@@ -117,7 +117,7 @@ uWS.App()
                     return;
                 }
                 entityPool.addPetalOrMob(choice([MobType.JELLYFISH, MobType.STARFISH]), Rarities.MYTHIC, randPos.x, randPos.y);
-            }, 100);
+            }, 500);
         } else {
             console.error(`Failed to listen on port ${PORT}`);
         }

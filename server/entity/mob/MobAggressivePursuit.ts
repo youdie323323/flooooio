@@ -44,7 +44,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
             // Dont chase player when this is petal
             if (!isPetal(this.type)) {
                 switch (this.type) {
-                    case MobType.JELLYFISH:
+                    // Aggressive (starfish)
                     case MobType.STARFISH: {
                         let distanceToTarget = 0;
                         if (this.targetPlayer) {
@@ -53,8 +53,8 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                             distanceToTarget = Math.hypot(dx, dy);
                         }
 
-                        if (this.targetPlayer && distanceToTarget > 5000) {
-                            // Lose sight of player, switch to other player
+                        // Loss player
+                        if (this.targetPlayer && distanceToTarget < 5000) {
                             this.targetPlayer = null;
                         } else {
                             const nearestPlayer = findNearestEntity(this, poolThis.getAllClients().filter(p => !p.isDead));
@@ -87,6 +87,55 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                                 this.targetPlayer = null;
                             }
                         }
+
+                        break;
+                    }
+                    // Immobile
+
+                    // Aggressive but stops move while player in sufficient distance
+                    case MobType.JELLYFISH: {
+                        let distanceToTarget = 0;
+                        if (this.targetPlayer) {
+                            const dx = this.targetPlayer.x - this.x;
+                            const dy = this.targetPlayer.y - this.y;
+                            distanceToTarget = Math.hypot(dx, dy);
+                        }
+
+                        // Loss player
+                        if (this.targetPlayer && distanceToTarget > 5000) {
+                            this.targetPlayer = null;
+                        } else {
+                            const nearestPlayer = findNearestEntity(this, poolThis.getAllClients().filter(p => !p.isDead));
+                            if (nearestPlayer) {
+                                const dx = nearestPlayer.x - this.x;
+                                const dy = nearestPlayer.y - this.y;
+                                const distance = Math.hypot(dx, dy);
+
+                                const targetAngle = ((Math.atan2(dy, dx) / (Math.PI * 2)) * 255 + 255) % 255;
+
+                                if (distance < 3000) {
+                                    let currentAngle = this.angle;
+                                    while (currentAngle < 0) currentAngle += 255;
+                                    currentAngle = currentAngle % 255;
+
+                                    let angleDiff = targetAngle - currentAngle;
+                                    if (angleDiff > 127.5) angleDiff -= 255;
+                                    if (angleDiff < -127.5) angleDiff += 255;
+
+                                    this.angle += angleDiff * 0.1;
+                                    this.angle = ((this.angle + 255) % 255);
+
+                                    this.magnitude = 255 * (this.targetPlayer && distanceToTarget < 500 ? 0.5 : 2);
+
+                                    this.targetPlayer = nearestPlayer;
+                                } else {
+                                    this.targetPlayer = null;
+                                }
+                            } else {
+                                this.targetPlayer = null;
+                            }
+                        }
+
                         break;
                     }
                 }
