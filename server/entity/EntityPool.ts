@@ -71,7 +71,10 @@ export class EntityPool {
                     this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, 0, 0),
                     this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, 0, 0),
                     this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, 0, 0),
-                ],
+                ].map(c => {
+                    c.parentPlayer = playerInstance;
+                    return c;
+                }),
                 bottom: new Array(8).fill(null),
                 cooldowns: new Array(8).fill(0),
             },

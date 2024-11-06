@@ -34,9 +34,10 @@ export function MobOscillatingMovement<T extends new (...args: any[]) => BaseMob
                     this.angle += SHARED_SINE_WAVE.get(++this.beeSineWaveIndex) * (this.targetPlayer ? 3 : 1);
                 }
 
-                switch (this.type) {
-                    case MobType.BEE: {
-                        if (!this.targetPlayer) {
+                // Do defensive-position move if not targetting player
+                if (!this.targetPlayer) {
+                    switch (this.type) {
+                        case MobType.BEE: {
                             if (this.rotationCounter++ >= 400) {
                                 this.angle = getRandomAngle();
                                 this.rotationCounter = 0;
@@ -54,14 +55,16 @@ export function MobOscillatingMovement<T extends new (...args: any[]) => BaseMob
                                     this.movementTimer += MOVEMENT_DURATION;
                                 }
                             }
-                        } else {
-                            this.isMoving = false;
+                            break;
+                        }
+                        case MobType.STARFISH:
+                        case MobType.JELLYFISH: {
+                            this.magnitude = 255 * 0.1;
+                            break;
                         }
                     }
-                    case MobType.STARFISH:
-                    case MobType.JELLYFISH: {
-                        this.magnitude = 255 * 0.1;
-                    }
+                } else {
+                    this.isMoving = false;
                 }
             }
         }

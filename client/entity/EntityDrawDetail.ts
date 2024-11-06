@@ -11,7 +11,7 @@ export function drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, 
 }
 
 function _drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, scale = 1) {
-    if (entity.hpAlpha <= 0 || entity instanceof EntityMob && isPetal(entity.type) || entity instanceof EntityMob && entity.maxHealth <= entity.health) {
+    if (entity.hpAlpha <= 0 || entity instanceof EntityMob && isPetal(entity.type) || entity.maxHealth <= entity.health) {
         return;
     }
 

@@ -54,7 +54,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                         }
 
                         // Loss player
-                        if (this.targetPlayer && distanceToTarget < 5000) {
+                        if (this.targetPlayer && distanceToTarget < 125 * this.size) {
                             this.targetPlayer = null;
                         } else {
                             const nearestPlayer = findNearestEntity(this, poolThis.getAllClients().filter(p => !p.isDead));
@@ -65,7 +65,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
 
                                 const targetAngle = ((Math.atan2(dy, dx) / (Math.PI * 2)) * 255 + 255) % 255;
 
-                                if (distance < 3000) {
+                                if (distance < 100 * this.size) {
                                     let currentAngle = this.angle;
                                     while (currentAngle < 0) currentAngle += 255;
                                     currentAngle = currentAngle % 255;
@@ -102,7 +102,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                         }
 
                         // Loss player
-                        if (this.targetPlayer && distanceToTarget > 5000) {
+                        if (this.targetPlayer && distanceToTarget > 125 * this.size) {
                             this.targetPlayer = null;
                         } else {
                             const nearestPlayer = findNearestEntity(this, poolThis.getAllClients().filter(p => !p.isDead));
@@ -113,7 +113,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
 
                                 const targetAngle = ((Math.atan2(dy, dx) / (Math.PI * 2)) * 255 + 255) % 255;
 
-                                if (distance < 3000) {
+                                if (distance < 100 * this.size) {
                                     let currentAngle = this.angle;
                                     while (currentAngle < 0) currentAngle += 255;
                                     currentAngle = currentAngle % 255;
@@ -131,6 +131,48 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                                 } else {
                                     this.targetPlayer = null;
                                 }
+                            } else {
+                                this.targetPlayer = null;
+                            }
+                        }
+
+                        break;
+                    }
+
+                    // Neutral (bee)
+
+                    case MobType.BEE: {
+                        let distanceToTarget = 0;
+                        if (this.targetPlayer) {
+                            const dx = this.targetPlayer.x - this.x;
+                            const dy = this.targetPlayer.y - this.y;
+                            distanceToTarget = Math.hypot(dx, dy);
+                        }
+
+                        // Loss player
+                        if (this.targetPlayer && distanceToTarget > 125 * this.size) {
+                            this.targetPlayer = null;
+                        } else {
+                            if (this.lastAttacker && !this.lastAttacker.isDead) {
+                                const dx = this.lastAttacker.x - this.x;
+                                const dy = this.lastAttacker.y - this.y;
+
+                                const targetAngle = ((Math.atan2(dy, dx) / (Math.PI * 2)) * 255 + 255) % 255;
+
+                                let currentAngle = this.angle;
+                                while (currentAngle < 0) currentAngle += 255;
+                                currentAngle = currentAngle % 255;
+
+                                let angleDiff = targetAngle - currentAngle;
+                                if (angleDiff > 127.5) angleDiff -= 255;
+                                if (angleDiff < -127.5) angleDiff += 255;
+
+                                this.angle += angleDiff * 0.1;
+                                this.angle = ((this.angle + 255) % 255);
+
+                                this.magnitude = 255 * 5;
+
+                                this.targetPlayer = this.lastAttacker;
                             } else {
                                 this.targetPlayer = null;
                             }

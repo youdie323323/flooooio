@@ -141,15 +141,22 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
                 otherEntity.y += push.pushY2 * 0.1;
 
                 // Decrease both when either petal
-                // TODO: fix multiple hit
                 if (isPetal(this.type) || isPetal(otherEntity.type)) {
                   this.health -= profile2[otherEntity.rarity][bodyDamageOrDamage(profile2[otherEntity.rarity])];
+                  if (isPetal(this.type) && this.parentPlayer) {
+                    otherEntity.lastAttacker = this.parentPlayer;
+                  }
                   otherEntity.health -= profile[this.rarity][bodyDamageOrDamage(profile[this.rarity])];
+                  if (isPetal(otherEntity.type) && otherEntity.parentPlayer) {
+                    this.lastAttacker = otherEntity.parentPlayer;
+                  }
                 }
               }
             }
           }
         });
+
+        return;
       }
 
       if (this instanceof Player && !this.isDead) {
@@ -232,6 +239,8 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
             return;
           }
         });
+
+        return;
       }
     }
   };

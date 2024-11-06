@@ -12,13 +12,15 @@ export class BasePlayer implements Entity {
     id: number;
     x: number;
     y: number;
+    magnitude: number;
     angle: number;
     size: number;
     health: number;
     maxHealth: number;
+    bodyDamage: number;
     mood: MoodKind;
-    nickname: string;
     isDead: boolean;
+    nickname: string;
     
     slots: {
         surface: (MobInstance | null)[];
@@ -26,11 +28,7 @@ export class BasePlayer implements Entity {
         cooldowns: number[];
     };
 
-    // Below not sending to server ↓
-
     ws: uWS.WebSocket<UserData>;
-    magnitude: number;
-    bodyDamage: number;
 }
 
 let Player = BasePlayer;

@@ -14,17 +14,17 @@ class BaseMob implements Entity {
     id: number;
     x: number;
     y: number;
+    magnitude: number;
     angle: number;
     size: number;
     health: number;
     rarity: Rarities;
     maxHealth: number;
-
     type: MobType | PetalType;
 
-    // Below not sending to server ↓
-    magnitude: number;
+    parentPlayer?: PlayerInstance;
     targetPlayer: PlayerInstance | null;
+    lastAttacker: PlayerInstance | null;
 }
 
 let Mob = BaseMob;
