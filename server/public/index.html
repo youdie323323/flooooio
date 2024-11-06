@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>floooo.io</title>
+    <meta name="application-name" content="floooo.io" />
+    <meta name="description" content="Florr.io-like game" />
+    <script async="" type="text/javascript" src="./client.js"></script>
+    <style>
+      body {
+        background-color: #181818;
+        transition: background-color 0.3s ease;
+      }
+    </style>
+    <link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="favicon-16x16.png" sizes="16x16" />
+    <style>
+      :root {
+        --sat: env(safe-area-inset-top);
+        --sar: env(safe-area-inset-right);
+        --sab: env(safe-area-inset-bottom);
+        --sal: env(safe-area-inset-left);
+      }
+
+      #status-container {
+        color: #ffffff;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 48pt;
+        font-family: sans-serif;
+        font-weight: bold;
+        cursor: default;
+        text-align: center;
+      }
+
+      #status-container small {
+        font-size: 50%;
+      }
+
+      #canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        width: 100dvw;
+        height: 100dvh;
+        cursor: default;
+      }
+    </style>
+    <link href='https://fonts.googleapis.com/css?family=Ubuntu:700' rel='stylesheet' type='text/css'>
+  </head>
+  <body>
+    <div id="status-container">
+      <span id="loading">Loading...</span>
+      <span id="unsupported" style="display: none">
+        Your browser isn't supported<br />
+        <small>
+          try <a href="//chrome.google.com">Google Chrome</a> or
+          <a href="https://www.mozilla.org/en-US/firefox/">Firefox</a><br />
+        </small>
+      </span>
+      <span id="errorDialog" style="display: none">
+        Error<br />
+        <small>
+          Uninstall any scripts you may have,<br />as they might be interfering
+          with the game<br />
+        </small>
+      </span>
+    </div>
+    <canvas
+      id="canvas"
+      width="800"
+      height="800"
+      style="display: none"
+      oncontextmenu="return false;"
+    ></canvas>
+    <script>
+      function isBrowserSupported() {
+        var canvas = document.createElement("canvas");
+        if (!canvas || !canvas.getContext) return false;
+        return true;
+      }
+
+      (function (window, document) {
+        if (!isBrowserSupported()) {
+          document.getElementById("loading").style.display = "none";
+          document.getElementById("unsupported").style.display = "block";
+          document.getElementById("errorDialog").style.display = "none";
+          return;
+        }
+
+        document.getElementById("canvas").style.display = "block";
+      })(window, document);
+    </script>
+  </body>
+</html>
