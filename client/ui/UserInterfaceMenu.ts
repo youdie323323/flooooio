@@ -3,7 +3,7 @@ import { Rarities } from "../../shared/rarities";
 import { PetalType } from "../../shared/types";
 import { MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../constants";
 import EntityMob from "../entity/EntityMob";
-import WorldManager from "../utils/WorldManager";
+import TilesetManager from "../utils/WorldManager";
 import { ComponentsSVGButton, ComponentsTextButton } from "./components/ComponentsButton";
 import UserInterface from "./UserInterface";
 
@@ -20,7 +20,7 @@ export default class UserInterfaceMenu extends UserInterface {
         entity: EntityMob;
     }>;
     lastBackgroundPetalSpawn: number;
-    worldManager: WorldManager;
+    worldManager: TilesetManager;
     tilesets: OffscreenCanvas[];
     backgroundX: number;
     backgroundY: number;
@@ -32,7 +32,7 @@ export default class UserInterfaceMenu extends UserInterface {
 
         this.backgroundEntities = new Set();
         this.lastBackgroundPetalSpawn = Date.now();
-        this.worldManager = new WorldManager();
+        this.worldManager = new TilesetManager();
         this.backgroundX = 0;
         this.backgroundY = 0;
         this.backgroundWaveStep = 0;
@@ -117,7 +117,7 @@ export default class UserInterfaceMenu extends UserInterface {
         const canvas = this.canvas;
         const ctx = canvas.getContext("2d");
 
-        this.worldManager.constructWorldMenu(canvas, this.tilesets, this.backgroundX, this.backgroundY);
+        this.worldManager.constructWorldMenu(canvas, this.tilesets, "ocean", this.backgroundX, this.backgroundY);
 
         this.backgroundX += 0.5;
         this.backgroundY += Math.sin(this.backgroundWaveStep / 20) * 0.5;

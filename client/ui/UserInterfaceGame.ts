@@ -1,7 +1,7 @@
 import { ARROW_START_DISTANCE, MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../constants";
 import EntityMob from "../entity/EntityMob";
 import { players, selfId, mobs, scaleFactor, interpolatedMouseX, interpolatedMouseY } from "../main";
-import WorldManager from "../utils/WorldManager";
+import TilesetManager from "../utils/WorldManager";
 import { ComponentsSVGButton, ComponentsTextButton } from "./components/ComponentsButton";
 import UserInterface from "./UserInterface";
 
@@ -39,14 +39,14 @@ function drawMutableFunctions(canvas: HTMLCanvasElement) {
 
 export default class UserInterfaceGame extends UserInterface {
     backgroundEntities: Array<EntityMob>;
-    worldManager: WorldManager;
+    worldManager: TilesetManager;
     tilesets: OffscreenCanvas[];
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
         this.initializeComponents();
 
-        this.worldManager = new WorldManager();
+        this.worldManager = new TilesetManager();
     }
 
     protected initializeComponents(): void {
@@ -65,6 +65,7 @@ export default class UserInterfaceGame extends UserInterface {
         const selfPlayer = players.get(selfId);
         if (!selfPlayer) {
             requestAnimationFrame(callbackFn);
+            return;
         }
 
         for (const mob of mobs.values()) {
@@ -75,7 +76,7 @@ export default class UserInterfaceGame extends UserInterface {
             player.update();
         }
 
-        this.worldManager.constructWorld(canvas, this.tilesets, 50, 250, selfPlayer.x, selfPlayer.y);
+        this.worldManager.constructWorld(canvas, this.tilesets, "ocean", 50, 250, selfPlayer.x, selfPlayer.y);
 
         ctx.save();
 

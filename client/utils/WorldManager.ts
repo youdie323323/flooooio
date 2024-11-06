@@ -1,10 +1,10 @@
 import { Canvg, presets } from "canvg";
 import { ARROW_START_DISTANCE, BIOME_SVG_TILESETS } from "../constants";
 import { interpolatedMouseX, interpolatedMouseY, scaleFactor } from "../main";
-import { darkend, darkendBase } from "../entity/EntityMob";
+import { darkend, darkendBase } from "./small";
 
-export default class WorldManager {
-    async generateTilesets<A extends keyof typeof BIOME_SVG_TILESETS>(biome: A): Promise<OffscreenCanvas[]> {
+export default class TilesetManager {
+    async generateTilesets<T extends keyof typeof BIOME_SVG_TILESETS>(biome: T): Promise<OffscreenCanvas[]> {
         const generatedTilesets = new Array(BIOME_SVG_TILESETS[biome].length);
         for (let i = 0; i < BIOME_SVG_TILESETS[biome].length; i++) {
             const offscreenCanvas = new OffscreenCanvas(256, 256);
@@ -46,13 +46,13 @@ ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 ctx.restore();
 */
-    constructWorld(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], numGridX: number, numGridY: number, playerX: number, playerY: number) {
+    constructWorld<T extends keyof typeof BIOME_SVG_TILESETS>(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], biome: T, numGridX: number, numGridY: number, playerX: number, playerY: number) {
+        const ctx = canvas.getContext("2d");
+
         const adjustedGridSize = 300 * scaleFactor;
 
         numGridX = Math.floor(numGridX / 30);
         numGridY = Math.floor(numGridY / 30);
-
-        const ctx = canvas.getContext("2d");
 
         for (let i = 0; i < 30; i++) {
             for (let j = 0; j < 30; j++) {
@@ -65,6 +65,16 @@ ctx.restore();
                     adjustedGridSize + 1, adjustedGridSize + 1
                 );
             }
+        }
+
+        if (biome === "ocean") {
+            ctx.save();
+
+            ctx.globalCompositeOperation = "multiply";
+            ctx.fillStyle = "#CCDBF2";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.restore();
         }
 
         ctx.save();
@@ -86,14 +96,10 @@ ctx.restore();
         ctx.restore();
     }
 
-    constructWorldMenu(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], playerX: number, playerY: number) {
+    constructWorldMenu<T extends keyof typeof BIOME_SVG_TILESETS>(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], biome: T, playerX: number, playerY: number) {
         const ctx = canvas.getContext("2d");
-        const adjustedGridSize = 600;
 
-        ctx.save();
-        ctx.fillStyle = darkend("#4c78b5", darkendBase);
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.restore();
+        const adjustedGridSize = 600;
 
         const viewRadius = 2000;
 
@@ -129,6 +135,16 @@ ctx.restore();
         }
 
         ctx.restore();
+        
+        if (biome === "ocean") {
+            ctx.save();
+
+            ctx.globalCompositeOperation = "multiply";
+            ctx.fillStyle = "#CCDBF2";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.restore();
+        }
     }
 }
 
