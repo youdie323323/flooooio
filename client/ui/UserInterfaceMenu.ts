@@ -99,7 +99,7 @@ export default class UserInterfaceMenu extends UserInterface {
     }
 
     public async onInit() {
-        this.tilesets = await this.worldManager.generateTilesets("garden");
+        this.tilesets = await this.worldManager.generateTilesets("ocean");
     }
 
     public async onExit() { }
@@ -117,7 +117,7 @@ export default class UserInterfaceMenu extends UserInterface {
         const canvas = this.canvas;
         const ctx = canvas.getContext("2d");
 
-        this.worldManager.constructWorld(canvas, this.tilesets, this.backgroundX, this.backgroundY);
+        this.worldManager.constructWorldMenu(canvas, this.tilesets, this.backgroundX, this.backgroundY);
 
         this.backgroundX += 0.5;
         this.backgroundY += Math.sin(this.backgroundWaveStep / 20) * 0.5;

@@ -1,3 +1,4 @@
+import { MOB_PROFILES } from "../../shared/mobProfiles";
 import { selfId } from "../main";
 import { isPetal } from "../utils/small";
 import Entity from "./Entity";
@@ -51,12 +52,13 @@ function _drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, scale 
             ctx.scale(scale, scale);
             ctx.translate(-maxWidth / 2, 9 / 2 + 5);
         } else if (entity instanceof EntityMob) {
-            lineWidth = 7;
-            maxWidth = 55;
+            lineWidth = 6.5;
+            maxWidth = 45;
 
-            const rQ = entity.size / 20;
+            const profile = MOB_PROFILES[entity.type];
+            const rQ = ((profile.rx + profile.ry) * (entity.size / profile.fraction)) / 30;
             ctx.scale(rQ, rQ);
-            ctx.translate(-maxWidth / 2, entity.size / rQ + 15);
+            ctx.translate(-maxWidth / 2, 25);
         }
 
         ctx.beginPath();

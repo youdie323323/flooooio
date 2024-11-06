@@ -40,6 +40,7 @@ function drawMutableFunctions(canvas: HTMLCanvasElement) {
 export default class UserInterfaceGame extends UserInterface {
     backgroundEntities: Array<EntityMob>;
     worldManager: WorldManager;
+    tilesets: OffscreenCanvas[];
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
@@ -51,7 +52,9 @@ export default class UserInterfaceGame extends UserInterface {
     protected initializeComponents(): void {
     }
 
-    public async onInit() {}
+    public async onInit() {
+        this.tilesets = await this.worldManager.generateTilesets("ocean");
+    }
 
     public async onExit() { }
 
@@ -72,7 +75,7 @@ export default class UserInterfaceGame extends UserInterface {
             player.update();
         }
 
-        this.worldManager.constructWorldSingleColor(canvas, 50, 250, selfPlayer.x, selfPlayer.y);
+        this.worldManager.constructWorld(canvas, this.tilesets, 50, 250, selfPlayer.x, selfPlayer.y);
 
         ctx.save();
 

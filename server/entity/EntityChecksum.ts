@@ -10,7 +10,7 @@ export let mapRadius = 2500;
 
 export const mapCenterX = 4470;
 export const mapCenterY = 4470;
-export const safetyDistance = 50;
+export const safetyDistance = 300;
 
 export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T) {
     return class extends Base {
@@ -72,7 +72,7 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
 
             // World boundary (circular)
             if (!(this instanceof Mob && isPetal(this.type))) {
-                const worldRadius = Math.min(mapCenterX, mapCenterY) - mapRadius - (this instanceof Mob ? getRadius() : 0);
+                const worldRadius = Math.min(mapCenterX, mapCenterY) - mapRadius - (this instanceof Mob ? getRadius() - /* Decrease some gaps */ 15 : 0);
 
                 const dx = this.x - mapCenterX;
                 const dy = this.y - mapCenterY;

@@ -19,64 +19,103 @@ export default class WorldManager {
         return generatedTilesets;
     }
 
-    constructWorldSingleColor(canvas: HTMLCanvasElement, numGridX: number, numGridY: number, playerX: number, playerY: number) {
-        const ctx = canvas.getContext("2d");
+    /*
+const ctx = canvas.getContext("2d");
 
-        ctx.save();
-        ctx.fillStyle = darkend("#547db3", darkendBase);
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.restore();
+ctx.save();
+ctx.fillStyle = darkend("#547db3", darkendBase);
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+ctx.restore();
 
-        ctx.save();
-        ctx.beginPath();
+ctx.save();
+ctx.beginPath();
 
+const adjustedGridSize = 300 * scaleFactor;
+
+ctx.arc(
+    30 / 2 * adjustedGridSize - (playerX * scaleFactor) + canvas.width / 2
+    - Math.floor(numGridX / 30) * 30 * scaleFactor,
+    (30 / 2 * adjustedGridSize - (playerY * scaleFactor) + canvas.height / 2
+    - Math.floor(numGridY / 30) * 30 * scaleFactor) + (210 * scaleFactor),
+    ((4.985 * (30 * 30)) - 2500) * scaleFactor, 0, Math.PI * 2,
+);
+ctx.clip();
+
+ctx.fillStyle = "#547db3";
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+ctx.restore();
+*/
+    constructWorld(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], numGridX: number, numGridY: number, playerX: number, playerY: number) {
         const adjustedGridSize = 300 * scaleFactor;
 
+        numGridX = Math.floor(numGridX / 30);
+        numGridY = Math.floor(numGridY / 30);
+
+        const ctx = canvas.getContext("2d");
+
+        for (let i = 0; i < 30; i++) {
+            for (let j = 0; j < 30; j++) {
+                const x = i * adjustedGridSize - (playerX * scaleFactor) + canvas.width / 2
+                    - numGridX * 30 * scaleFactor;
+                const y = (j * adjustedGridSize - (playerY * scaleFactor) + canvas.height / 2
+                    - numGridY * 30 * scaleFactor) + (210 * scaleFactor);
+                ctx.drawImage(tilesets[Math.abs(i + j) % tilesets.length],
+                    x, y,
+                    adjustedGridSize + 1, adjustedGridSize + 1
+                );
+            }
+        }
+
+        ctx.save();
+
+        ctx.lineWidth = ((canvas.width * scaleFactor) * 2) + ((canvas.height * scaleFactor) * 2);
+        ctx.beginPath();
+        ctx.strokeStyle = 'black';
+        ctx.globalAlpha = 0.08;
         ctx.arc(
             30 / 2 * adjustedGridSize - (playerX * scaleFactor) + canvas.width / 2
-            - Math.floor(numGridX / 30) * 30 * scaleFactor,
+            - numGridX * 30 * scaleFactor,
             (30 / 2 * adjustedGridSize - (playerY * scaleFactor) + canvas.height / 2
-            - Math.floor(numGridY / 30) * 30 * scaleFactor) + (210 * scaleFactor),
-            ((4.985 * (30 * 30)) - 2500) * scaleFactor, 0, Math.PI * 2,
+                - numGridY * 30 * scaleFactor) + (210 * scaleFactor),
+            ((4.985 * (30 * 30)) - 2500) * scaleFactor + ctx.lineWidth / 2, 0, Math.PI * 2,
         );
-        ctx.clip();
-
-        ctx.fillStyle = "#547db3";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.stroke();
+        ctx.closePath();
 
         ctx.restore();
     }
 
-    constructWorld(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], playerX: number, playerY: number) {
+    constructWorldMenu(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], playerX: number, playerY: number) {
         const ctx = canvas.getContext("2d");
         const adjustedGridSize = 600;
-    
+
         ctx.save();
         ctx.fillStyle = darkend("#4c78b5", darkendBase);
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.restore();
-        
+
         const viewRadius = 2000;
-        
+
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
-    
+
         ctx.save();
 
         const playerGridX = Math.floor(playerX / adjustedGridSize);
         const playerGridY = Math.floor(playerY / adjustedGridSize);
-        
+
         const tilesRadius = Math.ceil(viewRadius / adjustedGridSize) + 2;
 
         for (let i = -tilesRadius; i <= tilesRadius; i++) {
             for (let j = -tilesRadius; j <= tilesRadius; j++) {
                 const worldGridX = playerGridX + i;
                 const worldGridY = playerGridY + j;
-                
+
                 const tileDistX = i * adjustedGridSize;
                 const tileDistY = j * adjustedGridSize;
                 const distance = Math.sqrt(tileDistX * tileDistX + tileDistY * tileDistY);
-    
+
                 if (distance <= viewRadius + adjustedGridSize) {
                     const x = centerX + tileDistX - (playerX % adjustedGridSize);
                     const y = centerY + tileDistY - (playerY % adjustedGridSize);
@@ -88,7 +127,7 @@ export default class WorldManager {
                 }
             }
         }
-    
+
         ctx.restore();
     }
 }

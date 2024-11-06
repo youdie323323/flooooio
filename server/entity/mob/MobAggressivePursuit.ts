@@ -140,7 +140,6 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                     }
 
                     // Neutral (bee)
-
                     case MobType.BEE: {
                         let distanceToTarget = 0;
                         if (this.targetPlayer) {
