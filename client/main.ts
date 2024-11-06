@@ -117,10 +117,11 @@ export const mobs: Map<number, EntityMob> = new Map();
     }
 
     ws.onmessage = (event) => {
+        const textDecoder =  new TextDecoder("utf-8");
         function readString(): string {
             const len = data.getUint8(offset++);
             const buffers = new Uint8Array(data.buffer, offset, len);
-            const string = new TextDecoder("utf-8").decode(buffers);
+            const string = textDecoder.decode(buffers);
             offset += len;
             return string;
         }

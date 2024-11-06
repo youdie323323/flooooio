@@ -12,12 +12,12 @@ export function drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, 
 }
 
 function _drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, scale = 1) {
-    if (entity.hpAlpha <= 0 || entity instanceof EntityMob && isPetal(entity.type) || entity.maxHealth <= entity.health) {
+    if (entity.hpAlpha <= 0 || entity instanceof EntityMob && isPetal(entity.type)) {
         return;
     }
 
+    // Draw nickname if not self
     if (entity instanceof EntityPlayer && entity.id !== selfId) {
-        // Draw nickname if not self
         ctx.save();
 
         ctx.translate(0, -(entity.size + 8));
@@ -32,9 +32,13 @@ function _drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, scale 
         ctx.fillStyle = "white";
         ctx.fillText(entity.nickname, 0, 0);
 
+        console.log(entity.nickname)
+
         ctx.restore();
     }
-    if (!entity.isDead) {
+
+    // Draw hp bar if health decreasing and living
+    if (!entity.isDead && entity.maxHealth > entity.health) {
         ctx.save();
 
         ctx.globalAlpha = entity.hpAlpha;

@@ -31,7 +31,7 @@ export default class EntityPlayer extends Entity {
     }
 
     draw(ctx: CanvasRenderingContext2D) {
-        if (this.isDead) {
+        if (this.isDead && this.deadT > 1) {
             return;
         }
 
@@ -40,6 +40,8 @@ export default class EntityPlayer extends Entity {
         ctx.translate(this.x, this.y);
 
         drawEntityDetail(this, ctx);
+
+        this.deadPreDraw(ctx);
 
         let scale = this.size / 25;
         ctx.scale(scale, scale);

@@ -59,7 +59,7 @@ export class EntityPool {
             // Not changing
             maxHealth: 200 * levelMultiplier,
             isDead: false,
-            nickname: "Youdi3",
+            nickname: "s3x",
             ws,
             slots: {
                 surface: [
