@@ -3,7 +3,7 @@ import Entity from "./Entity";
 import { MobType, PetalType } from "../../shared/types";
 import { Rarities } from "../../shared/rarities";
 import { deltaTime } from "../main";
-import { drawEntityDetail } from "./EntityDrawDetail";
+import { drawEntityDetail, HP_BAR_MAX_WIDTH } from "./EntityDrawDetail";
 import { darkend, darkendBase } from "../utils/small";
 
 function createBodyPath() {
@@ -48,7 +48,7 @@ export default class EntityMob extends Entity {
 
         ctx.lineWidth = 6;
 
-        const drawBasics = (fill: string, stroke: string) => {
+        const drawBasicLike = (fill: string, stroke: string) => {
             const size = this.size / 20;
             ctx.scale(size, size);
             ctx.beginPath();
@@ -73,15 +73,15 @@ export default class EntityMob extends Entity {
                 if (!this.legD) {
                     this.legD = Array(starfishLegCount).fill(150);
                 }
-                const s3 = this.legD;
-                const s4 = this.isDead ? 0 : Math.floor(this.nHealth * (starfishLegCount - 1));
+                const legD = this.legD;
+                const s4 = this.isDead ? 0 : Math.floor((this.nHealth / this.maxHealth) * (starfishLegCount - 1));
                 ctx.beginPath();
-                for (let tv = 0; tv < starfishLegCount; tv++) {
-                    const tw = (tv + 0.5) / starfishLegCount * Math.PI * 2;
-                    const tx = (tv + 1) / starfishLegCount * Math.PI * 2;
-                    s3[tv] += ((tv < s4 ? 175 : 105) - s3[tv]) * 0.5;
-                    const ty = s3[tv];
-                    if (tv === 0) {
+                for (let i = 0; i < starfishLegCount; i++) {
+                    const tw = (i + 0.5) / starfishLegCount * TWO_PI;
+                    const tx = (i + 1) / starfishLegCount * TWO_PI;
+                    legD[i] += ((i < s4 ? 175 : 105) - legD[i]) * 0.5;
+                    const ty = legD[i];
+                    if (i === 0) {
                         ctx.moveTo(ty, 0);
                     }
                     ctx.quadraticCurveTo(Math.cos(tw) * 15, Math.sin(tw) * 15, Math.cos(tx) * ty, Math.sin(tx) * ty);
@@ -96,17 +96,17 @@ export default class EntityMob extends Entity {
                 ctx.fill();
                 ctx.stroke();
                 ctx.beginPath();
-                for (let tz = 0; tz < starfishLegCount; tz++) {
-                    const tA = tz / starfishLegCount * Math.PI * 2;
+                for (let i = 0; i < starfishLegCount; i++) {
+                    const tA = i / starfishLegCount * TWO_PI;
                     ctx.save();
                     ctx.rotate(tA);
-                    const tB = s3[tz] / 175;
+                    const tB = legD[i] / 175;
                     let step = 56;
-                    const ballCount = 3;
-                    for (let tE = 0; tE < ballCount; tE++) {
-                        const tF = (1 - tE / ballCount * 0.8) * 24 * tB;
+                    const arcCount = 3;
+                    for (let j = 0; j < arcCount; j++) {
+                        const tF = (1 - j / arcCount * 0.8) * 24 * tB;
                         ctx.moveTo(step, 0);
-                        ctx.arc(step, 0, tF, 0, Math.PI * 2);
+                        ctx.arc(step, 0, tF, 0, TWO_PI);
                         step += tF * 2 + tB * 5;
                     }
                     ctx.restore();
@@ -117,19 +117,19 @@ export default class EntityMob extends Entity {
             }
             case MobType.JELLYFISH: {
                 ctx.scale(this.size / 20, this.size / 20);
-                const sm = ctx.globalAlpha;
+                const oldGlobalAlpha = ctx.globalAlpha;
                 ctx.strokeStyle = ctx.fillStyle = this.getSkinColor("#ffffff");
-                ctx.globalAlpha = sm * 0.6;
+                ctx.globalAlpha = oldGlobalAlpha * 0.6;
                 ctx.beginPath();
-                for (let uf = 0; uf < 10; uf++) {
-                    const ug = uf / 10 * Math.PI * 2;
+                for (let i = 0; i < 10; i++) {
+                    const tentacleAngle = i / 10 * Math.PI * 2;
                     ctx.save();
-                    ctx.rotate(ug);
+                    ctx.rotate(tentacleAngle);
                     ctx.translate(17.5, 0);
                     ctx.moveTo(0, 0);
-                    const uh = Math.sin(ug + Date.now() / 500);
-                    ctx.rotate(uh * 0.5);
-                    ctx.quadraticCurveTo(4, uh * -2, 14, 0);
+                    const tentacleMoveWave = Math.sin(tentacleAngle + Date.now() / 500);
+                    ctx.rotate(tentacleMoveWave * 0.5);
+                    ctx.quadraticCurveTo(4, tentacleMoveWave * -2, 14, 0);
                     ctx.restore();
                 }
                 ctx.lineCap = "round";
@@ -137,7 +137,7 @@ export default class EntityMob extends Entity {
                 ctx.stroke();
                 ctx.beginPath();
                 ctx.arc(0, 0, 20, 0, Math.PI * 2);
-                ctx.globalAlpha = sm * 0.5;
+                ctx.globalAlpha = oldGlobalAlpha * 0.5;
                 ctx.fill();
                 ctx.clip();
                 ctx.lineWidth = 3;
@@ -176,15 +176,15 @@ export default class EntityMob extends Entity {
                 ctx.lineCap = "round";
                 ctx.lineWidth = 7;
                 ctx.stroke();
-                const rS = [[-17, -13], [17, -13], [0, -17]];
+                const arcPoints = [[-17, -13], [17, -13], [0, -17]];
                 ctx.beginPath();
-                for (let sZ = 0; sZ < 2; sZ++) {
-                    const t0 = sZ === 1 ? 1 : -1;
-                    for (let t1 = 0; t1 < rS.length; t1++) {
-                        let [t2, t3] = rS[t1];
-                        t3 *= t0;
-                        ctx.moveTo(t2, t3);
-                        ctx.arc(t2, t3, 5, 0, TWO_PI);
+                for (let i = 0; i < 2; i++) {
+                    const relative = i === 1 ? 1 : -1;
+                    for (let j = 0; j < arcPoints.length; j++) {
+                        let [x, y] = arcPoints[j];
+                        y *= relative;
+                        ctx.moveTo(x, y);
+                        ctx.arc(x, y, 5, 0, TWO_PI);
                     }
                 }
                 ctx.fill();
@@ -197,11 +197,11 @@ export default class EntityMob extends Entity {
                 break;
             }
             case PetalType.BASIC: {
-                drawBasics("#ffffff", "#cfcfcf");
+                drawBasicLike("#ffffff", "#cfcfcf");
                 break;
             }
             case PetalType.FASTER: {
-                drawBasics("#feffc9", "#cecfa3");
+                drawBasicLike("#feffc9", "#cecfa3");
                 break;
             }
         }

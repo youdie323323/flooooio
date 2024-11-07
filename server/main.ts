@@ -41,9 +41,9 @@ uWS.App()
             });
         });
     })
-    .ws('/*', {
+    .ws('/*', { 
         compression: uWS.SHARED_COMPRESSOR,
-        maxPayloadLength: 16 * 1024,
+        maxPayloadLength: 16 * 1024 * 1024,
         sendPingsAutomatically: false,
         idleTimeout: 0,
         open: (ws: uWS.WebSocket<UserData>) => {
@@ -60,7 +60,7 @@ uWS.App()
             const client = entityPool.getClient(clientId);
             setInterval(() => {
                 entityPool.addPetalOrMob(choice([MobType.BEETLE]), Rarities.MYTHIC, client.x, client.y, client);
-            }, 1000);
+            }, 500);
 
             // Lag emulation:
             // const originalSend = ws.send;
@@ -116,8 +116,8 @@ uWS.App()
                 if (!randPos) {
                     return;
                 }
-                entityPool.addPetalOrMob(choice([MobType.BUBBLE]), Rarities.MYTHIC, randPos.x, randPos.y);
-            }, 250);
+                entityPool.addPetalOrMob(choice([MobType.BEE, MobType.BEETLE, MobType.JELLYFISH, MobType.STARFISH, MobType.BUBBLE]), Rarities.MYTHIC, randPos.x, randPos.y);
+            }, 100);
         } else {
             console.error(`Failed to listen on port ${PORT}`);
         }

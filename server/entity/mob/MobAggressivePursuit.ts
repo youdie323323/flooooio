@@ -62,6 +62,12 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
             if (!isPetal(this.type)) {
                 switch (MOB_BEHAVIORS[this.type]) {
                     case "aggressive": {
+                        // Dont do anything while this.starfishRegeningHealth so
+                        // can handle angle in MobHealthRegen.ts
+                        if (this.starfishRegeningHealth) {
+                            return;
+                        }
+
                         let distanceToTarget = 0;
                         if (this.targetEntity) {
                             const dx = this.targetEntity.x - this.x;

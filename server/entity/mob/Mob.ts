@@ -7,6 +7,7 @@ import { EntityLinearMovement } from "../EntityLinearMovement";
 import { EntityChecksum } from "../EntityChecksum";
 import { Rarities } from "../../../shared/rarities";
 import { BasePlayer, PlayerInstance } from "../player/Player";
+import { MobHealthRegen } from "./MobHealthRegen";
 
 // Note that i will call petal as mob
 
@@ -28,6 +29,8 @@ class BaseMob implements Entity {
     lastAttacked: Entity | null;
 
     parentEgger: PlayerInstance | null;
+
+    starfishRegeningHealth: boolean;
 }
 
 let Mob = BaseMob;
@@ -36,6 +39,7 @@ Mob = EntityLinearMovement(Mob);
 Mob = EntityChecksum(Mob);
 Mob = MobOscillatingMovement(Mob);
 Mob = MobAggressivePursuit(Mob);
+Mob = MobHealthRegen(Mob);
 
 type MobInstance = InstanceType<typeof Mob>;
 

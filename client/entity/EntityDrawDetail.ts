@@ -11,6 +11,8 @@ export function drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, 
     ctx.restore();
 }
 
+export const HP_BAR_MAX_WIDTH: number = 45;
+
 function _drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, scale = 1) {
     if (entity.hpAlpha <= 0 || entity instanceof EntityMob && isPetal(entity.type)) {   
         return;
@@ -45,29 +47,26 @@ function _drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, scale 
         ctx.strokeStyle = "#222";
         ctx.beginPath();
 
-        let maxWidth: number;
         let lineWidth: number;
 
         if (entity instanceof EntityPlayer) {
             lineWidth = 5;
-            maxWidth = 45;
 
             ctx.translate(0, entity.size);
             ctx.scale(scale, scale);
-            ctx.translate(-maxWidth / 2, 9 / 2 + 5);
+            ctx.translate(-HP_BAR_MAX_WIDTH / 2, 9 / 2 + 5);
         } else if (entity instanceof EntityMob) {
             lineWidth = 6.5;
-            maxWidth = 45;
-
+  
             const profile = MOB_PROFILES[entity.type];
             const rQ = ((profile.rx + profile.ry) * (entity.size / profile.fraction)) / 30;
             ctx.scale(rQ, rQ);
-            ctx.translate(-maxWidth / 2, 25);
+            ctx.translate(-HP_BAR_MAX_WIDTH / 2, 25);
         }
 
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        ctx.lineTo(maxWidth, 0);
+        ctx.lineTo(HP_BAR_MAX_WIDTH, 0);
         ctx.lineCap = "round";
         ctx.lineWidth = lineWidth;
         ctx.strokeStyle = "#222";
@@ -80,7 +79,7 @@ function _drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, scale 
             setGlobalAlpha(entity.redHealth);
             ctx.beginPath();
             ctx.moveTo(0, 0);
-            ctx.lineTo(maxWidth * (entity.redHealth / entity.maxHealth), 0);
+            ctx.lineTo(HP_BAR_MAX_WIDTH * (entity.redHealth / entity.maxHealth), 0);
             ctx.lineWidth = lineWidth * 0.44;
             ctx.strokeStyle = "#f22";
             ctx.stroke();
@@ -89,7 +88,7 @@ function _drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, scale 
             setGlobalAlpha(entity.health);
             ctx.beginPath();
             ctx.moveTo(0, 0);
-            ctx.lineTo(maxWidth * (entity.health / entity.maxHealth), 0);
+            ctx.lineTo(HP_BAR_MAX_WIDTH * (entity.health / entity.maxHealth), 0);
             ctx.lineWidth = lineWidth * 0.66;
             ctx.strokeStyle = "#75dd34";
             ctx.stroke();

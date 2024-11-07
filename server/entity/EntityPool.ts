@@ -111,6 +111,7 @@ export class EntityPool {
             maxHealth: profile[rarity].health,
             targetPlayer: null,
             parentEgger,
+            starfishRegeningHealth: false,
         });
 
         this.mobs.set(mobId, mobInstance);
