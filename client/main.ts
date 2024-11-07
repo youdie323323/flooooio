@@ -228,6 +228,8 @@ export const mobs: Map<number, EntityMob> = new Map();
                     const mobMaxHealth = data.getInt32(offset);
                     offset += 4;
 
+                    const mobIsPet = !!data.getUint8(offset++);
+
                     const mob = mobs.get(mobId);
                     if (mob) {
                         mob.nx = mobX;
@@ -254,7 +256,7 @@ export const mobs: Map<number, EntityMob> = new Map();
                         mob.oSize = mob.size;
                         mob.updateT = 0;
                     } else {
-                        mobs.set(mobId, new EntityMob(mobId, mobType, mobRarity, mobX, mobY, mobSize, mobHp, mobMaxHealth, mobAngle));
+                        mobs.set(mobId, new EntityMob(mobId, mobType, mobRarity, mobX, mobY, mobSize, mobHp, mobMaxHealth, mobAngle, mobIsPet));
                     }
                 }
 

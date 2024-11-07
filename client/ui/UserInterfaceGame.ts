@@ -53,7 +53,7 @@ export default class UserInterfaceGame extends UserInterface {
     }
 
     public async onInit() {
-        this.tilesets = await this.worldManager.generateTilesets("ocean");
+        this.tilesets = await this.worldManager.generateTilesets("garden");
     }
 
     public async onExit() { }
@@ -76,7 +76,7 @@ export default class UserInterfaceGame extends UserInterface {
             player.update();
         }
 
-        this.worldManager.constructWorld(canvas, this.tilesets, "ocean", 50, 250, selfPlayer.x, selfPlayer.y);
+        this.worldManager.constructWorld(canvas, this.tilesets, "garden", 50, 250, selfPlayer.x, selfPlayer.y);
 
         ctx.save();
 

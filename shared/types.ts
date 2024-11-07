@@ -4,6 +4,7 @@ export enum MobType {
     BEE = 0,
     STARFISH = 3,
     JELLYFISH = 4,
+    BEETLE = 5,
 }
 
 export enum PetalType {

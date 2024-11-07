@@ -6,7 +6,7 @@ export const MOB_PROFILES: Record<MobType, MobData> = {
     [MobType.BEE]: {
         name: "Bee",
         description: "It stings. Don't touch it.",
-        baseSize: 20,
+        baseSize: 30,
         fraction: 30,
         rx: 30,
         ry: 20,
@@ -145,6 +145,46 @@ export const MOB_PROFILES: Record<MobType, MobData> = {
 
             lightning: 15309,
             bounces: 9,
+        },
+    },
+    [MobType.BEETLE]: {
+        name: "Beetle",
+        description: "It's hungry and flowers are its favorite meal.",
+        baseSize: 30,
+        fraction: 40,
+        rx: 42,
+        ry: 34,
+        [Rarities.COMMON]: {
+            health: 100,
+            bodyDamage: 30,
+        },
+        [Rarities.UNUSUAL]: {
+            health: 375.2,
+            bodyDamage: 90,
+        },
+        [Rarities.RARE]: {
+            health: 1350,
+            bodyDamage: 270,
+        },
+        [Rarities.EPIC]: {
+            health: 5400,
+            bodyDamage: 810,
+        },
+        [Rarities.LEGENDARY]: {
+            health: 40500,
+            bodyDamage: 2430,
+        },
+        [Rarities.MYTHIC]: {
+            health: 243000,
+            bodyDamage: 7290,
+        },
+        [Rarities.ULTRA]: {
+            health: 7300000,
+            bodyDamage: 21870,
+        },
+        [Rarities.SUPER]: {
+            health: 131200000,
+            bodyDamage: 65610,
         },
     },
 };

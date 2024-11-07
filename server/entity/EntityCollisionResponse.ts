@@ -118,6 +118,13 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
             // Petal dont damaged to petal
             if (isPetal(this.type) && isPetal(otherEntity.type)) return;
 
+            if (this instanceof Player && otherEntity.parentEgger) return;
+            if (otherEntity instanceof Player && this.parentEgger) return;
+
+            // Petal dont collision/damaged to pet
+            if (isPetal(this.type) && otherEntity.parentEgger) return;
+            if (isPetal(otherEntity.type) && this.parentEgger) return;
+
             const profile2: MobData | PetalData = MOB_PROFILES[otherEntity.type] || PETAL_PROFILES[otherEntity.type];
 
             if (isEllipseIntersecting({
@@ -140,15 +147,27 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
                 otherEntity.x += push.pushX2 * 0.1;
                 otherEntity.y += push.pushY2 * 0.1;
 
-                // Decrease both when either petal
-                if (isPetal(this.type) || isPetal(otherEntity.type)) {
+                // Summoned mob doesnt hostile to other summoned egg
+                if (this.parentEgger && otherEntity.parentEgger) return;
+
+                if (
+                  isPetal(this.type) || isPetal(otherEntity.type) ||
+                  this.parentEgger || otherEntity.parentEgger
+                ) {
                   this.health -= profile2[otherEntity.rarity][bodyDamageOrDamage(profile2[otherEntity.rarity])];
-                  if (isPetal(this.type) && this.parentPlayer) {
-                    otherEntity.lastAttacker = this.parentPlayer;
+                  if (isPetal(this.type) && this.petalParent) {
+                    otherEntity.lastAttacked = this.petalParent;
+                  }
+                  // Can targetted to pet too
+                  if (this.parentEgger) {
+                    otherEntity.lastAttacked = this;
                   }
                   otherEntity.health -= profile[this.rarity][bodyDamageOrDamage(profile[this.rarity])];
-                  if (isPetal(otherEntity.type) && otherEntity.parentPlayer) {
-                    this.lastAttacker = otherEntity.parentPlayer;
+                  if (isPetal(otherEntity.type) && otherEntity.petalParent) {
+                    this.lastAttacked = otherEntity.petalParent;
+                  }
+                  if (otherEntity.parentEgger) {
+                    this.lastAttacked = otherEntity;
                   }
                 }
               }
@@ -208,6 +227,8 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
           }
           if (otherEntity instanceof Mob && !isPetal(otherEntity.type)) {
             const profile1: MobData = MOB_PROFILES[otherEntity.type];
+
+            if (otherEntity.parentEgger) return;
 
             if (isEllipseIntersecting({
               // Arc

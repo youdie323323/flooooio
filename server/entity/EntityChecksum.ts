@@ -72,6 +72,7 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
 
             // World boundary (circular)
             if (!(this instanceof Mob && isPetal(this.type))) {
+                // TODO: fix gap
                 const worldRadius = Math.min(mapCenterX, mapCenterY) - mapRadius - (this instanceof Mob ? getRadius() - /* Decrease some gaps */ 15 : 0);
 
                 const dx = this.x - mapCenterX;
@@ -81,7 +82,7 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                 if (distance > worldRadius) {
                     const collisionAngle = Math.atan2(dy, dx);
 
-                    if (this instanceof Mob && !this.targetPlayer) {
+                    if (this instanceof Mob && !this.targetEntity) {
                         const reflectedAngleRad = 2 * collisionAngle - angleToRad(this.angle) + Math.PI;
 
                         this.angle = ((reflectedAngleRad / (2 * Math.PI)) * 255) % 255;
@@ -90,6 +91,7 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                         }
                     }
 
+                    // TODO: push instead limit
                     this.x = mapCenterX + Math.cos(collisionAngle) * worldRadius;
                     this.y = mapCenterY + Math.sin(collisionAngle) * worldRadius;
                 }

@@ -22,9 +22,12 @@ class BaseMob implements Entity {
     maxHealth: number;
     type: MobType | PetalType;
 
-    parentPlayer?: PlayerInstance;
-    targetPlayer: PlayerInstance | null;
-    lastAttacker: PlayerInstance | null;
+    targetEntity: Entity | null;
+
+    petalParent?: PlayerInstance;
+    lastAttacked: Entity | null;
+
+    parentEgger: PlayerInstance | null;
 }
 
 let Mob = BaseMob;

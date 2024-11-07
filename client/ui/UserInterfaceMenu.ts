@@ -99,7 +99,7 @@ export default class UserInterfaceMenu extends UserInterface {
     }
 
     public async onInit() {
-        this.tilesets = await this.worldManager.generateTilesets("ocean");
+        this.tilesets = await this.worldManager.generateTilesets("garden");
     }
 
     public async onExit() { }
@@ -117,7 +117,7 @@ export default class UserInterfaceMenu extends UserInterface {
         const canvas = this.canvas;
         const ctx = canvas.getContext("2d");
 
-        this.worldManager.constructWorldMenu(canvas, this.tilesets, "ocean", this.backgroundX, this.backgroundY);
+        this.worldManager.constructWorldMenu(canvas, this.tilesets, "garden", this.backgroundX, this.backgroundY);
 
         this.backgroundX += 0.5;
         this.backgroundY += Math.sin(this.backgroundWaveStep / 20) * 0.5;
@@ -133,7 +133,7 @@ export default class UserInterfaceMenu extends UserInterface {
             const param = this.generateBackgroundEntity3D();
             this.backgroundEntities.add({
                 ...param,
-                entity: new EntityMob(-1, PetalType.BASIC, Rarities.COMMON, param.x, param.y, param.z * 12, 1, 1, 0)
+                entity: new EntityMob(-1, PetalType.BASIC, Rarities.COMMON, param.x, param.y, param.z * 12, 1, 1, 0, false)
             });
             this.lastBackgroundPetalSpawn = Date.now();
         }

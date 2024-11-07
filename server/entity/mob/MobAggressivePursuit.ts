@@ -3,7 +3,7 @@ import { Entity, onUpdateTick } from "../Entity";
 import { EntityPool } from "../EntityPool";
 import { BaseMob, Mob, MobInstance } from "./Mob";
 import { MobType } from "../../../shared/types";
-import { PlayerInstance } from "../player/Player";
+import { Player, PlayerInstance } from "../player/Player";
 
 function predicateCoordinate(x0: number, y0: number, speed: number, angle: number, time: number) {
     const rad = angleToRad(angle);
@@ -14,18 +14,18 @@ function predicateCoordinate(x0: number, y0: number, speed: number, angle: numbe
     return { x: newX, y: newY };
 }
 
-export function findNearestEntity<T extends PlayerInstance | MobInstance>(target: Entity, players: T[]) {
-    if (!players.length) return null;
+export function findNearestEntity(me: Entity, entites: Entity[]) {
+    if (!entites.length) return null;
 
-    return players.reduce((nearest, current) => {
+    return entites.reduce((nearest, current) => {
         const distanceToCurrent = Math.hypot(
-            current.x - target.x,
-            current.y - target.y
+            current.x - me.x,
+            current.y - me.y
         );
 
         const distanceToNearest = Math.hypot(
-            nearest.x - target.x,
-            nearest.y - target.y
+            nearest.x - me.x,
+            nearest.y - me.y
         );
 
         return distanceToCurrent < distanceToNearest ? current : nearest;
@@ -41,26 +41,36 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                 super[onUpdateTick](poolThis);
             }
 
+            let targets: Entity[];
+            if (this.parentEgger) {
+                // Mob which summoned by player will attack other mobs expect petal
+                targets = poolThis.getAllMobs().filter(p => !isPetal(p.type) && !p?.parentEgger);
+            } else {
+                // TODO: target pets
+                targets = [poolThis.getAllClients().filter(p => !p.isDead), poolThis.getAllMobs().filter(p => p.parentEgger)].flat();
+            }
+
             // Dont chase player when this is petal
             if (!isPetal(this.type)) {
                 switch (this.type) {
-                    // Aggressive (starfish)
-                    case MobType.STARFISH: {
+                    // Aggressive (beetle, starfish)
+                    case MobType.STARFISH:
+                    case MobType.BEETLE: {
                         let distanceToTarget = 0;
-                        if (this.targetPlayer) {
-                            const dx = this.targetPlayer.x - this.x;
-                            const dy = this.targetPlayer.y - this.y;
+                        if (this.targetEntity) {
+                            const dx = this.targetEntity.x - this.x;
+                            const dy = this.targetEntity.y - this.y;
                             distanceToTarget = Math.hypot(dx, dy);
                         }
 
                         // Loss player
-                        if (this.targetPlayer && distanceToTarget < 125 * this.size) {
-                            this.targetPlayer = null;
+                        if (this.targetEntity && distanceToTarget < 125 * this.size) {
+                            this.targetEntity = null;
                         } else {
-                            const nearestPlayer = findNearestEntity(this, poolThis.getAllClients().filter(p => !p.isDead));
-                            if (nearestPlayer) {
-                                const dx = nearestPlayer.x - this.x;
-                                const dy = nearestPlayer.y - this.y;
+                            const nearestTarget = findNearestEntity(this, targets);
+                            if (nearestTarget) {
+                                const dx = nearestTarget.x - this.x;
+                                const dy = nearestTarget.y - this.y;
                                 const distance = Math.hypot(dx, dy);
 
                                 const targetAngle = ((Math.atan2(dy, dx) / (Math.PI * 2)) * 255 + 255) % 255;
@@ -79,12 +89,12 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
 
                                     this.magnitude = 255 * 5;
 
-                                    this.targetPlayer = nearestPlayer;
+                                    this.targetEntity = nearestTarget;
                                 } else {
-                                    this.targetPlayer = null;
+                                    this.targetEntity = null;
                                 }
                             } else {
-                                this.targetPlayer = null;
+                                this.targetEntity = null;
                             }
                         }
 
@@ -95,20 +105,20 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                     // Aggressive but stops move while player in sufficient distance
                     case MobType.JELLYFISH: {
                         let distanceToTarget = 0;
-                        if (this.targetPlayer) {
-                            const dx = this.targetPlayer.x - this.x;
-                            const dy = this.targetPlayer.y - this.y;
+                        if (this.targetEntity) {
+                            const dx = this.targetEntity.x - this.x;
+                            const dy = this.targetEntity.y - this.y;
                             distanceToTarget = Math.hypot(dx, dy);
                         }
 
                         // Loss player
-                        if (this.targetPlayer && distanceToTarget > 125 * this.size) {
-                            this.targetPlayer = null;
+                        if (this.targetEntity && distanceToTarget > 125 * this.size) {
+                            this.targetEntity = null;
                         } else {
-                            const nearestPlayer = findNearestEntity(this, poolThis.getAllClients().filter(p => !p.isDead));
-                            if (nearestPlayer) {
-                                const dx = nearestPlayer.x - this.x;
-                                const dy = nearestPlayer.y - this.y;
+                            const nearestTarget = findNearestEntity(this, targets);
+                            if (nearestTarget) {
+                                const dx = nearestTarget.x - this.x;
+                                const dy = nearestTarget.y - this.y;
                                 const distance = Math.hypot(dx, dy);
 
                                 const targetAngle = ((Math.atan2(dy, dx) / (Math.PI * 2)) * 255 + 255) % 255;
@@ -125,14 +135,14 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                                     this.angle += angleDiff * 0.1;
                                     this.angle = ((this.angle + 255) % 255);
 
-                                    this.magnitude = 255 * (this.targetPlayer && distanceToTarget < 500 ? 0.5 : 2);
+                                    this.magnitude = 255 * (this.targetEntity && distanceToTarget < 500 ? 0.25 : 2);
 
-                                    this.targetPlayer = nearestPlayer;
+                                    this.targetEntity = nearestTarget;
                                 } else {
-                                    this.targetPlayer = null;
+                                    this.targetEntity = null;
                                 }
                             } else {
-                                this.targetPlayer = null;
+                                this.targetEntity = null;
                             }
                         }
 
@@ -142,19 +152,19 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                     // Neutral (bee)
                     case MobType.BEE: {
                         let distanceToTarget = 0;
-                        if (this.targetPlayer) {
-                            const dx = this.targetPlayer.x - this.x;
-                            const dy = this.targetPlayer.y - this.y;
+                        if (this.targetEntity) {
+                            const dx = this.targetEntity.x - this.x;
+                            const dy = this.targetEntity.y - this.y;
                             distanceToTarget = Math.hypot(dx, dy);
                         }
 
                         // Loss player
-                        if (this.targetPlayer && distanceToTarget > 125 * this.size) {
-                            this.targetPlayer = null;
+                        if (this.targetEntity && distanceToTarget > 125 * this.size) {
+                            this.targetEntity = null;
                         } else {
-                            if (this.lastAttacker && !this.lastAttacker.isDead) {
-                                const dx = this.lastAttacker.x - this.x;
-                                const dy = this.lastAttacker.y - this.y;
+                            if (this.lastAttacked && !(this.lastAttacked instanceof Player ? this.lastAttacked.isDead : /* If mob is dead, its simply deleted from pool so can use false */ false)) {
+                                const dx = this.lastAttacked.x - this.x;
+                                const dy = this.lastAttacked.y - this.y;
 
                                 const targetAngle = ((Math.atan2(dy, dx) / (Math.PI * 2)) * 255 + 255) % 255;
 
@@ -171,9 +181,9 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
 
                                 this.magnitude = 255 * 5;
 
-                                this.targetPlayer = this.lastAttacker;
+                                this.targetEntity = this.lastAttacked;
                             } else {
-                                this.targetPlayer = null;
+                                this.targetEntity = null;
                             }
                         }
 

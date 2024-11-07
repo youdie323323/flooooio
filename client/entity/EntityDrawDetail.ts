@@ -12,7 +12,7 @@ export function drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, 
 }
 
 function _drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, scale = 1) {
-    if (entity.hpAlpha <= 0 || entity instanceof EntityMob && isPetal(entity.type)) {
+    if (entity.hpAlpha <= 0 || entity instanceof EntityMob && isPetal(entity.type)) {   
         return;
     }
 

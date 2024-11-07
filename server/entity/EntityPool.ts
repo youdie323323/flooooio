@@ -88,7 +88,7 @@ export class EntityPool {
     }
 
     // Ill just return instance here
-    addPetalOrMob(type: MobType | PetalType, rarity: Rarities, x: number, y: number) {
+    addPetalOrMob(type: MobType | PetalType, rarity: Rarities, x: number, y: number, parentEgger: PlayerInstance = null) {
         const mobId = generateId();
         if (this.mobs.has(mobId)) {
             return this.addPetalOrMob(type, rarity, x, y);
@@ -110,6 +110,7 @@ export class EntityPool {
             // Not changing
             maxHealth: profile[rarity].health,
             targetPlayer: null,
+            parentEgger,
         });
 
         this.mobs.set(mobId, mobInstance);
@@ -195,7 +196,7 @@ export class EntityPool {
         // 2 bytes for the mob count
         let size = 2;
         this.mobs.forEach(mob => {
-            size += 4 + 8 + 8 + 4 + 4 + 8 + 1 + 1 + 4; // Total bytes per mob
+            size += 4 + 8 + 8 + 4 + 4 + 8 + 1 + 1 + 4 + 1; // Total bytes per mob
         });
         return size;
     }
@@ -278,6 +279,9 @@ export class EntityPool {
 
             buffer.writeInt32BE(mob.maxHealth, offset);
             offset += 4;
+
+            // Is pet or no
+            buffer.writeUInt8(mob.parentEgger ? 1 : 0, offset++);
         });
 
         return buffer;

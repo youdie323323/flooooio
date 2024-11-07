@@ -31,36 +31,26 @@ export function MobOscillatingMovement<T extends new (...args: any[]) => BaseMob
             // Dont move when this is petal
             if (!isPetal(this.type)) {
                 if (this.shouldApplyAngleShake()) {
-                    this.angle += SHARED_SINE_WAVE.get(++this.beeSineWaveIndex) * (this.targetPlayer ? 3 : 1);
+                    this.angle += SHARED_SINE_WAVE.get(++this.beeSineWaveIndex) * (this.targetEntity ? 3 : 1);
                 }
 
                 // Do defensive-position move if not targetting player
-                if (!this.targetPlayer) {
-                    switch (this.type) {
-                        case MobType.BEE: {
-                            if (this.rotationCounter++ >= 400) {
-                                this.angle = getRandomAngle();
-                                this.rotationCounter = 0;
-                            }
+                if (!this.targetEntity) {
+                    if (this.rotationCounter++ >= 400) {
+                        this.angle = getRandomAngle();
+                        this.rotationCounter = 0;
+                    }
 
-                            if (!this.isMoving) {
-                                this.startMovement();
-                            } else {
-                                if (this.movementTimer >= 1) {
-                                    this.magnitude = 0;
-                                    this.isMoving = false;
-                                } else {
-                                    // TODO: ease move
-                                    this.magnitude = 255 * (this.movementTimer * 7);
-                                    this.movementTimer += MOVEMENT_DURATION;
-                                }
-                            }
-                            break;
-                        }
-                        case MobType.STARFISH:
-                        case MobType.JELLYFISH: {
-                            this.magnitude = 255 * 0.1;
-                            break;
+                    if (!this.isMoving) {
+                        this.startMovement();
+                    } else {
+                        if (this.movementTimer >= 1) {
+                            this.magnitude = 0;
+                            this.isMoving = false;
+                        } else {
+                            // TODO: ease move
+                            this.magnitude = 255 * (this.movementTimer * 5);
+                            this.movementTimer += MOVEMENT_DURATION;
                         }
                     }
                 } else {

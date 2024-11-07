@@ -6,16 +6,30 @@ import { deltaTime } from "../main";
 import { drawEntityDetail } from "./EntityDrawDetail";
 import { darkend, darkendBase } from "../utils/small";
 
+function l7() {
+    const rF = new Path2D();
+    rF.moveTo(-40, 5);
+    rF.bezierCurveTo(-40, 40, 40, 40, 40, 5);
+    rF.lineTo(40, -5);
+    rF.bezierCurveTo(40, -40, -40, -40, -40, -5);
+    rF.closePath();
+    return rF;
+}
+
+var l6 = l7();
+
 export default class EntityMob extends Entity {
     type: MobType | PetalType;
     rarity: Rarities;
     // For hp bar
     legD: number[];
+    isPet: boolean;
 
-    constructor(id: number, type: MobType | PetalType, rarity: Rarities, x: number, y: number, size: number, health: number, maxHealth: number, angle: number) {
+    constructor(id: number, type: MobType | PetalType, rarity: Rarities, x: number, y: number, size: number, health: number, maxHealth: number, angle: number, isPet: boolean) {
         super(id, x, y, size, health, maxHealth, angle);
         this.type = type;
         this.rarity = rarity;
+        this.isPet = isPet;
     }
 
     update() {
@@ -44,6 +58,8 @@ export default class EntityMob extends Entity {
             ctx.strokeStyle = this.getHurtColor(stroke);
             ctx.stroke();
         };
+
+        ctx.rotate(this.angle);
 
         switch (this.type) {
             case MobType.BEE: {
@@ -128,6 +144,54 @@ export default class EntityMob extends Entity {
                 ctx.stroke();
                 break;
             }
+            case MobType.BEETLE: {
+                ctx.save();
+                ctx.scale(this.size / 40, this.size / 40);
+                ctx.fillStyle = ctx.strokeStyle = this.getHurtColor("#333333");
+                ctx.lineCap = ctx.lineJoin = "round";
+                for (let i = 0; i < 2; i++) {
+                    const sY = i === 0 ? 1 : -1;
+                    ctx.save();
+                    ctx.translate(28, sY * 13);
+                    ctx.rotate(Math.sin(this.moveCounter * 1.24) * 0.1 * sY);
+                    ctx.beginPath();
+                    ctx.moveTo(0, sY * 10);
+                    ctx.quadraticCurveTo(25, sY * 20, 45, 0);
+                    ctx.quadraticCurveTo(20, sY * 10, 0, 0);
+
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.restore();
+                }
+                const skinColor = this.isPet ? ["#ffe667", "#d0bb55"] : ["#8f5db0", "#754a8f"];
+                ctx.fillStyle = this.getHurtColor(skinColor[0]);
+                ctx.fill(l6);
+                ctx.lineWidth = 6;
+                ctx.fillStyle = ctx.strokeStyle = this.getHurtColor(skinColor[1]);
+                ctx.stroke(l6);
+                ctx.beginPath();
+                ctx.moveTo(-21, 0);
+                ctx.quadraticCurveTo(0, -3, 21, 0);
+                ctx.lineCap = "round";
+                ctx.lineWidth = 7;
+                ctx.stroke();
+                const rS = [[-17, -13], [17, -13], [0, -17]];
+                ctx.beginPath();
+                for (let sZ = 0; sZ < 2; sZ++) {
+                    const t0 = sZ === 1 ? 1 : -1;
+                    for (let t1 = 0; t1 < rS.length; t1++) {
+                        let [t2, t3] = rS[t1];
+                        t3 *= t0;
+                        ctx.moveTo(t2, t3);
+                        ctx.arc(t2, t3, 5, 0, TWO_PI);
+                    }
+                }
+                ctx.fill();
+                ctx.fill();
+                ctx.restore();
+                break;
+            }
             case PetalType.BASIC: {
                 drawBasics("#ffffff", "#cfcfcf");
                 break;
@@ -136,7 +200,6 @@ export default class EntityMob extends Entity {
                 drawBasics("#feffc9", "#cecfa3");
                 break;
             }
-
         }
 
         ctx.restore();
@@ -147,11 +210,7 @@ export default class EntityMob extends Entity {
         let fcolor = "#ffe763";
         let scolor = darkend(fcolor, 0.1);
 
-        const radius = this.size / 30;
-
-        // Setups
-        ctx.scale(radius, radius);
-        ctx.rotate(this.angle);
+        ctx.scale(this.size / 30, this.size / 30);
 
         ctx.lineJoin = "round";
         ctx.lineCap = "round";
