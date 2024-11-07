@@ -9,9 +9,12 @@ import QuadTree from "./utils/QuadTree";
 import { mapCenterX, mapCenterY } from "./EntityChecksum";
 import { MOB_PROFILES } from "../../shared/mobProfiles";
 import { PETAL_PROFILES } from "../../shared/petalProfiles";
+import { MobType } from "../../shared/types";
 
 // Arc + stroke size
 export const FLOWER_ARC_RADIUS = 25 + (2.75 / 2);
+
+export const BUBBLE_PUSH_FACTOR = 500;
 
 export function EntityCollisionResponse<T extends new (...args: any[]) => Entity>(Base: T) {
   return class extends Base {
@@ -142,10 +145,12 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
             })) {
               const push = this.collisionRestitution(this, otherEntity);
               if (push) {
-                this.x -= push.pushX1 * 0.1;
-                this.y -= push.pushY1 * 0.1;
-                otherEntity.x += push.pushX2 * 0.1;
-                otherEntity.y += push.pushY2 * 0.1;
+                const multiplier = this.type === MobType.BUBBLE && otherEntity.parentEgger ? BUBBLE_PUSH_FACTOR : 1;
+                const multiplier2 = otherEntity.type === MobType.BUBBLE && this.parentEgger ? BUBBLE_PUSH_FACTOR : 1;
+                this.x -= push.pushX1 * multiplier2 * 0.2;
+                this.y -= push.pushY1 * multiplier2 * 0.2;
+                otherEntity.x += push.pushX2 * multiplier * 0.2;
+                otherEntity.y += push.pushY2 * multiplier * 0.2;
 
                 // Summoned mob doesnt hostile to other summoned egg
                 if (this.parentEgger && otherEntity.parentEgger) return;
@@ -246,8 +251,9 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
             })) {
               const push = this.collisionRestitution(this, otherEntity);
               if (push) {
-                this.x -= push.pushX1 * 10;
-                this.y -= push.pushY1 * 10;
+                const multiplier = otherEntity.type === MobType.BUBBLE ? BUBBLE_PUSH_FACTOR : 1;
+                this.x -= push.pushX1 * multiplier * 10;
+                this.y -= push.pushY1 * multiplier * 10;
                 otherEntity.x += push.pushX2;
                 otherEntity.y += push.pushY2;
 

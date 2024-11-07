@@ -5,7 +5,7 @@ import { pack } from 'msgpackr';
 import { MobType, PetalType } from '../shared/types';
 import * as fs from 'fs';
 import * as path from 'path';
-import { choice, getRandomMapPos, getRandomSafePosition, onPlayerDead, randomEnum } from './entity/utils/small';
+import { choice, getRandomSafePosition, annihilateClient, randomEnum } from './entity/utils/small';
 import { Rarities } from '../shared/rarities';
 import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from './entity/EntityChecksum';
 
@@ -60,7 +60,7 @@ uWS.App()
             const client = entityPool.getClient(clientId);
             setInterval(() => {
                 entityPool.addPetalOrMob(choice([MobType.BEETLE]), Rarities.MYTHIC, client.x, client.y, client);
-            }, 500);
+            }, 1000);
 
             // Lag emulation:
             // const originalSend = ws.send;
@@ -72,12 +72,7 @@ uWS.App()
             // };
 
             // Send id to client so client can knows their own id
-            try {
-                ws.send(buffer, true);
-            } catch (e) {
-                // Connection is closed, remove the client
-                entityPool.removeClient(clientId);
-            }
+            ws.send(buffer, true);
         },
         message: (ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBinary) => {
             const { clientId } = ws.getUserData();
@@ -109,20 +104,20 @@ uWS.App()
         close: (ws: uWS.WebSocket<UserData>, code, message) => {
             const { clientId } = ws.getUserData();
 
-            onPlayerDead(entityPool, entityPool.getClient(clientId), true);
+            annihilateClient(entityPool, entityPool.getClient(clientId), true);
         },
     })
     .listen(PORT, async (token) => {
         if (token) {
             console.log(`Running on port ${PORT}`);
 
-            // setInterval(() => {
-            //     const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, entityPool);
-            //     if (!randPos) {
-            //         return;
-            //     }
-            //     entityPool.addPetalOrMob(choice([MobType.BEETLE, MobType.BEE, MobType.JELLYFISH, MobType.STARFISH]), Rarities.MYTHIC, randPos.x, randPos.y);
-            // }, 1000);
+            setInterval(() => {
+                const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, entityPool);
+                if (!randPos) {
+                    return;
+                }
+                entityPool.addPetalOrMob(choice([MobType.BUBBLE]), Rarities.MYTHIC, randPos.x, randPos.y);
+            }, 10);
         } else {
             console.error(`Failed to listen on port ${PORT}`);
         }

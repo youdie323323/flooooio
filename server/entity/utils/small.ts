@@ -26,15 +26,8 @@ export function bodyDamageOrDamage(c: PetalStat | MobStat): string {
     return "bodyDamage" in c ? "bodyDamage" : "damage";
 }
 
-export function getRandomMapPos(): { x: number, y: number } {
-    return {
-        x: Math.floor(Math.random() * (10468 + 1)),
-        y: Math.floor(Math.random() * (10168 + 1))
-    };
-}
-
 // Its can called 2 times for client; onclose and ondeath
-export function onPlayerDead(poolThis: EntityPool, player: PlayerInstance, isConnectionLost = false) {
+export function annihilateClient(poolThis: EntityPool, player: PlayerInstance, isConnectionLost = false) {
     // Its throws error when using instanceof
     if (player /* player instanceof Player */) {
         // Delete all petals

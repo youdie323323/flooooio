@@ -152,7 +152,7 @@ export const MOB_PROFILES: Record<MobType, MobData> = {
         description: "It's hungry and flowers are its favorite meal.",
         baseSize: 30,
         fraction: 40,
-        rx: 42,
+        rx: 40,
         ry: 34,
         [Rarities.COMMON]: {
             health: 100,
@@ -185,6 +185,46 @@ export const MOB_PROFILES: Record<MobType, MobData> = {
         [Rarities.SUPER]: {
             health: 131200000,
             bodyDamage: 65610,
+        },
+    },
+    [MobType.BUBBLE]: {
+        name: "Bubble",
+        description: "Pop",
+        baseSize: 40,
+        fraction: 20,
+        rx: 20,
+        ry: 20,
+        [Rarities.COMMON]: {
+            health: 0.5,
+            bodyDamage: 5,
+        },
+        [Rarities.UNUSUAL]: {
+            health: 1.876,
+            bodyDamage: 15,
+        },
+        [Rarities.RARE]: {
+            health: 6.75,
+            bodyDamage: 45,
+        },
+        [Rarities.EPIC]: {
+            health: 27,
+            bodyDamage: 135,
+        },
+        [Rarities.LEGENDARY]: {
+            health: 202.5,
+            bodyDamage: 405,
+        },
+        [Rarities.MYTHIC]: {
+            health: 1215,
+            bodyDamage: 1215,
+        },
+        [Rarities.ULTRA]: {
+            health: 36500,
+            bodyDamage: 3645,
+        },
+        [Rarities.SUPER]: {
+            health: 656000,
+            bodyDamage: 10935,
         },
     },
 };

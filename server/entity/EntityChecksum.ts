@@ -1,6 +1,6 @@
 import { Entity, onUpdateTick } from "./Entity";
 import { EntityPool } from "./EntityPool";
-import { angleToRad, isPetal, onPlayerDead } from "./utils/small";
+import { angleToRad, isPetal, annihilateClient } from "./utils/small";
 import { Mob } from "./mob/Mob";
 import { Player } from "./player/Player";
 import { MOB_PROFILES } from "../../shared/mobProfiles";
@@ -63,10 +63,37 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
             if (this.health < 0) {
                 // !this.isDead will prevent call every fps
                 if (this instanceof Player && !this.isDead) {
-                    onPlayerDead(poolThis, this, false);
+                    annihilateClient(poolThis, this, false);
                 }
                 if (this instanceof Mob) {
                     poolThis.removeMob(this.id);
+                }
+            }
+
+            if (this instanceof Mob && this.parentEgger) {
+                const dx = this.parentEgger.x - this.x;
+                const dy = this.parentEgger.y - this.y;
+                const distanceToParent = Math.hypot(dx, dy);
+
+                if (distanceToParent > 5 * this.size) {
+                    this.targetEntity = null;
+
+                    const targetAngle = ((Math.atan2(dy, dx) / (Math.PI * 2)) * 255 + 255) % 255;
+
+                    let currentAngle = this.angle;
+                    while (currentAngle < 0) currentAngle += 255;
+                    currentAngle = currentAngle % 255;
+
+                    let angleDiff = targetAngle - currentAngle;
+                    if (angleDiff > 127.5) angleDiff -= 255;
+                    if (angleDiff < -127.5) angleDiff += 255;
+
+                    this.angle += angleDiff * 0.1;
+                    this.angle = ((this.angle + 255) % 255);
+
+                    this.magnitude = 255 * 4;
+                } else if (distanceToParent < 5 * this.size && !this.targetEntity) {
+                    this.magnitude = 255 * 1;
                 }
             }
 
@@ -82,14 +109,14 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                 if (distance > worldRadius) {
                     const collisionAngle = Math.atan2(dy, dx);
 
-                    if (this instanceof Mob && !this.targetEntity) {
-                        const reflectedAngleRad = 2 * collisionAngle - angleToRad(this.angle) + Math.PI;
-
-                        this.angle = ((reflectedAngleRad / (2 * Math.PI)) * 255) % 255;
-                        if (this.angle < 0) {
-                            this.angle += 256;
-                        }
-                    }
+                    // New
+                    // if (this instanceof Mob && !this.targetEntity) {
+                    //     const reflectedAngleRad = 2 * collisionAngle - angleToRad(this.angle) + Math.PI;
+                    //     this.angle = ((reflectedAngleRad / (2 * Math.PI)) * 255) % 255;
+                    //     if (this.angle < 0) {
+                    //         this.angle += 256;
+                    //     }
+                    // }
 
                     // TODO: push instead limit
                     this.x = mapCenterX + Math.cos(collisionAngle) * worldRadius;

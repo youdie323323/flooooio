@@ -28,8 +28,8 @@ export function MobOscillatingMovement<T extends new (...args: any[]) => BaseMob
                 super[onUpdateTick](poolThis);
             }
 
-            // Dont move when this is petal
-            if (!isPetal(this.type)) {
+            // Dont move when this is petal or pet
+            if (!isPetal(this.type) && this.type !== MobType.BUBBLE && !this.parentEgger) {
                 if (this.shouldApplyAngleShake()) {
                     this.angle += SHARED_SINE_WAVE.get(++this.beeSineWaveIndex) * (this.targetEntity ? 3 : 1);
                 }

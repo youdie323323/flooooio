@@ -32,6 +32,14 @@ export function findNearestEntity(me: Entity, entites: Entity[]) {
     });
 }
 
+const MOB_BEHAVIORS = {
+    [MobType.STARFISH]: 'aggressive',
+    [MobType.BEETLE]: 'aggressive',
+    [MobType.BUBBLE]: 'immobile',
+    [MobType.JELLYFISH]: 'cautious',
+    [MobType.BEE]: 'neutral'
+} as const
+
 export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(Base: T) {
     return class extends Base {
         [onUpdateTick](poolThis: EntityPool): void {
@@ -52,10 +60,8 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
 
             // Dont chase player when this is petal
             if (!isPetal(this.type)) {
-                switch (this.type) {
-                    // Aggressive (beetle, starfish)
-                    case MobType.STARFISH:
-                    case MobType.BEETLE: {
+                switch (MOB_BEHAVIORS[this.type]) {
+                    case "aggressive": {
                         let distanceToTarget = 0;
                         if (this.targetEntity) {
                             const dx = this.targetEntity.x - this.x;
@@ -73,9 +79,9 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                                 const dy = nearestTarget.y - this.y;
                                 const distance = Math.hypot(dx, dy);
 
-                                const targetAngle = ((Math.atan2(dy, dx) / (Math.PI * 2)) * 255 + 255) % 255;
-
                                 if (distance < 100 * this.size) {
+                                    const targetAngle = ((Math.atan2(dy, dx) / (Math.PI * 2)) * 255 + 255) % 255;
+
                                     let currentAngle = this.angle;
                                     while (currentAngle < 0) currentAngle += 255;
                                     currentAngle = currentAngle % 255;
@@ -87,7 +93,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                                     this.angle += angleDiff * 0.1;
                                     this.angle = ((this.angle + 255) % 255);
 
-                                    this.magnitude = 255 * 5;
+                                    this.magnitude = 255 * 4;
 
                                     this.targetEntity = nearestTarget;
                                 } else {
@@ -100,10 +106,15 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
 
                         break;
                     }
-                    // Immobile
 
-                    // Aggressive but stops move while player in sufficient distance
-                    case MobType.JELLYFISH: {
+                    // Immobile (bubble, stone)
+                    case "immobile": {
+                        this.magnitude = 0;
+                        break;
+                    }
+
+                    // Cautious (jellyfish)
+                    case "cautious": {
                         let distanceToTarget = 0;
                         if (this.targetEntity) {
                             const dx = this.targetEntity.x - this.x;
@@ -121,9 +132,9 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                                 const dy = nearestTarget.y - this.y;
                                 const distance = Math.hypot(dx, dy);
 
-                                const targetAngle = ((Math.atan2(dy, dx) / (Math.PI * 2)) * 255 + 255) % 255;
-
                                 if (distance < 100 * this.size) {
+                                    const targetAngle = ((Math.atan2(dy, dx) / (Math.PI * 2)) * 255 + 255) % 255;
+
                                     let currentAngle = this.angle;
                                     while (currentAngle < 0) currentAngle += 255;
                                     currentAngle = currentAngle % 255;
@@ -150,7 +161,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                     }
 
                     // Neutral (bee)
-                    case MobType.BEE: {
+                    case "neutral": {
                         let distanceToTarget = 0;
                         if (this.targetEntity) {
                             const dx = this.targetEntity.x - this.x;

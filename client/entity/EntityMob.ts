@@ -152,12 +152,12 @@ export default class EntityMob extends Entity {
                 for (let i = 0; i < 2; i++) {
                     const relative = i === 0 ? 1 : -1;
                     ctx.save();
-                    // Maybe relative * 10 better
-                    ctx.translate(28, relative * 9);
+                    // Maybe relative * 9 better
+                    ctx.translate(28, relative * 10);
                     ctx.rotate(Math.sin(this.moveCounter * 1.24) * 0.1 * relative);
                     ctx.beginPath();
                     ctx.moveTo(0, relative * 7);
-                    ctx.quadraticCurveTo(25, relative * 15, 40, 0);
+                    ctx.quadraticCurveTo(25, relative * 16, 40, 0);
                     ctx.quadraticCurveTo(20, relative * 6, 0, 0);
                     ctx.closePath();
                     ctx.fill();
@@ -190,6 +190,10 @@ export default class EntityMob extends Entity {
                 ctx.fill();
                 ctx.fill();
                 ctx.restore();
+                break;
+            }
+            case MobType.BUBBLE: {
+                this.drawBubble(ctx, false);
                 break;
             }
             case PetalType.BASIC: {
@@ -268,70 +272,27 @@ export default class EntityMob extends Entity {
         }
     }
 
-    drawBasic(ctx: CanvasRenderingContext2D) {
-        let bcolor = this.getSkinColor("#333333");
-        let fcolor = "#ffe763";
-        let scolor = darkend(fcolor, 0.1);
+    drawBubble(ctx: CanvasRenderingContext2D, isPetal: boolean) {
+        ctx.scale(this.size / 20, this.size / 20);
+        const oldGlobalAlpha = ctx.globalAlpha;
+        ctx.strokeStyle = ctx.fillStyle = this.getSkinColor("#ffffff");
+        ctx.globalAlpha = oldGlobalAlpha * 0.4;
 
-        const radius = this.size / 30;
-
-        // Setups
-        ctx.scale(radius, radius);
-        ctx.rotate(this.angle);
-
-        ctx.lineJoin = "round";
-        ctx.lineCap = "round";
+        ctx.save();
+        ctx.beginPath();
         ctx.lineWidth = 5;
-
-        { // Stinger
-            ctx.fillStyle = "#333333";
-            ctx.strokeStyle = this.getSkinColor(darkend("#333333", 0.1));
-            ctx.beginPath();
-            ctx.moveTo(-37, 0);
-            ctx.lineTo(-25, -9);
-            ctx.lineTo(-25, 9);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-        }
-
-        // Body
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 30, 20, 0, 0, TWO_PI);
-        ctx.fillStyle = fcolor;
-        ctx.fill();
-
-        { // Body stripes
-            ctx.save();
-            ctx.clip();
-            ctx.fillStyle = bcolor;
-            ctx.fillRect(10, -20, 10, 40);
-            ctx.fillRect(-10, -20, 10, 40);
-            ctx.fillRect(-30, -20, 10, 40);
-            ctx.restore();
-        }
-
-        // Body outline
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 30, 20, 0, 0, TWO_PI);
-        ctx.strokeStyle = scolor;
+        ctx.lineJoin = ctx.lineCap = "round";
+        ctx.arc(10, 0, 2, 0, Math.PI * 2);
         ctx.stroke();
+		ctx.closePath();
+        ctx.restore();
 
-        // Antennas
-        {
-            ctx.strokeStyle = bcolor;
-            ctx.fillStyle = bcolor;
-            ctx.lineWidth = 3;
-            for (let dir = -1; dir <= 1; dir += 2) {
-                ctx.beginPath();
-                ctx.moveTo(25, 5 * dir);
-                ctx.quadraticCurveTo(35, 5 * dir, 40, 15 * dir);
-                ctx.stroke()
-
-                ctx.beginPath();
-                ctx.arc(40, 15 * dir, 5, 0, TWO_PI);
-                ctx.fill();
-            }
-        }
+        ctx.beginPath();
+        ctx.arc(0, 0, 20, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.clip();
+        ctx.globalAlpha = oldGlobalAlpha * 0.5;
+        ctx.lineWidth = isPetal ? 8 : 3;
+        ctx.stroke();
     }
 }

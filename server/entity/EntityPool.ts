@@ -173,12 +173,7 @@ export class EntityPool {
         this.clients.forEach((_, clientId) => {
             const ws = this.getWebSocket(clientId);
             if (ws && clientId !== excludeClientId) {
-                try {
-                    ws.send(updatePacket, true);
-                } catch (e) {
-                    // Connection is closed, remove the client
-                    this.removeClient(clientId);
-                }
+                ws.send(updatePacket, true);
             }
         });
     }
