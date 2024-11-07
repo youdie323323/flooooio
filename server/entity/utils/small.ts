@@ -86,20 +86,12 @@ export function getRandomSafePosition(
 
         let isSafe = true;
 
+        // Dont spawn on player
         entityPool.getAllClients().forEach(client => {
             const dx = client.x - x;
             const dy = client.y - y;
             const distanceToClient = Math.sqrt(dx * dx + dy * dy);
             if (distanceToClient < safetyDistance + client.size) {
-                isSafe = false;
-            }
-        });
-
-        entityPool.getAllMobs().forEach(mob => {
-            const dx = mob.x - x;
-            const dy = mob.y - y;
-            const distanceToMob = Math.sqrt(dx * dx + dy * dy);
-            if (distanceToMob < safetyDistance + mob.size) {
                 isSafe = false;
             }
         });

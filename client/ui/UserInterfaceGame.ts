@@ -53,7 +53,7 @@ export default class UserInterfaceGame extends UserInterface {
     }
 
     public async onInit() {
-        this.tilesets = await this.worldManager.generateTilesets("garden");
+        this.tilesets = await this.worldManager.generateTilesets("ocean");
     }
 
     public async onExit() { }
@@ -76,7 +76,7 @@ export default class UserInterfaceGame extends UserInterface {
             player.update();
         }
 
-        this.worldManager.constructWorld(canvas, this.tilesets, "garden", 50, 250, selfPlayer.x, selfPlayer.y);
+        this.worldManager.constructWorld(canvas, this.tilesets, 50, 250, selfPlayer.x, selfPlayer.y);
 
         ctx.save();
 
@@ -96,6 +96,16 @@ export default class UserInterfaceGame extends UserInterface {
         });
 
         ctx.restore();
+
+        if ("ocean" === "ocean") {
+            ctx.save();
+
+            ctx.globalCompositeOperation = "multiply";
+            ctx.fillStyle = "#CCDBF2";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.restore();
+        }
 
         drawMutableFunctions(canvas);
 

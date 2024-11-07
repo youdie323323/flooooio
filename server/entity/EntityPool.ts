@@ -63,14 +63,14 @@ export class EntityPool {
             ws,
             slots: {
                 surface: [
-                    this.addPetalOrMob(PetalType.FASTER, Rarities.SUPER, 0, 0),
-                    this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, 0, 0),
-                    this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, 0, 0),
-                    this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, 0, 0),
-                    this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, 0, 0),
-                    this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, 0, 0),
-                    this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, 0, 0),
-                    this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, 0, 0),
+                    this.addPetalOrMob(PetalType.FASTER, Rarities.SUPER, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, randPos.x, randPos.y),
                 ].map(c => {
                     c.parentPlayer = playerInstance;
                     return c;

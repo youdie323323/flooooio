@@ -60,7 +60,7 @@ uWS.App()
             const client = entityPool.getClient(clientId);
             setInterval(() => {
                 entityPool.addPetalOrMob(choice([MobType.BEETLE]), Rarities.MYTHIC, client.x, client.y, client);
-            }, 250);
+            }, 500);
 
             // Lag emulation:
             // const originalSend = ws.send;
@@ -116,13 +116,13 @@ uWS.App()
         if (token) {
             console.log(`Running on port ${PORT}`);
 
-            setInterval(() => {
-                const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, entityPool);
-                if (!randPos) {
-                    return;
-                }
-                entityPool.addPetalOrMob(choice([MobType.BEETLE, MobType.BEE, MobType.JELLYFISH, MobType.STARFISH]), Rarities.MYTHIC, randPos.x, randPos.y);
-            }, 100);
+            // setInterval(() => {
+            //     const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, entityPool);
+            //     if (!randPos) {
+            //         return;
+            //     }
+            //     entityPool.addPetalOrMob(choice([MobType.BEETLE, MobType.BEE, MobType.JELLYFISH, MobType.STARFISH]), Rarities.MYTHIC, randPos.x, randPos.y);
+            // }, 1000);
         } else {
             console.error(`Failed to listen on port ${PORT}`);
         }

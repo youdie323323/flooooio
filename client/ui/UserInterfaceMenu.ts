@@ -99,7 +99,7 @@ export default class UserInterfaceMenu extends UserInterface {
     }
 
     public async onInit() {
-        this.tilesets = await this.worldManager.generateTilesets("garden");
+        this.tilesets = await this.worldManager.generateTilesets("ocean");
     }
 
     public async onExit() { }
@@ -117,7 +117,7 @@ export default class UserInterfaceMenu extends UserInterface {
         const canvas = this.canvas;
         const ctx = canvas.getContext("2d");
 
-        this.worldManager.constructWorldMenu(canvas, this.tilesets, "garden", this.backgroundX, this.backgroundY);
+        this.worldManager.constructWorldMenu(canvas, this.tilesets, this.backgroundX, this.backgroundY);
 
         this.backgroundX += 0.5;
         this.backgroundY += Math.sin(this.backgroundWaveStep / 20) * 0.5;
@@ -148,6 +148,16 @@ export default class UserInterfaceMenu extends UserInterface {
         });
 
         this.render();
+
+        if ("ocean" === "ocean") {
+            ctx.save();
+
+            ctx.globalCompositeOperation = "multiply";
+            ctx.fillStyle = "#CCDBF2";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.restore();
+        }
 
         requestAnimationFrame(callbackFn);
     }

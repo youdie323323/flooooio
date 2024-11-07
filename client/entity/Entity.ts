@@ -116,7 +116,7 @@ export default abstract class Entity {
         }
     }
 
-    getHurtColor(color) {
+    getSkinColor(color) {
         const rJ = 1 - this.hurtT;
         if (rJ >= 1) {
             return color;

@@ -46,9 +46,9 @@ export default class EntityPlayer extends Entity {
         let scale = this.size / 25;
         ctx.scale(scale, scale);
 
-        ctx.fillStyle = this.getHurtColor("#ffe763");
+        ctx.fillStyle = this.getSkinColor("#ffe763");
         ctx.lineWidth = 2.75;
-        ctx.strokeStyle = this.getHurtColor("#cfbb50");
+        ctx.strokeStyle = this.getSkinColor("#cfbb50");
         ctx.beginPath();
         ctx.arc(0, 0, 25, 0, TWO_PI);
         ctx.fill();

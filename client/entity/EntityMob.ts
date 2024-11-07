@@ -6,17 +6,17 @@ import { deltaTime } from "../main";
 import { drawEntityDetail } from "./EntityDrawDetail";
 import { darkend, darkendBase } from "../utils/small";
 
-function l7() {
-    const rF = new Path2D();
-    rF.moveTo(-40, 5);
-    rF.bezierCurveTo(-40, 40, 40, 40, 40, 5);
-    rF.lineTo(40, -5);
-    rF.bezierCurveTo(40, -40, -40, -40, -40, -5);
-    rF.closePath();
-    return rF;
+function createBodyPath() {
+    const p2 = new Path2D();
+    p2.moveTo(-40, 5);
+    p2.bezierCurveTo(-40, 40, 40, 40, 40, 5);
+    p2.lineTo(40, -5);
+    p2.bezierCurveTo(40, -40, -40, -40, -40, -5);
+    p2.closePath();
+    return p2;
 }
 
-var l6 = l7();
+const bodyPath = createBodyPath();
 
 export default class EntityMob extends Entity {
     type: MobType | PetalType;
@@ -53,9 +53,9 @@ export default class EntityMob extends Entity {
             ctx.scale(size, size);
             ctx.beginPath();
             ctx.arc(0, 0, 20, 0, TWO_PI);
-            ctx.fillStyle = this.getHurtColor(fill);
+            ctx.fillStyle = this.getSkinColor(fill);
             ctx.fill();
-            ctx.strokeStyle = this.getHurtColor(stroke);
+            ctx.strokeStyle = this.getSkinColor(stroke);
             ctx.stroke();
         };
 
@@ -89,10 +89,10 @@ export default class EntityMob extends Entity {
                 ctx.closePath();
                 ctx.lineCap = ctx.lineJoin = "round";
                 ctx.lineWidth = 52;
-                ctx.strokeStyle = this.getHurtColor(darkend("#9f546a", darkendBase));
+                ctx.strokeStyle = this.getSkinColor(darkend("#d0504e", darkendBase));
                 ctx.stroke();
                 ctx.lineWidth = 26;
-                ctx.strokeStyle = ctx.fillStyle = this.getHurtColor("#9f546a");
+                ctx.strokeStyle = ctx.fillStyle = this.getSkinColor("#d0504e");
                 ctx.fill();
                 ctx.stroke();
                 ctx.beginPath();
@@ -111,14 +111,14 @@ export default class EntityMob extends Entity {
                     }
                     ctx.restore();
                 }
-                ctx.fillStyle = "#a16f7f";
+                ctx.fillStyle = "#d3756b";
                 ctx.fill();
                 break;
             }
             case MobType.JELLYFISH: {
                 ctx.scale(this.size / 20, this.size / 20);
                 const sm = ctx.globalAlpha;
-                ctx.strokeStyle = ctx.fillStyle = this.getHurtColor("#ffffff");
+                ctx.strokeStyle = ctx.fillStyle = this.getSkinColor("#ffffff");
                 ctx.globalAlpha = sm * 0.6;
                 ctx.beginPath();
                 for (let uf = 0; uf < 10; uf++) {
@@ -147,29 +147,29 @@ export default class EntityMob extends Entity {
             case MobType.BEETLE: {
                 ctx.save();
                 ctx.scale(this.size / 40, this.size / 40);
-                ctx.fillStyle = ctx.strokeStyle = this.getHurtColor("#333333");
+                ctx.fillStyle = ctx.strokeStyle = this.getSkinColor("#333333");
                 ctx.lineCap = ctx.lineJoin = "round";
                 for (let i = 0; i < 2; i++) {
-                    const sY = i === 0 ? 1 : -1;
+                    const relative = i === 0 ? 1 : -1;
                     ctx.save();
-                    ctx.translate(28, sY * 13);
-                    ctx.rotate(Math.sin(this.moveCounter * 1.24) * 0.1 * sY);
+                    // Maybe relative * 10 better
+                    ctx.translate(28, relative * 9);
+                    ctx.rotate(Math.sin(this.moveCounter * 1.24) * 0.1 * relative);
                     ctx.beginPath();
-                    ctx.moveTo(0, sY * 10);
-                    ctx.quadraticCurveTo(25, sY * 20, 45, 0);
-                    ctx.quadraticCurveTo(20, sY * 10, 0, 0);
-
+                    ctx.moveTo(0, relative * 7);
+                    ctx.quadraticCurveTo(25, relative * 15, 40, 0);
+                    ctx.quadraticCurveTo(20, relative * 6, 0, 0);
                     ctx.closePath();
                     ctx.fill();
                     ctx.stroke();
                     ctx.restore();
                 }
                 const skinColor = this.isPet ? ["#ffe667", "#d0bb55"] : ["#8f5db0", "#754a8f"];
-                ctx.fillStyle = this.getHurtColor(skinColor[0]);
-                ctx.fill(l6);
+                ctx.fillStyle = this.getSkinColor(skinColor[0]);
+                ctx.fill(bodyPath);
                 ctx.lineWidth = 6;
-                ctx.fillStyle = ctx.strokeStyle = this.getHurtColor(skinColor[1]);
-                ctx.stroke(l6);
+                ctx.fillStyle = ctx.strokeStyle = this.getSkinColor(skinColor[1]);
+                ctx.stroke(bodyPath);
                 ctx.beginPath();
                 ctx.moveTo(-21, 0);
                 ctx.quadraticCurveTo(0, -3, 21, 0);
@@ -206,7 +206,7 @@ export default class EntityMob extends Entity {
     }
 
     drawBee(ctx: CanvasRenderingContext2D) {
-        let bcolor = this.getHurtColor("#333333");
+        let bcolor = this.getSkinColor("#333333");
         let fcolor = "#ffe763";
         let scolor = darkend(fcolor, 0.1);
 
@@ -218,7 +218,7 @@ export default class EntityMob extends Entity {
 
         { // Stinger
             ctx.fillStyle = "#333333";
-            ctx.strokeStyle = this.getHurtColor(darkend("#333333", 0.1));
+            ctx.strokeStyle = this.getSkinColor(darkend("#333333", 0.1));
             ctx.beginPath();
             ctx.moveTo(-37, 0);
             ctx.lineTo(-25, -9);
@@ -269,7 +269,7 @@ export default class EntityMob extends Entity {
     }
 
     drawBasic(ctx: CanvasRenderingContext2D) {
-        let bcolor = this.getHurtColor("#333333");
+        let bcolor = this.getSkinColor("#333333");
         let fcolor = "#ffe763";
         let scolor = darkend(fcolor, 0.1);
 
@@ -285,7 +285,7 @@ export default class EntityMob extends Entity {
 
         { // Stinger
             ctx.fillStyle = "#333333";
-            ctx.strokeStyle = this.getHurtColor(darkend("#333333", 0.1));
+            ctx.strokeStyle = this.getSkinColor(darkend("#333333", 0.1));
             ctx.beginPath();
             ctx.moveTo(-37, 0);
             ctx.lineTo(-25, -9);
