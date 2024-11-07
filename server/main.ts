@@ -117,7 +117,7 @@ uWS.App()
                     return;
                 }
                 entityPool.addPetalOrMob(choice([MobType.BUBBLE]), Rarities.MYTHIC, randPos.x, randPos.y);
-            }, 10);
+            }, 250);
         } else {
             console.error(`Failed to listen on port ${PORT}`);
         }

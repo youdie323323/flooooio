@@ -118,9 +118,8 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                     //     }
                     // }
 
-                    // TODO: push instead limit
-                    this.x = mapCenterX + Math.cos(collisionAngle) * worldRadius;
-                    this.y = mapCenterY + Math.sin(collisionAngle) * worldRadius;
+                    this.x = mapCenterX + Math.cos(collisionAngle) * (worldRadius - 20);
+                    this.y = mapCenterY + Math.sin(collisionAngle) * (worldRadius - 20);
                 }
             }
         }
