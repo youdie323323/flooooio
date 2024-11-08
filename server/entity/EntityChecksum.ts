@@ -5,6 +5,7 @@ import { Mob } from "./mob/Mob";
 import { Player } from "./player/Player";
 import { MOB_PROFILES } from "../../shared/mobProfiles";
 import { PETAL_PROFILES } from "../../shared/petalProfiles";
+import { USAGE_RELOAD_PETALS } from "./player/PlayerReload";
 
 export let mapRadius = 2500;
 
@@ -44,6 +45,15 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                 }
             }
 
+            if (this instanceof Player && !this.isDead) {
+                this.slots.surface.forEach((e, i) => {
+                    // Angle correction petals like egg
+                    if (e != null && poolThis.getMob(e.id) && USAGE_RELOAD_PETALS.has(e.type)) {
+                        e.angle = 0;
+                    }
+                });
+            }
+            
             // In the current version of florr.io, the pet goes to the player's position after a certain range away from the target
             // But in the florr.io wave, what is specification?
             if (this instanceof Mob && this.parentEgger && /* This condition do old florr (maybe) */ !this.targetEntity) {

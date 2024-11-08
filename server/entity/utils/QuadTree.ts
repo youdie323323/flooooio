@@ -51,10 +51,10 @@ export default class QuadTree {
         }
 
         return (
-            this.northwest!.insert(point) ||
-            this.northeast!.insert(point) ||
-            this.southwest!.insert(point) ||
-            this.southeast!.insert(point)
+            this.northwest.insert(point) ||
+            this.northeast.insert(point) ||
+            this.southwest.insert(point) ||
+            this.southeast.insert(point)
         );
     }
 
@@ -72,10 +72,10 @@ export default class QuadTree {
         }
 
         if (this.divided) {
-            found.push(...this.northwest!.query(range));
-            found.push(...this.northeast!.query(range));
-            found.push(...this.southwest!.query(range));
-            found.push(...this.southeast!.query(range));
+            found.push(...this.northwest.query(range));
+            found.push(...this.northeast.query(range));
+            found.push(...this.southwest.query(range));
+            found.push(...this.southeast.query(range));
         }
 
         return found;

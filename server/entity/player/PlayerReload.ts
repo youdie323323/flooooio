@@ -23,17 +23,23 @@ export function PlayerReload<T extends new (...args: any[]) => BasePlayer>(Base:
                 super[onUpdateTick](poolThis);
             }
 
+            const surface = this.slots.surface;
+
+            if (this.slots.bottom.length !== surface.length) {
+                this.slots.bottom.length = this.slots.cooldownsPetal.length = this.slots.cooldownsUsage.length = surface.length;
+                this.slots.cooldownsPetal = this.slots.cooldownsPetal.fill(0);
+                this.slots.cooldownsUsage = this.slots.cooldownsUsage.fill(0);
+            }
+
             // Dont reload if player is dead
             if (!this.isDead) {
                 // Respawn petal if destroyed
-                this.slots.surface.forEach((e, i) => {
+                surface.forEach((e, i) => {
                     // If e is not falsy and dont has e on mob pool, that means petal are breaked
                     // So if petal is breaked, start reloading
-                    if (
-                        e != null && !poolThis.getMob(e.id)
-                    ) {
+                    if (e != null && !poolThis.getMob(e.id)) {
                         // If summoned mob is not dead, not reloading
-                        if (e.petalSummonedMob && poolThis.getMob(e.petalSummonedMob.id)) {
+                        if (e.summonedMob && poolThis.getMob(e.summonedMob.id)) {
                             return;
                         }
                         if (this.slots.cooldownsPetal[i] === 0) {
@@ -53,28 +59,33 @@ export function PlayerReload<T extends new (...args: any[]) => BasePlayer>(Base:
                         }
                     }
                 });
-                this.slots.surface.forEach((e, i) => {
-                    if (e != null && poolThis.mobs.has(e.id) && e.isPetalEgg) {
-                        if (this.slots.cooldownsUsage[i] === 0) {
-                            const profile = PETAL_PROFILES[e.type];
-                            this.slots.cooldownsUsage[i] = Date.now() + (profile[e.rarity].usageReload * 1000);
-                        }
-                        // If cooldown elapsed
-                        else if (Date.now() >= this.slots.cooldownsUsage[i]) {
-                            const summonMob = EGG_TYPE_MAPPING[e.type];
-                            if (summonMob) {
-                                // Null means its empty slot, so no need to set null
-                                // this.slots.surface[i] = null;
-                                poolThis.removeMob(e.id);
-                                e.petalSummonedMob = poolThis.addPetalOrMob(
-                                    summonMob,
-                                    Math.max(Rarities.COMMON, Math.min(Rarities.MYTHIC, e.rarity - 1)),
-                                    e.x,
-                                    e.y,
-                                    this,
-                                );
-                                this.slots.cooldownsUsage[i] = 0;
+                surface.forEach((e, i) => {
+                    if (e != null && e.isPetalEgg) {
+                        if (poolThis.getMob(e.id)) {
+                            if (this.slots.cooldownsUsage[i] === 0) {
+                                const profile = PETAL_PROFILES[e.type];
+                                this.slots.cooldownsUsage[i] = Date.now() + (profile[e.rarity].usageReload * 1000);
                             }
+                            // If cooldown elapsed
+                            else if (Date.now() >= this.slots.cooldownsUsage[i]) {
+                                const summonMob = EGG_TYPE_MAPPING[e.type];
+                                if (summonMob) {
+                                    // Null means its empty slot, so no need to set null
+                                    // this.slots.surface[i] = null;
+                                    poolThis.removeMob(e.id);
+                                    e.summonedMob = poolThis.addPetalOrMob(
+                                        summonMob,
+                                        Math.max(Rarities.COMMON, Math.min(Rarities.MYTHIC, e.rarity - 1)),
+                                        e.x,
+                                        e.y,
+                                        this,
+                                    );
+                                    this.slots.cooldownsUsage[i] = 0;
+                                }
+                            }
+                        } else {
+                            // Reset cooldown because its breaked
+                            this.slots.cooldownsUsage[i] = 0;
                         }
                     }
                 });

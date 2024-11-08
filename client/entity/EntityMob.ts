@@ -193,7 +193,7 @@ export default class EntityMob extends Entity {
                 break;
             }
             case PetalType.BEETLE_EGG: {
-                ctx.scale(this.size / 35, this.size / 35);
+                ctx.scale(this.size / 20, this.size / 20);
                 ctx.beginPath();
                 ctx.ellipse(0, 0, 30, 40, 0, 0, TWO_PI);
                 const eggColor = ["#fff0b8", "#cfc295"];

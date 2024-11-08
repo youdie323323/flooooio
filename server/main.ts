@@ -111,18 +111,19 @@ uWS.App()
         if (token) {
             console.log(`Running on port ${PORT}`);
 
-            // setInterval(() => {
-            //     const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, entityPool);
-            //     if (!randPos) {
-            //         return;
-            //     }
-            //     entityPool.addPetalOrMob(choice([MobType.BUBBLE]), Rarities.MYTHIC, randPos.x, randPos.y);
-            // }, 10);
-            // const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, entityPool);
-            // if (!randPos) {
-            //     return;
-            // }
-            // entityPool.addPetalOrMob(choice([MobType.STARFISH]), Rarities.MYTHIC, randPos.x, randPos.y);
+            setTimeout(()=>{
+                setInterval(() => {
+                    const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, entityPool);
+                    if (!randPos) {
+                        return;
+                    }
+                    if (Math.random() > 0.01) {
+                        entityPool.addPetalOrMob(MobType.BUBBLE, Rarities.MYTHIC, randPos.x, randPos.y);
+                    } else {
+                        entityPool.addPetalOrMob(MobType.STARFISH, Rarities.MYTHIC, randPos.x, randPos.y);
+                    }
+                }, 10);
+            }, 20000)
         } else {
             console.error(`Failed to listen on port ${PORT}`);
         }

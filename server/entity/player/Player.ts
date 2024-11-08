@@ -25,6 +25,7 @@ export class BasePlayer implements Entity {
     slots: {
         surface: (MobInstance | null)[];
         bottom: (MobInstance | null)[];
+        // ID: reload
         cooldownsPetal: number[];
         cooldownsUsage: number[];
     };

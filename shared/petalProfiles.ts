@@ -125,7 +125,7 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
     [PetalType.BEETLE_EGG]: {
         name: "Beetle Egg",
         description: "Something interesting might pop out of this.",
-        fraction: 35,
+        fraction: 20,
         rx: 30,
         ry: 40,
         [Rarities.COMMON]: {

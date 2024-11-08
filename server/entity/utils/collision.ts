@@ -1,100 +1,15 @@
-interface Point {
-    x: number;
-    y: number;
-}
-
-interface Ellipse {
-    a: number;
-    b: number;
-    x: number;
-    y: number;
-    theta: number;
-}
-
-function rotatePoint(point: Point, center: Point, angle: number) {
-    const dx = point.x - center.x;
-    const dy = point.y - center.y;
-    return {
-        x: center.x + dx * Math.cos(angle) - dy * Math.sin(angle),
-        y: center.y + dx * Math.sin(angle) + dy * Math.cos(angle)
-    };
-}
-
-function interpolateEllipse(e0: Ellipse, segments: number) {
-    const points = [];
-    const δ = (2 * Math.PI) / segments;
-
-    for (let t = 0; t < 2 * Math.PI; t += δ) {
-        const x = e0.a * Math.cos(t);
-        const y = e0.b * Math.sin(t);
-
-        points.push(rotatePoint(
-            { x: x + e0.x, y: y + e0.y },
-            e0,
-            e0.theta,
-        ));
-    }
-
-    return points;
-}
-
-function lineSegmentIntersection(p1: Point, p2: Point, p3: Point, p4: Point) {
-    const dx1 = p2.x - p1.x;
-    const dy1 = p2.y - p1.y;
-    const dx2 = p4.x - p3.x;
-    const dy2 = p4.y - p3.y;
-
-    const denominator = dx1 * dy2 - dy1 * dx2;
-    if (denominator === 0) return false;
-
-    const t1 = ((p3.x - p1.x) * dy2 - (p3.y - p1.y) * dx2) / denominator;
-    const t2 = ((p1.x - p3.x) * dy1 - (p1.y - p3.y) * dx1) / -denominator;
-
-    return t1 >= 0 && t1 <= 1 && t2 >= 0 && t2 <= 1;
-}
-
-function isPointInPolygon(point: Point, polygon) {
-    let inside = false;
-    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-        const xi = polygon[i].x, yi = polygon[i].y;
-        const xj = polygon[j].x, yj = polygon[j].y;
-
-        const intersect = yi > point.y !== yj > point.y &&
-            point.x < ((xj - xi) * (point.y - yi)) / (yj - yi) + xi;
-        if (intersect) inside = !inside;
-    }
-    return inside;
-}
-
-export function isEllipseIntersecting(e1: Ellipse, e2: Ellipse, segments = 32) {
-    const points1 = interpolateEllipse(e1, segments);
-    const points2 = interpolateEllipse(e2, segments);
-
-    for (let i = 0; i < points1.length; i++) {
-        const start1 = points1[i];
-        const end1 = points1[(i + 1) % points1.length];
-
-        for (let j = 0; j < points2.length; j++) {
-            const start2 = points2[j];
-            const end2 = points2[(j + 1) % points2.length];
-
-            if (lineSegmentIntersection(start1, end1, start2, end2)) {
-                return true;
-            }
-        }
-    }
-
-    return isPointInPolygon(e1, points2) ||
-        isPointInPolygon(e2, points1);
-}
-
-/*
 // Original: https://github.com/NaokiHori/EllipsesInFlows/tree/main/docs/source/collision/data
 // https://qiita.com/NaokiHori/items/daf3fd191d51a7e682f8
 
-interface Point {
+export interface Point {
     x: number;
     y: number;
+}
+
+export interface Circle {
+    x: number;
+    y: number;
+    r: number;
 }
 
 export interface Ellipse {
@@ -105,13 +20,7 @@ export interface Ellipse {
     theta: number;
 }
 
-interface Circle {
-    x: number;
-    y: number;
-    r: number;
-}
-
-interface Evolute extends Point {
+export interface Evolute extends Point {
     r: number;
 }
 
@@ -186,7 +95,7 @@ function findNormalT(e: Ellipse, p: Point): number {
     return t;
 }
 
-export function fitCircles(e0: Ellipse, e1: Ellipse): [Circle, Circle] {
+function fitCircles(e0: Ellipse, e1: Ellipse): [Circle, Circle] {
     // Core function, fitting two circles
     let p0: Point = { x: e0.x, y: e0.y };
     let p1: Point = { x: e1.x, y: e1.y };
@@ -229,19 +138,26 @@ export function fitCircles(e0: Ellipse, e1: Ellipse): [Circle, Circle] {
     return [evolute0, evolute1];
 }
 
-export function isEllipseIntersecting(c0: Circle, c1: Circle) {
-    const dx = c1.x - c0.x;
-    const dy = c1.y - c0.y;
-    const centerDistance = Math.hypot(dx, dy);
-    const radiiSum = c0.r + c1.r;
-    return centerDistance < radiiSum;
+export function computeDelta(e0: Ellipse, e1: Ellipse): number {
+    // Compute the collision depth between two ellipses
+
+    // Get the fitted circles for both ellipses
+    const [circle0, circle1] = fitCircles(e0, e1);
+
+    // Calculate distance between circle centers
+    const dx = circle1.x - circle0.x;
+    const dy = circle1.y - circle0.y;
+    const distance = Math.hypot(dx, dy);
+
+    // Calculate delta (overlap amount)
+    // δ = r0 + r1 - d
+    // Positive delta means collision/overlap
+    // Negative delta means no collision/separation
+    const delta = circle0.r + circle1.r - distance;
+
+    return delta;
 }
 
-export function computeDelta(c0: Circle, c1: Circle) {
-    const dx = c1.x - c0.x;
-    const dy = c1.y - c0.y;
-    const centerDistance = Math.hypot(dx, dy);
-    const radiiSum = c0.r + c1.r;
-    return radiiSum - centerDistance;
+export function isColliding(delta: number): boolean {
+    return delta > 0;
 }
-*/

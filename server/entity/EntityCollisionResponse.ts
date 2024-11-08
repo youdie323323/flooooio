@@ -1,5 +1,4 @@
 import { angleToRad, bodyDamageOrDamage, isPetal } from "./utils/small";
-import { isEllipseIntersecting } from "./utils/collision";
 import { Entity, onUpdateTick } from "./Entity";
 import { EntityPool } from "./EntityPool";
 import { Mob, MobData } from "./mob/Mob";
@@ -10,6 +9,7 @@ import { mapCenterX, mapCenterY } from "./EntityChecksum";
 import { MOB_PROFILES } from "../../shared/mobProfiles";
 import { PETAL_PROFILES } from "../../shared/petalProfiles";
 import { MobType } from "../../shared/types";
+import { computeDelta, Ellipse, isColliding } from "./utils/collision";
 
 // Arc + stroke size
 export const FLOWER_ARC_RADIUS = 25 + (2.75 / 2);
@@ -32,6 +32,41 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
       });
     }
 
+    private handlePush(entity1: Entity, entity2: Entity, delta: number) {
+      delta *= 0.02
+      const dx = entity2.x - entity1.x;
+      const dy = entity2.y - entity1.y;
+      const distance = Math.hypot(dx, dy);
+
+      if (distance === 0) return;
+
+      const nx = dx / distance;
+      const ny = dy / distance;
+
+      const profile1 = entity1 instanceof Mob && (MOB_PROFILES[entity1.type] || PETAL_PROFILES[entity1.type]);
+      const profile2 = entity2 instanceof Mob && (MOB_PROFILES[entity2.type] || PETAL_PROFILES[entity2.type]);
+      const sizeFactorEntity1 = entity1 instanceof Player ? entity1.size : profile1.rx * (entity1.size / profile1.fraction);
+      const sizeFactorEntity2 = entity2 instanceof Player ? entity2.size : profile2.rx * (entity1.size / profile2.fraction);
+
+      const magnitude1 = Math.max((entity1.magnitude / 255) * sizeFactorEntity1, 1);
+      const magnitude2 = Math.max((entity2.magnitude / 255) * sizeFactorEntity2, 1);
+      const totalMagnitude = magnitude1 + magnitude2;
+
+      const pushRatio1 = (magnitude2 / totalMagnitude) * sizeFactorEntity2;
+      const pushRatio2 = (magnitude1 / totalMagnitude) * sizeFactorEntity1;
+
+      // Use delta as overlap
+      const pushX = nx * delta;
+      const pushY = ny * delta;
+
+      return {
+        pushX1: pushX * pushRatio1,
+        pushY1: pushY * pushRatio1,
+        pushX2: pushX * pushRatio2,
+        pushY2: pushY * pushRatio2
+      };
+    }
+
     private collisionRestitution(entity1: Entity, entity2: Entity) {
       const dx = entity2.x - entity1.x;
       const dy = entity2.y - entity1.y;
@@ -41,8 +76,8 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
       const getRadiusAtAngle = (entity: Entity, angle: number) => {
         const profile = entity instanceof Mob && (MOB_PROFILES[entity.type] || PETAL_PROFILES[entity.type]);
 
-        const rx = entity instanceof Player ? FLOWER_ARC_RADIUS * (entity.size / FLOWER_ARC_RADIUS) : profile.rx * (entity.size / profile.fraction);
-        const ry = entity instanceof Player ? FLOWER_ARC_RADIUS * (entity.size / FLOWER_ARC_RADIUS) : profile.ry * (entity.size / profile.fraction);
+        const rx = entity instanceof Player ? entity.size : profile.rx * (entity.size / profile.fraction);
+        const ry = entity instanceof Player ? entity.size : profile.ry * (entity.size / profile.fraction);
 
         const rotatedAngle = angle - (entity instanceof Mob ? angleToRad(entity.angle) : 0);
 
@@ -104,8 +139,8 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
       });
 
       if (this instanceof Mob) {
-        const profile = MOB_PROFILES[this.type] || PETAL_PROFILES[this.type];
-        const searchRadius = (profile.rx + profile.ry) * (this.size / profile.fraction) * 2;
+        const profile1 = MOB_PROFILES[this.type] || PETAL_PROFILES[this.type];
+        const searchRadius = (profile1.rx + profile1.ry) * (this.size / profile1.fraction) * 2;
 
         const nearby = this.quadTree.query({
           x: this.x,
@@ -118,6 +153,8 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
           const otherEntity = point.entity;
           if (this.id === otherEntity.id) return;
           if (otherEntity instanceof Mob) {
+            // TODO: Fix multiple hit
+
             // Petal dont damaged to petal
             if (isPetal(this.type) && isPetal(otherEntity.type)) return;
 
@@ -130,27 +167,34 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
 
             const profile2: MobData | PetalData = MOB_PROFILES[otherEntity.type] || PETAL_PROFILES[otherEntity.type];
 
-            if (isEllipseIntersecting({
+            const ellipse1: Ellipse = {
               x: this.x,
               y: this.y,
-              a: profile.rx * (this.size / profile.fraction),
-              b: profile.ry * (this.size / profile.fraction),
+              a: profile1.rx * (this.size / profile1.fraction),
+              b: profile1.ry * (this.size / profile1.fraction),
               theta: angleToRad(this.angle),
-            }, {
+            };
+
+            const ellipse2: Ellipse = {
               x: otherEntity.x,
               y: otherEntity.y,
               a: profile2.rx * (otherEntity.size / profile2.fraction),
               b: profile2.ry * (otherEntity.size / profile2.fraction),
               theta: angleToRad(otherEntity.angle),
-            })) {
-              const push = this.collisionRestitution(this, otherEntity);
+            };
+
+            const delta = computeDelta(ellipse1, ellipse2);
+
+            if (isColliding(delta)) {
+              const push = this.handlePush(this, otherEntity, delta);
               if (push) {
-                const multiplier = this.type === MobType.BUBBLE && otherEntity.parentEgger ? BUBBLE_PUSH_FACTOR : 1;
+                // Only pop knockback to enemie (summoned mob)
+                const multiplier1 = this.type === MobType.BUBBLE && otherEntity.parentEgger ? BUBBLE_PUSH_FACTOR : 1;
                 const multiplier2 = otherEntity.type === MobType.BUBBLE && this.parentEgger ? BUBBLE_PUSH_FACTOR : 1;
                 this.x -= push.pushX1 * multiplier2 * 0.2;
                 this.y -= push.pushY1 * multiplier2 * 0.2;
-                otherEntity.x += push.pushX2 * multiplier * 0.2;
-                otherEntity.y += push.pushY2 * multiplier * 0.2;
+                otherEntity.x += push.pushX2 * multiplier1 * 0.2;
+                otherEntity.y += push.pushY2 * multiplier1 * 0.2;
 
                 // Summoned mob doesnt hostile to other summoned egg
                 if (this.parentEgger && otherEntity.parentEgger) return;
@@ -167,7 +211,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
                   if (this.parentEgger) {
                     otherEntity.lastAttacked = this;
                   }
-                  otherEntity.health -= profile[this.rarity][bodyDamageOrDamage(profile[this.rarity])];
+                  otherEntity.health -= profile1[this.rarity][bodyDamageOrDamage(profile1[this.rarity])];
                   if (isPetal(otherEntity.type) && otherEntity.petalParent) {
                     this.lastAttacked = otherEntity.petalParent;
                   }
@@ -196,22 +240,28 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
           const otherEntity = point.entity;
           if (this.id === otherEntity.id) return;
           if (otherEntity instanceof Player) {
-            if (isEllipseIntersecting({
-              // Arc
+            const ellipse1: Ellipse = {
+              // Arc (player)
               x: this.x,
               y: this.y,
               a: this.size,
               b: this.size,
               theta: 0
-            }, {
-              // Arc
+            };
+
+            const ellipse2: Ellipse = {
+              // Arc (player)
               x: otherEntity.x,
               y: otherEntity.y,
-              a: this.size,
-              b: this.size,
+              a: otherEntity.size,
+              b: otherEntity.size,
               theta: 0
-            })) {
-              const push = this.collisionRestitution(this, otherEntity);
+            };
+
+            const delta = computeDelta(ellipse1, ellipse2);
+
+            if (isColliding(delta)) {
+              const push = this.handlePush(this, otherEntity, delta);
               if (push) {
                 const overlapPenalty = Math.hypot(push.pushX1, push.pushY1) * 2;
 
@@ -235,21 +285,27 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
 
             if (otherEntity.parentEgger) return;
 
-            if (isEllipseIntersecting({
-              // Arc
+            const ellipse1: Ellipse = {
+              // Arc (player)
               x: this.x,
               y: this.y,
               a: this.size,
               b: this.size,
               theta: 0
-            }, {
+            };
+
+            const ellipse2: Ellipse = {
               x: otherEntity.x,
               y: otherEntity.y,
               a: profile1.rx * (otherEntity.size / profile1.fraction),
               b: profile1.ry * (otherEntity.size / profile1.fraction),
               theta: angleToRad(otherEntity.angle),
-            })) {
-              const push = this.collisionRestitution(this, otherEntity);
+            };
+
+            const delta = computeDelta(ellipse1, ellipse2);
+
+            if (isColliding(delta)) {
+              const push = this.handlePush(this, otherEntity, delta);
               if (push) {
                 const multiplier = otherEntity.type === MobType.BUBBLE ? BUBBLE_PUSH_FACTOR : 1;
                 this.x -= push.pushX1 * multiplier * 10;

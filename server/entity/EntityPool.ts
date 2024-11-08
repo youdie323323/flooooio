@@ -60,7 +60,7 @@ export class EntityPool {
             // Not changing
             maxHealth: 200 * levelMultiplier,
             isDead: false,
-            nickname: "s3x",
+            nickname: "Harmagedon",
             ws,
             slots: {
                 surface: [
@@ -73,14 +73,44 @@ export class EntityPool {
                     this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
                     this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
                     this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.FASTER, Rarities.MYTHIC, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
                 ].map(c => {
                     c.parentEgger = playerInstance;
                     return c;
                 }),
-                bottom: new Array(10).fill(null),
-                cooldownsPetal: new Array(10).fill(0),
-                cooldownsUsage: new Array(10).fill(0),
+                bottom: new Array(40).fill(null),
+                cooldownsPetal: new Array(40).fill(0),
+                cooldownsUsage: new Array(40).fill(0),
             },
         });
 
@@ -121,7 +151,7 @@ export class EntityPool {
             parentEgger,
             petGoingToPlayer: false,
             isPetalEgg: USAGE_RELOAD_PETALS.has(type),
-            petalSummonedMob: null,
+            summonedMob: null,
         });
 
         this.mobs.set(mobId, mobInstance);
@@ -331,6 +361,10 @@ export class EntityPool {
         return Array.from(this.clients.values());
     }
 
+    getAllClientIds() {
+        return Array.from(this.clients.keys());
+    }
+
     getMob(id: number): MobInstance | undefined {
         return this.mobs.get(id);
     }
@@ -344,6 +378,10 @@ export class EntityPool {
 
     getAllMobs() {
         return Array.from(this.mobs.values());
+    }
+
+    getAllMobIds() {
+        return Array.from(this.mobs.keys());
     }
 
     private getWebSocket(clientId: number): uWS.WebSocket<UserData> | undefined {
