@@ -5,6 +5,7 @@ export interface PetalStat {
     damage: number;
     health: number;
     petalReload: number;
+    usageReload?: number;
     count: number;
     [key: string]: any;
 }

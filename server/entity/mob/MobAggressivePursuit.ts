@@ -60,14 +60,18 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
 
             // Dont chase player when this is petal
             if (!isPetal(this.type)) {
+                // Dont do anything while this.starfishRegeningHealth so
+                // can handle angle in MobHealthRegen.ts
+                if (this.starfishRegeningHealth) {
+                    return;
+                }
+
+                if (this.petGoingToPlayer) {
+                    return;
+                }
+
                 switch (MOB_BEHAVIORS[this.type]) {
                     case "aggressive": {
-                        // Dont do anything while this.starfishRegeningHealth so
-                        // can handle angle in MobHealthRegen.ts
-                        if (this.starfishRegeningHealth) {
-                            return;
-                        }
-
                         let distanceToTarget = 0;
                         if (this.targetEntity) {
                             const dx = this.targetEntity.x - this.x;
@@ -75,7 +79,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                             distanceToTarget = Math.hypot(dx, dy);
                         }
 
-                        // Loss player
+                        // Loss entity
                         if (this.targetEntity && distanceToTarget < 125 * this.size) {
                             this.targetEntity = null;
                         } else {
@@ -128,7 +132,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                             distanceToTarget = Math.hypot(dx, dy);
                         }
 
-                        // Loss player
+                        // Loss entity
                         if (this.targetEntity && distanceToTarget > 125 * this.size) {
                             this.targetEntity = null;
                         } else {
@@ -175,7 +179,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                             distanceToTarget = Math.hypot(dx, dy);
                         }
 
-                        // Loss player
+                        // Loss entity
                         if (this.targetEntity && distanceToTarget > 125 * this.size) {
                             this.targetEntity = null;
                         } else {

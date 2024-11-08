@@ -41,7 +41,7 @@ uWS.App()
             });
         });
     })
-    .ws('/*', { 
+    .ws('/*', {
         compression: uWS.SHARED_COMPRESSOR,
         maxPayloadLength: 16 * 1024 * 1024,
         sendPingsAutomatically: false,
@@ -57,10 +57,10 @@ uWS.App()
             buffer.writeUInt32BE(clientId, offset);
             offset += 4;
 
-            const client = entityPool.getClient(clientId);
-            setInterval(() => {
-                entityPool.addPetalOrMob(choice([MobType.BEETLE]), Rarities.MYTHIC, client.x, client.y, client);
-            }, 500);
+            // const client = entityPool.getClient(clientId);
+            // setInterval(() => {
+            //     entityPool.addPetalOrMob(choice([MobType.BEETLE]), Rarities.MYTHIC, client.x, client.y, client);
+            // }, 5000);
 
             // Lag emulation:
             // const originalSend = ws.send;
@@ -111,13 +111,18 @@ uWS.App()
         if (token) {
             console.log(`Running on port ${PORT}`);
 
-            setInterval(() => {
-                const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, entityPool);
-                if (!randPos) {
-                    return;
-                }
-                entityPool.addPetalOrMob(choice([MobType.BEE, MobType.BEETLE, MobType.JELLYFISH, MobType.STARFISH, MobType.BUBBLE]), Rarities.MYTHIC, randPos.x, randPos.y);
-            }, 100);
+            // setInterval(() => {
+            //     const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, entityPool);
+            //     if (!randPos) {
+            //         return;
+            //     }
+            //     entityPool.addPetalOrMob(choice([MobType.BUBBLE]), Rarities.MYTHIC, randPos.x, randPos.y);
+            // }, 10);
+            // const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, entityPool);
+            // if (!randPos) {
+            //     return;
+            // }
+            // entityPool.addPetalOrMob(choice([MobType.STARFISH]), Rarities.MYTHIC, randPos.x, randPos.y);
         } else {
             console.error(`Failed to listen on port ${PORT}`);
         }

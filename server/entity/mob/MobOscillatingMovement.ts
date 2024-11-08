@@ -29,13 +29,17 @@ export function MobOscillatingMovement<T extends new (...args: any[]) => BaseMob
             }
 
             // Dont move when this is petal or pet
-            if (!isPetal(this.type) && this.type !== MobType.BUBBLE && !this.parentEgger) {
+            if (!isPetal(this.type) && this.type !== MobType.BUBBLE) {
                 if (this.shouldApplyAngleShake()) {
                     this.angle += SHARED_SINE_WAVE.get(++this.beeSineWaveIndex) * (this.targetEntity ? 3 : 1);
                 }
 
                 // Do defensive-position move if not targetting player
                 if (!this.targetEntity) {
+                    if (this.petGoingToPlayer) {
+                        return;
+                    }
+
                     if (this.rotationCounter++ >= 200) {
                         this.angle = getRandomAngle();
                         this.rotationCounter = 0;
@@ -49,7 +53,7 @@ export function MobOscillatingMovement<T extends new (...args: any[]) => BaseMob
                             this.isMoving = false;
                         } else {
                             // TODO: ease move
-                            this.magnitude = 255 * (this.movementTimer * 5);
+                            this.magnitude = 255 * (this.movementTimer * 2);
                             this.movementTimer += MOVEMENT_DURATION;
                         }
                     }

@@ -11,4 +11,5 @@ export enum MobType {
 export enum PetalType {
     BASIC = 1,
     FASTER = 2,
+    BEETLE_EGG = 7,
 }

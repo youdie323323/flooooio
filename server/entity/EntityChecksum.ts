@@ -34,32 +34,6 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                 return 0;
             };
 
-            // Dont reload if player is dead
-            if (this instanceof Player && !this.isDead) {
-                // Respawn petal if destroyed
-                this.slots.surface.forEach((e, i) => {
-                    // If e is not falsy and dont has e on mob pool, that means petal are breaked
-                    // So if petal is breaked, start reloading
-                    if (e != null && !poolThis.mobs.has(e.id)) {
-                        if (this.slots.cooldowns[i] === 0) {
-                            const profile = PETAL_PROFILES[e.type];
-                            this.slots.cooldowns[i] = Date.now() + (profile[e.rarity].petalReload * 1000);
-                        }
-                        // If cooldown elapsed
-                        else if (Date.now() >= this.slots.cooldowns[i]) {
-                            this.slots.surface[i] = poolThis.addPetalOrMob(
-                                e.type,
-                                e.rarity,
-                                // Make it player coordinate so its looks like spawning from players body
-                                this.x,
-                                this.y
-                            );
-                            this.slots.cooldowns[i] = 0;
-                        }
-                    }
-                });
-            }
-
             if (this.health < 0) {
                 // !this.isDead will prevent call every fps
                 if (this instanceof Player && !this.isDead) {
@@ -70,13 +44,20 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                 }
             }
 
-            if (this instanceof Mob && this.parentEgger) {
+            // In the current version of florr.io, the pet goes to the player's position after a certain range away from the target
+            // But in the florr.io wave, what is specification?
+            if (this instanceof Mob && this.parentEgger && /* This condition do old florr (maybe) */ !this.targetEntity) {
                 const dx = this.parentEgger.x - this.x;
                 const dy = this.parentEgger.y - this.y;
                 const distanceToParent = Math.hypot(dx, dy);
 
-                if (distanceToParent > 5 * this.size) {
+                if (this.petGoingToPlayer || distanceToParent > 5 * this.size) {
                     this.targetEntity = null;
+                    if (distanceToParent < this.size) {
+                        this.petGoingToPlayer = false;
+                    } else {
+                        this.petGoingToPlayer = true;
+                    }
 
                     const targetAngle = ((Math.atan2(dy, dx) / (Math.PI * 2)) * 255 + 255) % 255;
 
@@ -92,8 +73,6 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                     this.angle = ((this.angle + 255) % 255);
 
                     this.magnitude = 255 * 4;
-                } else if (distanceToParent < 5 * this.size && !this.targetEntity) {
-                    this.magnitude = 255 * 1;
                 }
             }
 

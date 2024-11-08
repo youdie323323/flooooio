@@ -1,5 +1,3 @@
-import { angleToRad } from "./small";
-
 interface Point {
     x: number;
     y: number;
@@ -91,8 +89,6 @@ export function isEllipseIntersecting(e1: Ellipse, e2: Ellipse, segments = 32) {
 }
 
 /*
-Nvm this code not good
-
 // Original: https://github.com/NaokiHori/EllipsesInFlows/tree/main/docs/source/collision/data
 // https://qiita.com/NaokiHori/items/daf3fd191d51a7e682f8
 
@@ -241,157 +237,11 @@ export function isEllipseIntersecting(c0: Circle, c1: Circle) {
     return centerDistance < radiiSum;
 }
 
-export function getParameterδ(c0: Circle, c1: Circle) {
+export function computeDelta(c0: Circle, c1: Circle) {
     const dx = c1.x - c0.x;
     const dy = c1.y - c0.y;
     const centerDistance = Math.hypot(dx, dy);
     const radiiSum = c0.r + c1.r;
     return radiiSum - centerDistance;
-}
-
-// EntityCollisionResponse.ts
-
-import { angleToRad, bodyDamageOrDamage, isPetal } from "./utils/small";
-import { Ellipse, fitCircles, getParameterδ, isEllipseIntersecting } from "./utils/collision";
-import { Entity, onUpdateTick } from "./entity";
-import { EntityPool } from "./entityPool";
-import { Mob } from "./mob/mob";
-import { MOB_PROFILES } from "./mob/mobProfiles";
-import { PETAL_PROFILES } from "./mob/petal/petalProfiles";
-import { Player } from "./player/player";
-
-// Arc + stroke size
-export const FLOWER_ARC_RADIUS = 25 + (2.75 / 2);
-
-const KNOCKBACK_MULTIPLIER = 0.1;
-
-export function EntityCollisionResponse<T extends new (...args: any[]) => Entity>(Base: T) {
-  return class extends Base {
-    [onUpdateTick](poolThis: EntityPool): void {
-      // Call parent onUpdateTick
-      // to use multiple mixin functions
-      if (super[onUpdateTick]) {
-        super[onUpdateTick](poolThis);
-      }
-
-      if (this instanceof Mob) {
-        poolThis.mobs.forEach(otherMob => {
-          if (this.id === otherMob.id) return;
-          // Petal dont damaged to petal
-          if (isPetal(this.type) && isPetal(otherMob.type)) return;
-
-          const profile1 = MOB_PROFILES[this.type] || PETAL_PROFILES[this.type];
-          const profile2 = MOB_PROFILES[otherMob.type] || PETAL_PROFILES[otherMob.type];
-
-          const ellipse1: Ellipse = {
-            x: this.x,
-            y: this.y,
-            a: profile1.rx * (this.size / profile1.fraction),
-            b: profile1.ry * (this.size / profile1.fraction),
-            theta: angleToRad(this.angle),
-          };
-
-          const ellipse2: Ellipse = {
-            x: otherMob.x,
-            y: otherMob.y,
-            a: profile2.rx * (otherMob.size / profile2.fraction),
-            b: profile2.ry * (otherMob.size / profile2.fraction),
-            theta: angleToRad(otherMob.angle),
-          };
-
-          const [c0, c1] = fitCircles(ellipse1, ellipse2);
-
-          if (isEllipseIntersecting(c0, c1)) {
-            const δ = getParameterδ(c0, c1);
-            const thisPushMultiplier = (otherMob.size + (otherMob.magnitude / 255)) * KNOCKBACK_MULTIPLIER;
-            this.x -= δ * thisPushMultiplier;
-            this.y -= δ * thisPushMultiplier;
-            const otherMobPushMultiplier = (this.size + (this.magnitude / 255)) * KNOCKBACK_MULTIPLIER;
-            otherMob.x += δ * otherMobPushMultiplier;
-            otherMob.y += δ * otherMobPushMultiplier;
-
-            // Decrease both when either petal
-            // TODO: fix multiple hit
-            if (isPetal(this.type) || isPetal(otherMob.type)) {
-              this.health -= profile2[otherMob.rarity][bodyDamageOrDamage(profile2[otherMob.rarity])];
-              otherMob.health -= profile1[this.rarity][bodyDamageOrDamage(profile1[this.rarity])];
-            }
-          }
-        });
-      }
-
-      if (this instanceof Player && !this.isDead) {
-        poolThis.clients.forEach(otherClient => {
-          if (this.id === otherClient.id) return;
-
-          const ellipse1: Ellipse = {
-            x: this.x,
-            y: this.y,
-            a: FLOWER_ARC_RADIUS * (this.size / FLOWER_ARC_RADIUS),
-            b: FLOWER_ARC_RADIUS * (this.size / FLOWER_ARC_RADIUS),
-            theta: 0,
-          };
-
-          const ellipse2: Ellipse = {
-            x: otherClient.x,
-            y: otherClient.y,
-            a: FLOWER_ARC_RADIUS * (otherClient.size / FLOWER_ARC_RADIUS),
-            b: FLOWER_ARC_RADIUS * (otherClient.size / FLOWER_ARC_RADIUS),
-            theta: 0,
-          };
-
-          const [c0, c1] = fitCircles(ellipse1, ellipse2);
-
-          if (isEllipseIntersecting(c0, c1)) {
-            const δ = getParameterδ(c0, c1) * 0.1;
-            const thisPushMultiplier = (otherClient.size + (otherClient.magnitude / 255)) * KNOCKBACK_MULTIPLIER;
-            this.x -= δ * thisPushMultiplier;
-            this.y -= δ * thisPushMultiplier;
-            const otherMobPushMultiplier = (this.size + (this.magnitude / 255)) * KNOCKBACK_MULTIPLIER;
-            otherClient.x += δ * otherMobPushMultiplier;
-            otherClient.y += δ * otherMobPushMultiplier;
-          }
-        });
-
-        poolThis.mobs.forEach(mob => {
-          if (!isPetal(mob.type)) {
-            const profile1 = MOB_PROFILES[mob.type];
-
-            const ellipse1: Ellipse = {
-              x: this.x,
-              y: this.y,
-              a: FLOWER_ARC_RADIUS * (this.size / FLOWER_ARC_RADIUS),
-              b: FLOWER_ARC_RADIUS * (this.size / FLOWER_ARC_RADIUS),
-              theta: 0,
-            };
-  
-            const ellipse2: Ellipse = {
-              x: mob.x,
-              y: mob.y,
-              a: profile1.rx * (mob.size / profile1.fraction),
-              b: profile1.rx * (mob.size / profile1.fraction),
-              theta: angleToRad(mob.angle),
-            };
-  
-            const [c0, c1] = fitCircles(ellipse1, ellipse2);
-  
-            if (isEllipseIntersecting(c0, c1)) {
-              const δ = getParameterδ(c0, c1) * 0.1;
-              const thisPushMultiplier = (mob.size + (mob.magnitude / 255)) * KNOCKBACK_MULTIPLIER;
-              this.x -= δ * thisPushMultiplier;
-              this.y -= δ * thisPushMultiplier;
-              const otherMobPushMultiplier = (this.size + (this.magnitude / 255)) * KNOCKBACK_MULTIPLIER;
-              mob.x += δ * otherMobPushMultiplier;
-              mob.y += δ * otherMobPushMultiplier;
-
-              // profile1 is always mob, so no need to use bodyDamageOrDamage
-              this.health -= profile1[mob.rarity].bodyDamage;
-              mob.health -= this.bodyDamage;
-            }
-          }
-        });
-      }
-    }
-  };
 }
 */

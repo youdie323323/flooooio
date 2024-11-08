@@ -10,6 +10,7 @@ import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from './EntityCheck
 import { MOB_PROFILES } from '../../shared/mobProfiles';
 import { PETAL_PROFILES } from '../../shared/petalProfiles';
 import { PetalData } from './mob/petal/Petal';
+import { USAGE_RELOAD_PETALS } from './player/PlayerReload';
 
 // Define UserData for WebSocket connections
 export interface UserData {
@@ -63,20 +64,23 @@ export class EntityPool {
             ws,
             slots: {
                 surface: [
-                    this.addPetalOrMob(PetalType.FASTER, Rarities.SUPER, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BASIC, Rarities.SUPER, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
+                    this.addPetalOrMob(PetalType.FASTER, Rarities.MYTHIC, randPos.x, randPos.y),
                 ].map(c => {
-                    c.parentPlayer = playerInstance;
+                    c.parentEgger = playerInstance;
                     return c;
                 }),
-                bottom: new Array(8).fill(null),
-                cooldowns: new Array(8).fill(0),
+                bottom: new Array(10).fill(null),
+                cooldownsPetal: new Array(10).fill(0),
+                cooldownsUsage: new Array(10).fill(0),
             },
         });
 
@@ -88,7 +92,7 @@ export class EntityPool {
     }
 
     // Ill just return instance here
-    addPetalOrMob(type: MobType | PetalType, rarity: Rarities, x: number, y: number, parentEgger: PlayerInstance = null) {
+    addPetalOrMob(type: MobType | PetalType, rarity: Rarities, x: number, y: number, parentEgger: PlayerInstance = null): MobInstance {
         const mobId = generateId();
         if (this.mobs.has(mobId)) {
             return this.addPetalOrMob(type, rarity, x, y);
@@ -109,9 +113,15 @@ export class EntityPool {
             health: profile[rarity].health,
             // Not changing
             maxHealth: profile[rarity].health,
+            
             targetPlayer: null,
-            parentEgger,
+
             starfishRegeningHealth: false,
+
+            parentEgger,
+            petGoingToPlayer: false,
+            isPetalEgg: USAGE_RELOAD_PETALS.has(type),
+            petalSummonedMob: null,
         });
 
         this.mobs.set(mobId, mobInstance);

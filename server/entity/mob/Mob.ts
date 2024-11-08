@@ -29,6 +29,9 @@ class BaseMob implements Entity {
     lastAttacked: Entity | null;
 
     parentEgger: PlayerInstance | null;
+    petGoingToPlayer: boolean;
+    isPetalEgg: boolean;
+    petalSummonedMob: MobInstance | null;
 
     starfishRegeningHealth: boolean;
 }

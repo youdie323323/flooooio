@@ -152,8 +152,8 @@ export default class EntityMob extends Entity {
                 for (let i = 0; i < 2; i++) {
                     const relative = i === 0 ? 1 : -1;
                     ctx.save();
-                    // Maybe relative * 9 better
-                    ctx.translate(28, relative * 10);
+                    // Maybe relative * 10 better
+                    ctx.translate(28, relative * 11);
                     ctx.rotate(Math.sin(this.moveCounter * 1.24) * 0.1 * relative);
                     ctx.beginPath();
                     ctx.moveTo(0, relative * 7);
@@ -190,6 +190,17 @@ export default class EntityMob extends Entity {
                 ctx.fill();
                 ctx.fill();
                 ctx.restore();
+                break;
+            }
+            case PetalType.BEETLE_EGG: {
+                ctx.scale(this.size / 35, this.size / 35);
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 30, 40, 0, 0, TWO_PI);
+                const eggColor = ["#fff0b8", "#cfc295"];
+                ctx.fillStyle = this.getSkinColor(eggColor[0]);
+                ctx.fill();
+                ctx.strokeStyle = this.getSkinColor(eggColor[1]);
+                ctx.stroke();
                 break;
             }
             case MobType.BUBBLE: {

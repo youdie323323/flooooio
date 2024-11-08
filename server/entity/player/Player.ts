@@ -7,6 +7,7 @@ import { EntityChecksum } from "../EntityChecksum";
 import { MobInstance } from "../mob/Mob";
 import { PlayerPetalOrbit } from "./PlayerPetalOrbit";
 import { MoodKind } from "../../../shared/packet";
+import { PlayerReload } from "./PlayerReload";
 
 export class BasePlayer implements Entity {
     id: number;
@@ -21,11 +22,11 @@ export class BasePlayer implements Entity {
     mood: MoodKind;
     isDead: boolean;
     nickname: string;
-    
     slots: {
         surface: (MobInstance | null)[];
         bottom: (MobInstance | null)[];
-        cooldowns: number[];
+        cooldownsPetal: number[];
+        cooldownsUsage: number[];
     };
 
     ws: uWS.WebSocket<UserData>;
@@ -36,6 +37,7 @@ Player = EntityCollisionResponse(Player);
 Player = EntityLinearMovement(Player);
 // Do player mixin before checksum so petal reloads like original game (can interpolate movement)
 Player = PlayerPetalOrbit(Player);
+Player = PlayerReload(Player);
 Player = EntityChecksum(Player);
 
 type PlayerInstance = InstanceType<typeof Player>;
