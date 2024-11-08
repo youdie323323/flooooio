@@ -1,4 +1,4 @@
-import { angleToRad, isPetal } from "../utils/small";
+import { angleToRad, isPetal } from "../utils/common";
 import { Entity, onUpdateTick } from "../Entity";
 import { EntityPool } from "../EntityPool";
 import { BaseMob, Mob, MobInstance } from "./Mob";
@@ -17,7 +17,11 @@ export function MobHealthRegen<T extends new (...args: any[]) => BaseMob>(Base: 
             if (this.starfishRegeningHealth || (this.type === MobType.STARFISH && this.health < this.maxHealth / 2)) {
                 this.starfishRegeningHealth = true;
                 // Hmm maybe i shouldnt use size here
-                this.health = Math.min(this.maxHealth, this.health + (10 * this.size));
+                this.health = Math.min(this.maxHealth + 1, this.health + (10 * this.size));
+                if (this.health > this.maxHealth) {
+                    this.starfishRegeningHealth = false;
+                    return;
+                }
                 // Running away from player
                 if (this.targetEntity) {
                     const dx = this.targetEntity.x - this.x;
@@ -37,9 +41,6 @@ export function MobHealthRegen<T extends new (...args: any[]) => BaseMob>(Base: 
                     this.angle = ((this.angle + 255) % 255);
 
                     this.magnitude = 255 * 4;
-                }
-                if (this.health >= this.maxHealth) {
-                    this.starfishRegeningHealth = false;
                 }
             }
         }

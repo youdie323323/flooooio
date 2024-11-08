@@ -1,7 +1,7 @@
 import { Canvg, presets } from "canvg";
 import { ARROW_START_DISTANCE, BIOME_SVG_TILESETS } from "../constants";
 import { interpolatedMouseX, interpolatedMouseY, scaleFactor } from "../main";
-import { darkend, darkendBase } from "./small";
+import { darkend, darkendBase } from "./common";
 
 export default class TilesetManager {
     async generateTilesets<T extends keyof typeof BIOME_SVG_TILESETS>(biome: T): Promise<OffscreenCanvas[]> {

@@ -1,5 +1,5 @@
 import { MobType } from "../../../shared/types";
-import { getRandomAngle, isPetal } from "../utils/small";
+import { getRandomAngle, isPetal } from "../utils/common";
 import { onUpdateTick } from "../Entity";
 import { EntityPool } from "../EntityPool";
 import { BaseMob } from "./Mob";

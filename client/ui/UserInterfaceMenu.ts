@@ -1,4 +1,4 @@
-import { generateId } from "../../server/entity/utils/small";
+import { generateId } from "../../server/entity/utils/common";
 import { Rarities } from "../../shared/rarities";
 import { PetalType } from "../../shared/types";
 import { MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../constants";

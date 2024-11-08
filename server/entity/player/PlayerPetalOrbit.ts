@@ -6,7 +6,7 @@ import { BasePlayer } from "./Player";
 import { MobType, PetalType } from "../../../shared/types";
 import { PetalData } from "../mob/petal/Petal";
 import { PETAL_PROFILES } from "../../../shared/petalProfiles";
-import { isPetal } from "../utils/small";
+import { isPetal } from "../utils/common";
 
 const BASE_ROTATE_SPEED = 2.5;
 const LERP_FACTOR = 0.7;

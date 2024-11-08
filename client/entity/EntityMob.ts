@@ -4,7 +4,7 @@ import { MobType, PetalType } from "../../shared/types";
 import { Rarities } from "../../shared/rarities";
 import { deltaTime } from "../main";
 import { drawEntityDetail, HP_BAR_MAX_WIDTH } from "./EntityDrawDetail";
-import { darkend, darkendBase } from "../utils/small";
+import { darkend, darkendBase } from "../utils/common";
 
 function createBodyPath() {
     const p2 = new Path2D();

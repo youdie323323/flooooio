@@ -1,6 +1,6 @@
 import { Entity, onUpdateTick } from "./Entity";
 import { EntityPool } from "./EntityPool";
-import { angleToRad, isPetal, annihilateClient } from "./utils/small";
+import { angleToRad, isPetal, annihilateClient } from "./utils/common";
 import { Mob } from "./mob/Mob";
 import { Player } from "./player/Player";
 import { MOB_PROFILES } from "../../shared/mobProfiles";

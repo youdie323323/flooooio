@@ -1,4 +1,4 @@
-import { angleToRad } from "./utils/small";
+import { angleToRad } from "./utils/common";
 import { Entity, onUpdateTick } from "./Entity";
 import { EntityPool } from "./EntityPool";
 

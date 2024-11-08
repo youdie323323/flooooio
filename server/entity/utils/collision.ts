@@ -85,6 +85,7 @@ function findNormalT(e: Ellipse, p: Point): number {
             break;
         }
     }
+
     // Apply result to the other quadrants
     if (p.x < 0) {
         t = -t + Math.PI;
@@ -92,6 +93,7 @@ function findNormalT(e: Ellipse, p: Point): number {
     if (p.y < 0) {
         t = -t;
     }
+    
     return t;
 }
 
@@ -139,8 +141,6 @@ function fitCircles(e0: Ellipse, e1: Ellipse): [Circle, Circle] {
 }
 
 export function computeDelta(e0: Ellipse, e1: Ellipse): number {
-    // Compute the collision depth between two ellipses
-
     // Get the fitted circles for both ellipses
     const [circle0, circle1] = fitCircles(e0, e1);
 

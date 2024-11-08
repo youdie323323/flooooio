@@ -1,5 +1,5 @@
 import { Canvg, presets } from "canvg";
-import { darkend, darkendBase } from "../../utils/small";
+import { darkend, darkendBase } from "../../utils/common";
 
 export abstract class ComponentsButton {
     protected x: number;

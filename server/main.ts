@@ -5,7 +5,7 @@ import { pack } from 'msgpackr';
 import { MobType, PetalType } from '../shared/types';
 import * as fs from 'fs';
 import * as path from 'path';
-import { choice, getRandomSafePosition, annihilateClient, randomEnum } from './entity/utils/small';
+import { choice, getRandomSafePosition, annihilateClient, randomEnum } from './entity/utils/common';
 import { Rarities } from '../shared/rarities';
 import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from './entity/EntityChecksum';
 

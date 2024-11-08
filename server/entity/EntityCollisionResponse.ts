@@ -1,4 +1,4 @@
-import { angleToRad, bodyDamageOrDamage, isPetal } from "./utils/small";
+import { angleToRad, bodyDamageOrDamage, isPetal } from "./utils/common";
 import { Entity, onUpdateTick } from "./Entity";
 import { EntityPool } from "./EntityPool";
 import { Mob, MobData } from "./mob/Mob";
@@ -32,8 +32,9 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
       });
     }
 
-    private handlePush(entity1: Entity, entity2: Entity, delta: number) {
+    private calculatePush(entity1: Entity, entity2: Entity, delta: number) {
       delta *= 0.02
+      
       const dx = entity2.x - entity1.x;
       const dy = entity2.y - entity1.y;
       const distance = Math.hypot(dx, dy);
@@ -58,59 +59,6 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
       // Use delta as overlap
       const pushX = nx * delta;
       const pushY = ny * delta;
-
-      return {
-        pushX1: pushX * pushRatio1,
-        pushY1: pushY * pushRatio1,
-        pushX2: pushX * pushRatio2,
-        pushY2: pushY * pushRatio2
-      };
-    }
-
-    private collisionRestitution(entity1: Entity, entity2: Entity) {
-      const dx = entity2.x - entity1.x;
-      const dy = entity2.y - entity1.y;
-
-      const collisionAngle = Math.atan2(dy, dx);
-
-      const getRadiusAtAngle = (entity: Entity, angle: number) => {
-        const profile = entity instanceof Mob && (MOB_PROFILES[entity.type] || PETAL_PROFILES[entity.type]);
-
-        const rx = entity instanceof Player ? entity.size : profile.rx * (entity.size / profile.fraction);
-        const ry = entity instanceof Player ? entity.size : profile.ry * (entity.size / profile.fraction);
-
-        const rotatedAngle = angle - (entity instanceof Mob ? angleToRad(entity.angle) : 0);
-
-        return (rx * ry) / Math.sqrt(
-          Math.pow(ry * Math.cos(rotatedAngle), 2) +
-          Math.pow(rx * Math.sin(rotatedAngle), 2)
-        );
-      };
-
-      const r1 = getRadiusAtAngle(entity1, collisionAngle);
-      const r2 = getRadiusAtAngle(entity2, collisionAngle);
-
-      const distance = Math.hypot(dx, dy);
-
-      if (distance === 0) return;
-
-      const nx = dx / distance;
-      const ny = dy / distance;
-
-      const overlap = (r1 + r2 - distance) / 2;
-
-      const sizeFactorEntity1 = entity1.size / 30;
-      const sizeFactorEntity2 = entity2.size / 30;
-
-      const magnitude1 = Math.max(entity1.magnitude * sizeFactorEntity1, 1);
-      const magnitude2 = Math.max(entity2.magnitude * sizeFactorEntity2, 1);
-      const totalMagnitude = magnitude1 + magnitude2;
-
-      const pushRatio1 = (magnitude2 / totalMagnitude) * sizeFactorEntity2;
-      const pushRatio2 = (magnitude1 / totalMagnitude) * sizeFactorEntity1;
-
-      const pushX = nx * overlap;
-      const pushY = ny * overlap;
 
       return {
         pushX1: pushX * pushRatio1,
@@ -186,7 +134,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
             const delta = computeDelta(ellipse1, ellipse2);
 
             if (isColliding(delta)) {
-              const push = this.handlePush(this, otherEntity, delta);
+              const push = this.calculatePush(this, otherEntity, delta);
               if (push) {
                 // Only pop knockback to enemie (summoned mob)
                 const multiplier1 = this.type === MobType.BUBBLE && otherEntity.parentEgger ? BUBBLE_PUSH_FACTOR : 1;
@@ -261,7 +209,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
             const delta = computeDelta(ellipse1, ellipse2);
 
             if (isColliding(delta)) {
-              const push = this.handlePush(this, otherEntity, delta);
+              const push = this.calculatePush(this, otherEntity, delta);
               if (push) {
                 const overlapPenalty = Math.hypot(push.pushX1, push.pushY1) * 2;
 
@@ -305,7 +253,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
             const delta = computeDelta(ellipse1, ellipse2);
 
             if (isColliding(delta)) {
-              const push = this.handlePush(this, otherEntity, delta);
+              const push = this.calculatePush(this, otherEntity, delta);
               if (push) {
                 const multiplier = otherEntity.type === MobType.BUBBLE ? BUBBLE_PUSH_FACTOR : 1;
                 this.x -= push.pushX1 * multiplier * 10;

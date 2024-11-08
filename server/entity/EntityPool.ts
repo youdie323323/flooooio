@@ -4,7 +4,7 @@ import { MobType, PetalType } from "../../shared/types";
 import { Mob, MobInstance, MOB_SIZE_FACTOR, MobData } from "./mob/Mob";
 import { Player, PlayerInstance } from "./player/Player";
 import { onUpdateTick } from "./Entity";
-import { generateId, getRandomAngle, getRandomSafePosition, isPetal } from './utils/small';
+import { generateId, getRandomAngle, getRandomSafePosition, isPetal } from './utils/common';
 import { Rarities } from '../../shared/rarities';
 import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from './EntityChecksum';
 import { MOB_PROFILES } from '../../shared/mobProfiles';
