@@ -261,7 +261,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
                 otherEntity.x += push.pushX2;
                 otherEntity.y += push.pushY2;
 
-                // profile1 is always mob, so no need to use bodyDamageOrDamage
+                // profile1 always mob, so no need to use bodyDamageOrDamage
                 this.health -= profile1[otherEntity.rarity].bodyDamage;
                 otherEntity.health -= this.bodyDamage;
               }

@@ -1,7 +1,16 @@
 import { Canvg, presets } from "canvg";
 import { darkend, darkendBase } from "../../utils/common";
 
+export interface RelativePosition {
+    xPercent: number;
+    yPercent: number;
+    widthPercent?: number; 
+    heightPercent?: number;
+    aspectRatio?: number;  
+}
+
 export abstract class ComponentsButton {
+    protected relativePos: RelativePosition;
     protected x: number;
     protected y: number;
     protected w: number;
@@ -11,13 +20,32 @@ export abstract class ComponentsButton {
     public isPressed: boolean = false;
     public isHovered: boolean = false;
 
-    constructor(x: number, y: number, w: number, h: number, color: string, callback: () => void) {
-        this.x = x;
-        this.y = y;
-        this.w = w;
-        this.h = h;
+    constructor(relativePos: RelativePosition, color: string, callback: () => void) {
+        this.relativePos = {
+            ...relativePos,
+            aspectRatio: relativePos.aspectRatio || 1.0
+        };
         this.color = color;
         this._callback = callback;
+        this.updateAbsolutePosition(window.innerWidth, window.innerHeight);
+    }
+
+    public updateAbsolutePosition(viewportWidth: number, viewportHeight: number): void {
+        const baseSize = Math.min(viewportWidth, viewportHeight);
+        
+        if (this.relativePos.widthPercent !== undefined) {
+            this.w = baseSize * this.relativePos.widthPercent;
+            this.h = this.w / this.relativePos.aspectRatio!;
+        } else if (this.relativePos.heightPercent !== undefined) {
+            this.h = baseSize * this.relativePos.heightPercent;
+            this.w = this.h * this.relativePos.aspectRatio!;
+        } else {
+            this.w = baseSize * 0.1;
+            this.h = this.w / this.relativePos.aspectRatio!;
+        }
+
+        this.x = this.relativePos.xPercent * viewportWidth;
+        this.y = this.relativePos.yPercent * viewportHeight;
     }
 
     public isPointInside(x: number, y: number): boolean {
@@ -51,9 +79,21 @@ export abstract class ComponentsButton {
 export class ComponentsTextButton extends ComponentsButton {
     private text: string;
 
-    constructor(x: number, y: number, w: number, h: number, color: string, callback: () => void, text: string) {
-        super(x, y, w, h, color, callback);
+    constructor(relativePos: RelativePosition, color: string, callback: () => void, text: string) {
+        super(relativePos, color, callback);
         this.text = text;
+    }
+
+    private calculateFontSize(ctx: CanvasRenderingContext2D): number {
+        let fontSize = this.h * 0.6;
+        ctx.font = `${fontSize}px Ubuntu, sans-serif`;
+
+        while (ctx.measureText(this.text).width > this.w * 0.9 && fontSize > 10) {
+            fontSize -= 1;
+            ctx.font = `${fontSize}px Ubuntu, sans-serif`;
+        }
+
+        return fontSize;
     }
 
     public render(ctx: CanvasRenderingContext2D): void {
@@ -71,7 +111,8 @@ export class ComponentsTextButton extends ComponentsButton {
         ctx.closePath();
 
         // Button text
-        ctx.font = "3em Ubuntu, sans-serif";
+        const fontSize = this.calculateFontSize(ctx);
+        ctx.font = `${fontSize}px Ubuntu, sans-serif`;
         ctx.textBaseline = 'middle';
         ctx.textAlign = 'center';
         ctx.lineWidth = 6;
@@ -92,8 +133,8 @@ export class ComponentsSVGButton extends ComponentsButton {
     private svg: string;
     private svgCanvas: OffscreenCanvas | null = null;
 
-    constructor(x: number, y: number, w: number, h: number, color: string, callback: () => void, svg: string) {
-        super(x, y, w, h, color, callback);
+    constructor(relativePos: RelativePosition, color: string, callback: () => void, svg: string) {
+        super(relativePos, color, callback);
         this.svg = svg;
         this.initSVG();
     }

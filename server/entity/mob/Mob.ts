@@ -30,7 +30,7 @@ class BaseMob implements Entity {
 
     parentEgger: PlayerInstance | null;
     petGoingToPlayer: boolean;
-    isPetalEgg: boolean;
+    isUsagePetal: boolean;
     summonedMob: MobInstance | null;
 
     starfishRegeningHealth: boolean;

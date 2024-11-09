@@ -15,7 +15,8 @@ import { MoodKind } from '../../shared/mood';
 
 // Define UserData for WebSocket connections
 export interface UserData {
-    clientId: number;
+    waveRoomClientId: number;
+    waveClientId: number;
 }
 
 export const UPDATE_FPS = 60;
@@ -32,33 +33,34 @@ export class EntityPool {
 
     public startWave(roomPlayers: PlayerData[]) {
         roomPlayers.forEach(r => {
-            this.addClient(r);
+            const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this);
+            if (!randPos) {
+                return null;
+            }
+
+            this.addClient(r, randPos.x, randPos.y);
         });
+
         this.broadcastInitPacket();
 
         this.updateInterval = setInterval(() => this.update(), 1000 / UPDATE_FPS);
     }
 
-    addClient(playerData: PlayerData): PlayerInstance | null {
+    addClient(playerData: PlayerData, x: number, y: number): PlayerInstance | null {
         const clientId = generateId();
 
         // Ensure unique clientId
         if (this.getAllClients().map(v => v.id).includes(clientId)) {
-            return this.addClient(playerData);
+            return this.addClient(playerData, x, y);
         }
 
         // 100 is level
         const levelMultiplier: number = (243 ** 0.01) ** (Math.max(100, 75) - 0.5);
 
-        const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this);
-        if (!randPos) {
-            return null;
-        }
-
         const playerInstance = new Player({
             id: clientId,
-            x: randPos.x,
-            y: randPos.y,
+            x,
+            y,
             angle: 0,
             magnitude: 0,
             mood: 0,
@@ -80,29 +82,24 @@ export class EntityPool {
 
         this.clients.set(clientId, playerInstance);
 
-        playerData.ws.getUserData().clientId = clientId;
+        playerData.ws.getUserData().waveClientId = clientId;
 
         return playerInstance;
     }
 
-    addPetalOrMob(type: MobType | PetalType, rarity: Rarities, parentEgger: PlayerInstance = null): MobInstance | null {
+    addPetalOrMob(type: MobType | PetalType, rarity: Rarities, x: number, y: number, parentEgger: PlayerInstance = null): MobInstance | null {
         const mobId = generateId();
         if (this.mobs.has(mobId)) {
-            return this.addPetalOrMob(type, rarity, parentEgger);
+            return this.addPetalOrMob(type, rarity, x, y, parentEgger);
         }
 
         const profile: MobData | PetalData = MOB_PROFILES[type] || PETAL_PROFILES[type];
 
-        const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this);
-        if (!randPos) {
-            return null;
-        }
-
         const mobInstance = new Mob({
             id: mobId,
             type,
-            x: randPos.x,
-            y: randPos.y,
+            x,
+            y,
             angle: getRandomAngle(),
             magnitude: 0,
             rarity,
@@ -117,7 +114,7 @@ export class EntityPool {
 
             parentEgger,
             petGoingToPlayer: false,
-            isPetalEgg: USAGE_RELOAD_PETALS.has(type),
+            isUsagePetal: USAGE_RELOAD_PETALS.has(type),
             summonedMob: null,
         });
 
@@ -129,7 +126,13 @@ export class EntityPool {
         if (!sp) {
             return null;
         }
-        return this.addPetalOrMob(sp.type, sp.rarity);
+
+        const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this);
+        if (!randPos) {
+            return null;
+        }
+
+        return this.addPetalOrMob(sp.type, sp.rarity, randPos.x, randPos.y);
     }
 
     private update() {
@@ -330,10 +333,6 @@ export class EntityPool {
         mobsPacket.copy(buffer, offset);
 
         return buffer;
-    }
-
-    getClientId(ws: uWS.WebSocket<UserData>): number | undefined {
-        return ws.getUserData()?.clientId;
     }
 
     getClient(id: number): PlayerInstance | undefined {

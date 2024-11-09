@@ -61,9 +61,6 @@ export const mobs: Map<number, EntityMob> = new Map();
         hideElement("loading");
         showElement("errorDialog");
     }
-    
-    const data = new Uint8Array([PacketKind.CREATE_WAVE_ROOM, Biomes.GARDEN]);
-    ws.send(data);
 
     // Add all global listeners
 

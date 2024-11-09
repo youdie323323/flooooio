@@ -35,7 +35,7 @@ export default class WaveRoom {
 
     updater: NodeJS.Timeout;
 
-    constructor(biome: Biomes, creator: PlayerData, code: string) {
+    constructor(biome: Biomes, code: string) {
         this.code = code;
         this.public = false;
         this.state = WaveState.WAITING;
@@ -43,12 +43,6 @@ export default class WaveRoom {
         this.entityPool = new EntityPool();
 
         this.roomPlayers = new Array<WaveRoomPlayer>();
-        this.roomPlayers.push({
-            ...creator,
-            id: generateId(),
-            state: PlayerReadyState.UNREADY,
-            isOwner: true,
-        });
 
         this.updater = setInterval(() => this.broadcastUpdatePacket(), 1000 / ROOM_UPDATE_FPS)
     }
@@ -127,7 +121,8 @@ export default class WaveRoom {
             ...player,
             id: waveClientId,
             state: PlayerReadyState.UNREADY,
-            isOwner: false,
+            // First player is owner
+            isOwner: this.roomPlayers.length === 0,
         });
 
         return waveClientId;
@@ -148,7 +143,7 @@ export default class WaveRoom {
         };
     }
 
-    public playerChangeReadyState(id: number, state: PlayerReadyState): boolean {
+    public setPlayerReadyState(id: number, state: PlayerReadyState): boolean {
         using _disposable = this.onChangeSomething();
 
         const index = this.roomPlayers.findIndex(p => p.id === id);

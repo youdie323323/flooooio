@@ -19,7 +19,7 @@ export default class TilesetManager {
         return generatedTilesets;
     }
 
-    constructWorld(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], numGridX: number, numGridY: number, playerX: number, playerY: number) {
+    constructWorld(canvas: HTMLCanvasElement, tilesets: Awaited<ReturnType<typeof TilesetManager.prototype.generateTilesets>>, numGridX: number, numGridY: number, playerX: number, playerY: number) {
         const ctx = canvas.getContext("2d");
 
         const adjustedGridSize = 300 * scaleFactor;

@@ -49,8 +49,7 @@ export default class UserInterfaceGame extends UserInterface {
         this.worldManager = new TilesetManager();
     }
 
-    protected initializeComponents(): void {
-    }
+    protected initializeComponents(): void { }
 
     public async onInit() {
         this.tilesets = await this.worldManager.generateTilesets("ocean");

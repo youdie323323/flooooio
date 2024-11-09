@@ -6,6 +6,7 @@ export enum PacketKind {
 
     CREATE_WAVE_ROOM,
     JOIN_WAVE_ROOM,
+    WAVE_ROOM_READY,
 
     // Server
     UPDATE,

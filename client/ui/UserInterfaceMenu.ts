@@ -39,13 +39,13 @@ export default class UserInterfaceMenu extends UserInterface {
     }
 
     protected initializeComponents(): void {
-        const UI_BUTTON_GAP: number = 136;
-
         const bagButton = new ComponentsSVGButton(
-            35,
-            802,
-            110,
-            110,
+            {
+                xPercent: 0.01,
+                yPercent: 0.795 - 0.1 - 0.1,
+                heightPercent: 0.08,
+                widthPercent: 0.08,
+            },
             "#599dd8",
             () => {
                 console.log("called")
@@ -56,10 +56,12 @@ export default class UserInterfaceMenu extends UserInterface {
         this.addButton(bagButton);
 
         const craftButton = new ComponentsSVGButton(
-            35,
-            802 + UI_BUTTON_GAP,
-            110,
-            110,
+            {
+                xPercent: 0.01,
+                yPercent: 0.795 - 0.1,
+                heightPercent: 0.08,
+                widthPercent: 0.08,
+            },
             "#db9d5a",
             () => {
                 console.log("called")
@@ -70,10 +72,12 @@ export default class UserInterfaceMenu extends UserInterface {
         this.addButton(craftButton);
 
         const changelogButton = new ComponentsSVGButton(
-            35,
-            802 + UI_BUTTON_GAP + UI_BUTTON_GAP,
-            110,
-            110,
+            {
+                xPercent: 0.01,
+                yPercent: 0.795,
+                heightPercent: 0.08,
+                widthPercent: 0.08,
+            },
             "#9bb56b",
             () => {
                 console.log("called")
@@ -84,10 +88,12 @@ export default class UserInterfaceMenu extends UserInterface {
         this.addButton(changelogButton);
 
         const playButton = new ComponentsTextButton(
-            (this.canvas.width / 2) - (180 / 2),
-            (this.canvas.height / 2) - (70 / 2),
-            180,
-            70,
+            {
+                xPercent: 0.4725,
+                yPercent: 0.48,
+                widthPercent: 0.12,
+                aspectRatio: 2.5
+            },
             "#1dd129",
             async () => {
                 await this.uiManager.switchUI('game');
@@ -121,7 +127,7 @@ export default class UserInterfaceMenu extends UserInterface {
 
         this.backgroundX += 0.5;
         this.backgroundY += Math.sin(this.backgroundWaveStep / 20) * 0.5;
-        this.backgroundWaveStep += 0.075;
+        this.backgroundWaveStep += 0.08;
 
         this.backgroundEntities.forEach((v) => {
             if (v.x > canvas.width) {
@@ -144,7 +150,7 @@ export default class UserInterfaceMenu extends UserInterface {
             v.entity.x += v.z * 0.6;
             v.entity.y += Math.sin(v.waveStep / 20) * 0.5;
 
-            v.waveStep += 0.075;
+            v.waveStep += 0.08;
         });
 
         this.render();

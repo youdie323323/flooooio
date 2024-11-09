@@ -1,6 +1,7 @@
 import { Biomes } from "../../shared/biomes";
 import { PlayerData, PlayerInstance } from "../entity/player/Player";
-import WaveRoom from "./WaveRoom";
+import { generateId } from "../entity/utils/common";
+import WaveRoom, { PlayerReadyState } from "./WaveRoom";
 
 export default class WaveRoomManager {
     private waveRooms: WaveRoom[] = [];
@@ -9,7 +10,9 @@ export default class WaveRoomManager {
         let waveRoom = this.findPublicRoom(biome);
 
         if (!waveRoom) {
-            this.waveRooms.push(new WaveRoom(biome, player, this.generateCode()));
+            if (!this.createWaveRoom(player, biome)) {
+                return false;
+            }
         } else {
             if (!waveRoom.addPlayer(player)) {
                 return false;
@@ -42,8 +45,11 @@ export default class WaveRoomManager {
         return false;
     }
 
-    public createWaveRoom(player: PlayerData, biome: Biomes) {
-        this.waveRooms.push(new WaveRoom(biome, player, this.generateCode()));
+    public createWaveRoom(player: PlayerData, biome: Biomes): number | false {
+        const waveRoom = new WaveRoom(biome, this.generateCode());
+        const id = waveRoom.addPlayer(player);
+        this.waveRooms.push(waveRoom);
+        return id;
     }
 
     private findPublicRoom(biome: Biomes): WaveRoom | undefined {

@@ -59,7 +59,7 @@ export function PlayerReload<T extends new (...args: any[]) => BasePlayer>(Base:
                     }
                 });
                 surface.forEach((e, i) => {
-                    if (e != null && e.isPetalEgg) {
+                    if (e != null && e.isUsagePetal) {
                         if (poolThis.getMob(e.id)) {
                             if (this.slots.cooldownsUsage[i] === 0) {
                                 const profile = PETAL_PROFILES[e.type];

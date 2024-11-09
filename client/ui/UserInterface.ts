@@ -21,10 +21,14 @@ export default abstract class UserInterface {
         this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
         this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
         new ResizeObserver((entries) => {
-            this.canvas.width = Math.round(this.canvas.clientWidth * devicePixelRatio);
-            this.canvas.height = Math.round(this.canvas.clientHeight * devicePixelRatio);
-            this.buttons = [];
-            this.initializeComponents();
+            const width = Math.round(this.canvas.clientWidth * devicePixelRatio);
+            const height = Math.round(this.canvas.clientHeight * devicePixelRatio);
+            this.canvas.width = width;
+            this.canvas.height = height;
+
+            this.buttons.forEach(button => {
+                button.updateAbsolutePosition(width, height);
+            });
         }).observe(this.canvas);
     }
 
