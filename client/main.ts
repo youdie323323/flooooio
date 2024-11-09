@@ -276,7 +276,29 @@ export const mobs: Map<number, EntityMob> = new Map();
                 break;
             }
             case PacketKind.WAVE_UPDATE: {
-                console.log(data)
+                const waveClientCount = data.getUint8(offset++);
+   
+                for (let i = 0; i < waveClientCount; i++) {
+                    const waveClientId = data.getUint32(offset);
+                    offset += 4;
+
+                    const waveClientIsOwner = data.getUint8(offset++) === 1;
+
+                    const waveClientName = readString();
+
+                    console.log(waveClientId, waveClientIsOwner, waveClientName);
+                }
+
+                const waveCode = readString();
+
+                const waveBiome = data.getUint8(offset++) as Biomes;
+
+                const waveState = data.getUint8(offset++);
+
+                const waveIsPublic = !!data.getUint8(offset++);
+
+                console.log(waveCode, waveBiome, waveState, waveIsPublic);
+
                 break;
             }
             case PacketKind.WAVE_SELF_ID: {
