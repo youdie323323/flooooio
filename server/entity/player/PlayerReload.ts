@@ -1,6 +1,5 @@
-import { MoodKind } from "../../../shared/packet";
 import { onUpdateTick } from "../Entity";
-import { EntityPool, FPS } from "../EntityPool";
+import { EntityPool, UPDATE_FPS } from "../EntityPool";
 import { Mob } from "../mob/Mob";
 import { BasePlayer } from "./Player";
 import { MobType, PetalType } from "../../../shared/types";

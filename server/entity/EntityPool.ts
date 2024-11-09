@@ -1,23 +1,24 @@
 import uWS from 'uWebSockets.js';
-import { MoodKind, PacketKind, PacketType } from "../../shared/packet";
+import { PacketKind } from "../../shared/packet";
 import { MobType, PetalType } from "../../shared/types";
 import { Mob, MobInstance, MOB_SIZE_FACTOR, MobData } from "./mob/Mob";
-import { Player, PlayerInstance } from "./player/Player";
+import { Player, PlayerData, PlayerInstance } from "./player/Player";
 import { onUpdateTick } from "./Entity";
 import { generateId, getRandomAngle, getRandomSafePosition, isPetal } from './utils/common';
 import { Rarities } from '../../shared/rarities';
 import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from './EntityChecksum';
 import { MOB_PROFILES } from '../../shared/mobProfiles';
 import { PETAL_PROFILES } from '../../shared/petalProfiles';
-import { PetalData } from './mob/petal/Petal';
+import { PetalData, StaticPetalData } from './mob/petal/Petal';
 import { USAGE_RELOAD_PETALS } from './player/PlayerReload';
+import { MoodKind } from '../../shared/mood';
 
 // Define UserData for WebSocket connections
 export interface UserData {
     clientId: number;
 }
 
-export const FPS = 60;
+export const UPDATE_FPS = 60;
 
 export class EntityPool {
     public clients: Map<number, PlayerInstance>;
@@ -27,27 +28,34 @@ export class EntityPool {
     constructor() {
         this.clients = new Map();
         this.mobs = new Map();
-        this.updateInterval = setInterval(() => this.update(), 1000 / FPS);
     }
 
-    addClient(ws: uWS.WebSocket<UserData>): number | null {
+    public startWave(roomPlayers: PlayerData[]) {
+        roomPlayers.forEach(r => {
+            this.addClient(r);
+        });
+        this.broadcastInitPacket();
+
+        this.updateInterval = setInterval(() => this.update(), 1000 / UPDATE_FPS);
+    }
+
+    addClient(playerData: PlayerData): PlayerInstance | null {
         const clientId = generateId();
 
         // Ensure unique clientId
-        if (Array.from(this.clients.values()).map(v => v.id).includes(clientId)) {
-            return this.addClient(ws);
+        if (this.getAllClients().map(v => v.id).includes(clientId)) {
+            return this.addClient(playerData);
         }
 
         // 100 is level
         const levelMultiplier: number = (243 ** 0.01) ** (Math.max(100, 75) - 0.5);
 
-        const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, entityPool);
+        const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this);
         if (!randPos) {
             return null;
         }
 
-        const playerInstance = new Player();
-        Object.assign(playerInstance, {
+        const playerInstance = new Player({
             id: clientId,
             x: randPos.x,
             y: randPos.y,
@@ -60,82 +68,41 @@ export class EntityPool {
             // Not changing
             maxHealth: 200 * levelMultiplier,
             isDead: false,
-            nickname: "Harmagedon",
-            ws,
+            nickname: playerData.name,
+            ws: playerData.ws,
             slots: {
-                surface: [
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                    this.addPetalOrMob(PetalType.BEETLE_EGG, Rarities.ULTRA, randPos.x, randPos.y),
-                ].map(c => {
-                    c.parentEgger = playerInstance;
-                    return c;
-                }),
-                bottom: new Array(40).fill(null),
-                cooldownsPetal: new Array(40).fill(0),
-                cooldownsUsage: new Array(40).fill(0),
+                surface: playerData.slots.surface.map(c => this.staticPetalDataToReal(c)),
+                bottom: playerData.slots.bottom.map(c => this.staticPetalDataToReal(c)),
+                cooldownsPetal: new Array(playerData.slots.surface.length).fill(0),
+                cooldownsUsage: new Array(playerData.slots.surface.length).fill(0),
             },
         });
 
         this.clients.set(clientId, playerInstance);
 
-        ws.getUserData().clientId = clientId;
+        playerData.ws.getUserData().clientId = clientId;
 
-        return clientId;
+        return playerInstance;
     }
 
-    // Ill just return instance here
-    addPetalOrMob(type: MobType | PetalType, rarity: Rarities, x: number, y: number, parentEgger: PlayerInstance = null): MobInstance {
+    addPetalOrMob(type: MobType | PetalType, rarity: Rarities, parentEgger: PlayerInstance = null): MobInstance | null {
         const mobId = generateId();
         if (this.mobs.has(mobId)) {
-            return this.addPetalOrMob(type, rarity, x, y);
+            return this.addPetalOrMob(type, rarity, parentEgger);
         }
 
         const profile: MobData | PetalData = MOB_PROFILES[type] || PETAL_PROFILES[type];
 
-        const mobInstance = new Mob();
-        Object.assign(mobInstance, {
+        const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this);
+        if (!randPos) {
+            return null;
+        }
+
+        const mobInstance = new Mob({
             id: mobId,
             type,
-            x,
-            y,
+            x: randPos.x,
+            y: randPos.y,
             angle: getRandomAngle(),
             magnitude: 0,
             rarity,
@@ -143,8 +110,8 @@ export class EntityPool {
             health: profile[rarity].health,
             // Not changing
             maxHealth: profile[rarity].health,
-            
-            targetPlayer: null,
+
+            targetEntity: null,
 
             starfishRegeningHealth: false,
 
@@ -156,6 +123,13 @@ export class EntityPool {
 
         this.mobs.set(mobId, mobInstance);
         return mobInstance;
+    }
+
+    private staticPetalDataToReal(sp: StaticPetalData | null): MobInstance | null {
+        if (!sp) {
+            return null;
+        }
+        return this.addPetalOrMob(sp.type, sp.rarity);
     }
 
     private update() {
@@ -211,10 +185,26 @@ export class EntityPool {
         const updatePacket = this.createUpdatePacket();
 
         // Loop through all WebSocket connections
+        this.clients.forEach((player, clientId) => {
+            if (player?.ws && clientId !== excludeClientId) {
+                player.ws.send(updatePacket, true);
+            }
+        });
+    }
+
+    broadcastInitPacket(excludeClientId?: number) {
         this.clients.forEach((_, clientId) => {
             const ws = this.getWebSocket(clientId);
             if (ws && clientId !== excludeClientId) {
-                ws.send(updatePacket, true);
+                const buffer = Buffer.alloc(5);
+                let offset = 0;
+
+                buffer.writeUInt8(PacketKind.SELF_ID, offset++);
+
+                buffer.writeUInt32BE(clientId, offset);
+                offset += 4;
+
+                ws.send(buffer, true);
             }
         });
     }
@@ -388,5 +378,3 @@ export class EntityPool {
         return this.clients.get(clientId)?.ws;
     }
 }
-
-export const entityPool = new EntityPool();

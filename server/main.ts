@@ -1,6 +1,6 @@
 import uWS from 'uWebSockets.js';
-import { MoodKind, MOON_KIND_VALUES, PacketKind, PacketType } from '../shared/packet';
-import { entityPool, UserData } from './entity/EntityPool';
+import { PacketKind } from '../shared/packet';
+import { UserData } from './entity/EntityPool';
 import { pack } from 'msgpackr';
 import { MobType, PetalType } from '../shared/types';
 import * as fs from 'fs';
@@ -8,6 +8,25 @@ import * as path from 'path';
 import { choice, getRandomSafePosition, annihilateClient, randomEnum } from './entity/utils/common';
 import { Rarities } from '../shared/rarities';
 import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from './entity/EntityChecksum';
+import { MOON_KIND_VALUES } from '../shared/mood';
+import WaveRoomManager from './wave/WaveRoomManager';
+import { BIOME_VALUES, Biomes } from '../shared/biomes';
+import { PlayerData } from './entity/player/Player';
+
+const DEFAULT_PLAYER_DATA: Omit<PlayerData, "ws"> = {
+    name: 'hare',
+    slots: {
+        surface: [
+            {
+                type: PetalType.BASIC,
+                rarity: Rarities.MYTHIC,
+            },
+        ],
+        bottom: [
+            null,
+        ]
+    },
+};
 
 const PORT = 8080;
 const MIME_TYPES = {
@@ -17,6 +36,8 @@ const MIME_TYPES = {
     '.png': 'image/png',
     '.ico': 'image/x-icon'
 };
+
+export const waveRoomManager = new WaveRoomManager();
 
 uWS.App()
     .get('/*', (res, req) => {
@@ -47,21 +68,6 @@ uWS.App()
         sendPingsAutomatically: false,
         idleTimeout: 0,
         open: (ws: uWS.WebSocket<UserData>) => {
-            const clientId = entityPool.addClient(ws);
-
-            const buffer = Buffer.alloc(5);
-            let offset = 0;
-
-            buffer.writeUInt8(PacketKind.INIT, offset++);
-
-            buffer.writeUInt32BE(clientId, offset);
-            offset += 4;
-
-            // const client = entityPool.getClient(clientId);
-            // setInterval(() => {
-            //     entityPool.addPetalOrMob(choice([MobType.BEETLE]), Rarities.MYTHIC, client.x, client.y, client);
-            // }, 5000);
-
             // Lag emulation:
             // const originalSend = ws.send;
 
@@ -70,9 +76,6 @@ uWS.App()
             //         originalSend.apply(ws, args);
             //     }, 100);
             // };
-
-            // Send id to client so client can knows their own id
-            ws.send(buffer, true);
         },
         message: (ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBinary) => {
             const { clientId } = ws.getUserData();
@@ -83,47 +86,113 @@ uWS.App()
             switch (buffer[0]) {
                 case PacketKind.MOVE: {
                     if (buffer.length < 3) return;
-                    entityPool.updatePositionProp(clientId, buffer[1], buffer[2]);
+                    const waveRoom = waveRoomManager.findPlayerRoom(clientId);
+                    if (!waveRoom) {
+                        return;
+                    }
+
+                    waveRoom.entityPool.updatePositionProp(clientId, buffer[1], buffer[2]);
+
                     break;
                 }
                 case PacketKind.MOOD: {
                     if (buffer.length < 2) return;
+
                     if (!MOON_KIND_VALUES.includes(buffer[1])) {
                         break;
                     }
-                    entityPool.updateMood(clientId, buffer[1]);
+
+                    const waveRoom = waveRoomManager.findPlayerRoom(clientId);
+                    if (!waveRoom) {
+                        return;
+                    }
+
+                    waveRoom.entityPool.updateMood(clientId, buffer[1]);
+
                     break;
                 }
                 case PacketKind.SWAP_PETAL: {
                     if (buffer.length < 2) return;
-                    entityPool.swapPetal(clientId, buffer[1]);
+
+                    const waveRoom = waveRoomManager.findPlayerRoom(clientId);
+                    if (!waveRoom) {
+                        return;
+                    }
+
+                    waveRoom.entityPool.swapPetal(clientId, buffer[1]);
+
+                    break;
+                }
+                case PacketKind.CREATE_WAVE_ROOM: {
+                    if (buffer.length < 2) return;
+
+                    if (!BIOME_VALUES.includes(buffer[1])) {
+                        break;
+                    }
+
+                    waveRoomManager.createWaveRoom({
+                        ...DEFAULT_PLAYER_DATA,
+                        ws: ws
+                    }, buffer[1] as Biomes);
+
+                    break;
+                }
+                case PacketKind.JOIN_WAVE_ROOM: {
+                    if (buffer.length < 2) return;
+
+                    const length = buffer[1];
+                    if (buffer.length < 2 + length) return;
+
+                    const roomCode = new TextDecoder("utf-8").decode(buffer.slice(2, 2 + length));
+
+                    const idOrNullish = waveRoomManager.joinPrivateWaveRoom({
+                        ...DEFAULT_PLAYER_DATA,
+                        ws: ws
+                    }, roomCode);
+
+                    const buffer2 = Buffer.alloc(idOrNullish == false ? 1 : 5);
+                    let offset = 0;
+
+                    if (idOrNullish == false) {
+                        buffer2.writeUInt8(PacketKind.WAVE_CODE_INVALID, offset++);
+                    } else {
+                        buffer2.writeUInt8(PacketKind.WAVE_SELF_ID, offset++);
+                        buffer2.writeUInt32BE(idOrNullish, offset);
+                        offset += 4;
+                    }
+
+                    ws.send(buffer2, true)
+
                     break;
                 }
             }
         },
         close: (ws: uWS.WebSocket<UserData>, code, message) => {
             const { clientId } = ws.getUserData();
-
-            annihilateClient(entityPool, entityPool.getClient(clientId), true);
+            const waveRoom = waveRoomManager.findPlayerRoom(clientId);
+            if (!waveRoom) {
+                return;
+            }
+            annihilateClient(waveRoom.entityPool, waveRoom.entityPool.getClient(clientId), true);
         },
     })
     .listen(PORT, async (token) => {
         if (token) {
             console.log(`Running on port ${PORT}`);
 
-            setTimeout(()=>{
-                setInterval(() => {
-                    const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, entityPool);
-                    if (!randPos) {
-                        return;
-                    }
-                    if (Math.random() > 0.01) {
-                        entityPool.addPetalOrMob(MobType.BUBBLE, Rarities.MYTHIC, randPos.x, randPos.y);
-                    } else {
-                        entityPool.addPetalOrMob(MobType.STARFISH, Rarities.MYTHIC, randPos.x, randPos.y);
-                    }
-                }, 10);
-            }, 20000)
+            // setTimeout(() => {
+            //     setInterval(() => {
+            //         const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, entityPool);
+            //         if (!randPos) {
+            //             return;
+            //         }
+            //         if (Math.random() > 0.01) {
+            //             entityPool.addPetalOrMob(MobType.BUBBLE, Rarities.MYTHIC, randPos.x, randPos.y);
+            //         } else {
+            //             entityPool.addPetalOrMob(choice([MobType.BEE, MobType.BEETLE, MobType.JELLYFISH, MobType.STARFISH]), Rarities.MYTHIC, randPos.x, randPos.y);
+            //         }
+            //     }, 5);
+            // }, 20000)
         } else {
             console.error(`Failed to listen on port ${PORT}`);
         }

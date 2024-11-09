@@ -9,7 +9,7 @@ const MOVEMENT_DURATION = 1 / 150;
 
 export function MobOscillatingMovement<T extends new (...args: any[]) => BaseMob>(Base: T) {
     return class extends Base {
-        private beeSineWaveIndex: number = -1;
+        private sineWaveIndex: number = -1;
         private movementTimer: number = 0;
         private rotationCounter: number = 0;
         private isMoving: boolean = false;
@@ -31,7 +31,7 @@ export function MobOscillatingMovement<T extends new (...args: any[]) => BaseMob
             // Dont move when this is petal or pet
             if (!isPetal(this.type) && this.type !== MobType.BUBBLE) {
                 if (this.shouldApplyAngleShake()) {
-                    this.angle += SHARED_SINE_WAVE.get(++this.beeSineWaveIndex) * (this.targetEntity ? 3 : 1);
+                    this.angle += SHARED_SINE_WAVE.get(++this.sineWaveIndex) * (this.targetEntity ? 3 : 1);
                 }
 
                 // Do defensive-position move if not targetting player

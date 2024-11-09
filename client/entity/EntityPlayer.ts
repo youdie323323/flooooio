@@ -1,8 +1,8 @@
 import { deltaTime } from "../main";
 import { TWO_PI } from "../constants";
 import Entity from "./Entity";
-import { MoodKind } from "../../shared/packet";
 import { drawEntityDetail } from "./EntityDrawDetail";
+import { MoodKind } from "../../shared/mood";
 
 export default class EntityPlayer extends Entity {
     angryT: number;

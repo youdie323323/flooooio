@@ -19,33 +19,6 @@ export default class TilesetManager {
         return generatedTilesets;
     }
 
-    /*
-const ctx = canvas.getContext("2d");
-
-ctx.save();
-ctx.fillStyle = darkend("#547db3", darkendBase);
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-ctx.restore();
-
-ctx.save();
-ctx.beginPath();
-
-const adjustedGridSize = 300 * scaleFactor;
-
-ctx.arc(
-    30 / 2 * adjustedGridSize - (playerX * scaleFactor) + canvas.width / 2
-    - Math.floor(numGridX / 30) * 30 * scaleFactor,
-    (30 / 2 * adjustedGridSize - (playerY * scaleFactor) + canvas.height / 2
-    - Math.floor(numGridY / 30) * 30 * scaleFactor) + (210 * scaleFactor),
-    ((4.985 * (30 * 30)) - 2500) * scaleFactor, 0, Math.PI * 2,
-);
-ctx.clip();
-
-ctx.fillStyle = "#547db3";
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-ctx.restore();
-*/
     constructWorld(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], numGridX: number, numGridY: number, playerX: number, playerY: number) {
         const ctx = canvas.getContext("2d");
 

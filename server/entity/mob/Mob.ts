@@ -34,6 +34,10 @@ class BaseMob implements Entity {
     summonedMob: MobInstance | null;
 
     starfishRegeningHealth: boolean;
+
+    constructor(source: Partial<BaseMob>) {
+        Object.assign(this, source);
+    }
 }
 
 let Mob = BaseMob;

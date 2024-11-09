@@ -4,20 +4,13 @@ export enum PacketKind {
     MOOD,
     SWAP_PETAL,
 
+    CREATE_WAVE_ROOM,
+    JOIN_WAVE_ROOM,
+
     // Server
     UPDATE,
-    INIT,
-}
-
-export enum MoodKind {
-    NORMAL,
-    ANGRY,
-    SAD,
-}
-
-export const MOON_KIND_VALUES = Object.values(MoodKind);
-
-export interface PacketType {
-    type: PacketKind;
-    [key: string]: any;
+    WAVE_UPDATE,
+    WAVE_SELF_ID,
+    WAVE_CODE_INVALID,
+    SELF_ID,
 }

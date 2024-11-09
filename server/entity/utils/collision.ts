@@ -65,7 +65,7 @@ function findNormalT(e: Ellipse, p: Point): number {
     // and the target point p gives a normal vector to the given ellipse
     let t = 0.25 * Math.PI;
 
-    while (true) {
+    for (; ;) {
         const xe = e.a * Math.cos(t);
         const ye = e.b * Math.sin(t);
         const evolute = computeEvolute(e, t);
@@ -93,7 +93,7 @@ function findNormalT(e: Ellipse, p: Point): number {
     if (p.y < 0) {
         t = -t;
     }
-    
+
     return t;
 }
 

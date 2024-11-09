@@ -27,3 +27,8 @@ export interface PetalData {
     [Rarities.ULTRA]: PetalStat;
     [Rarities.SUPER]: PetalStat;
 }
+
+export interface StaticPetalData {
+    type: PetalType;
+    rarity: Rarities;
+}

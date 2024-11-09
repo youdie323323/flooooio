@@ -32,12 +32,19 @@ export function findNearestEntity(me: Entity, entites: Entity[]) {
     });
 }
 
-const MOB_BEHAVIORS = {
-    [MobType.STARFISH]: 'aggressive',
-    [MobType.BEETLE]: 'aggressive',
-    [MobType.BUBBLE]: 'immobile',
-    [MobType.JELLYFISH]: 'cautious',
-    [MobType.BEE]: 'neutral'
+enum MobBehaviors {
+    AGGRESSIVE,
+    IMMOBILE,
+    CAUTIONS,
+    NEUTRAL,
+}
+
+const MOB_BEHAVIORS: Record<MobType, MobBehaviors> = {
+    [MobType.STARFISH]: MobBehaviors.AGGRESSIVE,
+    [MobType.BEETLE]: MobBehaviors.AGGRESSIVE,
+    [MobType.BUBBLE]: MobBehaviors.IMMOBILE,
+    [MobType.JELLYFISH]: MobBehaviors.CAUTIONS,
+    [MobType.BEE]: MobBehaviors.NEUTRAL
 } as const
 
 export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(Base: T) {
@@ -71,7 +78,8 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                 }
 
                 switch (MOB_BEHAVIORS[this.type]) {
-                    case "aggressive": {
+                    // Aggressive
+                    case MobBehaviors.AGGRESSIVE: {
                         let distanceToTarget = 0;
                         if (this.targetEntity) {
                             const dx = this.targetEntity.x - this.x;
@@ -118,13 +126,13 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                     }
 
                     // Immobile (bubble, stone)
-                    case "immobile": {
+                    case MobBehaviors.IMMOBILE: {
                         this.magnitude = 0;
                         break;
                     }
 
                     // Cautious (jellyfish)
-                    case "cautious": {
+                    case MobBehaviors.CAUTIONS: {
                         let distanceToTarget = 0;
                         if (this.targetEntity) {
                             const dx = this.targetEntity.x - this.x;
@@ -171,7 +179,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                     }
 
                     // Neutral (bee)
-                    case "neutral": {
+                    case MobBehaviors.NEUTRAL: {
                         let distanceToTarget = 0;
                         if (this.targetEntity) {
                             const dx = this.targetEntity.x - this.x;

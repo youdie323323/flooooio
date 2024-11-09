@@ -1,4 +1,4 @@
-import { MoodKind, PacketKind } from "../shared/packet";
+import { PacketKind } from "../shared/packet";
 import { STANDARD_WIDTH, STANDARD_HEIGHT, TWO_PI } from "./constants";
 import EntityPlayer from "./entity/EntityPlayer";
 import CameraController from "./utils/CameraController";
@@ -6,6 +6,8 @@ import EntityMob from "./entity/EntityMob";
 import { interpolate } from "./utils/Interpolator";
 import { Rarities } from "../shared/rarities";
 import { UserInterfaceManager } from "./ui/UserInterfaceManager";
+import { MoodKind } from "../shared/mood";
+import { Biomes } from "../shared/biomes";
 
 export let lastTimestamp = Date.now();
 export let deltaTime = 0;
@@ -21,6 +23,7 @@ export let targetY = 0;
 export let scaleFactor = 1;
 
 export let selfId = -1;
+export let waveSelfId = -1;
 export const players: Map<number, EntityPlayer> = new Map();
 export const mobs: Map<number, EntityMob> = new Map();
 
@@ -58,6 +61,9 @@ export const mobs: Map<number, EntityMob> = new Map();
         hideElement("loading");
         showElement("errorDialog");
     }
+    
+    const data = new Uint8Array([PacketKind.CREATE_WAVE_ROOM, Biomes.GARDEN]);
+    ws.send(data);
 
     // Add all global listeners
 
@@ -116,9 +122,10 @@ export const mobs: Map<number, EntityMob> = new Map();
         });
     }
 
+    const textDecoder = new TextDecoder("utf-8");
+
     ws.onmessage = (event) => {
-        const textDecoder =  new TextDecoder("utf-8");
-        function readString(): string {
+        const readString = (): string => {
             const len = data.getUint8(offset++);
             const buffers = new Uint8Array(data.buffer, offset, len);
             const string = textDecoder.decode(buffers);
@@ -130,7 +137,7 @@ export const mobs: Map<number, EntityMob> = new Map();
         let offset = 0;
         const kind = data.getUint8(offset++);
         switch (kind) {
-            case PacketKind.INIT: {
+            case PacketKind.SELF_ID: {
                 selfId = data.getUint32(offset);
                 break;
             }
@@ -266,6 +273,18 @@ export const mobs: Map<number, EntityMob> = new Map();
                     }
                 });
 
+                break;
+            }
+            case PacketKind.WAVE_UPDATE: {
+                console.log(data)
+                break;
+            }
+            case PacketKind.WAVE_SELF_ID: {
+                waveSelfId = data.getUint32(offset);
+                break;
+            }
+            case PacketKind.WAVE_CODE_INVALID: {
+                alert("Code invalid!");
                 break;
             }
         }

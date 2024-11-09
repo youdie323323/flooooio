@@ -16,4 +16,4 @@ export const SHARED_SINE_WAVE = {
     get(index: number): number {
         return this.table[index % this.table.length];
     }
-};
+} as const;

@@ -6,10 +6,13 @@ import { UserData } from "../EntityPool";
 import { EntityChecksum } from "../EntityChecksum";
 import { MobInstance } from "../mob/Mob";
 import { PlayerPetalOrbit } from "./PlayerPetalOrbit";
-import { MoodKind } from "../../../shared/packet";
 import { PlayerReload } from "./PlayerReload";
+import { MoodKind } from "../../../shared/mood";
+import { StaticPetalData } from "../mob/petal/Petal";
 
-export class BasePlayer implements Entity {
+export type MaybeEmptySlot<T> = T | null;
+
+class BasePlayer implements Entity {
     id: number;
     x: number;
     y: number;
@@ -23,14 +26,17 @@ export class BasePlayer implements Entity {
     isDead: boolean;
     nickname: string;
     slots: {
-        surface: (MobInstance | null)[];
-        bottom: (MobInstance | null)[];
-        // ID: reload
+        surface: MaybeEmptySlot<MobInstance>[];
+        bottom: MaybeEmptySlot<MobInstance>[];
         cooldownsPetal: number[];
         cooldownsUsage: number[];
     };
 
     ws: uWS.WebSocket<UserData>;
+
+    constructor(source: Partial<BasePlayer>) {
+        Object.assign(this, source);
+    }
 }
 
 let Player = BasePlayer;
@@ -43,4 +49,14 @@ Player = EntityChecksum(Player);
 
 type PlayerInstance = InstanceType<typeof Player>;
 
-export { Player, PlayerInstance };
+interface PlayerData {
+    name: string;
+    slots: {
+        surface: MaybeEmptySlot<StaticPetalData>[];
+        bottom: MaybeEmptySlot<StaticPetalData>[];
+    };
+
+    ws: uWS.WebSocket<UserData>;
+}
+
+export { Player, PlayerInstance, BasePlayer, PlayerData };
