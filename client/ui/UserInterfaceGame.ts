@@ -1,7 +1,7 @@
 import { ARROW_START_DISTANCE, MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../constants";
 import EntityMob from "../entity/EntityMob";
 import { players, selfId, mobs, scaleFactor, interpolatedMouseX, interpolatedMouseY } from "../main";
-import TilesetManager from "../utils/WorldManager";
+import TilesetManager from "../common/WorldManager";
 import { ComponentsSVGButton, ComponentsTextButton } from "./components/ComponentButton";
 import UserInterface from "./UserInterface";
 

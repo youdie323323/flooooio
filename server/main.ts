@@ -5,21 +5,23 @@ import { pack } from 'msgpackr';
 import { MobType, PetalType } from '../shared/types';
 import * as fs from 'fs';
 import * as path from 'path';
-import { choice, getRandomSafePosition, annihilateClient, randomEnum } from './entity/common/common';
-import { Rarities } from '../shared/rarities';
-import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from './entity/EntityChecksum';
 import { MOON_KIND_VALUES } from '../shared/mood';
 import WaveRoomManager from './wave/WaveRoomManager';
 import { BIOME_VALUES, Biomes } from '../shared/biomes';
 import { PlayerData } from './entity/player/Player';
 import { PlayerReadyState, WaveRoomVisibleState } from './wave/WaveRoom';
+import { Logger } from './logger/Logger';
+import { Mob } from './entity/mob/Mob';
+import { Rarities } from '../shared/rarities';
 
 const DEFAULT_PLAYER_DATA: Omit<PlayerData, "ws"> = {
     name: 'hare',
     slots: {
-        surface: Array(8 * 4).fill({
-            type: PetalType.BASIC,
-            rarity: Rarities.SUPER,
+        surface: Array.from({ length: 8 }, () => {
+            return {
+                type: PetalType.BEETLE_EGG,
+                rarity: Rarities.ULTRA,
+            };
         }),
         bottom: [
             null,
@@ -36,9 +38,17 @@ const MIME_TYPES = {
     '.ico': 'image/x-icon'
 };
 
+// Define wave room manager
 const waveRoomManager = new WaveRoomManager();
 
-function handleWebSocketMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBinary: any) {
+/**
+ * Global logger instance.
+ */
+export const logger = new Logger();
+
+logger.info("App started");
+
+function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBinary: any) {
     const buffer = new Uint8Array(message);
     if (buffer.length < 1 || !isBinary) return;
 
@@ -48,130 +58,105 @@ function handleWebSocketMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffe
     const { waveRoomClientId, waveClientId } = userData;
 
     switch (buffer[0]) {
-        case PacketKind.MOVE:
-            handleMovePacket(buffer, waveRoomClientId, waveClientId);
+        case PacketKind.MOVE: {
+            if (buffer.length !== 3) return;
+
+            const waveRoom = waveRoomManager.findPlayerRoom(waveRoomClientId);
+            if (!waveRoom) return;
+
+            waveRoom.entityPool.updateMovement(waveClientId, buffer[1], buffer[2]);
+
             break;
-        case PacketKind.MOOD:
-            handleMoodPacket(buffer, waveRoomClientId, waveClientId);
-            break;
-        case PacketKind.SWAP_PETAL:
-            handleSwapPetalPacket(buffer, waveRoomClientId, waveClientId);
-            break;
-        case PacketKind.CREATE_WAVE_ROOM:
-            handleCreateWaveRoom(ws, buffer);
-            break;
-        case PacketKind.JOIN_WAVE_ROOM:
-            handleJoinWaveRoom(ws, buffer);
-            break;
-        case PacketKind.WAVE_ROOM_READY:
-            handleWaveRoomReady(buffer, waveRoomClientId);
-            break;
-        case PacketKind.WAVE_ROOM_CHANGE_VISIBLE:
-            handleWaveRoomVisibility(buffer, waveRoomClientId);
-            break;
-        case PacketKind.WAVE_ROOM_LEAVE:
-            handleWaveRoomLeave(waveRoomClientId);
-            break;
-    }
-}
-
-function handleMovePacket(buffer: Uint8Array, waveRoomClientId: number, waveClientId: number) {
-    if (buffer.length < 3) return;
-
-    const waveRoom = waveRoomManager.findPlayerRoom(waveRoomClientId);
-    if (!waveRoom) return;
-
-    waveRoom.entityPool.updatePositionProp(waveClientId, buffer[1], buffer[2]);
-}
-
-function handleMoodPacket(buffer: Uint8Array, waveRoomClientId: number, waveClientId: number) {
-    if (buffer.length < 2 || !MOON_KIND_VALUES.includes(buffer[1])) return;
-
-    const waveRoom = waveRoomManager.findPlayerRoom(waveRoomClientId);
-    if (!waveRoom) return;
-
-    waveRoom.entityPool.updateMood(waveClientId, buffer[1]);
-}
-
-function handleSwapPetalPacket(buffer: Uint8Array, waveRoomClientId: number, waveClientId: number) {
-    if (buffer.length < 2) return;
-
-    const waveRoom = waveRoomManager.findPlayerRoom(waveRoomClientId);
-    if (!waveRoom) return;
-
-    waveRoom.entityPool.swapPetal(waveClientId, buffer[1]);
-}
-
-function handleCreateWaveRoom(ws: uWS.WebSocket<UserData>, buffer: Uint8Array) {
-    if (buffer.length < 2 || !BIOME_VALUES.includes(buffer[1])) return;
-
-    const userData = ws.getUserData();
-
-    if (userData.waveRoomClientId) {
-        waveRoomManager.leaveWaveRoom(userData.waveRoomClientId)
-    }
-
-    const id = waveRoomManager.createWaveRoom({ ...DEFAULT_PLAYER_DATA, ws }, buffer[1]);
-    if (!id) return;
-
-    ws.getUserData().waveRoomClientId = id;
-}
-
-function handleJoinWaveRoom(ws: uWS.WebSocket<UserData>, buffer: Uint8Array) {
-    if (buffer.length < 2) return;
-
-    const length = buffer[1];
-    if (buffer.length < 2 + length) return;
-
-    const roomCode = new TextDecoder('utf-8').decode(buffer.slice(2, 2 + length));
-
-    const userData = ws.getUserData();
-
-    if (userData.waveRoomClientId) {
-        const waveRoom = waveRoomManager.findPlayerRoom(userData.waveRoomClientId);
-
-        if (waveRoom && waveRoom.code === roomCode) {
-            ws.send(Buffer.from([PacketKind.WAVE_CODE_INVALID]), true);
-            return;
         }
+        case PacketKind.MOOD: {
+            if (buffer.length !== 2 || !MOON_KIND_VALUES.includes(buffer[1])) return;
 
-        waveRoomManager.leaveWaveRoom(userData.waveRoomClientId);
-        userData.waveRoomClientId = null;
+            const waveRoom = waveRoomManager.findPlayerRoom(waveRoomClientId);
+            if (!waveRoom) return;
+
+            waveRoom.entityPool.updateMood(waveClientId, buffer[1]);
+
+            break;
+        }
+        case PacketKind.SWAP_PETAL: {
+            if (buffer.length !== 2) return;
+
+            const waveRoom = waveRoomManager.findPlayerRoom(waveRoomClientId);
+            if (!waveRoom) return;
+
+            waveRoom.entityPool.swapPetal(waveClientId, buffer[1]);
+
+            break;
+        }
+        case PacketKind.CREATE_WAVE_ROOM:
+            if (buffer.length !== 2 || !BIOME_VALUES.includes(buffer[1])) return;
+
+            const userData = ws.getUserData();
+
+            if (userData.waveRoomClientId) {
+                waveRoomManager.leaveWaveRoom(userData.waveRoomClientId);
+            }
+
+            const id = waveRoomManager.createWaveRoom({ ...DEFAULT_PLAYER_DATA, ws }, buffer[1]);
+            if (!id) return;
+
+            ws.getUserData().waveRoomClientId = id;
+
+            break;
+        case PacketKind.JOIN_WAVE_ROOM: {
+            if (buffer.length < 2) return;
+
+            const length = buffer[1];
+            if (buffer.length !== 2 + length) return;
+
+            const roomCode = new TextDecoder('utf-8').decode(buffer.slice(2, 2 + length));
+
+            const userData = ws.getUserData();
+
+            // Remove player from wave room if player were in other wave room
+            if (userData.waveRoomClientId) {
+                waveRoomManager.leaveWaveRoom(userData.waveRoomClientId);
+                userData.waveRoomClientId = null;
+            }
+
+            const id = waveRoomManager.joinWaveRoom({ ...DEFAULT_PLAYER_DATA, ws }, roomCode);
+
+            const response = Buffer.alloc(id ? 5 : 1);
+            response.writeUInt8(id ? PacketKind.WAVE_SELF_ID : PacketKind.WAVE_JOIN_FAILED, 0);
+
+            if (id) {
+                response.writeUInt32BE(id, 1);
+                userData.waveRoomClientId = id;
+            };
+
+            ws.send(response, true);
+
+            break;
+        }
+        case PacketKind.WAVE_ROOM_READY: {
+            if (buffer.length !== 2) return;
+
+            const waveRoom = waveRoomManager.findPlayerRoom(waveRoomClientId);
+            if (!waveRoom) return;
+
+            waveRoom.setPlayerReadyState(waveRoomClientId, buffer[1] ? PlayerReadyState.READY : PlayerReadyState.UNREADY);
+
+            break;
+        }
+        case PacketKind.WAVE_ROOM_CHANGE_VISIBLE: {
+            if (buffer.length !== 2) return;
+
+            const waveRoom = waveRoomManager.findPlayerRoom(waveRoomClientId);
+            if (!waveRoom) return;
+
+            waveRoom.setPublicState(waveRoomClientId, buffer[1] ? WaveRoomVisibleState.PUBLIC : WaveRoomVisibleState.PRIVATE);
+
+            break;
+        }
+        case PacketKind.WAVE_ROOM_LEAVE:
+            waveRoomManager.leaveWaveRoom(waveRoomClientId);
+            break;
     }
-
-    const idOrNullish = waveRoomManager.joinWaveRoom({ ...DEFAULT_PLAYER_DATA, ws }, roomCode);
-
-    const response = Buffer.alloc(idOrNullish ? 5 : 1);
-    response.writeUInt8(idOrNullish ? PacketKind.WAVE_SELF_ID : PacketKind.WAVE_CODE_INVALID, 0);
-
-    if (idOrNullish) {
-        response.writeUInt32BE(idOrNullish, 1);
-        userData.waveRoomClientId = idOrNullish;
-    };
-
-    ws.send(response, true);
-}
-
-function handleWaveRoomReady(buffer: Uint8Array, waveRoomClientId: number) {
-    if (buffer.length < 2) return;
-
-    const waveRoom = waveRoomManager.findPlayerRoom(waveRoomClientId);
-    if (!waveRoom) return;
-
-    waveRoom.setPlayerReadyState(waveRoomClientId, buffer[1] ? PlayerReadyState.READY : PlayerReadyState.UNREADY);
-}
-
-function handleWaveRoomVisibility(buffer: Uint8Array, waveRoomClientId: number) {
-    if (buffer.length < 2) return;
-
-    const waveRoom = waveRoomManager.findPlayerRoom(waveRoomClientId);
-    if (!waveRoom) return;
-
-    waveRoom.setPublicState(waveRoomClientId, buffer[1] ? WaveRoomVisibleState.PUBLIC : WaveRoomVisibleState.PUBLIC);
-}
-
-function handleWaveRoomLeave(waveRoomClientId: number) {
-    waveRoomManager.leaveWaveRoom(waveRoomClientId);
 }
 
 uWS.App()
@@ -202,7 +187,12 @@ uWS.App()
         maxPayloadLength: 16 * 1024 * 1024,
         sendPingsAutomatically: false,
         idleTimeout: 0,
-        open: (ws: uWS.WebSocket<UserData>) => {
+        open: (ws: uWS.WebSocket<UserData>) => logger.region(() => {
+            using _guard = logger.metadata({
+                ipAddress: Buffer.from(ws.getRemoteAddressAsText()).toString(),
+            });
+            logger.info("Client connected");
+
             // Safely set them null
             ws.getUserData().waveRoomClientId = null;
             ws.getUserData().waveClientId = null;
@@ -214,24 +204,42 @@ uWS.App()
             //         originalSend.apply(ws, args);
             //     }, 200);
             // };
-        },
+        }),
+        // I dont log errors here because all errors are well-known (ws.send fail)
+        // its maybe impact performance
         message: (ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBinary: boolean) => {
             try {
-                handleWebSocketMessage(ws, message, isBinary);
+                handleMessage(ws, message, isBinary);
             } catch { }
         },
-        close: (ws: uWS.WebSocket<UserData>, code, message) => {
+        close: (ws: uWS.WebSocket<UserData>, code, message) => logger.region(() => {
             const { waveRoomClientId, waveClientId } = ws.getUserData();
             const waveRoom = waveRoomManager.findPlayerRoom(waveRoomClientId);
 
             if (waveRoom) {
+                // Leave current wave room | wave
+                waveRoomManager.leaveWaveRoom(waveRoomClientId);
+
                 const waveClient = waveRoom.entityPool.getClient(waveClientId);
                 if (waveClient) {
-                    annihilateClient(waveRoom.entityPool, waveClient, waveRoomManager, waveRoomClientId, true)
+                    // use onChangeSomething so can delete started wave if all players leaved
+                    using _disposable = waveRoom.onChangeSomething();
+
+                    waveClient.slots.surface.forEach((e) => {
+                        if (e instanceof Mob) {
+                            waveRoom.entityPool.removeMob(e.id);
+                        }
+                    });
+
+                    waveRoom.entityPool.removeClient(waveClientId);
                 };
             }
-        }
+        })
     })
     .listen(PORT, (token) => {
-        console.log(token ? `Server running on port ${PORT}` : `Failed to listen on port ${PORT}`);
+        if (token) {
+            logger.info(`Server running on port ${PORT}`);
+        } else {
+            logger.error(`Failed to listen on port ${PORT}`);
+        }
     });

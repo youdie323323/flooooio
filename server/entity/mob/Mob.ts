@@ -25,18 +25,17 @@ class BaseMob implements Entity {
 
     mobTargetEntity: Entity | null;
 
-    lastAttackedBy: Entity | null;
+    mobLastAttackedBy: Entity | null;
+
+    isUsagePetal: boolean;
 
     petParentPlayer: PlayerInstance | null;
     petGoingToPlayer: boolean;
 
-    isUsagePetal: boolean;
-
     petalSummonedPet: MobInstance | null;
+    petalParentPlayer: PlayerInstance | null;
 
     starfishRegeningHealth: boolean;
-
-    petalParentPlayer: PlayerInstance | null;
 
     constructor(source: Required<BaseMob>) {
         Object.assign(this, source);
@@ -63,7 +62,6 @@ interface MobData {
     name: string;
     description: string;
     baseSize: number;
-    // Canvas common
     fraction: number;
     rx: number;
     ry: number;

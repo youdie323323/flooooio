@@ -67,13 +67,13 @@ export function PlayerReload<T extends new (...args: any[]) => BasePlayer>(Base:
                             }
                             // If cooldown elapsed
                             else if (Date.now() >= this.slots.cooldownsUsage[i]) {
-                                const summonMob = EGG_TYPE_MAPPING[e.type];
-                                if (summonMob) {
+                                const toSummon = EGG_TYPE_MAPPING[e.type];
+                                if (toSummon) {
                                     // Null means its empty slot, so no need to set null
                                     // this.slots.surface[i] = null;
                                     poolThis.removeMob(e.id);
                                     e.petalSummonedPet = poolThis.addPetalOrMob(
-                                        summonMob,
+                                        toSummon,
                                         Math.max(Rarities.COMMON, Math.min(Rarities.MYTHIC, e.rarity - 1)),
                                         e.x,
                                         e.y,

@@ -27,9 +27,7 @@ export function bodyDamageOrDamage(c: PetalStat | MobStat): string {
     return "bodyDamage" in c ? "bodyDamage" : "damage";
 }
 
-// Its can called 2 times for client; onclose and ondeath
-export function annihilateClient(poolThis: EntityPool, player: PlayerInstance, waveRoomManager: WaveRoomManager = null, waveRoomClientId: number = null, isConnectionLost = false) {
-    // Its throws error when using instanceof
+export function onClientDeath(poolThis: EntityPool, player: PlayerInstance) {
     if (player) {
         // Delete all petals
         player.slots.surface.forEach((e) => {
@@ -37,14 +35,10 @@ export function annihilateClient(poolThis: EntityPool, player: PlayerInstance, w
                 poolThis.removeMob(e.id);
             }
         });
-        if (isConnectionLost) {
-            waveRoomManager.leaveWaveRoom(waveRoomClientId);
-            poolThis.removeClient(player.id);
-        } else {
-            player.isDead = true;
-            // Stop moving
-            player.magnitude = 0;
-        }
+
+        player.isDead = true;
+        // Stop moving
+        player.magnitude = 0;
     }
 }
 

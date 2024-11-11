@@ -1,6 +1,6 @@
 import { Entity, onUpdateTick } from "./Entity";
 import { EntityPool } from "./EntityPool";
-import { angleToRad, isPetal, annihilateClient } from "./common/common";
+import { angleToRad, isPetal, onClientDeath } from "./common/common";
 import { Mob } from "./mob/Mob";
 import { Player } from "./player/Player";
 import { MOB_PROFILES } from "../../shared/mobProfiles";
@@ -38,7 +38,7 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
             if (this.health < 0) {
                 // !this.isDead will prevent call every fps
                 if (this instanceof Player && !this.isDead) {
-                    annihilateClient(poolThis, this, null, null, false);
+                    onClientDeath(poolThis, this);
                 }
                 if (this instanceof Mob) {
                     poolThis.removeMob(this.id);
@@ -97,15 +97,6 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
 
                 if (distance > worldRadius) {
                     const collisionAngle = Math.atan2(dy, dx);
-
-                    // New
-                    // if (this instanceof Mob && !this.targetEntity) {
-                    //     const reflectedAngleRad = 2 * collisionAngle - angleToRad(this.angle) + Math.PI;
-                    //     this.angle = ((reflectedAngleRad / (2 * Math.PI)) * 255) % 255;
-                    //     if (this.angle < 0) {
-                    //         this.angle += 256;
-                    //     }
-                    // }
 
                     this.x = mapCenterX + Math.cos(collisionAngle) * (worldRadius - 20);
                     this.y = mapCenterY + Math.sin(collisionAngle) * (worldRadius - 20);

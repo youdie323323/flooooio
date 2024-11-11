@@ -3,30 +3,36 @@ import { PacketKind } from "../../shared/packet";
 import { EntityPool } from "../entity/EntityPool";
 import { PlayerData, PlayerInstance } from "../entity/player/Player";
 import { generateId } from "../entity/common/common";
+import { logger } from "../main";
 
+/** Represents the current state of a wave room */
 export enum WaveRoomState {
     WAITING,
     STARTED,
     END,
 }
 
+/** Determines if a wave room is public or private */
 export enum WaveRoomVisibleState {
     PUBLIC,
     PRIVATE,
 }
 
+/** Indicates if a player is ready to start the wave */
 export enum PlayerReadyState {
     UNREADY,
     READY,
 }
 
+/** Extended player data with wave room specific properties */
 export type WaveRoomPlayer = PlayerData & {
     id: number;
     isOwner: boolean;
     readyState: PlayerReadyState;
 };
 
-export const ROOM_UPDATE_FPS = 15;
+/** Update rate for broadcasting room state */
+export const ROOM_UPDATE_FPS = 30;
 
 export default class WaveRoom {
     public static readonly MAX_PLAYER_AMOUNT = 4;
@@ -35,10 +41,10 @@ export default class WaveRoom {
     visible: WaveRoomVisibleState;
     state: WaveRoomState;
     biome: Biomes;
-    roomPlayers: WaveRoomPlayer[];
+    roomCandidates: WaveRoomPlayer[];
     entityPool: EntityPool;
 
-    updater: NodeJS.Timeout;
+    updateInterval: NodeJS.Timeout;
 
     constructor(biome: Biomes, code: string) {
         this.code = code;
@@ -47,26 +53,27 @@ export default class WaveRoom {
         this.biome = biome;
         this.entityPool = new EntityPool();
 
-        this.roomPlayers = new Array<WaveRoomPlayer>();
+        this.roomCandidates = new Array<WaveRoomPlayer>();
 
-        this.updater = setInterval(() => this.broadcastUpdatePacket(), 1000 / ROOM_UPDATE_FPS)
+        this.updateInterval = setInterval(() => this.broadcastUpdatePacket(), 1000 / ROOM_UPDATE_FPS);
     }
 
+    /**
+    * Broadcasts the current room state to all players
+    */
     private broadcastUpdatePacket() {
         const waveClientsPacket = this.createWaveClientsPacket();
 
-        this.roomPlayers.forEach((player) => {
-            if (player?.ws) {
-                try {
-                    player.ws.send(waveClientsPacket, true)
-                } catch { };
-            }
+        this.roomCandidates.forEach((player) => {
+            try {
+                player.ws.send(waveClientsPacket, true);
+            } catch { };
         });
     }
 
     private calculateWaveClientsPacketSize(): number {
         let size = 1 + 1 + (this.code.length + 1) + 1 + 1 + 1;
-        this.roomPlayers.forEach(client => {
+        this.roomCandidates.forEach(client => {
             size += 4 + 1 + 1 + client.name.length;
         });
         return size;
@@ -80,9 +87,9 @@ export default class WaveRoom {
         buffer.writeUInt8(PacketKind.WAVE_UPDATE, offset++);
 
         // Client count
-        buffer.writeUInt8(this.roomPlayers.length, offset++);
+        buffer.writeUInt8(this.roomCandidates.length, offset++);
 
-        this.roomPlayers.forEach(client => {
+        this.roomCandidates.forEach(client => {
             buffer.writeUInt32BE(client.id, offset);
             offset += 4;
 
@@ -113,36 +120,48 @@ export default class WaveRoom {
     public addPlayer(player: PlayerData): number | false {
         using _disposable = this.onChangeSomething();
 
-        if (WaveRoom.MAX_PLAYER_AMOUNT <= this.roomPlayers.length) {
+        if (WaveRoom.MAX_PLAYER_AMOUNT <= this.roomCandidates.length) {
             return false;
         }
 
-        const waveClientId = generateId();
+        const id = generateId();
 
         // Ensure unique clientId
-        if (Array.from(this.roomPlayers.values()).map(v => v.id).includes(waveClientId)) {
+        if (Array.from(this.roomCandidates.values()).map(v => v.id).includes(id)) {
             return this.addPlayer(player);
         }
 
-        this.roomPlayers.push({
+        this.roomCandidates.push({
             ...player,
-            id: waveClientId,
+            id,
             readyState: PlayerReadyState.UNREADY,
             // First player is owner
-            isOwner: this.roomPlayers.length === 0,
+            isOwner: this.roomCandidates.length === 0,
         });
 
-        return waveClientId;
+
+        logger.region(() => {
+            using _guard = logger.metadata({ waveClientId: id, code: this.code });
+            logger.info("Added player on wave room");
+        });
+
+        return id;
     }
 
     public removePlayer(id: number): boolean {
         using _disposable = this.onChangeSomething();
 
-        const index = this.roomPlayers.findIndex(p => p.id === id);
+        const index = this.roomCandidates.findIndex(p => p.id === id);
         if (index >= 0) {
-            this.roomPlayers.splice(index, 1);
-            if (this.roomPlayers[index]?.isOwner && this.roomPlayers.length > 0) {
-                this.roomPlayers[0].isOwner = true;
+            this.roomCandidates.splice(index, 1);
+
+            logger.region(() => {
+                using _guard = logger.metadata({ waveClientId: id, code: this.code });
+                logger.info("Removed player from wave room");
+            });
+
+            if (this.roomCandidates[index]?.isOwner && this.roomCandidates.length > 0) {
+                this.roomCandidates[0].isOwner = true;
             }
             return true;
         } else {
@@ -153,44 +172,79 @@ export default class WaveRoom {
     public setPlayerReadyState(id: number, state: PlayerReadyState): boolean {
         using _disposable = this.onChangeSomething();
 
-        const index = this.roomPlayers.findIndex(p => p.id === id);
+        const index = this.roomCandidates.findIndex(p => p.id === id);
         if (index >= 0) {
-            this.roomPlayers[index].readyState = state;
+            this.roomCandidates[index].readyState = state;
+
+            logger.region(() => {
+                using _guard = logger.metadata({ state: PlayerReadyState[state], waveClientId: id, code: this.code });
+                logger.info("Player changed ready state");
+            });
+
             return true;
         } else {
             return false;
         };
     }
 
-    public setPublicState(id: number, state: WaveRoomVisibleState) {
+    public setPublicState(id: number, state: WaveRoomVisibleState): boolean {
         using _disposable = this.onChangeSomething();
 
-        const playerData = this.roomPlayers.find(p => p.id === id);
+        const playerData = this.roomCandidates.find(p => p.id === id);
         if (!playerData?.isOwner) {
             return false;
         }
 
         this.visible = state;
+
+        logger.region(() => {
+            using _guard = logger.metadata({ state: WaveRoomVisibleState[state], waveClientId: id, code: this.code });
+            logger.info("Player changed visible state");
+        });
+
         return true;
     }
 
     private startWave() {
         this.state = WaveRoomState.STARTED;
-        clearInterval(this.updater);
-        this.entityPool.startWave(this.roomPlayers);
+        clearInterval(this.updateInterval);
+        this.entityPool.startWave(this.roomCandidates);
+
+        logger.region(() => {
+            using _guard = logger.metadata({
+                candidateIds: this.roomCandidates.map(c => c.id).join(","),
+                code: this.code,
+            });
+            logger.info("Wave starting");
+        });
     }
 
-    private onChangeSomething = () => {
+    private endWave() {
+        // Stop wave update
+        this.entityPool.endWave();
+
+        logger.region(() => {
+            using _guard = logger.metadata({ code: this.code });
+            logger.info("Wave ended");
+        });
+    }
+
+    public onChangeSomething = () => {
         const cacheThis = this;
         return {
             [Symbol.dispose]() {
+                // cacheThis.roomCandidates.length !== 0 to prevent multiple wave start, before wave room deletion
+                if (cacheThis.state === WaveRoomState.WAITING && cacheThis.roomCandidates.length !== 0 && cacheThis.roomCandidates.every(p => p.readyState === PlayerReadyState.READY)) {
+                    cacheThis.startWave();
+                }
+
                 if (cacheThis.state === WaveRoomState.STARTED && cacheThis.entityPool.getAllClients().every(p => p.isDead)) {
                     cacheThis.state = WaveRoomState.END;
                 }
 
-                // This condition will do once
-                if (cacheThis.state === WaveRoomState.WAITING && cacheThis.roomPlayers.every(p => p.readyState === PlayerReadyState.READY)) {
-                    cacheThis.startWave();
+                // cacheThis.state === WaveRoomState.STARTED for force ends while wave started
+                if ((cacheThis.state === WaveRoomState.END || cacheThis.state === WaveRoomState.STARTED) && cacheThis.entityPool.clients.size === 0) {
+                    cacheThis.endWave();
                 }
             }
         };

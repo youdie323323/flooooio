@@ -192,14 +192,14 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                             this.mobTargetEntity = null;
                         } else {
                             // Switch to other player if last attacked player is dead
-                            if (this.lastAttackedBy && this.lastAttackedBy instanceof Player && this.lastAttackedBy.isDead) {
-                                this.lastAttackedBy = null;
+                            if (this.mobLastAttackedBy && this.mobLastAttackedBy instanceof Player && this.mobLastAttackedBy.isDead) {
+                                this.mobLastAttackedBy = null;
                                 return;
                             } 
                             
-                            if (this.lastAttackedBy && !(this.lastAttackedBy instanceof Player ? this.lastAttackedBy.isDead : /* If mob is dead, its simply deleted from pool so can use false */ false)) {
-                                const dx = this.lastAttackedBy.x - this.x;
-                                const dy = this.lastAttackedBy.y - this.y;
+                            if (this.mobLastAttackedBy && !(this.mobLastAttackedBy instanceof Player ? this.mobLastAttackedBy.isDead : /* If mob is dead, its simply deleted from pool so can use false */ false)) {
+                                const dx = this.mobLastAttackedBy.x - this.x;
+                                const dy = this.mobLastAttackedBy.y - this.y;
 
                                 const targetAngle = ((Math.atan2(dy, dx) / (Math.PI * 2)) * 255 + 255) % 255;
 
@@ -216,7 +216,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
 
                                 this.magnitude = 255 * 5;
 
-                                this.mobTargetEntity = this.lastAttackedBy;
+                                this.mobTargetEntity = this.mobLastAttackedBy;
                             } else {
                                 this.mobTargetEntity = null;
                             }

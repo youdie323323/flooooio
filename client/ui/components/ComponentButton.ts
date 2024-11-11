@@ -1,5 +1,5 @@
 import { Canvg, presets } from "canvg";
-import { darkend, darkendBase } from "../../utils/common";
+import { darkend, darkendBase } from "../../common/common";
 import { Component } from "./Component";
 
 export interface RelativePosition {

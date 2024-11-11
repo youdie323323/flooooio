@@ -1,4 +1,3 @@
-import { generateId } from "../../server/entity/utils/common";
 import { Biomes } from "../../shared/biomes";
 import { PacketKind } from "../../shared/packet";
 import { Rarities } from "../../shared/rarities";
@@ -6,7 +5,7 @@ import { PetalType } from "../../shared/types";
 import { MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../constants";
 import EntityMob from "../entity/EntityMob";
 import { ws } from "../main";
-import TilesetManager from "../utils/WorldManager";
+import TilesetManager from "../common/WorldManager";
 import { ComponentsSVGButton, ComponentsTextButton } from "./components/ComponentButton";
 import UserInterface from "./UserInterface";
 

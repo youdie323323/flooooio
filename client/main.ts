@@ -1,9 +1,9 @@
 import { PacketKind } from "../shared/packet";
 import { STANDARD_WIDTH, STANDARD_HEIGHT, TWO_PI } from "./constants";
 import EntityPlayer from "./entity/EntityPlayer";
-import CameraController from "./utils/CameraController";
+import CameraController from "./common/CameraController";
 import EntityMob from "./entity/EntityMob";
-import { interpolate } from "./utils/Interpolator";
+import { interpolate } from "./common/Interpolator";
 import { Rarities } from "../shared/rarities";
 import { UserInterfaceManager } from "./ui/UserInterfaceManager";
 import { MoodKind } from "../shared/mood";
@@ -145,9 +145,13 @@ export const mobs: Map<number, EntityMob> = new Map();
                 const clientCount = data.getUint16(offset);
                 offset += 2;
 
+                let clientIds: Set<number> = new Set();
+
                 for (let i = 0; i < clientCount; i++) {
                     const clientId = data.getUint32(offset);
                     offset += 4;
+
+                    clientIds.add(clientId);
 
                     const clientX = data.getFloat64(offset);
                     offset += 8;
@@ -202,6 +206,12 @@ export const mobs: Map<number, EntityMob> = new Map();
                         players.set(clientId, new EntityPlayer(clientId, clientX, clientY, clientSize, clientHp, clientMaxHealth, clientAngle, clientMood, clientNickname));
                     }
                 }
+
+                players.forEach((client, key) => {
+                    if (!clientIds.has(key)) {
+                        players.delete(key);
+                    }
+                });
 
                 const mobCount = data.getUint16(offset);
                 offset += 2;
@@ -313,7 +323,7 @@ export const mobs: Map<number, EntityMob> = new Map();
                 waveSelfId = data.getUint32(offset);
                 break;
             }
-            case PacketKind.WAVE_CODE_INVALID: {
+            case PacketKind.WAVE_JOIN_FAILED: {
                 alert("Code invalid!");
                 break;
             }

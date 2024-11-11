@@ -1,6 +1,6 @@
 import { MOB_PROFILES } from "../../shared/mobProfiles";
 import { selfId } from "../main";
-import { isPetal } from "../utils/common";
+import { isPetal } from "../common/common";
 import Entity from "./Entity";
 import EntityMob from "./EntityMob";
 import EntityPlayer from "./EntityPlayer";

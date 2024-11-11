@@ -13,8 +13,9 @@ export function EntityLinearMovement<T extends new (...args: any[]) => Entity>(B
 
             if (this.magnitude > 0) {
                 const rad = angleToRad(this.angle);
-                this.x += Math.cos(rad) * (this.magnitude / 255);
-                this.y += Math.sin(rad) * (this.magnitude / 255);
+                const magnitude = this.magnitude / 255;
+                this.x += Math.cos(rad) * magnitude;
+                this.y += Math.sin(rad) * magnitude;
             }
         }
     };

@@ -12,6 +12,7 @@ import { PETAL_PROFILES } from '../../shared/petalProfiles';
 import { PetalData, StaticPetalData } from './mob/petal/Petal';
 import { USAGE_RELOAD_PETALS } from './player/PlayerReload';
 import { MoodKind } from '../../shared/mood';
+import { logger } from '../main';
 
 // Define UserData for WebSocket connections
 export interface UserData {
@@ -33,16 +34,16 @@ export class EntityPool {
 
     public startWave(roomPlayers: PlayerData[]) {
         const startBuffer = Buffer.from([PacketKind.WAVE_START]);
-        roomPlayers.forEach(r => {
+        roomPlayers.forEach(player => {
             const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this);
             if (!randPos) {
                 return null;
             }
 
-            this.addClient(r, randPos.x, randPos.y);
+            this.addClient(player, randPos.x, randPos.y);
 
             try {
-                r.ws.send(startBuffer, true);
+                player.ws.send(startBuffer, true);
             } catch { }
         });
 
@@ -60,6 +61,10 @@ export class EntityPool {
                 this.addPetalOrMob(MobType.BUBBLE, Rarities.MYTHIC, randPos.x, randPos.y, null, null);
             }, 5);
         }, 20000);
+    }
+
+    public endWave() {
+        clearInterval(this.updateInterval);
     }
 
     addClient(playerData: PlayerData, x: number, y: number): PlayerInstance | null {
@@ -103,6 +108,11 @@ export class EntityPool {
 
         playerData.ws.getUserData().waveClientId = clientId;
 
+        logger.region(() => {
+            using _guard = logger.metadata({ clientId });
+            logger.info("Added player on wave");
+        });
+
         return playerInstance;
     }
 
@@ -129,20 +139,21 @@ export class EntityPool {
 
             mobTargetEntity: null,
 
-            lastAttackedBy: null,
+            mobLastAttackedBy: null,
+
+            isUsagePetal: USAGE_RELOAD_PETALS.has(type),
 
             petParentPlayer: eggParent,
             petGoingToPlayer: false,
 
-            isUsagePetal: USAGE_RELOAD_PETALS.has(type),
+            petalParentPlayer: petalParent,
             petalSummonedPet: null,
 
             starfishRegeningHealth: false,
-
-            petalParentPlayer: petalParent,
         });
 
         this.mobs.set(mobId, mobInstance);
+
         return mobInstance;
     }
 
@@ -175,7 +186,7 @@ export class EntityPool {
         this.broadcastUpdatePacket();
     }
 
-    updatePositionProp(clientId: number, angle: number, magnitude: number) {
+    updateMovement(clientId: number, angle: number, magnitude: number) {
         const client = this.clients.get(clientId);
         if (client && !client.isDead) {
             client.angle = angle;
@@ -190,39 +201,38 @@ export class EntityPool {
         }
     }
 
-    swapPetal(clientId: number, i: number) {
+    swapPetal(clientId: number, at: number) {
         const client = this.clients.get(clientId);
         if (
             client &&
             !client.isDead &&
-            client.slots.surface.length >= i && client.slots.bottom.length >= i &&
-            client.slots.bottom[i] instanceof Mob
+            client.slots.surface.length >= at && client.slots.bottom.length >= at &&
+            client.slots.bottom[at] instanceof Mob
         ) {
-            if (client.slots.surface[i] instanceof Mob) {
-                this.removeMob(client.slots.surface[i].id);
+            if (client.slots.surface[at] instanceof Mob) {
+                this.removeMob(client.slots.surface[at].id);
             }
 
-            const temp = client.slots.surface[i];
-            client.slots.surface[i] = client.slots.bottom[i];
-            client.slots.bottom[i] = temp;
+            const temp = client.slots.surface[at];
+            client.slots.surface[at] = client.slots.bottom[at];
+            client.slots.bottom[at] = temp;
         }
     }
 
-    broadcastUpdatePacket(excludeClientId?: number) {
+    broadcastUpdatePacket() {
         const updatePacket = this.createUpdatePacket();
 
         // Loop through all WebSocket connections
-        this.clients.forEach((player, clientId) => {
-            if (player?.ws && clientId !== excludeClientId) {
+        this.clients.forEach((player) => {
+            try {
                 player.ws.send(updatePacket, true);
-            }
+            } catch { }
         });
     }
 
-    broadcastInitPacket(excludeClientId?: number) {
-        this.clients.forEach((_, clientId) => {
-            const ws = this.getWebSocket(clientId);
-            if (ws && clientId !== excludeClientId) {
+    broadcastInitPacket() {
+        this.clients.forEach((player, clientId) => {
+            try {
                 const buffer = Buffer.alloc(5);
                 let offset = 0;
 
@@ -231,8 +241,8 @@ export class EntityPool {
                 buffer.writeUInt32BE(clientId, offset);
                 offset += 4;
 
-                ws.send(buffer, true);
-            }
+                player.ws.send(buffer, true);
+            } catch { }
         });
     }
 
@@ -367,6 +377,11 @@ export class EntityPool {
         const client = this.clients.get(clientId);
         if (client) {
             this.clients.delete(clientId);
+            
+            logger.region(() => {
+                using _guard = logger.metadata({ clientId });
+                logger.info("Removed player from wave");
+            });
         }
     }
 
@@ -395,9 +410,5 @@ export class EntityPool {
 
     getAllMobIds() {
         return Array.from(this.mobs.keys());
-    }
-
-    private getWebSocket(clientId: number): uWS.WebSocket<UserData> | undefined {
-        return this.clients.get(clientId)?.ws;
     }
 }

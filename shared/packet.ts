@@ -14,7 +14,7 @@ export enum PacketKind {
     UPDATE,
     WAVE_UPDATE,
     WAVE_SELF_ID,
-    WAVE_CODE_INVALID,
+    WAVE_JOIN_FAILED,
     WAVE_START,
     SELF_ID,
 }
