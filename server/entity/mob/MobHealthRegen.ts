@@ -1,4 +1,3 @@
-import { angleToRad, isPetal } from "../utils/common";
 import { Entity, onUpdateTick } from "../Entity";
 import { EntityPool } from "../EntityPool";
 import { BaseMob, Mob, MobInstance } from "./Mob";
@@ -22,10 +21,10 @@ export function MobHealthRegen<T extends new (...args: any[]) => BaseMob>(Base: 
                     this.starfishRegeningHealth = false;
                     return;
                 }
-                // Running away from player
-                if (this.targetEntity) {
-                    const dx = this.targetEntity.x - this.x;
-                    const dy = this.targetEntity.y - this.y;
+                // Running away from target
+                if (this.mobTargetEntity) {
+                    const dx = this.mobTargetEntity.x - this.x;
+                    const dy = this.mobTargetEntity.y - this.y;
 
                     const targetAngle = ((Math.atan2(dy, dx) / (Math.PI * 2)) * 255 + 255) % 255;
 

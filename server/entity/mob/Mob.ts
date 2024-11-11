@@ -23,19 +23,22 @@ class BaseMob implements Entity {
     maxHealth: number;
     type: MobType | PetalType;
 
-    targetEntity: Entity | null;
+    mobTargetEntity: Entity | null;
 
-    petalParent?: PlayerInstance;
-    lastAttacked: Entity | null;
+    lastAttackedBy: Entity | null;
 
-    parentEgger: PlayerInstance | null;
+    petParentPlayer: PlayerInstance | null;
     petGoingToPlayer: boolean;
+
     isUsagePetal: boolean;
-    summonedMob: MobInstance | null;
+
+    petalSummonedPet: MobInstance | null;
 
     starfishRegeningHealth: boolean;
 
-    constructor(source: Partial<BaseMob>) {
+    petalParentPlayer: PlayerInstance | null;
+
+    constructor(source: Required<BaseMob>) {
         Object.assign(this, source);
     }
 }

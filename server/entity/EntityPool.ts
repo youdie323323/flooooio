@@ -4,7 +4,7 @@ import { MobType, PetalType } from "../../shared/types";
 import { Mob, MobInstance, MOB_SIZE_FACTOR, MobData } from "./mob/Mob";
 import { Player, PlayerData, PlayerInstance } from "./player/Player";
 import { onUpdateTick } from "./Entity";
-import { generateId, getRandomAngle, getRandomSafePosition, isPetal } from './utils/common';
+import { generateId, getRandomAngle, getRandomSafePosition, isPetal } from './common/common';
 import { Rarities } from '../../shared/rarities';
 import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from './EntityChecksum';
 import { MOB_PROFILES } from '../../shared/mobProfiles';
@@ -32,6 +32,7 @@ export class EntityPool {
     }
 
     public startWave(roomPlayers: PlayerData[]) {
+        const startBuffer = Buffer.from([PacketKind.WAVE_START]);
         roomPlayers.forEach(r => {
             const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this);
             if (!randPos) {
@@ -39,11 +40,26 @@ export class EntityPool {
             }
 
             this.addClient(r, randPos.x, randPos.y);
+
+            try {
+                r.ws.send(startBuffer, true);
+            } catch { }
         });
 
         this.broadcastInitPacket();
 
         this.updateInterval = setInterval(() => this.update(), 1000 / UPDATE_FPS);
+
+        setTimeout(() => {
+            setInterval(() => {
+                const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this);
+                if (!randPos) {
+                    return null;
+                }
+
+                this.addPetalOrMob(MobType.BUBBLE, Rarities.MYTHIC, randPos.x, randPos.y, null, null);
+            }, 5);
+        }, 20000);
     }
 
     addClient(playerData: PlayerData, x: number, y: number): PlayerInstance | null {
@@ -73,12 +89,15 @@ export class EntityPool {
             nickname: playerData.name,
             ws: playerData.ws,
             slots: {
-                surface: playerData.slots.surface.map(c => this.staticPetalDataToReal(c)),
-                bottom: playerData.slots.bottom.map(c => this.staticPetalDataToReal(c)),
+                surface: null,
+                bottom: null,
                 cooldownsPetal: new Array(playerData.slots.surface.length).fill(0),
                 cooldownsUsage: new Array(playerData.slots.surface.length).fill(0),
             },
         });
+
+        playerInstance.slots.surface = playerData.slots.surface.map(c => this.staticPetalDataToReal(c, playerInstance));
+        playerInstance.slots.bottom = playerData.slots.bottom.map(c => this.staticPetalDataToReal(c, playerInstance));
 
         this.clients.set(clientId, playerInstance);
 
@@ -87,10 +106,10 @@ export class EntityPool {
         return playerInstance;
     }
 
-    addPetalOrMob(type: MobType | PetalType, rarity: Rarities, x: number, y: number, parentEgger: PlayerInstance = null): MobInstance | null {
+    addPetalOrMob(type: MobType | PetalType, rarity: Rarities, x: number, y: number, petalParent: PlayerInstance = null, eggParent: PlayerInstance = null): MobInstance | null {
         const mobId = generateId();
         if (this.mobs.has(mobId)) {
-            return this.addPetalOrMob(type, rarity, x, y, parentEgger);
+            return this.addPetalOrMob(type, rarity, x, y, petalParent, eggParent);
         }
 
         const profile: MobData | PetalData = MOB_PROFILES[type] || PETAL_PROFILES[type];
@@ -108,21 +127,26 @@ export class EntityPool {
             // Not changing
             maxHealth: profile[rarity].health,
 
-            targetEntity: null,
+            mobTargetEntity: null,
+
+            lastAttackedBy: null,
+
+            petParentPlayer: eggParent,
+            petGoingToPlayer: false,
+
+            isUsagePetal: USAGE_RELOAD_PETALS.has(type),
+            petalSummonedPet: null,
 
             starfishRegeningHealth: false,
 
-            parentEgger,
-            petGoingToPlayer: false,
-            isUsagePetal: USAGE_RELOAD_PETALS.has(type),
-            summonedMob: null,
+            petalParentPlayer: petalParent,
         });
 
         this.mobs.set(mobId, mobInstance);
         return mobInstance;
     }
 
-    private staticPetalDataToReal(sp: StaticPetalData | null): MobInstance | null {
+    private staticPetalDataToReal(sp: StaticPetalData | null, parent: PlayerInstance): MobInstance | null {
         if (!sp) {
             return null;
         }
@@ -132,7 +156,7 @@ export class EntityPool {
             return null;
         }
 
-        return this.addPetalOrMob(sp.type, sp.rarity, randPos.x, randPos.y);
+        return this.addPetalOrMob(sp.type, sp.rarity, randPos.x, randPos.y, parent, parent);
     }
 
     private update() {
@@ -310,7 +334,7 @@ export class EntityPool {
             offset += 4;
 
             // Is pet or no
-            buffer.writeUInt8(mob.parentEgger ? 1 : 0, offset++);
+            buffer.writeUInt8(mob.petParentPlayer ? 1 : 0, offset++);
         });
 
         return buffer;

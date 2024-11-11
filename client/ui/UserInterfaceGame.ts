@@ -2,7 +2,7 @@ import { ARROW_START_DISTANCE, MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG }
 import EntityMob from "../entity/EntityMob";
 import { players, selfId, mobs, scaleFactor, interpolatedMouseX, interpolatedMouseY } from "../main";
 import TilesetManager from "../utils/WorldManager";
-import { ComponentsSVGButton, ComponentsTextButton } from "./components/ComponentsButton";
+import { ComponentsSVGButton, ComponentsTextButton } from "./components/ComponentButton";
 import UserInterface from "./UserInterface";
 
 function drawMutableFunctions(canvas: HTMLCanvasElement) {
@@ -51,11 +51,11 @@ export default class UserInterfaceGame extends UserInterface {
 
     protected initializeComponents(): void { }
 
-    public async onInit() {
+    public async initialize() {
         this.tilesets = await this.worldManager.generateTilesets("ocean");
     }
 
-    public async onExit() { }
+    public async cleanup() { }
 
     public animationFrame(callbackFn: () => void) {
         const canvas = this.canvas;

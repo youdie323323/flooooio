@@ -28,6 +28,7 @@ export interface PetalData {
     [Rarities.SUPER]: PetalStat;
 }
 
+// This for visualize petals in profile, this is not actually a mob, dummy data (used in converting to actual petals)
 export interface StaticPetalData {
     type: PetalType;
     rarity: Rarities;

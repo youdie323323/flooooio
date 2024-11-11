@@ -1,15 +1,15 @@
-import { angleToRad, bodyDamageOrDamage, isPetal } from "./utils/common";
+import { angleToRad, bodyDamageOrDamage, isPetal } from "./common/common";
 import { Entity, onUpdateTick } from "./Entity";
 import { EntityPool } from "./EntityPool";
 import { Mob, MobData } from "./mob/Mob";
 import { Player } from "./player/Player";
 import { PetalData } from "./mob/petal/Petal";
-import QuadTree from "./utils/QuadTree";
+import QuadTree from "./common/QuadTree";
 import { mapCenterX, mapCenterY } from "./EntityChecksum";
 import { MOB_PROFILES } from "../../shared/mobProfiles";
 import { PETAL_PROFILES } from "../../shared/petalProfiles";
 import { MobType } from "../../shared/types";
-import { computeDelta, Ellipse, isColliding } from "./utils/collision";
+import { computeDelta, Ellipse, isColliding } from "./common/collision";
 
 // Arc + stroke size
 export const FLOWER_ARC_RADIUS = 25 + (2.75 / 2);
@@ -27,8 +27,8 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
       this.quadTree = new QuadTree({
         x: mapCenterX,
         y: mapCenterY,
-        width: mapCenterX * 2,
-        height: mapCenterY * 2
+        w: mapCenterX * 2,
+        h: mapCenterY * 2
       });
     }
 
@@ -79,11 +79,11 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
 
       poolThis.mobs.forEach(mob => {
         if (this.id === mob.id) return;
-        this.quadTree.insert({ x: mob.x, y: mob.y, entity: mob });
+        this.quadTree.insert({ x: mob.x, y: mob.y, unit: mob });
       });
       poolThis.clients.forEach(client => {
         if (this.id === client.id) return;
-        this.quadTree.insert({ x: client.x, y: client.y, entity: client });
+        this.quadTree.insert({ x: client.x, y: client.y, unit: client });
       });
 
       if (this instanceof Mob) {
@@ -93,12 +93,12 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
         const nearby = this.quadTree.query({
           x: this.x,
           y: this.y,
-          width: searchRadius,
-          height: searchRadius
+          w: searchRadius,
+          h: searchRadius
         });
 
         nearby.forEach(point => {
-          const otherEntity = point.entity;
+          const otherEntity = point.unit;
           if (this.id === otherEntity.id) return;
           if (otherEntity instanceof Mob) {
             // TODO: Fix multiple hit
@@ -106,12 +106,12 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
             // Petal dont damaged to petal
             if (isPetal(this.type) && isPetal(otherEntity.type)) return;
 
-            if (this instanceof Player && otherEntity.parentEgger) return;
-            if (otherEntity instanceof Player && this.parentEgger) return;
+            if (this instanceof Player && otherEntity.petParentPlayer) return;
+            if (otherEntity instanceof Player && this.petParentPlayer) return;
 
             // Petal dont collision/damaged to pet
-            if (isPetal(this.type) && otherEntity.parentEgger) return;
-            if (isPetal(otherEntity.type) && this.parentEgger) return;
+            if (isPetal(this.type) && otherEntity.petParentPlayer) return;
+            if (isPetal(otherEntity.type) && this.petParentPlayer) return;
 
             const profile2: MobData | PetalData = MOB_PROFILES[otherEntity.type] || PETAL_PROFILES[otherEntity.type];
 
@@ -137,34 +137,34 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
               const push = this.calculatePush(this, otherEntity, delta);
               if (push) {
                 // Only pop knockback to enemie (summoned mob)
-                const multiplier1 = this.type === MobType.BUBBLE && otherEntity.parentEgger ? BUBBLE_PUSH_FACTOR : 1;
-                const multiplier2 = otherEntity.type === MobType.BUBBLE && this.parentEgger ? BUBBLE_PUSH_FACTOR : 1;
+                const multiplier1 = this.type === MobType.BUBBLE && otherEntity.petParentPlayer ? BUBBLE_PUSH_FACTOR : 1;
+                const multiplier2 = otherEntity.type === MobType.BUBBLE && this.petParentPlayer ? BUBBLE_PUSH_FACTOR : 1;
                 this.x -= push.pushX1 * multiplier2 * 0.2;
                 this.y -= push.pushY1 * multiplier2 * 0.2;
                 otherEntity.x += push.pushX2 * multiplier1 * 0.2;
                 otherEntity.y += push.pushY2 * multiplier1 * 0.2;
 
                 // Summoned mob doesnt hostile to other summoned egg
-                if (this.parentEgger && otherEntity.parentEgger) return;
+                if (this.petParentPlayer && otherEntity.petParentPlayer) return;
 
                 if (
                   isPetal(this.type) || isPetal(otherEntity.type) ||
-                  this.parentEgger || otherEntity.parentEgger
+                  this.petParentPlayer || otherEntity.petParentPlayer
                 ) {
                   this.health -= profile2[otherEntity.rarity][bodyDamageOrDamage(profile2[otherEntity.rarity])];
-                  if (isPetal(this.type) && this.petalParent) {
-                    otherEntity.lastAttacked = this.petalParent;
+                  if (isPetal(this.type) && this.petalParentPlayer) {
+                    otherEntity.lastAttackedBy = this.petalParentPlayer;
                   }
                   // Can targetted to pet too
-                  if (this.parentEgger) {
-                    otherEntity.lastAttacked = this;
+                  if (this.petParentPlayer) {
+                    otherEntity.lastAttackedBy = this;
                   }
                   otherEntity.health -= profile1[this.rarity][bodyDamageOrDamage(profile1[this.rarity])];
-                  if (isPetal(otherEntity.type) && otherEntity.petalParent) {
-                    this.lastAttacked = otherEntity.petalParent;
+                  if (isPetal(otherEntity.type) && otherEntity.petalParentPlayer) {
+                    this.lastAttackedBy = otherEntity.petalParentPlayer;
                   }
-                  if (otherEntity.parentEgger) {
-                    this.lastAttacked = otherEntity;
+                  if (otherEntity.petParentPlayer) {
+                    this.lastAttackedBy = otherEntity;
                   }
                 }
               }
@@ -176,16 +176,16 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
       }
 
       if (this instanceof Player && !this.isDead) {
-        const searchRadius = (FLOWER_ARC_RADIUS * (this.size / FLOWER_ARC_RADIUS)) * 50;
+        const searchRadius = this.size * 50;
         const nearby = this.quadTree.query({
           x: this.x,
           y: this.y,
-          width: searchRadius,
-          height: searchRadius
+          w: searchRadius,
+          h: searchRadius
         });
 
         nearby.forEach(point => {
-          const otherEntity = point.entity;
+          const otherEntity = point.unit;
           if (this.id === otherEntity.id) return;
           if (otherEntity instanceof Player) {
             const ellipse1: Ellipse = {
@@ -194,7 +194,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
               y: this.y,
               a: this.size,
               b: this.size,
-              theta: 0
+              theta: angleToRad(this.angle),
             };
 
             const ellipse2: Ellipse = {
@@ -203,7 +203,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
               y: otherEntity.y,
               a: otherEntity.size,
               b: otherEntity.size,
-              theta: 0
+              theta: angleToRad(otherEntity.angle),
             };
 
             const delta = computeDelta(ellipse1, ellipse2);
@@ -231,7 +231,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
           if (otherEntity instanceof Mob && !isPetal(otherEntity.type)) {
             const profile1: MobData = MOB_PROFILES[otherEntity.type];
 
-            if (otherEntity.parentEgger) return;
+            if (otherEntity.petParentPlayer) return;
 
             const ellipse1: Ellipse = {
               // Arc (player)
@@ -239,7 +239,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
               y: this.y,
               a: this.size,
               b: this.size,
-              theta: 0
+              theta: angleToRad(this.angle),
             };
 
             const ellipse2: Ellipse = {

@@ -3,7 +3,7 @@ import { MobType, PetalType } from "../../shared/types";
 
 // Ill implements util function here because server-side source leak
 
-export function isPetal(type: MobType | PetalType): boolean {
+export function isPetal(type: MobType | PetalType): type is PetalType {
     return type in PETAL_PROFILES;
 }
 

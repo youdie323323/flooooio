@@ -1,4 +1,5 @@
-import { ComponentsButton } from "./components/ComponentsButton";
+import { Component } from "./components/Component";
+import { ComponentsButton } from "./components/ComponentButton";
 import { UserInterfaceManager } from "./UserInterfaceManager";
 
 export default abstract class UserInterface {
@@ -7,8 +8,8 @@ export default abstract class UserInterface {
     private mouseX: number = 0;
     private mouseY: number = 0;
 
-    public buttons: ComponentsButton[] = [];
-    public activeButton: ComponentsButton | null = null;
+    public components: Component[] = [];
+    public activeComponent: Component | null = null;
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
@@ -26,24 +27,24 @@ export default abstract class UserInterface {
             this.canvas.width = width;
             this.canvas.height = height;
 
-            this.buttons.forEach(button => {
-                button.updateAbsolutePosition(width, height);
+            this.components.forEach(component => {
+                component.updateAbsolutePosition(width, height);
             });
         }).observe(this.canvas);
     }
 
     private updateMousePosition(event: MouseEvent): void {
         const rect = this.canvas.getBoundingClientRect();
-        this.mouseX = event.clientX - rect.left;
-        this.mouseY = event.clientY - rect.top;
+        this.mouseX = (event.clientX - rect.left) * (this.canvas.width / rect.width);
+        this.mouseY = (event.clientY - rect.top) * (this.canvas.height / rect.height);
     }
 
     private handleMouseDown(event: MouseEvent): void {
         this.updateMousePosition(event);
-        for (const button of this.buttons) {
-            if (button.isPointInside(this.mouseX, this.mouseY)) {
-                this.activeButton = button;
-                button.setPressed(true);
+        for (const component of this.components) {
+            if (component.isPointInside(this.mouseX, this.mouseY)) {
+                this.activeComponent = component;
+                component.setPressed(true);
                 break;
             }
         }
@@ -51,43 +52,43 @@ export default abstract class UserInterface {
 
     private handleMouseUp(event: MouseEvent): void {
         this.updateMousePosition(event);
-        if (this.activeButton?.isPointInside(this.mouseX, this.mouseY)) {
-            this.activeButton.executeCallback();
+        if (this.activeComponent?.isPointInside(this.mouseX, this.mouseY)) {
+            this.activeComponent.executeCallback();
         }
-        if (this.activeButton) {
-            this.activeButton.setPressed(false);
-            this.activeButton = null;
+        if (this.activeComponent) {
+            this.activeComponent.setPressed(false);
+            this.activeComponent = null;
         }
     }
 
     private handleMouseMove(event: MouseEvent): void {
         this.updateMousePosition(event);
-        for (const button of this.buttons) {
-            const isHovering = button.isPointInside(this.mouseX, this.mouseY);
-            button.setHovered(isHovering);
+        for (const component of this.components) {
+            const isHovering = component.isPointInside(this.mouseX, this.mouseY);
+            component.setHovered(isHovering);
 
-            if (this.activeButton === button && !isHovering) {
-                button.setPressed(false);
-                this.activeButton = null;
+            if (this.activeComponent === component && !isHovering) {
+                component.setPressed(false);
+                this.activeComponent = null;
             }
         }
     }
 
-    protected addButton(button: ComponentsButton): void {
-        this.buttons.push(button);
+    protected addComponent(component: Component): void {
+        this.components.push(component);
     }
 
     protected render(): void {
         const ctx = this.canvas.getContext("2d");
         if (!ctx) return;
 
-        for (const button of this.buttons) {
-            button.render(ctx);
+        for (const component of this.components) {
+            component.render(ctx);
         }
     }
 
-    public abstract onInit(): void;
-    public abstract onExit(): void;
+    public abstract initialize(): void;
+    public abstract cleanup(): void;
     protected abstract initializeComponents(): void;
     public abstract animationFrame(callbackFn: () => void): void;
 }

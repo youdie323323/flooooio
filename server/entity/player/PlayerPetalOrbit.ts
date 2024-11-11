@@ -5,7 +5,6 @@ import { BasePlayer } from "./Player";
 import { MobType, PetalType } from "../../../shared/types";
 import { PetalData } from "../mob/petal/Petal";
 import { PETAL_PROFILES } from "../../../shared/petalProfiles";
-import { isPetal } from "../utils/common";
 import { MoodKind } from "../../../shared/mood";
 
 const BASE_ROTATE_SPEED = 2.5;
@@ -35,7 +34,7 @@ export function PlayerPetalOrbit<T extends new (...args: any[]) => BasePlayer>(B
             // Update position history using a ring buffer
             this.historyX[this.historyIndex] = this.x;
             this.historyY[this.historyIndex] = this.y;
-            const historyTargetIndex = (this.historyIndex + 7) % 10; // Avoids hardcoding
+            const historyTargetIndex = (this.historyIndex + 8) % 10; // Avoids hardcoding
             this.historyIndex = (this.historyIndex + 1) % 10;
 
             const surface = this.slots.surface;
@@ -54,15 +53,16 @@ export function PlayerPetalOrbit<T extends new (...args: any[]) => BasePlayer>(B
                 if (!petal) continue;
 
                 const type = petal.type;
-                const baseRadius = UNMOODABLE_PETALS.has(type) ? 40 :
+                // 40 100 25
+                const baseRadius = UNMOODABLE_PETALS.has(type) ? 43 :
                     this.mood === MoodKind.ANGRY ? 100 :
-                        this.mood === MoodKind.SAD ? 25 : 40;
+                        this.mood === MoodKind.SAD ? 28 : 43;
 
                 const bounce = this.petalBounces[i];
                 const radius = this.petalRadii[i];
                 const newRadius = radius + bounce;
                 this.petalRadii[i] = newRadius;
-                this.petalBounces[i] = (baseRadius - newRadius) * BOUNCE_STRENGTH + bounce * (1 - BOUNCE_DECAY);
+                this.petalBounces[i] = (baseRadius - this.petalRadii[i]) * BOUNCE_STRENGTH + this.petalBounces[i] * (1 - BOUNCE_DECAY);
 
                 const rotateAngle = (Math.PI * 2 * i) / totalPetals + this.rotation;
                 const rad = this.petalRadii[i];

@@ -34,7 +34,7 @@ class BasePlayer implements Entity {
 
     ws: uWS.WebSocket<UserData>;
 
-    constructor(source: Partial<BasePlayer>) {
+    constructor(source: Required<BasePlayer>) {
         Object.assign(this, source);
     }
 }
@@ -51,11 +51,11 @@ type PlayerInstance = InstanceType<typeof Player>;
 
 interface PlayerData {
     name: string;
+    // Static slots (for visualize, converting)
     slots: {
         surface: MaybeEmptySlot<StaticPetalData>[];
         bottom: MaybeEmptySlot<StaticPetalData>[];
     };
-
     ws: uWS.WebSocket<UserData>;
 }
 

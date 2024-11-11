@@ -1,6 +1,6 @@
 import { Entity, onUpdateTick } from "./Entity";
 import { EntityPool } from "./EntityPool";
-import { angleToRad, isPetal, annihilateClient } from "./utils/common";
+import { angleToRad, isPetal, annihilateClient } from "./common/common";
 import { Mob } from "./mob/Mob";
 import { Player } from "./player/Player";
 import { MOB_PROFILES } from "../../shared/mobProfiles";
@@ -38,7 +38,7 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
             if (this.health < 0) {
                 // !this.isDead will prevent call every fps
                 if (this instanceof Player && !this.isDead) {
-                    annihilateClient(poolThis, this, false);
+                    annihilateClient(poolThis, this, null, null, false);
                 }
                 if (this instanceof Mob) {
                     poolThis.removeMob(this.id);
@@ -53,16 +53,16 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                     }
                 });
             }
-            
+
             // In the current version of florr.io, the pet goes to the player's position after a certain range away from the target
             // But in the florr.io wave, what is specification?
-            if (this instanceof Mob && this.parentEgger && /* This condition do old florr (maybe) */ !this.targetEntity) {
-                const dx = this.parentEgger.x - this.x;
-                const dy = this.parentEgger.y - this.y;
+            if (this instanceof Mob && this.petParentPlayer && /* This condition do old florr (maybe) */ !this.mobTargetEntity) {
+                const dx = this.petParentPlayer.x - this.x;
+                const dy = this.petParentPlayer.y - this.y;
                 const distanceToParent = Math.hypot(dx, dy);
 
                 if (this.petGoingToPlayer || distanceToParent > 5 * this.size) {
-                    this.targetEntity = null;
+                    this.mobTargetEntity = null;
                     if (distanceToParent < this.size) {
                         this.petGoingToPlayer = false;
                     } else {

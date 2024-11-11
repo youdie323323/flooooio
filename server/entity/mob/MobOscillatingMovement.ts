@@ -1,9 +1,9 @@
 import { MobType } from "../../../shared/types";
-import { getRandomAngle, isPetal } from "../utils/common";
+import { getRandomAngle, isPetal } from "../common/common";
 import { onUpdateTick } from "../Entity";
 import { EntityPool } from "../EntityPool";
 import { BaseMob } from "./Mob";
-import { SHARED_SINE_WAVE } from "../utils/cosineWave";
+import { SHARED_SINE_WAVE } from "../common/cosineWave";
 
 const MOVEMENT_DURATION = 1 / 150;
 
@@ -31,11 +31,11 @@ export function MobOscillatingMovement<T extends new (...args: any[]) => BaseMob
             // Dont move when this is petal or pet
             if (!isPetal(this.type) && this.type !== MobType.BUBBLE) {
                 if (this.shouldApplyAngleShake()) {
-                    this.angle += SHARED_SINE_WAVE.get(++this.sineWaveIndex) * (this.targetEntity ? 3 : 1);
+                    this.angle += SHARED_SINE_WAVE.get(++this.sineWaveIndex) * (this.mobTargetEntity ? 3 : 1);
                 }
 
                 // Do defensive-position move if not targetting player
-                if (!this.targetEntity) {
+                if (!this.mobTargetEntity) {
                     if (this.petGoingToPlayer) {
                         return;
                     }

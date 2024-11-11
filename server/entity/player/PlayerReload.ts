@@ -38,7 +38,7 @@ export function PlayerReload<T extends new (...args: any[]) => BasePlayer>(Base:
                     // So if petal is breaked, start reloading
                     if (e != null && !poolThis.getMob(e.id)) {
                         // If summoned mob is not dead, not reloading
-                        if (e.summonedMob && poolThis.getMob(e.summonedMob.id)) {
+                        if (e.petalSummonedPet && poolThis.getMob(e.petalSummonedPet.id)) {
                             return;
                         }
                         if (this.slots.cooldownsPetal[i] === 0) {
@@ -72,11 +72,12 @@ export function PlayerReload<T extends new (...args: any[]) => BasePlayer>(Base:
                                     // Null means its empty slot, so no need to set null
                                     // this.slots.surface[i] = null;
                                     poolThis.removeMob(e.id);
-                                    e.summonedMob = poolThis.addPetalOrMob(
+                                    e.petalSummonedPet = poolThis.addPetalOrMob(
                                         summonMob,
                                         Math.max(Rarities.COMMON, Math.min(Rarities.MYTHIC, e.rarity - 1)),
                                         e.x,
                                         e.y,
+                                        null,
                                         this,
                                     );
                                     this.slots.cooldownsUsage[i] = 0;

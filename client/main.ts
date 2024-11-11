@@ -9,6 +9,8 @@ import { UserInterfaceManager } from "./ui/UserInterfaceManager";
 import { MoodKind } from "../shared/mood";
 import { Biomes } from "../shared/biomes";
 
+export let ws: WebSocket;
+
 export let lastTimestamp = Date.now();
 export let deltaTime = 0;
 export let timeFactor = 0;
@@ -48,8 +50,8 @@ export const mobs: Map<number, EntityMob> = new Map();
         if (element) element.style.display = "none";
     }
 
-    let ws: WebSocket;
     try {
+        // Wss if ngrok
         ws = await connectWebSocket("ws://" + location.host);
         const statusContainer = document.getElementById("status-container");
         if (statusContainer) {
@@ -60,6 +62,7 @@ export const mobs: Map<number, EntityMob> = new Map();
     } catch (e) {
         hideElement("loading");
         showElement("errorDialog");
+        return;
     }
 
     // Add all global listeners
@@ -274,7 +277,9 @@ export const mobs: Map<number, EntityMob> = new Map();
             }
             case PacketKind.WAVE_UPDATE: {
                 const waveClientCount = data.getUint8(offset++);
-   
+
+                const clients = [];
+
                 for (let i = 0; i < waveClientCount; i++) {
                     const waveClientId = data.getUint32(offset);
                     offset += 4;
@@ -283,8 +288,14 @@ export const mobs: Map<number, EntityMob> = new Map();
 
                     const waveClientName = readString();
 
-                    console.log(waveClientId, waveClientIsOwner, waveClientName);
+                    clients.push({
+                        id: waveClientId,
+                        isOwner: waveClientIsOwner,
+                        name: waveClientName,
+                    });
                 }
+
+                console.table(clients);
 
                 const waveCode = readString();
 
@@ -304,6 +315,10 @@ export const mobs: Map<number, EntityMob> = new Map();
             }
             case PacketKind.WAVE_CODE_INVALID: {
                 alert("Code invalid!");
+                break;
+            }
+            case PacketKind.WAVE_START: {
+                uiManager.switchUI("game");
                 break;
             }
         }
@@ -344,7 +359,7 @@ export const mobs: Map<number, EntityMob> = new Map();
             document.documentElement.clientWidth / STANDARD_WIDTH,
             document.documentElement.clientHeight / STANDARD_HEIGHT
         ) * cameraController.zoom;
-
+        
         const currentUI = uiManager.getCurrentUI();
         if (currentUI) {
             currentUI.animationFrame(animationLoop);

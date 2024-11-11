@@ -22,10 +22,10 @@ export class UserInterfaceManager {
     public async switchUI(type: 'menu' | 'game'): Promise<void> {
         // Clean up previous UI if exists
         if (this.currentUI) {
-            await this.currentUI.onExit();
+            await this.currentUI.cleanup();
 
-            this.currentUI.buttons = [];
-            this.currentUI.activeButton = null;
+            this.currentUI.components = [];
+            this.currentUI.activeComponent = null;
         }
 
         // Create new UI
@@ -39,7 +39,7 @@ export class UserInterfaceManager {
         }
 
         // Initialize new UI
-        await this.currentUI.onInit();
+        await this.currentUI.initialize();
     }
 
     public getCurrentUI(): UserInterface | null {

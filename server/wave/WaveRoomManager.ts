@@ -1,7 +1,6 @@
 import { Biomes } from "../../shared/biomes";
 import { PlayerData, PlayerInstance } from "../entity/player/Player";
-import { generateId } from "../entity/utils/common";
-import WaveRoom, { PlayerReadyState } from "./WaveRoom";
+import WaveRoom, { PlayerReadyState, WaveRoomVisibleState } from "./WaveRoom";
 
 export default class WaveRoomManager {
     private waveRooms: WaveRoom[] = [];
@@ -22,7 +21,7 @@ export default class WaveRoomManager {
         return true;
     }
 
-    public joinPrivateWaveRoom(player: PlayerData, code: string): number | false {
+    public joinWaveRoom(player: PlayerData, code: string): number | false {
         const room = this.findPrivateRoom(code);
         if (!room) {
             return false;
@@ -45,6 +44,10 @@ export default class WaveRoomManager {
         return false;
     }
 
+    public removeWaveRoom(waveRoom: WaveRoom) {
+        this.waveRooms.splice(this.waveRooms.indexOf(waveRoom), 1);
+    }
+
     public createWaveRoom(player: PlayerData, biome: Biomes): number | false {
         const waveRoom = new WaveRoom(biome, this.generateCode());
         const id = waveRoom.addPlayer(player);
@@ -53,9 +56,7 @@ export default class WaveRoomManager {
     }
 
     private findPublicRoom(biome: Biomes): WaveRoom | undefined {
-        return this.waveRooms.find(
-            (room) => room.biome === biome && room.public === true && room.roomPlayers.length < WaveRoom.MAX_PLAYER_AMOUNT
-        );
+        return this.waveRooms.find(room => room.biome === biome && room.visible === WaveRoomVisibleState.PUBLIC && room.roomPlayers.length < WaveRoom.MAX_PLAYER_AMOUNT);
     }
 
     private findPrivateRoom(code: string): WaveRoom | undefined {

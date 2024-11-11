@@ -1,10 +1,13 @@
 import { generateId } from "../../server/entity/utils/common";
+import { Biomes } from "../../shared/biomes";
+import { PacketKind } from "../../shared/packet";
 import { Rarities } from "../../shared/rarities";
 import { PetalType } from "../../shared/types";
 import { MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../constants";
 import EntityMob from "../entity/EntityMob";
+import { ws } from "../main";
 import TilesetManager from "../utils/WorldManager";
-import { ComponentsSVGButton, ComponentsTextButton } from "./components/ComponentsButton";
+import { ComponentsSVGButton, ComponentsTextButton } from "./components/ComponentButton";
 import UserInterface from "./UserInterface";
 
 function randomFloat(min: number, max: number) {
@@ -53,7 +56,7 @@ export default class UserInterfaceMenu extends UserInterface {
             SWAP_BAG_SVG
         );
 
-        this.addButton(bagButton);
+        this.addComponent(bagButton);
 
         const craftButton = new ComponentsSVGButton(
             {
@@ -69,7 +72,7 @@ export default class UserInterfaceMenu extends UserInterface {
             MOLECULE_SVG
         );
 
-        this.addButton(craftButton);
+        this.addComponent(craftButton);
 
         const changelogButton = new ComponentsSVGButton(
             {
@@ -85,30 +88,113 @@ export default class UserInterfaceMenu extends UserInterface {
             SCROLL_UNFURLED_SVG
         );
 
-        this.addButton(changelogButton);
+        this.addComponent(changelogButton);
 
-        const playButton = new ComponentsTextButton(
+        // Squad
+
+        const readyButton = new ComponentsTextButton(
             {
                 xPercent: 0.4725,
-                yPercent: 0.48,
+                yPercent: 0.44,
                 widthPercent: 0.12,
                 aspectRatio: 2.5
             },
             "#1dd129",
             async () => {
-                await this.uiManager.switchUI('game');
+                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_READY, 1]));
             },
-            "Play"
+            "Ready"
         );
 
-        this.addButton(playButton);
+        this.addComponent(readyButton);
+
+        const joinSquadButton = new ComponentsTextButton(
+            {
+                xPercent: 0.4725,
+                yPercent: 0.5,
+                widthPercent: 0.12,
+                aspectRatio: 2.5
+            },
+            "#1dd129",
+            async () => {
+                const code = prompt("Enter squad code");
+                ws.send(new Uint8Array([PacketKind.JOIN_WAVE_ROOM, code.length, ...new TextEncoder().encode(code)]));
+            },
+            "Join squad"
+        );
+
+        this.addComponent(joinSquadButton);
+
+        const leaveSquadButton = new ComponentsTextButton(
+            {
+                xPercent: 0.4725,
+                yPercent: 0.74,
+                widthPercent: 0.12,
+                aspectRatio: 2.5
+            },
+            "#1dd129",
+            async () => {
+                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_LEAVE]));
+            },
+            "Leave squad"
+        );
+
+        this.addComponent(leaveSquadButton);
+
+        const createPublicButton = new ComponentsTextButton(
+            {
+                xPercent: 0.4725,
+                yPercent: 0.56,
+                widthPercent: 0.12,
+                aspectRatio: 2.5
+            },
+            "#1dd129",
+            async () => {
+                ws.send(new Uint8Array([PacketKind.CREATE_WAVE_ROOM, Biomes.GARDEN]));
+            },
+            "Create public"
+        );
+
+        this.addComponent(createPublicButton);
+        
+        const setPublicButton = new ComponentsTextButton(
+            {
+                xPercent: 0.4725,
+                yPercent: 0.68,
+                widthPercent: 0.12,
+                aspectRatio: 2.5
+            },
+            "#1dd129",
+            async () => {
+                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_CHANGE_VISIBLE, 1]));
+            },
+            "Set public"
+        );
+
+        this.addComponent(setPublicButton);
+
+        const setPrivateButton = new ComponentsTextButton(
+            {
+                xPercent: 0.4725,
+                yPercent: 0.62,
+                widthPercent: 0.12,
+                aspectRatio: 2.5
+            },
+            "#1dd129",
+            async () => {
+                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_CHANGE_VISIBLE, 0]));
+            },
+            "Set private"
+        );
+
+        this.addComponent(setPrivateButton)
     }
 
-    public async onInit() {
+    public async initialize() {
         this.tilesets = await this.worldManager.generateTilesets("ocean");
     }
 
-    public async onExit() { }
+    public async cleanup() { }
 
     private generateBackgroundEntity3D() {
         return {
