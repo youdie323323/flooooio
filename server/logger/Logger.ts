@@ -32,7 +32,7 @@ export class Logger {
      */
     private formatMetadata(metadata: Record<string, any>): string {
         return Object.entries(metadata)
-            .map(([key, value]) => `${key}=${value}`)
+            .map(([key, value]) => `${chalk.gray("@")}${key}=${value}`)
             .join(" ");
     }
 

@@ -14,7 +14,7 @@ import { computeDelta, Ellipse, isColliding } from "./common/collision";
 // Arc + stroke size
 export const FLOWER_ARC_RADIUS = 25 + (2.75 / 2);
 
-export const BUBBLE_PUSH_FACTOR = 5;
+export const BUBBLE_PUSH_FACTOR = 3;
 
 export function EntityCollisionResponse<T extends new (...args: any[]) => Entity>(Base: T) {
   return class extends Base {
@@ -81,7 +81,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
           const otherEntity = point.unit;
           if (this.id === otherEntity.id) return;
           if (otherEntity instanceof Mob) {
-            // TODO: Fix multiple hit
+            // TODO: fix multiple hit
 
             // Petal dont damaged to petal
             if (isPetal(this.type) && isPetal(otherEntity.type)) return;

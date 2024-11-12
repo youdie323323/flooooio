@@ -69,23 +69,19 @@ export function PlayerPetalOrbit<T extends new (...args: any[]) => BasePlayer>(B
                 const targetX = this.historyX[historyTargetIndex] + Math.cos(rotateAngle) * rad;
                 const targetY = this.historyY[historyTargetIndex] + Math.sin(rotateAngle) * rad;
 
-                // Smooth position using LERP
                 const pos = this.petalPositions[i];
                 pos.x += (targetX - pos.x) * LERP_FACTOR;
                 pos.y += (targetY - pos.y) * LERP_FACTOR;
 
-                // Assign smoothed positions
                 petal.x = pos.x;
                 petal.y = pos.y;
 
-                // Adjust speed for FASTER petals
                 if (type === PetalType.FASTER) {
                     const profile: PetalData = PETAL_PROFILES[type];
                     totalSpeed += profile[petal.rarity].rad;
                 }
             }
 
-            // Update rotation
             this.rotation += (BASE_ROTATE_SPEED + totalSpeed) / UPDATE_FPS;
         }
     };

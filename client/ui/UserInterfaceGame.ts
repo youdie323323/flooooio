@@ -1,9 +1,10 @@
 import { ARROW_START_DISTANCE, MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../constants";
 import EntityMob from "../entity/EntityMob";
-import { players, selfId, mobs, scaleFactor, interpolatedMouseX, interpolatedMouseY } from "../main";
+import { players, mobs, scaleFactor, interpolatedMouseX, interpolatedMouseY } from "../main";
 import TilesetManager from "../common/WorldManager";
 import { ComponentsSVGButton, ComponentsTextButton } from "./components/ComponentButton";
 import UserInterface from "./UserInterface";
+import { selfId } from "../Networking";
 
 function drawMutableFunctions(canvas: HTMLCanvasElement) {
     const ctx = canvas.getContext("2d");

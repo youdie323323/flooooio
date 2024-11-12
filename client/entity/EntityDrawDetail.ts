@@ -1,22 +1,18 @@
 import { MOB_PROFILES } from "../../shared/mobProfiles";
-import { selfId } from "../main";
 import { isPetal } from "../common/common";
+import { selfId } from "../Networking";
 import Entity from "./Entity";
 import EntityMob from "./EntityMob";
 import EntityPlayer from "./EntityPlayer";
 
-export function drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, scale = 1) {
-    ctx.save();
-    _drawEntityDetail(entity, ctx, scale);
-    ctx.restore();
-}
-
 export const HP_BAR_MAX_WIDTH: number = 45;
 
-function _drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, scale = 1) {
+export function drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, scale = 1) {
     if (entity.hpAlpha <= 0 || entity instanceof EntityMob && isPetal(entity.type)) {   
         return;
     }
+
+    ctx.save();
 
     // Draw nickname if not self
     if (entity instanceof EntityPlayer && entity.id !== selfId) {
@@ -96,4 +92,6 @@ function _drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, scale 
 
         ctx.restore();
     }
+
+    ctx.restore();
 }

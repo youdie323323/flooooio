@@ -4,10 +4,10 @@ import { Rarities } from "../../shared/rarities";
 import { PetalType } from "../../shared/types";
 import { MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../constants";
 import EntityMob from "../entity/EntityMob";
-import { ws } from "../main";
 import TilesetManager from "../common/WorldManager";
 import { ComponentsSVGButton, ComponentsTextButton } from "./components/ComponentButton";
 import UserInterface from "./UserInterface";
+import { ws } from "../main";
 
 function randomFloat(min: number, max: number) {
     return Math.random() * (max - min + 1) + min;
@@ -100,7 +100,7 @@ export default class UserInterfaceMenu extends UserInterface {
             },
             "#1dd129",
             async () => {
-                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_READY, 1]));
+                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_CHANGE_READY, 1]));
             },
             "Ready"
         );
@@ -117,7 +117,7 @@ export default class UserInterfaceMenu extends UserInterface {
             "#1dd129",
             async () => {
                 const code = prompt("Enter squad code");
-                ws.send(new Uint8Array([PacketKind.JOIN_WAVE_ROOM, code.length, ...new TextEncoder().encode(code)]));
+                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_JOIN, code.length, ...new TextEncoder().encode(code)]));
             },
             "Join squad"
         );
@@ -149,7 +149,7 @@ export default class UserInterfaceMenu extends UserInterface {
             },
             "#1dd129",
             async () => {
-                ws.send(new Uint8Array([PacketKind.CREATE_WAVE_ROOM, Biomes.GARDEN]));
+                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_CREATE, Biomes.GARDEN]));
             },
             "Create public"
         );

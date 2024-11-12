@@ -1,5 +1,5 @@
 import { PacketKind } from "../shared/packet";
-import { STANDARD_WIDTH, STANDARD_HEIGHT, TWO_PI } from "./constants";
+import { STANDARD_WIDTH, STANDARD_HEIGHT } from "./constants";
 import EntityPlayer from "./entity/EntityPlayer";
 import CameraController from "./common/CameraController";
 import EntityMob from "./entity/EntityMob";
@@ -8,6 +8,7 @@ import { Rarities } from "../shared/rarities";
 import { UserInterfaceManager } from "./ui/UserInterfaceManager";
 import { MoodKind } from "../shared/mood";
 import { Biomes } from "../shared/biomes";
+import Networking from "./Networking";
 
 export let ws: WebSocket;
 
@@ -24,20 +25,17 @@ export let targetY = 0;
 
 export let scaleFactor = 1;
 
-export let selfId = -1;
-export let waveSelfId = -1;
 export const players: Map<number, EntityPlayer> = new Map();
 export const mobs: Map<number, EntityMob> = new Map();
 
+const canvas: HTMLCanvasElement = document.querySelector('#canvas');
+const ctx = canvas.getContext('2d');
+
+export const cameraController = new CameraController(canvas);
+
+export const uiManager = new UserInterfaceManager(canvas);
+
 (async function () {
-    // Canvas setup
-    const canvas: HTMLCanvasElement = document.querySelector('#canvas');
-    const ctx = canvas.getContext('2d');
-
-    const cameraController = new CameraController(canvas);
-
-    const uiManager = UserInterfaceManager.getInstance(canvas);
-
     await uiManager.switchUI('menu');
 
     function showElement(id: string) {
@@ -51,7 +49,6 @@ export const mobs: Map<number, EntityMob> = new Map();
     }
 
     try {
-        // Wss if ngrok
         ws = await connectWebSocket("ws://" + location.host);
         const statusContainer = document.getElementById("status-container");
         if (statusContainer) {
@@ -65,7 +62,9 @@ export const mobs: Map<number, EntityMob> = new Map();
         return;
     }
 
-    // Add all global listeners
+    const networking = new Networking(ws);
+
+    // Add all global listeners (interaction)
 
     let mouseXOffset = 0;
     let mouseYOffset = 0;
@@ -76,18 +75,18 @@ export const mobs: Map<number, EntityMob> = new Map();
         mouseYOffset = event.clientY - document.documentElement.clientHeight / 2;
         const distance = Math.hypot(mouseXOffset, mouseYOffset);
         const angle = Math.atan2(mouseYOffset, mouseXOffset);
-        sendAngle(angle, distance < 50 ? distance / 100 : 1);
+        networking.sendAngle(angle, distance < 50 ? distance / 100 : 1);
     };
 
     window.onmousedown = function (e: MouseEvent) {
         if (e.button === 0 || e.button === 2) {
-            sendMood(e.button === 0 ? MoodKind.ANGRY : e.button === 2 ? MoodKind.SAD : MoodKind.NORMAL);
+            networking.sendMood(e.button === 0 ? MoodKind.ANGRY : e.button === 2 ? MoodKind.SAD : MoodKind.NORMAL);
         }
     };
 
     window.onmouseup = function (e: MouseEvent) {
         if (e.button === 0 || e.button === 2) {
-            sendMood(MoodKind.NORMAL);
+            networking.sendMood(MoodKind.NORMAL);
         }
     };
 
@@ -101,7 +100,7 @@ export const mobs: Map<number, EntityMob> = new Map();
                             index = 10;
                         }
                         index--;
-                        sendSwapPetal(index);
+                        networking.sendSwapPetal(index);
                     }
                 }
             }
@@ -120,238 +119,6 @@ export const mobs: Map<number, EntityMob> = new Map();
                 reject(err);
             };
         });
-    }
-
-    const textDecoder = new TextDecoder("utf-8");
-
-    ws.onmessage = (event) => {
-        const readString = (): string => {
-            const len = data.getUint8(offset++);
-            const buffers = new Uint8Array(data.buffer, offset, len);
-            const string = textDecoder.decode(buffers);
-            offset += len;
-            return string;
-        }
-
-        const data = new DataView(event.data);
-        let offset = 0;
-        const kind = data.getUint8(offset++);
-        switch (kind) {
-            case PacketKind.SELF_ID: {
-                selfId = data.getUint32(offset);
-                break;
-            }
-            case PacketKind.UPDATE: {
-                const clientCount = data.getUint16(offset);
-                offset += 2;
-
-                let clientIds: Set<number> = new Set();
-
-                for (let i = 0; i < clientCount; i++) {
-                    const clientId = data.getUint32(offset);
-                    offset += 4;
-
-                    clientIds.add(clientId);
-
-                    const clientX = data.getFloat64(offset);
-                    offset += 8;
-                    const clientY = data.getFloat64(offset);
-                    offset += 8;
-
-                    const clientHp = data.getInt32(offset);
-                    offset += 4;
-
-                    const clientSize = data.getUint32(offset);
-                    offset += 4;
-
-                    const clientAngle = angleToRad(data.getUint8(offset++));
-
-                    const clientMood = data.getUint8(offset++) as MoodKind;
-
-                    const clientIsDead = !!data.getUint8(offset++);
-
-                    const clientNickname = readString();
-
-                    const clientMaxHealth = data.getInt32(offset);
-                    offset += 4;
-
-                    const client = players.get(clientId);
-                    if (client) {
-                        client.nx = clientX;
-                        client.ny = clientY;
-                        client.nAngle = clientAngle;
-                        client.nSize = clientSize;
-                        client.mood = clientMood;
-                        client.isDead = clientIsDead;
-
-                        if (clientHp < client.nHealth) {
-                            client.redHealthTimer = 1;
-                        } else if (clientHp > client.nHealth) {
-                            client.redHealthTimer = 0;
-                        }
-
-                        if (clientHp < client.nHealth) {
-                            client.hurtT = 1;
-                        }
-
-                        client.nHealth = clientHp;
-
-                        client.ox = client.x;
-                        client.oy = client.y;
-                        client.oAngle = client.angle;
-                        client.oHealth = client.health;
-                        client.oSize = client.size;
-                        client.updateT = 0;
-                    } else {
-                        players.set(clientId, new EntityPlayer(clientId, clientX, clientY, clientSize, clientHp, clientMaxHealth, clientAngle, clientMood, clientNickname));
-                    }
-                }
-
-                players.forEach((client, key) => {
-                    if (!clientIds.has(key)) {
-                        players.delete(key);
-                    }
-                });
-
-                const mobCount = data.getUint16(offset);
-                offset += 2;
-
-                let mobIds: Set<number> = new Set();
-
-                for (let i = 0; i < mobCount; i++) {
-                    const mobId = data.getUint32(offset);
-                    offset += 4;
-
-                    mobIds.add(mobId);
-
-                    const mobX = data.getFloat64(offset);
-                    offset += 8;
-                    const mobY = data.getFloat64(offset);
-                    offset += 8;
-
-                    const mobHp = data.getInt32(offset);
-                    offset += 4;
-
-                    const mobSize = data.getUint32(offset);
-                    offset += 4;
-
-                    const mobAngle = angleToRad(data.getFloat64(offset));
-                    offset += 8;
-
-                    const mobType = data.getUint8(offset++);
-
-                    const mobRarity = data.getUint8(offset++) as Rarities;
-
-                    const mobMaxHealth = data.getInt32(offset);
-                    offset += 4;
-
-                    const mobIsPet = !!data.getUint8(offset++);
-
-                    const mob = mobs.get(mobId);
-                    if (mob) {
-                        mob.nx = mobX;
-                        mob.ny = mobY;
-                        mob.nAngle = mobAngle;
-                        mob.nSize = mobSize;
-
-                        if (mob.health < mob.nHealth) {
-                            mob.redHealthTimer = 1;
-                        } else if (mob.health > mob.nHealth) {
-                            mob.redHealthTimer = 0;
-                        }
-
-                        if (mobHp < mob.nHealth) {
-                            mob.hurtT = 1;
-                        }
-
-                        mob.nHealth = mobHp;
-
-                        mob.ox = mob.x;
-                        mob.oy = mob.y;
-                        mob.oAngle = mob.angle;
-                        mob.oHealth = mob.health;
-                        mob.oSize = mob.size;
-                        mob.updateT = 0;
-                    } else {
-                        mobs.set(mobId, new EntityMob(mobId, mobType, mobRarity, mobX, mobY, mobSize, mobHp, mobMaxHealth, mobAngle, mobIsPet));
-                    }
-                }
-
-                mobs.forEach((mob, key) => {
-                    if (!mobIds.has(key)) {
-                        mob.isDead = true;
-                    }
-                });
-
-                break;
-            }
-            case PacketKind.WAVE_UPDATE: {
-                const waveClientCount = data.getUint8(offset++);
-
-                const clients = [];
-
-                for (let i = 0; i < waveClientCount; i++) {
-                    const waveClientId = data.getUint32(offset);
-                    offset += 4;
-
-                    const waveClientIsOwner = data.getUint8(offset++) === 1;
-
-                    const waveClientName = readString();
-
-                    clients.push({
-                        id: waveClientId,
-                        isOwner: waveClientIsOwner,
-                        name: waveClientName,
-                    });
-                }
-
-                console.table(clients);
-
-                const waveCode = readString();
-
-                const waveBiome = data.getUint8(offset++) as Biomes;
-
-                const waveState = data.getUint8(offset++);
-
-                const waveIsPublic = !!data.getUint8(offset++);
-
-                console.log(waveCode, waveBiome, waveState, waveIsPublic);
-
-                break;
-            }
-            case PacketKind.WAVE_SELF_ID: {
-                waveSelfId = data.getUint32(offset);
-                break;
-            }
-            case PacketKind.WAVE_JOIN_FAILED: {
-                alert("Code invalid!");
-                break;
-            }
-            case PacketKind.WAVE_START: {
-                uiManager.switchUI("game");
-                break;
-            }
-        }
-    };
-
-    function angleToRad(angle: number) {
-        return angle / 255 * TWO_PI;
-    }
-
-    function sendAngle(angle: number, magnitude = 1) {
-        const normalizedAngle = getNormalizedAngle(angle);
-        const data = new Uint8Array([PacketKind.MOVE, normalizedAngle, Math.round(magnitude * 255)]);
-        ws.send(data);
-    }
-
-    function sendMood(flag: MoodKind) {
-        const data = new Uint8Array([PacketKind.MOOD, flag]);
-        ws.send(data);
-    }
-
-    function sendSwapPetal(index: number) {
-        const data = new Uint8Array([PacketKind.SWAP_PETAL, index]);
-        ws.send(data);
     }
 
     (function animationLoop() {
@@ -375,12 +142,4 @@ export const mobs: Map<number, EntityMob> = new Map();
             currentUI.animationFrame(animationLoop);
         }
     })();
-
-    function getNormalizedAngle(angle: number): number {
-        angle %= TWO_PI;
-        if (angle < 0) {
-            angle += TWO_PI;
-        }
-        return Math.round(angle / TWO_PI * 255);
-    }
 })();

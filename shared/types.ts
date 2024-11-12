@@ -2,14 +2,14 @@
 
 export enum MobType {
     BEE = 0,
-    STARFISH = 3,
-    JELLYFISH = 4,
-    BEETLE = 5,
-    BUBBLE = 6,
+    STARFISH = 1,
+    JELLYFISH = 2,
+    BEETLE = 3,
+    BUBBLE = 4,
 }
 
 export enum PetalType {
-    BASIC = 1,
-    FASTER = 2,
+    BASIC = 5,
+    FASTER = 6,
     BEETLE_EGG = 7,
 }

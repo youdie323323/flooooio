@@ -4,6 +4,7 @@ import { EntityPool } from "../entity/EntityPool";
 import { PlayerData, PlayerInstance } from "../entity/player/Player";
 import { generateId } from "../entity/common/common";
 import { logger } from "../main";
+import WaveRoomManager from "./WaveRoomManager";
 
 /** Represents the current state of a wave room */
 export enum WaveRoomState {
@@ -46,12 +47,12 @@ export default class WaveRoom {
 
     updateInterval: NodeJS.Timeout;
 
-    constructor(biome: Biomes, code: string) {
+    constructor(private waveRoomManager: WaveRoomManager, biome: Biomes, code: string) {
         this.code = code;
         this.visible = WaveRoomVisibleState.PUBLIC;
         this.state = WaveRoomState.WAITING;
         this.biome = biome;
-        this.entityPool = new EntityPool();
+        this.entityPool = new EntityPool(this);
 
         this.roomCandidates = new Array<WaveRoomPlayer>();
 
@@ -65,9 +66,7 @@ export default class WaveRoom {
         const waveClientsPacket = this.createWaveClientsPacket();
 
         this.roomCandidates.forEach((player) => {
-            try {
-                player.ws.send(waveClientsPacket, true);
-            } catch { };
+            player.ws.send(waveClientsPacket, true);
         });
     }
 
@@ -84,7 +83,7 @@ export default class WaveRoom {
         const buffer = Buffer.alloc(size);
         let offset = 0;
 
-        buffer.writeUInt8(PacketKind.WAVE_UPDATE, offset++);
+        buffer.writeUInt8(PacketKind.WAVE_ROOM_UPDATE, offset++);
 
         // Client count
         buffer.writeUInt8(this.roomCandidates.length, offset++);
@@ -118,7 +117,7 @@ export default class WaveRoom {
     }
 
     public addPlayer(player: PlayerData): number | false {
-        using _disposable = this.onChangeSomething();
+        using _disposable = this.onChangeAnything();
 
         if (WaveRoom.MAX_PLAYER_AMOUNT <= this.roomCandidates.length) {
             return false;
@@ -139,7 +138,6 @@ export default class WaveRoom {
             isOwner: this.roomCandidates.length === 0,
         });
 
-
         logger.region(() => {
             using _guard = logger.metadata({ waveClientId: id, code: this.code });
             logger.info("Added player on wave room");
@@ -149,7 +147,7 @@ export default class WaveRoom {
     }
 
     public removePlayer(id: number): boolean {
-        using _disposable = this.onChangeSomething();
+        using _disposable = this.onChangeAnything();
 
         const index = this.roomCandidates.findIndex(p => p.id === id);
         if (index >= 0) {
@@ -170,7 +168,7 @@ export default class WaveRoom {
     }
 
     public setPlayerReadyState(id: number, state: PlayerReadyState): boolean {
-        using _disposable = this.onChangeSomething();
+        using _disposable = this.onChangeAnything();
 
         const index = this.roomCandidates.findIndex(p => p.id === id);
         if (index >= 0) {
@@ -188,7 +186,7 @@ export default class WaveRoom {
     }
 
     public setPublicState(id: number, state: WaveRoomVisibleState): boolean {
-        using _disposable = this.onChangeSomething();
+        using _disposable = this.onChangeAnything();
 
         const playerData = this.roomCandidates.find(p => p.id === id);
         if (!playerData?.isOwner) {
@@ -227,9 +225,12 @@ export default class WaveRoom {
             using _guard = logger.metadata({ code: this.code });
             logger.info("Wave ended");
         });
+    
+        // We already checking this in waveRoomManager.leaveWaveRoom
+        // this.waveRoomManager.removeWaveRoom(this);
     }
 
-    public onChangeSomething = () => {
+    public onChangeAnything = () => {
         const cacheThis = this;
         return {
             [Symbol.dispose]() {
@@ -238,7 +239,7 @@ export default class WaveRoom {
                     cacheThis.startWave();
                 }
 
-                if (cacheThis.state === WaveRoomState.STARTED && cacheThis.entityPool.getAllClients().every(p => p.isDead)) {
+                if (cacheThis.state === WaveRoomState.STARTED && cacheThis.roomCandidates.length !== 0 && cacheThis.entityPool.getAllClients().every(p => p.isDead)) {
                     cacheThis.state = WaveRoomState.END;
                 }
 

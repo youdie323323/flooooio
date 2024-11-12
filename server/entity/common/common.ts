@@ -6,13 +6,14 @@ import { Mob, MobStat } from "../mob/Mob";
 import { PetalStat } from "../mob/petal/Petal";
 import { PETAL_PROFILES } from "../../../shared/petalProfiles";
 import WaveRoomManager from "../../wave/WaveRoomManager";
+import WaveRoom from "../../wave/WaveRoom";
 
 export function generateId(): number {
     return Math.random() * 2 ** 32 >>> 0;
 }
 
 export function angleToRad(angle: number): number {
-    return (angle / 255) * Math.PI * 2
+    return (angle / 255) * (Math.PI * 2)
 }
 
 export function getRandomAngle(): number {
@@ -39,6 +40,22 @@ export function onClientDeath(poolThis: EntityPool, player: PlayerInstance) {
         player.isDead = true;
         // Stop moving
         player.magnitude = 0;
+    }
+}
+
+export function kickClient(waveRoom: WaveRoom, player: PlayerInstance) {
+    if (player) {
+        // Use onChangeSomething so can delete started wave if all players leaved
+        using _disposable = waveRoom.onChangeAnything();
+
+        // Delete all petals
+        player.slots.surface.forEach((e) => {
+            if (e instanceof Mob) {
+                waveRoom.entityPool.removeMob(e.id);
+            }
+        });
+
+        waveRoom.entityPool.removeClient(player.id);
     }
 }
 

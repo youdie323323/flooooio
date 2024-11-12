@@ -1,11 +1,8 @@
-import { deltaTime, selfId } from "../main";
-import { TWO_PI } from "../constants";
-import EntityPlayer from "./EntityPlayer";
-import EntityMob from "./EntityMob";
+import { deltaTime } from "../main";
 
 function normalizeAngleDifference(startAngle: number, targetAngle: number) {
-    const angleDifference = (targetAngle - startAngle) % TWO_PI;
-    return (angleDifference * 2) % TWO_PI - angleDifference;
+    const angleDifference = (targetAngle - startAngle) % (Math.PI * 2);
+    return (angleDifference * 2) % (Math.PI * 2) - angleDifference;
 }
 
 function interpolateAngle(startAngle: number, targetAngle: any, fraction: number) {

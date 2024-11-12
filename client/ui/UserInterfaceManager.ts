@@ -3,20 +3,12 @@ import UserInterfaceGame from "./UserInterfaceGame";
 import UserInterfaceMenu from "./UserInterfaceMenu";
 
 export class UserInterfaceManager {
-    private static instance: UserInterfaceManager;
     private currentUI: UserInterface | null;
     private canvas: HTMLCanvasElement;
     
-    private constructor(canvas: HTMLCanvasElement) {
+    constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
         this.currentUI = null;
-    }
-
-    public static getInstance(canvas: HTMLCanvasElement): UserInterfaceManager {
-        if (!UserInterfaceManager.instance) {
-            UserInterfaceManager.instance = new UserInterfaceManager(canvas);
-        }
-        return UserInterfaceManager.instance;
     }
 
     public async switchUI(type: 'menu' | 'game'): Promise<void> {

@@ -71,7 +71,7 @@ export default class WaveRoomManager {
      * Creates a new wave room with initial player
      */
     public createWaveRoom(player: PlayerData, biome: Biomes): number | false {
-        const waveRoom = new WaveRoom(biome, this.generateCode());
+        const waveRoom = new WaveRoom(this, biome, this.generateCode());
         this.waveRooms.push(waveRoom);
 
         logger.region(() => {

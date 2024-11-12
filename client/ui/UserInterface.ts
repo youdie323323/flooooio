@@ -3,7 +3,6 @@ import { ComponentsButton } from "./components/ComponentButton";
 import { UserInterfaceManager } from "./UserInterfaceManager";
 
 export default abstract class UserInterface {
-    protected uiManager: UserInterfaceManager;
     protected canvas: HTMLCanvasElement;
     private mouseX: number = 0;
     private mouseY: number = 0;
@@ -13,7 +12,6 @@ export default abstract class UserInterface {
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
-        this.uiManager = UserInterfaceManager.getInstance(canvas);
         this.setupEventListeners();
     }
 

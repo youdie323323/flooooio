@@ -4,15 +4,16 @@ import { MobType, PetalType } from "../../shared/types";
 import { Mob, MobInstance, MOB_SIZE_FACTOR, MobData } from "./mob/Mob";
 import { Player, PlayerData, PlayerInstance } from "./player/Player";
 import { onUpdateTick } from "./Entity";
-import { generateId, getRandomAngle, getRandomSafePosition, isPetal } from './common/common';
+import { generateId, getRandomAngle, getRandomSafePosition, isPetal, kickClient } from './common/common';
 import { Rarities } from '../../shared/rarities';
 import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from './EntityChecksum';
 import { MOB_PROFILES } from '../../shared/mobProfiles';
 import { PETAL_PROFILES } from '../../shared/petalProfiles';
 import { PetalData, StaticPetalData } from './mob/petal/Petal';
 import { USAGE_RELOAD_PETALS } from './player/PlayerReload';
-import { MoodKind } from '../../shared/mood';
+import { MoodKind, MOON_KIND_VALUES } from '../../shared/mood';
 import { logger } from '../main';
+import WaveRoom from '../wave/WaveRoom';
 
 // Define UserData for WebSocket connections
 export interface UserData {
@@ -27,13 +28,13 @@ export class EntityPool {
     public mobs: Map<number, MobInstance>;
     private updateInterval: NodeJS.Timeout;
 
-    constructor() {
+    constructor(private readonly waveRoom: WaveRoom) {
         this.clients = new Map();
         this.mobs = new Map();
     }
 
     public startWave(roomPlayers: PlayerData[]) {
-        const startBuffer = Buffer.from([PacketKind.WAVE_START]);
+        const waveStartBuffer = Buffer.from([PacketKind.WAVE_ROOM_STARTING]);
         roomPlayers.forEach(player => {
             const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this);
             if (!randPos) {
@@ -42,9 +43,7 @@ export class EntityPool {
 
             this.addClient(player, randPos.x, randPos.y);
 
-            try {
-                player.ws.send(startBuffer, true);
-            } catch { }
+            player.ws.send(waveStartBuffer, true);
         });
 
         this.broadcastInitPacket();
@@ -186,18 +185,56 @@ export class EntityPool {
         this.broadcastUpdatePacket();
     }
 
+    // Begin updaters
+
     updateMovement(clientId: number, angle: number, magnitude: number) {
         const client = this.clients.get(clientId);
         if (client && !client.isDead) {
+            if (
+                magnitude < 0 || magnitude > 255 ||
+                angle < 0 || angle > 256
+            ) {
+                logger.region(() => {
+                    using _guard = logger.metadata({
+                        clientId,
+                        magnitude,
+                        angle,
+                    });
+
+                    logger.warn("Invalid magnitude/angle received from client, kicking");
+                });
+
+                kickClient(this.waveRoom, client);
+
+                return;
+            }
+
             client.angle = angle;
-            client.magnitude = Math.max(0, Math.min(magnitude, 255)) * 5;
+            client.magnitude = magnitude * 5;
         }
     }
 
-    updateMood(clientId: number, flag: MoodKind) {
+    updateMood(clientId: number, kind: MoodKind) {
         const client = this.clients.get(clientId);
         if (client && !client.isDead) {
-            client.mood = flag;
+            if (
+                !MOON_KIND_VALUES.includes(kind)
+            ) {
+                logger.region(() => {
+                    using _guard = logger.metadata({
+                        clientId,
+                        kind,
+                    });
+
+                    logger.warn("Invalid mood kind received from client, kicking");
+                });
+
+                kickClient(this.waveRoom, client);
+
+                return;
+            }
+
+            client.mood = kind;
         }
     }
 
@@ -219,30 +256,28 @@ export class EntityPool {
         }
     }
 
+    // End
+
     broadcastUpdatePacket() {
         const updatePacket = this.createUpdatePacket();
 
         // Loop through all WebSocket connections
         this.clients.forEach((player) => {
-            try {
-                player.ws.send(updatePacket, true);
-            } catch { }
+            player.ws.send(updatePacket, true);
         });
     }
 
     broadcastInitPacket() {
         this.clients.forEach((player, clientId) => {
-            try {
-                const buffer = Buffer.alloc(5);
-                let offset = 0;
+            const buffer = Buffer.alloc(5);
+            let offset = 0;
 
-                buffer.writeUInt8(PacketKind.SELF_ID, offset++);
+            buffer.writeUInt8(PacketKind.SELF_ID, offset++);
 
-                buffer.writeUInt32BE(clientId, offset);
-                offset += 4;
+            buffer.writeUInt32BE(clientId, offset);
+            offset += 4;
 
-                player.ws.send(buffer, true);
-            } catch { }
+            player.ws.send(buffer, true);
         });
     }
 
@@ -377,7 +412,7 @@ export class EntityPool {
         const client = this.clients.get(clientId);
         if (client) {
             this.clients.delete(clientId);
-            
+
             logger.region(() => {
                 using _guard = logger.metadata({ clientId });
                 logger.info("Removed player from wave");
