@@ -2,6 +2,7 @@ import { Biomes } from "../shared/biomes";
 import { MoodKind } from "../shared/mood";
 import { PacketKind } from "../shared/packet";
 import { Rarities } from "../shared/rarities";
+import { TWO_PI } from "./constants";
 import EntityMob from "./entity/EntityMob";
 import EntityPlayer from "./entity/EntityPlayer";
 import { players, mobs, uiManager } from "./main";
@@ -10,15 +11,15 @@ export let selfId = -1;
 export let waveSelfId = -1;
 
 function angleToRad(angle: number) {
-    return angle / 255 * (Math.PI * 2);
+    return angle / 255 * TWO_PI;
 }
 
 function getNormalizedAngle(angle: number): number {
-    angle %= Math.PI * 2;
+    angle %= TWO_PI;
     if (angle < 0) {
-        angle += Math.PI * 2;
+        angle += TWO_PI;
     }
-    return Math.round(angle / (Math.PI * 2) * 255);
+    return Math.round(angle / TWO_PI * 255);
 }
 
 export default class Networking {

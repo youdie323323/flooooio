@@ -5,7 +5,7 @@
   "scripts": {
     "build:client": "node esbuild.mjs",
     "build": "npm run build:client",
-    "start:server": "cd server && tsx main.ts",
+    "start:server": "cd server && tsx --inspect main.ts",
     "start": "concurrently \"npm run build\" \"npm run start:server\""
   },
   "dependencies": {

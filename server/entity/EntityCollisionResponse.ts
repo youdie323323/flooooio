@@ -18,7 +18,7 @@ export const BUBBLE_PUSH_FACTOR = 3;
 
 export function EntityCollisionResponse<T extends new (...args: any[]) => Entity>(Base: T) {
   return class extends Base {
-    quadTree: QuadTree;
+    private quadTree: QuadTree;
 
     constructor(...args: any) {
       super(...args);
@@ -54,8 +54,6 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
       if (super[onUpdateTick]) {
         super[onUpdateTick](poolThis);
       }
-
-      this.quadTree.clear();
 
       poolThis.mobs.forEach(mob => {
         if (this.id === mob.id) return;
@@ -149,6 +147,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
           }
         });
 
+        this.quadTree.clear();
         return;
       }
 
@@ -244,8 +243,11 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
           }
         });
 
+        this.quadTree.clear();
         return;
       }
+
+      throw "Unreachable";
     }
   };
 }

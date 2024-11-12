@@ -2,6 +2,7 @@ import { deltaTime } from "../main";
 import Entity from "./Entity";
 import { drawEntityDetail } from "./entityDrawDetail";
 import { MoodKind } from "../../shared/mood";
+import { TWO_PI } from "../constants";
 
 export default class EntityPlayer extends Entity {
     angryT: number;
@@ -49,7 +50,7 @@ export default class EntityPlayer extends Entity {
         ctx.lineWidth = 2.75;
         ctx.strokeStyle = this.getSkinColor("#cfbb50");
         ctx.beginPath();
-        ctx.arc(0, 0, 25, 0, Math.PI * 2);
+        ctx.arc(0, 0, 25, 0, TWO_PI);
         ctx.fill();
         ctx.stroke();
 
@@ -86,9 +87,9 @@ export default class EntityPlayer extends Entity {
             };
             let s8 = function (s9 = 0) {
                 ctx.beginPath();
-                ctx.ellipse(7, -5, 2.5 + s9, 6 + s9, 0, 0, Math.PI * 2);
+                ctx.ellipse(7, -5, 2.5 + s9, 6 + s9, 0, 0, TWO_PI);
                 ctx.moveTo(-7, -5);
-                ctx.ellipse(-7, -5, 2.5 + s9, 6 + s9, 0, 0, Math.PI * 2);
+                ctx.ellipse(-7, -5, 2.5 + s9, 6 + s9, 0, 0, TWO_PI);
                 ctx.strokeStyle = ctx.fillStyle = "#111111";
                 ctx.fill();
             };
@@ -101,9 +102,9 @@ export default class EntityPlayer extends Entity {
             s8(0);
             ctx.clip();
             ctx.beginPath();
-            ctx.arc(7 + this.eyeX * 2, -5 + this.eyeY * 3.5, 3.1, 0, Math.PI * 2);
+            ctx.arc(7 + this.eyeX * 2, -5 + this.eyeY * 3.5, 3.1, 0, TWO_PI);
             ctx.moveTo(-7, -5);
-            ctx.arc(-7 + this.eyeX * 2, -5 + this.eyeY * 3.5, 3.1, 0, Math.PI * 2);
+            ctx.arc(-7 + this.eyeX * 2, -5 + this.eyeY * 3.5, 3.1, 0, TWO_PI);
             ctx.fillStyle = "#eee";
             ctx.fill();
             ctx.restore();

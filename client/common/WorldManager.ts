@@ -1,5 +1,6 @@
 import { Canvg, presets } from "canvg";
 import { scaleFactor } from "../main";
+import { TWO_PI } from "../constants";
 
 export const BIOME_SVG_TILESETS: {
     [key: string]: Array<string>;
@@ -335,7 +336,7 @@ export default class TilesetManager {
             - numGridX * 30 * scaleFactor,
             (30 / 2 * adjustedGridSize - (playerY * scaleFactor) + canvas.height / 2
                 - numGridY * 30 * scaleFactor) + (210 * scaleFactor),
-            ((4.985 * (30 * 30)) - 2500) * scaleFactor + ctx.lineWidth / 2, 0, Math.PI * 2,
+            ((4.985 * (30 * 30)) - 2500) * scaleFactor + ctx.lineWidth / 2, 0, TWO_PI,
         );
         ctx.stroke();
         ctx.closePath();

@@ -1,13 +1,10 @@
-import { PacketKind } from "../shared/packet";
 import { STANDARD_WIDTH, STANDARD_HEIGHT } from "./constants";
 import EntityPlayer from "./entity/EntityPlayer";
 import CameraController from "./common/CameraController";
 import EntityMob from "./entity/EntityMob";
 import { interpolate } from "./common/Interpolator";
-import { Rarities } from "../shared/rarities";
 import { UserInterfaceManager } from "./ui/UserInterfaceManager";
 import { MoodKind } from "../shared/mood";
-import { Biomes } from "../shared/biomes";
 import Networking from "./Networking";
 
 export let ws: WebSocket;
@@ -46,6 +43,20 @@ export const uiManager = new UserInterfaceManager(canvas);
     function hideElement(id: string) {
         const element = document.getElementById(id);
         if (element) element.style.display = "none";
+    }
+
+    // WebSocket setup
+    function connectWebSocket(address: string | URL): Promise<WebSocket> {
+        return new Promise(function (resolve, reject) {
+            const ws = new WebSocket(address);
+            ws.binaryType = "arraybuffer";
+            ws.onopen = function () {
+                resolve(ws);
+            };
+            ws.onerror = function (err) {
+                reject(err);
+            };
+        });
     }
 
     try {
@@ -105,21 +116,7 @@ export const uiManager = new UserInterfaceManager(canvas);
                 }
             }
         }
-    }
-
-    // WebSocket setup
-    function connectWebSocket(address: string | URL): Promise<WebSocket> {
-        return new Promise(function (resolve, reject) {
-            const ws = new WebSocket(address);
-            ws.binaryType = "arraybuffer";
-            ws.onopen = function () {
-                resolve(ws);
-            };
-            ws.onerror = function (err) {
-                reject(err);
-            };
-        });
-    }
+    };
 
     (function animationLoop() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -136,7 +133,7 @@ export const uiManager = new UserInterfaceManager(canvas);
             document.documentElement.clientWidth / STANDARD_WIDTH,
             document.documentElement.clientHeight / STANDARD_HEIGHT
         ) * cameraController.zoom;
-        
+
         const currentUI = uiManager.getCurrentUI();
         if (currentUI) {
             currentUI.animationFrame(animationLoop);

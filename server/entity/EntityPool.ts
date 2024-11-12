@@ -58,7 +58,7 @@ export class EntityPool {
                 }
 
                 this.addPetalOrMob(MobType.BUBBLE, Rarities.MYTHIC, randPos.x, randPos.y, null, null);
-            }, 5);
+            }, 10);
         }, 20000);
     }
 
