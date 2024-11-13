@@ -13,7 +13,6 @@ export interface PetalStat {
 export interface PetalData {
     name: string;
     description: string;
-    // Canvas common
     fraction: number;
     rx: number;
     ry: number;

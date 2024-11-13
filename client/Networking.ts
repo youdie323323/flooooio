@@ -224,14 +224,27 @@ export default class Networking {
 
                     console.log(waveCode, waveBiome, waveState, waveIsPublic);
 
+                    uiManager.currentUI.biome = waveBiome;
+
                     break;
                 }
                 case PacketKind.WAVE_ROOM_STARTING: {
                     uiManager.switchUI("game");
+
+                    const waveBiome = data.getUint8(offset++) as Biomes;
+
+                    uiManager.currentUI.biome = waveBiome;
+
                     break;
                 }
                 case PacketKind.WAVE_ROOM_JOIN_FAILED: {
                     alert("Code invalid!");
+
+                    break;
+                }
+                case PacketKind.SERVER_CLOSED: {
+                    document.body.innerHTML = "<h1>Server closed. Try again after some minutes.</h1>";
+                    
                     break;
                 }
             }

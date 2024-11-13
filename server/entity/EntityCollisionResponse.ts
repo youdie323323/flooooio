@@ -148,6 +148,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
         });
 
         this.quadTree.clear();
+        
         return;
       }
 
@@ -244,6 +245,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
         });
 
         this.quadTree.clear();
+        
         return;
       }
 

@@ -1,13 +1,13 @@
 import { TWO_PI } from "../constants";
 import { deltaTime } from "../main";
 
-function normalizeAngleDifference(startAngle: number, targetAngle: number) {
-    const angleDifference = (targetAngle - startAngle) % TWO_PI;
-    return (angleDifference * 2) % TWO_PI - angleDifference;
+function shortAngleDistance(a0: number, a1: number) {
+    const da = (a1 - a0) % TWO_PI;
+    return (da * 2) % TWO_PI - da;
 }
 
-function interpolateAngle(startAngle: number, targetAngle: any, fraction: number) {
-    return startAngle + normalizeAngleDifference(startAngle, targetAngle) * fraction;
+function interpolateDirection(a0: number, a1: any, t: number) {
+    return a0 + shortAngleDistance(a0, a1) * t;
 }
 
 function hx(rs: number[], rt: number[], ru: number) {
@@ -97,7 +97,7 @@ export default abstract class Entity {
         this.eyeX += (Math.cos(this.nAngle) - this.eyeX) * rI;
         this.eyeY += (Math.sin(this.nAngle) - this.eyeY) * rI;
 
-        this.angle = interpolateAngle(this.oAngle, this.nAngle, this.t);
+        this.angle = interpolateDirection(this.oAngle, this.nAngle, this.t);
         this.moveCounter += Math.hypot(this.x - this.nx, this.y - this.ny) / 50 * deltaTime / 18;
 
         if (this.redHealthTimer > 0) {

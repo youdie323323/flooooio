@@ -47,11 +47,11 @@ export default class WaveRoom {
 
     updateInterval: NodeJS.Timeout;
 
-    constructor(private waveRoomManager: WaveRoomManager, biome: Biomes, code: string) {
-        this.code = code;
+    constructor(biome: Biomes, code: string) {
         this.visible = WaveRoomVisibleState.PUBLIC;
         this.state = WaveRoomState.WAITING;
         this.biome = biome;
+        this.code = code;
         this.entityPool = new EntityPool(this);
 
         this.roomCandidates = new Array<WaveRoomPlayer>();
@@ -63,14 +63,14 @@ export default class WaveRoom {
     * Broadcasts the current room state to all players
     */
     private broadcastUpdatePacket() {
-        const waveClientsPacket = this.createWaveClientsPacket();
+        const waveClientsPacket = this.createWaveRoomUpdatePacket();
 
         this.roomCandidates.forEach((player) => {
             player.ws.send(waveClientsPacket, true);
         });
     }
 
-    private calculateWaveClientsPacketSize(): number {
+    private calculateWaveRoomUpdatePacketSize(): number {
         let size = 1 + 1 + (this.code.length + 1) + 1 + 1 + 1;
         this.roomCandidates.forEach(client => {
             size += 4 + 1 + 1 + client.name.length;
@@ -78,8 +78,8 @@ export default class WaveRoom {
         return size;
     }
 
-    private createWaveClientsPacket() {
-        const size = this.calculateWaveClientsPacketSize();
+    private createWaveRoomUpdatePacket() {
+        const size = this.calculateWaveRoomUpdatePacketSize();
         const buffer = Buffer.alloc(size);
         let offset = 0;
 
@@ -151,6 +151,7 @@ export default class WaveRoom {
 
         const index = this.roomCandidates.findIndex(p => p.id === id);
         if (index >= 0) {
+            const savedIsOwner = this.roomCandidates[index]?.isOwner;
             this.roomCandidates.splice(index, 1);
 
             logger.region(() => {
@@ -158,9 +159,11 @@ export default class WaveRoom {
                 logger.info("Removed player from wave room");
             });
 
-            if (this.roomCandidates[index]?.isOwner && this.roomCandidates.length > 0) {
+            // Grant owner to second joined candidate
+            if (savedIsOwner && this.roomCandidates.length > 0) {
                 this.roomCandidates[0].isOwner = true;
             }
+
             return true;
         } else {
             return false;
@@ -206,7 +209,7 @@ export default class WaveRoom {
     private startWave() {
         this.state = WaveRoomState.STARTED;
         clearInterval(this.updateInterval);
-        this.entityPool.startWave(this.roomCandidates);
+        this.entityPool.startWave(this);
 
         logger.region(() => {
             using _guard = logger.metadata({
@@ -225,7 +228,7 @@ export default class WaveRoom {
             using _guard = logger.metadata({ code: this.code });
             logger.info("Wave ended");
         });
-    
+
         // We already checking this in waveRoomManager.leaveWaveRoom
         // this.waveRoomManager.removeWaveRoom(this);
     }

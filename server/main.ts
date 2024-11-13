@@ -34,6 +34,8 @@ const DEFAULT_PLAYER_DATA: Omit<PlayerData, "ws"> = {
 };
 
 const PORT = 8080;
+const app = uWS.App();
+
 const MIME_TYPES = {
     '.html': 'text/html',
     '.js': 'application/javascript',
@@ -94,21 +96,20 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             break;
         }
         // Wave
-        case PacketKind.WAVE_ROOM_CREATE:
+        case PacketKind.WAVE_ROOM_CREATE: {
             if (buffer.length !== 2 || !BIOME_VALUES.includes(buffer[1])) return;
 
-            const userData = ws.getUserData();
-
-            if (userData.waveRoomClientId) {
-                waveRoomManager.leaveWaveRoom(userData.waveRoomClientId);
+            if (waveRoomClientId) {
+                waveRoomManager.leaveWaveRoom(waveRoomClientId);
             }
 
-            const id = waveRoomManager.createWaveRoom({ ...DEFAULT_PLAYER_DATA, ws }, buffer[1]);
+            const id = waveRoomManager.createWaveRoom(userData.wavePlayerData, buffer[1]);
             if (!id) return;
 
-            ws.getUserData().waveRoomClientId = id;
+            userData.waveRoomClientId = id;
 
             break;
+        }
         case PacketKind.WAVE_ROOM_JOIN: {
             if (buffer.length < 2) return;
 
@@ -117,21 +118,17 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             const roomCode = new TextDecoder('utf-8').decode(buffer.slice(2, 2 + length));
 
-            const userData = ws.getUserData();
-
-            // Remove player from wave room if player were in other wave room
-            if (userData.waveRoomClientId) {
-                waveRoomManager.leaveWaveRoom(userData.waveRoomClientId);
-                userData.waveRoomClientId = null;
-            }
-
-            const id = waveRoomManager.joinWaveRoom({ ...DEFAULT_PLAYER_DATA, ws }, roomCode);
+            const id = waveRoomManager.joinWaveRoom(userData.wavePlayerData, roomCode);
 
             const response = Buffer.alloc(id ? 5 : 1);
             response.writeUInt8(id ? PacketKind.WAVE_ROOM_SELF_ID : PacketKind.WAVE_ROOM_JOIN_FAILED, 0);
 
             if (id) {
                 response.writeUInt32BE(id, 1);
+
+                // Remove player from wave room if player were in other wave room
+                if (waveRoomClientId) waveRoomManager.leaveWaveRoom(waveRoomClientId);
+
                 userData.waveRoomClientId = id;
             };
 
@@ -166,7 +163,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
     }
 }
 
-uWS.App()
+app
     .get('/*', (res, req) => logger.region(() => {
         const url = req.getUrl();
         const filePath = path.join(__dirname, 'public', url === '/' ? 'index.html' : url);
@@ -208,15 +205,17 @@ uWS.App()
             logger.info("Client connected");
 
             // Safely set them null
-            ws.getUserData().waveRoomClientId = null;
-            ws.getUserData().waveClientId = null;
+            const userData = ws.getUserData();
+            userData.waveRoomClientId = null;
+            userData.waveClientId = null;
+            userData.wavePlayerData = { ...DEFAULT_PLAYER_DATA, ws };
 
             // Lag simulator
             // const originalSend = ws.send;
             // ws.send = function (...args) {
             //     setTimeout(() => {
             //         originalSend.apply(ws, args);
-            //     }, 200);
+            //     }, 300);
             // };
         }),
         // I dont log errors here because all errors are well-known (ws.send fail)
@@ -253,3 +252,16 @@ uWS.App()
             logger.error(`Failed to listen on port ${PORT}`);
         }
     });
+
+// TODO: fix this ass...
+// process.on('SIGINT', () => {
+//     logger.warn("Gracefully shutdown");
+// 
+//     const serverClosedBuffer = Buffer.from([PacketKind.SERVER_CLOSED]);
+//     waveRoomManager.getAllWebsockets().forEach(ws => {
+//         ws.send(serverClosedBuffer, true);
+//         ws.close();
+//     });
+// 
+//     app.close();
+// });

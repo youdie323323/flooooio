@@ -65,7 +65,7 @@ export default class QuadTree {
     public query(range: Rectangle): Point[] {
         const found: Point[] = [];
 
-        if (this.intersects(range, this.boundary)) {
+        if (this.overlapsAABB(range, this.boundary)) {
             return found;
         }
 
@@ -131,7 +131,7 @@ export default class QuadTree {
         );
     }
 
-    private intersects(rangeA: Rectangle, rangeB: Rectangle): boolean {
+    private overlapsAABB(rangeA: Rectangle, rangeB: Rectangle): boolean {
         const wA = rangeA.w / 2;
         const hA = rangeA.h / 2;
         const wB = rangeB.w / 2;

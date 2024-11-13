@@ -6,6 +6,7 @@ import { MobType, PetalType } from "../../../shared/types";
 import { PetalData } from "../mob/petal/Petal";
 import { PETAL_PROFILES } from "../../../shared/petalProfiles";
 import { MoodKind } from "../../../shared/mood";
+import { TWO_PI } from "../common/common";
 
 const BASE_ROTATE_SPEED = 2.5;
 const LERP_FACTOR = 0.7;
@@ -54,9 +55,9 @@ export function PlayerPetalOrbit<T extends new (...args: any[]) => BasePlayer>(B
 
                 const type = petal.type;
                 // 40 100 25
-                const baseRadius = UNMOODABLE_PETALS.has(type) ? 43 :
+                const baseRadius = UNMOODABLE_PETALS.has(type) ? 40 :
                     this.mood === MoodKind.ANGRY ? 100 :
-                        this.mood === MoodKind.SAD ? 28 : 43;
+                        this.mood === MoodKind.SAD ? 25 : 40;
 
                 const bounce = this.petalBounces[i];
                 const radius = this.petalRadii[i];
@@ -64,7 +65,7 @@ export function PlayerPetalOrbit<T extends new (...args: any[]) => BasePlayer>(B
                 this.petalRadii[i] = newRadius;
                 this.petalBounces[i] = (baseRadius - this.petalRadii[i]) * BOUNCE_STRENGTH + this.petalBounces[i] * (1 - BOUNCE_DECAY);
 
-                const rotateAngle = (Math.PI * 2 * i) / totalPetals + this.rotation;
+                const rotateAngle = (TWO_PI * i) / totalPetals + this.rotation;
                 const rad = this.petalRadii[i];
                 const targetX = this.historyX[historyTargetIndex] + Math.cos(rotateAngle) * rad;
                 const targetY = this.historyY[historyTargetIndex] + Math.sin(rotateAngle) * rad;

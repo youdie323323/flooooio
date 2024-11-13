@@ -19,6 +19,7 @@ import WaveRoom from '../wave/WaveRoom';
 export interface UserData {
     waveRoomClientId: number;
     waveClientId: number;
+    wavePlayerData: PlayerData;
 }
 
 export const UPDATE_FPS = 60;
@@ -33,9 +34,14 @@ export class EntityPool {
         this.mobs = new Map();
     }
 
-    public startWave(roomPlayers: PlayerData[]) {
-        const waveStartBuffer = Buffer.from([PacketKind.WAVE_ROOM_STARTING]);
-        roomPlayers.forEach(player => {
+    public startWave(waveRoom: WaveRoom) {
+        const waveStartBuffer = Buffer.alloc(2);
+
+        waveStartBuffer.writeUInt8(PacketKind.WAVE_ROOM_STARTING, 0);
+
+        waveStartBuffer.writeUInt8(waveRoom.biome, 1);
+
+        waveRoom.roomCandidates.forEach(player => {
             const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this);
             if (!randPos) {
                 return null;

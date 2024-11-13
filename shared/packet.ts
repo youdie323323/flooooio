@@ -14,6 +14,8 @@ export enum PacketKind {
     UPDATE,
     SELF_ID,
 
+    SERVER_CLOSED,
+
     WAVE_ROOM_UPDATE,
     WAVE_ROOM_SELF_ID,
     WAVE_ROOM_JOIN_FAILED,

@@ -1,6 +1,6 @@
 import { Entity, onUpdateTick } from "./Entity";
 import { EntityPool } from "./EntityPool";
-import { angleToRad, isPetal, onClientDeath } from "./common/common";
+import { angleToRad, isPetal, onClientDeath, TWO_PI } from "./common/common";
 import { Mob } from "./mob/Mob";
 import { Player } from "./player/Player";
 import { MOB_PROFILES } from "../../shared/mobProfiles";
@@ -69,7 +69,7 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                         this.petGoingToPlayer = true;
                     }
 
-                    const targetAngle = ((Math.atan2(dy, dx) / (Math.PI * 2)) * 255 + 255) % 255;
+                    const targetAngle = ((Math.atan2(dy, dx) / TWO_PI) * 255 + 255) % 255;
 
                     let currentAngle = this.angle;
                     while (currentAngle < 0) currentAngle += 255;
@@ -88,7 +88,6 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
 
             // World boundary (circular)
             if (!(this instanceof Mob && isPetal(this.type))) {
-                // TODO: fix gap
                 const worldRadius = Math.min(mapCenterX, mapCenterY) - mapRadius - (this instanceof Mob ? getRadius() - /* Decrease some gaps */ 15 : 0);
 
                 const dx = this.x - mapCenterX;

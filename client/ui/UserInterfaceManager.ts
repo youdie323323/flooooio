@@ -3,7 +3,7 @@ import UserInterfaceGame from "./UserInterfaceGame";
 import UserInterfaceMenu from "./UserInterfaceMenu";
 
 export class UserInterfaceManager {
-    private currentUI: UserInterface | null;
+    public currentUI: UserInterface | null;
     private canvas: HTMLCanvasElement;
     
     constructor(canvas: HTMLCanvasElement) {
@@ -14,13 +14,10 @@ export class UserInterfaceManager {
     public async switchUI(type: 'menu' | 'game'): Promise<void> {
         // Clean up previous UI if exists
         if (this.currentUI) {
-            await this.currentUI.cleanup();
-
             this.currentUI.components = [];
             this.currentUI.activeComponent = null;
         }
 
-        // Create new UI
         switch (type) {
             case 'menu':
                 this.currentUI = new UserInterfaceMenu(this.canvas);
@@ -29,12 +26,5 @@ export class UserInterfaceManager {
                 this.currentUI = new UserInterfaceGame(this.canvas);
                 break;
         }
-
-        // Initialize new UI
-        await this.currentUI.initialize();
-    }
-
-    public getCurrentUI(): UserInterface | null {
-        return this.currentUI;
     }
 }

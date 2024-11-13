@@ -61,10 +61,11 @@ interface MobStat {
 interface MobData {
     name: string;
     description: string;
-    baseSize: number;
     fraction: number;
     rx: number;
     ry: number;
+
+    baseSize: number;
 
     // TODO: replace these with MOB_HEALTH_FACTOR, MOB_DAMAGE_FACTOR
 

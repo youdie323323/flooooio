@@ -6,6 +6,8 @@ import { interpolate } from "./common/Interpolator";
 import { UserInterfaceManager } from "./ui/UserInterfaceManager";
 import { MoodKind } from "../shared/mood";
 import Networking from "./Networking";
+import TilesetManager, { BIOME_SVG_TILESETS, BIOME_TILESETS } from "./common/WorldManager";
+import { Biomes } from "../shared/biomes";
 
 export let ws: WebSocket;
 
@@ -33,6 +35,11 @@ export const cameraController = new CameraController(canvas);
 export const uiManager = new UserInterfaceManager(canvas);
 
 (async function () {
+    for (const biome in BIOME_SVG_TILESETS) {
+        const parsedBiome = parseInt(biome) as Biomes;
+        BIOME_TILESETS.set(parsedBiome, await TilesetManager.generateTilesets(parsedBiome));
+    }
+
     await uiManager.switchUI('menu');
 
     function showElement(id: string) {
@@ -134,7 +141,7 @@ export const uiManager = new UserInterfaceManager(canvas);
             document.documentElement.clientHeight / STANDARD_HEIGHT
         ) * cameraController.zoom;
 
-        const currentUI = uiManager.getCurrentUI();
+        const currentUI = uiManager.currentUI;
         if (currentUI) {
             currentUI.animationFrame(animationLoop);
         }

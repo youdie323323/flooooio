@@ -1,10 +1,11 @@
 import { ARROW_START_DISTANCE, MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../constants";
 import EntityMob from "../entity/EntityMob";
 import { players, mobs, scaleFactor, interpolatedMouseX, interpolatedMouseY } from "../main";
-import TilesetManager from "../common/WorldManager";
+import TilesetManager, { BIOME_TILESETS } from "../common/WorldManager";
 import { ComponentsSVGButton, ComponentsTextButton } from "./components/ComponentButton";
 import UserInterface from "./UserInterface";
 import { selfId } from "../Networking";
+import { Biomes } from "../../shared/biomes";
 
 function drawMutableFunctions(canvas: HTMLCanvasElement) {
     const ctx = canvas.getContext("2d");
@@ -39,9 +40,7 @@ function drawMutableFunctions(canvas: HTMLCanvasElement) {
 }
 
 export default class UserInterfaceGame extends UserInterface {
-    backgroundEntities: Array<EntityMob>;
-    worldManager: TilesetManager;
-    tilesets: OffscreenCanvas[];
+    private worldManager: TilesetManager;
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
@@ -51,12 +50,6 @@ export default class UserInterfaceGame extends UserInterface {
     }
 
     protected initializeComponents(): void { }
-
-    public async initialize() {
-        this.tilesets = await this.worldManager.generateTilesets("ocean");
-    }
-
-    public async cleanup() { }
 
     public animationFrame(callbackFn: () => void) {
         const canvas = this.canvas;
@@ -76,7 +69,7 @@ export default class UserInterfaceGame extends UserInterface {
             player.update();
         }
 
-        this.worldManager.constructWorld(canvas, this.tilesets, 50, 250, selfPlayer.x, selfPlayer.y);
+        this.worldManager.constructWorld(canvas, BIOME_TILESETS.get(this.biome), 50, 250, selfPlayer.x, selfPlayer.y);
 
         ctx.save();
 
@@ -97,7 +90,7 @@ export default class UserInterfaceGame extends UserInterface {
 
         ctx.restore();
 
-        if ("ocean" === "ocean") {
+        if (this.biome === Biomes.OCEAN) {
             ctx.save();
 
             ctx.globalCompositeOperation = "multiply";

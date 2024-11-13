@@ -1,11 +1,10 @@
 import { Canvg, presets } from "canvg";
 import { scaleFactor } from "../main";
 import { TWO_PI } from "../constants";
+import { Biomes } from "../../shared/biomes";
 
-export const BIOME_SVG_TILESETS: {
-    [key: string]: Array<string>;
-} = {
-    garden: [
+export const BIOME_SVG_TILESETS: Record<Biomes, string[]> = {
+    [Biomes.GARDEN]: [
         `<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 256 256">
             <rect width="256" height="256" fill="#1EA761"/>
             <path fill="#1C9E5B" d="M231.8 122.8c.6 5-2.7 7.6-7.4 5.6s-5.2-6.1-1.2-9.2c4.1-3 8-1.4 8.6 3.6z"/>
@@ -87,7 +86,7 @@ export const BIOME_SVG_TILESETS: {
         	<path fill="#1C9E5B" d="M86 232.9c2 4.8-.5 8.1-5.6 7.5-5.1-.6-6.8-4.5-3.7-8.6s7.3-3.7 9.3 1.1z"/>
         </svg>`,
     ],
-    desert: [
+    [Biomes.DESERT]: [
         `<?xml version="1.0" encoding="utf-8"?>
         <!-- Generator: Adobe Illustrator 26.2.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
         <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
@@ -194,7 +193,7 @@ export const BIOME_SVG_TILESETS: {
         <polyline fill="#F3E2BE" points="229.9,53.7 210,62.6 219,82.5 238.8,73.5 229.9,53.7 "/>
         </svg>`,
     ],
-    ocean: [
+    [Biomes.OCEAN]: [
         `<?xml version="1.0" encoding="utf-8"?>
         <!-- Generator: Adobe Illustrator 27.1.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
         <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
@@ -289,7 +288,7 @@ export const BIOME_SVG_TILESETS: {
 };
 
 export default class TilesetManager {
-    async generateTilesets<T extends keyof typeof BIOME_SVG_TILESETS>(biome: T): Promise<OffscreenCanvas[]> {
+    static async generateTilesets<T extends keyof typeof BIOME_SVG_TILESETS>(biome: T): Promise<OffscreenCanvas[]> {
         const generatedTilesets = new Array(BIOME_SVG_TILESETS[biome].length);
         for (let i = 0; i < BIOME_SVG_TILESETS[biome].length; i++) {
             const offscreenCanvas = new OffscreenCanvas(256, 256);
@@ -304,7 +303,7 @@ export default class TilesetManager {
         return generatedTilesets;
     }
 
-    constructWorld(canvas: HTMLCanvasElement, tilesets: Awaited<ReturnType<typeof TilesetManager.prototype.generateTilesets>>, numGridX: number, numGridY: number, playerX: number, playerY: number) {
+    constructWorld(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], numGridX: number, numGridY: number, playerX: number, playerY: number) {
         const ctx = canvas.getContext("2d");
 
         const adjustedGridSize = 300 * scaleFactor;
@@ -386,3 +385,4 @@ export default class TilesetManager {
     }
 }
 
+export const BIOME_TILESETS: Map<Biomes, OffscreenCanvas[]> = new Map();

@@ -1,4 +1,4 @@
-import { angleToRad, isPetal } from "../common/common";
+import { angleToRad, isPetal, TWO_PI } from "../common/common";
 import { Entity, onUpdateTick } from "../Entity";
 import { EntityPool } from "../EntityPool";
 import { BaseMob, Mob, MobInstance } from "./Mob";
@@ -98,7 +98,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                                 const distance = Math.hypot(dx, dy);
 
                                 if (distance < 100 * this.size) {
-                                    const targetAngle = ((Math.atan2(dy, dx) / (Math.PI * 2)) * 255 + 255) % 255;
+                                    const targetAngle = ((Math.atan2(dy, dx) / TWO_PI) * 255 + 255) % 255;
 
                                     let currentAngle = this.angle;
                                     while (currentAngle < 0) currentAngle += 255;
@@ -151,7 +151,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                                 const distance = Math.hypot(dx, dy);
 
                                 if (distance < 100 * this.size) {
-                                    const targetAngle = ((Math.atan2(dy, dx) / (Math.PI * 2)) * 255 + 255) % 255;
+                                    const targetAngle = ((Math.atan2(dy, dx) / TWO_PI) * 255 + 255) % 255;
 
                                     let currentAngle = this.angle;
                                     while (currentAngle < 0) currentAngle += 255;
@@ -201,7 +201,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                                 const dx = this.mobLastAttackedBy.x - this.x;
                                 const dy = this.mobLastAttackedBy.y - this.y;
 
-                                const targetAngle = ((Math.atan2(dy, dx) / (Math.PI * 2)) * 255 + 255) % 255;
+                                const targetAngle = ((Math.atan2(dy, dx) / TWO_PI) * 255 + 255) % 255;
 
                                 let currentAngle = this.angle;
                                 while (currentAngle < 0) currentAngle += 255;

@@ -12,16 +12,19 @@ const defaultOption = {
     range: null
 };
 const _defaultOption = defaultOption;
+
 export default class Interpolator {
     interpolation: any;
     options: any;
     oldValue: null;
     lastUpdatedAt: number | null;
     value: any;
+
     get isInterpolating() {
         const l = new Date().getTime() - this.interpolation.startTime;
         return l <= this.options.duration;
     }
+
     constructor(defaultOptionOverride = {}) {
         this.oldValue = null;
         this.lastUpdatedAt = null;
@@ -40,6 +43,7 @@ export default class Interpolator {
             this.setValue(this.options.initValue);
         }
     }
+
     setValue(o: any) {
         if (typeof this.oldValue === "number") {
             if (this.value === o) {
@@ -74,15 +78,19 @@ export default class Interpolator {
             }
         }
     }
+
     getValue() {
         return this.value;
     }
+
     getOldValue() {
         return this.oldValue;
     }
+
     getInterpolatedValue() {
         return this.calcInterpolatedValue();
     }
+    
     calcInterpolatedValue() {
         if (typeof this.oldValue !== "number") {
             throw new TypeError("Cannot calculate interpolated value");

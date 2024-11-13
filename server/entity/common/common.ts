@@ -12,8 +12,9 @@ export function generateId(): number {
     return Math.random() * 2 ** 32 >>> 0;
 }
 
+export const TWO_PI = Math.PI * 2;
 export function angleToRad(angle: number): number {
-    return (angle / 255) * (Math.PI * 2)
+    return (angle / 255) * TWO_PI
 }
 
 export function getRandomAngle(): number {

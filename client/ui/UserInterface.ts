@@ -1,3 +1,4 @@
+import { Biomes } from "../../shared/biomes";
 import { Component } from "./components/Component";
 import { ComponentsButton } from "./components/ComponentButton";
 import { UserInterfaceManager } from "./UserInterfaceManager";
@@ -9,6 +10,8 @@ export default abstract class UserInterface {
 
     public components: Component[] = [];
     public activeComponent: Component | null = null;
+
+    public biome: Biomes = Biomes.GARDEN;
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
@@ -85,8 +88,6 @@ export default abstract class UserInterface {
         }
     }
 
-    public abstract initialize(): void;
-    public abstract cleanup(): void;
     protected abstract initializeComponents(): void;
     public abstract animationFrame(callbackFn: () => void): void;
 }

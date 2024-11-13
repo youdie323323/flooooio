@@ -4,7 +4,7 @@ import { Rarities } from "../../shared/rarities";
 import { PetalType } from "../../shared/types";
 import { MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../constants";
 import EntityMob from "../entity/EntityMob";
-import TilesetManager from "../common/WorldManager";
+import TilesetManager, { BIOME_TILESETS } from "../common/WorldManager";
 import { ComponentsSVGButton, ComponentsTextButton } from "./components/ComponentButton";
 import UserInterface from "./UserInterface";
 import { ws } from "../main";
@@ -23,7 +23,6 @@ export default class UserInterfaceMenu extends UserInterface {
     }>;
     lastBackgroundPetalSpawn: number;
     worldManager: TilesetManager;
-    tilesets: OffscreenCanvas[];
     backgroundX: number;
     backgroundY: number;
     backgroundWaveStep: number;
@@ -149,7 +148,7 @@ export default class UserInterfaceMenu extends UserInterface {
             },
             "#1dd129",
             async () => {
-                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_CREATE, Biomes.GARDEN]));
+                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_CREATE, Biomes.OCEAN]));
             },
             "Create public"
         );
@@ -189,12 +188,6 @@ export default class UserInterfaceMenu extends UserInterface {
         this.addComponent(setPrivateButton)
     }
 
-    public async initialize() {
-        this.tilesets = await this.worldManager.generateTilesets("ocean");
-    }
-
-    public async cleanup() { }
-
     private generateBackgroundEntity3D() {
         return {
             x: 0,
@@ -208,7 +201,7 @@ export default class UserInterfaceMenu extends UserInterface {
         const canvas = this.canvas;
         const ctx = canvas.getContext("2d");
 
-        this.worldManager.constructWorldMenu(canvas, this.tilesets, this.backgroundX, this.backgroundY);
+        this.worldManager.constructWorldMenu(canvas, BIOME_TILESETS.get(this.biome), this.backgroundX, this.backgroundY);
 
         this.backgroundX += 0.5;
         this.backgroundY += Math.sin(this.backgroundWaveStep / 20) * 0.5;
@@ -233,14 +226,14 @@ export default class UserInterfaceMenu extends UserInterface {
             v.entity.draw(ctx);
 
             v.entity.x += v.z * 0.6;
-            v.entity.y += Math.sin(v.waveStep / 20) * 0.5;
+            v.entity.y += Math.sin(v.waveStep / 20) * 0.2;
 
-            v.waveStep += 0.08;
+            v.waveStep += 0.05;
         });
 
         this.render();
 
-        if ("ocean" === "ocean") {
+        if (this.biome === Biomes.OCEAN) {
             ctx.save();
 
             ctx.globalCompositeOperation = "multiply";

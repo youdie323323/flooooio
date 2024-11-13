@@ -30,8 +30,6 @@ export function drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, 
         ctx.fillStyle = "white";
         ctx.fillText(entity.nickname, 0, 0);
 
-        console.log(entity.nickname)
-
         ctx.restore();
     }
 

@@ -3,6 +3,7 @@ import { EntityPool } from "../EntityPool";
 import { BaseMob, Mob, MobInstance } from "./Mob";
 import { MobType } from "../../../shared/types";
 import { Player, PlayerInstance } from "../player/Player";
+import { TWO_PI } from "../common/common";
 
 export function MobHealthRegen<T extends new (...args: any[]) => BaseMob>(Base: T) {
     return class extends Base {
@@ -26,7 +27,7 @@ export function MobHealthRegen<T extends new (...args: any[]) => BaseMob>(Base: 
                     const dx = this.mobTargetEntity.x - this.x;
                     const dy = this.mobTargetEntity.y - this.y;
 
-                    const targetAngle = ((Math.atan2(dy, dx) / (Math.PI * 2)) * 255 + 255) % 255;
+                    const targetAngle = ((Math.atan2(dy, dx) / TWO_PI) * 255 + 255) % 255;
 
                     let currentAngle = this.angle;
                     while (currentAngle < 0) currentAngle += 255;

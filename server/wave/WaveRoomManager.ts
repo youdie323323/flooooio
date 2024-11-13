@@ -1,8 +1,10 @@
 import { Biomes } from "../../shared/biomes";
+import { UserData } from "../entity/EntityPool";
 import { PlayerData, PlayerInstance } from "../entity/player/Player";
 import { logger } from "../main";
 import WaveRoom, { PlayerReadyState, WaveRoomVisibleState } from "./WaveRoom";
 import { generate } from 'generate-passphrase';
+import uWS from 'uWebSockets.js';
 
 export default class WaveRoomManager {
     private waveRooms: WaveRoom[] = [];
@@ -71,7 +73,7 @@ export default class WaveRoomManager {
      * Creates a new wave room with initial player
      */
     public createWaveRoom(player: PlayerData, biome: Biomes): number | false {
-        const waveRoom = new WaveRoom(this, biome, this.generateCode());
+        const waveRoom = new WaveRoom(biome, this.generateCode());
         this.waveRooms.push(waveRoom);
 
         logger.region(() => {
@@ -110,6 +112,10 @@ export default class WaveRoomManager {
         }
 
         return null;
+    }
+
+    public getAllWebsockets(): uWS.WebSocket<UserData>[] {
+        return [...new Set(this.waveRooms.map(w => w.roomCandidates.map(c => c.ws).concat(w.entityPool.getAllClients().map(c => c.ws))).flat())];
     }
 
     /**
