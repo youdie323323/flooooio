@@ -16,6 +16,9 @@ interface Point {
 }
 
 export default class QuadTree {
+    private static readonly MAX_DEPTH = 10;
+    private static readonly MIN_SIZE = 1;
+
     private boundary: Rectangle;
     private capacity: number;
     private points: Point[] = [];
@@ -27,9 +30,6 @@ export default class QuadTree {
     private southEast!: QuadTree;
 
     private depth: number;
-
-    private static readonly MAX_DEPTH = 10;
-    private static readonly MIN_SIZE = 1;
 
     constructor(boundary: Rectangle, capacity: number = 4, depth: number = 0) {
         this.boundary = boundary;
@@ -92,22 +92,22 @@ export default class QuadTree {
         const h = this.boundary.h / 2;
 
         this.northWest = new QuadTree(
-            { x: x - w / 2, y: y - h / 2, w: w, h: h },
+            { x: x - w / 2, y: y - h / 2, w, h },
             this.capacity,
             this.depth + 1
         );
         this.northEast = new QuadTree(
-            { x: x + w / 2, y: y - h / 2, w: w, h: h },
+            { x: x + w / 2, y: y - h / 2, w, h },
             this.capacity,
             this.depth + 1
         );
         this.southWest = new QuadTree(
-            { x: x - w / 2, y: y + h / 2, w: w, h: h },
+            { x: x - w / 2, y: y + h / 2, w, h },
             this.capacity,
             this.depth + 1
         );
         this.southEast = new QuadTree(
-            { x: x + w / 2, y: y + h / 2, w: w, h: h },
+            { x: x + w / 2, y: y + h / 2, w, h },
             this.capacity,
             this.depth + 1
         );

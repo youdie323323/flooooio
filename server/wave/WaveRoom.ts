@@ -1,10 +1,9 @@
 import { Biomes } from "../../shared/biomes";
 import { PacketKind } from "../../shared/packet";
+import { generateRandomId } from "../entity/utils/random";
 import { EntityPool } from "../entity/EntityPool";
 import { PlayerData, PlayerInstance } from "../entity/player/Player";
-import { generateId } from "../entity/common/common";
 import { logger } from "../main";
-import WaveRoomManager from "./WaveRoomManager";
 
 /** Represents the current state of a wave room */
 export enum WaveRoomState {
@@ -123,7 +122,7 @@ export default class WaveRoom {
             return false;
         }
 
-        const id = generateId();
+        const id = generateRandomId();
 
         // Ensure unique clientId
         if (Array.from(this.roomCandidates.values()).map(v => v.id).includes(id)) {

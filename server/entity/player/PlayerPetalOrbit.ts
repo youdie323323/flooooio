@@ -6,7 +6,7 @@ import { MobType, PetalType } from "../../../shared/types";
 import { PetalData } from "../mob/petal/Petal";
 import { PETAL_PROFILES } from "../../../shared/petalProfiles";
 import { MoodKind } from "../../../shared/mood";
-import { TWO_PI } from "../common/common";
+import { TWO_PI } from "../utils/common";
 
 const BASE_ROTATE_SPEED = 2.5;
 const LERP_FACTOR = 0.7;

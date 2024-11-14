@@ -1,6 +1,6 @@
 import { Entity, onUpdateTick } from "./Entity";
 import { EntityPool } from "./EntityPool";
-import { angleToRad, isPetal, onClientDeath, TWO_PI } from "./common/common";
+import { isPetal, TWO_PI } from "./utils/common";
 import { Mob } from "./mob/Mob";
 import { Player } from "./player/Player";
 import { MOB_PROFILES } from "../../shared/mobProfiles";
@@ -38,7 +38,16 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
             if (this.health < 0) {
                 // !this.isDead will prevent call every fps
                 if (this instanceof Player && !this.isDead) {
-                    onClientDeath(poolThis, this);
+                    // Delete all petals
+                    this.slots.surface.forEach((e) => {
+                        if (e instanceof Mob) {
+                            poolThis.removeMob(e.id);
+                        }
+                    });
+
+                    this.isDead = true;
+                    // Stop moving
+                    this.magnitude = 0;
                 }
                 if (this instanceof Mob) {
                     poolThis.removeMob(this.id);

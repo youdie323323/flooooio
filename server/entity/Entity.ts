@@ -9,4 +9,7 @@ export interface Entity {
     maxHealth: number;
 }
 
+/**
+ * Symbol that
+ */
 export const onUpdateTick: symbol = Symbol.for("onUpdateTick");

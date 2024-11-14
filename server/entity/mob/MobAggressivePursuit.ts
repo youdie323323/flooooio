@@ -1,4 +1,4 @@
-import { angleToRad, isPetal, TWO_PI } from "../common/common";
+import { angleToRad, isPetal, TWO_PI } from "../utils/common";
 import { Entity, onUpdateTick } from "../Entity";
 import { EntityPool } from "../EntityPool";
 import { BaseMob, Mob, MobInstance } from "./Mob";

@@ -1,15 +1,15 @@
-import { angleToRad, bodyDamageOrDamage, isPetal } from "./common/common";
+import { angleToRad, bodyDamageOrDamage, isPetal } from "./utils/common";
 import { Entity, onUpdateTick } from "./Entity";
 import { EntityPool } from "./EntityPool";
 import { Mob, MobData } from "./mob/Mob";
 import { Player } from "./player/Player";
 import { PetalData } from "./mob/petal/Petal";
-import QuadTree from "./common/QuadTree";
+import QuadTree from "./utils/QuadTree";
 import { mapCenterX, mapCenterY } from "./EntityChecksum";
 import { MOB_PROFILES } from "../../shared/mobProfiles";
 import { PETAL_PROFILES } from "../../shared/petalProfiles";
 import { MobType } from "../../shared/types";
-import { computeDelta, Ellipse, isColliding } from "./common/collision";
+import { computeDelta, Ellipse, isColliding } from "./utils/collision";
 
 // Arc + stroke size
 export const FLOWER_ARC_RADIUS = 25 + (2.75 / 2);
@@ -126,7 +126,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
                   isPetal(this.type) || isPetal(otherEntity.type) ||
                   this.petParentPlayer || otherEntity.petParentPlayer
                 ) {
-                  this.health -= profile2[otherEntity.rarity][bodyDamageOrDamage(profile2[otherEntity.rarity])];
+                  this.health -= bodyDamageOrDamage(profile2[otherEntity.rarity]);
                   if (isPetal(this.type) && this.petalParentPlayer) {
                     otherEntity.mobLastAttackedBy = this.petalParentPlayer;
                   }
@@ -134,7 +134,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
                   if (this.petParentPlayer) {
                     otherEntity.mobLastAttackedBy = this;
                   }
-                  otherEntity.health -= profile1[this.rarity][bodyDamageOrDamage(profile1[this.rarity])];
+                  otherEntity.health -= bodyDamageOrDamage(profile1[this.rarity]);
                   if (isPetal(otherEntity.type) && otherEntity.petalParentPlayer) {
                     this.mobLastAttackedBy = otherEntity.petalParentPlayer;
                   }

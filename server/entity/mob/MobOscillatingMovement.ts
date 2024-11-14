@@ -1,9 +1,10 @@
 import { MobType } from "../../../shared/types";
-import { getRandomAngle, isPetal } from "../common/common";
+import { isPetal } from "../utils/common";
 import { onUpdateTick } from "../Entity";
 import { EntityPool } from "../EntityPool";
 import { BaseMob } from "./Mob";
-import { SHARED_SINE_WAVE } from "../common/cosineWave";
+import { SHARED_SINE_WAVE } from "../utils/cosineWave";
+import { getRandomAngle } from "../utils/random";
 
 const MOVEMENT_DURATION = 1 / 150;
 

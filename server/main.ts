@@ -13,7 +13,7 @@ import { PlayerReadyState, WaveRoomVisibleState } from './wave/WaveRoom';
 import { Logger } from './logger/Logger';
 import { Mob } from './entity/mob/Mob';
 import { Rarities } from '../shared/rarities';
-import { kickClient } from './entity/common/common';
+import { kickClient } from './entity/utils/common';
 
 /**
  * Temp player data.

@@ -4,7 +4,7 @@ import { MobType, PetalType } from "../../shared/types";
 import { Mob, MobInstance, MOB_SIZE_FACTOR, MobData } from "./mob/Mob";
 import { Player, PlayerData, PlayerInstance } from "./player/Player";
 import { onUpdateTick } from "./Entity";
-import { generateId, getRandomAngle, getRandomSafePosition, isPetal, kickClient } from './common/common';
+import { isPetal, kickClient } from './utils/common';
 import { Rarities } from '../../shared/rarities';
 import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from './EntityChecksum';
 import { MOB_PROFILES } from '../../shared/mobProfiles';
@@ -14,6 +14,7 @@ import { USAGE_RELOAD_PETALS } from './player/PlayerReload';
 import { MoodKind, MOON_KIND_VALUES } from '../../shared/mood';
 import { logger } from '../main';
 import WaveRoom from '../wave/WaveRoom';
+import { getRandomSafePosition, generateRandomId, getRandomAngle } from './utils/random';
 
 // Define UserData for WebSocket connections
 export interface UserData {
@@ -47,7 +48,7 @@ export class EntityPool {
                 return null;
             }
 
-            this.addClient(player, randPos.x, randPos.y);
+            this.addClient(player, randPos[0], randPos[1]);
 
             player.ws.send(waveStartBuffer, true);
         });
@@ -63,7 +64,7 @@ export class EntityPool {
                     return null;
                 }
 
-                this.addPetalOrMob(MobType.BUBBLE, Rarities.MYTHIC, randPos.x, randPos.y, null, null);
+                this.addPetalOrMob(MobType.BUBBLE, Rarities.MYTHIC, randPos[0], randPos[1], null, null);
             }, 10);
         }, 20000);
     }
@@ -73,7 +74,7 @@ export class EntityPool {
     }
 
     addClient(playerData: PlayerData, x: number, y: number): PlayerInstance | null {
-        const clientId = generateId();
+        const clientId = generateRandomId();
 
         // Ensure unique clientId
         if (this.getAllClients().map(v => v.id).includes(clientId)) {
@@ -122,7 +123,7 @@ export class EntityPool {
     }
 
     addPetalOrMob(type: MobType | PetalType, rarity: Rarities, x: number, y: number, petalParent: PlayerInstance = null, eggParent: PlayerInstance = null): MobInstance | null {
-        const mobId = generateId();
+        const mobId = generateRandomId();
         if (this.mobs.has(mobId)) {
             return this.addPetalOrMob(type, rarity, x, y, petalParent, eggParent);
         }
@@ -172,7 +173,7 @@ export class EntityPool {
             return null;
         }
 
-        return this.addPetalOrMob(sp.type, sp.rarity, randPos.x, randPos.y, parent, parent);
+        return this.addPetalOrMob(sp.type, sp.rarity, randPos[0], randPos[1], parent, parent);
     }
 
     private update() {
