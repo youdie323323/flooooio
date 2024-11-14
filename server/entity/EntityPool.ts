@@ -26,6 +26,16 @@ export interface UserData {
 export const UPDATE_FPS = 60;
 
 /**
+ * Frame per second to send update packet.
+ * 
+ * @remarks
+ * 
+ * Packets don't need to be sent at 60fps per second. 30fps per second is enough.
+ * If update sent too fast, it will feel laggy.
+ */
+export const UPDATE_SEND_FPS = 30;
+
+/**
  * Pool of entities, aka wave.
  * 
  * @remarks
@@ -37,6 +47,7 @@ export class EntityPool {
     public clients: Map<number, PlayerInstance>;
     public mobs: Map<number, MobInstance>;
     private updateInterval: NodeJS.Timeout;
+    private updateSendInterval: NodeJS.Timeout;
 
     constructor(private readonly waveRoom: WaveRoom) {
         this.clients = new Map();
@@ -66,10 +77,12 @@ export class EntityPool {
         this.broadcastInitPacket();
 
         this.updateInterval = setInterval(() => this.update(), 1000 / UPDATE_FPS);
+        this.updateSendInterval = setInterval(() => this.broadcastUpdatePacket(), 1000 / UPDATE_SEND_FPS);
     }
 
     public endWave() {
         clearInterval(this.updateInterval);
+        clearInterval(this.updateSendInterval);
     }
 
     public addClient(playerData: StaticPlayerData, x: number, y: number): PlayerInstance | null {
@@ -82,7 +95,10 @@ export class EntityPool {
 
         // 100 is level
         // 100 * x, x is upgrade
-        const health: number = (100 * 1) * 1.02 ** (Math.max(100, 75) - 1);
+        let health: number = (100 * 1) * 1.02 ** (Math.max(100, 75) - 1);
+
+        // Temporary
+        health *= 100;
 
         const playerInstance = new Player({
             id: clientId,
@@ -96,7 +112,7 @@ export class EntityPool {
             // Not changing
             maxHealth: health,
 
-            bodyDamage: 10,
+            bodyDamage: 1000,
             isDead: false,
             nickname: playerData.name,
             ws: playerData.ws,
@@ -188,8 +204,6 @@ export class EntityPool {
                 mob[onUpdateTick](this);
             }
         });
-
-        this.broadcastUpdatePacket();
     }
 
     /**

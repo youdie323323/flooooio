@@ -3,7 +3,7 @@ import { MobType, PetalType } from "../../../shared/types";
 import { PlayerInstance } from "../player/Player";
 import { EntityPool } from "../EntityPool";
 import { Mob, MobStat } from "../mob/Mob";
-import { PetalStat } from "../mob/petal/Petal";
+import { isLivingPetal, PetalStat } from "../mob/petal/Petal";
 import { PETAL_PROFILES } from "../../../shared/petalProfiles";
 import WaveRoomManager from "../../wave/WaveRoomManager";
 import WaveRoom from "../../wave/WaveRoom";
@@ -29,7 +29,7 @@ export function kickClient(waveRoom: WaveRoom, player: PlayerInstance) {
 
         // Delete all petals
         player.slots.surface.forEach((e) => {
-            if (e instanceof Mob) {
+            if (e != null && isLivingPetal(e) && waveRoom.entityPool.getMob(e.id)) {
                 waveRoom.entityPool.removeMob(e.id);
             }
         });

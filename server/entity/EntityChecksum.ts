@@ -45,7 +45,7 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                 if (this instanceof Player && !this.isDead) {
                     // Delete all petals
                     this.slots.surface.forEach((e) => {
-                        if (e instanceof Mob) {
+                        if (e != null && isLivingPetal(e) && poolThis.getMob(e.id)) {
                             poolThis.removeMob(e.id);
                         }
                     });

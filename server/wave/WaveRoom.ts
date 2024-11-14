@@ -34,8 +34,7 @@ export type WaveRoomPlayer = StaticPlayerData & {
     readyState: PlayerReadyState;
 };
 
-/** Update rate for broadcasting room state */
-export const ROOM_UPDATE_FPS = 30;
+export const ROOM_UPDATE_SEND_FPS = 30;
 
 /**
  * The wave room.
@@ -66,7 +65,7 @@ export default class WaveRoom {
 
         this.roomCandidates = new Array<WaveRoomPlayer>();
 
-        this.updateInterval = setInterval(() => this.broadcastUpdatePacket(), 1000 / ROOM_UPDATE_FPS);
+        this.updateInterval = setInterval(() => this.broadcastUpdatePacket(), 1000 / ROOM_UPDATE_SEND_FPS);
     }
 
     /**
