@@ -17,7 +17,7 @@ class BaseMob implements Entity {
     angle: number;
     size: number;
     health: number;
-    maxHealth: number;
+    readonly maxHealth: number;
 
     /**
      * Type of mob/petal.

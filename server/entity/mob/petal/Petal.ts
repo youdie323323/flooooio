@@ -52,6 +52,5 @@ export interface PetalSlots {
  * Type guard for slot.
  */
 export function isLivingPetal(slot: StaticPetalData | MobInstance): slot is MobInstance {
-    // Its have id because living
     return "id" in slot;
 }

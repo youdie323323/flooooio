@@ -20,7 +20,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
   return class extends Base {
     private quadTree: QuadTree;
 
-    constructor(...args: any) {
+    constructor(...args: any[]) {
       super(...args);
 
       this.quadTree = new QuadTree({
@@ -65,7 +65,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
       });
 
       if (this instanceof Mob) {
-        const profile1 = MOB_PROFILES[this.type] || PETAL_PROFILES[this.type];
+        const profile1: MobData | PetalData = MOB_PROFILES[this.type] || PETAL_PROFILES[this.type];
         const searchRadius = (profile1.rx + profile1.ry) * (this.size / profile1.fraction) * 2;
 
         const nearby = this.quadTree.query({
@@ -84,7 +84,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
             // Petal dont damaged to petal
             if (isPetal(this.type) && isPetal(otherEntity.type)) return;
 
-            // Pet/Petal dont damaged to player/pet
+            // Pet/petal dont damaged to player/pet
             if ((this instanceof Player || isPetal(this.type)) && otherEntity.petParentPlayer) return;
             if ((otherEntity instanceof Player || isPetal(otherEntity.type)) && this.petParentPlayer) return;
 
@@ -111,7 +111,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
             if (isColliding(delta)) {
               const push = this.calculatePush(this, otherEntity, delta);
               if (push) {
-                // Only pop knockback to enemie (summoned mob)
+                // Only pop knockback to enemy (summoned mob)
                 const multiplier1 = this.type === MobType.BUBBLE && otherEntity.petParentPlayer ? BUBBLE_PUSH_FACTOR : 1;
                 const multiplier2 = otherEntity.type === MobType.BUBBLE && this.petParentPlayer ? BUBBLE_PUSH_FACTOR : 1;
                 this.x -= push[0] * multiplier2 * 0.3;

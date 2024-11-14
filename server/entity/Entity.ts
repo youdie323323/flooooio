@@ -34,7 +34,7 @@ export interface Entity {
     /**
      * Max health of entity, immutable.
      */
-    maxHealth: number;
+    readonly maxHealth: number;
 }
 
 /**

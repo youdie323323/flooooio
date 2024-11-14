@@ -47,25 +47,21 @@ export const ROOM_UPDATE_SEND_FPS = 30;
 export default class WaveRoom {
     public static readonly MAX_PLAYER_AMOUNT = 4;
 
-    code: string;
     visible: WaveRoomVisibleState;
     state: WaveRoomState;
-    biome: Biomes;
     roomCandidates: WaveRoomPlayer[];
     entityPool: EntityPool;
 
     updateInterval: NodeJS.Timeout;
 
-    constructor(biome: Biomes, code: string) {
+    constructor(public readonly biome: Biomes, public readonly code: string) {
         this.visible = WaveRoomVisibleState.PUBLIC;
         this.state = WaveRoomState.WAITING;
-        this.biome = biome;
-        this.code = code;
         this.entityPool = new EntityPool(this);
 
         this.roomCandidates = new Array<WaveRoomPlayer>();
 
-        this.updateInterval = setInterval(() => this.broadcastUpdatePacket(), 1000 / ROOM_UPDATE_SEND_FPS);
+        this.updateInterval = setInterval(this.broadcastUpdatePacket.bind(this), 1000 / ROOM_UPDATE_SEND_FPS);
     }
 
     /**

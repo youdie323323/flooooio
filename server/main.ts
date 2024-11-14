@@ -23,7 +23,7 @@ const DEFAULT_PLAYER_DATA: Omit<StaticPlayerData, "ws"> = {
     slots: {
         surface: Array.from({ length: 8 }, () => {
             return {
-                type: PetalType.BEETLE_EGG,
+                type: PetalType.BASIC,
                 rarity: Rarities.ULTRA,
             };
         }),

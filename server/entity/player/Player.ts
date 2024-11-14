@@ -18,7 +18,7 @@ class BasePlayer implements Entity {
     angle: number;
     size: number;
     health: number;
-    maxHealth: number;
+    readonly maxHealth: number;
     
     /**
      * Body damage of player.

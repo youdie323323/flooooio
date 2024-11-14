@@ -46,6 +46,7 @@ export const UPDATE_SEND_FPS = 30;
 export class EntityPool {
     public clients: Map<number, PlayerInstance>;
     public mobs: Map<number, MobInstance>;
+    
     private updateInterval: NodeJS.Timeout;
     private updateSendInterval: NodeJS.Timeout;
 
@@ -76,8 +77,8 @@ export class EntityPool {
 
         this.broadcastInitPacket();
 
-        this.updateInterval = setInterval(() => this.update(), 1000 / UPDATE_FPS);
-        this.updateSendInterval = setInterval(() => this.broadcastUpdatePacket(), 1000 / UPDATE_SEND_FPS);
+        this.updateInterval = setInterval(this.update.bind(this), 1000 / UPDATE_FPS);
+        this.updateSendInterval = setInterval(this.broadcastUpdatePacket.bind(this), 1000 / UPDATE_SEND_FPS);
     }
 
     public endWave() {
