@@ -1,6 +1,6 @@
 import { Biomes } from "../../shared/biomes";
 import { UserData } from "../entity/EntityPool";
-import { PlayerData, PlayerInstance } from "../entity/player/Player";
+import { PlayerInstance, StaticPlayerData } from "../entity/player/Player";
 import { logger } from "../main";
 import WaveRoom, { PlayerReadyState, WaveRoomVisibleState } from "./WaveRoom";
 import { generate } from 'generate-passphrase';
@@ -12,7 +12,7 @@ export default class WaveRoomManager {
     /**
      * Adds a player to an existing public wave room or creates a new one if none exists
      */
-    public joinPublicWaveRoom(player: PlayerData, biome: Biomes): boolean {
+    public joinPublicWaveRoom(player: StaticPlayerData, biome: Biomes): boolean {
         let waveRoom = this.findPublicRoom(biome);
 
         if (!waveRoom) {
@@ -31,7 +31,7 @@ export default class WaveRoomManager {
     /**
      * Adds a player to a private wave room using a room code
      */
-    public joinWaveRoom(player: PlayerData, code: string): number | false {
+    public joinWaveRoom(player: StaticPlayerData, code: string): number | false {
         const room = this.findPrivateRoom(code);
         if (!room) {
             return false;
@@ -72,7 +72,7 @@ export default class WaveRoomManager {
     /**
      * Creates a new wave room with initial player
      */
-    public createWaveRoom(player: PlayerData, biome: Biomes): number | false {
+    public createWaveRoom(player: StaticPlayerData, biome: Biomes): number | false {
         const waveRoom = new WaveRoom(biome, this.generateCode());
         this.waveRooms.push(waveRoom);
 

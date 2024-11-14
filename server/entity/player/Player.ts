@@ -8,12 +8,10 @@ import { MobInstance } from "../mob/Mob";
 import { PlayerPetalOrbit } from "./PlayerPetalOrbit";
 import { PlayerReload } from "./PlayerReload";
 import { MoodKind } from "../../../shared/mood";
-import { StaticPetalData } from "../mob/petal/Petal";
-
-export type MaybeEmptySlot<T> = T | null;
+import { PetalSlots, StaticPetalData } from "../mob/petal/Petal";
 
 class BasePlayer implements Entity {
-    id: number;
+    readonly id: number;
     x: number;
     y: number;
     magnitude: number;
@@ -21,17 +19,47 @@ class BasePlayer implements Entity {
     size: number;
     health: number;
     maxHealth: number;
+    
+    /**
+     * Body damage of player.
+     * 
+     * @remarks
+     * 
+     * We have this property because body damage is mutable by petal.
+     */
     bodyDamage: number;
+
+    /**
+     * Current mood of player.
+     */
     mood: MoodKind;
+
+    /**
+     * Determine if player is dead.
+     * 
+     * @remarks
+     * 
+     * The reason this property in the player and not in the mob is to revive the player with Yggdrasil, etc.
+     * When a mob dies, instantly removed from the pool.
+     */
     isDead: boolean;
+
+    /**
+     * Nickname of player.
+     */
     nickname: string;
-    slots: {
-        surface: MaybeEmptySlot<MobInstance>[];
-        bottom: MaybeEmptySlot<MobInstance>[];
+    
+    /**
+     * Petal slots, and cooldowns.
+     */
+    slots: PetalSlots & {
         cooldownsPetal: number[];
         cooldownsUsage: number[];
     };
 
+    /**
+     * Websocket of player.
+     */
     ws: uWS.WebSocket<UserData>;
 
     constructor(source: Required<BasePlayer>) {
@@ -49,14 +77,21 @@ Player = EntityChecksum(Player);
 
 type PlayerInstance = InstanceType<typeof Player>;
 
-interface PlayerData {
+/**
+ * Dummy data of {@link Player}.
+ * 
+ * @remarks
+ * 
+ * This data for visualize player in wave room.
+ */
+interface StaticPlayerData {
     name: string;
-    // Static slots (for visualize, converting)
-    slots: {
-        surface: MaybeEmptySlot<StaticPetalData>[];
-        bottom: MaybeEmptySlot<StaticPetalData>[];
-    };
+    slots: PetalSlots;
+
+    /**
+     * Websocket of player.
+     */
     ws: uWS.WebSocket<UserData>;
 }
 
-export { Player, PlayerInstance, BasePlayer, PlayerData };
+export { Player, PlayerInstance, BasePlayer, StaticPlayerData };

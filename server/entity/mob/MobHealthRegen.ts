@@ -17,7 +17,8 @@ export function MobHealthRegen<T extends new (...args: any[]) => BaseMob>(Base: 
             if (this.starfishRegeningHealth || (this.type === MobType.STARFISH && this.health < this.maxHealth / 2)) {
                 this.starfishRegeningHealth = true;
                 // Hmm maybe i shouldnt use size here
-                this.health = Math.min(this.maxHealth + 1, this.health + (10 * this.size));
+                const starfishRegenMultiplier = 10 * this.size;
+                this.health = Math.min(this.maxHealth + 1, this.health + starfishRegenMultiplier);
                 if (this.health > this.maxHealth) {
                     this.starfishRegeningHealth = false;
                     return;

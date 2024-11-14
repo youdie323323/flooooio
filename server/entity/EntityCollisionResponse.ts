@@ -249,7 +249,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
         return;
       }
 
-      throw "Unreachable";
+      // throw "Unreachable";
     }
   };
 }

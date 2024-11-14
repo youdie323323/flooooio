@@ -1,4 +1,5 @@
 // IMPORTANT: This will used for index
+
 export enum Rarities {
     COMMON = 0,
     UNUSUAL = 1,

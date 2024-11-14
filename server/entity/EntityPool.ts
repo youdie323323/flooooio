@@ -2,14 +2,14 @@ import uWS from 'uWebSockets.js';
 import { PacketKind } from "../../shared/packet";
 import { MobType, PetalType } from "../../shared/types";
 import { Mob, MobInstance, MOB_SIZE_FACTOR, MobData } from "./mob/Mob";
-import { Player, PlayerData, PlayerInstance } from "./player/Player";
+import { Player, PlayerInstance, StaticPlayerData } from "./player/Player";
 import { onUpdateTick } from "./Entity";
 import { isPetal, kickClient } from './utils/common';
 import { Rarities } from '../../shared/rarities';
 import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from './EntityChecksum';
 import { MOB_PROFILES } from '../../shared/mobProfiles';
 import { PETAL_PROFILES } from '../../shared/petalProfiles';
-import { PetalData, StaticPetalData } from './mob/petal/Petal';
+import { isLivingPetal, PetalData, StaticPetalData } from './mob/petal/Petal';
 import { USAGE_RELOAD_PETALS } from './player/PlayerReload';
 import { MoodKind, MOON_KIND_VALUES } from '../../shared/mood';
 import { logger } from '../main';
@@ -20,11 +20,19 @@ import { getRandomSafePosition, generateRandomId, getRandomAngle } from './utils
 export interface UserData {
     waveRoomClientId: number;
     waveClientId: number;
-    wavePlayerData: PlayerData;
+    wavePlayerData: StaticPlayerData;
 }
 
 export const UPDATE_FPS = 60;
 
+/**
+ * Pool of entities, aka wave.
+ * 
+ * @remarks
+ * 
+ * Rather than doing unnecessary processing like spawning mobs here, it's better to do that in WaveRoom.
+ * This class is only for managing mobs and players, not for randomly spawning mobs etc.
+ */
 export class EntityPool {
     public clients: Map<number, PlayerInstance>;
     public mobs: Map<number, MobInstance>;
@@ -34,6 +42,8 @@ export class EntityPool {
         this.clients = new Map();
         this.mobs = new Map();
     }
+
+    // This class methods shouldn't be called as wave, but alright
 
     public startWave(waveRoom: WaveRoom) {
         const waveStartBuffer = Buffer.alloc(2);
@@ -56,24 +66,13 @@ export class EntityPool {
         this.broadcastInitPacket();
 
         this.updateInterval = setInterval(() => this.update(), 1000 / UPDATE_FPS);
-
-        setTimeout(() => {
-            setInterval(() => {
-                const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this);
-                if (!randPos) {
-                    return null;
-                }
-
-                this.addPetalOrMob(MobType.BUBBLE, Rarities.MYTHIC, randPos[0], randPos[1], null, null);
-            }, 10);
-        }, 20000);
     }
 
     public endWave() {
         clearInterval(this.updateInterval);
     }
 
-    addClient(playerData: PlayerData, x: number, y: number): PlayerInstance | null {
+    public addClient(playerData: StaticPlayerData, x: number, y: number): PlayerInstance | null {
         const clientId = generateRandomId();
 
         // Ensure unique clientId
@@ -82,7 +81,8 @@ export class EntityPool {
         }
 
         // 100 is level
-        const levelMultiplier: number = (243 ** 0.01) ** (Math.max(100, 75) - 0.5);
+        // 100 * x, x is upgrade
+        const health: number = (100 * 1) * 1.02 ** (Math.max(100, 75) - 1);
 
         const playerInstance = new Player({
             id: clientId,
@@ -92,10 +92,11 @@ export class EntityPool {
             magnitude: 0,
             mood: 0,
             size: 15,
-            health: 200 * levelMultiplier,
-            bodyDamage: 25 * levelMultiplier,
+            health: health,
             // Not changing
-            maxHealth: 200 * levelMultiplier,
+            maxHealth: health,
+
+            bodyDamage: 10,
             isDead: false,
             nickname: playerData.name,
             ws: playerData.ws,
@@ -107,8 +108,8 @@ export class EntityPool {
             },
         });
 
-        playerInstance.slots.surface = playerData.slots.surface.map(c => this.staticPetalDataToReal(c, playerInstance));
-        playerInstance.slots.bottom = playerData.slots.bottom.map(c => this.staticPetalDataToReal(c, playerInstance));
+        playerInstance.slots.surface = playerData.slots.surface.map(c => c && !isLivingPetal(c) && this.staticPetalDataToReal(c, playerInstance));
+        playerInstance.slots.bottom = playerData.slots.bottom.map(c => c && !isLivingPetal(c) && this.staticPetalDataToReal(c, playerInstance));
 
         this.clients.set(clientId, playerInstance);
 
@@ -122,7 +123,7 @@ export class EntityPool {
         return playerInstance;
     }
 
-    addPetalOrMob(type: MobType | PetalType, rarity: Rarities, x: number, y: number, petalParent: PlayerInstance = null, eggParent: PlayerInstance = null): MobInstance | null {
+    public addPetalOrMob(type: MobType | PetalType, rarity: Rarities, x: number, y: number, petalParent: PlayerInstance = null, eggParent: PlayerInstance = null): MobInstance | null {
         const mobId = generateRandomId();
         if (this.mobs.has(mobId)) {
             return this.addPetalOrMob(type, rarity, x, y, petalParent, eggParent);
@@ -147,10 +148,9 @@ export class EntityPool {
 
             mobLastAttackedBy: null,
 
-            isUsagePetal: USAGE_RELOAD_PETALS.has(type),
+            petalIsUsage: USAGE_RELOAD_PETALS.has(type),
 
             petParentPlayer: eggParent,
-            petGoingToPlayer: false,
 
             petalParentPlayer: petalParent,
             petalSummonedPet: null,
@@ -192,9 +192,10 @@ export class EntityPool {
         this.broadcastUpdatePacket();
     }
 
-    // Begin updaters
-
-    updateMovement(clientId: number, angle: number, magnitude: number) {
+    /**
+     * Updates the movement of a client
+     */
+    public updateMovement(clientId: number, angle: number, magnitude: number) {
         const client = this.clients.get(clientId);
         if (client && !client.isDead) {
             if (
@@ -221,7 +222,10 @@ export class EntityPool {
         }
     }
 
-    updateMood(clientId: number, kind: MoodKind) {
+    /**
+     * Updates the mood of a client.
+     */
+    public changeMood(clientId: number, kind: MoodKind) {
         const client = this.clients.get(clientId);
         if (client && !client.isDead) {
             if (
@@ -245,7 +249,10 @@ export class EntityPool {
         }
     }
 
-    swapPetal(clientId: number, at: number) {
+    /**
+     * Swaps a petal between surface and bottom slots for a client.
+     */
+    public swapPetal(clientId: number, at: number) {
         const client = this.clients.get(clientId);
         if (
             client &&
@@ -263,8 +270,6 @@ export class EntityPool {
         }
     }
 
-    // End
-
     broadcastUpdatePacket() {
         const updatePacket = this.createUpdatePacket();
 
@@ -275,8 +280,9 @@ export class EntityPool {
     }
 
     broadcastInitPacket() {
+        const buffer = Buffer.alloc(5);
+
         this.clients.forEach((player, clientId) => {
-            const buffer = Buffer.alloc(5);
             let offset = 0;
 
             buffer.writeUInt8(PacketKind.SELF_ID, offset++);

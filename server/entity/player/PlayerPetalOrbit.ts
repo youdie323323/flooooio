@@ -3,7 +3,7 @@ import { EntityPool, UPDATE_FPS } from "../EntityPool";
 import { Mob } from "../mob/Mob";
 import { BasePlayer } from "./Player";
 import { MobType, PetalType } from "../../../shared/types";
-import { PetalData } from "../mob/petal/Petal";
+import { isLivingPetal, PetalData } from "../mob/petal/Petal";
 import { PETAL_PROFILES } from "../../../shared/petalProfiles";
 import { MoodKind } from "../../../shared/mood";
 import { TWO_PI } from "../utils/common";
@@ -51,7 +51,7 @@ export function PlayerPetalOrbit<T extends new (...args: any[]) => BasePlayer>(B
 
             for (let i = 0; i < totalPetals; i++) {
                 const petal = surface[i];
-                if (!petal) continue;
+                if (!petal || !isLivingPetal(petal)) continue;
 
                 const type = petal.type;
                 // 40 100 25

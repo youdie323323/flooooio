@@ -73,10 +73,6 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                     return;
                 }
 
-                if (this.petGoingToPlayer) {
-                    return;
-                }
-
                 switch (MOB_BEHAVIORS[this.type]) {
                     // Aggressive
                     case MobBehaviors.AGGRESSIVE: {

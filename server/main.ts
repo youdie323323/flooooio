@@ -8,17 +8,17 @@ import * as path from 'path';
 import { MoodKind, MOON_KIND_VALUES } from '../shared/mood';
 import WaveRoomManager from './wave/WaveRoomManager';
 import { BIOME_VALUES, Biomes } from '../shared/biomes';
-import { PlayerData } from './entity/player/Player';
 import { PlayerReadyState, WaveRoomVisibleState } from './wave/WaveRoom';
 import { Logger } from './logger/Logger';
 import { Mob } from './entity/mob/Mob';
 import { Rarities } from '../shared/rarities';
 import { kickClient } from './entity/utils/common';
+import { StaticPlayerData } from './entity/player/Player';
 
 /**
  * Temp player data.
  */
-const DEFAULT_PLAYER_DATA: Omit<PlayerData, "ws"> = {
+const DEFAULT_PLAYER_DATA: Omit<StaticPlayerData, "ws"> = {
     name: 'hare',
     slots: {
         surface: Array.from({ length: 8 }, () => {
@@ -81,7 +81,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             const waveRoom = waveRoomManager.findPlayerRoom(waveRoomClientId);
             if (!waveRoom) return;
 
-            waveRoom.entityPool.updateMood(waveClientId, buffer[1]);
+            waveRoom.entityPool.changeMood(waveClientId, buffer[1]);
 
             break;
         }

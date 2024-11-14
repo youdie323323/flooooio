@@ -1,5 +1,6 @@
 import { Rarities } from "../../../../shared/rarities";
 import { PetalType } from "../../../../shared/types";
+import { MobInstance } from "../Mob";
 
 export interface PetalStat {
     damage: number;
@@ -27,8 +28,30 @@ export interface PetalData {
     [Rarities.SUPER]: PetalStat;
 }
 
-// This for visualize petals in profile, this is not actually a mob, dummy data (used in converting to actual petals)
+/**
+ * Dummy data of {@link Mob}.
+ * 
+ * @remarks
+ * 
+ * This data for visualize petals in wave room, inventory and slots.
+ * Eliminates the need for the server to create the actual living “Mob” instance.
+ */
 export interface StaticPetalData {
     type: PetalType;
     rarity: Rarities;
+}
+
+export type MaybeEmptySlot<T> = T | null;
+
+export interface PetalSlots {
+    surface: MaybeEmptySlot<StaticPetalData | MobInstance>[];
+    bottom: MaybeEmptySlot<StaticPetalData | MobInstance>[];
+}
+
+/**
+ * Type guard for slot.
+ */
+export function isLivingPetal(slot: StaticPetalData | MobInstance): slot is MobInstance {
+    // Its have id because living
+    return "id" in slot;
 }

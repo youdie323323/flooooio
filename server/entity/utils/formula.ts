@@ -1,6 +1,9 @@
 import { Rarities } from "../../../shared/rarities";
+import { MOB_DAMAGE_FACTOR } from "../mob/Mob";
 
-// Based on m28 message
+/**
+ * Calculate required xp by level.
+ */
 export const xpPerLevel = (level: number) => 25 * (Math.floor(level * Math.pow(1.05, level - 1)));
 
 export const GENERATE_DROP_RATE_TABLE = (n: number, rarity: number) => {
@@ -22,4 +25,14 @@ export const GENERATE_DROP_RATE_TABLE = (n: number, rarity: number) => {
     }
 
     return ret;
+}
+
+/**
+ * Calculate hp by level.
+ * @deprecated This is the formula after wave.
+ */
+export function calculateHp(level: number) {
+    let hp: number = 100;
+    const ff = Math.pow(MOB_DAMAGE_FACTOR[Rarities.MYTHIC], 1/200.0);
+    return 2.0 * hp * Math.pow(ff, Math.min(level, 150) - 1);
 }

@@ -37,10 +37,6 @@ export function MobOscillatingMovement<T extends new (...args: any[]) => BaseMob
 
                 // Do defensive-position move if not targetting player
                 if (!this.mobTargetEntity) {
-                    if (this.petGoingToPlayer) {
-                        return;
-                    }
-
                     if (this.rotationCounter++ >= 200) {
                         this.angle = getRandomAngle();
                         this.rotationCounter = 0;

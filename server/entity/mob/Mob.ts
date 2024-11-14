@@ -9,32 +9,59 @@ import { Rarities } from "../../../shared/rarities";
 import { BasePlayer, PlayerInstance } from "../player/Player";
 import { MobHealthRegen } from "./MobHealthRegen";
 
-// Note that i will call petal as mob
-
 class BaseMob implements Entity {
-    id: number;
+    readonly id: number;
     x: number;
     y: number;
     magnitude: number;
     angle: number;
     size: number;
     health: number;
-    rarity: Rarities;
     maxHealth: number;
+
+    /**
+     * Type of mob/petal.
+     */
     type: MobType | PetalType;
 
-    mobTargetEntity: Entity | null;
+    /**
+     * Rarity of mob/petal.
+     */
+    rarity: Rarities;
 
+    /**
+     * Current target entity of mob.
+     * Always null if petal.
+     */
+    mobTargetEntity: Entity | null;
+    /**
+     * Current target entity of mob.
+     * Always null if petal.
+     */
     mobLastAttackedBy: Entity | null;
 
-    isUsagePetal: boolean;
-
+    /**
+     * Player which owner of this pet.
+     */
     petParentPlayer: PlayerInstance | null;
-    petGoingToPlayer: boolean;
 
-    petalSummonedPet: MobInstance | null;
+    /**
+     * Determines if petal is usage petal. (e.g. beetle egg)
+     */
+    petalIsUsage: boolean;
+    /**
+     * Player which owns this petal.
+     */
     petalParentPlayer: PlayerInstance | null;
+    /**
+     * Mob that usage petal spawned.
+     * Always false if petalIsUsage is false.
+     */
+    petalSummonedPet: MobInstance | null;
 
+    /**
+     * Determines if starfish is running for regen.
+     */
     starfishRegeningHealth: boolean;
 
     constructor(source: Required<BaseMob>) {

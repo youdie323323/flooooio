@@ -3,7 +3,7 @@ import { EntityPool, UPDATE_FPS } from "../EntityPool";
 import { Mob } from "../mob/Mob";
 import { BasePlayer } from "./Player";
 import { MobType, PetalType } from "../../../shared/types";
-import { PetalData } from "../mob/petal/Petal";
+import { isLivingPetal, PetalData } from "../mob/petal/Petal";
 import { PETAL_PROFILES } from "../../../shared/petalProfiles";
 import { Rarities } from "../../../shared/rarities";
 
@@ -36,11 +36,12 @@ export function PlayerReload<T extends new (...args: any[]) => BasePlayer>(Base:
                 surface.forEach((e, i) => {
                     // If e is not falsy and dont has e on mob pool, that means petal are breaked
                     // So if petal is breaked, start reloading
-                    if (e != null && !poolThis.getMob(e.id)) {
+                    if (e != null && isLivingPetal(e) && !poolThis.getMob(e.id)) {
                         // If summoned mob is not dead, not reloading
                         if (e.petalSummonedPet && poolThis.getMob(e.petalSummonedPet.id)) {
                             return;
                         }
+                        
                         if (this.slots.cooldownsPetal[i] === 0) {
                             const profile = PETAL_PROFILES[e.type];
                             this.slots.cooldownsPetal[i] = Date.now() + (profile[e.rarity].petalReload * 1000);
@@ -59,7 +60,7 @@ export function PlayerReload<T extends new (...args: any[]) => BasePlayer>(Base:
                     }
                 });
                 surface.forEach((e, i) => {
-                    if (e != null && e.isUsagePetal) {
+                    if (e != null && isLivingPetal(e) && e.petalIsUsage) {
                         if (poolThis.getMob(e.id)) {
                             if (this.slots.cooldownsUsage[i] === 0) {
                                 const profile = PETAL_PROFILES[e.type];

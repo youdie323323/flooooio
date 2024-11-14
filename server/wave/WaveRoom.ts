@@ -1,9 +1,12 @@
 import { Biomes } from "../../shared/biomes";
 import { PacketKind } from "../../shared/packet";
-import { generateRandomId } from "../entity/utils/random";
+import { generateRandomId, getRandomSafePosition } from "../entity/utils/random";
 import { EntityPool } from "../entity/EntityPool";
-import { PlayerData, PlayerInstance } from "../entity/player/Player";
+import { PlayerInstance, StaticPlayerData } from "../entity/player/Player";
 import { logger } from "../main";
+import { Rarities } from "../../shared/rarities";
+import { MobType } from "../../shared/types";
+import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from "../entity/EntityChecksum";
 
 /** Represents the current state of a wave room */
 export enum WaveRoomState {
@@ -25,7 +28,7 @@ export enum PlayerReadyState {
 }
 
 /** Extended player data with wave room specific properties */
-export type WaveRoomPlayer = PlayerData & {
+export type WaveRoomPlayer = StaticPlayerData & {
     id: number;
     isOwner: boolean;
     readyState: PlayerReadyState;
@@ -34,6 +37,14 @@ export type WaveRoomPlayer = PlayerData & {
 /** Update rate for broadcasting room state */
 export const ROOM_UPDATE_FPS = 30;
 
+/**
+ * The wave room.
+ * 
+ * @remarks
+ * 
+ * Data such as the overall wave rack and the current wave number are stored in this class.
+ * Spawning and other processes are also handled in this class.
+ */
 export default class WaveRoom {
     public static readonly MAX_PLAYER_AMOUNT = 4;
 
@@ -115,7 +126,7 @@ export default class WaveRoom {
         return buffer;
     }
 
-    public addPlayer(player: PlayerData): number | false {
+    public addPlayer(player: StaticPlayerData): number | false {
         using _disposable = this.onChangeAnything();
 
         if (WaveRoom.MAX_PLAYER_AMOUNT <= this.roomCandidates.length) {
@@ -210,6 +221,17 @@ export default class WaveRoom {
         clearInterval(this.updateInterval);
         this.entityPool.startWave(this);
 
+        setTimeout(() => {
+            setInterval(() => {
+                const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this.entityPool);
+                if (!randPos) {
+                    return null;
+                }
+
+                this.entityPool.addPetalOrMob(MobType.BUBBLE, Rarities.MYTHIC, randPos[0], randPos[1], null, null);
+            }, 10);
+        }, 20000);
+
         logger.region(() => {
             using _guard = logger.metadata({
                 candidateIds: this.roomCandidates.map(c => c.id).join(","),
@@ -220,6 +242,8 @@ export default class WaveRoom {
     }
 
     private endWave() {
+        this.state = WaveRoomState.END;
+
         // Stop wave update
         this.entityPool.endWave();
 
@@ -241,12 +265,8 @@ export default class WaveRoom {
                     cacheThis.startWave();
                 }
 
-                if (cacheThis.state === WaveRoomState.STARTED && cacheThis.roomCandidates.length !== 0 && cacheThis.entityPool.getAllClients().every(p => p.isDead)) {
-                    cacheThis.state = WaveRoomState.END;
-                }
-
-                // cacheThis.state === WaveRoomState.STARTED for force ends while wave started
-                if ((cacheThis.state === WaveRoomState.END || cacheThis.state === WaveRoomState.STARTED) && cacheThis.entityPool.clients.size === 0) {
+                // Dont check for cacheThis.roomCandidates.length !== 0 so can delete wave if all players leaved
+                if (cacheThis.state === WaveRoomState.STARTED && cacheThis.entityPool.getAllClients().every(p => p.isDead)) {
                     cacheThis.endWave();
                 }
             }

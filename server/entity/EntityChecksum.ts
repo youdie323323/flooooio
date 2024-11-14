@@ -6,12 +6,17 @@ import { Player } from "./player/Player";
 import { MOB_PROFILES } from "../../shared/mobProfiles";
 import { PETAL_PROFILES } from "../../shared/petalProfiles";
 import { USAGE_RELOAD_PETALS } from "./player/PlayerReload";
+import { isLivingPetal } from "./mob/petal/Petal";
+import { MobType } from "../../shared/types";
 
 export let mapRadius = 2500;
 
 export const mapCenterX = 4470;
 export const mapCenterY = 4470;
 export const safetyDistance = 300;
+
+export const PROJECTILE_TYPES: Set<MobType> = new Set([
+]);
 
 export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T) {
     return class extends Base {
@@ -57,27 +62,20 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
             if (this instanceof Player && !this.isDead) {
                 this.slots.surface.forEach((e, i) => {
                     // Angle correction petals like egg
-                    if (e != null && poolThis.getMob(e.id) && USAGE_RELOAD_PETALS.has(e.type)) {
+                    if (e != null && isLivingPetal(e) && poolThis.getMob(e.id) && USAGE_RELOAD_PETALS.has(e.type)) {
                         e.angle = 0;
                     }
                 });
             }
 
-            // In the current version of florr.io, the pet goes to the player's position after a certain range away from the target
-            // But in the florr.io wave, what is specification?
-            if (this instanceof Mob && this.petParentPlayer && /* This condition do old florr (maybe) */ !this.mobTargetEntity) {
+            // Follows the player when the player moves away from this (pet) for a certain distance
+            // Dont follows if targetting other mob
+            if (this instanceof Mob && this.petParentPlayer && !this.mobTargetEntity) {
                 const dx = this.petParentPlayer.x - this.x;
                 const dy = this.petParentPlayer.y - this.y;
                 const distanceToParent = Math.hypot(dx, dy);
 
-                if (this.petGoingToPlayer || distanceToParent > 5 * this.size) {
-                    this.mobTargetEntity = null;
-                    if (distanceToParent < this.size) {
-                        this.petGoingToPlayer = false;
-                    } else {
-                        this.petGoingToPlayer = true;
-                    }
-
+                if (distanceToParent > 5 * this.size) {
                     const targetAngle = ((Math.atan2(dy, dx) / TWO_PI) * 255 + 255) % 255;
 
                     let currentAngle = this.angle;
@@ -95,17 +93,28 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                 }
             }
 
-            // World boundary (circular)
-            if (!(this instanceof Mob && isPetal(this.type))) {
-                const worldRadius = Math.min(mapCenterX, mapCenterY) - mapRadius - (this instanceof Mob ? getRadius() - /* Decrease some gaps */ 15 : 0);
+            {
+                if (this instanceof Mob) {
+                    if (isPetal(this.type)) {
+                        return;
+                    }
 
+                    // Mob like missile will ignore border
+                    if (!isPetal(this.type) && PROJECTILE_TYPES.has(this.type)) {
+                        return;
+                    }
+                }
+    
+                // World boundary (circular)
+                const worldRadius = Math.min(mapCenterX, mapCenterY) - mapRadius - (this instanceof Mob ? getRadius() - /* Decrease some gaps */ 15 : 0);
+    
                 const dx = this.x - mapCenterX;
                 const dy = this.y - mapCenterY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-
+    
                 if (distance > worldRadius) {
                     const collisionAngle = Math.atan2(dy, dx);
-
+    
                     this.x = mapCenterX + Math.cos(collisionAngle) * (worldRadius - 20);
                     this.y = mapCenterY + Math.sin(collisionAngle) * (worldRadius - 20);
                 }
