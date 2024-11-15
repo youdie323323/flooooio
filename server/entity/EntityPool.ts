@@ -15,6 +15,7 @@ import { MoodKind, MOON_KIND_VALUES } from '../../shared/mood';
 import { logger } from '../main';
 import WaveRoom from '../wave/WaveRoom';
 import { getRandomSafePosition, generateRandomId, getRandomAngle } from './utils/random';
+import { calculateWaveLength } from './utils/formula';
 
 // Define UserData for WebSocket connections
 export interface UserData {
@@ -40,22 +41,33 @@ export const UPDATE_SEND_FPS = 30;
  * 
  * @remarks
  * 
- * Rather than doing unnecessary processing like spawning mobs here, it's better to do that in WaveRoom.
- * This class is only for managing mobs and players, not for randomly spawning mobs etc.
+ *  ̶R̶a̶t̶h̶e̶r̶ ̶t̶h̶a̶n̶ ̶d̶o̶i̶n̶g̶ ̶u̶n̶n̶e̶c̶e̶s̶s̶a̶r̶y̶ ̶p̶r̶o̶c̶e̶s̶s̶i̶n̶g̶ ̶l̶i̶k̶e̶ ̶s̶p̶a̶w̶n̶i̶n̶g̶ ̶m̶o̶b̶s̶ ̶h̶e̶r̶e̶,̶ ̶i̶t̶'̶s̶ ̶b̶e̶t̶t̶e̶r̶ ̶t̶o̶ ̶d̶o̶ ̶t̶h̶a̶t̶ ̶i̶n̶ ̶W̶a̶v̶e̶R̶o̶o̶m̶.̶
+ *  ̶T̶h̶i̶s̶ ̶c̶l̶a̶s̶s̶ ̶i̶s̶ ̶o̶n̶l̶y̶ ̶f̶o̶r̶ ̶m̶a̶n̶a̶g̶i̶n̶g̶ ̶m̶o̶b̶s̶ ̶a̶n̶d̶ ̶p̶l̶a̶y̶e̶r̶s̶,̶ ̶n̶o̶t̶ ̶f̶o̶r̶ ̶r̶a̶n̶d̶o̶m̶l̶y̶ ̶s̶p̶a̶w̶n̶i̶n̶g̶ ̶m̶o̶b̶s̶ ̶e̶t̶c̶.̶
+ * Data such as the overall wave luck and the current wave number are stored in this class.
+ * Spawning and other processes are also handled in this class.
  */
 export class EntityPool {
     public clients: Map<number, PlayerInstance>;
     public mobs: Map<number, MobInstance>;
-    
+
     private updateInterval: NodeJS.Timeout;
     private updateSendInterval: NodeJS.Timeout;
+
+    //  ̶T̶h̶i̶s̶ ̶c̶l̶a̶s̶s̶ ̶m̶e̶t̶h̶o̶d̶s̶ ̶s̶h̶o̶u̶l̶d̶n̶'̶t̶ ̶b̶e̶ ̶c̶a̶l̶l̶e̶d̶ ̶a̶s̶ ̶w̶a̶v̶e̶,̶ ̶b̶u̶t̶ ̶a̶l̶r̶i̶g̶h̶t̶
+
+    /**
+     * Current wave progress.
+     */
+    waveProgress: number;
+    waveProgressTimer: number;
 
     constructor(private readonly waveRoom: WaveRoom) {
         this.clients = new Map();
         this.mobs = new Map();
-    }
 
-    // This class methods shouldn't be called as wave, but alright
+        this.waveProgress = 1;
+        this.waveProgressTimer = 0;
+    }
 
     public startWave(waveRoom: WaveRoom) {
         const waveStartBuffer = Buffer.alloc(2);
@@ -205,6 +217,16 @@ export class EntityPool {
                 mob[onUpdateTick](this);
             }
         });
+
+        // Wave updates
+
+        const waveLength = calculateWaveLength(this.waveProgress);
+
+        this.waveProgressTimer = Math.round((this.waveProgressTimer + ((1 / waveLength) / UPDATE_FPS)) * 100000) / 100000;
+        if (this.waveProgressTimer >= waveLength) {
+            this.waveProgressTimer = 0;
+            this.waveProgress++;
+        }
     }
 
     /**
@@ -417,12 +439,21 @@ export class EntityPool {
         const clientsPacket = this.createClientsPacket();
         const mobsPacket = this.createMobsPacket();
 
-        const totalLength = 1 + clientsPacket.length + mobsPacket.length;
+        const totalLength = (1 + 2 + 8) + clientsPacket.length + mobsPacket.length;
 
         const buffer = Buffer.alloc(totalLength);
         let offset = 0;
 
         buffer.writeUInt8(PacketKind.UPDATE, offset++);
+
+        // Wave informations
+        {
+            buffer.writeUInt16BE(this.waveProgress, offset);
+            offset += 2;
+
+            buffer.writeDoubleBE(this.waveProgressTimer, offset);
+            offset += 8;
+        }
 
         clientsPacket.copy(buffer, offset);
         offset += clientsPacket.length;

@@ -90,10 +90,13 @@ export default class UserInterfaceMenu extends UserInterface {
 
         // Squad
 
+        const base = 0.44;
+        const baseOffset = 0.06;
+
         const readyButton = new ComponentsTextButton(
             {
                 xPercent: 0.4725,
-                yPercent: 0.44,
+                yPercent: base,
                 widthPercent: 0.12,
                 aspectRatio: 2.5
             },
@@ -109,7 +112,7 @@ export default class UserInterfaceMenu extends UserInterface {
         const joinSquadButton = new ComponentsTextButton(
             {
                 xPercent: 0.4725,
-                yPercent: 0.5,
+                yPercent: base + baseOffset,
                 widthPercent: 0.12,
                 aspectRatio: 2.5
             },
@@ -123,10 +126,26 @@ export default class UserInterfaceMenu extends UserInterface {
 
         this.addComponent(joinSquadButton);
 
+        const joinPublicSquadButton = new ComponentsTextButton(
+            {
+                xPercent: 0.4725,
+                yPercent: base + baseOffset + baseOffset,
+                widthPercent: 0.12,
+                aspectRatio: 2.5
+            },
+            "#1dd129",
+            async () => {
+                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_JOIN_PUBLIC, Biomes.GARDEN]));
+            },
+            "Join public squad"
+        );
+
+        this.addComponent(joinPublicSquadButton);
+
         const leaveSquadButton = new ComponentsTextButton(
             {
                 xPercent: 0.4725,
-                yPercent: 0.74,
+                yPercent: base + baseOffset + baseOffset + baseOffset,
                 widthPercent: 0.12,
                 aspectRatio: 2.5
             },
@@ -142,7 +161,7 @@ export default class UserInterfaceMenu extends UserInterface {
         const createPublicButton = new ComponentsTextButton(
             {
                 xPercent: 0.4725,
-                yPercent: 0.56,
+                yPercent: base + baseOffset + baseOffset + baseOffset + baseOffset,
                 widthPercent: 0.12,
                 aspectRatio: 2.5
             },
@@ -158,7 +177,7 @@ export default class UserInterfaceMenu extends UserInterface {
         const setPublicButton = new ComponentsTextButton(
             {
                 xPercent: 0.4725,
-                yPercent: 0.68,
+                yPercent: base + baseOffset + baseOffset + baseOffset + baseOffset + baseOffset,
                 widthPercent: 0.12,
                 aspectRatio: 2.5
             },
@@ -174,7 +193,7 @@ export default class UserInterfaceMenu extends UserInterface {
         const setPrivateButton = new ComponentsTextButton(
             {
                 xPercent: 0.4725,
-                yPercent: 0.62,
+                yPercent: base + baseOffset + baseOffset + baseOffset + baseOffset + baseOffset + baseOffset,
                 widthPercent: 0.12,
                 aspectRatio: 2.5
             },
@@ -185,7 +204,7 @@ export default class UserInterfaceMenu extends UserInterface {
             "Set private"
         );
 
-        this.addComponent(setPrivateButton)
+        this.addComponent(setPrivateButton);
     }
 
     private generateBackgroundEntity3D() {

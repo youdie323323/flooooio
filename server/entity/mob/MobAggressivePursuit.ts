@@ -34,7 +34,7 @@ export function findNearestEntity(me: Entity, entites: Entity[]) {
 
 enum MobBehaviors {
     AGGRESSIVE,
-    IMMOBILE,
+    PASSIVE,
     CAUTIONS,
     NEUTRAL,
 }
@@ -42,7 +42,7 @@ enum MobBehaviors {
 const MOB_BEHAVIORS: Record<MobType, MobBehaviors> = {
     [MobType.STARFISH]: MobBehaviors.AGGRESSIVE,
     [MobType.BEETLE]: MobBehaviors.AGGRESSIVE,
-    [MobType.BUBBLE]: MobBehaviors.IMMOBILE,
+    [MobType.BUBBLE]: MobBehaviors.PASSIVE,
     [MobType.JELLYFISH]: MobBehaviors.CAUTIONS,
     [MobType.BEE]: MobBehaviors.NEUTRAL
 } as const
@@ -61,7 +61,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                 // Mob which summoned by player will attack other mobs expect petal
                 targets = poolThis.getAllMobs().filter(p => !isPetal(p.type) && !p?.petParentPlayer);
             } else {
-                // TODO: target pets
+                // Target living players, pets
                 targets = [poolThis.getAllClients().filter(p => !p.isDead), poolThis.getAllMobs().filter(p => p.petParentPlayer)].flat();
             }
 
@@ -84,7 +84,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                         }
 
                         // Loss entity
-                        if (this.mobTargetEntity && distanceToTarget < 125 * this.size) {
+                        if (this.mobTargetEntity && distanceToTarget > 125 * this.size) {
                             this.mobTargetEntity = null;
                         } else {
                             const nearestTarget = findNearestEntity(this, targets);
@@ -122,7 +122,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                     }
 
                     // Immobile (bubble, stone)
-                    case MobBehaviors.IMMOBILE: {
+                    case MobBehaviors.PASSIVE: {
                         this.magnitude = 0;
                         break;
                     }

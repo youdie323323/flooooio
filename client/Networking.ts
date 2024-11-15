@@ -49,6 +49,17 @@ export default class Networking {
                     break;
                 }
                 case PacketKind.UPDATE: {
+                    // Wave informations
+                    {
+                        const waveProgress = data.getUint16(offset);
+                        offset += 2;
+
+                        const waveProgressTimer = data.getFloat64(offset);
+                        offset += 8;
+
+                        console.log(waveProgress, waveProgressTimer)
+                    };
+
                     const clientCount = data.getUint16(offset);
                     offset += 2;
 

@@ -5,7 +5,7 @@ import { EntityPool } from "../EntityPool";
 import { Mob, MobStat } from "../mob/Mob";
 import { isLivingPetal, PetalStat } from "../mob/petal/Petal";
 import { PETAL_PROFILES } from "../../../shared/petalProfiles";
-import WaveRoomManager from "../../wave/WaveRoomManager";
+import WaveRoomService from "../../wave/WaveRoomService";
 import WaveRoom from "../../wave/WaveRoom";
 
 export const TWO_PI = Math.PI * 2;

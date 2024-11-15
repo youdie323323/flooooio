@@ -62,10 +62,7 @@ export function PlayerPetalOrbit<T extends new (...args: any[]) => BasePlayer>(B
                         this.mood === MoodKind.SAD ? 25 : 40;
 
                 // This need rework
-                const bounce = this.petalBounces[i];
-                const radius = this.petalRadii[i];
-                const newRadius = radius + bounce;
-                this.petalRadii[i] = newRadius;
+                this.petalRadii[i] += this.petalBounces[i];
                 this.petalBounces[i] = (baseRadius - this.petalRadii[i]) * BOUNCE_STRENGTH + this.petalBounces[i] * (1 - BOUNCE_DECAY);
 
                 const rotateAngle = (TWO_PI * i) / petalsExcludeEmpty.length + this.rotation;

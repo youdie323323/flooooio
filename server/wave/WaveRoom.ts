@@ -37,12 +37,7 @@ export type WaveRoomPlayer = StaticPlayerData & {
 export const ROOM_UPDATE_SEND_FPS = 30;
 
 /**
- * The wave room.
- * 
- * @remarks
- * 
- * Data such as the overall wave rack and the current wave number are stored in this class.
- * Spawning and other processes are also handled in this class.
+ * The wave room, aka squad.
  */
 export default class WaveRoom {
     public static readonly MAX_PLAYER_AMOUNT = 4;
@@ -65,8 +60,8 @@ export default class WaveRoom {
     }
 
     /**
-    * Broadcasts the current room state to all players
-    */
+     * Broadcasts the current room state to all players
+     */
     private broadcastUpdatePacket() {
         const waveClientsPacket = this.createWaveRoomUpdatePacket();
 
@@ -124,7 +119,7 @@ export default class WaveRoom {
     public addPlayer(player: StaticPlayerData): number | false {
         using _disposable = this.onChangeAnything();
 
-        if (WaveRoom.MAX_PLAYER_AMOUNT <= this.roomCandidates.length) {
+        if (!this.canAddCandidate) {
             return false;
         }
 
@@ -223,8 +218,8 @@ export default class WaveRoom {
                     return null;
                 }
 
-                this.entityPool.addPetalOrMob(MobType.BUBBLE, Rarities.MYTHIC, randPos[0], randPos[1], null, null);
-            }, 10);
+                this.entityPool.addPetalOrMob(MobType.BEETLE, Rarities.MYTHIC, randPos[0], randPos[1], null, null);
+            }, 1000);
         }, 20000);
 
         logger.region(() => {
@@ -266,5 +261,9 @@ export default class WaveRoom {
                 }
             }
         };
+    }
+
+    public get canAddCandidate() {
+        return this.roomCandidates.length < WaveRoom.MAX_PLAYER_AMOUNT;
     }
 }
