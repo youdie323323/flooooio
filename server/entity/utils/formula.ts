@@ -63,7 +63,7 @@ export function calculateWaveLength(x: number) {
  * you can basically assume that 0.3 luck = +1 wave, 0.69 luck +2 waves, 1.2 luck = +3 waves, etc.
  * ```
  * 
- * Can someone teach me what difficult means;
+ * Can someone teach me what difficulty means;
  */
 export function calculateWaveLuck(waveProgress: number) {
     return 1.3 ** waveProgress - 1;

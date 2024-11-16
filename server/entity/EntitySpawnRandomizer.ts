@@ -14,7 +14,9 @@ Wave 51+: Epics stop spawning
 Wave 61+: Legendaries stop spawning
 */
 
-const END_SPAWN_WAVE_RARITY: Partial<Record<Rarities, number>> = {
+type RarityDict = Partial<Record<Rarities, number>>;
+
+const END_SPAWN_WAVE_RARITY: RarityDict = {
     [Rarities.COMMON]: 20,
     [Rarities.UNUSUAL]: 30,
     [Rarities.RARE]: 40,
@@ -23,24 +25,24 @@ const END_SPAWN_WAVE_RARITY: Partial<Record<Rarities, number>> = {
     [Rarities.MYTHIC]: 177,
 };
 
-const RARITY_WEIGHTS: Partial<Record<Rarities, number>> = {
+const RARITY_WEIGHTS: RarityDict = {
     [Rarities.COMMON]: 1,
-    [Rarities.UNUSUAL]: 0.75,
-    [Rarities.RARE]: 0.6,
-    [Rarities.EPIC]: 0.5,
-    [Rarities.LEGENDARY]: 0.25,
-    [Rarities.MYTHIC]: 0.1,
+    [Rarities.UNUSUAL]: 0.5,
+    [Rarities.RARE]: 0.25,
+    [Rarities.EPIC]: 0.1,
+    [Rarities.LEGENDARY]: 0.05,
+    [Rarities.MYTHIC]: 0.01,
 };
 
-function calculateSpawnProbabilities(luck: number, waveProgress: number): Partial<Record<Rarities, number>> {
-    const probabilities: Partial<Record<Rarities, number>> = {};
+function calculateSpawnProbabilities(luck: number, waveProgress: number): RarityDict {
+    const probabilities: RarityDict = {};
     let totalWeight = 0;
 
     for (const key in END_SPAWN_WAVE_RARITY) {
         const parsedKey = parseInt(key) as Rarities;
         if (waveProgress < END_SPAWN_WAVE_RARITY[parsedKey]) {
             const baseWeight = RARITY_WEIGHTS[parsedKey] || 0;
-            const weight = baseWeight * Math.max(0, 1 - (END_SPAWN_WAVE_RARITY[parsedKey] - waveProgress) / 200) * luck;
+            const weight = baseWeight * Math.max(0, 1 - (waveProgress / 100)) * Math.pow(luck, parsedKey / (Rarities.MYTHIC * 2.5));
             probabilities[parsedKey] = weight;
             totalWeight += weight;
         }
@@ -54,7 +56,7 @@ function calculateSpawnProbabilities(luck: number, waveProgress: number): Partia
     return probabilities;
 }
 
-function weightedChoice(probabilities: Partial<Record<Rarities, number>>): Rarities | null {
+function weightedChoice(probabilities: RarityDict): Rarities | null {
     const randomValue = Math.random();
     let cumulative = 0;
 
@@ -98,7 +100,7 @@ export default class EntitySpawnRandomizer {
         }
 
         // See comment of calculateWaveLuck
-        const luck = ((calculateWaveLuck(entityPool.waveProgress) * (( /** All players luck */ 0.0) + 1)) + 1) * 1;
+        const luck = (calculateWaveLuck(entityPool.waveProgress) * (( /** All players luck */ 20) + 1)) * 1;
 
         if (this.timer % 5 === 5 - 1 && this.points > 0) {
             const probabilities = calculateSpawnProbabilities(luck, entityPool.waveProgress);

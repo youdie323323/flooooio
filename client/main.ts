@@ -67,7 +67,7 @@ export const uiManager = new UserInterfaceManager(canvas);
     }
 
     try {
-        ws = await connectWebSocket("wss://" + location.host);
+        ws = await connectWebSocket("ws://" + location.host);
         const statusContainer = document.getElementById("status-container");
         if (statusContainer) {
             document.body.style.backgroundColor = 'rgba(24, 24, 24, 0)';

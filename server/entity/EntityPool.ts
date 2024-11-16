@@ -74,7 +74,7 @@ export class EntityPool {
 
     private entitySpawnRandomizer: EntitySpawnRandomizer;
 
-    constructor(private readonly waveRoom: WaveRoom) {
+    constructor(public readonly waveRoom: WaveRoom) {
         this.clients = new Map();
         this.mobs = new Map();
 

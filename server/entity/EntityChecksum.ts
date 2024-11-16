@@ -1,6 +1,6 @@
 import { Entity, EntityMixinTemplate, onUpdateTick } from "./Entity";
 import { EntityPool } from "./EntityPool";
-import { isPetal, TWO_PI } from "./utils/common";
+import { isPetal, removeAllBindings, TWO_PI } from "./utils/common";
 import { Mob } from "./mob/Mob";
 import { Player } from "./player/Player";
 import { MOB_PROFILES } from "../../shared/mobProfiles";
@@ -43,19 +43,10 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
             if (this.health < 0) {
                 // !this.isDead will prevent call every fps
                 if (this instanceof Player && !this.isDead) {
-                    // Delete all petals
-                    this.slots.surface.forEach((e) => {
-                        if (e != null && isLivingPetal(e) && poolThis.getMob(e.id)) {
-                            poolThis.removeMob(e.id);
-                        }
-                    });
+                    // Use onChangeSomething so can delete started wave if all players dead
+                    using _disposable = poolThis.waveRoom.onChangeAnything();
 
-                    // Remove all their pets
-                    poolThis.getAllMobs().filter(c => c.petParentPlayer === this).forEach((e) => {
-                        if (e != null && isLivingPetal(e) && poolThis.getMob(e.id)) {
-                            poolThis.removeMob(e.id);
-                        }
-                    });
+                    removeAllBindings(poolThis.waveRoom, this);
 
                     this.isDead = true;
                     // Stop moving
@@ -129,9 +120,10 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
 
                 if (distance > worldRadius) {
                     const collisionAngle = Math.atan2(dy, dx);
+                    const knockback = this instanceof Mob ? 0 : 20;
 
-                    this.x = mapCenterX + Math.cos(collisionAngle) * (worldRadius - 20);
-                    this.y = mapCenterY + Math.sin(collisionAngle) * (worldRadius - 20);
+                    this.x = mapCenterX + Math.cos(collisionAngle) * (worldRadius - knockback);
+                    this.y = mapCenterY + Math.sin(collisionAngle) * (worldRadius - knockback);
                 }
             }
         }

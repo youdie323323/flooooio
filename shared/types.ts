@@ -1,15 +1,21 @@
-// DONT MAKE IDS DUPLICATE!
+let currentEntityType: number = 0;
+function getNextEntityType(): number {
+    if (currentEntityType > 255) {
+        throw new RangeError("Rarity type overflow")
+    }
+    return currentEntityType++;
+}
 
 export enum MobType {
-    BEE = 0,
-    STARFISH = 1,
-    JELLYFISH = 2,
-    BEETLE = 3,
-    BUBBLE = 4,
+    BEE = getNextEntityType(),
+    STARFISH = getNextEntityType(),
+    JELLYFISH = getNextEntityType(),
+    BEETLE = getNextEntityType(),
+    BUBBLE = getNextEntityType(),
 }
 
 export enum PetalType {
-    BASIC = 5,
-    FASTER = 6,
-    BEETLE_EGG = 7,
+    BASIC = getNextEntityType(),
+    FASTER = getNextEntityType(),
+    BEETLE_EGG = getNextEntityType(),
 }

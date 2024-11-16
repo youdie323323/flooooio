@@ -27,6 +27,14 @@ export function kickClient(waveRoom: WaveRoom, player: PlayerInstance) {
         // Use onChangeSomething so can delete started wave if all players leaved
         using _disposable = waveRoom.onChangeAnything();
 
+        removeAllBindings(waveRoom, player);
+
+        waveRoom.entityPool.removeClient(player.id);
+    }
+}
+
+export function removeAllBindings(waveRoom: WaveRoom, player: PlayerInstance) {
+    if (player) {
         // Delete all petals
         player.slots.surface.forEach((e) => {
             if (e != null && isLivingPetal(e) && waveRoom.entityPool.getMob(e.id)) {
@@ -41,6 +49,8 @@ export function kickClient(waveRoom: WaveRoom, player: PlayerInstance) {
             }
         });
 
-        waveRoom.entityPool.removeClient(player.id);
+        // Reset all reloads
+        player.slots.cooldownsPetal = new Array(player.slots.surface.length).fill(0);
+        player.slots.cooldownsUsage = new Array(player.slots.surface.length).fill(0);
     }
 }
