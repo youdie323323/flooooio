@@ -78,7 +78,7 @@ export class EntityPool {
         this.clients = new Map();
         this.mobs = new Map();
 
-        this.waveProgress = 36;
+        this.waveProgress = 52;
         this.waveProgressTimer = 0;
         this.waveProgressRedGageTimer = 0;
         this.waveProgressIsRedGage = false;

@@ -134,8 +134,8 @@ export default class UserInterfaceGame extends UserInterface {
 
             const centerWidth = canvas.width / 2;
 
-            const WAVE_PROGRESS_BAR_LENGTH = 140;
-            const WAVE_PROGRESS_BAR_Y = 100;
+            const WAVE_PROGRESS_BAR_LENGTH = 135;
+            const WAVE_PROGRESS_BAR_Y = 104;
 
             // Interpolate
             this.updateT += deltaTime / 100;
@@ -148,7 +148,7 @@ export default class UserInterfaceGame extends UserInterface {
 
                 ctx.save();
 
-                ctx.lineWidth = 24;
+                ctx.lineWidth = 25;
                 ctx.lineCap = "round";
                 ctx.strokeStyle = "black";
                 ctx.beginPath();
@@ -160,9 +160,9 @@ export default class UserInterfaceGame extends UserInterface {
 
                 ctx.save();
 
-                ctx.lineWidth = Math.min((this.waveProgressTimer / MAX_SPAWN_TIME) * (MAX_SPAWN_TIME * 16.6666), 17.5);
+                ctx.lineWidth = Math.min((this.waveProgressTimer / MAX_SPAWN_TIME) * (MAX_SPAWN_TIME * 16.6666), 18.5);
                 ctx.lineCap = "round";
-                ctx.strokeStyle = "#62a972";
+                ctx.strokeStyle = "#6dbd7f";
                 ctx.beginPath();
                 ctx.lineTo(centerWidth - WAVE_PROGRESS_BAR_LENGTH, WAVE_PROGRESS_BAR_Y);
                 ctx.lineTo(centerWidth - WAVE_PROGRESS_BAR_LENGTH + (WAVE_PROGRESS_BAR_LENGTH * 2) * (this.waveProgressTimer / MAX_SPAWN_TIME), WAVE_PROGRESS_BAR_Y);
@@ -172,7 +172,7 @@ export default class UserInterfaceGame extends UserInterface {
 
                 ctx.save();
 
-                ctx.lineWidth = Math.min((this.waveProgressRedGageTimer / MAX_SPAWN_TIME) * (MAX_SPAWN_TIME * 16.6666), 14);
+                ctx.lineWidth = Math.min((this.waveProgressRedGageTimer / MAX_SPAWN_TIME) * (MAX_SPAWN_TIME * 16.6666), 15);
                 ctx.lineCap = "round";
                 ctx.strokeStyle = "#b0212b";
                 ctx.beginPath();
@@ -191,6 +191,23 @@ export default class UserInterfaceGame extends UserInterface {
             ctx.strokeText("Wave " + this.waveProgress, centerWidth, WAVE_PROGRESS_BAR_Y);
             ctx.fillStyle = "white";
             ctx.fillText("Wave " + this.waveProgress, centerWidth, WAVE_PROGRESS_BAR_Y);
+
+            ctx.restore();
+        }
+
+        {
+            ctx.save();
+
+            const centerWidth = canvas.width / 2;
+
+            ctx.font = "2em Ubuntu, sans-serif";
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center';
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#000000';
+            ctx.strokeText("Garden", centerWidth, 68);
+            ctx.fillStyle = "white";
+            ctx.fillText("Garden", centerWidth, 68);
 
             ctx.restore();
         }

@@ -127,19 +127,24 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
                   this.petParentPlayer || otherEntity.petParentPlayer
                 ) {
                   this.health -= bodyDamageOrDamage(profile2[otherEntity.rarity]);
-                  if (isPetal(this.type) && this.petalParentPlayer) {
-                    otherEntity.mobLastAttackedBy = this.petalParentPlayer;
-                  }
-                  // Can targetted to pet too
-                  if (this.petParentPlayer) {
-                    otherEntity.mobLastAttackedBy = this;
+                  if (!isPetal(otherEntity.type)) {
+                    if (isPetal(this.type) && this.petalParentPlayer) {
+                      otherEntity.mobLastAttackedBy = this.petalParentPlayer;
+                    }
+                    // Can targetted to pet too
+                    if (this.petParentPlayer) {
+                      // If pet attacked mob its target player or pet?
+                      otherEntity.mobLastAttackedBy = this.petParentPlayer;
+                    }
                   }
                   otherEntity.health -= bodyDamageOrDamage(profile1[this.rarity]);
-                  if (isPetal(otherEntity.type) && otherEntity.petalParentPlayer) {
-                    this.mobLastAttackedBy = otherEntity.petalParentPlayer;
-                  }
-                  if (otherEntity.petParentPlayer) {
-                    this.mobLastAttackedBy = otherEntity;
+                  if (!isPetal(this.type)) {
+                    if (!isPetal(otherEntity.type) && otherEntity.petalParentPlayer) {
+                      this.mobLastAttackedBy = otherEntity.petalParentPlayer;
+                    }
+                    if (otherEntity.petParentPlayer) {
+                      this.mobLastAttackedBy = otherEntity.petParentPlayer;
+                    }
                   }
                 }
               }
@@ -148,7 +153,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
         });
 
         this.quadTree.clear();
-        
+
         return;
       }
 
@@ -237,6 +242,9 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
                 // profile1 always mob, so no need to use bodyDamageOrDamage
                 this.health -= profile1[otherEntity.rarity].bodyDamage;
                 otherEntity.health -= this.bodyDamage;
+
+                // Body hitted
+                otherEntity.mobLastAttackedBy = this;
               }
             }
 
@@ -245,7 +253,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
         });
 
         this.quadTree.clear();
-        
+
         return;
       }
 

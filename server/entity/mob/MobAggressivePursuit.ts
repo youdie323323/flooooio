@@ -163,7 +163,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                                     this.angle += angleDiff * 0.1;
                                     this.angle = ((this.angle + 255) % 255);
 
-                                    this.magnitude = 255 * (this.mobTargetEntity && distanceToTarget < 500 ? 0.25 : 2);
+                                    this.magnitude = 255 * (this.mobTargetEntity && distanceToTarget < 300 ? 0 : 2);
 
                                     this.mobTargetEntity = nearestTarget;
                                 } else {
@@ -177,7 +177,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                         break;
                     }
 
-                    // Neutral (bee)
+                    // Neutral
                     case MobBehaviors.NEUTRAL: {
                         let distanceToTarget = 0;
                         if (this.mobTargetEntity) {
@@ -190,13 +190,20 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                         if (this.mobTargetEntity && distanceToTarget > (MOB_DETECTION_FACTOR + 25) * this.size) {
                             this.mobTargetEntity = null;
                         } else {
-                            // Switch to other player if last attacked player is dead
-                            if (this.mobLastAttackedBy && this.mobLastAttackedBy instanceof Player && this.mobLastAttackedBy.isDead) {
+                            // Switch to other entity if last attacked entity is dead
+                            if (this.mobLastAttackedBy &&
+                                (
+                                    // Player dead, stop target
+                                    (this.mobLastAttackedBy instanceof Player && this.mobLastAttackedBy.isDead) ||
+                                    // Mob dead, stop target
+                                    (this.mobLastAttackedBy instanceof Mob && !poolThis.getMob(this.mobLastAttackedBy.id))
+                                )
+                            ) {
                                 this.mobLastAttackedBy = null;
                                 return;
-                            } 
-                            
-                            if (this.mobLastAttackedBy && !(this.mobLastAttackedBy instanceof Player ? this.mobLastAttackedBy.isDead : /* If mob is dead, its simply deleted from pool so can use false */ false)) {
+                            }
+
+                            if (this.mobLastAttackedBy) {
                                 const dx = this.mobLastAttackedBy.x - this.x;
                                 const dy = this.mobLastAttackedBy.y - this.y;
 

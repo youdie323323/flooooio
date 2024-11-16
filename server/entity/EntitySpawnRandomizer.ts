@@ -22,7 +22,7 @@ const END_SPAWN_WAVE_RARITY: RarityDict = {
     [Rarities.RARE]: 40,
     [Rarities.EPIC]: 50,
     [Rarities.LEGENDARY]: 60,
-    [Rarities.MYTHIC]: 177,
+    [Rarities.MYTHIC]: Infinity,
 };
 
 const RARITY_WEIGHTS: RarityDict = {
@@ -42,10 +42,13 @@ function calculateSpawnProbabilities(luck: number, waveProgress: number): Rarity
         const parsedKey = parseInt(key) as Rarities;
         if (waveProgress < END_SPAWN_WAVE_RARITY[parsedKey]) {
             const baseWeight = RARITY_WEIGHTS[parsedKey] || 0;
+
+            // TODO: luck multiplication makes no sense with normalization
+
             // Ill explain what 180 coming from,
             // in the original wave, if wave above 177, only common mobs are spawning,
-            // that because m28 were divide wave by 180, so that constant
-            const weight = baseWeight * Math.max(0, 1 - (waveProgress / 180)) * Math.pow(luck, parsedKey / 20);
+            // that because m28 were divide wave by 178, so that constant
+            const weight = baseWeight * Math.max(0, 1 - (waveProgress / 178)) * luck;
             probabilities[parsedKey] = weight;
             totalWeight += weight;
         }
@@ -54,6 +57,9 @@ function calculateSpawnProbabilities(luck: number, waveProgress: number): Rarity
     for (const key in probabilities) {
         const parsedKey = parseInt(key) as Rarities;
         probabilities[parsedKey] /= totalWeight;
+        if (isNaN(probabilities[parsedKey])) {
+            delete probabilities[parsedKey];
+        }
     }
 
     return probabilities;
@@ -105,19 +111,22 @@ export default class EntitySpawnRandomizer {
         // See comment of calculateWaveLuck
         const luck = (calculateWaveLuck(entityPool.waveProgress) * (( /** All players luck */ 0.0) + 1)) * 1;
 
-        if (this.timer % 5 === 5 - 1 && this.points > 0) {
+        if (this.timer % 10 === 10 - 1 && this.points > 0) {
             const probabilities = calculateSpawnProbabilities(luck, entityPool.waveProgress);
+            if (!Object.keys(probabilities).length) {
+                probabilities[Rarities.COMMON] = 1;
+            }
             const spawnRarity = weightedChoice(probabilities);
-            if (!spawnRarity) {
+            if (spawnRarity === null) {
                 return;
             }
 
             const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, entityPool);
             if (!randPos) {
-                return null;
+                return;
             }
 
-            entityPool.addPetalOrMob(MobType.BEETLE, spawnRarity, randPos[0], randPos[1], null, null);
+            entityPool.addPetalOrMob(MobType.BEE, spawnRarity, randPos[0], randPos[1], null, null);
 
             // Consume point
             this.points--;

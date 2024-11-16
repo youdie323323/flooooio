@@ -21,7 +21,7 @@ import { StaticPlayerData } from './entity/player/Player';
 const DEFAULT_PLAYER_DATA: Omit<StaticPlayerData, "ws"> = {
     name: 'unko',
     slots: {
-        surface: Array.from({ length: 1 }, () => {
+        surface: Array.from({ length: 0 }, () => {
             return {
                 type: PetalType.BEETLE_EGG,
                 rarity: Rarities.SUPER,
