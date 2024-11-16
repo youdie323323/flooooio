@@ -1,4 +1,4 @@
-import { Entity, onUpdateTick } from "./Entity";
+import { Entity, EntityMixinTemplate, onUpdateTick } from "./Entity";
 import { EntityPool } from "./EntityPool";
 import { isPetal, TWO_PI } from "./utils/common";
 import { Mob } from "./mob/Mob";
@@ -19,7 +19,7 @@ export const PROJECTILE_TYPES: Set<MobType> = new Set([
 ]);
 
 export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T) {
-    return class extends Base {
+    return class extends Base implements EntityMixinTemplate {
         [onUpdateTick](poolThis: EntityPool): void {
             // Call parent onUpdateTick
             // to use multiple mixin functions
@@ -50,6 +50,13 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                         }
                     });
 
+                    // Remove all their pets
+                    poolThis.getAllMobs().filter(c => c.petParentPlayer === this).forEach((e) => {
+                        if (e != null && isLivingPetal(e) && poolThis.getMob(e.id)) {
+                            poolThis.removeMob(e.id);
+                        }
+                    });
+
                     this.isDead = true;
                     // Stop moving
                     this.magnitude = 0;
@@ -70,26 +77,34 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
 
             // Follows the player when the player moves away from this (pet) for a certain distance
             // Dont follows if targetting other mob
-            if (this instanceof Mob && this.petParentPlayer && !this.mobTargetEntity) {
-                const dx = this.petParentPlayer.x - this.x;
-                const dy = this.petParentPlayer.y - this.y;
-                const distanceToParent = Math.hypot(dx, dy);
+            if (this instanceof Mob && this.petParentPlayer) {
+                if (!this.mobTargetEntity) {
+                    const dx = this.petParentPlayer.x - this.x;
+                    const dy = this.petParentPlayer.y - this.y;
+                    const distanceToParent = Math.hypot(dx, dy);
 
-                if (distanceToParent > 5 * this.size) {
-                    const targetAngle = ((Math.atan2(dy, dx) / TWO_PI) * 255 + 255) % 255;
+                    if (distanceToParent > 2 * this.size) {
+                        const targetAngle = ((Math.atan2(dy, dx) / TWO_PI) * 255 + 255) % 255;
 
-                    let currentAngle = this.angle;
-                    while (currentAngle < 0) currentAngle += 255;
-                    currentAngle = currentAngle % 255;
+                        let currentAngle = this.angle;
+                        while (currentAngle < 0) currentAngle += 255;
+                        currentAngle = currentAngle % 255;
 
-                    let angleDiff = targetAngle - currentAngle;
-                    if (angleDiff > 127.5) angleDiff -= 255;
-                    if (angleDiff < -127.5) angleDiff += 255;
+                        let angleDiff = targetAngle - currentAngle;
+                        if (angleDiff > 127.5) angleDiff -= 255;
+                        if (angleDiff < -127.5) angleDiff += 255;
 
-                    this.angle += angleDiff * 0.1;
-                    this.angle = ((this.angle + 255) % 255);
+                        this.angle += angleDiff * 0.1;
+                        this.angle = ((this.angle + 255) % 255);
 
-                    this.magnitude = 255 * 4;
+                        this.magnitude = 255 * 4;
+
+                        this.petGoingToPlayer = true;
+                    } else {
+                        this.petGoingToPlayer = false;
+                    }
+                } else {
+                    this.petGoingToPlayer = false;
                 }
             }
 
@@ -104,17 +119,17 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                         return;
                     }
                 }
-    
+
                 // World boundary (circular)
                 const worldRadius = Math.min(mapCenterX, mapCenterY) - mapRadius - (this instanceof Mob ? getRadius() - /* Decrease some gaps */ 15 : 0);
-    
+
                 const dx = this.x - mapCenterX;
                 const dy = this.y - mapCenterY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-    
+
                 if (distance > worldRadius) {
                     const collisionAngle = Math.atan2(dy, dx);
-    
+
                     this.x = mapCenterX + Math.cos(collisionAngle) * (worldRadius - 20);
                     this.y = mapCenterY + Math.sin(collisionAngle) * (worldRadius - 20);
                 }

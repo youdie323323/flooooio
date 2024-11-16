@@ -34,6 +34,13 @@ export function kickClient(waveRoom: WaveRoom, player: PlayerInstance) {
             }
         });
 
+        // Remove all their pets
+        waveRoom.entityPool.getAllMobs().filter(c => c.petParentPlayer === player).forEach((e) => {
+            if (e != null && isLivingPetal(e) && waveRoom.entityPool.getMob(e.id)) {
+                waveRoom.entityPool.removeMob(e.id);
+            }
+        });
+
         waveRoom.entityPool.removeClient(player.id);
     }
 }

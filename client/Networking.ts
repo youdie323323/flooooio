@@ -54,10 +54,17 @@ export default class Networking {
                         const waveProgress = data.getUint16(offset);
                         offset += 2;
 
+                        const waveProgressIsRedGage = data.getUint8(offset++) === 1 ? true : false;
+
                         const waveProgressTimer = data.getFloat64(offset);
                         offset += 8;
 
-                        console.log(waveProgress, waveProgressTimer)
+                        const waveProgressRedGageTimer = data.getFloat64(offset);
+                        offset += 8;
+
+                        console.clear();
+
+                        console.log(waveProgress, waveProgressIsRedGage, waveProgressTimer, waveProgressRedGageTimer);
                     };
 
                     const clientCount = data.getUint16(offset);

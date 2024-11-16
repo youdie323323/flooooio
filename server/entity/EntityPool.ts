@@ -3,7 +3,7 @@ import { PacketKind } from "../../shared/packet";
 import { MobType, PetalType } from "../../shared/types";
 import { Mob, MobInstance, MOB_SIZE_FACTOR, MobData } from "./mob/Mob";
 import { Player, PlayerInstance, StaticPlayerData } from "./player/Player";
-import { onUpdateTick } from "./Entity";
+import { EntityId, onUpdateTick } from "./Entity";
 import { isPetal, kickClient } from './utils/common';
 import { Rarities } from '../../shared/rarities';
 import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from './EntityChecksum';
@@ -13,14 +13,23 @@ import { isLivingPetal, PetalData, StaticPetalData } from './mob/petal/Petal';
 import { USAGE_RELOAD_PETALS } from './player/PlayerReload';
 import { MoodKind, MOON_KIND_VALUES } from '../../shared/mood';
 import { logger } from '../main';
-import WaveRoom from '../wave/WaveRoom';
-import { getRandomSafePosition, generateRandomId, getRandomAngle } from './utils/random';
-import { calculateWaveLength } from './utils/formula';
+import WaveRoom, { WaveRoomPlayerId } from '../wave/WaveRoom';
+import { getRandomSafePosition, generateRandomEntityId, getRandomAngle } from './utils/random';
+import { calculateWaveLength, calculateWaveLuck } from './utils/formula';
+import EntitySpawnRandomizer from './EntitySpawnRandomizer';
 
 // Define UserData for WebSocket connections
 export interface UserData {
-    waveRoomClientId: number;
-    waveClientId: number;
+    waveRoomClientId: WaveRoomPlayerId;
+    waveClientId: EntityId;
+    
+    /**
+     * Static data of player.
+     * 
+     * @remarks
+     * 
+     * This data is used to squad ui to display petals and names and to convert them when wave starting.
+     */
     wavePlayerData: StaticPlayerData;
 }
 
@@ -47,8 +56,8 @@ export const UPDATE_SEND_FPS = 30;
  * Spawning and other processes are also handled in this class.
  */
 export class EntityPool {
-    public clients: Map<number, PlayerInstance>;
-    public mobs: Map<number, MobInstance>;
+    public clients: Map<PlayerInstance["id"], PlayerInstance>;
+    public mobs: Map<MobInstance["id"], MobInstance>;
 
     private updateInterval: NodeJS.Timeout;
     private updateSendInterval: NodeJS.Timeout;
@@ -58,15 +67,23 @@ export class EntityPool {
     /**
      * Current wave progress.
      */
-    waveProgress: number;
-    waveProgressTimer: number;
+    public waveProgress: number;
+    public waveProgressTimer: number;
+    public waveProgressRedGageTimer: number;
+    public waveProgressIsRedGage: boolean;
+
+    private entitySpawnRandomizer: EntitySpawnRandomizer;
 
     constructor(private readonly waveRoom: WaveRoom) {
         this.clients = new Map();
         this.mobs = new Map();
 
-        this.waveProgress = 1;
+        this.waveProgress = 36;
         this.waveProgressTimer = 0;
+        this.waveProgressRedGageTimer = 0;
+        this.waveProgressIsRedGage = false;
+
+        this.entitySpawnRandomizer = new EntitySpawnRandomizer(this);
     }
 
     public startWave(waveRoom: WaveRoom) {
@@ -99,10 +116,10 @@ export class EntityPool {
     }
 
     public addClient(playerData: StaticPlayerData, x: number, y: number): PlayerInstance | null {
-        const clientId = generateRandomId();
+        const clientId = generateRandomEntityId();
 
         // Ensure unique clientId
-        if (this.getAllClients().map(v => v.id).includes(clientId)) {
+        if (this.clients.has(clientId)) {
             return this.addClient(playerData, x, y);
         }
 
@@ -153,7 +170,7 @@ export class EntityPool {
     }
 
     public addPetalOrMob(type: MobType | PetalType, rarity: Rarities, x: number, y: number, petalParent: PlayerInstance = null, eggParent: PlayerInstance = null): MobInstance | null {
-        const mobId = generateRandomId();
+        const mobId = generateRandomEntityId();
         if (this.mobs.has(mobId)) {
             return this.addPetalOrMob(type, rarity, x, y, petalParent, eggParent);
         }
@@ -177,10 +194,10 @@ export class EntityPool {
 
             mobLastAttackedBy: null,
 
-            petalIsUsage: USAGE_RELOAD_PETALS.has(type),
-
             petParentPlayer: eggParent,
+            petGoingToPlayer: false,
 
+            petalIsUsage: USAGE_RELOAD_PETALS.has(type),
             petalParentPlayer: petalParent,
             petalSummonedPet: null,
 
@@ -218,21 +235,42 @@ export class EntityPool {
             }
         });
 
+        this.entitySpawnRandomizer[onUpdateTick]();
+
         // Wave updates
 
         const waveLength = calculateWaveLength(this.waveProgress);
 
-        this.waveProgressTimer = Math.round((this.waveProgressTimer + ((1 / waveLength) / UPDATE_FPS)) * 100000) / 100000;
         if (this.waveProgressTimer >= waveLength) {
-            this.waveProgressTimer = 0;
-            this.waveProgress++;
+            // If mob count above 4, start red gage
+            if (
+                // Force start into next wave when red gage reached
+                !(this.waveProgressRedGageTimer >= waveLength) &&
+                4 < this.getAllMobs().filter(c => /** Dont count petals & pets. */ !c.petParentPlayer && !c.petalParentPlayer).length
+            ) {
+                this.waveProgressIsRedGage = true;
+
+                this.waveProgressRedGageTimer = Math.round((this.waveProgressRedGageTimer + (1 / waveLength)) * 100000) / 100000;
+            } else {
+                this.waveProgressIsRedGage = false;
+
+                this.waveProgressRedGageTimer = 0;
+                
+                this.waveProgressTimer = 0;
+
+                this.waveProgress++;
+
+                this.entitySpawnRandomizer.reset();
+            }
+        } else {
+            this.waveProgressTimer = Math.round((this.waveProgressTimer + (1 / waveLength)) * 100000) / 100000;
         }
     }
 
     /**
      * Updates the movement of a client
      */
-    public updateMovement(clientId: number, angle: number, magnitude: number) {
+    public updateMovement(clientId: PlayerInstance["id"], angle: number, magnitude: number) {
         const client = this.clients.get(clientId);
         if (client && !client.isDead) {
             if (
@@ -262,7 +300,7 @@ export class EntityPool {
     /**
      * Updates the mood of a client.
      */
-    public changeMood(clientId: number, kind: MoodKind) {
+    public changeMood(clientId: PlayerInstance["id"], kind: MoodKind) {
         const client = this.clients.get(clientId);
         if (client && !client.isDead) {
             if (
@@ -289,7 +327,7 @@ export class EntityPool {
     /**
      * Swaps a petal between surface and bottom slots for a client.
      */
-    public swapPetal(clientId: number, at: number) {
+    public swapPetal(clientId: PlayerInstance["id"], at: number) {
         const client = this.clients.get(clientId);
         if (
             client &&
@@ -439,7 +477,7 @@ export class EntityPool {
         const clientsPacket = this.createClientsPacket();
         const mobsPacket = this.createMobsPacket();
 
-        const totalLength = (1 + 2 + 8) + clientsPacket.length + mobsPacket.length;
+        const totalLength = (1 + 2 + 1 + 8 + 8) + clientsPacket.length + mobsPacket.length;
 
         const buffer = Buffer.alloc(totalLength);
         let offset = 0;
@@ -451,7 +489,12 @@ export class EntityPool {
             buffer.writeUInt16BE(this.waveProgress, offset);
             offset += 2;
 
+            buffer.writeUInt8(this.waveProgressIsRedGage ? 1 : 0, offset++);
+
             buffer.writeDoubleBE(this.waveProgressTimer, offset);
+            offset += 8;
+
+            buffer.writeDoubleBE(this.waveProgressRedGageTimer, offset);
             offset += 8;
         }
 
@@ -463,11 +506,11 @@ export class EntityPool {
         return buffer;
     }
 
-    getClient(id: number): PlayerInstance | undefined {
-        return this.clients.get(id);
+    getClient(clientId: PlayerInstance["id"]): PlayerInstance | undefined {
+        return this.clients.get(clientId);
     }
 
-    removeClient(clientId: number) {
+    removeClient(clientId: PlayerInstance["id"]) {
         const client = this.clients.get(clientId);
         if (client) {
             this.clients.delete(clientId);
@@ -487,14 +530,14 @@ export class EntityPool {
         return Array.from(this.clients.keys());
     }
 
-    getMob(id: number): MobInstance | undefined {
-        return this.mobs.get(id);
+    getMob(mobId: MobInstance["id"]): MobInstance | undefined {
+        return this.mobs.get(mobId);
     }
 
-    removeMob(id: number) {
-        const mob = this.mobs.get(id);
+    removeMob(mobId: MobInstance["id"]) {
+        const mob = this.mobs.get(mobId);
         if (mob) {
-            this.mobs.delete(id);
+            this.mobs.delete(mobId);
         }
     }
 

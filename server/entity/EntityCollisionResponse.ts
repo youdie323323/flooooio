@@ -1,5 +1,5 @@
 import { angleToRad, bodyDamageOrDamage, isPetal } from "./utils/common";
-import { Entity, onUpdateTick } from "./Entity";
+import { Entity, EntityMixinTemplate, onUpdateTick } from "./Entity";
 import { EntityPool } from "./EntityPool";
 import { Mob, MobData } from "./mob/Mob";
 import { Player } from "./player/Player";
@@ -17,7 +17,7 @@ export const FLOWER_ARC_RADIUS = 25 + (2.75 / 2);
 export const BUBBLE_PUSH_FACTOR = 3;
 
 export function EntityCollisionResponse<T extends new (...args: any[]) => Entity>(Base: T) {
-  return class extends Base {
+  return class extends Base implements EntityMixinTemplate {
     private quadTree: QuadTree;
 
     constructor(...args: any[]) {
@@ -249,7 +249,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
         return;
       }
 
-      // throw "Unreachable";
+      this.quadTree.clear();
     }
   };
 }

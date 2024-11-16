@@ -21,10 +21,10 @@ import { StaticPlayerData } from './entity/player/Player';
 const DEFAULT_PLAYER_DATA: Omit<StaticPlayerData, "ws"> = {
     name: 'hare',
     slots: {
-        surface: Array.from({ length: 8 * 2 }, () => {
+        surface: Array.from({ length: 4 }, () => {
             return {
                 type: PetalType.BEETLE_EGG,
-                rarity: Rarities.ULTRA,
+                rarity: Rarities.SUPER,
             };
         }),
         bottom: [
@@ -245,7 +245,7 @@ app
             }
 
             using _guard = logger.metadata({
-                reason: Buffer.from(message).toString(),
+                reason: Buffer.from(message).toString() || "UNKNOWN",
                 waveRoomClientId,
                 waveClientId,
             });

@@ -1,6 +1,6 @@
 import { MobType, PetalType } from "../../../shared/types";
 import { EntityCollisionResponse } from "../EntityCollisionResponse";
-import { Entity } from "../Entity";
+import { BrandedNumber, Entity, EntityId } from "../Entity";
 import { MobOscillatingMovement } from "./MobOscillatingMovement";
 import { MobAggressivePursuit } from "./MobAggressivePursuit";
 import { EntityLinearMovement } from "../EntityLinearMovement";
@@ -10,7 +10,7 @@ import { BasePlayer, PlayerInstance } from "../player/Player";
 import { MobHealthRegen } from "./MobHealthRegen";
 
 class BaseMob implements Entity {
-    readonly id: number;
+    readonly id: EntityId;
     x: number;
     y: number;
     magnitude: number;
@@ -46,9 +46,19 @@ class BaseMob implements Entity {
     petParentPlayer: PlayerInstance | null;
 
     /**
+     * Whether the pet is moving to tracking the player.
+     * 
+     * @remarks
+     * 
+     * To prevent move from MobOscillatingMovement.ts.
+     */
+    petGoingToPlayer: boolean;
+
+    /**
      * Determines if petal is usage petal. (e.g. beetle egg)
      */
     petalIsUsage: boolean;
+
     /**
      * Player which owns this petal.
      */

@@ -1,5 +1,7 @@
 import { ok } from "assert";
 import { EntityPool } from "../EntityPool";
+import { Entity, EntityId } from "../Entity";
+import { WaveRoomPlayerId } from "../../wave/WaveRoom";
 
 /**
  * Returns a random element from the given array.
@@ -134,6 +136,14 @@ export function getRandomAngle(): number {
     return Math.random() * 256;
 }
 
-export function generateRandomId(): number {
-    return Math.random() * 2 ** 32 >>> 0;
+function randomUint16(): number {
+  return Math.random() * 2 ** 32 >>> 0
+}
+
+export function generateRandomEntityId(): EntityId {
+    return randomUint16() as EntityId;
+}
+
+export function generateRandomWaveRoomPlayerId(): WaveRoomPlayerId {
+    return randomUint16() as WaveRoomPlayerId;
 }

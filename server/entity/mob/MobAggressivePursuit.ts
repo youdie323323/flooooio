@@ -1,5 +1,5 @@
 import { angleToRad, isPetal, TWO_PI } from "../utils/common";
-import { Entity, onUpdateTick } from "../Entity";
+import { Entity, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { EntityPool } from "../EntityPool";
 import { BaseMob, Mob, MobInstance } from "./Mob";
 import { MobType } from "../../../shared/types";
@@ -48,7 +48,7 @@ const MOB_BEHAVIORS: Record<MobType, MobBehaviors> = {
 } as const
 
 export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(Base: T) {
-    return class extends Base {
+    return class extends Base implements EntityMixinTemplate {
         [onUpdateTick](poolThis: EntityPool): void {
             // Call parent onUpdateTick
             // to use multiple mixin functions
@@ -58,11 +58,12 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
 
             let targets: Entity[];
             if (this.petParentPlayer) {
-                // Mob which summoned by player will attack other mobs expect petal
+                // Mob which summoned by player will attack other mobs expect petals, pets
                 targets = poolThis.getAllMobs().filter(p => !isPetal(p.type) && !p?.petParentPlayer);
             } else {
-                // Target living players, pets
-                targets = [poolThis.getAllClients().filter(p => !p.isDead), poolThis.getAllMobs().filter(p => p.petParentPlayer)].flat();
+                // Target living players, p̶e̶t̶s̶
+                // Mob will never target pets before wave
+                targets = poolThis.getAllClients().filter(p => !p.isDead);
             }
 
             // Dont chase player when this is petal

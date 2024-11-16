@@ -1,9 +1,9 @@
 import { angleToRad } from "./utils/common";
-import { Entity, onUpdateTick } from "./Entity";
+import { Entity, EntityMixinTemplate, onUpdateTick } from "./Entity";
 import { EntityPool } from "./EntityPool";
 
 export function EntityLinearMovement<T extends new (...args: any[]) => Entity>(Base: T) {
-    return class extends Base {
+    return class extends Base implements EntityMixinTemplate {
         [onUpdateTick](poolThis: EntityPool): void {
             // Call parent onUpdateTick
             // to use multiple mixin functions

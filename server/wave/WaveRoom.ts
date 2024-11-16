@@ -1,12 +1,13 @@
 import { Biomes } from "../../shared/biomes";
 import { PacketKind } from "../../shared/packet";
-import { generateRandomId, getRandomSafePosition } from "../entity/utils/random";
+import { generateRandomWaveRoomPlayerId, getRandomSafePosition } from "../entity/utils/random";
 import { EntityPool } from "../entity/EntityPool";
 import { PlayerInstance, StaticPlayerData } from "../entity/player/Player";
 import { logger } from "../main";
 import { Rarities } from "../../shared/rarities";
 import { MobType } from "../../shared/types";
 import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from "../entity/EntityChecksum";
+import { BrandedNumber } from "../entity/Entity";
 
 /** Represents the current state of a wave room */
 export enum WaveRoomState {
@@ -27,9 +28,11 @@ export enum PlayerReadyState {
     READY,
 }
 
+export type WaveRoomPlayerId = BrandedNumber<"WaveRoomPlayer">;
+
 /** Extended player data with wave room specific properties */
 export type WaveRoomPlayer = StaticPlayerData & {
-    id: number;
+    id: WaveRoomPlayerId;
     isOwner: boolean;
     readyState: PlayerReadyState;
 };
@@ -116,17 +119,17 @@ export default class WaveRoom {
         return buffer;
     }
 
-    public addPlayer(player: StaticPlayerData): number | false {
+    public addPlayer(player: StaticPlayerData): WaveRoomPlayerId | false {
         using _disposable = this.onChangeAnything();
 
         if (!this.canAddCandidate) {
             return false;
         }
 
-        const id = generateRandomId();
+        const id = generateRandomWaveRoomPlayerId();
 
         // Ensure unique clientId
-        if (Array.from(this.roomCandidates.values()).map(v => v.id).includes(id)) {
+        if (this.roomCandidates.map(v => v.id).includes(id)) {
             return this.addPlayer(player);
         }
 
@@ -146,7 +149,7 @@ export default class WaveRoom {
         return id;
     }
 
-    public removePlayer(id: number): boolean {
+    public removePlayer(id: WaveRoomPlayer["id"]): boolean {
         using _disposable = this.onChangeAnything();
 
         const index = this.roomCandidates.findIndex(p => p.id === id);
@@ -160,7 +163,7 @@ export default class WaveRoom {
             });
 
             // Grant owner to second joined candidate
-            if (savedIsOwner && this.roomCandidates.length > 0) {
+            if (savedIsOwner && this.roomCandidates.length !== 0 && this.roomCandidates[0]) {
                 this.roomCandidates[0].isOwner = true;
             }
 
@@ -170,7 +173,7 @@ export default class WaveRoom {
         };
     }
 
-    public setPlayerReadyState(id: number, state: PlayerReadyState): boolean {
+    public setPlayerReadyState(id: WaveRoomPlayer["id"], state: PlayerReadyState): boolean {
         using _disposable = this.onChangeAnything();
 
         const index = this.roomCandidates.findIndex(p => p.id === id);
@@ -188,7 +191,7 @@ export default class WaveRoom {
         };
     }
 
-    public setPublicState(id: number, state: WaveRoomVisibleState): boolean {
+    public setPublicState(id: WaveRoomPlayer["id"], state: WaveRoomVisibleState): boolean {
         using _disposable = this.onChangeAnything();
 
         const playerData = this.roomCandidates.find(p => p.id === id);
@@ -210,17 +213,6 @@ export default class WaveRoom {
         this.state = WaveRoomState.STARTED;
         clearInterval(this.updateInterval);
         this.entityPool.startWave(this);
-
-        setTimeout(() => {
-            setInterval(() => {
-                const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this.entityPool);
-                if (!randPos) {
-                    return null;
-                }
-
-                this.entityPool.addPetalOrMob(MobType.BEETLE, Rarities.MYTHIC, randPos[0], randPos[1], null, null);
-            }, 1000);
-        }, 20000);
 
         logger.region(() => {
             using _guard = logger.metadata({

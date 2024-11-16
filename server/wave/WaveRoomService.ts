@@ -2,7 +2,7 @@ import { Biomes } from "../../shared/biomes";
 import { UserData } from "../entity/EntityPool";
 import { PlayerInstance, StaticPlayerData } from "../entity/player/Player";
 import { logger } from "../main";
-import WaveRoom, { PlayerReadyState, WaveRoomVisibleState } from "./WaveRoom";
+import WaveRoom, { PlayerReadyState, WaveRoomPlayer, WaveRoomPlayerId, WaveRoomVisibleState } from "./WaveRoom";
 import { generate } from 'generate-passphrase';
 import uWS from 'uWebSockets.js';
 
@@ -12,7 +12,7 @@ export default class WaveRoomService {
     /**
      * Adds a player to an existing public wave room or creates a new one if none exists.
      */
-    public joinPublicWaveRoom(userData: UserData, biome: Biomes): number | false {
+    public joinPublicWaveRoom(userData: UserData, biome: Biomes): WaveRoomPlayer["id"] | false {
         this.leaveCurrentWaveRoom(userData);
 
         let waveRoom = this.findPublicRoom(biome);
@@ -27,7 +27,7 @@ export default class WaveRoomService {
     /**
      * Adds a player to a private wave room using a room code.
      */
-    public joinWaveRoom(userData: UserData, code: string): number | false {
+    public joinWaveRoom(userData: UserData, code: string): WaveRoomPlayer["id"] | false {
         this.leaveCurrentWaveRoom(userData);
 
         const room = this.findPrivateRoom(code);
@@ -41,7 +41,7 @@ export default class WaveRoomService {
     /**
      * Removes a player from their wave room, delete empty rooms if wave room is empty.
      */
-    public leaveWaveRoom(id: number): boolean {
+    public leaveWaveRoom(id: WaveRoomPlayer["id"]): boolean {
         for (const waveRoom of this.waveRooms) {
             if (waveRoom.removePlayer(id)) {
                 if (waveRoom.roomCandidates.length === 0) {
@@ -70,7 +70,7 @@ export default class WaveRoomService {
     /**
      * Creates a new wave room with initial player.
      */
-    public createWaveRoom(userData: UserData, biome: Biomes): number | false {
+    public createWaveRoom(userData: UserData, biome: Biomes): WaveRoomPlayer["id"] | false {
         this.leaveCurrentWaveRoom(userData);
 
         const waveRoom = new WaveRoom(biome, this.generateCode());
@@ -105,7 +105,7 @@ export default class WaveRoomService {
     /**
      * Finds the wave room that contains a specific player.
      */
-    public findPlayerRoom(id: number): WaveRoom | null {
+    public findPlayerRoom(id: WaveRoomPlayer["id"]): WaveRoom | null {
         for (const waveRoom of this.waveRooms) {
             const findedPlayer = waveRoom.roomCandidates.find(p => p.id === id);
             if (findedPlayer) {

@@ -1,4 +1,4 @@
-import { onUpdateTick } from "../Entity";
+import { EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { EntityPool, UPDATE_FPS } from "../EntityPool";
 import { Mob } from "../mob/Mob";
 import { BasePlayer } from "./Player";
@@ -18,7 +18,7 @@ export const UNMOODABLE_PETALS: Set<PetalType | MobType> = new Set([
 ]);
 
 export function PlayerPetalOrbit<T extends new (...args: any[]) => BasePlayer>(Base: T) {
-    return class extends Base {
+    return class extends Base implements EntityMixinTemplate {
         private rotation = 0;
         private historyX: number[] = new Array(10).fill(0);
         private historyY: number[] = new Array(10).fill(0);

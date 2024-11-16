@@ -1,6 +1,6 @@
 import { MobType } from "../../../shared/types";
 import { isPetal } from "../utils/common";
-import { onUpdateTick } from "../Entity";
+import { EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { EntityPool } from "../EntityPool";
 import { BaseMob } from "./Mob";
 import { SHARED_SINE_WAVE } from "../utils/cosineWave";
@@ -9,7 +9,7 @@ import { getRandomAngle } from "../utils/random";
 const MOVEMENT_DURATION = 1 / 150;
 
 export function MobOscillatingMovement<T extends new (...args: any[]) => BaseMob>(Base: T) {
-    return class extends Base {
+    return class extends Base implements EntityMixinTemplate {
         private sineWaveIndex: number = -1;
         private movementTimer: number = 0;
         private rotationCounter: number = 0;
@@ -30,7 +30,7 @@ export function MobOscillatingMovement<T extends new (...args: any[]) => BaseMob
             }
 
             // Dont move when this is petal or pet
-            if (!isPetal(this.type) && this.type !== MobType.BUBBLE) {
+            if (!isPetal(this.type) && this.type !== MobType.BUBBLE && !this.petGoingToPlayer) {
                 if (this.shouldApplyAngleShake()) {
                     this.angle += SHARED_SINE_WAVE.get(++this.sineWaveIndex) * (this.mobTargetEntity ? 3 : 1);
                 }

@@ -1,8 +1,23 @@
+import { EntityPool } from "./EntityPool";
+
+/**
+ * Create branded type.
+ * 
+ * @remarks
+ * 
+ * Use branded type to avoid mistaking WaveRoomPlayer id for Entity id.
+ */
+export type BrandedNumber<T extends string> = number & { brand: T };
+
+export type EntityId = BrandedNumber<"Entity">;
+
 export interface Entity {
     /**
-     * Id of entity, cant be changed.
+     * Id of entity.
+     * 
+     * @readonly
      */
-    readonly id: number;
+    readonly id: EntityId;
 
     /**
      * Current x-pos of entity.
@@ -32,12 +47,31 @@ export interface Entity {
      */
     health: number;
     /**
-     * Max health of entity, immutable.
+     * Max health of entity.
+     * 
+     * @readonly
      */
     readonly maxHealth: number;
 }
 
 /**
- * Symbol that call on 60 frame per second.
+ * Symbols to call in the update method of EntityPool
+ * 
+ * @remarks
+ * 
+ * This is not only used for mixin.
  */
-export const onUpdateTick: symbol = Symbol.for("onUpdateTick");
+export const onUpdateTick: unique symbol = Symbol.for("onUpdateTick");
+
+export interface EntityMixinTemplate {
+    /**
+     * Method call up to every UPDATE_FPS interval.
+     * 
+     * @remarks
+     * 
+     * Call this method of parent if exists so can propagate mixin.
+     */
+    [onUpdateTick]: (poolThis: EntityPool) => void;
+
+    [key: string]: any;
+}

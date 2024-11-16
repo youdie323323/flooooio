@@ -1,5 +1,5 @@
 import { EntityCollisionResponse } from "../EntityCollisionResponse";
-import { Entity } from "../Entity";
+import { BrandedNumber, Entity, EntityId } from "../Entity";
 import { EntityLinearMovement } from "../EntityLinearMovement";
 import uWS from 'uWebSockets.js';
 import { UserData } from "../EntityPool";
@@ -11,7 +11,7 @@ import { MoodKind } from "../../../shared/mood";
 import { PetalSlots, StaticPetalData } from "../mob/petal/Petal";
 
 class BasePlayer implements Entity {
-    readonly id: number;
+    readonly id: EntityId;
     x: number;
     y: number;
     magnitude: number;
