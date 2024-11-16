@@ -153,7 +153,7 @@ export default class EntityMob extends Entity {
                     const relative = i === 0 ? 1 : -1;
                     ctx.save();
                     // Maybe relative * 10 better
-                    ctx.translate(28, relative * 11);
+                    ctx.translate(32, relative * 11);
                     ctx.rotate(Math.sin(this.moveCounter * 1.24) * 0.1 * relative);
                     ctx.beginPath();
                     ctx.moveTo(0, relative * 7);

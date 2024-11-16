@@ -6,6 +6,7 @@ import { TWO_PI } from "./constants";
 import EntityMob from "./entity/EntityMob";
 import EntityPlayer from "./entity/EntityPlayer";
 import { players, mobs, uiManager } from "./main";
+import UserInterfaceGame from "./ui/UserInterfaceGame";
 
 export let selfId = -1;
 export let waveSelfId = -1;
@@ -37,7 +38,7 @@ export default class Networking {
 
             const data = new DataView(event.data);
             let offset = 0;
-            
+
             const kind = data.getUint8(offset++);
             switch (kind) {
                 case PacketKind.SELF_ID: {
@@ -51,20 +52,53 @@ export default class Networking {
                 case PacketKind.UPDATE: {
                     // Wave informations
                     {
+                        /*
+                                                    client.nx = clientX;
+                            client.ny = clientY;
+                            client.nAngle = clientAngle;
+                            client.nSize = clientSize;
+                            client.mood = clientMood;
+                            client.isDead = clientIsDead;
+
+                            if (clientHp < client.nHealth) {
+                                client.redHealthTimer = 1;
+                            } else if (clientHp > client.nHealth) {
+                                client.redHealthTimer = 0;
+                            }
+
+                            if (clientHp < client.nHealth) {
+                                client.hurtT = 1;
+                            }
+
+                            client.nHealth = clientHp;
+
+                            client.ox = client.x;
+                            client.oy = client.y;
+                            client.oAngle = client.angle;
+                            client.oHealth = client.health;
+                            client.oSize = client.size;
+                            client.updateT = 0;
+                         */
                         const waveProgress = data.getUint16(offset);
                         offset += 2;
-
-                        const waveProgressIsRedGage = data.getUint8(offset++) === 1 ? true : false;
 
                         const waveProgressTimer = data.getFloat64(offset);
                         offset += 8;
 
                         const waveProgressRedGageTimer = data.getFloat64(offset);
                         offset += 8;
+                        
+                        if (uiManager.currentUI instanceof UserInterfaceGame) {
+                            uiManager.currentUI.waveProgress = waveProgress;
 
-                        console.clear();
+                            uiManager.currentUI.nWaveProgressTimer = waveProgressTimer;
+                            uiManager.currentUI.oWaveProgressTimer = uiManager.currentUI.waveProgressTimer;
 
-                        console.log(waveProgress, waveProgressIsRedGage, waveProgressTimer, waveProgressRedGageTimer);
+                            uiManager.currentUI.nWaveProgressRedGageTimer = waveProgressRedGageTimer;
+                            uiManager.currentUI.oWaveProgressRedGageTimer = uiManager.currentUI.waveProgressRedGageTimer;
+
+                            uiManager.currentUI.updateT = 0;
+                        }
                     };
 
                     const clientCount = data.getUint16(offset);
@@ -262,7 +296,7 @@ export default class Networking {
                 }
                 case PacketKind.SERVER_CLOSED: {
                     document.body.innerHTML = "<h1>Server closed. Try again after some minutes.</h1>";
-                    
+
                     break;
                 }
             }

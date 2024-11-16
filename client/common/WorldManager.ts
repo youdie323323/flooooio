@@ -329,7 +329,7 @@ export default class TilesetManager {
         ctx.lineWidth = ((canvas.width * scaleFactor) * 2) + ((canvas.height * scaleFactor) * 2);
         ctx.beginPath();
         ctx.strokeStyle = 'black';
-        ctx.globalAlpha = 0.08;
+        ctx.globalAlpha = 0.2;
         ctx.arc(
             30 / 2 * adjustedGridSize - (playerX * scaleFactor) + canvas.width / 2
             - numGridX * 30 * scaleFactor,

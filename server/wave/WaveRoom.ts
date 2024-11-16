@@ -7,7 +7,7 @@ import { logger } from "../main";
 import { Rarities } from "../../shared/rarities";
 import { MobType } from "../../shared/types";
 import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from "../entity/EntityChecksum";
-import { BrandedNumber } from "../entity/Entity";
+import { BrandedId } from "../entity/Entity";
 
 /** Represents the current state of a wave room */
 export enum WaveRoomState {
@@ -28,9 +28,9 @@ export enum PlayerReadyState {
     READY,
 }
 
-export type WaveRoomPlayerId = BrandedNumber<"WaveRoomPlayer">;
+export type WaveRoomPlayerId = BrandedId<"WaveRoomPlayer">;
 
-/** Extended player data with wave room specific properties */
+/** Extended player data with wave room data properties */
 export type WaveRoomPlayer = StaticPlayerData & {
     id: WaveRoomPlayerId;
     isOwner: boolean;
@@ -218,6 +218,7 @@ export default class WaveRoom {
             using _guard = logger.metadata({
                 candidateIds: this.roomCandidates.map(c => c.id).join(","),
                 code: this.code,
+                wave: this.entityPool.waveProgress,
             });
             logger.info("Wave starting");
         });
@@ -230,7 +231,7 @@ export default class WaveRoom {
         this.entityPool.endWave();
 
         logger.region(() => {
-            using _guard = logger.metadata({ code: this.code });
+            using _guard = logger.metadata({ code: this.code, wave: this.entityPool.waveProgress });
             logger.info("Wave ended");
         });
 

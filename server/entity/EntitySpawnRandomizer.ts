@@ -30,7 +30,7 @@ const RARITY_WEIGHTS: RarityDict = {
     [Rarities.UNUSUAL]: 0.5,
     [Rarities.RARE]: 0.25,
     [Rarities.EPIC]: 0.1,
-    [Rarities.LEGENDARY]: 0.05,
+    [Rarities.LEGENDARY]: 0.025,
     [Rarities.MYTHIC]: 0.01,
 };
 
@@ -42,7 +42,10 @@ function calculateSpawnProbabilities(luck: number, waveProgress: number): Rarity
         const parsedKey = parseInt(key) as Rarities;
         if (waveProgress < END_SPAWN_WAVE_RARITY[parsedKey]) {
             const baseWeight = RARITY_WEIGHTS[parsedKey] || 0;
-            const weight = baseWeight * Math.max(0, 1 - (waveProgress / 100)) * Math.pow(luck, parsedKey / (Rarities.MYTHIC * 2.5));
+            // Ill explain what 180 coming from,
+            // in the original wave, if wave above 177, only common mobs are spawning,
+            // that because m28 were divide wave by 180, so that constant
+            const weight = baseWeight * Math.max(0, 1 - (waveProgress / 180)) * Math.pow(luck, parsedKey / 20);
             probabilities[parsedKey] = weight;
             totalWeight += weight;
         }
@@ -100,7 +103,7 @@ export default class EntitySpawnRandomizer {
         }
 
         // See comment of calculateWaveLuck
-        const luck = (calculateWaveLuck(entityPool.waveProgress) * (( /** All players luck */ 20) + 1)) * 1;
+        const luck = (calculateWaveLuck(entityPool.waveProgress) * (( /** All players luck */ 0.0) + 1)) * 1;
 
         if (this.timer % 5 === 5 - 1 && this.points > 0) {
             const probabilities = calculateSpawnProbabilities(luck, entityPool.waveProgress);
@@ -125,6 +128,6 @@ export default class EntitySpawnRandomizer {
 
     public reset() {
         this.timer = 0;
-        this.points = Math.max(50, Math.pow(this.entityPool.waveProgress, 1.5));
+        this.points = 50 + Math.pow(this.entityPool.waveProgress, 1.6);
     }
 }

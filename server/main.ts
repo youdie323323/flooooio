@@ -19,17 +19,15 @@ import { StaticPlayerData } from './entity/player/Player';
  * Temp player data.
  */
 const DEFAULT_PLAYER_DATA: Omit<StaticPlayerData, "ws"> = {
-    name: 'hare',
+    name: 'unko',
     slots: {
-        surface: Array.from({ length: 4 }, () => {
+        surface: Array.from({ length: 1 }, () => {
             return {
                 type: PetalType.BEETLE_EGG,
                 rarity: Rarities.SUPER,
             };
         }),
-        bottom: [
-            null,
-        ]
+        bottom: [],
     },
 };
 

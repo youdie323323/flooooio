@@ -1,5 +1,5 @@
 import { EntityCollisionResponse } from "../EntityCollisionResponse";
-import { BrandedNumber, Entity, EntityId } from "../Entity";
+import { BrandedId, Entity, EntityId } from "../Entity";
 import { EntityLinearMovement } from "../EntityLinearMovement";
 import uWS from 'uWebSockets.js';
 import { UserData } from "../EntityPool";

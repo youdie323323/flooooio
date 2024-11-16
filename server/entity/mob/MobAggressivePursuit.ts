@@ -14,6 +14,8 @@ function predicateCoordinate(x0: number, y0: number, speed: number, angle: numbe
     return { x: newX, y: newY };
 }
 
+const MOB_DETECTION_FACTOR = 25;
+
 export function findNearestEntity(me: Entity, entites: Entity[]) {
     if (!entites.length) return null;
 
@@ -85,7 +87,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                         }
 
                         // Loss entity
-                        if (this.mobTargetEntity && distanceToTarget > 125 * this.size) {
+                        if (this.mobTargetEntity && distanceToTarget > (MOB_DETECTION_FACTOR + 25) * this.size) {
                             this.mobTargetEntity = null;
                         } else {
                             const nearestTarget = findNearestEntity(this, targets);
@@ -94,7 +96,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                                 const dy = nearestTarget.y - this.y;
                                 const distance = Math.hypot(dx, dy);
 
-                                if (distance < 100 * this.size) {
+                                if (distance < MOB_DETECTION_FACTOR * this.size) {
                                     const targetAngle = ((Math.atan2(dy, dx) / TWO_PI) * 255 + 255) % 255;
 
                                     let currentAngle = this.angle;
@@ -138,7 +140,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                         }
 
                         // Loss entity
-                        if (this.mobTargetEntity && distanceToTarget > 125 * this.size) {
+                        if (this.mobTargetEntity && distanceToTarget > (MOB_DETECTION_FACTOR + 25) * this.size) {
                             this.mobTargetEntity = null;
                         } else {
                             const nearestTarget = findNearestEntity(this, targets);
@@ -147,7 +149,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                                 const dy = nearestTarget.y - this.y;
                                 const distance = Math.hypot(dx, dy);
 
-                                if (distance < 100 * this.size) {
+                                if (distance < MOB_DETECTION_FACTOR * this.size) {
                                     const targetAngle = ((Math.atan2(dy, dx) / TWO_PI) * 255 + 255) % 255;
 
                                     let currentAngle = this.angle;
@@ -185,7 +187,7 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                         }
 
                         // Loss entity
-                        if (this.mobTargetEntity && distanceToTarget > 125 * this.size) {
+                        if (this.mobTargetEntity && distanceToTarget > (MOB_DETECTION_FACTOR + 25) * this.size) {
                             this.mobTargetEntity = null;
                         } else {
                             // Switch to other player if last attacked player is dead

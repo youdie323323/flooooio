@@ -5,11 +5,11 @@ import { EntityPool } from "./EntityPool";
  * 
  * @remarks
  * 
- * Use branded type to avoid mistaking WaveRoomPlayer id for Entity id.
+ * Use branded type to avoid mistaking WaveRoomPlayer id and Entity id.
  */
-export type BrandedNumber<T extends string> = number & { brand: T };
+export type BrandedId<T extends string> = number & { __brand: T };
 
-export type EntityId = BrandedNumber<"Entity">;
+export type EntityId = BrandedId<"Entity">;
 
 export interface Entity {
     /**

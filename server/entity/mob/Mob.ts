@@ -1,6 +1,6 @@
 import { MobType, PetalType } from "../../../shared/types";
 import { EntityCollisionResponse } from "../EntityCollisionResponse";
-import { BrandedNumber, Entity, EntityId } from "../Entity";
+import { BrandedId, Entity, EntityId } from "../Entity";
 import { MobOscillatingMovement } from "./MobOscillatingMovement";
 import { MobAggressivePursuit } from "./MobAggressivePursuit";
 import { EntityLinearMovement } from "../EntityLinearMovement";

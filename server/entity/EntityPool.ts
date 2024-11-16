@@ -22,7 +22,7 @@ import EntitySpawnRandomizer from './EntitySpawnRandomizer';
 export interface UserData {
     waveRoomClientId: WaveRoomPlayerId;
     waveClientId: EntityId;
-    
+
     /**
      * Static data of player.
      * 
@@ -111,8 +111,8 @@ export class EntityPool {
     }
 
     public endWave() {
-        clearInterval(this.updateInterval);
-        clearInterval(this.updateSendInterval);
+        // clearInterval(this.updateInterval);
+        // clearInterval(this.updateSendInterval);
     }
 
     public addClient(playerData: StaticPlayerData, x: number, y: number): PlayerInstance | null {
@@ -250,12 +250,12 @@ export class EntityPool {
             ) {
                 this.waveProgressIsRedGage = true;
 
-                this.waveProgressRedGageTimer = Math.round((this.waveProgressRedGageTimer + (1 / waveLength)) * 100000) / 100000;
+                this.waveProgressRedGageTimer = Math.round((this.waveProgressRedGageTimer + 0.016) * 100000) / 100000;
             } else {
                 this.waveProgressIsRedGage = false;
 
                 this.waveProgressRedGageTimer = 0;
-                
+
                 this.waveProgressTimer = 0;
 
                 this.waveProgress++;
@@ -263,7 +263,7 @@ export class EntityPool {
                 this.entitySpawnRandomizer.reset();
             }
         } else {
-            this.waveProgressTimer = Math.round((this.waveProgressTimer + (1 / waveLength)) * 100000) / 100000;
+            this.waveProgressTimer = Math.round((this.waveProgressTimer + 0.016) * 100000) / 100000;
         }
     }
 
@@ -488,8 +488,6 @@ export class EntityPool {
         {
             buffer.writeUInt16BE(this.waveProgress, offset);
             offset += 2;
-
-            buffer.writeUInt8(this.waveProgressIsRedGage ? 1 : 0, offset++);
 
             buffer.writeDoubleBE(this.waveProgressTimer, offset);
             offset += 8;
