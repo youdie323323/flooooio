@@ -20,7 +20,7 @@ export default class UserInterfaceTransition {
         },
         game: {
             initialRadius: () => 4,
-            radiusChange: (current) => current + (0.5 + current / 35),
+            radiusChange: (current) => current + (0.5 + current / 30),
             isComplete: (canvas, radius) => radius > Math.max(canvas.height, canvas.width)
         }
     };

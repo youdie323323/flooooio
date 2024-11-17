@@ -11,6 +11,9 @@ import { Biomes } from "../shared/biomes";
 
 export let ws: WebSocket;
 
+const canvas: HTMLCanvasElement = document.querySelector('#canvas');
+const ctx = canvas.getContext('2d');
+
 export let lastTimestamp = Date.now();
 export let deltaTime = 0;
 export let timeFactor = 0;
@@ -26,9 +29,6 @@ export let scaleFactor = 1;
 
 export const players: Map<number, EntityPlayer> = new Map();
 export const mobs: Map<number, EntityMob> = new Map();
-
-const canvas: HTMLCanvasElement = document.querySelector('#canvas');
-const ctx = canvas.getContext('2d');
 
 export const cameraController = new CameraController(canvas);
 
@@ -85,45 +85,47 @@ export const uiManager = new UserInterfaceManager(canvas);
     let mouseXOffset = 0;
     let mouseYOffset = 0;
 
-    // Mouse move event handler
-    canvas.onmousemove = function (event) {
-        mouseXOffset = event.clientX - document.documentElement.clientWidth / 2;
-        mouseYOffset = event.clientY - document.documentElement.clientHeight / 2;
-        const distance = Math.hypot(mouseXOffset, mouseYOffset);
-        const angle = Math.atan2(mouseYOffset, mouseXOffset);
-        networking.sendAngle(angle, distance < 50 ? distance / 100 : 1);
-    };
+    {
+        // Mouse move event handler
+        canvas.onmousemove = function (event) {
+            mouseXOffset = event.clientX - document.documentElement.clientWidth / 2;
+            mouseYOffset = event.clientY - document.documentElement.clientHeight / 2;
+            const distance = Math.hypot(mouseXOffset, mouseYOffset);
+            const angle = Math.atan2(mouseYOffset, mouseXOffset);
+            networking.sendAngle(angle, distance < 50 ? distance / 100 : 1);
+        };
 
-    window.onmousedown = function (e: MouseEvent) {
-        if (e.button === 0 || e.button === 2) {
-            networking.sendMood(e.button === 0 ? MoodKind.ANGRY : e.button === 2 ? MoodKind.SAD : MoodKind.NORMAL);
-        }
-    };
+        window.onmousedown = function (e: MouseEvent) {
+            if (e.button === 0 || e.button === 2) {
+                networking.sendMood(e.button === 0 ? MoodKind.ANGRY : e.button === 2 ? MoodKind.SAD : MoodKind.NORMAL);
+            }
+        };
 
-    window.onmouseup = function (e: MouseEvent) {
-        if (e.button === 0 || e.button === 2) {
-            networking.sendMood(MoodKind.NORMAL);
-        }
-    };
+        window.onmouseup = function (e: MouseEvent) {
+            if (e.button === 0 || e.button === 2) {
+                networking.sendMood(MoodKind.NORMAL);
+            }
+        };
 
-    document.onkeydown = function (e) {
-        if (e.type === "keydown") {
-            switch (e.code) {
-                default: {
-                    if (e.code.startsWith("Digit")) {
-                        let index = parseInt(e.code.slice(5));
-                        if (index === 0) {
-                            index = 10;
+        document.onkeydown = function (e) {
+            if (e.type === "keydown") {
+                switch (e.code) {
+                    default: {
+                        if (e.code.startsWith("Digit")) {
+                            let index = parseInt(e.code.slice(5));
+                            if (index === 0) {
+                                index = 10;
+                            }
+                            index--;
+                            networking.sendSwapPetal(index);
                         }
-                        index--;
-                        networking.sendSwapPetal(index);
                     }
                 }
             }
-        }
-    };
+        };
+    }
 
-    (function animationLoop() {
+    (function frame() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         lastTimestamp = Date.now();
@@ -141,6 +143,6 @@ export const uiManager = new UserInterfaceManager(canvas);
 
         uiManager.update();
 
-        requestAnimationFrame(animationLoop);
+        requestAnimationFrame(frame);
     })();
 })();

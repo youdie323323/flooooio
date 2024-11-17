@@ -220,14 +220,17 @@ export default class UserInterfaceGame extends UserInterface {
 
             const centerWidth = canvas.width / 2;
 
+            const _biomeText = Biomes[this.biome].toLocaleLowerCase();
+            const biomeText = _biomeText[0].toUpperCase() +_biomeText.slice(1);
+
             ctx.font = "2em Ubuntu, sans-serif";
             ctx.textBaseline = 'middle';
             ctx.textAlign = 'center';
             ctx.lineWidth = 4;
             ctx.strokeStyle = '#000000';
-            ctx.strokeText("Garden", centerWidth, 68);
+            ctx.strokeText(biomeText, centerWidth, 68);
             ctx.fillStyle = "white";
-            ctx.fillText("Garden", centerWidth, 68);
+            ctx.fillText(biomeText, centerWidth, 68);
 
             ctx.restore();
         }

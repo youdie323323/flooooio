@@ -16,28 +16,28 @@ Wave 51+: Epics stop spawning
 Wave 61+: Legendaries stop spawning
 */
 
-type RarityDict = Partial<Record<Rarities, number>>;
+type RarityRecordConstant = Partial<Record<Rarities, number>>;
 
-const END_SPAWN_WAVE_RARITY: RarityDict = {
+const END_SPAWN_WAVE_RARITY: RarityRecordConstant = {
     [Rarities.COMMON]: 20,
     [Rarities.UNUSUAL]: 30,
     [Rarities.RARE]: 40,
     [Rarities.EPIC]: 50,
     [Rarities.LEGENDARY]: 60,
     [Rarities.MYTHIC]: Infinity,
-};
+} as const;
 
-const RARITY_WEIGHTS: RarityDict = {
+const RARITY_WEIGHTS: RarityRecordConstant = {
     [Rarities.COMMON]: 1,
     [Rarities.UNUSUAL]: 0.5,
     [Rarities.RARE]: 0.25,
     [Rarities.EPIC]: 0.1,
     [Rarities.LEGENDARY]: 0.025,
     [Rarities.MYTHIC]: 0.01,
-};
+} as const;
 
-function calculateSpawnProbabilities(luck: number, waveProgress: number): RarityDict {
-    const probabilities: RarityDict = {};
+function calculateSpawnProbabilities(luck: number, waveProgress: number): RarityRecordConstant {
+    const probabilities: RarityRecordConstant = {};
     let totalWeight = 0;
 
     for (const key in END_SPAWN_WAVE_RARITY) {
@@ -67,7 +67,7 @@ function calculateSpawnProbabilities(luck: number, waveProgress: number): Rarity
     return probabilities;
 }
 
-function weightedChoice(probabilities: RarityDict): Rarities | null {
+function weightedChoice(probabilities: RarityRecordConstant): Rarities | null {
     const randomValue = Math.random();
     let cumulative = 0;
 
@@ -83,7 +83,7 @@ function weightedChoice(probabilities: RarityDict): Rarities | null {
 }
 
 export default class WaveProbabilityPredictor {
-    private timer: number = 0;
+    private timer: number;
 
     /**
      * Consumable points.
@@ -96,17 +96,19 @@ export default class WaveProbabilityPredictor {
      * It selects random mobs from the available pool (with some weights) until the wave runs out of points.
      * ```
      */
-    private points: number = 0;
+    private points: number;
 
-    constructor(waveData: WaveProgressData) {
+    public constructor(waveData: WaveProgressData) {
         this.reset(waveData);
     }
 
     public getMobData(waveData: WaveProgressData): [MobType, Rarities] | null {
+        this.timer++;
+
         // See comment of calculateWaveLuck
         const luck = (calculateWaveLuck(waveData.waveProgress) * (( /** All players luck */ 0.0) + 1)) * 1;
 
-        if (this.points > 0) {
+        if (this.timer % 5 === 0 && this.points > 0) {
             const probabilities = calculateSpawnProbabilities(luck, waveData.waveProgress);
             // Ensure atleast common
             if (!Object.keys(probabilities).length) {
@@ -120,16 +122,15 @@ export default class WaveProbabilityPredictor {
             // Consume point
             this.points--;
 
-            return [MobType.BUBBLE, spawnRarity]
+            return [MobType.BEETLE, spawnRarity]
         }
-
-        this.timer++;
 
         return null;
     }
 
     public reset(waveData: WaveProgressData) {
-        this.timer = 0;
+        this.timer = -1;
         this.points = 50 + Math.pow(waveData.waveProgress, 1.6);
+        this.points += 1500;
     }
 }

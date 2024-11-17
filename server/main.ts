@@ -21,7 +21,7 @@ import { MockPlayerData } from './entity/player/Player';
 const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
     name: 'unko',
     slots: {
-        surface: Array.from({ length: 2 }, () => {
+        surface: Array.from({ length: 10 }, () => {
             return {
                 type: PetalType.BEETLE_EGG,
                 rarity: Rarities.SUPER,
