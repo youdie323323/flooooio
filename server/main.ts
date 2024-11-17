@@ -21,7 +21,7 @@ import { StaticPlayerData } from './entity/player/Player';
 const DEFAULT_PLAYER_DATA: Omit<StaticPlayerData, "ws"> = {
     name: 'unko',
     slots: {
-        surface: Array.from({ length: 0 }, () => {
+        surface: Array.from({ length: 8 }, () => {
             return {
                 type: PetalType.BEETLE_EGG,
                 rarity: Rarities.SUPER,
@@ -124,7 +124,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             const id = waveRoomService.joinPublicWaveRoom(userData, buffer[1]);
             if (!id) {
-                logger.warn("Client failed join public wave room")
+                logger.warn("Client failed join public wave room");
                 return;
             };
 
@@ -154,6 +154,18 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
         }
         case PacketKind.WAVE_ROOM_LEAVE: {
             waveRoomService.leaveWaveRoom(waveRoomClientId);
+
+            break;
+        }
+        case PacketKind.WAVE_ROOM_GAME_LEAVE: {
+            const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
+            if (!waveRoom) return;
+
+            const client = waveRoom.entityPool.getClient(waveClientId);
+            if (!client) return;
+
+            kickClient(waveRoom, client);
+
             break;
         }
     }

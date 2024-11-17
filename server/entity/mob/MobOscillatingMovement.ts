@@ -32,7 +32,7 @@ export function MobOscillatingMovement<T extends new (...args: any[]) => BaseMob
             // Dont move when this is petal or pet
             if (!isPetal(this.type) && this.type !== MobType.BUBBLE && !this.petGoingToPlayer) {
                 if (this.shouldApplyAngleShake()) {
-                    this.angle += SHARED_SINE_WAVE.get(++this.sineWaveIndex) * (this.mobTargetEntity ? 3 : 1);
+                    this.angle += SHARED_SINE_WAVE.get(++this.sineWaveIndex) * (this.mobTargetEntity ? 2 : 1);
                 }
 
                 // Do defensive-position move if not targetting player

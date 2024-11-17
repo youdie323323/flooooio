@@ -35,7 +35,7 @@ export function kickClient(waveRoom: WaveRoom, player: PlayerInstance) {
 
 export function removeAllBindings(waveRoom: WaveRoom, player: PlayerInstance) {
     if (player) {
-        // Delete all petals
+        // Remove all petals
         player.slots.surface.forEach((e) => {
             if (e != null && isLivingPetal(e) && waveRoom.entityPool.getMob(e.id)) {
                 waveRoom.entityPool.removeMob(e.id);

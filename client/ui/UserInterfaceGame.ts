@@ -1,11 +1,12 @@
-import { ARROW_START_DISTANCE, MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../constants";
+import { ARROW_START_DISTANCE, CROSS_ICON_SVG, MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../constants";
 import EntityMob from "../entity/EntityMob";
-import { players, mobs, scaleFactor, interpolatedMouseX, interpolatedMouseY, deltaTime } from "../main";
+import { players, mobs, scaleFactor, interpolatedMouseX, interpolatedMouseY, deltaTime, ws, uiManager } from "../main";
 import TilesetManager, { BIOME_TILESETS } from "../common/WorldManager";
 import { ComponentsSVGButton, ComponentsTextButton } from "./components/ComponentButton";
 import UserInterface from "./UserInterface";
 import { selfId } from "../Networking";
 import { Biomes } from "../../shared/biomes";
+import { PacketKind } from "../../shared/packet";
 
 function drawMutableFunctions(canvas: HTMLCanvasElement) {
     const ctx = canvas.getContext("2d");
@@ -76,15 +77,33 @@ export default class UserInterfaceGame extends UserInterface {
         this.updateT = 0;
     }
 
-    protected initializeComponents(): void { }
+    protected initializeComponents(): void {
+        const exitButton = new ComponentsSVGButton(
+            {
+                xPercent: 0.005,
+                yPercent: 0.012,
+                heightPercent: 0.034,
+                widthPercent: 0.034,
+            },
+            "#b04c5e",
+            () => {
+                if (confirm("Are you really want to leave the game?")) {
+                    ws.send(new Uint8Array([PacketKind.WAVE_ROOM_GAME_LEAVE]));
+                    uiManager.switchUI("menu");
+                }
+            },
+            CROSS_ICON_SVG,
+        );
 
-    public animationFrame(callbackFn: () => void) {
+        this.addComponent(exitButton);
+    }
+
+    public animationFrame() {
         const canvas = this.canvas;
         const ctx = canvas.getContext("2d");
 
         const selfPlayer = players.get(selfId);
         if (!selfPlayer) {
-            requestAnimationFrame(callbackFn);
             return;
         }
 
@@ -146,6 +165,8 @@ export default class UserInterfaceGame extends UserInterface {
             {
                 const MAX_SPAWN_TIME = calculateWaveLength(this.waveProgress);
 
+                ctx.globalAlpha = 0.9;
+
                 ctx.save();
 
                 ctx.lineWidth = 25;
@@ -174,7 +195,7 @@ export default class UserInterfaceGame extends UserInterface {
 
                 ctx.lineWidth = Math.min((this.waveProgressRedGageTimer / MAX_SPAWN_TIME) * (MAX_SPAWN_TIME * 16.6666), 15);
                 ctx.lineCap = "round";
-                ctx.strokeStyle = "#b0212b";
+                ctx.strokeStyle = "#e32933";
                 ctx.beginPath();
                 ctx.lineTo(centerWidth - WAVE_PROGRESS_BAR_LENGTH, WAVE_PROGRESS_BAR_Y);
                 ctx.lineTo(centerWidth - WAVE_PROGRESS_BAR_LENGTH + (WAVE_PROGRESS_BAR_LENGTH * 2) * (this.waveProgressRedGageTimer / MAX_SPAWN_TIME), WAVE_PROGRESS_BAR_Y);
@@ -186,7 +207,7 @@ export default class UserInterfaceGame extends UserInterface {
             ctx.font = "1em Ubuntu, sans-serif";
             ctx.textBaseline = 'middle';
             ctx.textAlign = 'center';
-            ctx.lineWidth = 4;
+            ctx.lineWidth = 3;
             ctx.strokeStyle = '#000000';
             ctx.strokeText("Wave " + this.waveProgress, centerWidth, WAVE_PROGRESS_BAR_Y);
             ctx.fillStyle = "white";
@@ -223,7 +244,9 @@ export default class UserInterfaceGame extends UserInterface {
         ctx.restore();
 
         this.render();
+    }
 
-        requestAnimationFrame(callbackFn);
+    public cleanup(): void {
+       this.worldManager = undefined;
     }
 }

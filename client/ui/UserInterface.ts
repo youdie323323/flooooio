@@ -13,16 +13,27 @@ export default abstract class UserInterface {
 
     public biome: Biomes = Biomes.GARDEN;
 
+    private resizeObserver: ResizeObserver | null = null;
+
+    private _mousedown: (event: MouseEvent) => void;
+    private _mouseup: (event: MouseEvent) => void;
+    private _mousemove: (event: MouseEvent) => void;
+
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
         this.setupEventListeners();
     }
 
     private setupEventListeners(): void {
-        this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
-        this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
-        this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
-        new ResizeObserver((entries) => {
+        this._mousedown = this.handleMouseDown.bind(this);
+        this._mouseup = this.handleMouseUp.bind(this);
+        this._mousemove = this.handleMouseMove.bind(this);
+
+        this.canvas.addEventListener('mousedown', this._mousedown);
+        this.canvas.addEventListener('mouseup', this._mouseup);
+        this.canvas.addEventListener('mousemove', this._mousemove);
+
+        this.resizeObserver = new ResizeObserver((entries) => {
             const width = Math.round(this.canvas.clientWidth * devicePixelRatio);
             const height = Math.round(this.canvas.clientHeight * devicePixelRatio);
             this.canvas.width = width;
@@ -31,7 +42,29 @@ export default abstract class UserInterface {
             this.components.forEach(component => {
                 component.updateAbsolutePosition(width, height);
             });
-        }).observe(this.canvas);
+        });
+
+        this.resizeObserver.observe(this.canvas);
+    }
+
+    public _cleanup(): void {
+        // Remove all event listeners
+        this.canvas.removeEventListener('mousedown', this._mousedown);
+        this.canvas.removeEventListener('mouseup', this._mouseup);
+        this.canvas.removeEventListener('mousemove', this._mousemove);
+
+        this._mousedown = undefined;
+        this._mouseup = undefined;
+        this._mousemove = undefined;
+
+        // Disconnect the ResizeObserver if it exists
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
+            this.resizeObserver = null;
+        }
+
+        this.components = null;
+        this.activeComponent = null;
     }
 
     private updateMousePosition(event: MouseEvent): void {
@@ -89,5 +122,6 @@ export default abstract class UserInterface {
     }
 
     protected abstract initializeComponents(): void;
-    public abstract animationFrame(callbackFn: () => void): void;
+    public abstract animationFrame(): void;
+    public abstract cleanup(): void;
 }

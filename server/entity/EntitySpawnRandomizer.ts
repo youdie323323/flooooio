@@ -1,5 +1,6 @@
 import { Rarities } from "../../shared/rarities";
 import { MobType } from "../../shared/types";
+import { WaveRoomState } from "../wave/WaveRoom";
 import { onUpdateTick } from "./Entity";
 import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from "./EntityChecksum";
 import { EntityPool } from "./EntityPool";
@@ -105,6 +106,11 @@ export default class EntitySpawnRandomizer {
 
         // Dont spawn mob when red gage
         if (entityPool.waveProgressIsRedGage) {
+            return;
+        }
+
+        // Dont do anything when wave ends
+        if (entityPool.waveRoom.state !== WaveRoomState.STARTED) {
             return;
         }
 

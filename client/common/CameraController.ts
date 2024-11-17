@@ -2,6 +2,7 @@ import Interpolator from "./Interpolator";
 export default class CameraController extends EventTarget {
     _zoom: Interpolator;
     canvas: HTMLCanvasElement;
+    
     constructor(canvas: HTMLCanvasElement) {
         super();
         this._zoom = new Interpolator({
@@ -12,6 +13,7 @@ export default class CameraController extends EventTarget {
         this.canvas = canvas;
         this.handleZoom();
     }
+
     handleZoom() {
         function limitZoom(zoom) {
             if (zoom < 0.0125) {
@@ -30,12 +32,15 @@ export default class CameraController extends EventTarget {
             });
         }
     }
+
     set zoom(o) {
         this._zoom.setValue(o);
     }
+
     get zoom() {
         return this._zoom.getInterpolatedValue();
     }
+
     resetCamera() {
         this.zoom = 0.0125;
     }

@@ -52,33 +52,6 @@ export default class Networking {
                 case PacketKind.UPDATE: {
                     // Wave informations
                     {
-                        /*
-                                                    client.nx = clientX;
-                            client.ny = clientY;
-                            client.nAngle = clientAngle;
-                            client.nSize = clientSize;
-                            client.mood = clientMood;
-                            client.isDead = clientIsDead;
-
-                            if (clientHp < client.nHealth) {
-                                client.redHealthTimer = 1;
-                            } else if (clientHp > client.nHealth) {
-                                client.redHealthTimer = 0;
-                            }
-
-                            if (clientHp < client.nHealth) {
-                                client.hurtT = 1;
-                            }
-
-                            client.nHealth = clientHp;
-
-                            client.ox = client.x;
-                            client.oy = client.y;
-                            client.oAngle = client.angle;
-                            client.oHealth = client.health;
-                            client.oSize = client.size;
-                            client.updateT = 0;
-                         */
                         const waveProgress = data.getUint16(offset);
                         offset += 2;
 
@@ -290,12 +263,12 @@ export default class Networking {
                     break;
                 }
                 case PacketKind.WAVE_ROOM_JOIN_FAILED: {
-                    alert("Code invalid!");
+                    alert("Invalid squad code");
 
                     break;
                 }
                 case PacketKind.SERVER_CLOSED: {
-                    document.body.innerHTML = "<h1>Server closed. Try again after some minutes.</h1>";
+                    document.body.innerHTML = "<h1>Server closed, try again after some minutes.</h1>";
 
                     break;
                 }

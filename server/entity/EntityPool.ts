@@ -13,7 +13,7 @@ import { isLivingPetal, PetalData, StaticPetalData } from './mob/petal/Petal';
 import { USAGE_RELOAD_PETALS } from './player/PlayerReload';
 import { MoodKind, MOON_KIND_VALUES } from '../../shared/mood';
 import { logger } from '../main';
-import WaveRoom, { WaveRoomPlayerId } from '../wave/WaveRoom';
+import WaveRoom, { WaveRoomPlayerId, WaveRoomState } from '../wave/WaveRoom';
 import { getRandomSafePosition, generateRandomEntityId, getRandomAngle } from './utils/random';
 import { calculateWaveLength, calculateWaveLuck } from './utils/formula';
 import EntitySpawnRandomizer from './EntitySpawnRandomizer';
@@ -237,33 +237,47 @@ export class EntityPool {
 
         this.entitySpawnRandomizer[onUpdateTick]();
 
-        // Wave updates
+        {
+            // Wave updates
 
-        const waveLength = calculateWaveLength(this.waveProgress);
+            // Dont do anything when wave waiting/end
+            if (this.waveRoom.state === WaveRoomState.STARTED) {
+                const waveLength = calculateWaveLength(this.waveProgress);
 
-        if (this.waveProgressTimer >= waveLength) {
-            // If mob count above 4, start red gage
-            if (
-                // Force start into next wave when red gage reached
-                !(this.waveProgressRedGageTimer >= waveLength) &&
-                4 < this.getAllMobs().filter(c => /** Dont count petals & pets. */ !c.petParentPlayer && !c.petalParentPlayer).length
-            ) {
-                this.waveProgressIsRedGage = true;
+                if (this.waveProgressTimer >= waveLength) {
+                    // If mob count above 4, start red gage
+                    if (
+                        // Force start into next wave when red gage reached
+                        !(this.waveProgressRedGageTimer >= waveLength) &&
+                        4 < this.getAllMobs().filter(c => /** Dont count petals & pets. */ !c.petParentPlayer && !c.petalParentPlayer).length
+                    ) {
+                        this.waveProgressIsRedGage = true;
 
-                this.waveProgressRedGageTimer = Math.round((this.waveProgressRedGageTimer + 0.016) * 100000) / 100000;
-            } else {
-                this.waveProgressIsRedGage = false;
+                        this.waveProgressRedGageTimer = Math.min(waveLength, Math.round((this.waveProgressRedGageTimer + 0.016) * 100000) / 100000);
+                    } else {
+                        // Respawn all dead players
+                        this.clients.forEach(c => {
+                            if (c.isDead) {
+                                c.isDead = false;
+                                c.x = mapCenterX;
+                                c.y = mapCenterY;
+                            }
+                        });
 
-                this.waveProgressRedGageTimer = 0;
+                        this.waveProgressIsRedGage = false;
 
-                this.waveProgressTimer = 0;
+                        this.waveProgressRedGageTimer = 0;
 
-                this.waveProgress++;
+                        this.waveProgressTimer = 0;
 
-                this.entitySpawnRandomizer.reset();
+                        this.waveProgress++;
+
+                        this.entitySpawnRandomizer.reset();
+                    }
+                } else {
+                    this.waveProgressTimer = Math.min(waveLength, Math.round((this.waveProgressTimer + 0.016) * 100000) / 100000);
+                }
             }
-        } else {
-            this.waveProgressTimer = Math.round((this.waveProgressTimer + 0.016) * 100000) / 100000;
         }
     }
 

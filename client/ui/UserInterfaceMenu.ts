@@ -119,6 +119,9 @@ export default class UserInterfaceMenu extends UserInterface {
             "#1dd129",
             async () => {
                 const code = prompt("Enter squad code");
+                if (!code) {
+                    return;
+                }
                 ws.send(new Uint8Array([PacketKind.WAVE_ROOM_JOIN, code.length, ...new TextEncoder().encode(code)]));
             },
             "Join squad"
@@ -173,7 +176,7 @@ export default class UserInterfaceMenu extends UserInterface {
         );
 
         this.addComponent(createPublicButton);
-        
+
         const setPublicButton = new ComponentsTextButton(
             {
                 xPercent: 0.4725,
@@ -216,7 +219,7 @@ export default class UserInterfaceMenu extends UserInterface {
         }
     }
 
-    public animationFrame(callbackFn: () => void) {
+    public animationFrame() {
         const canvas = this.canvas;
         const ctx = canvas.getContext("2d");
 
@@ -261,7 +264,10 @@ export default class UserInterfaceMenu extends UserInterface {
 
             ctx.restore();
         }
+    }
 
-        requestAnimationFrame(callbackFn);
+    public cleanup(): void {
+        this.worldManager = undefined;
+        this.backgroundEntities = undefined;
     }
 }

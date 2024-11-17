@@ -40,8 +40,6 @@ export const uiManager = new UserInterfaceManager(canvas);
         BIOME_TILESETS.set(parsedBiome, await TilesetManager.generateTilesets(parsedBiome));
     }
 
-    await uiManager.switchUI('menu');
-
     function showElement(id: string) {
         const element = document.getElementById(id);
         if (element) element.style.display = "block";
@@ -127,23 +125,49 @@ export const uiManager = new UserInterfaceManager(canvas);
 
     (function animationLoop() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+    
         lastTimestamp = Date.now();
         deltaTime = lastTimestamp - prevTimestamp;
         prevTimestamp = lastTimestamp;
         timeFactor = deltaTime / 33;
-
+    
         interpolatedMouseX = interpolate(interpolatedMouseX, mouseXOffset, 50);
         interpolatedMouseY = interpolate(interpolatedMouseY, mouseYOffset, 50);
-
+    
         scaleFactor = Math.max(
             document.documentElement.clientWidth / STANDARD_WIDTH,
             document.documentElement.clientHeight / STANDARD_HEIGHT
         ) * cameraController.zoom;
+    
+        if (uiManager.isTransitioning) {
+            if (uiManager.previousUI) {
+                uiManager.previousUI.animationFrame();
+            }
 
-        const currentUI = uiManager.currentUI;
-        if (currentUI) {
-            currentUI.animationFrame(animationLoop);
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, uiManager.blackArcCounter, 0, Math.PI * 2);
+            ctx.clip();
+            if (uiManager.currentUI) {
+                uiManager.currentUI.animationFrame();
+            }
+            ctx.restore();
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, uiManager.blackArcCounter, 0, Math.PI * 2);
+            ctx.lineWidth = 10;
+            ctx.strokeStyle = '#000000';
+            ctx.stroke();
+            ctx.restore();
+    
+            uiManager.blackArcCounter += 0.5 + (uiManager.blackArcCounter / 30);
+        } else {
+            if (uiManager.currentUI) {
+                uiManager.currentUI.animationFrame();
+            }
         }
+
+        requestAnimationFrame(animationLoop);
     })();
 })();

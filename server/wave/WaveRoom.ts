@@ -120,6 +120,10 @@ export default class WaveRoom {
     }
 
     public addPlayer(player: StaticPlayerData): WaveRoomPlayerId | false {
+        if (this.state !== WaveRoomState.WAITING) {
+            return false;
+        }
+
         using _disposable = this.onChangeAnything();
 
         if (!this.canAddCandidate) {
@@ -150,6 +154,10 @@ export default class WaveRoom {
     }
 
     public removePlayer(id: WaveRoomPlayer["id"]): boolean {
+        if (this.state !== WaveRoomState.WAITING) {
+            return false;
+        }
+
         using _disposable = this.onChangeAnything();
 
         const index = this.roomCandidates.findIndex(p => p.id === id);
@@ -174,6 +182,10 @@ export default class WaveRoom {
     }
 
     public setPlayerReadyState(id: WaveRoomPlayer["id"], state: PlayerReadyState): boolean {
+        if (this.state !== WaveRoomState.WAITING) {
+            return false;
+        }
+
         using _disposable = this.onChangeAnything();
 
         const index = this.roomCandidates.findIndex(p => p.id === id);
@@ -192,6 +204,10 @@ export default class WaveRoom {
     }
 
     public setPublicState(id: WaveRoomPlayer["id"], state: WaveRoomVisibleState): boolean {
+        if (this.state !== WaveRoomState.WAITING) {
+            return false;
+        }
+
         using _disposable = this.onChangeAnything();
 
         const playerData = this.roomCandidates.find(p => p.id === id);
@@ -257,6 +273,6 @@ export default class WaveRoom {
     }
 
     public get canAddCandidate() {
-        return this.roomCandidates.length < WaveRoom.MAX_PLAYER_AMOUNT;
+        return this.roomCandidates.length < WaveRoom.MAX_PLAYER_AMOUNT && this.state === WaveRoomState.WAITING;
     }
 }
