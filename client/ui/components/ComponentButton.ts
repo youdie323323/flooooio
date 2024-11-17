@@ -31,6 +31,11 @@ export abstract class ComponentsButton implements Component {
         this.updateAbsolutePosition(window.innerWidth, window.innerHeight);
     }
 
+    cleanup(): void {
+        this.relativePos = null;
+        this._callback = null;
+    }
+
     public updateAbsolutePosition(viewportWidth: number, viewportHeight: number): void {
         const baseSize = Math.min(viewportWidth, viewportHeight);
         
@@ -127,10 +132,15 @@ export class ComponentsTextButton extends ComponentsButton {
 
         ctx.restore();
     }
+
+    cleanup(): void {
+        this.relativePos = null;
+    }
 }
 
 export class ComponentsSVGButton extends ComponentsButton {
     private static readonly SVG_SIZE: number = 0.65;
+    
     private svg: string;
     private svgCanvas: OffscreenCanvas | null = null;
 
@@ -180,5 +190,10 @@ export class ComponentsSVGButton extends ComponentsButton {
         }
 
         ctx.restore();
+    }
+
+    cleanup(): void {
+        this.relativePos = null;
+        this.svgCanvas = null;
     }
 }

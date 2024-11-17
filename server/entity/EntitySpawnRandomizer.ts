@@ -1,11 +1,12 @@
 import { Rarities } from "../../shared/rarities";
 import { MobType } from "../../shared/types";
-import { WaveRoomState } from "../wave/WaveRoom";
+import { WaveProgressData, WaveRoomState } from "../wave/WaveRoom";
 import { onUpdateTick } from "./Entity";
 import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from "./EntityChecksum";
 import { EntityPool } from "./EntityPool";
+import { PlayerInstance } from "./player/Player";
 import { calculateWaveLuck } from "./utils/formula";
-import { choice, getRandomSafePosition } from "./utils/random";
+import { choice, getRandomMapSafePosition } from "./utils/random";
 
 /*
 Wave 21+: Commons stop spawning
@@ -82,7 +83,7 @@ function weightedChoice(probabilities: RarityDict): Rarities | null {
 }
 
 export default class EntitySpawnRandomizer {
-    public timer: number;
+    private timer: number = 0;
 
     /**
      * Consumable points.
@@ -95,30 +96,19 @@ export default class EntitySpawnRandomizer {
      * It selects random mobs from the available pool (with some weights) until the wave runs out of points.
      * ```
      */
-    public points: number;
+    private points: number = 0;
 
-    constructor(private entityPool: EntityPool) {
-        this.reset();
+    constructor(waveData: WaveProgressData) {
+        this.reset(waveData);
     }
 
-    [onUpdateTick](): void {
-        const { entityPool } = this;
-
-        // Dont spawn mob when red gage
-        if (entityPool.waveProgressIsRedGage) {
-            return;
-        }
-
-        // Dont do anything when wave ends
-        if (entityPool.waveRoom.state !== WaveRoomState.STARTED) {
-            return;
-        }
-
+    public getMobData(waveData: WaveProgressData): [MobType, Rarities] | null {
         // See comment of calculateWaveLuck
-        const luck = (calculateWaveLuck(entityPool.waveProgress) * (( /** All players luck */ 0.0) + 1)) * 1;
+        const luck = (calculateWaveLuck(waveData.waveProgress) * (( /** All players luck */ 0.0) + 1)) * 1;
 
-        if (this.timer % 10 === 10 - 1 && this.points > 0) {
-            const probabilities = calculateSpawnProbabilities(luck, entityPool.waveProgress);
+        if (this.points > 0) {
+            const probabilities = calculateSpawnProbabilities(luck, waveData.waveProgress);
+            // Ensure atleast common
             if (!Object.keys(probabilities).length) {
                 probabilities[Rarities.COMMON] = 1;
             }
@@ -127,22 +117,19 @@ export default class EntitySpawnRandomizer {
                 return;
             }
 
-            const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, entityPool);
-            if (!randPos) {
-                return;
-            }
-
-            entityPool.addPetalOrMob(MobType.BEE, spawnRarity, randPos[0], randPos[1], null, null);
-
             // Consume point
             this.points--;
+
+            return [MobType.BUBBLE, spawnRarity]
         }
 
         this.timer++;
+
+        return null;
     }
 
-    public reset() {
+    public reset(waveData: WaveProgressData) {
         this.timer = 0;
-        this.points = 50 + Math.pow(this.entityPool.waveProgress, 1.6);
+        this.points = 50 + Math.pow(waveData.waveProgress, 1.6);
     }
 }

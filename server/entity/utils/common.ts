@@ -6,7 +6,8 @@ import { Mob, MobStat } from "../mob/Mob";
 import { isLivingPetal, PetalStat } from "../mob/petal/Petal";
 import { PETAL_PROFILES } from "../../../shared/petalProfiles";
 import WaveRoomService from "../../wave/WaveRoomService";
-import WaveRoom from "../../wave/WaveRoom";
+import WaveRoom, { WaveRoomState } from "../../wave/WaveRoom";
+import { waveRoomService } from "../../main";
 
 export const TWO_PI = Math.PI * 2;
 
@@ -24,29 +25,31 @@ export function bodyDamageOrDamage(stat: PetalStat | MobStat): number {
 
 export function kickClient(waveRoom: WaveRoom, player: PlayerInstance) {
     if (player) {
-        // Use onChangeSomething so can delete started wave if all players leaved
-        using _disposable = waveRoom.onChangeAnything();
-
-        removeAllBindings(waveRoom, player);
+        removeAllBindings(waveRoom.entityPool, player);
 
         waveRoom.entityPool.removeClient(player.id);
+
+        // Check size, if all players leaved, remove wave room
+        if (waveRoom.state !== WaveRoomState.WAITING && waveRoom.entityPool.clients.size === 0) {
+            waveRoomService.removeWaveRoom(waveRoom);
+        }
     }
 }
 
-export function removeAllBindings(waveRoom: WaveRoom, player: PlayerInstance) {
+export function removeAllBindings(entityPool: EntityPool, player: PlayerInstance) {
     if (player) {
         // Remove all petals
         player.slots.surface.forEach((e) => {
-            if (e != null && isLivingPetal(e) && waveRoom.entityPool.getMob(e.id)) {
-                waveRoom.entityPool.removeMob(e.id);
+            if (e != null && isLivingPetal(e) && entityPool.getMob(e.id)) {
+                entityPool.removeMob(e.id);
             }
         });
 
         // Remove all their pets
-        waveRoom.entityPool.getAllMobs().filter(c => c.petParentPlayer === player).forEach((e) => {
-            if (e != null && isLivingPetal(e) && waveRoom.entityPool.getMob(e.id)) {
-                waveRoom.entityPool.removeMob(e.id);
-            }
+        entityPool.getAllMobs().filter(c => c.petParentPlayer === player).forEach((e) => {
+            if (e != null && isLivingPetal(e) && entityPool.getMob(e.id)) {
+                entityPool.removeMob(e.id);
+            };
         });
 
         // Reset all reloads

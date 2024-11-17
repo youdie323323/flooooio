@@ -8,4 +8,6 @@ export interface Component {
 
     executeCallback(): void;
     render(ctx: CanvasRenderingContext2D): void;
+
+    cleanup(): void;
 }

@@ -13,10 +13,11 @@ import { isLivingPetal, PetalData, StaticPetalData } from './mob/petal/Petal';
 import { USAGE_RELOAD_PETALS } from './player/PlayerReload';
 import { MoodKind, MOON_KIND_VALUES } from '../../shared/mood';
 import { logger } from '../main';
-import WaveRoom, { WaveRoomPlayerId, WaveRoomState } from '../wave/WaveRoom';
-import { getRandomSafePosition, generateRandomEntityId, getRandomAngle } from './utils/random';
+import WaveRoom, { WaveProgressData, WaveRoomPlayer, WaveRoomPlayerId, WaveRoomState } from '../wave/WaveRoom';
+import { getRandomMapSafePosition, generateRandomEntityId, getRandomAngle, choice, getRandomSafePosition } from './utils/random';
 import { calculateWaveLength, calculateWaveLuck } from './utils/formula';
 import EntitySpawnRandomizer from './EntitySpawnRandomizer';
+import { Biomes } from '../../shared/biomes';
 
 // Define UserData for WebSocket connections
 export interface UserData {
@@ -50,8 +51,8 @@ export const UPDATE_SEND_FPS = 30;
  * 
  * @remarks
  * 
- *  ̶R̶a̶t̶h̶e̶r̶ ̶t̶h̶a̶n̶ ̶d̶o̶i̶n̶g̶ ̶u̶n̶n̶e̶c̶e̶s̶s̶a̶r̶y̶ ̶p̶r̶o̶c̶e̶s̶s̶i̶n̶g̶ ̶l̶i̶k̶e̶ ̶s̶p̶a̶w̶n̶i̶n̶g̶ ̶m̶o̶b̶s̶ ̶h̶e̶r̶e̶,̶ ̶i̶t̶'̶s̶ ̶b̶e̶t̶t̶e̶r̶ ̶t̶o̶ ̶d̶o̶ ̶t̶h̶a̶t̶ ̶i̶n̶ ̶W̶a̶v̶e̶R̶o̶o̶m̶.̶
- *  ̶T̶h̶i̶s̶ ̶c̶l̶a̶s̶s̶ ̶i̶s̶ ̶o̶n̶l̶y̶ ̶f̶o̶r̶ ̶m̶a̶n̶a̶g̶i̶n̶g̶ ̶m̶o̶b̶s̶ ̶a̶n̶d̶ ̶p̶l̶a̶y̶e̶r̶s̶,̶ ̶n̶o̶t̶ ̶f̶o̶r̶ ̶r̶a̶n̶d̶o̶m̶l̶y̶ ̶s̶p̶a̶w̶n̶i̶n̶g̶ ̶m̶o̶b̶s̶ ̶e̶t̶c̶.̶
+ * R̶a̶t̶h̶e̶r̶ ̶t̶h̶a̶n̶ ̶d̶o̶i̶n̶g̶ ̶u̶n̶n̶e̶c̶e̶s̶s̶a̶r̶y̶ ̶p̶r̶o̶c̶e̶s̶s̶i̶n̶g̶ ̶l̶i̶k̶e̶ ̶s̶p̶a̶w̶n̶i̶n̶g̶ ̶m̶o̶b̶s̶ ̶h̶e̶r̶e̶,̶ ̶i̶t̶'̶s̶ ̶b̶e̶t̶t̶e̶r̶ ̶t̶o̶ ̶d̶o̶ ̶t̶h̶a̶t̶ ̶i̶n̶ ̶W̶a̶v̶e̶R̶o̶o̶m̶.̶
+ * T̶h̶i̶s̶ ̶c̶l̶a̶s̶s̶ ̶i̶s̶ ̶o̶n̶l̶y̶ ̶f̶o̶r̶ ̶m̶a̶n̶a̶g̶i̶n̶g̶ ̶m̶o̶b̶s̶ ̶a̶n̶d̶ ̶p̶l̶a̶y̶e̶r̶s̶,̶ ̶n̶o̶t̶ ̶f̶o̶r̶ ̶r̶a̶n̶d̶o̶m̶l̶y̶ ̶s̶p̶a̶w̶n̶i̶n̶g̶ ̶m̶o̶b̶s̶ ̶e̶t̶c̶.̶
  * Data such as the overall wave luck and the current wave number are stored in this class.
  * Spawning and other processes are also handled in this class.
  */
@@ -62,39 +63,44 @@ export class EntityPool {
     private updateInterval: NodeJS.Timeout;
     private updateSendInterval: NodeJS.Timeout;
 
-    //  ̶T̶h̶i̶s̶ ̶c̶l̶a̶s̶s̶ ̶m̶e̶t̶h̶o̶d̶s̶ ̶s̶h̶o̶u̶l̶d̶n̶'̶t̶ ̶b̶e̶ ̶c̶a̶l̶l̶e̶d̶ ̶a̶s̶ ̶w̶a̶v̶e̶,̶ ̶b̶u̶t̶ ̶a̶l̶r̶i̶g̶h̶t̶
-
-    /**
-     * Current wave progress.
-     */
-    public waveProgress: number;
-    public waveProgressTimer: number;
-    public waveProgressRedGageTimer: number;
-    public waveProgressIsRedGage: boolean;
-
-    private entitySpawnRandomizer: EntitySpawnRandomizer;
-
-    constructor(public readonly waveRoom: WaveRoom) {
+    constructor(private waveProgressData: WaveProgressData) {
         this.clients = new Map();
         this.mobs = new Map();
-
-        this.waveProgress = 52;
-        this.waveProgressTimer = 0;
-        this.waveProgressRedGageTimer = 0;
-        this.waveProgressIsRedGage = false;
-
-        this.entitySpawnRandomizer = new EntitySpawnRandomizer(this);
     }
 
-    public startWave(waveRoom: WaveRoom) {
+    /**
+     * Release all memory in this class.
+     */
+    public releaseAllMemory() {
+        clearInterval(this.updateInterval);
+        clearInterval(this.updateSendInterval);
+
+        this.clients.clear();
+        this.mobs.clear();
+
+        this.clients = null;
+        this.mobs = null;
+
+        this.updateInterval = null;
+        this.updateSendInterval = null;
+
+        this.waveProgressData = null;
+    }
+
+    /**
+     * Start wave.
+     * @param biome - biome of wave.
+     * @param roomCandidates - list of players.
+     */
+    public startWave(biome: Biomes, roomCandidates: WaveRoomPlayer[]) {
         const waveStartBuffer = Buffer.alloc(2);
 
         waveStartBuffer.writeUInt8(PacketKind.WAVE_ROOM_STARTING, 0);
 
-        waveStartBuffer.writeUInt8(waveRoom.biome, 1);
+        waveStartBuffer.writeUInt8(biome, 1);
 
-        waveRoom.roomCandidates.forEach(player => {
-            const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this);
+        roomCandidates.forEach(player => {
+            const randPos = getRandomMapSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this.getAllClients().filter(p => !p.isDead));
             if (!randPos) {
                 return null;
             }
@@ -128,7 +134,7 @@ export class EntityPool {
         let health: number = (100 * 1) * 1.02 ** (Math.max(100, 75) - 1);
 
         // Temporary
-        health *= 100;
+        health *= 30;
 
         const playerInstance = new Player({
             id: clientId,
@@ -214,7 +220,7 @@ export class EntityPool {
             return null;
         }
 
-        const randPos = getRandomSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this);
+        const randPos = getRandomMapSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this.getAllClients().filter(p => !p.isDead));
         if (!randPos) {
             return null;
         }
@@ -234,108 +240,44 @@ export class EntityPool {
                 mob[onUpdateTick](this);
             }
         });
-
-        this.entitySpawnRandomizer[onUpdateTick]();
-
-        {
-            // Wave updates
-
-            // Dont do anything when wave waiting/end
-            if (this.waveRoom.state === WaveRoomState.STARTED) {
-                const waveLength = calculateWaveLength(this.waveProgress);
-
-                if (this.waveProgressTimer >= waveLength) {
-                    // If mob count above 4, start red gage
-                    if (
-                        // Force start into next wave when red gage reached
-                        !(this.waveProgressRedGageTimer >= waveLength) &&
-                        4 < this.getAllMobs().filter(c => /** Dont count petals & pets. */ !c.petParentPlayer && !c.petalParentPlayer).length
-                    ) {
-                        this.waveProgressIsRedGage = true;
-
-                        this.waveProgressRedGageTimer = Math.min(waveLength, Math.round((this.waveProgressRedGageTimer + 0.016) * 100000) / 100000);
-                    } else {
-                        // Respawn all dead players
-                        this.clients.forEach(c => {
-                            if (c.isDead) {
-                                c.isDead = false;
-                                c.x = mapCenterX;
-                                c.y = mapCenterY;
-                            }
-                        });
-
-                        this.waveProgressIsRedGage = false;
-
-                        this.waveProgressRedGageTimer = 0;
-
-                        this.waveProgressTimer = 0;
-
-                        this.waveProgress++;
-
-                        this.entitySpawnRandomizer.reset();
-                    }
-                } else {
-                    this.waveProgressTimer = Math.min(waveLength, Math.round((this.waveProgressTimer + 0.016) * 100000) / 100000);
-                }
-            }
-        }
     }
 
     /**
      * Updates the movement of a client
      */
-    public updateMovement(clientId: PlayerInstance["id"], angle: number, magnitude: number) {
+    public updateMovement(clientId: PlayerInstance["id"], angle: number, magnitude: number): boolean {
+        if (
+            magnitude < 0 || magnitude > 255 ||
+            angle < 0 || angle > 256
+        ) {
+            return false;
+        }
+
         const client = this.clients.get(clientId);
         if (client && !client.isDead) {
-            if (
-                magnitude < 0 || magnitude > 255 ||
-                angle < 0 || angle > 256
-            ) {
-                logger.region(() => {
-                    using _guard = logger.metadata({
-                        clientId,
-                        magnitude,
-                        angle,
-                    });
-
-                    logger.warn("Invalid magnitude/angle received from client, kicking");
-                });
-
-                kickClient(this.waveRoom, client);
-
-                return;
-            }
-
             client.angle = angle;
             client.magnitude = magnitude * 5;
         }
+
+        return true;
     }
 
     /**
      * Updates the mood of a client.
      */
-    public changeMood(clientId: PlayerInstance["id"], kind: MoodKind) {
+    public changeMood(clientId: PlayerInstance["id"], kind: MoodKind): boolean {
+        if (
+            !MOON_KIND_VALUES.includes(kind)
+        ) {
+            return false;
+        }
+
         const client = this.clients.get(clientId);
         if (client && !client.isDead) {
-            if (
-                !MOON_KIND_VALUES.includes(kind)
-            ) {
-                logger.region(() => {
-                    using _guard = logger.metadata({
-                        clientId,
-                        kind,
-                    });
-
-                    logger.warn("Invalid mood kind received from client, kicking");
-                });
-
-                kickClient(this.waveRoom, client);
-
-                return;
-            }
-
             client.mood = kind;
         }
+
+        return true;
     }
 
     /**
@@ -491,7 +433,7 @@ export class EntityPool {
         const clientsPacket = this.createClientsPacket();
         const mobsPacket = this.createMobsPacket();
 
-        const totalLength = (1 + 2 + 1 + 8 + 8) + clientsPacket.length + mobsPacket.length;
+        const totalLength = (1 + 2 + 8 + 8) + clientsPacket.length + mobsPacket.length;
 
         const buffer = Buffer.alloc(totalLength);
         let offset = 0;
@@ -500,13 +442,13 @@ export class EntityPool {
 
         // Wave informations
         {
-            buffer.writeUInt16BE(this.waveProgress, offset);
+            buffer.writeUInt16BE(this.waveProgressData.waveProgress, offset);
             offset += 2;
 
-            buffer.writeDoubleBE(this.waveProgressTimer, offset);
+            buffer.writeDoubleBE(this.waveProgressData.waveProgressTimer, offset);
             offset += 8;
 
-            buffer.writeDoubleBE(this.waveProgressRedGageTimer, offset);
+            buffer.writeDoubleBE(this.waveProgressData.waveProgressRedGageTimer, offset);
             offset += 8;
         }
 

@@ -29,7 +29,6 @@ export default class UserInterfaceMenu extends UserInterface {
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
-        this.initializeComponents();
 
         this.backgroundEntities = new Set();
         this.lastBackgroundPetalSpawn = Date.now();
@@ -170,7 +169,7 @@ export default class UserInterfaceMenu extends UserInterface {
             },
             "#1dd129",
             async () => {
-                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_CREATE, Biomes.OCEAN]));
+                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_CREATE, Biomes.GARDEN]));
             },
             "Create public"
         );

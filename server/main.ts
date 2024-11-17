@@ -21,7 +21,7 @@ import { StaticPlayerData } from './entity/player/Player';
 const DEFAULT_PLAYER_DATA: Omit<StaticPlayerData, "ws"> = {
     name: 'unko',
     slots: {
-        surface: Array.from({ length: 8 }, () => {
+        surface: Array.from({ length: 2 }, () => {
             return {
                 type: PetalType.BEETLE_EGG,
                 rarity: Rarities.SUPER,
@@ -34,7 +34,7 @@ const DEFAULT_PLAYER_DATA: Omit<StaticPlayerData, "ws"> = {
 const PORT = 8080;
 const app = uWS.App();
 
-const waveRoomService = new WaveRoomService();
+export const waveRoomService = new WaveRoomService();
 
 /**
  * Global logger instance.
@@ -61,7 +61,22 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
             if (!waveRoom) return;
 
-            waveRoom.entityPool.updateMovement(waveClientId, buffer[1], buffer[2]);
+            const client = waveRoom.entityPool.getClient(waveClientId);
+            if (!client) return;
+
+            if (!waveRoom.entityPool.updateMovement(waveClientId, buffer[1], buffer[2])) {
+                logger.region(() => {
+                    using _guard = logger.metadata({
+                        waveClientId,
+                        angle: buffer[1],
+                        magnitude: buffer[2],
+                    });
+
+                    logger.warn("Invalid magnitude/angle received from client, kicking");
+                });
+
+                kickClient(waveRoom, client);
+            };
 
             break;
         }
@@ -71,7 +86,21 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
             if (!waveRoom) return;
 
-            waveRoom.entityPool.changeMood(waveClientId, buffer[1]);
+            const client = waveRoom.entityPool.getClient(waveClientId);
+            if (!client) return;
+
+            if (!waveRoom.entityPool.changeMood(waveClientId, buffer[1])) {
+                logger.region(() => {
+                    using _guard = logger.metadata({
+                        waveClientId,
+                        kind: MoodKind[buffer[1]],
+                    });
+
+                    logger.warn("Invalid mood kind received from client, kicking");
+                });
+
+                kickClient(waveRoom, client);
+            };
 
             break;
         }

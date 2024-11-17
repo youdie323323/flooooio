@@ -1,6 +1,6 @@
 import { Biomes } from "../../shared/biomes";
 import { PacketKind } from "../../shared/packet";
-import { generateRandomWaveRoomPlayerId, getRandomSafePosition } from "../entity/utils/random";
+import { choice, generateRandomWaveRoomPlayerId, getRandomMapSafePosition, getRandomSafePosition } from "../entity/utils/random";
 import { EntityPool } from "../entity/EntityPool";
 import { PlayerInstance, StaticPlayerData } from "../entity/player/Player";
 import { logger } from "../main";
@@ -8,6 +8,8 @@ import { Rarities } from "../../shared/rarities";
 import { MobType } from "../../shared/types";
 import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from "../entity/EntityChecksum";
 import { BrandedId } from "../entity/Entity";
+import EntitySpawnRandomizer from "../entity/EntitySpawnRandomizer";
+import { calculateWaveLength } from "../entity/utils/formula";
 
 /** Represents the current state of a wave room */
 export enum WaveRoomState {
@@ -37,7 +39,19 @@ export type WaveRoomPlayer = StaticPlayerData & {
     readyState: PlayerReadyState;
 };
 
+export interface WaveProgressData {
+    /**
+    * Current wave progress.
+    */
+    waveProgress: number;
+    waveProgressTimer: number;
+    waveProgressRedGageTimer: number;
+    waveProgressIsRedGage: boolean;
+}
+
 export const ROOM_UPDATE_SEND_FPS = 30;
+
+export const WAVE_PROGRESS_UPDATE = 60;
 
 /**
  * The wave room, aka squad.
@@ -50,16 +64,130 @@ export default class WaveRoom {
     roomCandidates: WaveRoomPlayer[];
     entityPool: EntityPool;
 
-    updateInterval: NodeJS.Timeout;
+    private updateInterval: NodeJS.Timeout;
+
+    private entitySpawnRandomizer: EntitySpawnRandomizer;
+
+    public waveProgressData: WaveProgressData = {
+        waveProgress: 52,
+        waveProgressTimer: 0,
+        waveProgressRedGageTimer: 0,
+        waveProgressIsRedGage: false,
+    };;
+
+    public wavePreUpdateInterval: NodeJS.Timeout;
 
     constructor(public readonly biome: Biomes, public readonly code: string) {
         this.visible = WaveRoomVisibleState.PUBLIC;
         this.state = WaveRoomState.WAITING;
-        this.entityPool = new EntityPool(this);
+        this.entityPool = new EntityPool(this.waveProgressData);
 
         this.roomCandidates = new Array<WaveRoomPlayer>();
 
         this.updateInterval = setInterval(this.broadcastUpdatePacket.bind(this), 1000 / ROOM_UPDATE_SEND_FPS);
+        this.wavePreUpdateInterval = setInterval(this.wavePreUpdate.bind(this), 1000 / WAVE_PROGRESS_UPDATE);
+
+        this.entitySpawnRandomizer = new EntitySpawnRandomizer(this.waveProgressData);
+    }
+
+    private wavePreUpdate() {
+        // Use onChangeSomething so can delete started wave if all players dead
+        using _disposable = this.onChangeAnything();
+
+        if (!this.waveProgressData.waveProgressIsRedGage && this.state === WaveRoomState.STARTED) {
+            const mobData = this.entitySpawnRandomizer.getMobData(this.waveProgressData);
+            if (mobData) {
+                const [type, rarity] = mobData;
+
+                const randPos = getRandomMapSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this.entityPool.getAllClients().filter(p => !p.isDead));
+                if (!randPos) {
+                    return null;
+                }
+
+                this.entityPool.addPetalOrMob(type, rarity, randPos[0], randPos[1]);
+            }
+        }
+
+        // Dont do anything when wave waiting/end
+        if (this.state === WaveRoomState.STARTED) {
+            const waveLength = calculateWaveLength(this.waveProgressData.waveProgress);
+
+            if (this.waveProgressData.waveProgressTimer >= waveLength) {
+                // If mob count above 4, start red gage
+                if (
+                    // Force start into next wave when red gage reached
+                    !(this.waveProgressData.waveProgressRedGageTimer >= waveLength) &&
+                    4 < this.entityPool.getAllMobs().filter(c => /** Dont count petals & pets. */ !c.petParentPlayer && !c.petalParentPlayer).length
+                ) {
+                    this.waveProgressData.waveProgressIsRedGage = true;
+
+                    this.waveProgressData.waveProgressRedGageTimer = Math.min(waveLength, Math.round((this.waveProgressData.waveProgressRedGageTimer + 0.016) * 100000) / 100000);
+                } else {
+                    // Respawn all dead players
+                    this.entityPool.clients.forEach(c => {
+                        if (c.isDead) {
+                            const alivePlayers = this.entityPool.getAllClients().filter(p => !p.isDead);
+
+                            if (alivePlayers.length > 0) {
+                                // Select random players
+                                const randomAlivePlayer = choice(alivePlayers);
+
+                                const randPos = getRandomSafePosition(
+                                    randomAlivePlayer.x,
+                                    randomAlivePlayer.y,
+                                    200,
+                                );
+
+                                // Make it max health so player will respawn without die again
+                                c.health = c.maxHealth;
+                                c.isDead = false;
+
+                                if (randPos) {
+                                    c.x = randPos[0];
+                                    c.y = randPos[1];
+                                } else {
+                                    c.x = mapCenterX;
+                                    c.y = mapCenterY;
+                                }
+                            }
+                        }
+                    });
+
+                    this.waveProgressData.waveProgressIsRedGage = false;
+
+                    this.waveProgressData.waveProgressRedGageTimer = 0;
+
+                    this.waveProgressData.waveProgressTimer = 0;
+
+                    this.waveProgressData.waveProgress++;
+
+                    this.entitySpawnRandomizer.reset(this.waveProgressData);
+                }
+            } else {
+                this.waveProgressData.waveProgressTimer = Math.min(waveLength, Math.round((this.waveProgressData.waveProgressTimer + 0.016) * 100000) / 100000);
+            }
+        }
+    }
+
+    /**
+     * Release all memory in this class.
+     */
+    public releaseAllMemory() {
+        this.entityPool.releaseAllMemory();
+
+        this.entityPool = null;
+
+        this.roomCandidates = null;
+
+        this.entitySpawnRandomizer = null;
+
+        this.waveProgressData = null;
+
+        clearInterval(this.updateInterval);
+        clearInterval(this.wavePreUpdateInterval);
+
+        this.updateInterval = null;
+        this.wavePreUpdateInterval = null;
     }
 
     /**
@@ -228,13 +356,13 @@ export default class WaveRoom {
     private startWave() {
         this.state = WaveRoomState.STARTED;
         clearInterval(this.updateInterval);
-        this.entityPool.startWave(this);
+        this.entityPool.startWave(this.biome, this.roomCandidates);
 
         logger.region(() => {
             using _guard = logger.metadata({
                 candidateIds: this.roomCandidates.map(c => c.id).join(","),
                 code: this.code,
-                wave: this.entityPool.waveProgress,
+                wave: this.waveProgressData.waveProgress,
             });
             logger.info("Wave starting");
         });
@@ -247,31 +375,35 @@ export default class WaveRoom {
         this.entityPool.endWave();
 
         logger.region(() => {
-            using _guard = logger.metadata({ code: this.code, wave: this.entityPool.waveProgress });
+            using _guard = logger.metadata({ code: this.code, wave: this.waveProgressData.waveProgress });
             logger.info("Wave ended");
         });
-
-        // We already checking this in waveRoomManager.leaveWaveRoom
-        // this.waveRoomManager.removeWaveRoom(this);
     }
 
+    /**
+     * Disposable checksum.
+     */
     public onChangeAnything = () => {
-        const cacheThis = this;
-        return {
-            [Symbol.dispose]() {
-                // cacheThis.roomCandidates.length !== 0 to prevent multiple wave start, before wave room deletion
-                if (cacheThis.state === WaveRoomState.WAITING && cacheThis.roomCandidates.length !== 0 && cacheThis.roomCandidates.every(p => p.readyState === PlayerReadyState.READY)) {
-                    cacheThis.startWave();
-                }
-
-                // Dont check for cacheThis.roomCandidates.length !== 0 so can delete wave if all players leaved
-                if (cacheThis.state === WaveRoomState.STARTED && cacheThis.entityPool.getAllClients().every(p => p.isDead)) {
-                    cacheThis.endWave();
-                }
-            }
-        };
+        return { [Symbol.dispose]: () => this._roomChecksum() };
     }
 
+    /**
+     * Checksum room values.
+     */
+    public _roomChecksum() {
+        // this.roomCandidates.length !== 0 to prevent multiple wave start, before wave room deletion
+        if (this.state === WaveRoomState.WAITING && this.roomCandidates.length !== 0 && this.roomCandidates.every(p => p.readyState === PlayerReadyState.READY)) {
+            this.startWave();
+        }
+
+        if (this.state === WaveRoomState.STARTED && this.entityPool.getAllClients().every(p => p.isDead)) {
+            this.endWave();
+        }
+    }
+
+    /**
+     * Determines if this wave room is joinable.
+     */
     public get canAddCandidate() {
         return this.roomCandidates.length < WaveRoom.MAX_PLAYER_AMOUNT && this.state === WaveRoomState.WAITING;
     }

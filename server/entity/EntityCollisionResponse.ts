@@ -16,6 +16,8 @@ export const FLOWER_ARC_RADIUS = 25 + (2.75 / 2);
 
 export const BUBBLE_PUSH_FACTOR = 3;
 
+// TODO: dont knockback too much with min
+
 export function EntityCollisionResponse<T extends new (...args: any[]) => Entity>(Base: T) {
   return class extends Base implements EntityMixinTemplate {
     private quadTree: QuadTree;

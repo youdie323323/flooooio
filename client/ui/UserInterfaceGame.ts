@@ -63,7 +63,6 @@ export default class UserInterfaceGame extends UserInterface {
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
-        this.initializeComponents();
 
         this.worldManager = new TilesetManager();
 

@@ -2,6 +2,7 @@ import { ok } from "assert";
 import { EntityPool } from "../EntityPool";
 import { Entity, EntityId } from "../Entity";
 import { WaveRoomPlayerId } from "../../wave/WaveRoom";
+import { PlayerInstance } from "../player/Player";
 
 /**
  * Returns a random element from the given array.
@@ -82,12 +83,54 @@ export function splitIntoChunks(str: string, size: number) {
 }
 
 export function randomEnum<T extends object>(anEnum: T): T[keyof T] {
-    const enumValues = Object.keys(anEnum)
-        .map(n => Number.parseInt(n))
-        .filter(n => !Number.isNaN(n)) as unknown as T[keyof T][]
-    const randomIndex = Math.floor(Math.random() * enumValues.length)
-    const randomEnumValue = enumValues[randomIndex]
-    return randomEnumValue;
+  const enumValues = Object.keys(anEnum)
+    .map(n => Number.parseInt(n))
+    .filter(n => !Number.isNaN(n)) as unknown as T[keyof T][]
+  const randomIndex = Math.floor(Math.random() * enumValues.length)
+  const randomEnumValue = enumValues[randomIndex]
+  return randomEnumValue;
+}
+
+/**
+ * Generate a safe position from the player for the map.
+ * @returns Coordinate of random position.
+ */
+export function getRandomMapSafePosition(
+  centerX: number,
+  centerY: number,
+  mapRadius: number,
+  safetyDistance: number,
+  clients: PlayerInstance[],
+): [number, number] | null {
+  const maxAttempts = 100;
+
+  mapRadius = Math.min(centerX, centerY) - mapRadius;
+
+  for (let i = 0; i < maxAttempts; i++) {
+    const angle = Math.random() * 2 * Math.PI;
+    const distance = Math.random() * (mapRadius - safetyDistance);
+
+    const x = centerX + Math.cos(angle) * distance;
+    const y = centerY + Math.sin(angle) * distance;
+
+    let isSafe = true;
+
+    // Dont spawn on player
+    clients.forEach(client => {
+      const dx = client.x - x;
+      const dy = client.y - y;
+      const distanceToClient = Math.sqrt(dx * dx + dy * dy);
+      if (distanceToClient < safetyDistance + client.size) {
+        isSafe = false;
+      }
+    });
+
+    if (isSafe) {
+      return [x, y];
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -95,45 +138,21 @@ export function randomEnum<T extends object>(anEnum: T): T[keyof T] {
  * @returns Coordinate of random position.
  */
 export function getRandomSafePosition(
-    centerX: number,
-    centerY: number,
-    mapRadius: number,
-    safetyDistance: number,
-    entityPool: EntityPool
+  centerX: number,
+  centerY: number,
+  spawnRadius: number,
 ): [number, number] | null {
-    const maxAttempts = 100;
+  const angle = Math.random() * 2 * Math.PI;
+  const distance = (0.5 + Math.random() * 0.5) * spawnRadius;
 
-    mapRadius = Math.min(centerX, centerY) - mapRadius;
+  const x = centerX + Math.cos(angle) * distance;
+  const y = centerY + Math.sin(angle) * distance;
 
-    for (let i = 0; i < maxAttempts; i++) {
-        const angle = Math.random() * 2 * Math.PI;
-        const distance = Math.random() * (mapRadius - safetyDistance);
-
-        const x = centerX + Math.cos(angle) * distance;
-        const y = centerY + Math.sin(angle) * distance;
-
-        let isSafe = true;
-
-        // Dont spawn on player
-        entityPool.getAllClients().forEach(client => {
-            const dx = client.x - x;
-            const dy = client.y - y;
-            const distanceToClient = Math.sqrt(dx * dx + dy * dy);
-            if (distanceToClient < safetyDistance + client.size) {
-                isSafe = false;
-            }
-        });
-
-        if (isSafe) {
-            return [x, y];
-        }
-    }
-
-    return null;
+  return [x, y];
 }
 
 export function getRandomAngle(): number {
-    return Math.random() * 256;
+  return Math.random() * 256;
 }
 
 function randomUint16(): number {
@@ -141,9 +160,9 @@ function randomUint16(): number {
 }
 
 export function generateRandomEntityId(): EntityId {
-    return randomUint16() as EntityId;
+  return randomUint16() as EntityId;
 }
 
 export function generateRandomWaveRoomPlayerId(): WaveRoomPlayerId {
-    return randomUint16() as WaveRoomPlayerId;
+  return randomUint16() as WaveRoomPlayerId;
 }

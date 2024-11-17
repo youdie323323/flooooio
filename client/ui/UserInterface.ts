@@ -22,6 +22,7 @@ export default abstract class UserInterface {
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
         this.setupEventListeners();
+        this.initializeComponents();
     }
 
     private setupEventListeners(): void {
@@ -53,15 +54,17 @@ export default abstract class UserInterface {
         this.canvas.removeEventListener('mouseup', this._mouseup);
         this.canvas.removeEventListener('mousemove', this._mousemove);
 
-        this._mousedown = undefined;
-        this._mouseup = undefined;
-        this._mousemove = undefined;
+        this._mousedown = null;
+        this._mouseup = null;
+        this._mousemove = null;
 
         // Disconnect the ResizeObserver if it exists
         if (this.resizeObserver) {
             this.resizeObserver.disconnect();
             this.resizeObserver = null;
         }
+
+        this.components.forEach(c => c.cleanup());
 
         this.components = null;
         this.activeComponent = null;

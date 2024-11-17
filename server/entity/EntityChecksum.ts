@@ -43,10 +43,7 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
             if (this.health < 0) {
                 // !this.isDead will prevent call every fps
                 if (this instanceof Player && !this.isDead) {
-                    // Use onChangeSomething so can delete started wave if all players dead
-                    using _disposable = poolThis.waveRoom.onChangeAnything();
-
-                    removeAllBindings(poolThis.waveRoom, this);
+                    removeAllBindings(poolThis, this);
 
                     this.isDead = true;
                     // Stop moving

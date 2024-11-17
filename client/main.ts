@@ -161,7 +161,7 @@ export const uiManager = new UserInterfaceManager(canvas);
             ctx.stroke();
             ctx.restore();
     
-            uiManager.blackArcCounter += 0.5 + (uiManager.blackArcCounter / 30);
+            uiManager.blackArcCounter += 0.5 + (uiManager.blackArcCounter / 35);
         } else {
             if (uiManager.currentUI) {
                 uiManager.currentUI.animationFrame();

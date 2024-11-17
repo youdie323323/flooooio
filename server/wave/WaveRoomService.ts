@@ -59,6 +59,8 @@ export default class WaveRoomService {
      * Removes a specific wave room from the manager.
      */
     public removeWaveRoom(waveRoom: WaveRoom) {
+        waveRoom.releaseAllMemory();
+
         this.waveRooms.splice(this.waveRooms.indexOf(waveRoom), 1);
 
         logger.region(() => {
@@ -88,6 +90,7 @@ export default class WaveRoomService {
      * Finds a public room with available slots for the specified biome.
      */
     private findPublicRoom(biome: Biomes): WaveRoom | undefined {
+        // Maybe, we dont need to care about biome?
         return this.waveRooms.find(room => room.biome === biome && room.visible === WaveRoomVisibleState.PUBLIC && room.canAddCandidate);
     }
 
