@@ -1,12 +1,12 @@
 import { Rarities } from "../../shared/rarities";
 import { MobType } from "../../shared/types";
-import { WaveProgressData, WaveRoomState } from "../wave/WaveRoom";
-import { onUpdateTick } from "./Entity";
-import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from "./EntityChecksum";
-import { EntityPool } from "./EntityPool";
-import { PlayerInstance } from "./player/Player";
-import { calculateWaveLuck } from "./utils/formula";
-import { choice, getRandomMapSafePosition } from "./utils/random";
+import { WaveProgressData, WaveRoomState } from "./WaveRoom";
+import { onUpdateTick } from "../entity/Entity";
+import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from "../entity/EntityChecksum";
+import { EntityPool } from "../entity/EntityPool";
+import { PlayerInstance } from "../entity/player/Player";
+import { calculateWaveLuck } from "../entity/utils/formula";
+import { choice, getRandomMapSafePosition } from "../entity/utils/random";
 
 /*
 Wave 21+: Commons stop spawning
@@ -82,7 +82,7 @@ function weightedChoice(probabilities: RarityDict): Rarities | null {
     return null;
 }
 
-export default class EntitySpawnRandomizer {
+export default class WaveProbabilityPredictor {
     private timer: number = 0;
 
     /**

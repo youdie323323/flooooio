@@ -13,12 +13,12 @@ import { Logger } from './logger/Logger';
 import { Mob } from './entity/mob/Mob';
 import { Rarities } from '../shared/rarities';
 import { kickClient } from './entity/utils/common';
-import { StaticPlayerData } from './entity/player/Player';
+import { MockPlayerData } from './entity/player/Player';
 
 /**
  * Temp player data.
  */
-const DEFAULT_PLAYER_DATA: Omit<StaticPlayerData, "ws"> = {
+const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
     name: 'unko',
     slots: {
         surface: Array.from({ length: 2 }, () => {

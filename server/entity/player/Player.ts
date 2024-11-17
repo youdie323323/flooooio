@@ -8,7 +8,7 @@ import { MobInstance } from "../mob/Mob";
 import { PlayerPetalOrbit } from "./PlayerPetalOrbit";
 import { PlayerReload } from "./PlayerReload";
 import { MoodKind } from "../../../shared/mood";
-import { PetalSlots, StaticPetalData } from "../mob/petal/Petal";
+import { PetalSlots, MockPetalData } from "../mob/petal/Petal";
 
 class BasePlayer implements Entity {
     readonly id: EntityId;
@@ -19,7 +19,7 @@ class BasePlayer implements Entity {
     size: number;
     health: number;
     readonly maxHealth: number;
-    
+
     /**
      * Body damage of player.
      * 
@@ -48,7 +48,7 @@ class BasePlayer implements Entity {
      * Nickname of player.
      */
     nickname: string;
-    
+
     /**
      * Petal slots, and cooldowns.
      */
@@ -84,7 +84,7 @@ type PlayerInstance = InstanceType<typeof Player>;
  * 
  * This data for visualize player in wave room.
  */
-interface StaticPlayerData {
+interface MockPlayerData {
     name: string;
     slots: PetalSlots;
 
@@ -94,4 +94,4 @@ interface StaticPlayerData {
     ws: uWS.WebSocket<UserData>;
 }
 
-export { Player, PlayerInstance, BasePlayer, StaticPlayerData };
+export { Player, PlayerInstance, BasePlayer, MockPlayerData };

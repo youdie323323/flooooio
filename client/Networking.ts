@@ -6,7 +6,7 @@ import { TWO_PI } from "./constants";
 import EntityMob from "./entity/EntityMob";
 import EntityPlayer from "./entity/EntityPlayer";
 import { players, mobs, uiManager } from "./main";
-import UserInterfaceGame from "./ui/UserInterfaceGame";
+import UserInterfaceGame from "./ui/mode/UserInterfaceModeGame";
 
 export let selfId = -1;
 export let waveSelfId = -1;

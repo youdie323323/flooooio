@@ -1,7 +1,6 @@
 import { Biomes } from "../../shared/biomes";
 import { Component } from "./components/Component";
 import { ComponentsButton } from "./components/ComponentButton";
-import { UserInterfaceManager } from "./UserInterfaceManager";
 
 export default abstract class UserInterface {
     protected canvas: HTMLCanvasElement;

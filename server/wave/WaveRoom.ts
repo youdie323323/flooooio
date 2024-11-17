@@ -2,13 +2,11 @@ import { Biomes } from "../../shared/biomes";
 import { PacketKind } from "../../shared/packet";
 import { choice, generateRandomWaveRoomPlayerId, getRandomMapSafePosition, getRandomSafePosition } from "../entity/utils/random";
 import { EntityPool } from "../entity/EntityPool";
-import { PlayerInstance, StaticPlayerData } from "../entity/player/Player";
+import { PlayerInstance, MockPlayerData } from "../entity/player/Player";
 import { logger } from "../main";
-import { Rarities } from "../../shared/rarities";
-import { MobType } from "../../shared/types";
 import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from "../entity/EntityChecksum";
 import { BrandedId } from "../entity/Entity";
-import EntitySpawnRandomizer from "../entity/EntitySpawnRandomizer";
+import WaveProbabilityPredictor from "./WaveProbabilityPredictor";
 import { calculateWaveLength } from "../entity/utils/formula";
 
 /** Represents the current state of a wave room */
@@ -33,7 +31,7 @@ export enum PlayerReadyState {
 export type WaveRoomPlayerId = BrandedId<"WaveRoomPlayer">;
 
 /** Extended player data with wave room data properties */
-export type WaveRoomPlayer = StaticPlayerData & {
+export type WaveRoomPlayer = MockPlayerData & {
     id: WaveRoomPlayerId;
     isOwner: boolean;
     readyState: PlayerReadyState;
@@ -66,7 +64,7 @@ export default class WaveRoom {
 
     private updateInterval: NodeJS.Timeout;
 
-    private entitySpawnRandomizer: EntitySpawnRandomizer;
+    private entitySpawnRandomizer: WaveProbabilityPredictor;
 
     public waveProgressData: WaveProgressData = {
         waveProgress: 52,
@@ -87,7 +85,7 @@ export default class WaveRoom {
         this.updateInterval = setInterval(this.broadcastUpdatePacket.bind(this), 1000 / ROOM_UPDATE_SEND_FPS);
         this.wavePreUpdateInterval = setInterval(this.wavePreUpdate.bind(this), 1000 / WAVE_PROGRESS_UPDATE);
 
-        this.entitySpawnRandomizer = new EntitySpawnRandomizer(this.waveProgressData);
+        this.entitySpawnRandomizer = new WaveProbabilityPredictor(this.waveProgressData);
     }
 
     private wavePreUpdate() {
@@ -247,7 +245,7 @@ export default class WaveRoom {
         return buffer;
     }
 
-    public addPlayer(player: StaticPlayerData): WaveRoomPlayerId | false {
+    public addPlayer(player: MockPlayerData): WaveRoomPlayerId | false {
         if (this.state !== WaveRoomState.WAITING) {
             return false;
         }

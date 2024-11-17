@@ -29,14 +29,14 @@ export interface PetalData {
 }
 
 /**
- * Dummy data of {@link Mob}.
+ * Mock data of {@link Mob}.
  * 
  * @remarks
  * 
  * This data for visualize petals in wave room, inventory and slots.
  * Eliminates the need for the server to create the actual living “Mob” instance.
  */
-export interface StaticPetalData {
+export interface MockPetalData {
     type: PetalType;
     rarity: Rarities;
 }
@@ -44,13 +44,13 @@ export interface StaticPetalData {
 export type MaybeEmptySlot<T> = T | null;
 
 export interface PetalSlots {
-    surface: MaybeEmptySlot<StaticPetalData | MobInstance>[];
-    bottom: MaybeEmptySlot<StaticPetalData | MobInstance>[];
+    surface: MaybeEmptySlot<MockPetalData | MobInstance>[];
+    bottom: MaybeEmptySlot<MockPetalData | MobInstance>[];
 }
 
 /**
  * Type guard for slot.
  */
-export function isLivingPetal(slot: StaticPetalData | MobInstance): slot is MobInstance {
+export function isLivingPetal(slot: MockPetalData | MobInstance): slot is MobInstance {
     return "id" in slot;
 }

@@ -2,21 +2,21 @@ import uWS from 'uWebSockets.js';
 import { PacketKind } from "../../shared/packet";
 import { MobType, PetalType } from "../../shared/types";
 import { Mob, MobInstance, MOB_SIZE_FACTOR, MobData } from "./mob/Mob";
-import { Player, PlayerInstance, StaticPlayerData } from "./player/Player";
+import { Player, PlayerInstance, MockPlayerData } from "./player/Player";
 import { EntityId, onUpdateTick } from "./Entity";
 import { isPetal, kickClient } from './utils/common';
 import { Rarities } from '../../shared/rarities';
 import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from './EntityChecksum';
 import { MOB_PROFILES } from '../../shared/mobProfiles';
 import { PETAL_PROFILES } from '../../shared/petalProfiles';
-import { isLivingPetal, PetalData, StaticPetalData } from './mob/petal/Petal';
+import { isLivingPetal, PetalData, MockPetalData } from './mob/petal/Petal';
 import { USAGE_RELOAD_PETALS } from './player/PlayerReload';
 import { MoodKind, MOON_KIND_VALUES } from '../../shared/mood';
 import { logger } from '../main';
 import WaveRoom, { WaveProgressData, WaveRoomPlayer, WaveRoomPlayerId, WaveRoomState } from '../wave/WaveRoom';
 import { getRandomMapSafePosition, generateRandomEntityId, getRandomAngle, choice, getRandomSafePosition } from './utils/random';
 import { calculateWaveLength, calculateWaveLuck } from './utils/formula';
-import EntitySpawnRandomizer from './EntitySpawnRandomizer';
+import WaveProbabilityPredictor from '../wave/WaveProbabilityPredictor';
 import { Biomes } from '../../shared/biomes';
 
 // Define UserData for WebSocket connections
@@ -31,7 +31,7 @@ export interface UserData {
      * 
      * This data is used to squad ui to display petals and names and to convert them when wave starting.
      */
-    wavePlayerData: StaticPlayerData;
+    wavePlayerData: MockPlayerData;
 }
 
 export const UPDATE_FPS = 60;
@@ -121,7 +121,7 @@ export class EntityPool {
         // clearInterval(this.updateSendInterval);
     }
 
-    public addClient(playerData: StaticPlayerData, x: number, y: number): PlayerInstance | null {
+    public addClient(playerData: MockPlayerData, x: number, y: number): PlayerInstance | null {
         const clientId = generateRandomEntityId();
 
         // Ensure unique clientId
@@ -160,8 +160,8 @@ export class EntityPool {
             },
         });
 
-        playerInstance.slots.surface = playerData.slots.surface.map(c => c && !isLivingPetal(c) && this.staticPetalDataToReal(c, playerInstance));
-        playerInstance.slots.bottom = playerData.slots.bottom.map(c => c && !isLivingPetal(c) && this.staticPetalDataToReal(c, playerInstance));
+        playerInstance.slots.surface = playerData.slots.surface.map(c => c && !isLivingPetal(c) && this.mockPetalDataToReal(c, playerInstance));
+        playerInstance.slots.bottom = playerData.slots.bottom.map(c => c && !isLivingPetal(c) && this.mockPetalDataToReal(c, playerInstance));
 
         this.clients.set(clientId, playerInstance);
 
@@ -215,7 +215,7 @@ export class EntityPool {
         return mobInstance;
     }
 
-    private staticPetalDataToReal(sp: StaticPetalData | null, parent: PlayerInstance): MobInstance | null {
+    private mockPetalDataToReal(sp: MockPetalData | null, parent: PlayerInstance): MobInstance | null {
         if (!sp) {
             return null;
         }

@@ -1,6 +1,6 @@
 import { Biomes } from "../../shared/biomes";
 import { UserData } from "../entity/EntityPool";
-import { PlayerInstance, StaticPlayerData } from "../entity/player/Player";
+import { PlayerInstance, MockPlayerData } from "../entity/player/Player";
 import { logger } from "../main";
 import WaveRoom, { PlayerReadyState, WaveRoomPlayer, WaveRoomPlayerId, WaveRoomVisibleState } from "./WaveRoom";
 import { generate } from 'generate-passphrase';

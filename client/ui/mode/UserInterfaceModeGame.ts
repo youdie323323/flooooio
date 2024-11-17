@@ -1,12 +1,12 @@
-import { ARROW_START_DISTANCE, CROSS_ICON_SVG, MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../constants";
-import EntityMob from "../entity/EntityMob";
-import { players, mobs, scaleFactor, interpolatedMouseX, interpolatedMouseY, deltaTime, ws, uiManager } from "../main";
-import TilesetManager, { BIOME_TILESETS } from "../common/WorldManager";
-import { ComponentsSVGButton, ComponentsTextButton } from "./components/ComponentButton";
-import UserInterface from "./UserInterface";
-import { selfId } from "../Networking";
-import { Biomes } from "../../shared/biomes";
-import { PacketKind } from "../../shared/packet";
+import { ARROW_START_DISTANCE, CROSS_ICON_SVG, MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../../constants";
+import EntityMob from "../../entity/EntityMob";
+import { players, mobs, scaleFactor, interpolatedMouseX, interpolatedMouseY, deltaTime, ws, uiManager } from "../../main";
+import TilesetManager, { BIOME_TILESETS } from "../../common/WorldManager";
+import { ComponentsSVGButton, ComponentsTextButton } from "../components/ComponentButton";
+import UserInterface from "../UserInterface";
+import { selfId } from "../../Networking";
+import { Biomes } from "../../../shared/biomes";
+import { PacketKind } from "../../../shared/packet";
 
 function drawMutableFunctions(canvas: HTMLCanvasElement) {
     const ctx = canvas.getContext("2d");

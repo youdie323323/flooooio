@@ -1,62 +1,68 @@
 import { cameraController, mobs, players } from "../main";
+import { selfId } from "../Networking";
 import UserInterface from "./UserInterface";
-import UserInterfaceGame from "./UserInterfaceGame";
-import UserInterfaceMenu from "./UserInterfaceMenu";
+import UserInterfaceGame from "./mode/UserInterfaceModeGame";
+import UserInterfaceMenu from "./mode/UserInterfaceModeMenu";
+import UserInterfaceTransition from "./UserInterfaceTransition";
 
-export class UserInterfaceManager {
+export type UserInterfaceMode = 'menu' | 'game';
+
+export default class UserInterfaceManager {
     public currentUI: UserInterface | null;
     public previousUI: UserInterface | null;
-    private canvas: HTMLCanvasElement;
-    public blackArcCounter: number;
+    private readonly canvas: HTMLCanvasElement;
+    private readonly transition: UserInterfaceTransition;
     public isTransitioning: boolean;
-    public timeout: NodeJS.Timeout;
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
-        this.currentUI = new UserInterfaceMenu(this.canvas);
+        this.currentUI = new UserInterfaceMenu(canvas);
         this.previousUI = null;
-        this.blackArcCounter = -1;
+        this.transition = new UserInterfaceTransition(canvas);
         this.isTransitioning = false;
-        this.timeout = null;
     }
 
-    public switchUI(type: 'menu' | 'game'): void {
-        const resetAllEnvroiment = () => {
-            if (this.previousUI) {
-                // Release all components
-                this.previousUI.cleanup();
-                this.previousUI._cleanup();
-            }
+    public cleanup(): void {
+        this.previousUI?.cleanup();
+        this.previousUI?._cleanup();
+        this.isTransitioning = false;
+    }
 
-            this.blackArcCounter = -1;
-            this.isTransitioning = false;
-        };
-
+    public switchUI(mode: UserInterfaceMode): void {
         if (this.isTransitioning) {
-            clearTimeout(this.timeout);
-
-            resetAllEnvroiment();
-
-            return this.switchUI(type);
-        };
+            this.cleanup();
+            return this.switchUI(mode);
+        }
 
         this.isTransitioning = true;
         this.previousUI = this.currentUI;
-        this.blackArcCounter = 4;
+        this.currentUI = this.createUI(mode);
+        this.transition.start(mode);
+    }
 
-        switch (type) {
+    private createUI(mode: UserInterfaceMode): UserInterface {
+        switch (mode) {
             case 'menu':
-                this.currentUI = new UserInterfaceMenu(this.canvas);
+                return new UserInterfaceMenu(this.canvas);
 
-                break;
             case 'game':
-                // Reset camera
                 cameraController.zoom = 1;
-                this.currentUI = new UserInterfaceGame(this.canvas);
+                
+                return new UserInterfaceGame(this.canvas);
+        }
+    }
 
-                break;
+    public update(): void {
+        if (!this.isTransitioning) {
+            this.currentUI?.animationFrame();
+            return;
         }
 
-        this.timeout = setTimeout(resetAllEnvroiment, this.canvas.height);
+        const type = this.currentUI instanceof UserInterfaceMenu ? 'menu' : 'game';
+        this.transition.draw(this.currentUI, this.previousUI);
+
+        if (this.transition.update(type)) {
+            this.cleanup();
+        }
     }
 }

@@ -1,13 +1,13 @@
-import { Biomes } from "../../shared/biomes";
-import { PacketKind } from "../../shared/packet";
-import { Rarities } from "../../shared/rarities";
-import { PetalType } from "../../shared/types";
-import { MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../constants";
-import EntityMob from "../entity/EntityMob";
-import TilesetManager, { BIOME_TILESETS } from "../common/WorldManager";
-import { ComponentsSVGButton, ComponentsTextButton } from "./components/ComponentButton";
-import UserInterface from "./UserInterface";
-import { ws } from "../main";
+import { Biomes } from "../../../shared/biomes";
+import { PacketKind } from "../../../shared/packet";
+import { Rarities } from "../../../shared/rarities";
+import { PetalType } from "../../../shared/types";
+import { MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../../constants";
+import EntityMob from "../../entity/EntityMob";
+import TilesetManager, { BIOME_TILESETS } from "../../common/WorldManager";
+import { ComponentsSVGButton, ComponentsTextButton } from "../components/ComponentButton";
+import UserInterface from "../UserInterface";
+import { ws } from "../../main";
 
 function randomFloat(min: number, max: number) {
     return Math.random() * (max - min + 1) + min;
