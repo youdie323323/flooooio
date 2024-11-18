@@ -5,9 +5,10 @@ import { PetalType } from "../../../shared/types";
 import { MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../../constants";
 import EntityMob from "../../entity/EntityMob";
 import TilesetManager, { BIOME_TILESETS } from "../../common/WorldManager";
-import { ComponentsSVGButton, ComponentsTextButton } from "../components/ComponentButton";
+import { ComponentSVGButton, ComponentTextButton } from "../components/ComponentButton";
 import UserInterface from "../UserInterface";
 import { ws } from "../../main";
+import { ComponentContainer } from "../components/ComponentContainer";
 
 function randomFloat(min: number, max: number) {
     return Math.random() * (max - min + 1) + min;
@@ -30,11 +31,13 @@ export default class UserInterfaceMenu extends UserInterface {
     backgroundY: number;
     backgroundWaveStep: number;
 
+    public biome: Biomes = Biomes.GARDEN;
+
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
 
         this.lastBackgroundEntitySpawn = Date.now();
-        
+
         this.worldManager = new TilesetManager();
 
         this.backgroundX = 0;
@@ -43,12 +46,12 @@ export default class UserInterfaceMenu extends UserInterface {
     }
 
     protected initializeComponents(): void {
-        const bagButton = new ComponentsSVGButton(
+        const bagButton = new ComponentSVGButton(
             {
-                xPercent: 0.01,
-                yPercent: 0.795 - 0.1 - 0.1,
-                heightPercent: 0.08,
-                widthPercent: 0.08,
+                x: "1%",
+                y: "59.5%",
+                width: 110,
+                height: 110,
             },
             "#599dd8",
             () => {
@@ -59,12 +62,12 @@ export default class UserInterfaceMenu extends UserInterface {
 
         this.addComponent(bagButton);
 
-        const craftButton = new ComponentsSVGButton(
+        const craftButton = new ComponentSVGButton(
             {
-                xPercent: 0.01,
-                yPercent: 0.795 - 0.1,
-                heightPercent: 0.08,
-                widthPercent: 0.08,
+                x: "1%",
+                y: "69.5%",
+                width: 110,
+                height: 110,
             },
             "#db9d5a",
             () => {
@@ -75,12 +78,12 @@ export default class UserInterfaceMenu extends UserInterface {
 
         this.addComponent(craftButton);
 
-        const changelogButton = new ComponentsSVGButton(
+        const changelogButton = new ComponentSVGButton(
             {
-                xPercent: 0.01,
-                yPercent: 0.795,
-                heightPercent: 0.08,
-                widthPercent: 0.08,
+                x: "1%",
+                y: "79.5%",
+                width: 110,
+                height: 110,
             },
             "#9bb56b",
             () => {
@@ -93,15 +96,12 @@ export default class UserInterfaceMenu extends UserInterface {
 
         // Squad
 
-        const base = 0.44;
-        const baseOffset = 0.06;
-
-        const readyButton = new ComponentsTextButton(
+        const readyButton = new ComponentTextButton(
             {
-                xPercent: 0.4725,
-                yPercent: base,
-                widthPercent: 0.12,
-                aspectRatio: 2.5
+                x: "47.25%",
+                y: "44%",
+                width: 180,
+                height: 60,
             },
             "#1dd129",
             async () => {
@@ -112,12 +112,12 @@ export default class UserInterfaceMenu extends UserInterface {
 
         this.addComponent(readyButton);
 
-        const joinSquadButton = new ComponentsTextButton(
+        const joinSquadButton = new ComponentTextButton(
             {
-                xPercent: 0.4725,
-                yPercent: base + baseOffset,
-                widthPercent: 0.12,
-                aspectRatio: 2.5
+                x: "47.25%",
+                y: "50%",
+                width: 180,
+                height: 60,
             },
             "#1dd129",
             async () => {
@@ -132,12 +132,12 @@ export default class UserInterfaceMenu extends UserInterface {
 
         this.addComponent(joinSquadButton);
 
-        const joinPublicSquadButton = new ComponentsTextButton(
+        const joinPublicSquadButton = new ComponentTextButton(
             {
-                xPercent: 0.4725,
-                yPercent: base + baseOffset + baseOffset,
-                widthPercent: 0.12,
-                aspectRatio: 2.5
+                x: "47.25%",
+                y: "56%",
+                width: 180,
+                height: 60,
             },
             "#1dd129",
             async () => {
@@ -148,12 +148,12 @@ export default class UserInterfaceMenu extends UserInterface {
 
         this.addComponent(joinPublicSquadButton);
 
-        const leaveSquadButton = new ComponentsTextButton(
+        const leaveSquadButton = new ComponentTextButton(
             {
-                xPercent: 0.4725,
-                yPercent: base + baseOffset + baseOffset + baseOffset,
-                widthPercent: 0.12,
-                aspectRatio: 2.5
+                x: "47.25%",
+                y: "62%",
+                width: 180,
+                height: 60,
             },
             "#1dd129",
             async () => {
@@ -164,12 +164,12 @@ export default class UserInterfaceMenu extends UserInterface {
 
         this.addComponent(leaveSquadButton);
 
-        const createPublicButton = new ComponentsTextButton(
+        const createPublicButton = new ComponentTextButton(
             {
-                xPercent: 0.4725,
-                yPercent: base + baseOffset + baseOffset + baseOffset + baseOffset,
-                widthPercent: 0.12,
-                aspectRatio: 2.5
+                x: "47.25%",
+                y: "68%",
+                width: 180,
+                height: 60,
             },
             "#1dd129",
             async () => {
@@ -180,12 +180,12 @@ export default class UserInterfaceMenu extends UserInterface {
 
         this.addComponent(createPublicButton);
 
-        const setPublicButton = new ComponentsTextButton(
+        const setPublicButton = new ComponentTextButton(
             {
-                xPercent: 0.4725,
-                yPercent: base + baseOffset + baseOffset + baseOffset + baseOffset + baseOffset,
-                widthPercent: 0.12,
-                aspectRatio: 2.5
+                x: "47.25%",
+                y: "74%",
+                width: 180,
+                height: 60,
             },
             "#1dd129",
             async () => {
@@ -196,12 +196,12 @@ export default class UserInterfaceMenu extends UserInterface {
 
         this.addComponent(setPublicButton);
 
-        const setPrivateButton = new ComponentsTextButton(
+        const setPrivateButton = new ComponentTextButton(
             {
-                xPercent: 0.4725,
-                yPercent: base + baseOffset + baseOffset + baseOffset + baseOffset + baseOffset + baseOffset,
-                widthPercent: 0.12,
-                aspectRatio: 2.5
+                x: "47.25%",
+                y: "80%",
+                width: 180,
+                height: 60,
             },
             "#1dd129",
             async () => {
@@ -211,6 +211,34 @@ export default class UserInterfaceMenu extends UserInterface {
         );
 
         this.addComponent(setPrivateButton);
+
+
+
+        const mainContainer = new ComponentContainer(
+            {
+                x: "10%",
+                y: "10%",
+                width: 500,
+                height: 500,
+            },
+            "#ffffff"
+        );
+
+        const button = new ComponentTextButton(
+            {
+                verticalAlign: "center",
+                horizontalAlign: "center",
+                width: 180,
+                height: 60,
+            },
+            "#1dd129",
+            () => { },
+            "www"
+        );
+
+        mainContainer.addChild(button);
+
+        this.addComponent(mainContainer);
     }
 
     private generateBackgroundEntity3D() {

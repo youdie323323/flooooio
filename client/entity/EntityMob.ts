@@ -3,7 +3,7 @@ import { MobType, PetalType } from "../../shared/types";
 import { Rarities } from "../../shared/rarities";
 import { deltaTime } from "../main";
 import { drawEntityDetail, HP_BAR_MAX_WIDTH } from "./entityDrawDetail";
-import { darkend, darkendBase } from "../common/common";
+import { darkend, DARKEND_BASE } from "../common/common";
 import { TWO_PI } from "../constants";
 
 function createBodyPath() {
@@ -149,7 +149,7 @@ export default class EntityMob extends Entity {
                 ctx.closePath();
                 ctx.lineCap = ctx.lineJoin = "round";
                 ctx.lineWidth = 52;
-                ctx.strokeStyle = this.getSkinColor(darkend("#d0504e", darkendBase));
+                ctx.strokeStyle = this.getSkinColor(darkend("#d0504e", DARKEND_BASE));
                 ctx.stroke();
                 ctx.lineWidth = 26;
                 ctx.strokeStyle = ctx.fillStyle = this.getSkinColor("#d0504e");

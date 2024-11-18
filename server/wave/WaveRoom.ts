@@ -109,7 +109,7 @@ export default class WaveRoom {
                     return null;
                 }
 
-                // this.entityPool.addPetalOrMob(type, rarity, randPos[0], randPos[1]);
+                this.entityPool.addPetalOrMob(type, rarity, randPos[0], randPos[1]);
             }
         }
 

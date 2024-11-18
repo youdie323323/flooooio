@@ -2,7 +2,7 @@ import { ARROW_START_DISTANCE, CROSS_ICON_SVG, MOLECULE_SVG, SCROLL_UNFURLED_SVG
 import EntityMob from "../../entity/EntityMob";
 import { players, mobs, scaleFactor, interpolatedMouseX, interpolatedMouseY, deltaTime, ws, uiManager } from "../../main";
 import TilesetManager, { BIOME_TILESETS } from "../../common/WorldManager";
-import { ComponentsSVGButton, ComponentsTextButton } from "../components/ComponentButton";
+import { ComponentButton, ComponentSVGButton, ComponentTextButton } from "../components/ComponentButton";
 import UserInterface from "../UserInterface";
 import { selfId } from "../../Networking";
 import { Biomes } from "../../../shared/biomes";
@@ -68,6 +68,10 @@ export default class UserInterfaceGame extends UserInterface {
     public oWorldSize: number;
     public nWorldSize: number;
 
+    public isDeadMenuContinued: boolean;
+
+    public biome: Biomes = Biomes.GARDEN;
+
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
 
@@ -80,15 +84,17 @@ export default class UserInterfaceGame extends UserInterface {
         this.waveProgressTimer = this.waveProgressRedGageTimer = this.worldSize = 0;
         this.oWaveProgressTimer = this.oWaveProgressRedGageTimer = this.oWorldSize = 0;
         this.nWaveProgressTimer = this.nWaveProgressRedGageTimer = this.nWorldSize = 0;
+
+        this.isDeadMenuContinued = false;
     }
 
     protected initializeComponents(): void {
-        const exitButton = new ComponentsSVGButton(
+        const exitButton = new ComponentSVGButton(
             {
-                xPercent: 0.005,
-                yPercent: 0.012,
-                heightPercent: 0.034,
-                widthPercent: 0.034,
+                x: "0.5%",
+                y: "1%",
+                width: 50,
+                height: 50,
             },
             "#b04c5e",
             () => {
@@ -102,8 +108,8 @@ export default class UserInterfaceGame extends UserInterface {
     }
 
     public animationFrame() {
+        // Interpolate
         {
-            // Interpolate
             this.updateT += deltaTime / 100;
             this.t = Math.min(1, this.updateT);
 
@@ -243,15 +249,52 @@ export default class UserInterfaceGame extends UserInterface {
             ctx.restore();
         }
 
-        ctx.save();
+        // Dead menu
+        {
+            if (selfPlayer.isDead) {
+                ctx.save();
 
-        if (selfPlayer.isDead) {
-            ctx.globalAlpha = 0.2;
-            ctx.fillStyle = 'black';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                if (!this.isDeadMenuContinued) {
+                    {
+                        ctx.save();
+
+                        ctx.globalAlpha = 0.2;
+                        ctx.fillStyle = 'black';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                        ctx.restore();
+                    }
+
+                    {
+
+                        ctx.save();
+
+                        ctx.translate(canvas.width / 2, canvas.height / 2);
+
+                        ctx.textBaseline = 'middle';
+                        ctx.textAlign = 'center';
+                        ctx.strokeStyle = '#000000';
+                        ctx.fillStyle = "white";
+
+                        ctx.font = "18px Ubuntu, sans-serif";
+                        ctx.lineWidth = 3;
+
+                        ctx.strokeText("You were destroyed by:", 0, 0);
+                        ctx.fillText("You were destroyed by:", 0, 0);
+
+                        ctx.font = "25px Ubuntu, sans-serif";
+                        ctx.lineWidth = 3;
+
+                        ctx.strokeText("Solider Ant", 0, 35);
+                        ctx.fillText("Solider Ant", 0, 35);
+
+                        ctx.restore();
+                    }
+                }
+
+                ctx.restore();
+            }
         }
-
-        ctx.restore();
 
         this.render();
     }

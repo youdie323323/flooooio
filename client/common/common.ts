@@ -8,7 +8,7 @@ export function isPetal(type: MobType | PetalType): type is PetalType {
 }
 
 // #00000030
-export const darkendBase = 0.1875;
+export const DARKEND_BASE = 0.1875;
 
 /**
  * Darkens colour 

@@ -7,9 +7,11 @@ import UserInterfaceTransition from "./UserInterfaceTransition";
 
 export type UserInterfaceMode = 'menu' | 'game';
 
+export type UserInterfaces = UserInterfaceGame | UserInterfaceMenu;
+
 export default class UserInterfaceManager {
-    public currentUI: UserInterface | null;
-    public previousUI: UserInterface | null;
+    public currentUI: UserInterfaces | null;
+    public previousUI: UserInterfaces | null;
     private readonly canvas: HTMLCanvasElement;
     private readonly transition: UserInterfaceTransition;
     public isTransitioning: boolean;
@@ -25,7 +27,7 @@ export default class UserInterfaceManager {
     public cleanup(): void {
         // Cleanup special values & components
         this.previousUI?.cleanup();
-        this.previousUI?.cleanupComponent();
+        this.previousUI?.cleanupCore();
 
         this.isTransitioning = false;
     }
@@ -45,7 +47,7 @@ export default class UserInterfaceManager {
         this.previousUI?.cleanupListeners();
     }
 
-    private createUI(mode: UserInterfaceMode): UserInterface {
+    private createUI(mode: UserInterfaceMode): UserInterfaces {
         switch (mode) {
             case 'menu':
                 // Fake dead animation

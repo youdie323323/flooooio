@@ -1,78 +1,74 @@
 import { Canvg, presets } from "canvg";
-import { darkend, darkendBase } from "../../common/common";
-import { Component } from "./Component";
+import { darkend, DARKEND_BASE } from "../../common/common";
+import { Clickable, Component, Interactive } from "./Component";
+import Layout, { LayoutOptions } from "../layout/Layout";
 
-export interface RelativePosition {
-    xPercent: number;
-    yPercent: number;
-    widthPercent?: number; 
-    heightPercent?: number;
-    aspectRatio?: number;  
-}
-
-export abstract class ComponentsButton implements Component {
-    protected relativePos: RelativePosition;
+export abstract class ComponentButton implements Component, Interactive, Clickable {
     protected x: number;
     protected y: number;
     protected w: number;
     protected h: number;
-    protected color: string;
+
     private _callback: () => void;
+
     public isPressed: boolean = false;
     public isHovered: boolean = false;
+    public visible: boolean = true;
+    public enabled: boolean = true;
 
-    constructor(relativePos: RelativePosition, color: string, callback: () => void) {
-        this.relativePos = {
-            ...relativePos,
-            aspectRatio: relativePos.aspectRatio || 1.0
-        };
-        this.color = color;
+    constructor(protected layout: LayoutOptions, protected readonly color: string, callback: () => void) {
         this._callback = callback;
         this.updateAbsolutePosition(window.innerWidth, window.innerHeight);
     }
 
-    cleanup(): void {
-        this.relativePos = null;
-        this._callback = null;
-    }
-
     public updateAbsolutePosition(viewportWidth: number, viewportHeight: number): void {
-        const baseSize = Math.min(viewportWidth, viewportHeight);
-        
-        if (this.relativePos.widthPercent !== undefined) {
-            this.w = baseSize * this.relativePos.widthPercent;
-            this.h = this.w / this.relativePos.aspectRatio!;
-        } else if (this.relativePos.heightPercent !== undefined) {
-            this.h = baseSize * this.relativePos.heightPercent;
-            this.w = this.h * this.relativePos.aspectRatio!;
-        } else {
-            this.w = baseSize * 0.1;
-            this.h = this.w / this.relativePos.aspectRatio!;
-        }
+        const { x, y, width, height } = Layout.calculatePosition(
+            this.layout,
+            viewportWidth,
+            viewportHeight
+        );
 
-        this.x = this.relativePos.xPercent * viewportWidth;
-        this.y = this.relativePos.yPercent * viewportHeight;
+        this.x = x;
+        this.y = y;
+        this.w = width;
+        this.h = height;
     }
 
     public isPointInside(x: number, y: number): boolean {
         return x >= this.x && x <= this.x + this.w && y >= this.y && y <= this.y + this.h;
     }
 
-    public setPressed(pressed: boolean): void {
-        this.isPressed = pressed;
+    public onMouseEnter(): void {
+        this.isHovered = true;
     }
 
-    public setHovered(hovered: boolean): void {
-        this.isHovered = hovered;
+    public onMouseLeave(): void {
+        this.isHovered = false;
+        this.isPressed = false;
     }
 
-    public executeCallback(): void {
-        this._callback();
+    public onMouseDown(): void {
+        if (this.enabled) {
+            this.isPressed = true;
+        }
+    }
+
+    public onMouseUp(): void {
+        this.isPressed = false;
+    }
+
+    public onClick(): void {
+        if (this.enabled) {
+            this._callback();
+        }
     }
 
     protected getButtonColor(): string {
+        if (!this.enabled) {
+            return darkend(this.color, 0.5);
+        }
         if (this.isPressed) {
-            return darkend(this.color, darkendBase);
+            return darkend(this.color, DARKEND_BASE);
         } else if (this.isHovered) {
             return darkend(this.color, -0.1);
         }
@@ -82,16 +78,18 @@ export abstract class ComponentsButton implements Component {
     public abstract render(ctx: CanvasRenderingContext2D): void;
 }
 
-export class ComponentsTextButton extends ComponentsButton {
-    private text: string;
-
-    constructor(relativePos: RelativePosition, color: string, callback: () => void, text: string) {
-        super(relativePos, color, callback);
-        this.text = text;
+export class ComponentTextButton extends ComponentButton {
+    constructor(
+        layout: LayoutOptions,
+        color: string,
+        callback: () => void,
+        private readonly text: string
+    ) {
+        super(layout, color, callback);
     }
 
-    private calculateFontSize(ctx: CanvasRenderingContext2D): number {
-        let fontSize = this.h * 0.6;
+    private setFontSize(ctx: CanvasRenderingContext2D): void {
+        let fontSize = this.h * 0.5;
         ctx.font = `${fontSize}px Ubuntu, sans-serif`;
 
         while (ctx.measureText(this.text).width > this.w * 0.9 && fontSize > 10) {
@@ -99,7 +97,7 @@ export class ComponentsTextButton extends ComponentsButton {
             ctx.font = `${fontSize}px Ubuntu, sans-serif`;
         }
 
-        return fontSize;
+        ctx.lineWidth = Math.max(1, fontSize * 0.175);
     }
 
     public render(ctx: CanvasRenderingContext2D): void {
@@ -107,7 +105,7 @@ export class ComponentsTextButton extends ComponentsButton {
 
         // Button background
         ctx.lineWidth = 7;
-        ctx.strokeStyle = darkend(this.color, darkendBase);
+        ctx.strokeStyle = darkend(this.color, DARKEND_BASE);
         ctx.fillStyle = this.getButtonColor();
 
         ctx.beginPath();
@@ -117,36 +115,36 @@ export class ComponentsTextButton extends ComponentsButton {
         ctx.closePath();
 
         // Button text
-        const fontSize = this.calculateFontSize(ctx);
-        ctx.font = `${fontSize}px Ubuntu, sans-serif`;
+        this.setFontSize(ctx);
         ctx.textBaseline = 'middle';
         ctx.textAlign = 'center';
-        ctx.lineWidth = 6;
 
         const centerX = this.x + this.w / 2;
         const centerY = this.y + this.h / 2;
-        ctx.strokeStyle = '#000000';
+
+        const textColor = this.enabled ? 'white' : '#666666';
+
+        ctx.strokeStyle = this.enabled ? '#000000' : '#444444';
         ctx.strokeText(this.text, centerX, centerY);
-        ctx.fillStyle = "white";
+        ctx.fillStyle = textColor;
         ctx.fillText(this.text, centerX, centerY);
 
         ctx.restore();
     }
-
-    cleanup(): void {
-        this.relativePos = null;
-    }
 }
 
-export class ComponentsSVGButton extends ComponentsButton {
+export class ComponentSVGButton extends ComponentButton {
     private static readonly SVG_SIZE: number = 0.65;
-    
-    private svg: string;
     private svgCanvas: OffscreenCanvas | null = null;
 
-    constructor(relativePos: RelativePosition, color: string, callback: () => void, svg: string) {
-        super(relativePos, color, callback);
-        this.svg = svg;
+    constructor(
+        layout: LayoutOptions,
+        color: string,
+        callback: () => void,
+        private readonly svg: string
+    ) {
+        super(layout, color, callback);
+
         this.initSVG();
     }
 
@@ -168,9 +166,8 @@ export class ComponentsSVGButton extends ComponentsButton {
     public render(ctx: CanvasRenderingContext2D): void {
         ctx.save();
 
-        // Button background
         ctx.lineWidth = 7;
-        ctx.strokeStyle = darkend(this.color, darkendBase);
+        ctx.strokeStyle = darkend(this.color, DARKEND_BASE);
         ctx.fillStyle = this.getButtonColor();
 
         ctx.beginPath();
@@ -179,21 +176,23 @@ export class ComponentsSVGButton extends ComponentsButton {
         ctx.stroke();
         ctx.closePath();
 
-        // SVG
+        // SVG rendering
         if (this.svgCanvas) {
-            ctx.drawImage(this.svgCanvas,
-                this.x + (this.w - this.w * ComponentsSVGButton.SVG_SIZE) / 2,
-                this.y + (this.h - this.h * ComponentsSVGButton.SVG_SIZE) / 2,
-                this.w * ComponentsSVGButton.SVG_SIZE,
-                this.h * ComponentsSVGButton.SVG_SIZE
+            const size = ComponentSVGButton.SVG_SIZE;
+            const drawWidth = this.w * size;
+            const drawHeight = this.h * size;
+            const drawX = this.x + (this.w - drawWidth) / 2;
+            const drawY = this.y + (this.h - drawHeight) / 2;
+
+            ctx.drawImage(
+                this.svgCanvas,
+                drawX,
+                drawY,
+                drawWidth,
+                drawHeight
             );
         }
 
         ctx.restore();
-    }
-
-    cleanup(): void {
-        this.relativePos = null;
-        this.svgCanvas = null;
     }
 }
