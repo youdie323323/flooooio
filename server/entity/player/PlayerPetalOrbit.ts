@@ -83,7 +83,7 @@ export function PlayerPetalOrbit<T extends new (...args: any[]) => BasePlayer>(B
 
                 const rad = this.petalRadii[i];
 
-                if (rarityProfile.isCluster) {
+                if (rarityProfile.isCluster && /** Since single cluster rotation bit fancy, ill use spread if single */ petals.length > 1) {
                     const baseAngle = TWO_PI * currentAngleIndex / realLength + this.rotation;
                     currentAngleIndex++;
 

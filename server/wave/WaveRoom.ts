@@ -4,7 +4,7 @@ import { choice, generateRandomWaveRoomPlayerId, getRandomMapSafePosition, getRa
 import { EntityPool } from "../entity/EntityPool";
 import { PlayerInstance, MockPlayerData } from "../entity/player/Player";
 import { logger } from "../main";
-import { MAP_CENTER_X, MAP_CENTER_Y, mapSize, SAFETY_DISTANCE } from "../entity/EntityChecksum";
+import { MAP_CENTER_X, MAP_CENTER_Y, SAFETY_DISTANCE } from "../entity/EntityChecksum";
 import { BrandedId } from "../entity/Entity";
 import WaveProbabilityPredictor from "./WaveProbabilityPredictor";
 import { calculateWaveLength } from "../utils/formula";
@@ -37,7 +37,7 @@ export type WaveRoomPlayer = MockPlayerData & {
     readyState: PlayerReadyState;
 };
 
-export interface WaveProgressData {
+export interface WaveData {
     /**
     * Current wave progress.
     */
@@ -45,6 +45,8 @@ export interface WaveProgressData {
     waveProgressTimer: number;
     waveProgressRedGageTimer: number;
     waveProgressIsRedGage: boolean;
+
+    mapSize: number;
 }
 
 export const ROOM_UPDATE_SEND_FPS = 30;
@@ -66,11 +68,16 @@ export default class WaveRoom {
 
     private entitySpawnRandomizer: WaveProbabilityPredictor;
 
-    public waveProgressData: WaveProgressData = {
+    /**
+     * Current wave data transfer to entity pool.
+     */
+    public waveData: WaveData = {
         waveProgress: 52,
         waveProgressTimer: 0,
         waveProgressRedGageTimer: 0,
         waveProgressIsRedGage: false,
+
+        mapSize: 2600,
     };;
 
     public wavePreUpdateInterval: NodeJS.Timeout;
@@ -78,26 +85,26 @@ export default class WaveRoom {
     constructor(public readonly biome: Biomes, public readonly code: string) {
         this.visible = WaveRoomVisibleState.PUBLIC;
         this.state = WaveRoomState.WAITING;
-        this.entityPool = new EntityPool(this.waveProgressData);
+        this.entityPool = new EntityPool(this.waveData);
 
         this.roomCandidates = new Array<WaveRoomPlayer>();
 
         this.updateInterval = setInterval(this.broadcastUpdatePacket.bind(this), 1000 / ROOM_UPDATE_SEND_FPS);
         this.wavePreUpdateInterval = setInterval(this.wavePreUpdate.bind(this), 1000 / WAVE_PROGRESS_UPDATE);
 
-        this.entitySpawnRandomizer = new WaveProbabilityPredictor(this.waveProgressData);
+        this.entitySpawnRandomizer = new WaveProbabilityPredictor(this.waveData);
     }
 
     private wavePreUpdate() {
         // Use onChangeSomething so can delete started wave if all players dead
         using _disposable = this.onChangeAnything();
 
-        if (!this.waveProgressData.waveProgressIsRedGage && this.state === WaveRoomState.STARTED) {
-            const mobData = this.entitySpawnRandomizer.predictMockData(this.waveProgressData);
+        if (!this.waveData.waveProgressIsRedGage && this.state === WaveRoomState.STARTED) {
+            const mobData = this.entitySpawnRandomizer.predictMockData(this.waveData);
             if (mobData) {
                 const [type, rarity] = mobData;
 
-                const randPos = getRandomMapSafePosition(MAP_CENTER_X, MAP_CENTER_Y, mapSize, SAFETY_DISTANCE, this.entityPool.getAllClients().filter(p => !p.isDead));
+                const randPos = getRandomMapSafePosition(MAP_CENTER_X, MAP_CENTER_Y, this.waveData.mapSize, SAFETY_DISTANCE, this.entityPool.getAllClients().filter(p => !p.isDead));
                 if (!randPos) {
                     return null;
                 }
@@ -108,18 +115,18 @@ export default class WaveRoom {
 
         // Dont do anything when wave waiting/end
         if (this.state === WaveRoomState.STARTED) {
-            const waveLength = calculateWaveLength(this.waveProgressData.waveProgress);
+            const waveLength = calculateWaveLength(this.waveData.waveProgress);
 
-            if (this.waveProgressData.waveProgressTimer >= waveLength) {
+            if (this.waveData.waveProgressTimer >= waveLength) {
                 // If mob count above 4, start red gage
                 if (
                     // Force start into next wave when red gage reached
-                    !(this.waveProgressData.waveProgressRedGageTimer >= waveLength) &&
+                    !(this.waveData.waveProgressRedGageTimer >= waveLength) &&
                     4 < this.entityPool.getAllMobs().filter(c => /** Dont count petals & pets. */ !c.petParentPlayer && !c.petalParentPlayer).length
                 ) {
-                    this.waveProgressData.waveProgressIsRedGage = true;
+                    this.waveData.waveProgressIsRedGage = true;
 
-                    this.waveProgressData.waveProgressRedGageTimer = Math.min(waveLength, Math.round((this.waveProgressData.waveProgressRedGageTimer + 0.016) * 100000) / 100000);
+                    this.waveData.waveProgressRedGageTimer = Math.min(waveLength, Math.round((this.waveData.waveProgressRedGageTimer + 0.016) * 100000) / 100000);
                 } else {
                     // Respawn all dead players
                     this.entityPool.clients.forEach(c => {
@@ -151,18 +158,18 @@ export default class WaveRoom {
                         }
                     });
 
-                    this.waveProgressData.waveProgressIsRedGage = false;
+                    this.waveData.waveProgressIsRedGage = false;
 
-                    this.waveProgressData.waveProgressRedGageTimer = 0;
+                    this.waveData.waveProgressRedGageTimer = 0;
 
-                    this.waveProgressData.waveProgressTimer = 0;
+                    this.waveData.waveProgressTimer = 0;
 
-                    this.waveProgressData.waveProgress++;
+                    this.waveData.waveProgress++;
 
-                    this.entitySpawnRandomizer.reset(this.waveProgressData);
+                    this.entitySpawnRandomizer.reset(this.waveData);
                 }
             } else {
-                this.waveProgressData.waveProgressTimer = Math.min(waveLength, Math.round((this.waveProgressData.waveProgressTimer + 0.016) * 100000) / 100000);
+                this.waveData.waveProgressTimer = Math.min(waveLength, Math.round((this.waveData.waveProgressTimer + 0.016) * 100000) / 100000);
             }
         }
     }
@@ -179,7 +186,7 @@ export default class WaveRoom {
 
         this.entitySpawnRandomizer = null;
 
-        this.waveProgressData = null;
+        this.waveData = null;
 
         clearInterval(this.updateInterval);
         clearInterval(this.wavePreUpdateInterval);
@@ -360,7 +367,7 @@ export default class WaveRoom {
             using _guard = logger.metadata({
                 candidateIds: this.roomCandidates.map(c => c.id).join(","),
                 code: this.code,
-                wave: this.waveProgressData.waveProgress,
+                wave: this.waveData.waveProgress,
             });
             logger.info("Wave starting");
         });
@@ -373,7 +380,7 @@ export default class WaveRoom {
         this.entityPool.endWave();
 
         logger.region(() => {
-            using _guard = logger.metadata({ code: this.code, wave: this.waveProgressData.waveProgress });
+            using _guard = logger.metadata({ code: this.code, wave: this.waveData.waveProgress });
             logger.info("Wave ended");
         });
     }

@@ -6,14 +6,14 @@ import { Player, PlayerInstance, MockPlayerData } from "./player/Player";
 import { EntityId, onUpdateTick } from "./Entity";
 import { isPetal, kickClient } from '../utils/common';
 import { Rarities } from '../../shared/rarities';
-import { MAP_CENTER_X, MAP_CENTER_Y, mapSize, SAFETY_DISTANCE } from './EntityChecksum';
+import { MAP_CENTER_X, MAP_CENTER_Y, SAFETY_DISTANCE } from './EntityChecksum';
 import { MOB_PROFILES } from '../../shared/mobProfiles';
 import { PETAL_PROFILES } from '../../shared/petalProfiles';
 import { isSpawnableSlot, PetalData, MockPetalData, Slot } from './mob/petal/Petal';
 import { USAGE_RELOAD_PETALS } from './player/PlayerReload';
 import { MoodKind, MOON_KIND_VALUES } from '../../shared/mood';
 import { logger } from '../main';
-import WaveRoom, { WaveProgressData, WaveRoomPlayer, WaveRoomPlayerId, WaveRoomState } from '../wave/WaveRoom';
+import WaveRoom, { WaveData, WaveRoomPlayer, WaveRoomPlayerId, WaveRoomState } from '../wave/WaveRoom';
 import { getRandomMapSafePosition, generateRandomEntityId, getRandomAngle } from '../utils/random';
 import WaveProbabilityPredictor from '../wave/WaveProbabilityPredictor';
 import { Biomes } from '../../shared/biomes';
@@ -62,7 +62,10 @@ export class EntityPool {
     private updateInterval: NodeJS.Timeout;
     private updateSendInterval: NodeJS.Timeout;
 
-    constructor(private waveProgressData: WaveProgressData) {
+    /**
+     * @param waveData - POSSIBLY CIRCULAR REFERENCE. TODO: FIX
+     */
+    constructor(public waveData: WaveData) {
         this.clients = new Map();
         this.mobs = new Map();
     }
@@ -83,7 +86,7 @@ export class EntityPool {
         this.updateInterval = null;
         this.updateSendInterval = null;
 
-        this.waveProgressData = null;
+        this.waveData = null;
     }
 
     /**
@@ -99,7 +102,7 @@ export class EntityPool {
         waveStartBuffer.writeUInt8(biome, 1);
 
         roomCandidates.forEach(player => {
-            const randPos = getRandomMapSafePosition(MAP_CENTER_X, MAP_CENTER_Y, mapSize, SAFETY_DISTANCE, this.getAllClients().filter(p => !p.isDead));
+            const randPos = getRandomMapSafePosition(MAP_CENTER_X, MAP_CENTER_Y, this.waveData.mapSize, SAFETY_DISTANCE, this.getAllClients().filter(p => !p.isDead));
             if (!randPos) {
                 return null;
             }
@@ -446,17 +449,17 @@ export class EntityPool {
 
         // Wave informations
         {
-            buffer.writeUInt16BE(this.waveProgressData.waveProgress, offset);
+            buffer.writeUInt16BE(this.waveData.waveProgress, offset);
             offset += 2;
 
-            buffer.writeDoubleBE(this.waveProgressData.waveProgressTimer, offset);
+            buffer.writeDoubleBE(this.waveData.waveProgressTimer, offset);
             offset += 8;
 
-            buffer.writeDoubleBE(this.waveProgressData.waveProgressRedGageTimer, offset);
+            buffer.writeDoubleBE(this.waveData.waveProgressRedGageTimer, offset);
             offset += 8;
 
             // Map size
-            buffer.writeUInt16BE(mapSize, offset);
+            buffer.writeUInt16BE(this.waveData.mapSize, offset);
             offset += 2;
         }
 

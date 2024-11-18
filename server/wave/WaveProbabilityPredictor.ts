@@ -1,6 +1,6 @@
 import { Rarities } from "../../shared/rarities";
 import { MobType } from "../../shared/types";
-import { WaveProgressData, WaveRoomState } from "./WaveRoom";
+import { WaveData, WaveRoomState } from "./WaveRoom";
 import { onUpdateTick } from "../entity/Entity";
 import { MAP_CENTER_X, MAP_CENTER_Y, mapSize, SAFETY_DISTANCE } from "../entity/EntityChecksum";
 import { EntityPool } from "../entity/EntityPool";
@@ -97,11 +97,11 @@ export default class WaveProbabilityPredictor {
      */
     private points: number;
 
-    public constructor(waveData: WaveProgressData) {
+    public constructor(waveData: WaveData) {
         this.reset(waveData);
     }
 
-    public predictMockData(waveData: WaveProgressData): [MobType, Rarities] | null {
+    public predictMockData(waveData: WaveData): [MobType, Rarities] | null {
         this.timer++;
 
         // See comment of calculateWaveLuck
@@ -127,7 +127,7 @@ export default class WaveProbabilityPredictor {
         return null;
     }
 
-    public reset(waveData: WaveProgressData) {
+    public reset(waveData: WaveData) {
         this.timer = -1;
         this.points = 50 + Math.pow(waveData.waveProgress, 1.6);
         this.points += 1500;

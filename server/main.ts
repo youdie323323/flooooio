@@ -20,12 +20,12 @@ import { choice, randomEnum } from './utils/random';
  * Temp player data.
  */
 const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
-    name: 'unko',
+    name: 'YOBA',
     slots: {
-        surface: Array.from({ length: 20 }, () => {
+        surface: Array.from({ length: 1 }, () => {
             return {
                 type: PetalType.FASTER,
-                rarity: Rarities.COMMON,
+                rarity: Rarities.SUPER,
             };
         }),
         bottom: [],

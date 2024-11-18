@@ -9,8 +9,6 @@ import { USAGE_RELOAD_PETALS } from "./player/PlayerReload";
 import { isSpawnableSlot } from "./mob/petal/Petal";
 import { MobType } from "../../shared/types";
 
-export let mapSize = 2500;
-
 export const MAP_CENTER_X = 5000;
 export const MAP_CENTER_Y = 5000;
 
@@ -27,12 +25,12 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                 super[onUpdateTick](poolThis);
             }
 
+            // Hp check
             {
-                // Hp check
-                if (this.health < 0) {
+                if (this.health <= 0) {
                     if (this instanceof Player && !this.isDead) {
                         removeAllBindings(poolThis, this);
-    
+
                         this.isDead = true;
                         // Stop moving
                         this.magnitude = 0;
@@ -42,19 +40,6 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                     }
                 }
             }
-
-            const getRadius = () => {
-                if (this instanceof Player) {
-                    return this.size;
-                } else if (this instanceof Mob) {
-                    const profile = MOB_PROFILES[this.type] || PETAL_PROFILES[this.type];
-                    return Math.max(
-                        profile.rx * (this.size / profile.fraction),
-                        profile.ry * (this.size / profile.fraction)
-                    );
-                }
-                return 0;
-            };
 
             // World boundary (circular)
             {
@@ -69,7 +54,20 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                     }
                 }
 
-                const worldRadius = mapSize - getRadius();
+                const getRadius = () => {
+                    if (this instanceof Player) {
+                        return this.size;
+                    } else if (this instanceof Mob) {
+                        const profile = MOB_PROFILES[this.type] || PETAL_PROFILES[this.type];
+                        return Math.max(
+                            profile.rx * (this.size / profile.fraction),
+                            profile.ry * (this.size / profile.fraction)
+                        );
+                    }
+                    return 0;
+                };
+
+                const worldRadius = poolThis.waveData.mapSize - getRadius();
 
                 const dx = this.x - MAP_CENTER_X;
                 const dy = this.y - MAP_CENTER_Y;

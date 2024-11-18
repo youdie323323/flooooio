@@ -12,6 +12,7 @@ import { Biomes } from "../shared/biomes";
 export let ws: WebSocket;
 
 const canvas: HTMLCanvasElement = document.querySelector('#canvas');
+const ctx: CanvasRenderingContext2D = canvas.getContext("2d");
 
 export let lastTimestamp = Date.now();
 export let deltaTime = 0;
@@ -124,6 +125,8 @@ export const uiManager = new UserInterfaceManager(canvas);
     }
 
     (function frame() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
         lastTimestamp = Date.now();
         deltaTime = lastTimestamp - prevTimestamp;
         prevTimestamp = lastTimestamp;
