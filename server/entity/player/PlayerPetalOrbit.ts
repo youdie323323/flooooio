@@ -48,7 +48,8 @@ export function PlayerPetalOrbit<T extends new (...args: any[]) => BasePlayer>(B
 
             const realLength = surface.map<number>((petals) => {
                 if (!petals || !isSpawnableSlot(petals)) return 0;
-                return PETAL_PROFILES[petals[0].type].isCluster ? 1 : petals.length;
+                const firstPetal = petals[0];
+                return PETAL_PROFILES[firstPetal.type][firstPetal.rarity].isCluster ? 1 : petals.length;
             }).reduce((accumulator, currentValue) => {
                 return accumulator + currentValue;
             }, 0);
@@ -65,6 +66,7 @@ export function PlayerPetalOrbit<T extends new (...args: any[]) => BasePlayer>(B
                 const firstPetal = petals[0];
 
                 const profile: PetalData = PETAL_PROFILES[firstPetal.type];
+                const rarityProfile: PetalStat = profile[firstPetal.rarity];
 
                 {
                     const baseRadius = isPetal(firstPetal.type) && UNMOODABLE_PETALS.has(firstPetal.type) ? 40 :
@@ -75,13 +77,13 @@ export function PlayerPetalOrbit<T extends new (...args: any[]) => BasePlayer>(B
                     this.petalBounces[i] = (baseRadius - this.petalRadii[i]) * BOUNCE_STRENGTH + this.petalBounces[i] * (1 - BOUNCE_DECAY);
 
                     if (firstPetal.type === PetalType.FASTER) {
-                        totalSpeed += profile[firstPetal.rarity].rad;
+                        totalSpeed += rarityProfile.rad;
                     }
                 }
 
                 const rad = this.petalRadii[i];
 
-                if (profile.isCluster) {
+                if (rarityProfile.isCluster) {
                     const baseAngle = TWO_PI * currentAngleIndex / realLength + this.rotation;
                     currentAngleIndex++;
 

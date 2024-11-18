@@ -43,11 +43,19 @@ export default class UserInterfaceManager {
     private createUI(mode: UserInterfaceMode): UserInterface {
         switch (mode) {
             case 'menu':
+                // Fake dead animation
+                if (players.has(selfId)) {
+                    const player = players.get(selfId);
+                    player.deadT = 0;
+                    player.isDead = true;
+                    player.health = 0;
+                }
+
                 return new UserInterfaceMenu(this.canvas);
 
             case 'game':
                 cameraController.zoom = 1;
-                
+
                 return new UserInterfaceGame(this.canvas);
         }
     }
@@ -58,8 +66,9 @@ export default class UserInterfaceManager {
             return;
         }
 
-        const type = this.currentUI instanceof UserInterfaceMenu ? 'menu' : 'game';
         this.transition.draw(this.currentUI, this.previousUI);
+
+        const type: UserInterfaceMode = this.currentUI instanceof UserInterfaceMenu ? 'menu' : 'game';
 
         if (this.transition.update(type)) {
             this.cleanup();

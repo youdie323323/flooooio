@@ -25,7 +25,7 @@ const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
         surface: Array.from({ length: 20 }, () => {
             return {
                 type: PetalType.FASTER,
-                rarity: Rarities.SUPER,
+                rarity: Rarities.COMMON,
             };
         }),
         bottom: [],

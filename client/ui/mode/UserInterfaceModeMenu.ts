@@ -13,16 +13,19 @@ function randomFloat(min: number, max: number) {
     return Math.random() * (max - min + 1) + min;
 }
 
+let backgroundEntities: Set<{
+    x: number;
+    y: number;
+    z: number;
+    waveStep: number;
+    entity: EntityMob;
+}> = new Set();
+
 export default class UserInterfaceMenu extends UserInterface {
-    backgroundEntities: Set<{
-        x: number;
-        y: number;
-        z: number;
-        waveStep: number;
-        entity: EntityMob;
-    }>;
-    lastBackgroundPetalSpawn: number;
+    lastBackgroundEntitySpawn: number;
+
     worldManager: TilesetManager;
+
     backgroundX: number;
     backgroundY: number;
     backgroundWaveStep: number;
@@ -30,9 +33,10 @@ export default class UserInterfaceMenu extends UserInterface {
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
 
-        this.backgroundEntities = new Set();
-        this.lastBackgroundPetalSpawn = Date.now();
+        this.lastBackgroundEntitySpawn = Date.now();
+        
         this.worldManager = new TilesetManager();
+
         this.backgroundX = 0;
         this.backgroundY = 0;
         this.backgroundWaveStep = 0;
@@ -228,22 +232,22 @@ export default class UserInterfaceMenu extends UserInterface {
         this.backgroundY += Math.sin(this.backgroundWaveStep / 20) * 0.5;
         this.backgroundWaveStep += 0.08;
 
-        this.backgroundEntities.forEach((v) => {
+        backgroundEntities.forEach((v) => {
             if (v.x > canvas.width) {
-                this.backgroundEntities.delete(v);
+                backgroundEntities.delete(v);
             }
         });
 
-        if (Date.now() - this.lastBackgroundPetalSpawn > 200) {
+        if (Date.now() - this.lastBackgroundEntitySpawn > 200) {
             const param = this.generateBackgroundEntity3D();
-            this.backgroundEntities.add({
+            backgroundEntities.add({
                 ...param,
                 entity: new EntityMob(-1, PetalType.BASIC, Rarities.COMMON, param.x, param.y, param.z * 12, 1, 1, 0, false)
             });
-            this.lastBackgroundPetalSpawn = Date.now();
+            this.lastBackgroundEntitySpawn = Date.now();
         }
 
-        Array.from(this.backgroundEntities.values()).sort((a, b) => a.z + b.z).forEach(v => {
+        Array.from(backgroundEntities.values()).sort((a, b) => a.z + b.z).forEach(v => {
             v.entity.draw(ctx);
 
             v.entity.x += v.z * 0.6;
@@ -267,6 +271,5 @@ export default class UserInterfaceMenu extends UserInterface {
 
     public cleanup(): void {
         this.worldManager = undefined;
-        this.backgroundEntities = undefined;
     }
 }

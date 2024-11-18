@@ -8,6 +8,9 @@ export interface PetalStat {
     petalReload: number;
     usageReload?: number;
     count: number;
+
+    isCluster: boolean;
+
     [key: string]: any;
 }
 
@@ -17,8 +20,6 @@ export interface PetalData {
     fraction: number;
     rx: number;
     ry: number;
-
-    isCluster: boolean;
 
     [Rarities.COMMON]: PetalStat;
     [Rarities.UNUSUAL]: PetalStat;

@@ -10,55 +10,61 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
         rx: 20,
         ry: 20,
 
-        isCluster: false,
-
         [Rarities.COMMON]: {
             damage: 10,
             health: 10,
             petalReload: 2.5,
             count: 1,
+            isCluster: false,
         },
         [Rarities.UNUSUAL]: {
             damage: 30,
             health: 30,
             petalReload: 2.5,
             count: 1,
+            isCluster: false,
         },
         [Rarities.RARE]: {
             damage: 90,
             health: 90,
             petalReload: 2.5,
             count: 1,
+            isCluster: false,
         },
         [Rarities.EPIC]: {
             damage: 270,
             health: 270,
             petalReload: 2.5,
             count: 1,
+            isCluster: false,
         },
         [Rarities.LEGENDARY]: {
             damage: 810,
             health: 810,
             petalReload: 2.5,
             count: 1,
+            isCluster: false,
         },
         [Rarities.MYTHIC]: {
             damage: 2430,
             health: 2430,
             petalReload: 2.5,
             count: 1,
+            isCluster: false,
         },
         [Rarities.ULTRA]: {
             damage: 7290,
             health: 7290,
             petalReload: 2.5,
             count: 1,
+            isCluster: false,
         },
         [Rarities.SUPER]: {
             damage: 21870,
             health: 21870,
             petalReload: 2.5,
             count: 1,
+            isCluster: false,
         },
     },
     [PetalType.FASTER]: {
@@ -69,14 +75,14 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
         rx: 20,
         ry: 20,
 
-        isCluster: true,
-
         [Rarities.COMMON]: {
             damage: 8,
             health: 5,
             petalReload: 2.5,
             count: 1,
             rad: 0.5,
+
+            isCluster: false,
         },
         [Rarities.UNUSUAL]: {
             damage: 24,
@@ -84,6 +90,8 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             petalReload: 2.5,
             count: 1,
             rad: 0.7,
+
+            isCluster: false,
         },
         [Rarities.RARE]: {
             damage: 72,
@@ -91,6 +99,8 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             petalReload: 2.5,
             count: 1,
             rad: 0.9,
+
+            isCluster: false,
         },
         [Rarities.EPIC]: {
             damage: 216,
@@ -98,6 +108,8 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             petalReload: 2.5,
             count: 1,
             rad: 1.1,
+
+            isCluster: false,
         },
         [Rarities.LEGENDARY]: {
             damage: 648,
@@ -105,6 +117,8 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             petalReload: 2.5,
             count: 1,
             rad: 1.3,
+
+            isCluster: false,
         },
         [Rarities.MYTHIC]: {
             damage: 1944,
@@ -112,6 +126,8 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             petalReload: 2.5,
             count: 3,
             rad: 1.5,
+
+            isCluster: true,
         },
         [Rarities.ULTRA]: {
             damage: 5832,
@@ -119,14 +135,17 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             petalReload: 2.5,
             count: 3,
             rad: 1.7,
-        },
 
+            isCluster: true,
+        },
         [Rarities.SUPER]: {
             damage: 17496,
             health: 10935,
             petalReload: 2.5,
             count: 3,
             rad: 1.9,
+
+            isCluster: true,
         },
     },
     [PetalType.BEETLE_EGG]: {
@@ -136,14 +155,14 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
         rx: 30,
         ry: 40,
 
-        isCluster: false,
-
         [Rarities.COMMON]: {
             damage: 0,
             health: 25,
             petalReload: 1,
             usageReload: 15,
             count: 1,
+
+            isCluster: false,
         },
         [Rarities.UNUSUAL]: {
             damage: 0,
@@ -151,6 +170,8 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             petalReload: 1,
             usageReload: 19.2,
             count: 1,
+
+            isCluster: false,
         },
         [Rarities.RARE]: {
             damage: 0,
@@ -158,6 +179,8 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             petalReload: 1,
             usageReload: 23.5,
             count: 1,
+
+            isCluster: false,
         },
         [Rarities.EPIC]: {
             damage: 0,
@@ -165,6 +188,8 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             petalReload: 1,
             usageReload: 32,
             count: 1,
+
+            isCluster: false,
         },
         [Rarities.LEGENDARY]: {
             damage: 0,
@@ -172,6 +197,8 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             petalReload: 1,
             usageReload: 1.8,
             count: 1,
+
+            isCluster: false,
         },
         [Rarities.MYTHIC]: {
             damage: 0,
@@ -179,6 +206,8 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             petalReload: 1,
             usageReload: 7.4,
             count: 1,
+
+            isCluster: false,
         },
         [Rarities.ULTRA]: {
             damage: 0,
@@ -186,6 +215,8 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             petalReload: 1,
             usageReload: 16.9,
             count: 1,
+
+            isCluster: false,
         },
         [Rarities.SUPER]: {
             damage: 0,
@@ -193,6 +224,8 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             petalReload: 1,
             usageReload: 0.1,
             count: 1,
+
+            isCluster: false,
         },
     },
 };

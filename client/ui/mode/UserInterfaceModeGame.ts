@@ -92,10 +92,8 @@ export default class UserInterfaceGame extends UserInterface {
             },
             "#b04c5e",
             () => {
-                if (confirm("Are you really want to leave the game?")) {
-                    ws.send(new Uint8Array([PacketKind.WAVE_ROOM_GAME_LEAVE]));
-                    uiManager.switchUI("menu");
-                }
+                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_GAME_LEAVE]));
+                uiManager.switchUI("menu");
             },
             CROSS_ICON_SVG,
         );
@@ -108,7 +106,7 @@ export default class UserInterfaceGame extends UserInterface {
             // Interpolate
             this.updateT += deltaTime / 100;
             this.t = Math.min(1, this.updateT);
-            
+
             this.waveProgressTimer = this.oWaveProgressTimer + (this.nWaveProgressTimer - this.oWaveProgressTimer) * this.t;
             this.waveProgressRedGageTimer = this.oWaveProgressRedGageTimer + (this.nWaveProgressRedGageTimer - this.oWaveProgressRedGageTimer) * this.t;
             this.worldSize = this.oWorldSize + (this.nWorldSize - this.oWorldSize) * this.t;

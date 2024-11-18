@@ -63,6 +63,7 @@ export default class UserInterfaceTransition {
 
     private clipCircle(): void {
         this.ctx.beginPath();
+        
         this.ctx.arc(
             this.canvas.width / 2,
             this.canvas.height / 2,
@@ -70,11 +71,13 @@ export default class UserInterfaceTransition {
             0,
             Math.PI * 2
         );
-        this.ctx.clip();
+
+        this.ctx.clip('evenodd');
     }
 
     private drawTransitionBorder(): void {
         this.ctx.save();
+
         this.ctx.beginPath();
         this.ctx.arc(
             this.canvas.width / 2,
@@ -86,6 +89,7 @@ export default class UserInterfaceTransition {
         this.ctx.lineWidth = UserInterfaceTransition.STROKE_WIDTH;
         this.ctx.strokeStyle = UserInterfaceTransition.STROKE_COLOR;
         this.ctx.stroke();
+
         this.ctx.restore();
     }
 }
