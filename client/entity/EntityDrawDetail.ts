@@ -18,13 +18,13 @@ export function drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, 
     if (entity instanceof EntityPlayer && entity.id !== selfId) {
         ctx.save();
 
-        ctx.translate(0, -(entity.size + 8));
+        ctx.translate(0, -(entity.size + 10));
         ctx.scale(0.2, 0.2);
 
-        ctx.font = "3em Ubuntu, sans-serif";
+        ctx.font = "4em Ubuntu, sans-serif";
         ctx.textBaseline = 'middle';
         ctx.textAlign = 'center';
-        ctx.lineWidth = 6;
+        ctx.lineWidth = 7;
         ctx.strokeStyle = '#000000';
         ctx.strokeText(entity.nickname, 0, 0);
         ctx.fillStyle = "white";

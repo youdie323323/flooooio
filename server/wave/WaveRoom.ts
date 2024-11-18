@@ -109,7 +109,7 @@ export default class WaveRoom {
                     return null;
                 }
 
-                this.entityPool.addPetalOrMob(type, rarity, randPos[0], randPos[1]);
+                // this.entityPool.addPetalOrMob(type, rarity, randPos[0], randPos[1]);
             }
         }
 
@@ -388,7 +388,7 @@ export default class WaveRoom {
     /**
      * Disposable checksum.
      */
-    public onChangeAnything = () => {
+    public onChangeAnything = (): Disposable => {
         return { [Symbol.dispose]: () => this._roomChecksum() };
     }
 

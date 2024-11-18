@@ -20,7 +20,7 @@ export default abstract class UserInterface {
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
-        
+
         this.setupEventListeners();
         this.initializeComponents();
     }
@@ -48,7 +48,7 @@ export default abstract class UserInterface {
         this.resizeObserver.observe(this.canvas);
     }
 
-    public _cleanup(): void {
+    public cleanupListeners(): void {
         // Remove all event listeners
         this.canvas.removeEventListener('mousedown', this._mousedown);
         this.canvas.removeEventListener('mouseup', this._mouseup);
@@ -63,7 +63,9 @@ export default abstract class UserInterface {
             this.resizeObserver.disconnect();
             this.resizeObserver = null;
         }
+    }
 
+    public cleanupComponent(): void {
         this.components.forEach(c => c.cleanup());
 
         this.components = null;
@@ -78,6 +80,7 @@ export default abstract class UserInterface {
 
     private handleMouseDown(event: MouseEvent): void {
         this.updateMousePosition(event);
+
         for (const component of this.components) {
             if (component.isPointInside(this.mouseX, this.mouseY)) {
                 this.activeComponent = component;

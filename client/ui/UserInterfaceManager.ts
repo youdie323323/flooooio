@@ -23,21 +23,26 @@ export default class UserInterfaceManager {
     }
 
     public cleanup(): void {
+        // Cleanup special values & components
         this.previousUI?.cleanup();
-        this.previousUI?._cleanup();
+        this.previousUI?.cleanupComponent();
+
         this.isTransitioning = false;
     }
 
     public switchUI(mode: UserInterfaceMode): void {
         if (this.isTransitioning) {
-            this.cleanup();
-            return this.switchUI(mode);
+            // Dont do anything because its double click
+            return;
         }
 
         this.isTransitioning = true;
         this.previousUI = this.currentUI;
         this.currentUI = this.createUI(mode);
-        this.transition.start(mode);
+        this.transition.start(mode)
+        
+        // Cleanup listeners so cant touch before ui buttons
+        this.previousUI?.cleanupListeners();
     }
 
     private createUI(mode: UserInterfaceMode): UserInterface {

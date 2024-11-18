@@ -14,14 +14,14 @@ export default class UserInterfaceTransition {
 
     private readonly transitionConfigs: Record<UserInterfaceMode, TransitionConfig> = {
         menu: {
-            initialRadius: (canvas) => Math.max(canvas.height, canvas.width),
-            radiusChange: (current) => current - (0.5 + current / 30),
-            isComplete: (_, radius) => radius < 0
+            initialRadius: (canvas) => Math.max((canvas.height / 2) + 100, (canvas.width / 2) + 100),
+            radiusChange: (current) => current - (0.5 + current / 50),
+            isComplete: (_, radius) => radius < 0,
         },
         game: {
-            initialRadius: () => 4,
-            radiusChange: (current) => current + (0.5 + current / 30),
-            isComplete: (canvas, radius) => radius > Math.max(canvas.height, canvas.width)
+            initialRadius: () => 0,
+            radiusChange: (current) => current + (0.5 + current / 35),
+            isComplete: (canvas, radius) => radius > Math.max((canvas.height / 2) + 100, (canvas.width / 2) + 100),
         }
     };
 
@@ -63,7 +63,7 @@ export default class UserInterfaceTransition {
 
     private clipCircle(): void {
         this.ctx.beginPath();
-        
+
         this.ctx.arc(
             this.canvas.width / 2,
             this.canvas.height / 2,

@@ -272,17 +272,6 @@ app
         },
         close: (ws: uWS.WebSocket<UserData>, code, message) => logger.region(() => {
             const { waveRoomClientId, waveClientId } = ws.getUserData();
-            const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
-
-            if (waveRoom) {
-                // Leave current wave room | wave
-                waveRoomService.leaveWaveRoom(waveRoomClientId);
-
-                const waveClient = waveRoom.entityPool.getClient(waveClientId);
-                if (waveClient) {
-                    kickClient(waveRoom, waveClient);
-                };
-            }
 
             using _guard = logger.metadata({
                 reason: Buffer.from(message).toString() || "UNKNOWN",
@@ -290,6 +279,18 @@ app
                 waveClientId,
             });
             logger.info(`Client disconnected`);
+
+            const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
+
+            if (waveRoom) {
+                const waveClient = waveRoom.entityPool.getClient(waveClientId);
+                if (waveClient) {
+                    kickClient(waveRoom, waveClient);
+                };
+                
+                // Leave current wave room | wave
+                waveRoomService.leaveWaveRoom(waveRoomClientId);
+            }
         })
     })
     .listen(PORT, (token) => {
