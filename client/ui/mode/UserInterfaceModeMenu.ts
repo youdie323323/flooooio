@@ -169,7 +169,7 @@ export default class UserInterfaceMenu extends UserInterface {
             },
             "#1dd129",
             async () => {
-                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_CREATE, Biomes.GARDEN]));
+                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_CREATE, Biomes.DESERT]));
             },
             "Create public"
         );

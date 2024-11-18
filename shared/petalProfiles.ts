@@ -9,6 +9,9 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
         fraction: 20,
         rx: 20,
         ry: 20,
+
+        isCluster: false,
+
         [Rarities.COMMON]: {
             damage: 10,
             health: 10,
@@ -65,6 +68,9 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
         fraction: 20,
         rx: 20,
         ry: 20,
+
+        isCluster: true,
+
         [Rarities.COMMON]: {
             damage: 8,
             health: 5,
@@ -104,21 +110,22 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             damage: 1944,
             health: 1215,
             petalReload: 2.5,
-            count: 1,
+            count: 3,
             rad: 1.5,
         },
         [Rarities.ULTRA]: {
             damage: 5832,
             health: 3645,
             petalReload: 2.5,
-            count: 1,
+            count: 3,
             rad: 1.7,
         },
+
         [Rarities.SUPER]: {
             damage: 17496,
             health: 10935,
             petalReload: 2.5,
-            count: 1,
+            count: 3,
             rad: 1.9,
         },
     },
@@ -128,6 +135,9 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
         fraction: 20,
         rx: 30,
         ry: 40,
+
+        isCluster: false,
+
         [Rarities.COMMON]: {
             damage: 0,
             health: 25,

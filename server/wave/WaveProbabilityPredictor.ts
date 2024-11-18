@@ -2,11 +2,10 @@ import { Rarities } from "../../shared/rarities";
 import { MobType } from "../../shared/types";
 import { WaveProgressData, WaveRoomState } from "./WaveRoom";
 import { onUpdateTick } from "../entity/Entity";
-import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from "../entity/EntityChecksum";
+import { MAP_CENTER_X, MAP_CENTER_Y, mapSize, SAFETY_DISTANCE } from "../entity/EntityChecksum";
 import { EntityPool } from "../entity/EntityPool";
 import { PlayerInstance } from "../entity/player/Player";
-import { calculateWaveLuck } from "../entity/utils/formula";
-import { choice, getRandomMapSafePosition } from "../entity/utils/random";
+import { calculateWaveLuck } from "../utils/formula";
 
 /*
 Wave 21+: Commons stop spawning
@@ -102,13 +101,13 @@ export default class WaveProbabilityPredictor {
         this.reset(waveData);
     }
 
-    public getMobData(waveData: WaveProgressData): [MobType, Rarities] | null {
+    public predictMockData(waveData: WaveProgressData): [MobType, Rarities] | null {
         this.timer++;
 
         // See comment of calculateWaveLuck
         const luck = (calculateWaveLuck(waveData.waveProgress) * (( /** All players luck */ 0.0) + 1)) * 1;
 
-        if (this.timer % 5 === 0 && this.points > 0) {
+        if (this.timer % 10 === 0 && this.points > 0) {
             const probabilities = calculateSpawnProbabilities(luck, waveData.waveProgress);
             // Ensure atleast common
             if (!Object.keys(probabilities).length) {

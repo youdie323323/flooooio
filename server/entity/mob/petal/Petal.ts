@@ -18,6 +18,8 @@ export interface PetalData {
     rx: number;
     ry: number;
 
+    isCluster: boolean;
+
     [Rarities.COMMON]: PetalStat;
     [Rarities.UNUSUAL]: PetalStat;
     [Rarities.RARE]: PetalStat;
@@ -41,16 +43,25 @@ export interface MockPetalData {
     rarity: Rarities;
 }
 
-export type MaybeEmptySlot<T> = T | null;
+type MaybeEmptySlot<T> = T | null | undefined
+
+/**
+ * Slot placeholder.
+ * 
+ * @remarks
+ * 
+ * Multiple mob instance is because of we have petals like sand (they have 4 entities)
+ */
+export type Slot = MaybeEmptySlot<MockPetalData | MobInstance[]>;
 
 export interface PetalSlots {
-    surface: MaybeEmptySlot<MockPetalData | MobInstance>[];
-    bottom: MaybeEmptySlot<MockPetalData | MobInstance>[];
+    surface: Slot[];
+    bottom: Slot[];
 }
 
 /**
  * Type guard for slot.
  */
-export function isLivingPetal(slot: MockPetalData | MobInstance): slot is MobInstance {
-    return "id" in slot;
+export function isSpawnableSlot(slot: Slot): slot is MobInstance[] {
+    return Array.isArray(slot);
 }

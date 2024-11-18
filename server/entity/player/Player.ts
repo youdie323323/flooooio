@@ -53,8 +53,8 @@ class BasePlayer implements Entity {
      * Petal slots, and cooldowns.
      */
     slots: PetalSlots & {
-        cooldownsPetal: number[];
-        cooldownsUsage: number[];
+        cooldownsPetal: number[][];
+        cooldownsUsage: number[][];
     };
 
     /**

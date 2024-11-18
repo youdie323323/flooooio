@@ -50,8 +50,7 @@ export const uiManager = new UserInterfaceManager(canvas);
         if (element) element.style.display = "none";
     }
 
-    // WebSocket setup
-    function connectWebSocket(address: string | URL): Promise<WebSocket> {
+    function asyncWebsocket(address: string | URL): Promise<WebSocket> {
         return new Promise(function (resolve, reject) {
             const ws = new WebSocket(address);
             ws.binaryType = "arraybuffer";
@@ -65,7 +64,7 @@ export const uiManager = new UserInterfaceManager(canvas);
     }
 
     try {
-        ws = await connectWebSocket("ws://" + location.host);
+        ws = await asyncWebsocket("ws://" + location.host);
         const statusContainer = document.getElementById("status-container");
         if (statusContainer) {
             document.body.style.backgroundColor = 'rgba(24, 24, 24, 0)';

@@ -3,17 +3,17 @@ import { EntityPool, UPDATE_FPS } from "../EntityPool";
 import { Mob } from "../mob/Mob";
 import { BasePlayer } from "./Player";
 import { MobType, PetalType } from "../../../shared/types";
-import { isLivingPetal, PetalData } from "../mob/petal/Petal";
+import { isSpawnableSlot, PetalData, PetalStat } from "../mob/petal/Petal";
 import { PETAL_PROFILES } from "../../../shared/petalProfiles";
 import { MoodKind } from "../../../shared/mood";
-import { TWO_PI } from "../utils/common";
+import { isPetal, TWO_PI } from "../../utils/common";
 
 const BASE_ROTATE_SPEED = 2.5;
-const LERP_FACTOR = 0.7;
-const BOUNCE_DECAY = 0.275;
+const BOUNCE_DECAY = 0.225;
 const BOUNCE_STRENGTH = 0.25;
+const PETAL_CLUSTER_RADIUS = 8;
 
-export const UNMOODABLE_PETALS: Set<PetalType | MobType> = new Set([
+export const UNMOODABLE_PETALS: Set<PetalType> = new Set([
     PetalType.BEETLE_EGG,
 ]);
 
@@ -22,20 +22,18 @@ export function PlayerPetalOrbit<T extends new (...args: any[]) => BasePlayer>(B
         private rotation = 0;
         private historyX: number[] = new Array(10).fill(0);
         private historyY: number[] = new Array(10).fill(0);
-        private petalPositions: [number, number][] = [];
         private petalRadii: number[] = [];
         private petalBounces: number[] = [];
-        private historyIndex = 0; // Ring buffer index
+        private historyIndex = 0;
 
         [onUpdateTick](poolThis: EntityPool): void {
             if (super[onUpdateTick]) {
                 super[onUpdateTick](poolThis);
             }
 
-            // Update position history using a ring buffer
             this.historyX[this.historyIndex] = this.x;
             this.historyY[this.historyIndex] = this.y;
-            const historyTargetIndex = (this.historyIndex + 8) % 10; // Avoids hardcoding
+            const historyTargetIndex = (this.historyIndex + 8) % 10;
             this.historyIndex = (this.historyIndex + 1) % 10;
 
             const surface = this.slots.surface;
@@ -46,40 +44,66 @@ export function PlayerPetalOrbit<T extends new (...args: any[]) => BasePlayer>(B
             if (this.petalRadii.length !== totalPetals) {
                 this.petalRadii = new Array(totalPetals).fill(40);
                 this.petalBounces = new Array(totalPetals).fill(0);
-                this.petalPositions = new Array(totalPetals).fill(null).map(() => [0, 0]);
             }
 
-            const petalsExcludeEmpty = surface.filter(v => v != null);
+            const realLength = surface.map<number>((petals) => {
+                if (!petals || !isSpawnableSlot(petals)) return 0;
+                return PETAL_PROFILES[petals[0].type].isCluster ? 1 : petals.length;
+            }).reduce((accumulator, currentValue) => {
+                return accumulator + currentValue;
+            }, 0);
+
+            let currentAngleIndex = 0;
 
             for (let i = 0; i < totalPetals; i++) {
-                const petal = surface[i];
-                if (!petal || !isLivingPetal(petal)) continue;
+                const petals = surface[i];
+                if (!petals || !isSpawnableSlot(petals)) continue;
 
-                const type = petal.type;
+                /**
+                 * First value for profile utilities.
+                 */
+                const firstPetal = petals[0];
 
-                const baseRadius = UNMOODABLE_PETALS.has(type) ? 40 :
-                    this.mood === MoodKind.ANGRY ? 80 :
-                        this.mood === MoodKind.SAD ? 25 : 40;
+                const profile: PetalData = PETAL_PROFILES[firstPetal.type];
 
-                // This need rework
-                this.petalRadii[i] += this.petalBounces[i];
-                this.petalBounces[i] = (baseRadius - this.petalRadii[i]) * BOUNCE_STRENGTH + this.petalBounces[i] * (1 - BOUNCE_DECAY);
+                {
+                    const baseRadius = isPetal(firstPetal.type) && UNMOODABLE_PETALS.has(firstPetal.type) ? 40 :
+                        this.mood === MoodKind.ANGRY ? 80 :
+                            this.mood === MoodKind.SAD ? 25 : 40;
 
-                const rotateAngle = (TWO_PI * i) / petalsExcludeEmpty.length + this.rotation;
+                    this.petalRadii[i] += this.petalBounces[i];
+                    this.petalBounces[i] = (baseRadius - this.petalRadii[i]) * BOUNCE_STRENGTH + this.petalBounces[i] * (1 - BOUNCE_DECAY);
+
+                    if (firstPetal.type === PetalType.FASTER) {
+                        totalSpeed += profile[firstPetal.rarity].rad;
+                    }
+                }
+
                 const rad = this.petalRadii[i];
-                const targetX = this.historyX[historyTargetIndex] + Math.cos(rotateAngle) * rad;
-                const targetY = this.historyY[historyTargetIndex] + Math.sin(rotateAngle) * rad;
 
-                const pos = this.petalPositions[i];
-                pos[0] += (targetX - pos[0]) * LERP_FACTOR;
-                pos[1] += (targetY - pos[1]) * LERP_FACTOR;
+                if (profile.isCluster) {
+                    const baseAngle = TWO_PI * currentAngleIndex / realLength + this.rotation;
+                    currentAngleIndex++;
 
-                petal.x = pos[0];
-                petal.y = pos[1];
+                    const slotBaseX = this.historyX[historyTargetIndex] + Math.cos(baseAngle) * rad;
+                    const slotBaseY = this.historyY[historyTargetIndex] + Math.sin(baseAngle) * rad;
 
-                if (type === PetalType.FASTER) {
-                    const profile: PetalData = PETAL_PROFILES[type];
-                    totalSpeed += profile[petal.rarity].rad;
+                    for (let j = 0; j < petals.length; j++) {
+                        const petal = petals[j];
+                        const petalAngle = TWO_PI * j / petals.length + ( /** Bit faster than normal */ 1.1 * this.rotation);
+
+                        petal.x = slotBaseX + Math.cos(petalAngle) * PETAL_CLUSTER_RADIUS;
+                        petal.y = slotBaseY + Math.sin(petalAngle) * PETAL_CLUSTER_RADIUS;
+                    }
+                } else {
+                    for (let j = 0; j < petals.length; j++) {
+                        const baseAngle = TWO_PI * currentAngleIndex / realLength + this.rotation;
+                        currentAngleIndex++;
+                        
+                        const petal = petals[j];
+                        petal.x = this.historyX[historyTargetIndex] + Math.cos(baseAngle) * rad;
+                        petal.y = this.historyY[historyTargetIndex] + Math.sin(baseAngle) * rad;
+                    }
                 }
             }
 

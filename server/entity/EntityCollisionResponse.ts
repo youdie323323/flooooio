@@ -1,15 +1,15 @@
-import { angleToRad, bodyDamageOrDamage, isPetal } from "./utils/common";
+import { angleToRad, bodyDamageOrDamage, isPetal } from "../utils/common";
 import { Entity, EntityMixinTemplate, onUpdateTick } from "./Entity";
 import { EntityPool } from "./EntityPool";
 import { Mob, MobData } from "./mob/Mob";
 import { Player } from "./player/Player";
 import { PetalData } from "./mob/petal/Petal";
-import QuadTree from "./utils/QuadTree";
-import { mapCenterX, mapCenterY } from "./EntityChecksum";
+import QuadTree from "../utils/QuadTree";
+import { MAP_CENTER_X, MAP_CENTER_Y } from "./EntityChecksum";
 import { MOB_PROFILES } from "../../shared/mobProfiles";
 import { PETAL_PROFILES } from "../../shared/petalProfiles";
 import { MobType } from "../../shared/types";
-import { computeDelta, Ellipse, isColliding } from "./utils/collision";
+import { computeDelta, Ellipse, isColliding } from "../utils/collision";
 
 // Arc + stroke size
 export const FLOWER_ARC_RADIUS = 25 + (2.75 / 2);
@@ -26,10 +26,10 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
       super(...args);
 
       this.quadTree = new QuadTree({
-        x: mapCenterX,
-        y: mapCenterY,
-        w: mapCenterX * 2,
-        h: mapCenterY * 2
+        x: MAP_CENTER_X,
+        y: MAP_CENTER_Y,
+        w: MAP_CENTER_X * 2,
+        h: MAP_CENTER_Y * 2
       });
     }
 

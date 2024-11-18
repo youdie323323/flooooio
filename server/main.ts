@@ -12,8 +12,9 @@ import { PlayerReadyState, WaveRoomVisibleState } from './wave/WaveRoom';
 import { Logger } from './logger/Logger';
 import { Mob } from './entity/mob/Mob';
 import { Rarities } from '../shared/rarities';
-import { kickClient } from './entity/utils/common';
+import { kickClient } from './utils/common';
 import { MockPlayerData } from './entity/player/Player';
+import { choice, randomEnum } from './utils/random';
 
 /**
  * Temp player data.
@@ -21,9 +22,9 @@ import { MockPlayerData } from './entity/player/Player';
 const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
     name: 'unko',
     slots: {
-        surface: Array.from({ length: 10 }, () => {
+        surface: Array.from({ length: 20 }, () => {
             return {
-                type: PetalType.BEETLE_EGG,
+                type: PetalType.FASTER,
                 rarity: Rarities.SUPER,
             };
         }),

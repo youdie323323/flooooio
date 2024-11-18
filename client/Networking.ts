@@ -60,7 +60,11 @@ export default class Networking {
 
                         const waveProgressRedGageTimer = data.getFloat64(offset);
                         offset += 8;
-                        
+
+                        // World size
+                        const waveSize = data.getUint16(offset);
+                        offset += 2;
+
                         if (uiManager.currentUI instanceof UserInterfaceGame) {
                             uiManager.currentUI.waveProgress = waveProgress;
 
@@ -69,6 +73,9 @@ export default class Networking {
 
                             uiManager.currentUI.nWaveProgressRedGageTimer = waveProgressRedGageTimer;
                             uiManager.currentUI.oWaveProgressRedGageTimer = uiManager.currentUI.waveProgressRedGageTimer;
+
+                            uiManager.currentUI.nWorldSize = waveSize;
+                            uiManager.currentUI.oWorldSize = uiManager.currentUI.worldSize;
 
                             uiManager.currentUI.updateT = 0;
                         }

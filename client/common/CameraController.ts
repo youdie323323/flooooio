@@ -15,7 +15,7 @@ export default class CameraController extends EventTarget {
     }
 
     handleZoom() {
-        function limitZoom(zoom) {
+        function limitZoom(zoom: number) {
             if (zoom < 0.0125) {
                 zoom = 0.0125;
             }
@@ -24,6 +24,7 @@ export default class CameraController extends EventTarget {
             }
             return zoom;
         }
+        
         {
             this.canvas.addEventListener("wheel", e => {
                 const N = e.deltaY * -0.0005 * (this.zoom * 4);

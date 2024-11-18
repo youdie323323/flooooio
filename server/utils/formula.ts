@@ -1,5 +1,5 @@
-import { Rarities } from "../../../shared/rarities";
-import { MOB_DAMAGE_FACTOR } from "../mob/Mob";
+import { Rarities } from "../../shared/rarities";
+import { MOB_DAMAGE_FACTOR } from "../entity/mob/Mob";
 
 /**
  * Calculate required xp by level.

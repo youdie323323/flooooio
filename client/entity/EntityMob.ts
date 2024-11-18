@@ -63,7 +63,67 @@ export default class EntityMob extends Entity {
 
         switch (this.type) {
             case MobType.BEE: {
-                this.drawBee(ctx);
+                let bcolor = this.getSkinColor("#333333");
+                let fcolor = "#ffe763";
+                let scolor = darkend(fcolor, 0.1);
+
+                ctx.scale(this.size / 30, this.size / 30);
+
+                ctx.lineJoin = "round";
+                ctx.lineCap = "round";
+                ctx.lineWidth = 5;
+
+                { // Stinger
+                    ctx.fillStyle = "#333333";
+                    ctx.strokeStyle = this.getSkinColor(darkend("#333333", 0.1));
+                    ctx.beginPath();
+                    ctx.moveTo(-37, 0);
+                    ctx.lineTo(-25, -9);
+                    ctx.lineTo(-25, 9);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                }
+
+                // Body
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 30, 20, 0, 0, TWO_PI);
+                ctx.fillStyle = fcolor;
+                ctx.fill();
+
+                { // Body stripes
+                    ctx.save();
+                    ctx.clip();
+                    ctx.fillStyle = bcolor;
+                    ctx.fillRect(10, -20, 10, 40);
+                    ctx.fillRect(-10, -20, 10, 40);
+                    ctx.fillRect(-30, -20, 10, 40);
+                    ctx.restore();
+                }
+
+                // Body outline
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 30, 20, 0, 0, TWO_PI);
+                ctx.strokeStyle = scolor;
+                ctx.stroke();
+
+                // Antennas
+                {
+                    ctx.strokeStyle = bcolor;
+                    ctx.fillStyle = bcolor;
+                    ctx.lineWidth = 3;
+                    for (let dir = -1; dir <= 1; dir += 2) {
+                        ctx.beginPath();
+                        ctx.moveTo(25, 5 * dir);
+                        ctx.quadraticCurveTo(35, 5 * dir, 40, 15 * dir);
+                        ctx.stroke()
+
+                        ctx.beginPath();
+                        ctx.arc(40, 15 * dir, 5, 0, TWO_PI);
+                        ctx.fill();
+                    }
+                }
+
                 break;
             }
             case MobType.STARFISH: {
@@ -145,7 +205,6 @@ export default class EntityMob extends Entity {
                 break;
             }
             case MobType.BEETLE: {
-                ctx.save();
                 ctx.scale(this.size / 40, this.size / 40);
                 ctx.fillStyle = ctx.strokeStyle = this.getSkinColor("#333333");
                 ctx.lineCap = ctx.lineJoin = "round";
@@ -153,7 +212,7 @@ export default class EntityMob extends Entity {
                     const relative = i === 0 ? 1 : -1;
                     ctx.save();
                     // Maybe relative * 10 better
-                    ctx.translate(32, relative * 11);
+                    ctx.translate(34, relative * 12);
                     ctx.rotate(Math.sin(this.moveCounter * 1.24) * 0.1 * relative);
                     ctx.beginPath();
                     ctx.moveTo(0, relative * 7);
@@ -170,12 +229,14 @@ export default class EntityMob extends Entity {
                 ctx.lineWidth = 6;
                 ctx.fillStyle = ctx.strokeStyle = this.getSkinColor(skinColor[1]);
                 ctx.stroke(bodyPath);
+
                 ctx.beginPath();
                 ctx.moveTo(-21, 0);
                 ctx.quadraticCurveTo(0, -3, 21, 0);
                 ctx.lineCap = "round";
                 ctx.lineWidth = 7;
                 ctx.stroke();
+
                 const arcPoints = [[-17, -13], [17, -13], [0, -17]];
                 ctx.beginPath();
                 for (let i = 0; i < 2; i++) {
@@ -188,8 +249,9 @@ export default class EntityMob extends Entity {
                     }
                 }
                 ctx.fill();
+
                 ctx.fill();
-                ctx.restore();
+
                 break;
             }
             case PetalType.BEETLE_EGG: {
@@ -201,86 +263,27 @@ export default class EntityMob extends Entity {
                 ctx.fill();
                 ctx.strokeStyle = this.getSkinColor(eggColor[1]);
                 ctx.stroke();
+
                 break;
             }
             case MobType.BUBBLE: {
                 this.drawBubble(ctx, false);
+
                 break;
             }
             case PetalType.BASIC: {
                 drawBasicLike("#ffffff", "#cfcfcf");
+
                 break;
             }
             case PetalType.FASTER: {
                 drawBasicLike("#feffc9", "#cecfa3");
+
                 break;
             }
         }
 
         ctx.restore();
-    }
-
-    drawBee(ctx: CanvasRenderingContext2D) {
-        let bcolor = this.getSkinColor("#333333");
-        let fcolor = "#ffe763";
-        let scolor = darkend(fcolor, 0.1);
-
-        ctx.scale(this.size / 30, this.size / 30);
-
-        ctx.lineJoin = "round";
-        ctx.lineCap = "round";
-        ctx.lineWidth = 5;
-
-        { // Stinger
-            ctx.fillStyle = "#333333";
-            ctx.strokeStyle = this.getSkinColor(darkend("#333333", 0.1));
-            ctx.beginPath();
-            ctx.moveTo(-37, 0);
-            ctx.lineTo(-25, -9);
-            ctx.lineTo(-25, 9);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-        }
-
-        // Body
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 30, 20, 0, 0, TWO_PI);
-        ctx.fillStyle = fcolor;
-        ctx.fill();
-
-        { // Body stripes
-            ctx.save();
-            ctx.clip();
-            ctx.fillStyle = bcolor;
-            ctx.fillRect(10, -20, 10, 40);
-            ctx.fillRect(-10, -20, 10, 40);
-            ctx.fillRect(-30, -20, 10, 40);
-            ctx.restore();
-        }
-
-        // Body outline
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 30, 20, 0, 0, TWO_PI);
-        ctx.strokeStyle = scolor;
-        ctx.stroke();
-
-        // Antennas
-        {
-            ctx.strokeStyle = bcolor;
-            ctx.fillStyle = bcolor;
-            ctx.lineWidth = 3;
-            for (let dir = -1; dir <= 1; dir += 2) {
-                ctx.beginPath();
-                ctx.moveTo(25, 5 * dir);
-                ctx.quadraticCurveTo(35, 5 * dir, 40, 15 * dir);
-                ctx.stroke()
-
-                ctx.beginPath();
-                ctx.arc(40, 15 * dir, 5, 0, TWO_PI);
-                ctx.fill();
-            }
-        }
     }
 
     drawBubble(ctx: CanvasRenderingContext2D, isPetal: boolean) {
@@ -295,7 +298,7 @@ export default class EntityMob extends Entity {
         ctx.lineJoin = ctx.lineCap = "round";
         ctx.arc(10, 0, 2, 0, TWO_PI);
         ctx.stroke();
-		ctx.closePath();
+        ctx.closePath();
         ctx.restore();
 
         ctx.beginPath();

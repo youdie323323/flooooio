@@ -1,13 +1,13 @@
 import { Biomes } from "../../shared/biomes";
 import { PacketKind } from "../../shared/packet";
-import { choice, generateRandomWaveRoomPlayerId, getRandomMapSafePosition, getRandomSafePosition } from "../entity/utils/random";
+import { choice, generateRandomWaveRoomPlayerId, getRandomMapSafePosition, getRandomSafePosition } from "../utils/random";
 import { EntityPool } from "../entity/EntityPool";
 import { PlayerInstance, MockPlayerData } from "../entity/player/Player";
 import { logger } from "../main";
-import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from "../entity/EntityChecksum";
+import { MAP_CENTER_X, MAP_CENTER_Y, mapSize, SAFETY_DISTANCE } from "../entity/EntityChecksum";
 import { BrandedId } from "../entity/Entity";
 import WaveProbabilityPredictor from "./WaveProbabilityPredictor";
-import { calculateWaveLength } from "../entity/utils/formula";
+import { calculateWaveLength } from "../utils/formula";
 
 /** Represents the current state of a wave room */
 export enum WaveRoomState {
@@ -93,11 +93,11 @@ export default class WaveRoom {
         using _disposable = this.onChangeAnything();
 
         if (!this.waveProgressData.waveProgressIsRedGage && this.state === WaveRoomState.STARTED) {
-            const mobData = this.entitySpawnRandomizer.getMobData(this.waveProgressData);
+            const mobData = this.entitySpawnRandomizer.predictMockData(this.waveProgressData);
             if (mobData) {
                 const [type, rarity] = mobData;
 
-                const randPos = getRandomMapSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this.entityPool.getAllClients().filter(p => !p.isDead));
+                const randPos = getRandomMapSafePosition(MAP_CENTER_X, MAP_CENTER_Y, mapSize, SAFETY_DISTANCE, this.entityPool.getAllClients().filter(p => !p.isDead));
                 if (!randPos) {
                     return null;
                 }
@@ -144,8 +144,8 @@ export default class WaveRoom {
                                     c.x = randPos[0];
                                     c.y = randPos[1];
                                 } else {
-                                    c.x = mapCenterX;
-                                    c.y = mapCenterY;
+                                    c.x = MAP_CENTER_X;
+                                    c.y = MAP_CENTER_Y;
                                 }
                             }
                         }

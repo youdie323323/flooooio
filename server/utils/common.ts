@@ -1,13 +1,12 @@
 import crypto from "crypto";
-import { MobType, PetalType } from "../../../shared/types";
-import { PlayerInstance } from "../player/Player";
-import { EntityPool } from "../EntityPool";
-import { Mob, MobStat } from "../mob/Mob";
-import { isLivingPetal, PetalStat } from "../mob/petal/Petal";
-import { PETAL_PROFILES } from "../../../shared/petalProfiles";
-import WaveRoomService from "../../wave/WaveRoomService";
-import WaveRoom, { WaveRoomState } from "../../wave/WaveRoom";
-import { waveRoomService } from "../../main";
+import { PETAL_PROFILES } from "../../shared/petalProfiles";
+import { MobType, PetalType } from "../../shared/types";
+import { EntityPool } from "../entity/EntityPool";
+import { MobInstance, MobStat } from "../entity/mob/Mob";
+import { PetalStat, isSpawnableSlot } from "../entity/mob/petal/Petal";
+import { PlayerInstance } from "../entity/player/Player";
+import { waveRoomService } from "../main";
+import WaveRoom, { WaveRoomState } from "../wave/WaveRoom";
 
 export const TWO_PI = Math.PI * 2;
 
@@ -36,18 +35,27 @@ export function kickClient(waveRoom: WaveRoom, player: PlayerInstance) {
     }
 }
 
+export function removeAllSlotPetals(entityPool: EntityPool, petals: MobInstance[]) {
+    for (let i = 0; i < petals.length; i++) {
+        const e = petals[i];
+        if (entityPool.getMob(e.id)) {
+            entityPool.removeMob(e.id);
+        }
+    }
+}
+
 export function removeAllBindings(entityPool: EntityPool, player: PlayerInstance) {
     if (player) {
         // Remove all petals
         player.slots.surface.forEach((e) => {
-            if (e != null && isLivingPetal(e) && entityPool.getMob(e.id)) {
-                entityPool.removeMob(e.id);
+            if (e != null && isSpawnableSlot(e)) {
+                removeAllSlotPetals(entityPool, e);
             }
         });
 
         // Remove all their pets
         entityPool.getAllMobs().filter(c => c.petParentPlayer === player).forEach((e) => {
-            if (e != null && isLivingPetal(e) && entityPool.getMob(e.id)) {
+            if (e != null && entityPool.getMob(e.id)) {
                 entityPool.removeMob(e.id);
             };
         });

@@ -1,4 +1,4 @@
-import { angleToRad } from "./utils/common";
+import { angleToRad } from "../utils/common";
 import { Entity, EntityMixinTemplate, onUpdateTick } from "./Entity";
 import { EntityPool } from "./EntityPool";
 

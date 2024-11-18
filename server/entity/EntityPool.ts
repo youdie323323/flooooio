@@ -4,18 +4,17 @@ import { MobType, PetalType } from "../../shared/types";
 import { Mob, MobInstance, MOB_SIZE_FACTOR, MobData } from "./mob/Mob";
 import { Player, PlayerInstance, MockPlayerData } from "./player/Player";
 import { EntityId, onUpdateTick } from "./Entity";
-import { isPetal, kickClient } from './utils/common';
+import { isPetal, kickClient } from '../utils/common';
 import { Rarities } from '../../shared/rarities';
-import { mapCenterX, mapCenterY, mapRadius, safetyDistance } from './EntityChecksum';
+import { MAP_CENTER_X, MAP_CENTER_Y, mapSize, SAFETY_DISTANCE } from './EntityChecksum';
 import { MOB_PROFILES } from '../../shared/mobProfiles';
 import { PETAL_PROFILES } from '../../shared/petalProfiles';
-import { isLivingPetal, PetalData, MockPetalData } from './mob/petal/Petal';
+import { isSpawnableSlot, PetalData, MockPetalData, Slot } from './mob/petal/Petal';
 import { USAGE_RELOAD_PETALS } from './player/PlayerReload';
 import { MoodKind, MOON_KIND_VALUES } from '../../shared/mood';
 import { logger } from '../main';
 import WaveRoom, { WaveProgressData, WaveRoomPlayer, WaveRoomPlayerId, WaveRoomState } from '../wave/WaveRoom';
-import { getRandomMapSafePosition, generateRandomEntityId, getRandomAngle, choice, getRandomSafePosition } from './utils/random';
-import { calculateWaveLength, calculateWaveLuck } from './utils/formula';
+import { getRandomMapSafePosition, generateRandomEntityId, getRandomAngle } from '../utils/random';
 import WaveProbabilityPredictor from '../wave/WaveProbabilityPredictor';
 import { Biomes } from '../../shared/biomes';
 
@@ -100,7 +99,7 @@ export class EntityPool {
         waveStartBuffer.writeUInt8(biome, 1);
 
         roomCandidates.forEach(player => {
-            const randPos = getRandomMapSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this.getAllClients().filter(p => !p.isDead));
+            const randPos = getRandomMapSafePosition(MAP_CENTER_X, MAP_CENTER_Y, mapSize, SAFETY_DISTANCE, this.getAllClients().filter(p => !p.isDead));
             if (!randPos) {
                 return null;
             }
@@ -134,7 +133,7 @@ export class EntityPool {
         let health: number = (100 * 1) * 1.02 ** (Math.max(100, 75) - 1);
 
         // Temporary
-        health *= 30;
+        health *= 100;
 
         const playerInstance = new Player({
             id: clientId,
@@ -155,13 +154,13 @@ export class EntityPool {
             slots: {
                 surface: null,
                 bottom: null,
-                cooldownsPetal: new Array(playerData.slots.surface.length).fill(0),
-                cooldownsUsage: new Array(playerData.slots.surface.length).fill(0),
+                cooldownsPetal: [],
+                cooldownsUsage: [],
             },
         });
 
-        playerInstance.slots.surface = playerData.slots.surface.map(c => c && !isLivingPetal(c) && this.mockPetalDataToReal(c, playerInstance));
-        playerInstance.slots.bottom = playerData.slots.bottom.map(c => c && !isLivingPetal(c) && this.mockPetalDataToReal(c, playerInstance));
+        playerInstance.slots.surface = playerData.slots.surface.map(c => c && !isSpawnableSlot(c) && this.mockPetalDataToReal(c, playerInstance));
+        playerInstance.slots.bottom = playerData.slots.bottom.map(c => c && !isSpawnableSlot(c) && this.mockPetalDataToReal(c, playerInstance));
 
         this.clients.set(clientId, playerInstance);
 
@@ -215,17 +214,22 @@ export class EntityPool {
         return mobInstance;
     }
 
-    private mockPetalDataToReal(sp: MockPetalData | null, parent: PlayerInstance): MobInstance | null {
+    private mockPetalDataToReal(sp: MockPetalData, parent: PlayerInstance): MobInstance[] | null {
         if (!sp) {
             return null;
         }
 
-        const randPos = getRandomMapSafePosition(mapCenterX, mapCenterY, mapRadius, safetyDistance, this.getAllClients().filter(p => !p.isDead));
-        if (!randPos) {
-            return null;
+        const profile: PetalData = PETAL_PROFILES[sp.type];
+
+        const count: number = profile[sp.rarity].count;
+
+        const slotPetals: MobInstance[] = new Array(count);
+
+        for (let i = 0; i < count; i++) {
+            slotPetals[i] = this.addPetalOrMob(sp.type, sp.rarity, parent.x, parent.y, parent, parent);
         }
 
-        return this.addPetalOrMob(sp.type, sp.rarity, randPos[0], randPos[1], parent, parent);
+        return slotPetals;
     }
 
     private update() {
@@ -433,7 +437,7 @@ export class EntityPool {
         const clientsPacket = this.createClientsPacket();
         const mobsPacket = this.createMobsPacket();
 
-        const totalLength = (1 + 2 + 8 + 8) + clientsPacket.length + mobsPacket.length;
+        const totalLength = (1 + 2 + 8 + 8 + 2) + clientsPacket.length + mobsPacket.length;
 
         const buffer = Buffer.alloc(totalLength);
         let offset = 0;
@@ -450,6 +454,10 @@ export class EntityPool {
 
             buffer.writeDoubleBE(this.waveProgressData.waveProgressRedGageTimer, offset);
             offset += 8;
+
+            // Map size
+            buffer.writeUInt16BE(mapSize, offset);
+            offset += 2;
         }
 
         clientsPacket.copy(buffer, offset);
@@ -465,8 +473,7 @@ export class EntityPool {
     }
 
     removeClient(clientId: PlayerInstance["id"]) {
-        const client = this.clients.get(clientId);
-        if (client) {
+        if (this.clients.has(clientId)) {
             this.clients.delete(clientId);
 
             logger.region(() => {
@@ -489,8 +496,7 @@ export class EntityPool {
     }
 
     removeMob(mobId: MobInstance["id"]) {
-        const mob = this.mobs.get(mobId);
-        if (mob) {
+        if (this.mobs.has(mobId)) {
             this.mobs.delete(mobId);
         }
     }

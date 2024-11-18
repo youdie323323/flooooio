@@ -1,8 +1,7 @@
 import { ok } from "assert";
-import { EntityPool } from "../EntityPool";
-import { Entity, EntityId } from "../Entity";
-import { WaveRoomPlayerId } from "../../wave/WaveRoom";
-import { PlayerInstance } from "../player/Player";
+import { Entity, EntityId } from "../entity/Entity";
+import { WaveRoomPlayerId } from "../wave/WaveRoom";
+import { PlayerInstance } from "../entity/player/Player";
 
 /**
  * Returns a random element from the given array.
@@ -103,8 +102,6 @@ export function getRandomMapSafePosition(
   clients: PlayerInstance[],
 ): [number, number] | null {
   const maxAttempts = 100;
-
-  mapRadius = Math.min(centerX, centerY) - mapRadius;
 
   for (let i = 0; i < maxAttempts; i++) {
     const angle = Math.random() * 2 * Math.PI;

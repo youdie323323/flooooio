@@ -12,8 +12,8 @@ export const darkendBase = 0.1875;
 
 /**
  * Darkens colour 
- * @param color color code
- * @param strength strenth
+ * @param color - color code
+ * @param strength - strenth
  */
 export function darkend(color: string, strength: number) {
     let r = parseInt(color.slice(1, 3), 16);

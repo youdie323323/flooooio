@@ -287,6 +287,18 @@ export const BIOME_SVG_TILESETS: Record<Biomes, string[]> = {
     ],
 };
 
+const splitmix32 = (a: number) => {
+    return () => {
+        a |= 0;
+        a = (a + 0x9e3779b9) | 0;
+        let t = a ^ (a >>> 16);
+        t = Math.imul(t, 0x21f0aaad);
+        t = t ^ (t >>> 15);
+        t = Math.imul(t, 0x735a2d97);
+        return ((t = t ^ (t >>> 15)) >>> 0) / 4294967296;
+    };
+};
+
 export default class TilesetManager {
     static async generateTilesets<T extends keyof typeof BIOME_SVG_TILESETS>(biome: T): Promise<OffscreenCanvas[]> {
         const generatedTilesets = new Array(BIOME_SVG_TILESETS[biome].length);
@@ -303,21 +315,26 @@ export default class TilesetManager {
         return generatedTilesets;
     }
 
-    constructWorld(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], numGridX: number, numGridY: number, playerX: number, playerY: number) {
+    constructWorld(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], radius: number, playerX: number, playerY: number) {
         const ctx = canvas.getContext("2d");
+        const GRID_SIZE = 30;
 
-        const adjustedGridSize = 300 * scaleFactor;
+        const adjustedGridSize = 255 * scaleFactor;
 
-        numGridX = Math.floor(numGridX / 30);
-        numGridY = Math.floor(numGridY / 30);
+        const random = splitmix32(tilesets.length);
 
-        for (let i = 0; i < 30; i++) {
-            for (let j = 0; j < 30; j++) {
-                const x = i * adjustedGridSize - (playerX * scaleFactor) + canvas.width / 2
-                    - numGridX * 30 * scaleFactor;
-                const y = (j * adjustedGridSize - (playerY * scaleFactor) + canvas.height / 2
-                    - numGridY * 30 * scaleFactor) + (210 * scaleFactor);
-                ctx.drawImage(tilesets[Math.abs(i + j) % tilesets.length],
+        const relativeCenterX = (5000 - playerX) * scaleFactor + canvas.width / 2;
+        const relativeCenterY = (5000 - playerY) * scaleFactor + canvas.height / 2;
+
+        const startTileX = relativeCenterX - (GRID_SIZE / 2 * adjustedGridSize);
+        const startTileY = relativeCenterY - (GRID_SIZE / 2 * adjustedGridSize);
+
+        for (let i = 0; i < GRID_SIZE; i++) {
+            for (let j = 0; j < GRID_SIZE; j++) {
+                const x = startTileX + i * adjustedGridSize;
+                const y = startTileY + j * adjustedGridSize;
+
+                ctx.drawImage(tilesets[Math.floor(random() * tilesets.length)],
                     x, y,
                     adjustedGridSize + 1, adjustedGridSize + 1
                 );
@@ -326,16 +343,14 @@ export default class TilesetManager {
 
         ctx.save();
 
-        ctx.lineWidth = ((canvas.width * scaleFactor) * 2) + ((canvas.height * scaleFactor) * 2);
+        ctx.lineWidth = (canvas.width * scaleFactor) + (canvas.height * scaleFactor);
         ctx.beginPath();
         ctx.strokeStyle = 'black';
         ctx.globalAlpha = 0.2;
         ctx.arc(
-            30 / 2 * adjustedGridSize - (playerX * scaleFactor) + canvas.width / 2
-            - numGridX * 30 * scaleFactor,
-            (30 / 2 * adjustedGridSize - (playerY * scaleFactor) + canvas.height / 2
-                - numGridY * 30 * scaleFactor) + (210 * scaleFactor),
-            ((4.985 * (30 * 30)) - 2500) * scaleFactor + ctx.lineWidth / 2, 0, TWO_PI,
+            relativeCenterX,
+            relativeCenterY,
+            radius * scaleFactor + ctx.lineWidth / 2, 0, TWO_PI,
         );
         ctx.stroke();
         ctx.closePath();

@@ -59,13 +59,13 @@ export default class EntityPlayer extends Entity {
         const rS = sadT * 4;
         const rR = angryT * 6;
 
-        function rT(s7, s8) {
+        function drawDeadEyes(s7: number, s8: number) {
             ctx.beginPath();
-            const s9 = 4;
-            ctx.moveTo(s7 - s9, s8 - s9);
-            ctx.lineTo(s7 + s9, s8 + s9);
-            ctx.moveTo(s7 + s9, s8 - s9);
-            ctx.lineTo(s7 - s9, s8 + s9);
+            const offset = 4;
+            ctx.moveTo(s7 - offset, s8 - offset);
+            ctx.lineTo(s7 + offset, s8 + offset);
+            ctx.moveTo(s7 + offset, s8 - offset);
+            ctx.lineTo(s7 - offset, s8 + offset);
             ctx.lineWidth = 3;
             ctx.lineCap = "round";
             ctx.strokeStyle = "#000000";
@@ -74,32 +74,34 @@ export default class EntityPlayer extends Entity {
         }
 
         if (this.isDead) {
-            rT(7, -5);
-            rT(-7, -5);
+            drawDeadEyes(7, -5);
+            drawDeadEyes(-7, -5);
         } else {
-            let s7 = function (s9: number, sa: number, sb: number, sc: number, se = 0) {
-                const sf = se ^ 1;
-                ctx.moveTo(s9 - sb, sa - sc + se * rR + sf * rS);
-                ctx.lineTo(s9 + sb, sa - sc + sf * rR + se * rS);
+            let drawEyeShape = function (s9: number, sa: number, sb: number, sc: number, flag = 0) {
+                const flippedFlag = flag ^ 1;
+                ctx.moveTo(s9 - sb, sa - sc + flag * rR + flippedFlag * rS);
+                ctx.lineTo(s9 + sb, sa - sc + flippedFlag * rR + flag * rS);
                 ctx.lineTo(s9 + sb, sa + sc);
                 ctx.lineTo(s9 - sb, sa + sc);
                 ctx.lineTo(s9 - sb, sa - sc);
             };
-            let s8 = function (s9 = 0) {
+
+            let drawEyeOutline = function (flag = 0) {
                 ctx.beginPath();
-                ctx.ellipse(7, -5, 2.5 + s9, 6 + s9, 0, 0, TWO_PI);
+                ctx.ellipse(7, -5, 2.5 + flag, 6 + flag, 0, 0, TWO_PI);
                 ctx.moveTo(-7, -5);
-                ctx.ellipse(-7, -5, 2.5 + s9, 6 + s9, 0, 0, TWO_PI);
+                ctx.ellipse(-7, -5, 2.5 + flag, 6 + flag, 0, 0, TWO_PI);
                 ctx.strokeStyle = ctx.fillStyle = "#111111";
                 ctx.fill();
             };
+
             ctx.save();
             ctx.beginPath();
-            s7(7, -5, 3.5999999999999996, 7.3, 1);
-            s7(-7, -5, 3.5999999999999996, 7.3, 0);
+            drawEyeShape(7, -5, 3.5999999999999996, 7.3, 1);
+            drawEyeShape(-7, -5, 3.5999999999999996, 7.3, 0);
             ctx.clip();
-            s8(0.7);
-            s8(0);
+            drawEyeOutline(0.7);
+            drawEyeOutline(0);
             ctx.clip();
             ctx.beginPath();
             ctx.arc(7 + this.eyeX * 2, -5 + this.eyeY * 3.5, 3.1, 0, TWO_PI);
@@ -110,11 +112,11 @@ export default class EntityPlayer extends Entity {
             ctx.restore();
         }
 
-        const rV = angryT * -10.5 + sadT * -9;
+        const verticRise = angryT * -10.5 + sadT * -9;
         ctx.beginPath();
         ctx.translate(0, 9.7);
         ctx.moveTo(-6.1, 0);
-        ctx.quadraticCurveTo(0, 5.5 + rV, 6.1, 0);
+        ctx.quadraticCurveTo(0, 5.5 + verticRise, 6.1, 0);
         ctx.lineCap = "round";
         ctx.strokeStyle = "#000000";
         ctx.lineWidth = 1.5;

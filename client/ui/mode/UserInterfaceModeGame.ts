@@ -51,15 +51,22 @@ export function calculateWaveLength(x: number) {
 
 export default class UserInterfaceGame extends UserInterface {
     private worldManager: TilesetManager;
+
+    public updateT: number;
+    public t: number;
+
     public waveProgress: number;
+
     public waveProgressTimer: number;
     public waveProgressRedGageTimer: number;
     public oWaveProgressTimer: number;
     public oWaveProgressRedGageTimer: number;
     public nWaveProgressTimer: number;
     public nWaveProgressRedGageTimer: number;
-    public updateT: number;
-    public t: number;
+
+    public worldSize: number;
+    public oWorldSize: number;
+    public nWorldSize: number;
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
@@ -67,13 +74,12 @@ export default class UserInterfaceGame extends UserInterface {
         this.worldManager = new TilesetManager();
 
         this.waveProgress = 0;
-        this.waveProgressTimer = 0;
-        this.waveProgressRedGageTimer = 0;
-        this.oWaveProgressTimer = 0;
-        this.oWaveProgressRedGageTimer = 0;
-        this.nWaveProgressTimer = 0;
-        this.nWaveProgressRedGageTimer = 0;
+
         this.updateT = 0;
+
+        this.waveProgressTimer = this.waveProgressRedGageTimer = this.worldSize = 0;
+        this.oWaveProgressTimer = this.oWaveProgressRedGageTimer = this.oWorldSize = 0;
+        this.nWaveProgressTimer = this.nWaveProgressRedGageTimer = this.nWorldSize = 0;
     }
 
     protected initializeComponents(): void {
@@ -98,6 +104,16 @@ export default class UserInterfaceGame extends UserInterface {
     }
 
     public animationFrame() {
+        {
+            // Interpolate
+            this.updateT += deltaTime / 100;
+            this.t = Math.min(1, this.updateT);
+            
+            this.waveProgressTimer = this.oWaveProgressTimer + (this.nWaveProgressTimer - this.oWaveProgressTimer) * this.t;
+            this.waveProgressRedGageTimer = this.oWaveProgressRedGageTimer + (this.nWaveProgressRedGageTimer - this.oWaveProgressRedGageTimer) * this.t;
+            this.worldSize = this.oWorldSize + (this.nWorldSize - this.oWorldSize) * this.t;
+        }
+
         const canvas = this.canvas;
         const ctx = canvas.getContext("2d");
 
@@ -114,7 +130,7 @@ export default class UserInterfaceGame extends UserInterface {
             player.update();
         }
 
-        this.worldManager.constructWorld(canvas, BIOME_TILESETS.get(this.biome), 50, 250, selfPlayer.x, selfPlayer.y);
+        this.worldManager.constructWorld(canvas, BIOME_TILESETS.get(this.biome), this.worldSize, selfPlayer.x, selfPlayer.y);
 
         ctx.save();
 
@@ -154,12 +170,6 @@ export default class UserInterfaceGame extends UserInterface {
 
             const WAVE_PROGRESS_BAR_LENGTH = 135;
             const WAVE_PROGRESS_BAR_Y = 104;
-
-            // Interpolate
-            this.updateT += deltaTime / 100;
-            this.t = Math.min(1, this.updateT);
-            this.waveProgressTimer = this.oWaveProgressTimer + (this.nWaveProgressTimer - this.oWaveProgressTimer) * this.t;
-            this.waveProgressRedGageTimer = this.oWaveProgressRedGageTimer + (this.nWaveProgressRedGageTimer - this.oWaveProgressRedGageTimer) * this.t;
 
             {
                 const MAX_SPAWN_TIME = calculateWaveLength(this.waveProgress);
@@ -221,7 +231,7 @@ export default class UserInterfaceGame extends UserInterface {
             const centerWidth = canvas.width / 2;
 
             const _biomeText = Biomes[this.biome].toLocaleLowerCase();
-            const biomeText = _biomeText[0].toUpperCase() +_biomeText.slice(1);
+            const biomeText = _biomeText[0].toUpperCase() + _biomeText.slice(1);
 
             ctx.font = "2em Ubuntu, sans-serif";
             ctx.textBaseline = 'middle';
@@ -249,6 +259,6 @@ export default class UserInterfaceGame extends UserInterface {
     }
 
     public cleanup(): void {
-       this.worldManager = undefined;
+        this.worldManager = undefined;
     }
 }
