@@ -13,6 +13,10 @@ export default class WaveRoomService {
      * Adds a player to an existing public wave room or creates a new one if none exists.
      */
     public joinPublicWaveRoom(userData: UserData, biome: Biomes): WaveRoomPlayer["id"] | false {
+        if (!this.isUserDataAllowed(userData)) {
+            return false;
+        }
+
         this.leaveCurrentWaveRoom(userData);
 
         let waveRoom = this.findPublicRoom(biome);
@@ -28,6 +32,10 @@ export default class WaveRoomService {
      * Adds a player to a private wave room using a room code.
      */
     public joinWaveRoom(userData: UserData, code: string): WaveRoomPlayer["id"] | false {
+        if (!this.isUserDataAllowed(userData)) {
+            return false;
+        }
+
         this.leaveCurrentWaveRoom(userData);
 
         const room = this.findPrivateRoom(code);
@@ -73,6 +81,10 @@ export default class WaveRoomService {
      * Creates a new wave room with initial player.
      */
     public createWaveRoom(userData: UserData, biome: Biomes): WaveRoomPlayer["id"] | false {
+        if (!this.isUserDataAllowed(userData)) {
+            return false;
+        }
+
         this.leaveCurrentWaveRoom(userData);
 
         const waveRoom = new WaveRoom(biome, this.generateCode());
@@ -119,10 +131,6 @@ export default class WaveRoomService {
         return null;
     }
 
-    public get websockets(): uWS.WebSocket<UserData>[] {
-        return [...new Set(this.waveRooms.map(w => w.roomCandidates.map(c => c.ws).concat(w.entityPool.getAllClients().map(c => c.ws))).flat())];
-    }
-
     /**
      * Generates a unique room code.
      */
@@ -145,5 +153,12 @@ export default class WaveRoomService {
      */
     private leaveCurrentWaveRoom(userData: UserData) {
         if (userData?.waveRoomClientId) this.leaveWaveRoom(userData.waveRoomClientId);
+    }
+
+    /**
+     * Check if user data is allowed to join/add.
+     */
+    private isUserDataAllowed(userData: UserData): boolean {
+        return !userData || !userData.wavePlayerData || !new Set(this.waveRooms.map(waveRoom => waveRoom.entityPool.getAllClients().map(c => c.ws)).flat()).has(userData.wavePlayerData.ws);
     }
 }

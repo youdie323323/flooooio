@@ -77,14 +77,14 @@ export class EntityPool {
         clearInterval(this.updateInterval);
         clearInterval(this.updateSendInterval);
 
+        this.updateInterval = null;
+        this.updateSendInterval = null;
+
         this.clients.clear();
         this.mobs.clear();
 
         this.clients = null;
         this.mobs = null;
-
-        this.updateInterval = null;
-        this.updateSendInterval = null;
 
         this.waveData = null;
     }

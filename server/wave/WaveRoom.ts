@@ -95,6 +95,27 @@ export default class WaveRoom {
         this.entitySpawnRandomizer = new WaveProbabilityPredictor(this.waveData);
     }
 
+    /**
+     * Release all memory in this class.
+     */
+    public releaseAllMemory() {
+        this.entityPool.releaseAllMemory();
+
+        this.entityPool = null;
+
+        this.roomCandidates = null;
+
+        this.entitySpawnRandomizer = null;
+
+        this.waveData = null;
+
+        clearInterval(this.updateInterval);
+        clearInterval(this.wavePreUpdateInterval);
+
+        this.updateInterval = null;
+        this.wavePreUpdateInterval = null;
+    }
+
     private wavePreUpdate() {
         // Use onChangeSomething so can delete started wave if all players dead
         using _disposable = this.onChangeAnything();
@@ -172,27 +193,6 @@ export default class WaveRoom {
                 this.waveData.waveProgressTimer = Math.min(waveLength, Math.round((this.waveData.waveProgressTimer + 0.016) * 100000) / 100000);
             }
         }
-    }
-
-    /**
-     * Release all memory in this class.
-     */
-    public releaseAllMemory() {
-        this.entityPool.releaseAllMemory();
-
-        this.entityPool = null;
-
-        this.roomCandidates = null;
-
-        this.entitySpawnRandomizer = null;
-
-        this.waveData = null;
-
-        clearInterval(this.updateInterval);
-        clearInterval(this.wavePreUpdateInterval);
-
-        this.updateInterval = null;
-        this.wavePreUpdateInterval = null;
     }
 
     /**
