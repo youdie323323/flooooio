@@ -45,6 +45,11 @@ class BasePlayer implements Entity {
     isDead: boolean;
 
     /**
+     * Target entity where dead player seeing.
+     */
+    playerCameraTargetEntity: Entity | null;
+
+    /**
      * Nickname of player.
      */
     nickname: string;

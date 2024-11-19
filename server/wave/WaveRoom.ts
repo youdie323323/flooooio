@@ -9,6 +9,39 @@ import { BrandedId } from "../entity/Entity";
 import WaveProbabilityPredictor from "./WaveProbabilityPredictor";
 import { calculateWaveLength } from "../utils/formula";
 
+/**
+ * Revive player nearby other player.
+ */
+function revivePlayer(entityPool: EntityPool, player: PlayerInstance) {
+    if (player.isDead) {
+        const alivePlayers = entityPool.getAllClients().filter(p => !p.isDead);
+        if (alivePlayers.length > 0) {
+            // Select random players
+            const randomAlivePlayer = choice(alivePlayers);
+
+            const randPos = getRandomSafePosition(
+                randomAlivePlayer.x,
+                randomAlivePlayer.y,
+                200,
+            );
+
+            // Make it max health so player will respawn without die again
+            player.health = player.maxHealth;
+            player.isDead = false;
+
+            if (randPos) {
+                player.x = randPos[0];
+                player.y = randPos[1];
+            } else {
+                player.x = MAP_CENTER_X;
+                player.y = MAP_CENTER_Y;
+            }
+
+            player.playerCameraTargetEntity = null;
+        }
+    }
+}
+
 /** Represents the current state of a wave room */
 export enum WaveRoomState {
     WAITING,
@@ -150,34 +183,7 @@ export default class WaveRoom {
                     this.waveData.waveProgressRedGageTimer = Math.min(waveLength, Math.round((this.waveData.waveProgressRedGageTimer + 0.016) * 100000) / 100000);
                 } else {
                     // Respawn all dead players
-                    this.entityPool.clients.forEach(c => {
-                        if (c.isDead) {
-                            const alivePlayers = this.entityPool.getAllClients().filter(p => !p.isDead);
-
-                            if (alivePlayers.length > 0) {
-                                // Select random players
-                                const randomAlivePlayer = choice(alivePlayers);
-
-                                const randPos = getRandomSafePosition(
-                                    randomAlivePlayer.x,
-                                    randomAlivePlayer.y,
-                                    200,
-                                );
-
-                                // Make it max health so player will respawn without die again
-                                c.health = c.maxHealth;
-                                c.isDead = false;
-
-                                if (randPos) {
-                                    c.x = randPos[0];
-                                    c.y = randPos[1];
-                                } else {
-                                    c.x = MAP_CENTER_X;
-                                    c.y = MAP_CENTER_Y;
-                                }
-                            }
-                        }
-                    });
+                    this.entityPool.clients.forEach(c => revivePlayer(this.entityPool, c));
 
                     this.waveData.waveProgressIsRedGage = false;
 

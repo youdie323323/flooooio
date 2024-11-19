@@ -112,7 +112,7 @@ export class EntityPool {
             player.ws.send(waveStartBuffer, true);
         });
 
-        this.broadcastInitPacket();
+        this.broadcastSeldIdPacket();
 
         this.updateInterval = setInterval(this.update.bind(this), 1000 / UPDATE_FPS);
         this.updateSendInterval = setInterval(this.broadcastUpdatePacket.bind(this), 1000 / UPDATE_SEND_FPS);
@@ -150,6 +150,7 @@ export class EntityPool {
 
             bodyDamage: 1000,
             isDead: false,
+            playerCameraTargetEntity: null,
             nickname: playerData.name,
             ws: playerData.ws,
             slots: {
@@ -220,11 +221,9 @@ export class EntityPool {
             return null;
         }
 
-        const profile: PetalData = PETAL_PROFILES[sp.type];
+        const count: number = PETAL_PROFILES[sp.type][sp.rarity].count;
 
-        const count: number = profile[sp.rarity].count;
-
-        const slotPetals: MobInstance[] = new Array(count);
+        let slotPetals: MobInstance[] = new Array(count);
 
         for (let i = 0; i < count; i++) {
             slotPetals[i] = this.addPetalOrMob(sp.type, sp.rarity, parent.x, parent.y, parent, parent);
@@ -306,7 +305,7 @@ export class EntityPool {
         }
     }
 
-    broadcastUpdatePacket() {
+    private broadcastUpdatePacket() {
         const updatePacket = this.createUpdatePacket();
 
         // Loop through all WebSocket connections
@@ -315,16 +314,14 @@ export class EntityPool {
         });
     }
 
-    broadcastInitPacket() {
+    private broadcastSeldIdPacket() {
+        // Reuse buffer
         const buffer = Buffer.alloc(5);
 
+        // Loop through all WebSocket connections
         this.clients.forEach((player, clientId) => {
-            let offset = 0;
-
-            buffer.writeUInt8(PacketKind.SELF_ID, offset++);
-
-            buffer.writeUInt32BE(clientId, offset);
-            offset += 4;
+            buffer.writeUInt8(PacketKind.SELF_ID, 0);
+            buffer.writeUInt32BE(clientId, 1);
 
             player.ws.send(buffer, true);
         });

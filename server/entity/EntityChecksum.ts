@@ -1,13 +1,12 @@
 import { Entity, EntityMixinTemplate, onUpdateTick } from "./Entity";
 import { EntityPool } from "./EntityPool";
-import { isPetal, removeAllBindings, TWO_PI } from "../utils/common";
+import { isPetal, removeAllBindings } from "../utils/common";
 import { Mob } from "./mob/Mob";
 import { Player } from "./player/Player";
 import { MOB_PROFILES } from "../../shared/mobProfiles";
 import { PETAL_PROFILES } from "../../shared/petalProfiles";
-import { USAGE_RELOAD_PETALS } from "./player/PlayerReload";
-import { isSpawnableSlot } from "./mob/petal/Petal";
 import { MobType, PetalType } from "../../shared/types";
+import { findNearestEntity } from "./mob/MobAggressivePursuit";
 
 export const MAP_CENTER_X = 5000;
 export const MAP_CENTER_Y = 5000;
@@ -25,22 +24,48 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                 super[onUpdateTick](poolThis);
             }
 
+            // Camera move
+            {
+                if (this instanceof Player && this.isDead && this.playerCameraTargetEntity) {
+                    this.x = this.playerCameraTargetEntity.x;
+                    this.y = this.playerCameraTargetEntity.y;
+                }
+            }
+
             // Hp check
             {
                 if (this.health <= 0) {
                     if (this instanceof Player && !this.isDead) {
-                        removeAllBindings(poolThis, this);
-
                         this.isDead = true;
                         // Stop moving
                         this.magnitude = 0;
+
+                        removeAllBindings(poolThis, this);
+
+                        setTimeout(() => {
+                            // Dont change camera if player is not dead
+                            if (!this.isDead) {
+                                return;
+                            }
+
+                            // Ygg is the highest priority
+                            const cameraEntity = findNearestEntity(this, [
+                                poolThis.getAllMobs().filter(m => !m.petalParentPlayer && !m.petParentPlayer),
+                                poolThis.getAllClients().filter(c => !c.isDead),
+                            ].flat());
+                            if (!cameraEntity) {
+                                return;
+                            }
+
+                            this.playerCameraTargetEntity = cameraEntity;
+                        }, 500);
                     }
                     if (this instanceof Mob) {
                         poolThis.removeMob(this.id);
                     }
                 }
             }
-            
+
             // Make eggs angle anchored
             {
                 if (this instanceof Mob && isPetal(this.type) && this.type === PetalType.BEETLE_EGG) {

@@ -1,4 +1,3 @@
-import crypto from "crypto";
 import { PETAL_PROFILES } from "../../shared/petalProfiles";
 import { MobType, PetalType } from "../../shared/types";
 import { EntityPool } from "../entity/EntityPool";
@@ -7,6 +6,9 @@ import { PetalStat, isSpawnableSlot } from "../entity/mob/petal/Petal";
 import { PlayerInstance } from "../entity/player/Player";
 import { waveRoomService } from "../main";
 import WaveRoom, { WaveRoomState } from "../wave/WaveRoom";
+import { Entity } from "../entity/Entity";
+import { MAP_CENTER_X, MAP_CENTER_Y } from "../entity/EntityChecksum";
+import { choice, getRandomSafePosition } from "./random";
 
 export const TWO_PI = Math.PI * 2;
 

@@ -5,17 +5,6 @@ import { BaseMob, Mob, MobInstance } from "./Mob";
 import { MobType } from "../../../shared/types";
 import { Player, PlayerInstance } from "../player/Player";
 
-function predicateCoordinate(x0: number, y0: number, speed: number, angle: number, time: number) {
-    const rad = angleToRad(angle);
-
-    const newX = x0 + speed * Math.cos(rad) * time;
-    const newY = y0 + speed * Math.sin(rad) * time;
-
-    return { x: newX, y: newY };
-}
-
-const MOB_DETECTION_FACTOR = 25;
-
 export function findNearestEntity(me: Entity, entites: Entity[]) {
     if (!entites.length) return null;
 
@@ -33,6 +22,8 @@ export function findNearestEntity(me: Entity, entites: Entity[]) {
         return distanceToCurrent < distanceToNearest ? current : nearest;
     });
 }
+
+const MOB_DETECTION_FACTOR = 25;
 
 enum MobBehaviors {
     AGGRESSIVE,

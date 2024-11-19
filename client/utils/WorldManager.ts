@@ -346,7 +346,7 @@ export default class TilesetManager {
         ctx.lineWidth = (canvas.width * scaleFactor) + (canvas.height * scaleFactor);
         ctx.beginPath();
         ctx.strokeStyle = 'black';
-        ctx.globalAlpha = 0.15;
+        ctx.globalAlpha = 0.14;
         ctx.arc(
             relativeCenterX,
             relativeCenterY,
