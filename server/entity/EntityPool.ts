@@ -119,8 +119,6 @@ export class EntityPool {
     }
 
     public endWave() {
-        // clearInterval(this.updateInterval);
-        // clearInterval(this.updateSendInterval);
     }
 
     public addClient(playerData: MockPlayerData, x: number, y: number): PlayerInstance | null {
@@ -193,7 +191,7 @@ export class EntityPool {
             angle: getRandomAngle(),
             magnitude: 0,
             rarity,
-            size: isPetal(type) ? 6 : ((profile as MobData).baseSize * MOB_SIZE_FACTOR[rarity]),
+            size: isPetal(type) ? 6 : (profile as MobData).baseSize * MOB_SIZE_FACTOR[rarity],
             health: profile[rarity].health,
             // Not changing
             maxHealth: profile[rarity].health,
@@ -332,30 +330,46 @@ export class EntityPool {
         });
     }
 
-    private calculateClientsPacketSize(): number {
-        // 2 bytes for the client count
-        let size = 2;
+    private calculateTotalPacketSize(): number {
+        // Base size for wave data and packet kind
+        let size = 1 + 2 + 8 + 8 + 2;
+
+        // Add size for clients
+        size += 2; // Client count
         this.clients.forEach(client => {
-            size += 4 + 8 + 8 + 4 + 4 + 1 + 1 + 1 + client.nickname.length + 1 + 4; // Total bytes per client
+            size += 4 + 8 + 8 + 4 + 4 + 1 + 1 + 1 + client.nickname.length + 1 + 4;
         });
-        return size;
-    }
 
-    private calculateMobsPacketSize(): number {
-        // 2 bytes for the mob count
-        let size = 2;
+        // Add size for mobs
+        size += 2; // Mob count
         this.mobs.forEach(mob => {
-            size += 4 + 8 + 8 + 4 + 4 + 8 + 1 + 1 + 4 + 1; // Total bytes per mob
+            size += 4 + 8 + 8 + 4 + 4 + 8 + 1 + 1 + 4 + 1;
         });
+
         return size;
     }
 
-    private createClientsPacket() {
-        const size = this.calculateClientsPacketSize();
-        const buffer = Buffer.alloc(size);
+    private createUpdatePacket(): Buffer {
+        const buffer = Buffer.alloc(this.calculateTotalPacketSize());
         let offset = 0;
 
-        // Client count
+        // Packet kind
+        buffer.writeUInt8(PacketKind.UPDATE, offset++);
+
+        // Wave information
+        buffer.writeUInt16BE(this.waveData.waveProgress, offset);
+        offset += 2;
+
+        buffer.writeDoubleBE(this.waveData.waveProgressTimer, offset);
+        offset += 8;
+
+        buffer.writeDoubleBE(this.waveData.waveProgressRedGageTimer, offset);
+        offset += 8;
+
+        buffer.writeUInt16BE(this.waveData.mapSize, offset);
+        offset += 2;
+
+        // Write clients
         buffer.writeUInt16BE(this.clients.size, offset);
         offset += 2;
 
@@ -381,9 +395,7 @@ export class EntityPool {
             buffer.writeUInt8(client.isDead ? 1 : 0, offset++);
 
             const nicknameBuffer = Buffer.from(client.nickname, 'utf-8');
-
             buffer.writeUInt8(nicknameBuffer.length, offset++);
-
             nicknameBuffer.copy(buffer, offset);
             offset += nicknameBuffer.length;
 
@@ -391,15 +403,7 @@ export class EntityPool {
             offset += 4;
         });
 
-        return buffer;
-    }
-
-    private createMobsPacket() {
-        const size = this.calculateMobsPacketSize();
-        const buffer = Buffer.alloc(size);
-        let offset = 0;
-
-        // Mob count
+        // Write mobs
         buffer.writeUInt16BE(this.mobs.size, offset);
         offset += 2;
 
@@ -421,7 +425,6 @@ export class EntityPool {
             buffer.writeDoubleBE(mob.angle, offset);
             offset += 8;
 
-            // Make this uint16 when petals & mobs ids above 255
             buffer.writeUInt8(mob.type, offset++);
 
             buffer.writeUInt8(mob.rarity, offset++);
@@ -429,44 +432,8 @@ export class EntityPool {
             buffer.writeInt32BE(mob.maxHealth, offset);
             offset += 4;
 
-            // Is pet or no
             buffer.writeUInt8(mob.petParentPlayer ? 1 : 0, offset++);
         });
-
-        return buffer;
-    }
-
-    private createUpdatePacket(): Buffer {
-        const clientsPacket = this.createClientsPacket();
-        const mobsPacket = this.createMobsPacket();
-
-        const totalLength = (1 + 2 + 8 + 8 + 2) + clientsPacket.length + mobsPacket.length;
-
-        const buffer = Buffer.alloc(totalLength);
-        let offset = 0;
-
-        buffer.writeUInt8(PacketKind.UPDATE, offset++);
-
-        // Wave informations
-        {
-            buffer.writeUInt16BE(this.waveData.waveProgress, offset);
-            offset += 2;
-
-            buffer.writeDoubleBE(this.waveData.waveProgressTimer, offset);
-            offset += 8;
-
-            buffer.writeDoubleBE(this.waveData.waveProgressRedGageTimer, offset);
-            offset += 8;
-
-            // Map size
-            buffer.writeUInt16BE(this.waveData.mapSize, offset);
-            offset += 2;
-        }
-
-        clientsPacket.copy(buffer, offset);
-        offset += clientsPacket.length;
-
-        mobsPacket.copy(buffer, offset);
 
         return buffer;
     }

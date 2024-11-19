@@ -1,5 +1,5 @@
 import { Canvg, presets } from "canvg";
-import { darkend, DARKEND_BASE } from "../../common/common";
+import { darkend, DARKEND_BASE } from "../../utils/common";
 import { Clickable, Component, Interactive } from "./Component";
 import Layout, { LayoutOptions } from "../layout/Layout";
 
@@ -97,7 +97,7 @@ export class ComponentTextButton extends ComponentButton {
             ctx.font = `${fontSize}px Ubuntu, sans-serif`;
         }
 
-        ctx.lineWidth = Math.max(1, fontSize * 0.175);
+        ctx.lineWidth = Math.max(1, fontSize * 0.2);
     }
 
     public render(ctx: CanvasRenderingContext2D): void {

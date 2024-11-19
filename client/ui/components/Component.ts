@@ -33,10 +33,3 @@ export interface Focusable extends Interactive {
     onFocus?(): void;
     onBlur?(): void;
 }
-
-// Interface for components that can contain other components
-export interface Container extends Component {
-    children: Component[];
-    addChild(component: Component): void;
-    removeChild(component: Component): void;
-}

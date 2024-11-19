@@ -7,7 +7,7 @@ import { MOB_PROFILES } from "../../shared/mobProfiles";
 import { PETAL_PROFILES } from "../../shared/petalProfiles";
 import { USAGE_RELOAD_PETALS } from "./player/PlayerReload";
 import { isSpawnableSlot } from "./mob/petal/Petal";
-import { MobType } from "../../shared/types";
+import { MobType, PetalType } from "../../shared/types";
 
 export const MAP_CENTER_X = 5000;
 export const MAP_CENTER_Y = 5000;
@@ -38,6 +38,13 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                     if (this instanceof Mob) {
                         poolThis.removeMob(this.id);
                     }
+                }
+            }
+            
+            // Make eggs angle anchored
+            {
+                if (this instanceof Mob && isPetal(this.type) && this.type === PetalType.BEETLE_EGG) {
+                    this.angle = 0;
                 }
             }
 

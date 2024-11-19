@@ -195,10 +195,10 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
             if (isColliding(delta)) {
               const push = this.calculatePush(this, otherEntity, delta);
               if (push) {
-                const thisMagnitude = this.magnitude / 255 * 1.25;
-                const otherMagnitude = otherEntity.magnitude / 255 * 1.25;
+                const thisMagnitude = this.magnitude / 255 * 1.5;
+                const otherMagnitude = otherEntity.magnitude / 255 * 1.5;
 
-                // This is like penalty (pushing someone with high speed well recive more knockback)
+                // This is like penalty (pushing someone with high speed will recive more knockback)
                 this.x -= push[0] * thisMagnitude;
                 this.y -= push[1] * thisMagnitude;
                 otherEntity.x += push[0] * otherMagnitude;

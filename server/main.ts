@@ -14,7 +14,8 @@ import { Mob } from './entity/mob/Mob';
 import { Rarities } from '../shared/rarities';
 import { kickClient } from './utils/common';
 import { MockPlayerData } from './entity/player/Player';
-import { choice, randomEnum } from './utils/random';
+import { choice, randomEnum, shuffle } from './utils/random';
+import { MockPetalData } from './entity/mob/petal/Petal';
 
 /**
  * Temp player data.
@@ -22,12 +23,17 @@ import { choice, randomEnum } from './utils/random';
 const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
     name: 'YOBA',
     slots: {
-        surface: Array.from({ length: 1 }, () => {
+        surface: shuffle(Array.from({ length: 19 }, () => {
             return {
-                type: PetalType.FASTER,
+                type: PetalType.BEETLE_EGG,
+                rarity: Rarities.ULTRA,
+            } as MockPetalData;
+        }).concat(
+            {
+                type: PetalType.BEETLE_EGG,
                 rarity: Rarities.SUPER,
-            };
-        }),
+            } as MockPetalData,
+        )),
         bottom: [],
     },
 };
@@ -153,10 +159,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             if (buffer.length !== 2 || !BIOME_VALUES.includes(buffer[1])) return;
 
             const id = waveRoomService.joinPublicWaveRoom(userData, buffer[1]);
-            if (!id) {
-                logger.warn("Client failed join public wave room");
-                return;
-            };
+            if (!id) return;
 
             userData.waveRoomClientId = id;
 
@@ -287,7 +290,7 @@ app
                 if (waveClient) {
                     kickClient(waveRoom, waveClient);
                 };
-                
+
                 // Leave current wave room | wave
                 waveRoomService.leaveWaveRoom(waveRoomClientId);
             }

@@ -2,7 +2,6 @@ import { Rarities } from "../../shared/rarities";
 import { MobType } from "../../shared/types";
 import { WaveData, WaveRoomState } from "./WaveRoom";
 import { onUpdateTick } from "../entity/Entity";
-import { MAP_CENTER_X, MAP_CENTER_Y, mapSize, SAFETY_DISTANCE } from "../entity/EntityChecksum";
 import { EntityPool } from "../entity/EntityPool";
 import { PlayerInstance } from "../entity/player/Player";
 import { calculateWaveLuck } from "../utils/formula";

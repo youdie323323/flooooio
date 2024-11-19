@@ -1,7 +1,7 @@
 import { ARROW_START_DISTANCE, CROSS_ICON_SVG, MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../../constants";
 import EntityMob from "../../entity/EntityMob";
 import { players, mobs, scaleFactor, interpolatedMouseX, interpolatedMouseY, deltaTime, ws, uiManager } from "../../main";
-import TilesetManager, { BIOME_TILESETS } from "../../common/WorldManager";
+import TilesetManager, { BIOME_TILESETS } from "../../utils/WorldManager";
 import { ComponentButton, ComponentSVGButton, ComponentTextButton } from "../components/ComponentButton";
 import UserInterface from "../UserInterface";
 import { selfId } from "../../Networking";
@@ -49,6 +49,15 @@ export function calculateWaveLength(x: number) {
     return Math.max(60, x ** 0.2 * 18.9287 + 30)
 }
 
+/**
+ * Current ui of menu.
+ * 
+ * @remarks
+ * 
+ * To store biome when ui switched.
+ */
+let gameUiCurrentBiome: Biomes = Biomes.GARDEN;
+
 export default class UserInterfaceGame extends UserInterface {
     private worldManager: TilesetManager;
 
@@ -69,8 +78,6 @@ export default class UserInterfaceGame extends UserInterface {
     public nWorldSize: number;
 
     public isDeadMenuContinued: boolean;
-
-    public biome: Biomes = Biomes.GARDEN;
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
@@ -134,7 +141,7 @@ export default class UserInterfaceGame extends UserInterface {
             player.update();
         }
 
-        this.worldManager.constructWorld(canvas, BIOME_TILESETS.get(this.biome), this.worldSize, selfPlayer.x, selfPlayer.y);
+        this.worldManager.constructWorld(canvas, BIOME_TILESETS.get(gameUiCurrentBiome), this.worldSize, selfPlayer.x, selfPlayer.y);
 
         ctx.save();
 
@@ -155,7 +162,7 @@ export default class UserInterfaceGame extends UserInterface {
 
         ctx.restore();
 
-        if (this.biome === Biomes.OCEAN) {
+        if (gameUiCurrentBiome === Biomes.OCEAN) {
             ctx.save();
 
             ctx.globalCompositeOperation = "multiply";
@@ -234,7 +241,7 @@ export default class UserInterfaceGame extends UserInterface {
 
             const centerWidth = canvas.width / 2;
 
-            const _biomeText = Biomes[this.biome].toLocaleLowerCase();
+            const _biomeText = Biomes[gameUiCurrentBiome].toLocaleLowerCase();
             const biomeText = _biomeText[0].toUpperCase() + _biomeText.slice(1);
 
             ctx.font = "2em Ubuntu, sans-serif";
@@ -285,8 +292,8 @@ export default class UserInterfaceGame extends UserInterface {
                         ctx.font = "25px Ubuntu, sans-serif";
                         ctx.lineWidth = 3;
 
-                        ctx.strokeText("Solider Ant", 0, 35);
-                        ctx.fillText("Solider Ant", 0, 35);
+                        ctx.strokeText("Your mom", 0, 35);
+                        ctx.fillText("Your mom", 0, 35);
 
                         ctx.restore();
                     }
@@ -301,5 +308,9 @@ export default class UserInterfaceGame extends UserInterface {
 
     public cleanup(): void {
         this.worldManager = undefined;
+    }
+
+    public setBiome(biome: Biomes) {
+        gameUiCurrentBiome = biome;
     }
 }

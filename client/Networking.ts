@@ -256,7 +256,12 @@ export default class Networking {
 
                     console.log(waveCode, waveBiome, waveState, waveIsPublic);
 
-                    uiManager.currentUI.biome = waveBiome;
+                    if (uiManager.previousUI) {
+                        uiManager.previousUI.setBiome(waveBiome);
+                    }
+                    if (uiManager.currentUI) {
+                        uiManager.currentUI.setBiome(waveBiome);
+                    }
 
                     break;
                 }
@@ -265,7 +270,12 @@ export default class Networking {
 
                     const waveBiome = data.getUint8(offset++) as Biomes;
 
-                    uiManager.currentUI.biome = waveBiome;
+                    if (uiManager.previousUI) {
+                        uiManager.previousUI.setBiome(waveBiome);
+                    }
+                    if (uiManager.currentUI) {
+                        uiManager.currentUI.setBiome(waveBiome);
+                    }
 
                     break;
                 }

@@ -63,7 +63,7 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             damage: 21870,
             health: 21870,
             petalReload: 2.5,
-            count: 1,
+            count: 3,
             isCluster: false,
         },
     },

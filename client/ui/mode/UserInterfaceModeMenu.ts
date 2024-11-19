@@ -4,11 +4,10 @@ import { Rarities } from "../../../shared/rarities";
 import { PetalType } from "../../../shared/types";
 import { MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../../constants";
 import EntityMob from "../../entity/EntityMob";
-import TilesetManager, { BIOME_TILESETS } from "../../common/WorldManager";
+import TilesetManager, { BIOME_TILESETS } from "../../utils/WorldManager";
 import { ComponentSVGButton, ComponentTextButton } from "../components/ComponentButton";
 import UserInterface from "../UserInterface";
 import { ws } from "../../main";
-import { ComponentContainer } from "../components/ComponentContainer";
 
 function randomFloat(min: number, max: number) {
     return Math.random() * (max - min + 1) + min;
@@ -22,6 +21,15 @@ let backgroundEntities: Set<{
     entity: EntityMob;
 }> = new Set();
 
+/**
+ * Current ui of menu.
+ * 
+ * @remarks
+ * 
+ * To store biome when ui switched.
+ */
+let menuUiCurrentBiome: Biomes = Biomes.GARDEN;
+
 export default class UserInterfaceMenu extends UserInterface {
     lastBackgroundEntitySpawn: number;
 
@@ -30,8 +38,6 @@ export default class UserInterfaceMenu extends UserInterface {
     backgroundX: number;
     backgroundY: number;
     backgroundWaveStep: number;
-
-    public biome: Biomes = Biomes.GARDEN;
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
@@ -141,7 +147,7 @@ export default class UserInterfaceMenu extends UserInterface {
             },
             "#1dd129",
             async () => {
-                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_JOIN_PUBLIC, Biomes.GARDEN]));
+                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_JOIN_PUBLIC, Biomes.DESERT]));
             },
             "Join public squad"
         );
@@ -211,34 +217,6 @@ export default class UserInterfaceMenu extends UserInterface {
         );
 
         this.addComponent(setPrivateButton);
-
-
-
-        const mainContainer = new ComponentContainer(
-            {
-                x: "10%",
-                y: "10%",
-                width: 500,
-                height: 500,
-            },
-            "#ffffff"
-        );
-
-        const button = new ComponentTextButton(
-            {
-                verticalAlign: "center",
-                horizontalAlign: "center",
-                width: 180,
-                height: 60,
-            },
-            "#1dd129",
-            () => { },
-            "www"
-        );
-
-        mainContainer.addChild(button);
-
-        this.addComponent(mainContainer);
     }
 
     private generateBackgroundEntity3D() {
@@ -254,7 +232,7 @@ export default class UserInterfaceMenu extends UserInterface {
         const canvas = this.canvas;
         const ctx = canvas.getContext("2d");
 
-        this.worldManager.constructWorldMenu(canvas, BIOME_TILESETS.get(this.biome), this.backgroundX, this.backgroundY);
+        this.worldManager.constructWorldMenu(canvas, BIOME_TILESETS.get(menuUiCurrentBiome), this.backgroundX, this.backgroundY);
 
         this.backgroundX += 0.5;
         this.backgroundY += Math.sin(this.backgroundWaveStep / 20) * 0.5;
@@ -286,7 +264,7 @@ export default class UserInterfaceMenu extends UserInterface {
 
         this.render();
 
-        if (this.biome === Biomes.OCEAN) {
+        if (menuUiCurrentBiome === Biomes.OCEAN) {
             ctx.save();
 
             ctx.globalCompositeOperation = "multiply";
@@ -299,5 +277,9 @@ export default class UserInterfaceMenu extends UserInterface {
 
     public cleanup(): void {
         this.worldManager = undefined;
+    }
+
+    public setBiome(biome: Biomes) {
+        menuUiCurrentBiome = biome;
     }
 }

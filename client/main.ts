@@ -1,12 +1,12 @@
 import { STANDARD_WIDTH, STANDARD_HEIGHT } from "./constants";
 import EntityPlayer from "./entity/EntityPlayer";
-import CameraController from "./common/CameraController";
+import CameraController from "./utils/CameraController";
 import EntityMob from "./entity/EntityMob";
-import { interpolate } from "./common/Interpolator";
+import { interpolate } from "./utils/Interpolator";
 import UserInterfaceManager from "./ui/UserInterfaceManager";
 import { MoodKind } from "../shared/mood";
 import Networking from "./Networking";
-import TilesetManager, { BIOME_SVG_TILESETS, BIOME_TILESETS } from "./common/WorldManager";
+import TilesetManager, { BIOME_SVG_TILESETS, BIOME_TILESETS } from "./utils/WorldManager";
 import { Biomes } from "../shared/biomes";
 
 export let ws: WebSocket;

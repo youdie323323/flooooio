@@ -1,5 +1,5 @@
 import { MOB_PROFILES } from "../../shared/mobProfiles";
-import { isPetal } from "../common/common";
+import { isPetal } from "../utils/common";
 import { selfId } from "../Networking";
 import Entity from "./Entity";
 import EntityMob from "./EntityMob";
@@ -24,7 +24,7 @@ export function drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, 
         ctx.font = "4em Ubuntu, sans-serif";
         ctx.textBaseline = 'middle';
         ctx.textAlign = 'center';
-        ctx.lineWidth = 7;
+        ctx.lineWidth = 8;
         ctx.strokeStyle = '#000000';
         ctx.strokeText(entity.nickname, 0, 0);
         ctx.fillStyle = "white";
