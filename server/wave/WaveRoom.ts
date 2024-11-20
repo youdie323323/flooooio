@@ -90,6 +90,9 @@ export const WAVE_PROGRESS_UPDATE = 60;
  * The wave room, aka squad.
  */
 export default class WaveRoom {
+    /**
+     * Max player amount.
+     */
     public static readonly MAX_PLAYER_AMOUNT = 4;
 
     visible: WaveRoomVisibleState;

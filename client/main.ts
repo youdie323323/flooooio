@@ -125,8 +125,6 @@ export const uiManager = new UserInterfaceManager(canvas);
     }
 
     (function frame() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
         lastTimestamp = Date.now();
         deltaTime = lastTimestamp - prevTimestamp;
         prevTimestamp = lastTimestamp;
@@ -135,10 +133,7 @@ export const uiManager = new UserInterfaceManager(canvas);
         interpolatedMouseX = interpolate(interpolatedMouseX, mouseXOffset, 50);
         interpolatedMouseY = interpolate(interpolatedMouseY, mouseYOffset, 50);
 
-        scaleFactor = Math.max(
-            document.documentElement.clientWidth / STANDARD_WIDTH,
-            document.documentElement.clientHeight / STANDARD_HEIGHT
-        ) * cameraController.zoom;
+        scaleFactor = 3 * cameraController.zoom;
 
         uiManager.update();
 

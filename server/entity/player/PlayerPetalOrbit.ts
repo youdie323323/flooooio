@@ -46,7 +46,7 @@ export function PlayerPetalOrbit<T extends new (...args: any[]) => BasePlayer>(B
                 this.petalBounces = new Array(totalPetals).fill(0);
             }
 
-            const realLength = surface.map<number>((petals) => {
+            const realLength = surface.map((petals) => {
                 if (!petals || !isSpawnableSlot(petals)) return 0;
                 const firstPetal = petals[0];
                 return PETAL_PROFILES[firstPetal.type][firstPetal.rarity].isCluster ? 1 : petals.length;

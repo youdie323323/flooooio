@@ -1,4 +1,4 @@
-import uWS from 'uWebSockets.js';
+import uWS, { App, SHARED_COMPRESSOR } from 'uWebSockets.js';
 import { PacketKind } from '../shared/packet';
 import { UserData } from './entity/EntityPool';
 import { pack } from 'msgpackr';
@@ -39,7 +39,7 @@ const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
 };
 
 const PORT = 8080;
-const app = uWS.App();
+const app = App();
 
 export const waveRoomService = new WaveRoomService();
 
@@ -244,7 +244,7 @@ app
         });
     }))
     .ws('/*', {
-        compression: uWS.SHARED_COMPRESSOR,
+        compression: SHARED_COMPRESSOR,
         maxPayloadLength: 16 * 1024 * 1024,
         sendPingsAutomatically: false,
         idleTimeout: 0,

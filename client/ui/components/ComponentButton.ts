@@ -3,11 +3,12 @@ import { darkend, DARKEND_BASE } from "../../utils/common";
 import { Clickable, Component, Interactive } from "./Component";
 import Layout, { LayoutOptions } from "../layout/Layout";
 
-export abstract class ComponentButton implements Component, Interactive, Clickable {
+export class ComponentButton implements Component, Interactive, Clickable {
     protected x: number;
     protected y: number;
     protected w: number;
     protected h: number;
+    protected scale: number = 1;
 
     private _callback: () => void;
 
@@ -22,7 +23,7 @@ export abstract class ComponentButton implements Component, Interactive, Clickab
     }
 
     public updateAbsolutePosition(viewportWidth: number, viewportHeight: number): void {
-        const { x, y, width, height } = Layout.calculatePosition(
+        const { x, y, width, height, scale } = Layout.calculatePosition(
             this.layout,
             viewportWidth,
             viewportHeight
@@ -32,6 +33,7 @@ export abstract class ComponentButton implements Component, Interactive, Clickab
         this.y = y;
         this.w = width;
         this.h = height;
+        this.scale = scale;
     }
 
     public isPointInside(x: number, y: number): boolean {
@@ -75,7 +77,9 @@ export abstract class ComponentButton implements Component, Interactive, Clickab
         return this.color;
     }
 
-    public abstract render(ctx: CanvasRenderingContext2D): void;
+    public render(ctx: CanvasRenderingContext2D): void {
+        ctx.scale(this.scale, this.scale);
+    }
 }
 
 export class ComponentTextButton extends ComponentButton {
@@ -89,10 +93,10 @@ export class ComponentTextButton extends ComponentButton {
     }
 
     private setFontSize(ctx: CanvasRenderingContext2D): void {
-        let fontSize = this.h * 0.5;
+        let fontSize = (this.h / this.scale) * 0.5;
         ctx.font = `${fontSize}px Ubuntu, sans-serif`;
 
-        while (ctx.measureText(this.text).width > this.w * 0.9 && fontSize > 10) {
+        while (ctx.measureText(this.text).width > (this.w / this.scale) * 0.9 && fontSize > 10) {
             fontSize -= 1;
             ctx.font = `${fontSize}px Ubuntu, sans-serif`;
         }
@@ -103,13 +107,20 @@ export class ComponentTextButton extends ComponentButton {
     public render(ctx: CanvasRenderingContext2D): void {
         ctx.save();
 
+        super.render(ctx);
+
+        const scaledX = this.x / this.scale;
+        const scaledY = this.y / this.scale;
+        const scaledW = this.w / this.scale;
+        const scaledH = this.h / this.scale;
+
         // Button background
-        ctx.lineWidth = 7;
+        ctx.lineWidth = 2.75;
         ctx.strokeStyle = darkend(this.color, DARKEND_BASE);
         ctx.fillStyle = this.getButtonColor();
 
         ctx.beginPath();
-        ctx.roundRect(this.x, this.y, this.w, this.h, 5);
+        ctx.roundRect(scaledX, scaledY, scaledW, scaledH, 3);
         ctx.fill();
         ctx.stroke();
         ctx.closePath();
@@ -119,8 +130,8 @@ export class ComponentTextButton extends ComponentButton {
         ctx.textBaseline = 'middle';
         ctx.textAlign = 'center';
 
-        const centerX = this.x + this.w / 2;
-        const centerY = this.y + this.h / 2;
+        const centerX = scaledX + scaledW / 2;
+        const centerY = scaledY + scaledH / 2;
 
         const textColor = this.enabled ? 'white' : '#666666';
 
@@ -166,12 +177,19 @@ export class ComponentSVGButton extends ComponentButton {
     public render(ctx: CanvasRenderingContext2D): void {
         ctx.save();
 
-        ctx.lineWidth = 7;
+        super.render(ctx);
+
+        const scaledX = this.x / this.scale;
+        const scaledY = this.y / this.scale;
+        const scaledW = this.w / this.scale;
+        const scaledH = this.h / this.scale;
+
+        ctx.lineWidth = 2.75;
         ctx.strokeStyle = darkend(this.color, DARKEND_BASE);
         ctx.fillStyle = this.getButtonColor();
 
         ctx.beginPath();
-        ctx.roundRect(this.x, this.y, this.w, this.h, 5);
+        ctx.roundRect(scaledX, scaledY, scaledW, scaledH, 3);
         ctx.fill();
         ctx.stroke();
         ctx.closePath();
@@ -179,10 +197,10 @@ export class ComponentSVGButton extends ComponentButton {
         // SVG rendering
         if (this.svgCanvas) {
             const size = ComponentSVGButton.SVG_SIZE;
-            const drawWidth = this.w * size;
-            const drawHeight = this.h * size;
-            const drawX = this.x + (this.w - drawWidth) / 2;
-            const drawY = this.y + (this.h - drawHeight) / 2;
+            const drawWidth = scaledW * size;
+            const drawHeight = scaledH * size;
+            const drawX = scaledX + (scaledW - drawWidth) / 2;
+            const drawY = scaledY + (scaledH - drawHeight) / 2;
 
             ctx.drawImage(
                 this.svgCanvas,

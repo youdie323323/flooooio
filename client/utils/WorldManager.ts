@@ -319,7 +319,7 @@ export default class TilesetManager {
         const ctx = canvas.getContext("2d");
         const GRID_SIZE = 30;
 
-        const adjustedGridSize = 255 * scaleFactor;
+        const adjustedGridSize = 300 * scaleFactor;
 
         const random = splitmix32(tilesets.length);
 

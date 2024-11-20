@@ -56,8 +56,8 @@ export default class UserInterfaceMenu extends UserInterface {
             {
                 x: "1%",
                 y: "59.5%",
-                width: 110,
-                height: 110,
+                width: 40,
+                height: 40,
             },
             "#599dd8",
             () => {
@@ -72,8 +72,8 @@ export default class UserInterfaceMenu extends UserInterface {
             {
                 x: "1%",
                 y: "69.5%",
-                width: 110,
-                height: 110,
+                width: 40,
+                height: 40,
             },
             "#db9d5a",
             () => {
@@ -88,8 +88,8 @@ export default class UserInterfaceMenu extends UserInterface {
             {
                 x: "1%",
                 y: "79.5%",
-                width: 110,
-                height: 110,
+                width: 40,
+                height: 40,
             },
             "#9bb56b",
             () => {
@@ -259,7 +259,7 @@ export default class UserInterfaceMenu extends UserInterface {
             v.entity.x += v.z * 0.6;
             v.entity.y += Math.sin(v.waveStep / 20) * 0.2;
 
-            v.waveStep += 0.05;
+            v.waveStep += 0.2;
         });
 
         this.render();

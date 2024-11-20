@@ -51,10 +51,10 @@ export default class UserInterfaceManager {
         switch (mode) {
             case 'menu':
                 // Fake dead animation
-                if (players.has(selfId)) {
-                    const player = players.get(selfId);
-                    player.deadT = 0;
+                const player = players.get(selfId);
+                if (player && !player.isDead) {
                     player.isDead = true;
+                    player.deadT = 0;
                     player.health = 0;
                 }
 
