@@ -1,22 +1,22 @@
 import uWS from 'uWebSockets.js';
 import { PacketKind } from "../../shared/packet";
 import { MobType, PetalType } from "../../shared/types";
-import { Mob, MobInstance, MOB_SIZE_FACTOR, MobData } from "./mob/Mob";
-import { Player, PlayerInstance, MockPlayerData } from "./player/Player";
-import { EntityId, onUpdateTick } from "./Entity";
+import { Mob, MobInstance, MOB_SIZE_FACTOR, MobData } from "../entity/mob/Mob";
+import { Player, PlayerInstance, MockPlayerData } from "../entity/player/Player";
+import { EntityId, onUpdateTick } from "../entity/Entity";
 import { isPetal, kickClient } from '../utils/common';
 import { Rarities } from '../../shared/rarities';
-import { MAP_CENTER_X, MAP_CENTER_Y, SAFETY_DISTANCE } from './EntityChecksum';
 import { MOB_PROFILES } from '../../shared/mobProfiles';
 import { PETAL_PROFILES } from '../../shared/petalProfiles';
-import { isSpawnableSlot, PetalData, MockPetalData, Slot } from './mob/petal/Petal';
-import { USAGE_RELOAD_PETALS } from './player/PlayerReload';
+import { isSpawnableSlot, PetalData, MockPetalData, Slot } from '../entity/mob/petal/Petal';
+import { USAGE_RELOAD_PETALS } from '../entity/player/PlayerReload';
 import { MoodKind, MOON_KIND_VALUES } from '../../shared/mood';
 import { logger } from '../main';
-import WaveRoom, { WaveData, WaveRoomPlayer, WaveRoomPlayerId, WaveRoomState } from '../wave/WaveRoom';
+import WaveRoom, { WaveData, WaveRoomPlayer, WaveRoomPlayerId, WaveRoomState } from './WaveRoom';
 import { getRandomMapSafePosition, generateRandomEntityId, getRandomAngle } from '../utils/random';
-import WaveProbabilityPredictor from '../wave/WaveProbabilityPredictor';
+import WaveProbabilityPredictor from './WaveProbabilityPredictor';
 import { Biomes } from '../../shared/biomes';
+import { MAP_CENTER_X, MAP_CENTER_Y, SAFETY_DISTANCE } from '../entity/EntityWorldBoundary';
 
 // Define UserData for WebSocket connections
 export interface UserData {
@@ -50,12 +50,10 @@ export const UPDATE_SEND_FPS = 30;
  * 
  * @remarks
  * 
- * R̶a̶t̶h̶e̶r̶ ̶t̶h̶a̶n̶ ̶d̶o̶i̶n̶g̶ ̶u̶n̶n̶e̶c̶e̶s̶s̶a̶r̶y̶ ̶p̶r̶o̶c̶e̶s̶s̶i̶n̶g̶ ̶l̶i̶k̶e̶ ̶s̶p̶a̶w̶n̶i̶n̶g̶ ̶m̶o̶b̶s̶ ̶h̶e̶r̶e̶,̶ ̶i̶t̶'̶s̶ ̶b̶e̶t̶t̶e̶r̶ ̶t̶o̶ ̶d̶o̶ ̶t̶h̶a̶t̶ ̶i̶n̶ ̶W̶a̶v̶e̶R̶o̶o̶m̶.̶
- * T̶h̶i̶s̶ ̶c̶l̶a̶s̶s̶ ̶i̶s̶ ̶o̶n̶l̶y̶ ̶f̶o̶r̶ ̶m̶a̶n̶a̶g̶i̶n̶g̶ ̶m̶o̶b̶s̶ ̶a̶n̶d̶ ̶p̶l̶a̶y̶e̶r̶s̶,̶ ̶n̶o̶t̶ ̶f̶o̶r̶ ̶r̶a̶n̶d̶o̶m̶l̶y̶ ̶s̶p̶a̶w̶n̶i̶n̶g̶ ̶m̶o̶b̶s̶ ̶e̶t̶c̶.̶
  * Data such as the overall wave luck and the current wave number are stored in this class.
  * Spawning and other processes are also handled in this class.
  */
-export class EntityPool {
+export class WavePool {
     public clients: Map<PlayerInstance["id"], PlayerInstance>;
     public mobs: Map<MobInstance["id"], MobInstance>;
 
@@ -162,7 +160,7 @@ export class EntityPool {
 
             bodyDamage: 1000,
             isDead: false,
-            playerCameraTargetEntity: null,
+            playerDeadCameraTargetEntity: null,
             nickname: playerData.name,
             ws: playerData.ws,
             slots: {

@@ -1,5 +1,5 @@
 import { Entity, EntityMixinTemplate, onUpdateTick } from "../Entity";
-import { EntityPool } from "../EntityPool";
+import { WavePool } from "../../wave/WavePool";
 import { BaseMob, Mob, MobInstance } from "./Mob";
 import { MobType } from "../../../shared/types";
 import { Player, PlayerInstance } from "../player/Player";
@@ -7,7 +7,7 @@ import { TWO_PI } from "../../utils/common";
 
 export function MobHealthRegen<T extends new (...args: any[]) => BaseMob>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
-        [onUpdateTick](poolThis: EntityPool): void {
+        [onUpdateTick](poolThis: WavePool): void {
             // Call parent onUpdateTick
             // to use multiple mixin functions
             if (super[onUpdateTick]) {

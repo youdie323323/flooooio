@@ -4,10 +4,11 @@ import { BrandedId, Entity, EntityId } from "../Entity";
 import { MobOscillatingMovement } from "./MobOscillatingMovement";
 import { MobAggressivePursuit } from "./MobAggressivePursuit";
 import { EntityLinearMovement } from "../EntityLinearMovement";
-import { EntityChecksum } from "../EntityChecksum";
 import { Rarities } from "../../../shared/rarities";
 import { BasePlayer, PlayerInstance } from "../player/Player";
 import { MobHealthRegen } from "./MobHealthRegen";
+import { EntityWorldBoundary } from "../EntityWorldBoundary";
+import { EntityDead } from "../EntityDeath";
 
 class BaseMob implements Entity {
     readonly id: EntityId;
@@ -82,7 +83,8 @@ class BaseMob implements Entity {
 let Mob = BaseMob;
 Mob = EntityCollisionResponse(Mob);
 Mob = EntityLinearMovement(Mob);
-Mob = EntityChecksum(Mob);
+Mob = EntityDead(Mob);
+Mob = EntityWorldBoundary(Mob);
 Mob = MobOscillatingMovement(Mob);
 Mob = MobAggressivePursuit(Mob);
 Mob = MobHealthRegen(Mob);

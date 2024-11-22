@@ -138,7 +138,7 @@ export function getRandomSafePosition(
   centerX: number,
   centerY: number,
   spawnRadius: number,
-): [number, number] | null {
+): [number, number] {
   const angle = Math.random() * 2 * Math.PI;
   const distance = (0.5 + Math.random() * 0.5) * spawnRadius;
 

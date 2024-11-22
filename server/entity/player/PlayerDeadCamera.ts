@@ -1,5 +1,5 @@
 import { EntityMixinTemplate, onUpdateTick } from "../Entity";
-import { EntityPool, UPDATE_FPS } from "../EntityPool";
+import { WavePool, UPDATE_FPS } from "../../wave/WavePool";
 import { Mob } from "../mob/Mob";
 import { BasePlayer } from "./Player";
 import { MobType, PetalType } from "../../../shared/types";
@@ -14,15 +14,15 @@ export function PlayerDeadCamera<T extends new (...args: any[]) => BasePlayer>(B
         private isExecuting: boolean = false;
         private executionTimeout: NodeJS.Timeout;
 
-        [onUpdateTick](poolThis: EntityPool): void {
+        [onUpdateTick](poolThis: WavePool): void {
             if (super[onUpdateTick]) {
                 super[onUpdateTick](poolThis);
             }
 
             if (this.isDead) {
                 const isFindable: boolean =
-                    !this.playerCameraTargetEntity ||
-                    !(poolThis.getMob(this.playerCameraTargetEntity.id) || poolThis.getClient(this.playerCameraTargetEntity.id));
+                    !this.playerDeadCameraTargetEntity ||
+                    !(poolThis.getMob(this.playerDeadCameraTargetEntity.id) || poolThis.getClient(this.playerDeadCameraTargetEntity.id));
 
                 if (isFindable) {
                     if (!this.isExecuting) {
@@ -43,15 +43,15 @@ export function PlayerDeadCamera<T extends new (...args: any[]) => BasePlayer>(B
                                 poolThis.getAllClients().filter(c => !c.isDead && c.id !== this.id),
                             ].flat());
                             if (!cameraEntity) {
-                                this.playerCameraTargetEntity = null;
+                                this.playerDeadCameraTargetEntity = null;
                             } else {
-                                this.playerCameraTargetEntity = cameraEntity;
+                                this.playerDeadCameraTargetEntity = cameraEntity;
                             }
                         }, 1000);
                     }
                 } else {
-                    this.x = this.playerCameraTargetEntity.x;
-                    this.y = this.playerCameraTargetEntity.y;
+                    this.x = this.playerDeadCameraTargetEntity.x;
+                    this.y = this.playerDeadCameraTargetEntity.y;
                 }
             }
         }

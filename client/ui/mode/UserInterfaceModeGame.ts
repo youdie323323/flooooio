@@ -498,9 +498,9 @@ export default class UserInterfaceGame extends UserInterface {
                         this.isDeadAnimationActive = true;
                     }
 
-                    if (this.deadAnimationTimer < this.DEAD_MENU_ANIMATION_DURATION) {
+                    if (this.deadAnimationTimer < this.DEAD_MENU_ANIMATION_DURATION && this.deadAnimationY <= centerHeight + 50) {
                         this.deadAnimationTimer += deltaTime / 1000;
-                        this.deadAnimationY = -50 + easeOutCubic(Math.min(this.deadAnimationTimer / this.DEAD_MENU_ANIMATION_DURATION, 1)) * (centerHeight - (-50));
+                        this.deadAnimationY = -50 + easeOutCubic(Math.min(this.deadAnimationTimer / this.DEAD_MENU_ANIMATION_DURATION, 1)) * (centerHeight + 50);
                     }
                 }
 

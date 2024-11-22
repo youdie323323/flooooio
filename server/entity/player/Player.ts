@@ -2,14 +2,15 @@ import { EntityCollisionResponse } from "../EntityCollisionResponse";
 import { BrandedId, Entity, EntityId } from "../Entity";
 import { EntityLinearMovement } from "../EntityLinearMovement";
 import uWS from 'uWebSockets.js';
-import { UserData } from "../EntityPool";
-import { EntityChecksum } from "../EntityChecksum";
+import { UserData } from "../../wave/WavePool";
 import { MobInstance } from "../mob/Mob";
 import { PlayerPetalOrbit } from "./PlayerPetalOrbit";
 import { PlayerReload } from "./PlayerReload";
 import { MoodKind } from "../../../shared/mood";
 import { PetalSlots, MockPetalData } from "../mob/petal/Petal";
 import { PlayerDeadCamera } from "./PlayerDeadCamera";
+import { EntityWorldBoundary } from "../EntityWorldBoundary";
+import { EntityDead } from "../EntityDeath";
 
 class BasePlayer implements Entity {
     readonly id: EntityId;
@@ -48,7 +49,7 @@ class BasePlayer implements Entity {
     /**
      * Target entity where dead player seeing.
      */
-    playerCameraTargetEntity: Entity | null;
+    playerDeadCameraTargetEntity: Entity | null;
 
     /**
      * Nickname of player.
@@ -79,7 +80,8 @@ Player = EntityLinearMovement(Player);
 // Do player mixin before checksum so petal reloads like original game (can interpolate movement)
 Player = PlayerPetalOrbit(Player);
 Player = PlayerReload(Player);
-Player = EntityChecksum(Player);
+Player = EntityDead(Player);
+Player = EntityWorldBoundary(Player);
 Player = PlayerDeadCamera(Player);
 
 type PlayerInstance = InstanceType<typeof Player>;

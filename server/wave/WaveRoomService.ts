@@ -1,5 +1,5 @@
 import { Biomes } from "../../shared/biomes";
-import { UserData } from "../entity/EntityPool";
+import { UserData } from "./WavePool";
 import { PlayerInstance, MockPlayerData } from "../entity/player/Player";
 import { logger } from "../main";
 import WaveRoom, { PlayerReadyState, WaveRoomPlayer, WaveRoomPlayerId, WaveRoomVisibleState } from "./WaveRoom";
@@ -159,6 +159,6 @@ export default class WaveRoomService {
      * Determine if user data is allowed to join/add.
      */
     private canUserDataAdded(userData: UserData): boolean {
-        return !userData || !userData.wavePlayerData || !new Set(this.waveRooms.map(waveRoom => waveRoom.entityPool.getAllClients().map(c => c.ws)).flat()).has(userData.wavePlayerData.ws);
+        return !userData || !userData.wavePlayerData || !new Set(this.waveRooms.map(waveRoom => waveRoom.wavePool.getAllClients().map(c => c.ws)).flat()).has(userData.wavePlayerData.ws);
     }
 }

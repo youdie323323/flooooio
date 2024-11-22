@@ -1,5 +1,5 @@
 import { EntityMixinTemplate, onUpdateTick } from "../Entity";
-import { EntityPool, UPDATE_FPS } from "../EntityPool";
+import { WavePool, UPDATE_FPS } from "../../wave/WavePool";
 import { Mob } from "../mob/Mob";
 import { BasePlayer } from "./Player";
 import { MobType, PetalType } from "../../../shared/types";
@@ -17,7 +17,7 @@ export const EGG_TYPE_MAPPING: Partial<Record<PetalType, MobType>> = {
 
 export function PlayerReload<T extends new (...args: any[]) => BasePlayer>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
-        [onUpdateTick](poolThis: EntityPool): void {
+        [onUpdateTick](poolThis: WavePool): void {
             if (super[onUpdateTick]) {
                 super[onUpdateTick](poolThis);
             }

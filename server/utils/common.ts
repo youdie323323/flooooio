@@ -1,13 +1,12 @@
 import { PETAL_PROFILES } from "../../shared/petalProfiles";
 import { MobType, PetalType } from "../../shared/types";
-import { EntityPool } from "../entity/EntityPool";
+import { WavePool } from "../wave/WavePool";
 import { MobInstance, MobStat } from "../entity/mob/Mob";
 import { PetalStat, isSpawnableSlot } from "../entity/mob/petal/Petal";
 import { PlayerInstance } from "../entity/player/Player";
 import { waveRoomService } from "../main";
 import WaveRoom, { WaveRoomState } from "../wave/WaveRoom";
 import { Entity } from "../entity/Entity";
-import { MAP_CENTER_X, MAP_CENTER_Y } from "../entity/EntityChecksum";
 import { choice, getRandomSafePosition } from "./random";
 
 export const TWO_PI = Math.PI * 2;
@@ -26,35 +25,35 @@ export function bodyDamageOrDamage(stat: PetalStat | MobStat): number {
 
 export function kickClient(waveRoom: WaveRoom, player: PlayerInstance) {
     if (player) {
-        removeAllBindings(waveRoom.entityPool, player);
+        removeAllBindings(waveRoom.wavePool, player);
 
-        waveRoom.entityPool.removeClient(player.id);
+        waveRoom.wavePool.removeClient(player.id);
 
         // Check size, if all players leaved, remove wave room
-        if (waveRoom.state !== WaveRoomState.WAITING && waveRoom.entityPool.clients.size === 0) {
+        if (waveRoom.state !== WaveRoomState.WAITING && waveRoom.wavePool.clients.size === 0) {
             waveRoomService.removeWaveRoom(waveRoom);
         }
     }
 }
 
-export function removeAllBindings(entityPool: EntityPool, player: PlayerInstance) {
+export function removeAllBindings(wavePool: WavePool, player: PlayerInstance) {
     if (player) {
         // Remove all petals
         player.slots.surface.forEach((petals) => {
             if (petals != null && isSpawnableSlot(petals)) {
                 for (let i = 0; i < petals.length; i++) {
                     const e = petals[i];
-                    if (entityPool.getMob(e.id)) {
-                        entityPool.removeMob(e.id);
+                    if (wavePool.getMob(e.id)) {
+                        wavePool.removeMob(e.id);
                     }
                 }
             }
         });
 
         // Remove all their pets
-        entityPool.getAllMobs().filter(c => c.petParentPlayer === player).forEach((e) => {
-            if (e != null && entityPool.getMob(e.id)) {
-                entityPool.removeMob(e.id);
+        wavePool.getAllMobs().filter(c => c.petParentPlayer === player).forEach((e) => {
+            if (e != null && wavePool.getMob(e.id)) {
+                wavePool.removeMob(e.id);
             };
         });
 

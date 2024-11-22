@@ -1,6 +1,6 @@
 import uWS, { App, SHARED_COMPRESSOR } from 'uWebSockets.js';
 import { PacketKind } from '../shared/packet';
-import { UserData } from './entity/EntityPool';
+import { UserData } from './wave/WavePool';
 import { pack } from 'msgpackr';
 import { MobType, PetalType } from '../shared/types';
 import * as fs from 'fs';
@@ -23,7 +23,7 @@ import { MockPetalData } from './entity/mob/petal/Petal';
 const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
     name: 'YOBA',
     slots: {
-        surface: shuffle(Array.from({ length: 19 }, () => {
+        surface: shuffle(Array.from({ length: 29 }, () => {
             return {
                 type: PetalType.BEETLE_EGG,
                 rarity: Rarities.ULTRA,
@@ -68,10 +68,10 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
             if (!waveRoom) return;
 
-            const client = waveRoom.entityPool.getClient(waveClientId);
+            const client = waveRoom.wavePool.getClient(waveClientId);
             if (!client) return;
 
-            if (!waveRoom.entityPool.updateMovement(waveClientId, buffer[1], buffer[2])) {
+            if (!waveRoom.wavePool.updateMovement(waveClientId, buffer[1], buffer[2])) {
                 logger.region(() => {
                     using _guard = logger.metadata({
                         waveClientId,
@@ -93,10 +93,10 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
             if (!waveRoom) return;
 
-            const client = waveRoom.entityPool.getClient(waveClientId);
+            const client = waveRoom.wavePool.getClient(waveClientId);
             if (!client) return;
 
-            if (!waveRoom.entityPool.changeMood(waveClientId, buffer[1])) {
+            if (!waveRoom.wavePool.changeMood(waveClientId, buffer[1])) {
                 logger.region(() => {
                     using _guard = logger.metadata({
                         waveClientId,
@@ -117,7 +117,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
             if (!waveRoom) return;
 
-            waveRoom.entityPool.swapPetal(waveClientId, buffer[1]);
+            waveRoom.wavePool.swapPetal(waveClientId, buffer[1]);
 
             break;
         }
@@ -194,7 +194,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
             if (!waveRoom) return;
 
-            const client = waveRoom.entityPool.getClient(waveClientId);
+            const client = waveRoom.wavePool.getClient(waveClientId);
             if (!client) return;
 
             kickClient(waveRoom, client);
@@ -289,7 +289,7 @@ app
                 // Leave current wave room | wave
                 waveRoomService.leaveWaveRoom(waveRoomClientId);
 
-                const waveClient = waveRoom.entityPool.getClient(waveClientId);
+                const waveClient = waveRoom.wavePool.getClient(waveClientId);
                 if (waveClient) {
                     kickClient(waveRoom, waveClient);
                 };

@@ -1,4 +1,4 @@
-import { EntityPool } from "./EntityPool";
+import { WavePool } from "../wave/WavePool";
 
 /**
  * Create branded type.
@@ -55,7 +55,7 @@ export interface Entity {
 }
 
 /**
- * Symbols to call in the update method of EntityPool
+ * Symbols to call in the update method of WavePool
  * 
  * @remarks
  * 
@@ -71,7 +71,7 @@ export interface EntityMixinTemplate {
      * 
      * Call this method of parent if exists so can propagate mixin.
      */
-    [onUpdateTick]: (poolThis: EntityPool) => void;
+    [onUpdateTick]: (poolThis: WavePool) => void;
 
     /**
      * Free up their own mixin values.

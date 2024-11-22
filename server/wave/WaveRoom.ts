@@ -1,22 +1,22 @@
 import { Biomes } from "../../shared/biomes";
 import { PacketKind } from "../../shared/packet";
 import { choice, generateRandomWaveRoomPlayerId, getRandomMapSafePosition, getRandomSafePosition } from "../utils/random";
-import { EntityPool } from "../entity/EntityPool";
+import { WavePool } from "./WavePool";
 import { PlayerInstance, MockPlayerData } from "../entity/player/Player";
 import { logger } from "../main";
-import { MAP_CENTER_X, MAP_CENTER_Y, SAFETY_DISTANCE } from "../entity/EntityChecksum";
 import { BrandedId } from "../entity/Entity";
 import WaveProbabilityPredictor from "./WaveProbabilityPredictor";
 import { calculateWaveLength } from "../utils/formula";
+import { MAP_CENTER_X, MAP_CENTER_Y, SAFETY_DISTANCE } from "../entity/EntityWorldBoundary";
 
 /**
  * Revive player nearby other player.
  */
-function revivePlayer(entityPool: EntityPool, player: PlayerInstance) {
+function revivePlayer(wavePool: WavePool, player: PlayerInstance) {
     if (player.isDead) {
-        const alivePlayers = entityPool.getAllClients().filter(p => !p.isDead);
+        const alivePlayers = wavePool.getAllClients().filter(p => !p.isDead && p.id !== player.id);
         if (alivePlayers.length > 0) {
-            // Select random players
+            // Select random player
             const randomAlivePlayer = choice(alivePlayers);
 
             const randPos = getRandomSafePosition(
@@ -29,15 +29,11 @@ function revivePlayer(entityPool: EntityPool, player: PlayerInstance) {
             player.health = player.maxHealth;
             player.isDead = false;
 
-            if (randPos) {
-                player.x = randPos[0];
-                player.y = randPos[1];
-            } else {
-                player.x = MAP_CENTER_X;
-                player.y = MAP_CENTER_Y;
-            }
+            player.x = randPos[0];
+            player.y = randPos[1];
 
-            player.playerCameraTargetEntity = null;
+            // Disable dead camera
+            player.playerDeadCameraTargetEntity = null;
         }
     }
 }
@@ -100,7 +96,7 @@ export default class WaveRoom {
     visible: WaveRoomVisibleState;
     state: WaveRoomState;
     roomCandidates: WaveRoomPlayer[];
-    entityPool: EntityPool;
+    wavePool: WavePool;
 
     private updateInterval: NodeJS.Timeout;
 
@@ -125,7 +121,7 @@ export default class WaveRoom {
     constructor(public readonly biome: Biomes, public readonly code: string) {
         this.visible = WaveRoomVisibleState.PUBLIC;
         this.state = WaveRoomState.WAITING;
-        this.entityPool = new EntityPool(this.waveData);
+        this.wavePool = new WavePool(this.waveData);
 
         this.roomCandidates = new Array<WaveRoomPlayer>();
 
@@ -140,9 +136,9 @@ export default class WaveRoom {
      * Release all memory in this class.
      */
     public releaseAllMemory() {
-        this.entityPool.releaseAllMemory();
+        this.wavePool.releaseAllMemory();
 
-        this.entityPool = null;
+        this.wavePool = null;
 
         this.roomCandidates = null;
 
@@ -163,22 +159,22 @@ export default class WaveRoom {
 
         this.waveData.waveEnded = this.state === WaveRoomState.ENDED;
 
-        if (!this.waveData.waveProgressIsRedGage && this.state === WaveRoomState.STARTED) {
-            const mobData = this.entitySpawnRandomizer.predictMockData(this.waveData);
-            if (mobData) {
-                const [type, rarity] = mobData;
-
-                const randPos = getRandomMapSafePosition(MAP_CENTER_X, MAP_CENTER_Y, this.waveData.mapSize, SAFETY_DISTANCE, this.entityPool.getAllClients().filter(p => !p.isDead));
-                if (!randPos) {
-                    return null;
-                }
-
-                this.entityPool.addPetalOrMob(type, rarity, randPos[0], randPos[1]);
-            }
-        }
-
         // Dont do anything when wave waiting/end
         if (this.state === WaveRoomState.STARTED) {
+            if (!this.waveData.waveProgressIsRedGage) {
+                const mobData = this.entitySpawnRandomizer.predictMockData(this.waveData);
+                if (mobData) {
+                    const [type, rarity] = mobData;
+    
+                    const randPos = getRandomMapSafePosition(MAP_CENTER_X, MAP_CENTER_Y, this.waveData.mapSize, SAFETY_DISTANCE, this.wavePool.getAllClients().filter(p => !p.isDead));
+                    if (!randPos) {
+                        return null;
+                    }
+    
+                    this.wavePool.addPetalOrMob(type, rarity, randPos[0], randPos[1]);
+                }
+            }
+
             const waveLength = calculateWaveLength(this.waveData.waveProgress);
 
             if (this.waveData.waveProgressTimer >= waveLength) {
@@ -186,14 +182,14 @@ export default class WaveRoom {
                 if (
                     // Force start into next wave when red gage reached
                     !(this.waveData.waveProgressRedGageTimer >= waveLength) &&
-                    4 < this.entityPool.getAllMobs().filter(c => /** Dont count petals & pets. */ !c.petParentPlayer && !c.petalParentPlayer).length
+                    4 < this.wavePool.getAllMobs().filter(c => /** Dont count petals & pets. */ !c.petParentPlayer && !c.petalParentPlayer).length
                 ) {
                     this.waveData.waveProgressIsRedGage = true;
 
                     this.waveData.waveProgressRedGageTimer = Math.min(waveLength, Math.round((this.waveData.waveProgressRedGageTimer + 0.016) * 100000) / 100000);
                 } else {
                     // Respawn all dead players
-                    this.entityPool.clients.forEach(c => revivePlayer(this.entityPool, c));
+                    this.wavePool.clients.forEach(c => revivePlayer(this.wavePool, c));
 
                     this.waveData.waveProgressIsRedGage = false;
 
@@ -377,7 +373,7 @@ export default class WaveRoom {
     private startWave() {
         this.state = WaveRoomState.STARTED;
         clearInterval(this.updateInterval);
-        this.entityPool.startWave(this.biome, this.roomCandidates);
+        this.wavePool.startWave(this.biome, this.roomCandidates);
 
         logger.region(() => {
             using _guard = logger.metadata({
@@ -393,7 +389,7 @@ export default class WaveRoom {
         this.state = WaveRoomState.ENDED;
 
         // Stop wave update
-        this.entityPool.endWave();
+        this.wavePool.endWave();
 
         logger.region(() => {
             using _guard = logger.metadata({ code: this.code, wave: this.waveData.waveProgress });
@@ -417,7 +413,7 @@ export default class WaveRoom {
             this.startWave();
         }
 
-        if (this.state === WaveRoomState.STARTED && this.entityPool.getAllClients().every(p => p.isDead)) {
+        if (this.state === WaveRoomState.STARTED && this.wavePool.getAllClients().every(p => p.isDead)) {
             this.endWave();
         }
     }

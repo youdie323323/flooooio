@@ -1,7 +1,7 @@
 import { MobType } from "../../../shared/types";
 import { isPetal, TWO_PI } from "../../utils/common";
 import { EntityMixinTemplate, onUpdateTick } from "../Entity";
-import { EntityPool } from "../EntityPool";
+import { WavePool } from "../../wave/WavePool";
 import { BaseMob } from "./Mob";
 import { SHARED_SINE_WAVE } from "../../utils/cosineWave";
 import { getRandomAngle } from "../../utils/random";
@@ -22,7 +22,7 @@ export function MobOscillatingMovement<T extends new (...args: any[]) => BaseMob
             }
         }
 
-        [onUpdateTick](poolThis: EntityPool): void {
+        [onUpdateTick](poolThis: WavePool): void {
             // Call parent onUpdateTick
             // to use multiple mixin functions
             if (super[onUpdateTick]) {

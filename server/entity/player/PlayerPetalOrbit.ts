@@ -1,5 +1,5 @@
 import { EntityMixinTemplate, onUpdateTick } from "../Entity";
-import { EntityPool, UPDATE_FPS } from "../EntityPool";
+import { WavePool, UPDATE_FPS } from "../../wave/WavePool";
 import { Mob } from "../mob/Mob";
 import { BasePlayer } from "./Player";
 import { MobType, PetalType } from "../../../shared/types";
@@ -26,7 +26,7 @@ export function PlayerPetalOrbit<T extends new (...args: any[]) => BasePlayer>(B
         private petalBounces: number[] = [];
         private historyIndex = 0;
 
-        [onUpdateTick](poolThis: EntityPool): void {
+        [onUpdateTick](poolThis: WavePool): void {
             if (super[onUpdateTick]) {
                 super[onUpdateTick](poolThis);
             }

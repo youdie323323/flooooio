@@ -1,15 +1,15 @@
 import { angleToRad, bodyDamageOrDamage, isPetal } from "../utils/common";
 import { Entity, EntityMixinTemplate, onUpdateTick } from "./Entity";
-import { EntityPool } from "./EntityPool";
+import { WavePool } from "../wave/WavePool";
 import { Mob, MobData } from "./mob/Mob";
 import { Player } from "./player/Player";
 import { PetalData } from "./mob/petal/Petal";
 import QuadTree from "../utils/QuadTree";
-import { MAP_CENTER_X, MAP_CENTER_Y } from "./EntityChecksum";
 import { MOB_PROFILES } from "../../shared/mobProfiles";
 import { PETAL_PROFILES } from "../../shared/petalProfiles";
 import { MobType } from "../../shared/types";
 import { computeDelta, Ellipse, isColliding } from "../utils/collision";
+import { MAP_CENTER_X, MAP_CENTER_Y } from "./EntityWorldBoundary";
 
 // Arc + stroke size
 export const FLOWER_ARC_RADIUS = 25 + (2.75 / 2);
@@ -50,7 +50,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
       return [pushX, pushY];
     }
 
-    [onUpdateTick](poolThis: EntityPool): void {
+    [onUpdateTick](poolThis: WavePool): void {
       // Call parent onUpdateTick
       // to use multiple mixin functions
       if (super[onUpdateTick]) {
