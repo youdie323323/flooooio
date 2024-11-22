@@ -61,7 +61,7 @@ export default class UserInterfaceManager {
                 return new UserInterfaceMenu(this.canvas);
 
             case 'game':
-                cameraController.zoom = 1;
+                cameraController.zoom = 0.6;
 
                 return new UserInterfaceGame(this.canvas);
         }

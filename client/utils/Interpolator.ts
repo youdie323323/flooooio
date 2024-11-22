@@ -16,9 +16,9 @@ const _defaultOption = defaultOption;
 export default class Interpolator {
     interpolation: any;
     options: any;
-    oldValue: null;
+    oldValue: number | null;
     lastUpdatedAt: number | null;
-    value: any;
+    value: number;
 
     get isInterpolating() {
         const l = new Date().getTime() - this.interpolation.startTime;
@@ -44,7 +44,7 @@ export default class Interpolator {
         }
     }
 
-    setValue(o: any) {
+    setValue(o: number) {
         if (typeof this.oldValue === "number") {
             if (this.value === o) {
                 return;
@@ -102,8 +102,7 @@ export default class Interpolator {
         o = Math.max(o, 0);
         o = Math.min(o, this.options.duration);
         const l = this.interpolation.endValue - this.interpolation.startValue;
-        const easingFunction = EASING_FUNCTIONS[this.options.easingType];
-        let c = easingFunction(o, this.interpolation.startValue, l, this.options.duration);
+        let c = EASING_FUNCTIONS[this.options.easingType](o, this.interpolation.startValue, l, this.options.duration);
         if (typeof this.options.range === "number") {
             c %= this.options.range;
         }

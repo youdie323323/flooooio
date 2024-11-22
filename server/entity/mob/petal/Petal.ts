@@ -44,7 +44,7 @@ export interface MockPetalData {
     rarity: Rarities;
 }
 
-type MaybeEmptySlot<T> = T | null | undefined
+type MaybeEmptySlot<T> = T | null | undefined;
 
 /**
  * Slot placeholder.

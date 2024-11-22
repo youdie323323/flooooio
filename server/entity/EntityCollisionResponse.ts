@@ -261,5 +261,14 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
 
       this.quadTree.clear();
     }
+
+    free() {
+      if (super["free"]) {
+        super["free"]();
+      }
+
+      this.quadTree.clear();
+      this.quadTree = null;
+    }
   };
 }

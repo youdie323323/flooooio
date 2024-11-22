@@ -1,6 +1,13 @@
 // Base interface for all GUI components
 export interface Component {
     visible: boolean;
+    opacity: number;
+
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+
     updateAbsolutePosition(viewportWidth: number, viewportHeight: number): void;
     render(ctx: CanvasRenderingContext2D): void;
 }

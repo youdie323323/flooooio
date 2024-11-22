@@ -286,13 +286,13 @@ app
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
 
             if (waveRoom) {
+                // Leave current wave room | wave
+                waveRoomService.leaveWaveRoom(waveRoomClientId);
+
                 const waveClient = waveRoom.entityPool.getClient(waveClientId);
                 if (waveClient) {
                     kickClient(waveRoom, waveClient);
                 };
-
-                // Leave current wave room | wave
-                waveRoomService.leaveWaveRoom(waveRoomClientId);
             }
         })
     })

@@ -7,7 +7,7 @@ export default class CameraController {
         this._zoom = new Interpolator({
             easingType: "easeOutExpo",
             duration: 500,
-            initValue: 1
+            initValue: 0.6
         });
         this.canvas = canvas;
     }
@@ -18,9 +18,5 @@ export default class CameraController {
 
     get zoom() {
         return this._zoom.getInterpolatedValue();
-    }
-
-    resetCamera() {
-        this.zoom = 0.0125;
     }
 }

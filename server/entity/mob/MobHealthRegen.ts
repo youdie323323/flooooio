@@ -45,5 +45,11 @@ export function MobHealthRegen<T extends new (...args: any[]) => BaseMob>(Base: 
                 }
             }
         }
+
+        free() {
+            if (super["free"]) {
+                super["free"]();
+            }
+        }
     };
 }

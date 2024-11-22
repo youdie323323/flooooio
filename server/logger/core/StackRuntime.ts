@@ -47,9 +47,11 @@ export class AsyncObjectStack {
 
 export class StackGuard implements Disposable {
     #remove: () => void;
+
     constructor(remove: () => void) {
         this.#remove = remove;
     }
+    
     [Symbol.dispose](): void {
         this.#remove();
     }

@@ -26,8 +26,8 @@ export function PlayerReload<T extends new (...args: any[]) => BasePlayer>(Base:
 
             if (this.slots.bottom.length !== surface.length) {
                 this.slots.bottom.length = surface.length;
-                this.slots.cooldownsPetal = Array.from({ length: surface.length }, e => new Array( /** TODO: determine size using profile maybe (no) */ 5).fill(0));
-                this.slots.cooldownsUsage = Array.from({ length: surface.length }, e => new Array( /** TODO: determine size using profile maybe (no) */ 5).fill(0));
+                this.slots.cooldownsPetal = Array.from({ length: surface.length }, e => new Array(5).fill(0));
+                this.slots.cooldownsUsage = Array.from({ length: surface.length }, e => new Array(5).fill(0));
             }
 
             // Dont reload if player is dead
@@ -65,6 +65,7 @@ export function PlayerReload<T extends new (...args: any[]) => BasePlayer>(Base:
                         })
                     }
                 });
+
                 surface.forEach((petals, i) => {
                     if (petals != null && isSpawnableSlot(petals)) {
                         petals.forEach((e, j) => {
@@ -101,6 +102,12 @@ export function PlayerReload<T extends new (...args: any[]) => BasePlayer>(Base:
 
                     }
                 });
+            }
+        }
+
+        free() {
+            if (super["free"]) {
+                super["free"]();
             }
         }
     };

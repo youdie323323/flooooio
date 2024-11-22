@@ -1,3 +1,4 @@
+import { scaleFactor } from "../main";
 import UserInterface from "./UserInterface";
 import { UserInterfaceMode } from "./UserInterfaceManager";
 import UserInterfaceMenu from "./mode/UserInterfaceModeMenu";
@@ -9,19 +10,19 @@ export interface TransitionConfig {
 }
 
 export default class UserInterfaceTransition {
-    private static readonly STROKE_WIDTH = 10;
+    private static readonly STROKE_WIDTH = 5;
     private static readonly STROKE_COLOR = '#000000';
 
     private readonly transitionConfigs: Record<UserInterfaceMode, TransitionConfig> = {
         menu: {
-            initialRadius: (canvas) => Math.max((canvas.height / 2) + 100, (canvas.width / 2) + 100),
-            radiusChange: (current) => current - (0.5 + current / 50),
+            initialRadius: (canvas) => Math.max(((canvas.height / scaleFactor) / 2) + 100, ((canvas.width / scaleFactor) / 2) + 100),
+            radiusChange: (current) => current - (0.3 + current / 40),
             isComplete: (_, radius) => radius < 0,
         },
         game: {
             initialRadius: () => 0,
-            radiusChange: (current) => current + (0.5 + current / 35),
-            isComplete: (canvas, radius) => radius > Math.max((canvas.height / 2) + 100, (canvas.width / 2) + 100),
+            radiusChange: (current) => current + (0.4 + current / 30),
+            isComplete: (canvas, radius) => radius > Math.max(((canvas.height / scaleFactor) / 2) + 100, ((canvas.width / scaleFactor) / 2) + 100),
         }
     };
 
@@ -62,11 +63,14 @@ export default class UserInterfaceTransition {
     }
 
     private clipCircle(): void {
+        const widthRelative = this.canvas.width / scaleFactor;
+        const heightRelative = this.canvas.height / scaleFactor;
+
         this.ctx.beginPath();
 
         this.ctx.arc(
-            this.canvas.width / 2,
-            this.canvas.height / 2,
+            widthRelative / 2,
+            heightRelative / 2,
             this.radius,
             0,
             Math.PI * 2
@@ -76,12 +80,15 @@ export default class UserInterfaceTransition {
     }
 
     private drawTransitionBorder(): void {
+        const widthRelative = this.canvas.width / scaleFactor;
+        const heightRelative = this.canvas.height / scaleFactor;
+
         this.ctx.save();
 
         this.ctx.beginPath();
         this.ctx.arc(
-            this.canvas.width / 2,
-            this.canvas.height / 2,
+            widthRelative / 2,
+            heightRelative / 2,
             this.radius,
             0,
             Math.PI * 2

@@ -7,7 +7,7 @@ import EntityMob from "../../entity/EntityMob";
 import TilesetManager, { BIOME_TILESETS } from "../../utils/WorldManager";
 import { ComponentSVGButton, ComponentTextButton } from "../components/ComponentButton";
 import UserInterface from "../UserInterface";
-import { ws } from "../../main";
+import { scaleFactor, ws } from "../../main";
 
 function randomFloat(min: number, max: number) {
     return Math.random() * (max - min + 1) + min;
@@ -52,12 +52,15 @@ export default class UserInterfaceMenu extends UserInterface {
     }
 
     protected initializeComponents(): void {
+        const widthRelative = this.canvas.width / scaleFactor;
+        const heightRelative = this.canvas.height / scaleFactor;
+
         const bagButton = new ComponentSVGButton(
             {
-                x: "1%",
-                y: "59.5%",
-                width: 40,
-                height: 40,
+                x: 15,
+                y: heightRelative - 229,
+                width: 45,
+                height: 45,
             },
             "#599dd8",
             () => {
@@ -70,10 +73,10 @@ export default class UserInterfaceMenu extends UserInterface {
 
         const craftButton = new ComponentSVGButton(
             {
-                x: "1%",
-                y: "69.5%",
-                width: 40,
-                height: 40,
+                x: 15,
+                y: heightRelative - 173,
+                width: 45,
+                height: 45,
             },
             "#db9d5a",
             () => {
@@ -86,10 +89,10 @@ export default class UserInterfaceMenu extends UserInterface {
 
         const changelogButton = new ComponentSVGButton(
             {
-                x: "1%",
-                y: "79.5%",
-                width: 40,
-                height: 40,
+                x: 15,
+                y: heightRelative - 116,
+                width: 45,
+                height: 45,
             },
             "#9bb56b",
             () => {
@@ -104,10 +107,10 @@ export default class UserInterfaceMenu extends UserInterface {
 
         const readyButton = new ComponentTextButton(
             {
-                x: "47.25%",
-                y: "44%",
-                width: 180,
-                height: 60,
+                x: (widthRelative / 2) - 90 / 2,
+                y: ((heightRelative / 2) - 35 * 3),
+                width: 90,
+                height: 30,
             },
             "#1dd129",
             async () => {
@@ -120,10 +123,10 @@ export default class UserInterfaceMenu extends UserInterface {
 
         const joinSquadButton = new ComponentTextButton(
             {
-                x: "47.25%",
-                y: "50%",
-                width: 180,
-                height: 60,
+                x: (widthRelative / 2) - 90 / 2,
+                y: ((heightRelative / 2) - 35 * 3) + 35,
+                width: 90,
+                height: 30,
             },
             "#1dd129",
             async () => {
@@ -140,10 +143,10 @@ export default class UserInterfaceMenu extends UserInterface {
 
         const joinPublicSquadButton = new ComponentTextButton(
             {
-                x: "47.25%",
-                y: "56%",
-                width: 180,
-                height: 60,
+                x: (widthRelative / 2) - 90 / 2,
+                y: ((heightRelative / 2) - 35 * 3) + 35 + 35,
+                width: 90,
+                height: 30,
             },
             "#1dd129",
             async () => {
@@ -156,10 +159,10 @@ export default class UserInterfaceMenu extends UserInterface {
 
         const leaveSquadButton = new ComponentTextButton(
             {
-                x: "47.25%",
-                y: "62%",
-                width: 180,
-                height: 60,
+                x: (widthRelative / 2) - 90 / 2,
+                y: ((heightRelative / 2) - 35 * 3) + 35 + 35 + 35,
+                width: 90,
+                height: 30,
             },
             "#1dd129",
             async () => {
@@ -172,10 +175,10 @@ export default class UserInterfaceMenu extends UserInterface {
 
         const createPublicButton = new ComponentTextButton(
             {
-                x: "47.25%",
-                y: "68%",
-                width: 180,
-                height: 60,
+                x: (widthRelative / 2) - 90 / 2,
+                y: ((heightRelative / 2) - 35 * 3) + 35 + 35 + 35 + 35,
+                width: 90,
+                height: 30,
             },
             "#1dd129",
             async () => {
@@ -188,10 +191,10 @@ export default class UserInterfaceMenu extends UserInterface {
 
         const setPublicButton = new ComponentTextButton(
             {
-                x: "47.25%",
-                y: "74%",
-                width: 180,
-                height: 60,
+                x: (widthRelative / 2) - 90 / 2,
+                y: ((heightRelative / 2) - 35 * 3) + 35 + 35 + 35 + 35 + 35,
+                width: 90,
+                height: 30,
             },
             "#1dd129",
             async () => {
@@ -204,10 +207,10 @@ export default class UserInterfaceMenu extends UserInterface {
 
         const setPrivateButton = new ComponentTextButton(
             {
-                x: "47.25%",
-                y: "80%",
-                width: 180,
-                height: 60,
+                x: (widthRelative / 2) - 90 / 2,
+                y: ((heightRelative / 2) - 35 * 3) + 35 + 35 + 35 + 35 + 35 + 35,
+                width: 90,
+                height: 30,
             },
             "#1dd129",
             async () => {
@@ -222,7 +225,7 @@ export default class UserInterfaceMenu extends UserInterface {
     private generateBackgroundEntity3D() {
         return {
             x: 0,
-            y: randomFloat(-200, this.canvas.height + 100),
+            y: randomFloat(-200, (this.canvas.height / scaleFactor) + 100),
             z: randomFloat(0.8, 2.25),
             waveStep: Math.random() + 360,
         }
@@ -232,14 +235,17 @@ export default class UserInterfaceMenu extends UserInterface {
         const canvas = this.canvas;
         const ctx = canvas.getContext("2d");
 
+        const widthRelative = this.canvas.width / scaleFactor;
+        const heightRelative = this.canvas.height / scaleFactor;
+
         this.worldManager.constructWorldMenu(canvas, BIOME_TILESETS.get(menuUiCurrentBiome), this.backgroundX, this.backgroundY);
 
-        this.backgroundX += 0.5;
-        this.backgroundY += Math.sin(this.backgroundWaveStep / 20) * 0.5;
-        this.backgroundWaveStep += 0.08;
+        this.backgroundX += 0.3;
+        this.backgroundY += Math.sin(this.backgroundWaveStep / 20) * 0.3;
+        this.backgroundWaveStep += 0.1;
 
         backgroundEntities.forEach((v) => {
-            if (v.x > canvas.width) {
+            if (v.x > widthRelative) {
                 backgroundEntities.delete(v);
             }
         });
@@ -248,7 +254,7 @@ export default class UserInterfaceMenu extends UserInterface {
             const param = this.generateBackgroundEntity3D();
             backgroundEntities.add({
                 ...param,
-                entity: new EntityMob(-1, PetalType.BASIC, Rarities.COMMON, param.x, param.y, param.z * 12, 1, 1, 0, false)
+                entity: new EntityMob(-1, PetalType.BASIC, Rarities.COMMON, param.x, param.y, param.z * 5, 1, 1, 0, false)
             });
             this.lastBackgroundEntitySpawn = Date.now();
         }
@@ -256,10 +262,10 @@ export default class UserInterfaceMenu extends UserInterface {
         Array.from(backgroundEntities.values()).sort((a, b) => a.z + b.z).forEach(v => {
             v.entity.draw(ctx);
 
-            v.entity.x += v.z * 0.6;
+            v.entity.x += v.z * 0.3;
             v.entity.y += Math.sin(v.waveStep / 20) * 0.2;
 
-            v.waveStep += 0.2;
+            v.waveStep += 0.1;
         });
 
         this.render();
@@ -269,7 +275,7 @@ export default class UserInterfaceMenu extends UserInterface {
 
             ctx.globalCompositeOperation = "multiply";
             ctx.fillStyle = "#CCDBF2";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillRect(0, 0, widthRelative, heightRelative);
 
             ctx.restore();
         }

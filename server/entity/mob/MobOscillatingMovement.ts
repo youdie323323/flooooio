@@ -94,5 +94,11 @@ export function MobOscillatingMovement<T extends new (...args: any[]) => BaseMob
         private shouldApplyAngleShake(): boolean {
             return this.type === MobType.BEE;
         }
+
+        free() {
+            if (super["free"]) {
+                super["free"]();
+            }
+        }
     };
 }

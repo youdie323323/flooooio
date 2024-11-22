@@ -18,5 +18,11 @@ export function EntityLinearMovement<T extends new (...args: any[]) => Entity>(B
                 this.y += Math.sin(rad) * magnitude;
             }
         }
+
+        free() {
+            if (super["free"]) {
+                super["free"]();
+            }
+        }
     };
 }

@@ -1,7 +1,5 @@
 import { Rarities } from "../shared/rarities";
 
-export const STANDARD_WIDTH = 1300;
-export const STANDARD_HEIGHT = 650;
 export const ARROW_START_DISTANCE = 30;
 export const TWO_PI = Math.PI * 2;
 

@@ -65,6 +65,8 @@ export default class Networking {
                         const waveSize = data.getUint16(offset);
                         offset += 2;
 
+                        const waveEnded = !!data.getUint8(offset++);
+
                         if (uiManager.currentUI instanceof UserInterfaceGame) {
                             uiManager.currentUI.waveProgress = waveProgress;
 
@@ -78,6 +80,8 @@ export default class Networking {
                             uiManager.currentUI.oWorldSize = uiManager.currentUI.worldSize;
 
                             uiManager.currentUI.updateT = 0;
+
+                            uiManager.currentUI.waveEnded = waveEnded;
                         }
                     };
 

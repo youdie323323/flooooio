@@ -1,4 +1,3 @@
-import { STANDARD_WIDTH, STANDARD_HEIGHT } from "./constants";
 import EntityPlayer from "./entity/EntityPlayer";
 import CameraController from "./utils/CameraController";
 import EntityMob from "./entity/EntityMob";
@@ -25,7 +24,12 @@ export let interpolatedMouseY = 0;
 export let targetX = 0;
 export let targetY = 0;
 
-export let scaleFactor = 1;
+export let scaleFactor = Math.max(
+    document.documentElement.clientWidth / 1300,
+    document.documentElement.clientHeight / 650
+);
+
+export let antennaScaleFactor = 1;
 
 export const players: Map<number, EntityPlayer> = new Map();
 export const mobs: Map<number, EntityMob> = new Map();
@@ -89,6 +93,7 @@ export const uiManager = new UserInterfaceManager(canvas);
         canvas.onmousemove = function (event) {
             mouseXOffset = event.clientX - document.documentElement.clientWidth / 2;
             mouseYOffset = event.clientY - document.documentElement.clientHeight / 2;
+
             const distance = Math.hypot(mouseXOffset, mouseYOffset);
             const angle = Math.atan2(mouseYOffset, mouseXOffset);
             networking.sendAngle(angle, distance < 50 ? distance / 100 : 1);
@@ -122,6 +127,13 @@ export const uiManager = new UserInterfaceManager(canvas);
                 }
             }
         };
+
+        window.onresize = () => {
+            scaleFactor = Math.max(
+                document.documentElement.clientWidth / 1300,
+                document.documentElement.clientHeight / 650
+            );
+        };
     }
 
     (function frame() {
@@ -130,12 +142,18 @@ export const uiManager = new UserInterfaceManager(canvas);
         prevTimestamp = lastTimestamp;
         timeFactor = deltaTime / 33;
 
-        interpolatedMouseX = interpolate(interpolatedMouseX, mouseXOffset, 50);
-        interpolatedMouseY = interpolate(interpolatedMouseY, mouseYOffset, 50);
+        antennaScaleFactor = cameraController.zoom;
 
-        scaleFactor = 3 * cameraController.zoom;
+        interpolatedMouseX = interpolate(interpolatedMouseX, mouseXOffset / antennaScaleFactor, 50);
+        interpolatedMouseY = interpolate(interpolatedMouseY, mouseYOffset / antennaScaleFactor, 50);
+
+        ctx.save();
+
+        ctx.scale(scaleFactor, scaleFactor);
 
         uiManager.update();
+
+        ctx.restore();
 
         requestAnimationFrame(frame);
     })();

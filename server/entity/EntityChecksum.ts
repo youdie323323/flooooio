@@ -6,7 +6,6 @@ import { Player } from "./player/Player";
 import { MOB_PROFILES } from "../../shared/mobProfiles";
 import { PETAL_PROFILES } from "../../shared/petalProfiles";
 import { MobType, PetalType } from "../../shared/types";
-import { findNearestEntity } from "./mob/MobAggressivePursuit";
 
 export const MAP_CENTER_X = 5000;
 export const MAP_CENTER_Y = 5000;
@@ -24,14 +23,6 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                 super[onUpdateTick](poolThis);
             }
 
-            // Camera move
-            {
-                if (this instanceof Player && this.isDead && this.playerCameraTargetEntity) {
-                    this.x = this.playerCameraTargetEntity.x;
-                    this.y = this.playerCameraTargetEntity.y;
-                }
-            }
-
             // Hp check
             {
                 if (this.health <= 0) {
@@ -41,24 +32,6 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                         this.magnitude = 0;
 
                         removeAllBindings(poolThis, this);
-
-                        setTimeout(() => {
-                            // Dont change camera if player is not dead
-                            if (!this.isDead) {
-                                return;
-                            }
-
-                            // Ygg is the highest priority
-                            const cameraEntity = findNearestEntity(this, [
-                                poolThis.getAllMobs().filter(m => !m.petalParentPlayer && !m.petParentPlayer),
-                                poolThis.getAllClients().filter(c => !c.isDead),
-                            ].flat());
-                            if (!cameraEntity) {
-                                return;
-                            }
-
-                            this.playerCameraTargetEntity = cameraEntity;
-                        }, 500);
                     }
                     if (this instanceof Mob) {
                         poolThis.removeMob(this.id);
@@ -112,6 +85,12 @@ export function EntityChecksum<T extends new (...args: any[]) => Entity>(Base: T
                     this.x = MAP_CENTER_X + Math.cos(collisionAngle) * (worldRadius - knockback);
                     this.y = MAP_CENTER_Y + Math.sin(collisionAngle) * (worldRadius - knockback);
                 }
+            }
+        }
+
+        free() {
+            if (super["free"]) {
+                super["free"]();
             }
         }
     };

@@ -38,7 +38,7 @@ const MOB_BEHAVIORS: Record<MobType, MobBehaviors> = {
     [MobType.BUBBLE]: MobBehaviors.PASSIVE,
     [MobType.JELLYFISH]: MobBehaviors.CAUTIONS,
     [MobType.BEE]: MobBehaviors.NEUTRAL
-} as const
+} as const;
 
 export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
@@ -222,6 +222,12 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
                         break;
                     }
                 }
+            }
+        }
+        
+        free() {
+            if (super["free"]) {
+                super["free"]();
             }
         }
     };

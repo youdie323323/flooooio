@@ -96,9 +96,7 @@ export default class WaveProbabilityPredictor {
      */
     private points: number;
 
-    public constructor(waveData: WaveData) {
-        this.reset(waveData);
-    }
+    public constructor() { }
 
     public predictMockData(waveData: WaveData): [MobType, Rarities] | null {
         this.timer++;

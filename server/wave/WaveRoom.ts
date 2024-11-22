@@ -46,7 +46,7 @@ function revivePlayer(entityPool: EntityPool, player: PlayerInstance) {
 export enum WaveRoomState {
     WAITING,
     STARTED,
-    END,
+    ENDED,
 }
 
 /** Determines if a wave room is public or private */
@@ -78,6 +78,8 @@ export interface WaveData {
     waveProgressTimer: number;
     waveProgressRedGageTimer: number;
     waveProgressIsRedGage: boolean;
+
+    waveEnded: boolean;
 
     mapSize: number;
 }
@@ -113,6 +115,8 @@ export default class WaveRoom {
         waveProgressRedGageTimer: 0,
         waveProgressIsRedGage: false,
 
+        waveEnded: false,
+
         mapSize: 2600,
     };;
 
@@ -128,7 +132,8 @@ export default class WaveRoom {
         this.updateInterval = setInterval(this.broadcastUpdatePacket.bind(this), 1000 / ROOM_UPDATE_SEND_FPS);
         this.wavePreUpdateInterval = setInterval(this.wavePreUpdate.bind(this), 1000 / WAVE_PROGRESS_UPDATE);
 
-        this.entitySpawnRandomizer = new WaveProbabilityPredictor(this.waveData);
+        this.entitySpawnRandomizer = new WaveProbabilityPredictor();
+        this.entitySpawnRandomizer.reset(this.waveData);
     }
 
     /**
@@ -155,6 +160,8 @@ export default class WaveRoom {
     private wavePreUpdate() {
         // Use onChangeSomething so can delete started wave if all players dead
         using _disposable = this.onChangeAnything();
+
+        this.waveData.waveEnded = this.state === WaveRoomState.ENDED;
 
         if (!this.waveData.waveProgressIsRedGage && this.state === WaveRoomState.STARTED) {
             const mobData = this.entitySpawnRandomizer.predictMockData(this.waveData);
@@ -383,7 +390,7 @@ export default class WaveRoom {
     }
 
     private endWave() {
-        this.state = WaveRoomState.END;
+        this.state = WaveRoomState.ENDED;
 
         // Stop wave update
         this.entityPool.endWave();

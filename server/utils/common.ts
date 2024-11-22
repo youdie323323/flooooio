@@ -37,21 +37,17 @@ export function kickClient(waveRoom: WaveRoom, player: PlayerInstance) {
     }
 }
 
-export function removeAllSlotPetals(entityPool: EntityPool, petals: MobInstance[]) {
-    for (let i = 0; i < petals.length; i++) {
-        const e = petals[i];
-        if (entityPool.getMob(e.id)) {
-            entityPool.removeMob(e.id);
-        }
-    }
-}
-
 export function removeAllBindings(entityPool: EntityPool, player: PlayerInstance) {
     if (player) {
         // Remove all petals
-        player.slots.surface.forEach((e) => {
-            if (e != null && isSpawnableSlot(e)) {
-                removeAllSlotPetals(entityPool, e);
+        player.slots.surface.forEach((petals) => {
+            if (petals != null && isSpawnableSlot(petals)) {
+                for (let i = 0; i < petals.length; i++) {
+                    const e = petals[i];
+                    if (entityPool.getMob(e.id)) {
+                        entityPool.removeMob(e.id);
+                    }
+                }
             }
         });
 
@@ -63,7 +59,7 @@ export function removeAllBindings(entityPool: EntityPool, player: PlayerInstance
         });
 
         // Reset all reloads
-        player.slots.cooldownsPetal = new Array(player.slots.surface.length).fill(0);
-        player.slots.cooldownsUsage = new Array(player.slots.surface.length).fill(0);
+        player.slots.cooldownsPetal = Array.from({ length: player.slots.surface.length }, e => new Array(5).fill(0));
+        player.slots.cooldownsUsage = Array.from({ length: player.slots.surface.length }, e => new Array(5).fill(0));
     }
 }

@@ -80,6 +80,18 @@ export class EntityPool {
         this.updateInterval = null;
         this.updateSendInterval = null;
 
+        this.clients.forEach((v) => {
+            if (v["free"]) {
+                v["free"]();
+            }
+        });
+
+        this.mobs.forEach((v) => {
+            if (v["free"]) {
+                v["free"]();
+            }
+        });
+
         this.clients.clear();
         this.mobs.clear();
 
@@ -329,7 +341,7 @@ export class EntityPool {
 
     private calculateTotalPacketSize(): number {
         // Base size for wave data and packet kind
-        let size = 1 + 2 + 8 + 8 + 2;
+        let size = 1 + 2 + 8 + 8 + 2 + 1;
 
         // Add size for clients
         size += 2; // Client count
@@ -365,6 +377,8 @@ export class EntityPool {
 
         buffer.writeUInt16BE(this.waveData.mapSize, offset);
         offset += 2;
+
+        buffer.writeUInt8(this.waveData.waveEnded ? 1 : 0, offset++);
 
         // Write clients
         buffer.writeUInt16BE(this.clients.size, offset);

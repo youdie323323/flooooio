@@ -101,7 +101,7 @@ export function PlayerPetalOrbit<T extends new (...args: any[]) => BasePlayer>(B
                     for (let j = 0; j < petals.length; j++) {
                         const baseAngle = TWO_PI * currentAngleIndex / realLength + this.rotation;
                         currentAngleIndex++;
-                        
+
                         const petal = petals[j];
                         petal.x = this.historyX[historyTargetIndex] + Math.cos(baseAngle) * rad;
                         petal.y = this.historyY[historyTargetIndex] + Math.sin(baseAngle) * rad;
@@ -110,6 +110,17 @@ export function PlayerPetalOrbit<T extends new (...args: any[]) => BasePlayer>(B
             }
 
             this.rotation += (BASE_ROTATE_SPEED + totalSpeed) / UPDATE_FPS;
+        }
+
+        free() {
+            if (super["free"]) {
+                super["free"]();
+            }
+
+            this.historyX = null;
+            this.historyY = null;
+            this.petalRadii = null;
+            this.petalBounces = null;
         }
     };
 }

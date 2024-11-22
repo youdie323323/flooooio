@@ -9,6 +9,7 @@ import { PlayerPetalOrbit } from "./PlayerPetalOrbit";
 import { PlayerReload } from "./PlayerReload";
 import { MoodKind } from "../../../shared/mood";
 import { PetalSlots, MockPetalData } from "../mob/petal/Petal";
+import { PlayerDeadCamera } from "./PlayerDeadCamera";
 
 class BasePlayer implements Entity {
     readonly id: EntityId;
@@ -79,6 +80,7 @@ Player = EntityLinearMovement(Player);
 Player = PlayerPetalOrbit(Player);
 Player = PlayerReload(Player);
 Player = EntityChecksum(Player);
+Player = PlayerDeadCamera(Player);
 
 type PlayerInstance = InstanceType<typeof Player>;
 

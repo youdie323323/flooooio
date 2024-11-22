@@ -1,5 +1,5 @@
 import { Canvg, presets } from "canvg";
-import { scaleFactor } from "../main";
+import { cameraController, scaleFactor } from "../main";
 import { TWO_PI } from "../constants";
 import { Biomes } from "../../shared/biomes";
 
@@ -317,14 +317,20 @@ export default class TilesetManager {
 
     constructWorld(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], radius: number, playerX: number, playerY: number) {
         const ctx = canvas.getContext("2d");
+
+        const zoom = cameraController.zoom;
+
+        const widthRelative = canvas.width / scaleFactor;
+        const heightRelative = canvas.height / scaleFactor;
+
         const GRID_SIZE = 30;
 
-        const adjustedGridSize = 300 * scaleFactor;
+        const adjustedGridSize = 300 * zoom;
 
         const random = splitmix32(tilesets.length);
 
-        const relativeCenterX = (5000 - playerX) * scaleFactor + canvas.width / 2;
-        const relativeCenterY = (5000 - playerY) * scaleFactor + canvas.height / 2;
+        const relativeCenterX = (5000 - playerX) * zoom + widthRelative / 2;
+        const relativeCenterY = (5000 - playerY) * zoom + heightRelative / 2;
 
         const startTileX = relativeCenterX - (GRID_SIZE / 2 * adjustedGridSize);
         const startTileY = relativeCenterY - (GRID_SIZE / 2 * adjustedGridSize);
@@ -343,14 +349,14 @@ export default class TilesetManager {
 
         ctx.save();
 
-        ctx.lineWidth = (canvas.width * scaleFactor) + (canvas.height * scaleFactor);
+        ctx.lineWidth = (widthRelative * zoom) + (heightRelative * zoom);
         ctx.beginPath();
         ctx.strokeStyle = 'black';
         ctx.globalAlpha = 0.14;
         ctx.arc(
             relativeCenterX,
             relativeCenterY,
-            radius * scaleFactor + ctx.lineWidth / 2, 0, TWO_PI,
+            radius * zoom + ctx.lineWidth / 2, 0, TWO_PI,
         );
         ctx.stroke();
         ctx.closePath();
@@ -361,12 +367,15 @@ export default class TilesetManager {
     constructWorldMenu(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], playerX: number, playerY: number) {
         const ctx = canvas.getContext("2d");
 
-        const adjustedGridSize = 600;
+        const adjustedGridSize = 300;
 
         const viewRadius = 2000;
 
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
+        const widthRelative = canvas.width / scaleFactor;
+        const heightRelative = canvas.height / scaleFactor;
+
+        const centerX = widthRelative / 2;
+        const centerY = heightRelative / 2;
 
         ctx.save();
 
