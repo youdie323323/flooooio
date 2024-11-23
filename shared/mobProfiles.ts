@@ -191,7 +191,7 @@ export const MOB_PROFILES: Record<MobType, MobData> = {
         name: "Bubble",
         description: "Pop",
         baseSize: 40,
-        fraction: 20,
+        fraction: 15,
         rx: 20,
         ry: 20,
         [Rarities.COMMON]: {

@@ -254,18 +254,6 @@ export default class EntityMob extends Entity {
 
                 break;
             }
-            case PetalType.BEETLE_EGG: {
-                ctx.scale(this.size / 20, this.size / 20);
-                ctx.beginPath();
-                ctx.ellipse(0, 0, 30, 40, 0, 0, TWO_PI);
-                const eggColor = ["#fff0b8", "#cfc295"];
-                ctx.fillStyle = this.getSkinColor(eggColor[0]);
-                ctx.fill();
-                ctx.strokeStyle = this.getSkinColor(eggColor[1]);
-                ctx.stroke();
-
-                break;
-            }
             case MobType.BUBBLE: {
                 this.drawBubble(ctx, false);
 
@@ -281,13 +269,30 @@ export default class EntityMob extends Entity {
 
                 break;
             }
+            case PetalType.BEETLE_EGG: {
+                ctx.scale(this.size / 20, this.size / 20);
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 30, 40, 0, 0, TWO_PI);
+                const eggColor = ["#fff0b8", "#cfc295"];
+                ctx.fillStyle = this.getSkinColor(eggColor[0]);
+                ctx.fill();
+                ctx.strokeStyle = this.getSkinColor(eggColor[1]);
+                ctx.stroke();
+
+                break;
+            }
+            case PetalType.BUBBLE: {
+                this.drawBubble(ctx, true);
+
+                break;
+            }
         }
 
         ctx.restore();
     }
 
     drawBubble(ctx: CanvasRenderingContext2D, isPetal: boolean) {
-        ctx.scale(this.size / 20, this.size / 20);
+        ctx.scale(this.size / 15, this.size / 15);
         const oldGlobalAlpha = ctx.globalAlpha;
         ctx.strokeStyle = ctx.fillStyle = this.getSkinColor("#ffffff");
         ctx.globalAlpha = oldGlobalAlpha * 0.4;

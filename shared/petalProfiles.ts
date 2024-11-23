@@ -228,4 +228,84 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             isCluster: false,
         },
     },
+    [PetalType.BUBBLE]: {
+        name: "Bubble",
+        description: "Physics are for the weak.",
+        fraction: 15,
+        rx: 20,
+        ry: 20,
+
+        [Rarities.COMMON]: {
+            damage: 0,
+            health: 1,
+            petalReload: 5.5,
+            usageReload: 0.5,
+            count: 1,
+
+            isCluster: false,
+        },
+        [Rarities.UNUSUAL]: {
+            damage: 0,
+            health: 1,
+            petalReload: 4.5,
+            usageReload: 0.5,
+            count: 1,
+
+            isCluster: false,
+        },
+        [Rarities.RARE]: {
+            damage: 0,
+            health: 1,
+            petalReload: 3.5,
+            usageReload: 0.5,
+            count: 1,
+
+            isCluster: false,
+        },
+        [Rarities.EPIC]: {
+            damage: 0,
+            health: 1,
+            petalReload: 2.5,
+            usageReload: 0.5,
+            count: 1,
+
+            isCluster: false,
+        },
+        [Rarities.LEGENDARY]: {
+            damage: 0,
+            health: 1,
+            petalReload: 1.5,
+            usageReload: 0.5,
+            count: 1,
+
+            isCluster: false,
+        },
+        [Rarities.MYTHIC]: {
+            damage: 0,
+            health: 1,
+            petalReload: 0.8,
+            usageReload: 0.5,
+            count: 1,
+
+            isCluster: false,
+        },
+        [Rarities.ULTRA]: {
+            damage: 0,
+            health: 1,
+            petalReload: 0.5,
+            usageReload: 0.1,
+            count: 1,
+
+            isCluster: false,
+        },
+        [Rarities.SUPER]: {
+            damage: 0,
+            health: 1,
+            petalReload: 0.2,
+            usageReload: 0.1,
+            count: 1,
+
+            isCluster: false,
+        },
+    },
 };

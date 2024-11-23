@@ -3,6 +3,7 @@ export enum PacketKind {
     MOVE,
     MOOD,
     SWAP_PETAL,
+    CHAT,
 
     WAVE_ROOM_CREATE,
     WAVE_ROOM_JOIN,

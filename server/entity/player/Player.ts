@@ -5,12 +5,13 @@ import uWS from 'uWebSockets.js';
 import { UserData } from "../../wave/WavePool";
 import { MobInstance } from "../mob/Mob";
 import { PlayerPetalOrbit } from "./PlayerPetalOrbit";
-import { PlayerReload } from "./PlayerReload";
+import { PlayerReload } from "./PlayerPetalReload";
 import { MoodKind } from "../../../shared/mood";
 import { PetalSlots, MockPetalData } from "../mob/petal/Petal";
 import { PlayerDeadCamera } from "./PlayerDeadCamera";
 import { EntityWorldBoundary } from "../EntityWorldBoundary";
-import { EntityDead } from "../EntityDeath";
+import { EntityDeath } from "../EntityDeath";
+import { PlayerPetalConsume } from "./PlayerPetalConsume";
 
 class BasePlayer implements Entity {
     readonly id: EntityId;
@@ -80,9 +81,10 @@ Player = EntityLinearMovement(Player);
 // Do player mixin before checksum so petal reloads like original game (can interpolate movement)
 Player = PlayerPetalOrbit(Player);
 Player = PlayerReload(Player);
-Player = EntityDead(Player);
+Player = EntityDeath(Player);
 Player = EntityWorldBoundary(Player);
 Player = PlayerDeadCamera(Player);
+Player = PlayerPetalConsume(Player);
 
 type PlayerInstance = InstanceType<typeof Player>;
 

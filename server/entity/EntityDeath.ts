@@ -7,7 +7,7 @@ import { MOB_PROFILES } from "../../shared/mobProfiles";
 import { PETAL_PROFILES } from "../../shared/petalProfiles";
 import { MobType, PetalType } from "../../shared/types";
 
-export function EntityDead<T extends new (...args: any[]) => Entity>(Base: T) {
+export function EntityDeath<T extends new (...args: any[]) => Entity>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
         [onUpdateTick](poolThis: WavePool): void {
             // Call parent onUpdateTick

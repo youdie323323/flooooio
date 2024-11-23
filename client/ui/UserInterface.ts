@@ -92,9 +92,6 @@ export default abstract class UserInterface {
             this.canvas.width = width;
             this.canvas.height = height;
 
-            const scaledWidth = width / scaleFactor;
-            const scaledHeight = height / scaleFactor;
-
             this.components = [];
             this.interactiveComponents = [];
             this.focusableComponents = [];
@@ -104,6 +101,9 @@ export default abstract class UserInterface {
             this.activeComponent = null;
 
             this.initializeComponents();
+
+            const scaledWidth = width / scaleFactor;
+            const scaledHeight = height / scaleFactor;
 
             this.components.forEach(component => {
                 component.updateAbsolutePosition(scaledWidth, scaledHeight);
@@ -125,8 +125,7 @@ export default abstract class UserInterface {
         // Focus handling
         let foundFocusable = false;
         for (const component of this.focusableComponents) {
-            if (component.visible && component.enabled &&
-                component.isPointInside(this.mouseX, this.mouseY)) {
+            if (component.visible && component.isPointInside(this.mouseX, this.mouseY)) {
                 if (this.focusedComponent && this.focusedComponent !== component) {
                     this.focusedComponent.focused = false;
                     this.focusedComponent.onBlur?.();
@@ -147,8 +146,7 @@ export default abstract class UserInterface {
 
         // Click handling
         for (const component of this.interactiveComponents) {
-            if (component.visible && component.enabled &&
-                component.isPointInside(this.mouseX, this.mouseY)) {
+            if (component.visible && component.isPointInside(this.mouseX, this.mouseY)) {
                 if (this.isClickable(component)) {
                     this.activeComponent = component;
                     component.onMouseDown?.();
@@ -172,7 +170,7 @@ export default abstract class UserInterface {
         this.updateMousePosition(event);
 
         for (const component of this.interactiveComponents) {
-            if (component.visible && component.enabled) {
+            if (component.visible) {
                 const isHovering = component.isPointInside(this.mouseX, this.mouseY);
 
                 if (isHovering) {
@@ -190,12 +188,7 @@ export default abstract class UserInterface {
         }
     }
 
-    private handleKeyDown(event: KeyboardEvent): void {
-        if (this.focusedComponent) {
-            // Handle keyboard events for focused component
-            // Implementation depends on specific component requirements
-        }
-    }
+    abstract handleKeyDown(event: KeyboardEvent): void;
 
     public cleanupListeners(): void {
         this.canvas.removeEventListener('mousedown', this._mousedown);

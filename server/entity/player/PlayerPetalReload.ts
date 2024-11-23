@@ -1,7 +1,7 @@
 import { EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool, UPDATE_FPS } from "../../wave/WavePool";
-import { Mob } from "../mob/Mob";
-import { BasePlayer } from "./Player";
+import { Mob, MobInstance } from "../mob/Mob";
+import { BasePlayer, PlayerInstance } from "./Player";
 import { MobType, PetalType } from "../../../shared/types";
 import { isSpawnableSlot, PetalData } from "../mob/petal/Petal";
 import { PETAL_PROFILES } from "../../../shared/petalProfiles";
@@ -13,6 +13,43 @@ export const USAGE_RELOAD_PETALS: Set<PetalType | MobType> = new Set([
 
 export const EGG_TYPE_MAPPING: Partial<Record<PetalType, MobType>> = {
     [PetalType.BEETLE_EGG]: MobType.BEETLE,
+};
+
+export const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, petal: MobInstance, i: number, j: number) => {
+    // If cooldown elapsed
+    if (Date.now() >= player.slots.cooldownsUsage[i][j]) {
+        poolThis.removeMob(petal.id);
+
+        switch (petal.type) {
+            case PetalType.BEETLE_EGG: {
+                petal.petalSummonedPet = poolThis.addPetalOrMob(
+                    EGG_TYPE_MAPPING[petal.type],
+                    Math.max(Rarities.COMMON, Math.min(Rarities.MYTHIC, petal.rarity - 1)),
+                    petal.x,
+                    petal.y,
+                    null,
+                    player,
+                );
+
+                break;
+            }
+
+            case PetalType.BUBBLE: {
+                const dx = petal.x - player.x;
+                const dy = petal.y - player.y;
+
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                const BOUNCE_FORCE = 100;
+                player.x -= (dx / distance) * BOUNCE_FORCE;
+                player.y -= (dy / distance) * BOUNCE_FORCE;
+
+                break;
+            }
+        }
+
+        player.slots.cooldownsUsage[i][j] = 0;
+    }
 };
 
 export function PlayerReload<T extends new (...args: any[]) => BasePlayer>(Base: T) {
@@ -53,7 +90,7 @@ export function PlayerReload<T extends new (...args: any[]) => BasePlayer>(Base:
                                     petals[j] = poolThis.addPetalOrMob(
                                         e.type,
                                         e.rarity,
-                                        // Make it player coordinate so its looks like spawning from players body
+                                        // Make it player coordinate so its looks like spawning from player body
                                         this.x,
                                         this.y,
                                         this,
@@ -74,24 +111,6 @@ export function PlayerReload<T extends new (...args: any[]) => BasePlayer>(Base:
                                     if (this.slots.cooldownsUsage[i][j] === 0) {
                                         const profile = PETAL_PROFILES[e.type];
                                         this.slots.cooldownsUsage[i][j] = Date.now() + (profile[e.rarity].usageReload * 1000);
-                                    }
-                                    // If cooldown elapsed
-                                    else if (Date.now() >= this.slots.cooldownsUsage[i][j]) {
-                                        const toSummon = EGG_TYPE_MAPPING[e.type];
-                                        if (toSummon) {
-                                            // Null means its empty slot, so no need to set null
-                                            // this.slots.surface[i] = null;
-                                            poolThis.removeMob(e.id);
-                                            e.petalSummonedPet = poolThis.addPetalOrMob(
-                                                toSummon,
-                                                Math.max(Rarities.COMMON, Math.min(Rarities.MYTHIC, e.rarity - 1)),
-                                                e.x,
-                                                e.y,
-                                                null,
-                                                this,
-                                            );
-                                            this.slots.cooldownsUsage[i][j] = 0;
-                                        }
                                     }
                                 } else {
                                     // Reset cooldown because its breaked

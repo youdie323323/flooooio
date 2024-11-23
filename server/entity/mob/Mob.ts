@@ -8,7 +8,7 @@ import { Rarities } from "../../../shared/rarities";
 import { BasePlayer, PlayerInstance } from "../player/Player";
 import { MobHealthRegen } from "./MobHealthRegen";
 import { EntityWorldBoundary } from "../EntityWorldBoundary";
-import { EntityDead } from "../EntityDeath";
+import { EntityDeath } from "../EntityDeath";
 
 class BaseMob implements Entity {
     readonly id: EntityId;
@@ -83,7 +83,7 @@ class BaseMob implements Entity {
 let Mob = BaseMob;
 Mob = EntityCollisionResponse(Mob);
 Mob = EntityLinearMovement(Mob);
-Mob = EntityDead(Mob);
+Mob = EntityDeath(Mob);
 Mob = EntityWorldBoundary(Mob);
 Mob = MobOscillatingMovement(Mob);
 Mob = MobAggressivePursuit(Mob);

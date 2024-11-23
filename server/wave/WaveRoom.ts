@@ -1,6 +1,6 @@
 import { Biomes } from "../../shared/biomes";
 import { PacketKind } from "../../shared/packet";
-import { choice, generateRandomWaveRoomPlayerId, getRandomMapSafePosition, getRandomSafePosition } from "../utils/random";
+import { choice, generateRandomWaveRoomPlayerId, getRandomMapSafePosition, getRandomPosition } from "../utils/random";
 import { WavePool } from "./WavePool";
 import { PlayerInstance, MockPlayerData } from "../entity/player/Player";
 import { logger } from "../main";
@@ -8,6 +8,7 @@ import { BrandedId } from "../entity/Entity";
 import WaveProbabilityPredictor from "./WaveProbabilityPredictor";
 import { calculateWaveLength } from "../utils/formula";
 import { MAP_CENTER_X, MAP_CENTER_Y, SAFETY_DISTANCE } from "../entity/EntityWorldBoundary";
+import { AnsiUp } from '../utils/AnsiUp'
 
 /**
  * Revive player nearby other player.
@@ -19,7 +20,7 @@ function revivePlayer(wavePool: WavePool, player: PlayerInstance) {
             // Select random player
             const randomAlivePlayer = choice(alivePlayers);
 
-            const randPos = getRandomSafePosition(
+            const randPos = getRandomPosition(
                 randomAlivePlayer.x,
                 randomAlivePlayer.y,
                 200,
@@ -74,8 +75,9 @@ export interface WaveData {
     waveProgressTimer: number;
     waveProgressRedGageTimer: number;
     waveProgressIsRedGage: boolean;
-
     waveEnded: boolean;
+
+    chats: string[];
 
     mapSize: number;
 }
@@ -83,6 +85,11 @@ export interface WaveData {
 export const ROOM_UPDATE_SEND_FPS = 30;
 
 export const WAVE_PROGRESS_UPDATE = 60;
+
+/**
+ * Public instance of ansiup.
+ */
+const ansiUp = new AnsiUp();
 
 /**
  * The wave room, aka squad.
@@ -93,14 +100,19 @@ export default class WaveRoom {
      */
     public static readonly MAX_PLAYER_AMOUNT = 4;
 
-    visible: WaveRoomVisibleState;
+    private static readonly MAX_MESSAGE_QUEUE_AMOUNT = 128;
+
     state: WaveRoomState;
+    visible: WaveRoomVisibleState;
     roomCandidates: WaveRoomPlayer[];
+
     wavePool: WavePool;
+
+    private msgQueue: string[];
 
     private updateInterval: NodeJS.Timeout;
 
-    private entitySpawnRandomizer: WaveProbabilityPredictor;
+    private waveProbabilityPredictor: WaveProbabilityPredictor;
 
     /**
      * Current wave data transfer to entity pool.
@@ -112,6 +124,8 @@ export default class WaveRoom {
         waveProgressIsRedGage: false,
 
         waveEnded: false,
+
+        chats: [],
 
         mapSize: 2600,
     };;
@@ -128,8 +142,10 @@ export default class WaveRoom {
         this.updateInterval = setInterval(this.broadcastUpdatePacket.bind(this), 1000 / ROOM_UPDATE_SEND_FPS);
         this.wavePreUpdateInterval = setInterval(this.wavePreUpdate.bind(this), 1000 / WAVE_PROGRESS_UPDATE);
 
-        this.entitySpawnRandomizer = new WaveProbabilityPredictor();
-        this.entitySpawnRandomizer.reset(this.waveData);
+        this.waveProbabilityPredictor = new WaveProbabilityPredictor();
+        this.waveProbabilityPredictor.reset(this.waveData);
+
+        this.msgQueue = new Array<string>();
     }
 
     /**
@@ -140,17 +156,19 @@ export default class WaveRoom {
 
         this.wavePool = null;
 
-        this.roomCandidates = null;
-
-        this.entitySpawnRandomizer = null;
-
-        this.waveData = null;
-
         clearInterval(this.updateInterval);
         clearInterval(this.wavePreUpdateInterval);
 
         this.updateInterval = null;
         this.wavePreUpdateInterval = null;
+
+        this.roomCandidates = null;
+
+        this.waveProbabilityPredictor = null;
+
+        this.waveData = null;
+
+        this.msgQueue = null;
     }
 
     private wavePreUpdate() {
@@ -159,18 +177,20 @@ export default class WaveRoom {
 
         this.waveData.waveEnded = this.state === WaveRoomState.ENDED;
 
+        this.waveData.chats = this.msgQueue;
+
         // Dont do anything when wave waiting/end
         if (this.state === WaveRoomState.STARTED) {
             if (!this.waveData.waveProgressIsRedGage) {
-                const mobData = this.entitySpawnRandomizer.predictMockData(this.waveData);
+                const mobData = this.waveProbabilityPredictor.predictMockData(this.waveData);
                 if (mobData) {
                     const [type, rarity] = mobData;
-    
+
                     const randPos = getRandomMapSafePosition(MAP_CENTER_X, MAP_CENTER_Y, this.waveData.mapSize, SAFETY_DISTANCE, this.wavePool.getAllClients().filter(p => !p.isDead));
                     if (!randPos) {
                         return null;
                     }
-    
+
                     this.wavePool.addPetalOrMob(type, rarity, randPos[0], randPos[1]);
                 }
             }
@@ -199,7 +219,7 @@ export default class WaveRoom {
 
                     this.waveData.waveProgress++;
 
-                    this.entitySpawnRandomizer.reset(this.waveData);
+                    this.waveProbabilityPredictor.reset(this.waveData);
                 }
             } else {
                 this.waveData.waveProgressTimer = Math.min(waveLength, Math.round((this.waveData.waveProgressTimer + 0.016) * 100000) / 100000);
@@ -415,6 +435,18 @@ export default class WaveRoom {
 
         if (this.state === WaveRoomState.STARTED && this.wavePool.getAllClients().every(p => p.isDead)) {
             this.endWave();
+        }
+    }
+
+    /**
+     * Enqueue message into queue.
+     */
+    public enqueueMessage(msg: string) {
+        if (msg.length > 0) {
+            this.msgQueue.push(ansiUp.ansi_to_html(msg));
+            if (this.msgQueue.length > WaveRoom.MAX_MESSAGE_QUEUE_AMOUNT) {
+                this.msgQueue.shift();
+            }
         }
     }
 

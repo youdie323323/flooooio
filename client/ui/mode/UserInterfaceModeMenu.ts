@@ -7,6 +7,7 @@ import EntityMob from "../../entity/EntityMob";
 import TilesetManager, { BIOME_TILESETS } from "../../utils/WorldManager";
 import { ComponentSVGButton, ComponentTextButton } from "../components/ComponentButton";
 import UserInterface from "../UserInterface";
+import ComponentTextInput from "../components/ComponentTextInput.js";
 import { scaleFactor, ws } from "../../main";
 
 function randomFloat(min: number, max: number) {
@@ -51,6 +52,8 @@ export default class UserInterfaceMenu extends UserInterface {
         this.backgroundWaveStep = 0;
     }
 
+    handleKeyDown(event: KeyboardEvent): void { }
+
     protected initializeComponents(): void {
         const widthRelative = this.canvas.width / scaleFactor;
         const heightRelative = this.canvas.height / scaleFactor;
@@ -59,8 +62,8 @@ export default class UserInterfaceMenu extends UserInterface {
             {
                 x: 15,
                 y: heightRelative - 229,
-                width: 45,
-                height: 45,
+                w: 45,
+                h: 45,
             },
             "#599dd8",
             () => {
@@ -75,8 +78,8 @@ export default class UserInterfaceMenu extends UserInterface {
             {
                 x: 15,
                 y: heightRelative - 173,
-                width: 45,
-                height: 45,
+                w: 45,
+                h: 45,
             },
             "#db9d5a",
             () => {
@@ -91,8 +94,8 @@ export default class UserInterfaceMenu extends UserInterface {
             {
                 x: 15,
                 y: heightRelative - 116,
-                width: 45,
-                height: 45,
+                w: 45,
+                h: 45,
             },
             "#9bb56b",
             () => {
@@ -108,9 +111,9 @@ export default class UserInterfaceMenu extends UserInterface {
         const readyButton = new ComponentTextButton(
             {
                 x: (widthRelative / 2) - 90 / 2,
-                y: ((heightRelative / 2) - 35 * 3),
-                width: 90,
-                height: 30,
+                y: ((heightRelative / 2) - 40 * 3),
+                w: 90,
+                h: 30,
             },
             "#1dd129",
             async () => {
@@ -124,9 +127,9 @@ export default class UserInterfaceMenu extends UserInterface {
         const joinSquadButton = new ComponentTextButton(
             {
                 x: (widthRelative / 2) - 90 / 2,
-                y: ((heightRelative / 2) - 35 * 3) + 35,
-                width: 90,
-                height: 30,
+                y: ((heightRelative / 2) - 40 * 3) + 40,
+                w: 90,
+                h: 30,
             },
             "#1dd129",
             async () => {
@@ -144,9 +147,9 @@ export default class UserInterfaceMenu extends UserInterface {
         const joinPublicSquadButton = new ComponentTextButton(
             {
                 x: (widthRelative / 2) - 90 / 2,
-                y: ((heightRelative / 2) - 35 * 3) + 35 + 35,
-                width: 90,
-                height: 30,
+                y: ((heightRelative / 2) - 40 * 3) + 40 + 40,
+                w: 90,
+                h: 30,
             },
             "#1dd129",
             async () => {
@@ -160,9 +163,9 @@ export default class UserInterfaceMenu extends UserInterface {
         const leaveSquadButton = new ComponentTextButton(
             {
                 x: (widthRelative / 2) - 90 / 2,
-                y: ((heightRelative / 2) - 35 * 3) + 35 + 35 + 35,
-                width: 90,
-                height: 30,
+                y: ((heightRelative / 2) - 40 * 3) + 40 + 40 + 40,
+                w: 90,
+                h: 30,
             },
             "#1dd129",
             async () => {
@@ -176,9 +179,9 @@ export default class UserInterfaceMenu extends UserInterface {
         const createPublicButton = new ComponentTextButton(
             {
                 x: (widthRelative / 2) - 90 / 2,
-                y: ((heightRelative / 2) - 35 * 3) + 35 + 35 + 35 + 35,
-                width: 90,
-                height: 30,
+                y: ((heightRelative / 2) - 40 * 3) + 40 + 40 + 40 + 40,
+                w: 90,
+                h: 30,
             },
             "#1dd129",
             async () => {
@@ -192,9 +195,9 @@ export default class UserInterfaceMenu extends UserInterface {
         const setPublicButton = new ComponentTextButton(
             {
                 x: (widthRelative / 2) - 90 / 2,
-                y: ((heightRelative / 2) - 35 * 3) + 35 + 35 + 35 + 35 + 35,
-                width: 90,
-                height: 30,
+                y: ((heightRelative / 2) - 40 * 3) + 40 + 40 + 40 + 40 + 40,
+                w: 90,
+                h: 30,
             },
             "#1dd129",
             async () => {
@@ -208,9 +211,9 @@ export default class UserInterfaceMenu extends UserInterface {
         const setPrivateButton = new ComponentTextButton(
             {
                 x: (widthRelative / 2) - 90 / 2,
-                y: ((heightRelative / 2) - 35 * 3) + 35 + 35 + 35 + 35 + 35 + 35,
-                width: 90,
-                height: 30,
+                y: ((heightRelative / 2) - 40 * 3) + 40 + 40 + 40 + 40 + 40 + 40,
+                w: 90,
+                h: 30,
             },
             "#1dd129",
             async () => {

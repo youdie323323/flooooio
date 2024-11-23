@@ -23,17 +23,20 @@ import { MockPetalData } from './entity/mob/petal/Petal';
 const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
     name: 'YOBA',
     slots: {
-        surface: shuffle(Array.from({ length: 29 }, () => {
-            return {
-                type: PetalType.BEETLE_EGG,
-                rarity: Rarities.ULTRA,
-            } as MockPetalData;
-        }).concat(
+        surface: [
             {
                 type: PetalType.BEETLE_EGG,
                 rarity: Rarities.SUPER,
             } as MockPetalData,
-        )),
+            {
+                type: PetalType.BEETLE_EGG,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BEETLE_EGG,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+        ],
         bottom: [],
     },
 };
@@ -49,6 +52,11 @@ export const waveRoomService = new WaveRoomService();
 export const logger = new Logger();
 
 logger.info("App started");
+
+/**
+ * Global instance for decoding string of buffer.
+ */
+const textDecoder = new TextDecoder('utf-8');
 
 function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBinary: boolean) {
     const buffer = new Uint8Array(message);
@@ -121,6 +129,21 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             break;
         }
+        case PacketKind.CHAT: {
+            if (buffer.length < 2) return;
+
+            const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
+            if (!waveRoom) return;
+
+            const length = buffer[1];
+            if (buffer.length !== 2 + length) return;
+
+            const chat = textDecoder.decode(buffer.slice(2, 2 + length));
+
+            waveRoom.enqueueMessage(chat);
+
+            break;
+        }
         // Wave
         case PacketKind.WAVE_ROOM_CREATE: {
             if (buffer.length !== 2 || !BIOME_VALUES.includes(buffer[1])) return;
@@ -138,7 +161,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             const length = buffer[1];
             if (buffer.length !== 2 + length) return;
 
-            const roomCode = new TextDecoder('utf-8').decode(buffer.slice(2, 2 + length));
+            const roomCode = textDecoder.decode(buffer.slice(2, 2 + length));
 
             const id = waveRoomService.joinWaveRoom(userData, roomCode);
 

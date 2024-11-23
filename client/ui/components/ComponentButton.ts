@@ -4,34 +4,12 @@ import { Clickable, Component, Interactive } from "./Component";
 import Layout, { LayoutOptions } from "../layout/Layout";
 import { scaleFactor } from "../../main";
 
-export class ComponentButton implements Component, Interactive, Clickable {
-    visible: boolean = true;
-    opacity: number = 1;
-
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-
+export class ComponentButton extends Component implements Interactive, Clickable {
     public isPressed: boolean = false;
     public isHovered: boolean = false;
-    public enabled: boolean = true;
 
-    constructor(protected layout: LayoutOptions, protected readonly color: string, private readonly callback: () => void) {
-        this.updateAbsolutePosition(window.innerWidth / scaleFactor, window.innerHeight / scaleFactor);
-    }
-
-    public updateAbsolutePosition(viewportWidth: number, viewportHeight: number): void {
-        const { x, y, width, height } = Layout.calculatePosition(
-            this.layout,
-            viewportWidth,
-            viewportHeight
-        );
-
-        this.x = x;
-        this.y = y;
-        this.w = width;
-        this.h = height;
+    constructor(layout: LayoutOptions, protected readonly color: string, private readonly callback: () => void) {
+        super(layout);
     }
 
     public isPointInside(x: number, y: number): boolean {
@@ -48,9 +26,7 @@ export class ComponentButton implements Component, Interactive, Clickable {
     }
 
     public onMouseDown(): void {
-        if (this.enabled) {
-            this.isPressed = true;
-        }
+        this.isPressed = true;
     }
 
     public onMouseUp(): void {
@@ -58,25 +34,16 @@ export class ComponentButton implements Component, Interactive, Clickable {
     }
 
     public onClick(): void {
-        if (this.enabled) {
-            this.callback();
-        }
+        this.callback();
     }
 
     protected getButtonColor(): string {
-        if (!this.enabled) {
-            return darkend(this.color, 0.5);
-        }
         if (this.isPressed) {
             return darkend(this.color, DARKEND_BASE);
         } else if (this.isHovered) {
             return darkend(this.color, -0.1);
         }
         return this.color;
-    }
-
-    public render(ctx: CanvasRenderingContext2D): void {
-        ctx.globalAlpha = this.opacity;
     }
 }
 
@@ -139,11 +106,9 @@ export class ComponentTextButton extends ComponentButton {
         const centerX = this.x + this.w / 2;
         const centerY = this.y + this.h / 2;
 
-        const textColor = this.enabled ? 'white' : '#666666';
-
-        ctx.strokeStyle = this.enabled ? '#000000' : '#444444';
+        ctx.strokeStyle = '#000000';
         ctx.strokeText(this.text, centerX, centerY);
-        ctx.fillStyle = textColor;
+        ctx.fillStyle = 'white';
         ctx.fillText(this.text, centerX, centerY);
 
         ctx.restore();

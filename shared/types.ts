@@ -18,4 +18,5 @@ export enum PetalType {
     BASIC = getNextEntityType(),
     FASTER = getNextEntityType(),
     BEETLE_EGG = getNextEntityType(),
+    BUBBLE = getNextEntityType(),
 }

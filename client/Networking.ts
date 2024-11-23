@@ -61,11 +61,11 @@ export default class Networking {
                         const waveProgressRedGageTimer = data.getFloat64(offset);
                         offset += 8;
 
+                        const waveEnded = !!data.getUint8(offset++);
+
                         // World size
                         const waveSize = data.getUint16(offset);
                         offset += 2;
-
-                        const waveEnded = !!data.getUint8(offset++);
 
                         if (uiManager.currentUI instanceof UserInterfaceGame) {
                             uiManager.currentUI.waveProgress = waveProgress;
@@ -76,25 +76,37 @@ export default class Networking {
                             uiManager.currentUI.nWaveProgressRedGageTimer = waveProgressRedGageTimer;
                             uiManager.currentUI.oWaveProgressRedGageTimer = uiManager.currentUI.waveProgressRedGageTimer;
 
+                            uiManager.currentUI.waveEnded = waveEnded;
+
                             uiManager.currentUI.nWorldSize = waveSize;
                             uiManager.currentUI.oWorldSize = uiManager.currentUI.worldSize;
 
                             uiManager.currentUI.updateT = 0;
-
-                            uiManager.currentUI.waveEnded = waveEnded;
                         }
                     };
+
+                    // Chats
+                    {
+                        let chats = [];
+                        
+                        const chatAmount = data.getUint8(offset++);
+                        for (let i = 0; i < chatAmount; i++) {
+                            chats.push(readString());
+                        }
+
+                        if (uiManager.currentUI instanceof UserInterfaceGame) {
+                            uiManager.currentUI.chats = chats;
+                        }
+                    };
+
+                    let ids: Set<number> = new Set();
 
                     const clientCount = data.getUint16(offset);
                     offset += 2;
 
-                    let clientIds: Set<number> = new Set();
-
                     for (let i = 0; i < clientCount; i++) {
                         const clientId = data.getUint32(offset);
                         offset += 4;
-
-                        clientIds.add(clientId);
 
                         const clientX = data.getFloat64(offset);
                         offset += 8;
@@ -148,24 +160,24 @@ export default class Networking {
                         } else {
                             players.set(clientId, new EntityPlayer(clientId, clientX, clientY, clientSize, clientHp, clientMaxHealth, clientAngle, clientMood, clientNickname));
                         }
+
+                        ids.add(clientId);
                     }
 
                     players.forEach((client, key) => {
-                        if (!clientIds.has(key)) {
+                        if (!ids.has(key)) {
                             players.delete(key);
                         }
                     });
 
+                    ids.clear();
+
                     const mobCount = data.getUint16(offset);
                     offset += 2;
-
-                    let mobIds: Set<number> = new Set();
 
                     for (let i = 0; i < mobCount; i++) {
                         const mobId = data.getUint32(offset);
                         offset += 4;
-
-                        mobIds.add(mobId);
 
                         const mobX = data.getFloat64(offset);
                         offset += 8;
@@ -218,13 +230,17 @@ export default class Networking {
                         } else {
                             mobs.set(mobId, new EntityMob(mobId, mobType, mobRarity, mobX, mobY, mobSize, mobHp, mobMaxHealth, mobAngle, mobIsPet));
                         }
+
+                        ids.add(mobId);
                     }
 
                     mobs.forEach((mob, key) => {
-                        if (!mobIds.has(key)) {
+                        if (!ids.has(key)) {
                             mob.isDead = true;
                         }
                     });
+
+                    ids.clear();
 
                     break;
                 }

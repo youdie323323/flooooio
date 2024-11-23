@@ -7,6 +7,7 @@ import UserInterface from "../UserInterface";
 import { selfId } from "../../Networking";
 import { Biomes } from "../../../shared/biomes";
 import { PacketKind } from "../../../shared/packet";
+import ComponentTextInput from "../components/ComponentTextInput";
 
 /**
  * Helper for draw mutable functions. (e.g. mouse movement helper)
@@ -113,6 +114,10 @@ export default class UserInterfaceGame extends UserInterface {
 
     public waveEnded: boolean;
 
+    private chatInput: ComponentTextInput;
+    private chatValue: string;
+    public chats: string[];
+
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
 
@@ -138,6 +143,37 @@ export default class UserInterfaceGame extends UserInterface {
         this.gameOverOpacity = 0;
 
         this.waveEnded = false;
+
+        this.chatValue = "";
+        this.chats = [];
+    }
+
+    handleKeyDown(event: KeyboardEvent): void {
+        const selfPlayer = players.get(selfId);
+        if (!selfPlayer) {
+            return;
+        }
+
+        if (event.key === "Enter") {
+            if (selfPlayer.isDead) {
+                // How can i enable chat with enter if player is dead
+                if (this.isDeadMenuContinued && this.waveEnded) {
+                    this.continueGameOver();
+                } else if (!this.isDeadMenuContinued) {
+                    this.isDeadMenuContinued = true;
+                }
+            } else {
+                // TODO: stop propagate (when submitted, this focus again)
+                this.chatInput.focus();
+            }
+        }
+    }
+
+    private continueGameOver() {
+        this.isGameOverContinued = true;
+
+        ws.send(new Uint8Array([PacketKind.WAVE_ROOM_GAME_LEAVE]));
+        uiManager.switchUI("menu");
     }
 
     protected initializeComponents(): void {
@@ -148,8 +184,8 @@ export default class UserInterfaceGame extends UserInterface {
             {
                 x: 6,
                 y: 6,
-                width: 17.5,
-                height: 17.5,
+                w: 17.5,
+                h: 17.5,
             },
             "#b04c5e",
             () => {
@@ -162,26 +198,23 @@ export default class UserInterfaceGame extends UserInterface {
         this.addComponent(exitButton);
 
         // Order is important!
-        
+
         this.gameOverContinueButton = new ComponentTextButton(
             {
                 x: 0,
                 y: 0,
-                width: 95,
-                height: 27,
+                w: 95,
+                h: 27,
             },
             "#c62327",
             () => {
-                this.isGameOverContinued = true;
-
-                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_GAME_LEAVE]));
-                uiManager.switchUI("menu");
+                this.continueGameOver();
             },
             "Continue"
         );
 
         // Dont show every frame
-        this.gameOverContinueButton.visible = false;
+        this.gameOverContinueButton.setVisible(false);
 
         this.addComponent(this.gameOverContinueButton);
 
@@ -189,8 +222,8 @@ export default class UserInterfaceGame extends UserInterface {
             {
                 x: 0,
                 y: 0,
-                width: 95,
-                height: 27,
+                w: 95,
+                h: 27,
             },
             "#1dd129",
             () => {
@@ -200,9 +233,57 @@ export default class UserInterfaceGame extends UserInterface {
         );
 
         // Dont show every frame
-        this.deadMenuContinueButton.visible = false;
+        this.deadMenuContinueButton.setVisible(false);
 
         this.addComponent(this.deadMenuContinueButton);
+
+        if (this.chatInput) {
+            this.chatInput.destroy();
+        }
+
+        // TODO: dont continue if 
+
+        this.chatInput = new ComponentTextInput(
+            {
+                x: 13,
+                y: heightRelative - 34,
+                w: 192,
+                h: 8,
+            },
+            {
+                canvas: this.canvas,
+                value: this.chatValue,
+
+                fontSize: 11,
+                fontFamily: 'Ubuntu, sans-serif',
+                fontColor: '#212121',
+                fontWeight: 'bold',
+                placeHolder: '',
+                placeHolderUnfocused: "Press [ENTER] or click here to chat",
+
+                borderColor: "#000000",
+                borderRadius: 4,
+                borderWidth: 2.2,
+                maxlength: 64,
+
+                onsubmit: (e, self) => {
+                    const chatMessage = self.value();
+                    // Send chat
+                    ws.send(new Uint8Array([PacketKind.CHAT, chatMessage.length, ...new TextEncoder().encode(chatMessage)]));
+
+                    self.blur();
+
+                    this.chatValue = "";
+                    self.value(this.chatValue);
+                },
+
+                onkeyup: (e, self) => {
+                    this.chatValue = self.value();
+                },
+            },
+        );
+
+        this.addComponent(this.chatInput);
     }
 
     public animationFrame() {
@@ -364,8 +445,7 @@ export default class UserInterfaceGame extends UserInterface {
         // Dead menu
         {
             const resetFunc = () => {
-                this.deadMenuContinueButton.visible = false;
-                // this.gameOverContinueButton.visible = false;
+                this.deadMenuContinueButton.setVisible(false);
 
                 this.isDeadAnimationActive = false;
                 this.deadAnimationY = -50;
@@ -435,7 +515,7 @@ export default class UserInterfaceGame extends UserInterface {
 
             if (selfPlayer.isDead) {
                 if (
-                    this.deadBackgroundOpacity < this.DEAD_BACKGROUND_TARGET_OPACITY && 
+                    this.deadBackgroundOpacity < this.DEAD_BACKGROUND_TARGET_OPACITY &&
                     // Stop fade-out blocking
                     !(this.isDeadMenuContinued && !this.waveEnded)
                 ) {
@@ -468,8 +548,8 @@ export default class UserInterfaceGame extends UserInterface {
 
                         this.gameOverContinueButton.x = centerWidth - (this.gameOverContinueButton.w / 2);
                         this.gameOverContinueButton.y = centerHeight + 35;
-                        this.gameOverContinueButton.visible = true;
-                        this.gameOverContinueButton.opacity = this.gameOverOpacity;
+                        this.gameOverContinueButton.setVisible(true);
+                        this.gameOverContinueButton.setGlobalAlpha(this.gameOverOpacity);
 
                         ctx.save();
 
@@ -480,9 +560,17 @@ export default class UserInterfaceGame extends UserInterface {
                         ctx.strokeStyle = '#000000';
                         ctx.fillStyle = "#f0666b";
                         ctx.font = "34px Ubuntu, sans-serif";
+
                         ctx.lineWidth = 3;
                         ctx.strokeText("GAME OVER", centerWidth, centerHeight);
                         ctx.fillText("GAME OVER", centerWidth, centerHeight);
+
+                        ctx.fillStyle = "white";
+                        ctx.font = "12px Ubuntu, sans-serif";
+                        ctx.lineWidth = 1.2;
+
+                        ctx.strokeText("(or press enter)", centerWidth, centerHeight + 75);
+                        ctx.fillText("(or press enter)", centerWidth, centerHeight + 75);
 
                         ctx.restore();
                     };
@@ -509,7 +597,7 @@ export default class UserInterfaceGame extends UserInterface {
 
                     this.deadMenuContinueButton.x = centerWidth - (this.deadMenuContinueButton.w / 2);
                     this.deadMenuContinueButton.y = this.deadAnimationY + 50;
-                    this.deadMenuContinueButton.visible = true;
+                    this.deadMenuContinueButton.setVisible(true);
 
                     ctx.translate(centerWidth, this.deadAnimationY);
 
@@ -530,6 +618,12 @@ export default class UserInterfaceGame extends UserInterface {
                     ctx.strokeText("Poison", 0, -61);
                     ctx.fillText("Poison", 0, -61);
 
+                    ctx.font = "12px Ubuntu, sans-serif";
+                    ctx.lineWidth = 1.2;
+
+                    ctx.strokeText("(or press enter)", 0, 90);
+                    ctx.fillText("(or press enter)", 0, 90);
+
                     ctx.restore();
                 };
             } else {
@@ -542,6 +636,10 @@ export default class UserInterfaceGame extends UserInterface {
 
     public cleanup(): void {
         this.worldManager = undefined;
+
+        if (this.chatInput) {
+            this.chatInput.destroy();
+        }
     }
 
     public setBiome(biome: Biomes) {

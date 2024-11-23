@@ -7,7 +7,7 @@ import { PlayerInstance } from "../entity/player/Player";
 import { waveRoomService } from "../main";
 import WaveRoom, { WaveRoomState } from "../wave/WaveRoom";
 import { Entity } from "../entity/Entity";
-import { choice, getRandomSafePosition } from "./random";
+import { choice, getRandomPosition } from "./random";
 
 export const TWO_PI = Math.PI * 2;
 

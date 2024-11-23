@@ -91,7 +91,7 @@ export function randomEnum<T extends object>(anEnum: T): T[keyof T] {
 }
 
 /**
- * Generate a safe position from the player for the map.
+ * Generate a safe position from the player.
  * @returns Coordinate of random position.
  */
 export function getRandomMapSafePosition(
@@ -131,10 +131,10 @@ export function getRandomMapSafePosition(
 }
 
 /**
- * Generate a safe position from the player.
+ * Generate a position.
  * @returns Coordinate of random position.
  */
-export function getRandomSafePosition(
+export function getRandomPosition(
   centerX: number,
   centerY: number,
   spawnRadius: number,

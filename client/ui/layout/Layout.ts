@@ -1,21 +1,21 @@
 export type NumberOrPercentage = number | `${number}%`;
 
 export interface LayoutOptions {
-    x?: NumberOrPercentage;
-    y?: NumberOrPercentage;
-    width?: NumberOrPercentage;
-    height?: NumberOrPercentage;
+    x: NumberOrPercentage;
+    y: NumberOrPercentage;
+    w: NumberOrPercentage;
+    h: NumberOrPercentage;
 }
 
 export default class Layout {
-    private static parseSize(size: NumberOrPercentage | undefined, containerSize: number): number {
+    private static parseSize(size: NumberOrPercentage, containerSize: number): number {
         if (typeof size === 'number') return size;
         return (parseFloat(size) / 100) * containerSize;
     }
     
     static calculatePosition(options: LayoutOptions, containerWidth: number, containerHeight: number) {
-        const width = this.parseSize(options.width, containerWidth);
-        const height = this.parseSize(options.height, containerHeight);
+        const width = this.parseSize(options.w, containerWidth);
+        const height = this.parseSize(options.h, containerHeight);
 
         let x = 0;
         let y = 0;

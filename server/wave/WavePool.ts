@@ -9,11 +9,11 @@ import { Rarities } from '../../shared/rarities';
 import { MOB_PROFILES } from '../../shared/mobProfiles';
 import { PETAL_PROFILES } from '../../shared/petalProfiles';
 import { isSpawnableSlot, PetalData, MockPetalData, Slot } from '../entity/mob/petal/Petal';
-import { USAGE_RELOAD_PETALS } from '../entity/player/PlayerReload';
+import { USAGE_RELOAD_PETALS } from '../entity/player/PlayerPetalReload';
 import { MoodKind, MOON_KIND_VALUES } from '../../shared/mood';
 import { logger } from '../main';
 import WaveRoom, { WaveData, WaveRoomPlayer, WaveRoomPlayerId, WaveRoomState } from './WaveRoom';
-import { getRandomMapSafePosition, generateRandomEntityId, getRandomAngle } from '../utils/random';
+import { getRandomMapSafePosition, generateRandomEntityId, getRandomAngle, getRandomPosition } from '../utils/random';
 import WaveProbabilityPredictor from './WaveProbabilityPredictor';
 import { Biomes } from '../../shared/biomes';
 import { MAP_CENTER_X, MAP_CENTER_Y, SAFETY_DISTANCE } from '../entity/EntityWorldBoundary';
@@ -112,7 +112,7 @@ export class WavePool {
         waveStartBuffer.writeUInt8(biome, 1);
 
         roomCandidates.forEach(player => {
-            const randPos = getRandomMapSafePosition(MAP_CENTER_X, MAP_CENTER_Y, this.waveData.mapSize, SAFETY_DISTANCE, this.getAllClients().filter(p => !p.isDead));
+            const randPos = getRandomPosition(MAP_CENTER_X, MAP_CENTER_Y, this.waveData.mapSize);
             if (!randPos) {
                 return null;
             }
@@ -124,7 +124,7 @@ export class WavePool {
 
         this.broadcastSeldIdPacket();
 
-        this.updateInterval = setInterval(this.update.bind(this), 1000 / UPDATE_FPS);
+        this.updateInterval = setInterval(this.updateEntities.bind(this), 1000 / UPDATE_FPS);
         this.updateSendInterval = setInterval(this.broadcastUpdatePacket.bind(this), 1000 / UPDATE_SEND_FPS);
     }
 
@@ -242,7 +242,10 @@ export class WavePool {
         return slotPetals;
     }
 
-    private update() {
+    /**
+     * Run all entity mixin.
+     */
+    private updateEntities() {
         this.clients.forEach((client) => {
             if (client[onUpdateTick]) {
                 client[onUpdateTick](this);
@@ -341,6 +344,12 @@ export class WavePool {
         // Base size for wave data and packet kind
         let size = 1 + 2 + 8 + 8 + 2 + 1;
 
+        // Add size for chats
+        size++; // Chat amount
+        this.waveData.chats.forEach(c => {
+            size += c.length + 1;
+        });
+
         // Add size for clients
         size += 2; // Client count
         this.clients.forEach(client => {
@@ -373,10 +382,18 @@ export class WavePool {
         buffer.writeDoubleBE(this.waveData.waveProgressRedGageTimer, offset);
         offset += 8;
 
+        buffer.writeUInt8(this.waveData.waveEnded ? 1 : 0, offset++);
+
         buffer.writeUInt16BE(this.waveData.mapSize, offset);
         offset += 2;
 
-        buffer.writeUInt8(this.waveData.waveEnded ? 1 : 0, offset++);
+        buffer.writeUInt8(this.waveData.chats.length, offset++);
+        this.waveData.chats.forEach(c => {
+            const nicknameBuffer = Buffer.from(c, 'utf-8');
+            buffer.writeUInt8(nicknameBuffer.length, offset++);
+            nicknameBuffer.copy(buffer, offset);
+            offset += nicknameBuffer.length;
+        });
 
         // Write clients
         buffer.writeUInt16BE(this.clients.size, offset);
