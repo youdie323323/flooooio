@@ -92,8 +92,6 @@ export default class ComponentTextInput extends Component {
 
         let self = this;
 
-        o = o ? o : {};
-
         self._canvas = o.canvas || null;
         self._ctx = self._canvas ? self._canvas.getContext('2d') : null;
         self._extraX = o.extraX || 0;
@@ -152,16 +150,6 @@ export default class ComponentTextInput extends Component {
             }, false);
         }
 
-        let autoBlur = function (e) {
-            e = e || window.event;
-
-            if (self._hasFocus && !self._mouseDown) {
-                self.blur();
-            }
-        };
-        window.addEventListener('mouseup', autoBlur, true);
-        window.addEventListener('touchend', autoBlur, true);
-
         self._hiddenInput = document.createElement('input');
         self._hiddenInput.type = 'text';
         self._hiddenInput.style.position = 'absolute';
@@ -185,6 +173,8 @@ export default class ComponentTextInput extends Component {
 
                 self.keydown(e, self);
             }
+
+            self.render();
         });
 
         self._hiddenInput.addEventListener('keyup', function (e: any) {
@@ -198,8 +188,6 @@ export default class ComponentTextInput extends Component {
             if (self._hasFocus) {
                 self._onkeyup(e, self);
             }
-
-            self.render();
         });
 
         inputs.push(self);
@@ -519,9 +507,7 @@ export default class ComponentTextInput extends Component {
                 self._hiddenInput.value = '';
             }
 
-            if (self._cursorInterval) {
-                clearInterval(self._cursorInterval);
-            }
+            if (self._cursorInterval) clearInterval(self._cursorInterval);
 
             self._cursorInterval = setInterval(function () {
                 if (self._cursorGlobalAlphaBack) {
@@ -575,8 +561,9 @@ export default class ComponentTextInput extends Component {
         self._onkeydown(e, self);
 
         if (keyCode === 65 && (e.ctrlKey || e.metaKey)) {
-            self.selectText();
             e.preventDefault();
+
+            self.selectText();
             return;
         }
 
@@ -586,9 +573,11 @@ export default class ComponentTextInput extends Component {
 
         if (keyCode === 13) {
             e.preventDefault();
+
             self._onsubmit(e, self);
         } else if (keyCode === 9) {
             e.preventDefault();
+
             if (inputs.length > 1) {
                 let next = (inputs[self._inputsIndex + 1]) ? self._inputsIndex + 1 : 0;
                 self.blur();
@@ -618,7 +607,7 @@ export default class ComponentTextInput extends Component {
                 self.click(e, self);
                 return self.focus(self._clickPos(x, y));
             }
-        } else {
+        } else if (!self._mouseDown) {
             return self.blur();
         }
     }
@@ -635,14 +624,18 @@ export default class ComponentTextInput extends Component {
         }
 
         if (self._hasFocus && self._selectionStart >= 0) {
-            let curPos = self._clickPos(x, y), start = Math.min(self._selectionStart, curPos), end = Math.max(self._selectionStart, curPos);
+            let curPos = self._clickPos(x, y);
 
             if (!isOver) {
-                self._selectionUpdated = true;
-                self._endSelection = true;
-                delete self._selectionStart;
-                return;
+                if (x < self.x) {
+                    curPos = 0;
+                } else if (x > self.x + self.outerW) {
+                    curPos = self._value.length;
+                }
             }
+
+            let start = Math.min(self._selectionStart, curPos),
+                end = Math.max(self._selectionStart, curPos);
 
             if (self._selection[0] !== start || self._selection[1] !== end) {
                 self._selection = [start, end];
@@ -666,10 +659,9 @@ export default class ComponentTextInput extends Component {
         let isSelection = self._clickPos(x, y) !== self._selectionStart;
         if (self._hasFocus && self._selectionStart >= 0 && self._overInput(x, y) && isSelection) {
             self._selectionUpdated = true;
-            delete self._selectionStart;
-        } else {
-            delete self._selectionStart;
         }
+
+        delete self._selectionStart;
 
         self.click(e, self);
     }
@@ -702,55 +694,57 @@ export default class ComponentTextInput extends Component {
                 ctx.beginPath();
                 ctx.roundRect(0, 0, w, h, br);
                 ctx.fill();
-    
+
                 ctx.shadowOffsetX = 0;
                 ctx.shadowOffsetY = 0;
                 ctx.shadowBlur = 0;
             }
-    
+
             self._drawTextBox(function () {
                 ctx.shadowOffsetX = 0;
                 ctx.shadowOffsetY = 0;
                 ctx.shadowBlur = 0;
-    
+
                 let text = self._clipText();
-    
-                let paddingBorder = self._padding + self._borderWidth;
-                if (self._selection[1] > 0) {
-                    let selectOffset = self._textWidth(text.substring(0, self._selection[0])), selectWidth = self._textWidth(text.substring(self._selection[0], self._selection[1]));
-    
+
+                const paddingBorder = self._padding + self._borderWidth,
+                    selectWidth = self._textWidth(text.substring(self._selection[0], self._selection[1]));
+
+                if (selectWidth !== 0) {
+                    const selectOffset = self._textWidth(text.substring(0, self._selection[0]));
+
                     ctx.fillStyle = self._selectionColor;
-                    const heightResized = self.h * 1.55;
+
+                    const heightResized = self.h * 1.7;
                     const WIDTH_OFFSET = 4;
-                    const widthResized = selectWidth === 0 ? selectWidth : selectWidth + WIDTH_OFFSET;
                     ctx.fillRect(
                         paddingBorder + selectOffset - ((selectWidth === 0 ? 0 : WIDTH_OFFSET) / 2),
                         paddingBorder + ((self.h - heightResized) / 2),
-                        widthResized,
+                        selectWidth + WIDTH_OFFSET,
                         heightResized,
                     );
                 } else {
                     ctx.save();
-    
+
                     let cursorOffset = self._textWidth(text.substring(0, self._cursorPos));
                     ctx.globalAlpha = self._cursorGlobalAlpha;
-    
+
                     const CURSOR_SIZE_WIDTH = 2.2;
-    
+
                     ctx.fillStyle = "#000000";
                     ctx.fillRect((paddingBorder + cursorOffset) - 1, paddingBorder - (5.5 / 2), CURSOR_SIZE_WIDTH, self.h + 5.5);
-    
+
                     const whiteWidth = CURSOR_SIZE_WIDTH * 0.65;
                     ctx.fillStyle = "#ffffff";
                     ctx.fillRect((paddingBorder + cursorOffset + ((CURSOR_SIZE_WIDTH - whiteWidth) / 2)) - 1, paddingBorder - (5.5 / 2), whiteWidth, self.h + 5.5);
-    
+
                     ctx.restore();
                 }
-    
+
                 let textX = self._padding + self._borderWidth, textY = Math.round(paddingBorder + self.h / 2);
-    
+
                 text = (text === '' && self._placeHolder) ? self._placeHolder : text;
-    
+
                 ctx.font = self._fontStyle + ' ' + self._fontWeight + ' ' + self._fontSize + 'px ' + self._fontFamily;
                 ctx.shadowColor = self._fontShadowColor;
                 ctx.shadowBlur = self._fontShadowBlur;
@@ -758,24 +752,26 @@ export default class ComponentTextInput extends Component {
                 ctx.shadowOffsetY = self._fontShadowOffsetY;
                 ctx.textAlign = 'left';
                 ctx.textBaseline = 'middle';
-    
+
                 const normalFillStyle = (self._value !== '' && self._value !== self._placeHolder) ? self._fontColor : self._placeHolderColor;
-    
+
                 let currentX = textX;
                 for (let i = 0; i < text.length; i++) {
                     const char = text[i];
-    
+
                     if (i >= self._selection[0] && i < self._selection[1]) {
                         ctx.strokeStyle = '#000000';
                         ctx.fillStyle = "white";
+                        ctx.lineWidth = 1.2;
+
                         ctx.strokeText(char, currentX, textY);
                         ctx.fillText(char, currentX, textY);
                     } else {
                         ctx.fillStyle = normalFillStyle;
-    
+
                         ctx.fillText(char, currentX, textY);
                     }
-    
+
                     currentX += self._textWidth(char);
                 }
             });
@@ -803,6 +799,7 @@ export default class ComponentTextInput extends Component {
             ctx.strokeStyle = 'white';
             ctx.fillStyle = "#000000";
             ctx.lineWidth = 1.2;
+
             ctx.strokeText(this._value, textX, h / 2);
             ctx.fillText(this._value, textX, h / 2);
         } else {
@@ -903,6 +900,8 @@ export default class ComponentTextInput extends Component {
 
         ctx.font = self._fontStyle + ' ' + self._fontWeight + ' ' + self._fontSize + 'px ' + self._fontFamily;
         ctx.textAlign = 'left';
+        // Disable font kerning so multiple length doesnt have wrong precision
+        ctx.fontKerning = 'none';
 
         return ctx.measureText(text).width;
     }
@@ -925,22 +924,32 @@ export default class ComponentTextInput extends Component {
     }
 
     _clickPos(x: number, y: number) {
-        let self = this, value = self._value;
+        let self = this;
+        let text = self._clipText();
+        let totalWidth = 0;
+        let pos = text.length;
 
-        if (self._value === self._placeHolder) {
-            value = '';
+        let relativeX = x - (self.x + self._padding + self._borderWidth);
+
+        let allTextWidth = self._textWidth(text);
+
+        if (relativeX <= 0) {
+            return 0;
         }
 
-        let text = self._clipText(value), totalW = 0, pos = text.length;
+        if (relativeX >= allTextWidth) {
+            return text.length;
+        }
 
-        if (x - (self.x + self._extraX) < self._textWidth(text)) {
-            for (let i = 0; i < text.length; i++) {
-                totalW += self._textWidth(text[i]);
-                if (totalW >= x - (self.x + self._extraX)) {
-                    pos = i;
-                    break;
-                }
+        for (let i = 0; i < text.length; i++) {
+            let charWidth = self._textWidth(text[i]);
+            let nextTotalWidth = totalWidth + charWidth;
+
+            if (relativeX <= totalWidth + (charWidth / 2)) {
+                return i;
             }
+
+            totalWidth = nextTotalWidth;
         }
 
         return pos;
