@@ -341,6 +341,9 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
 
             players.forEach((v, k) => {
                 v.draw(ctx);
+                if (v.isDead && v.deadT > 1 && v.isDeleted) {
+                    players.delete(k);
+                }
             });
 
             ctx.restore();
@@ -563,8 +566,8 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
 
                         this.gameOverOpacity = Math.max(Math.min(this.gameOverOpacity, 1), 0);
 
-                        this.gameOverContinueButton.x = centerWidth - (this.gameOverContinueButton.w / 2);
-                        this.gameOverContinueButton.y = centerHeight + 35;
+                        this.gameOverContinueButton.setX(centerWidth - (this.gameOverContinueButton.w / 2));
+                        this.gameOverContinueButton.setY(centerHeight + 35);
                         this.gameOverContinueButton.setVisible(true);
                         this.gameOverContinueButton.setGlobalAlpha(this.gameOverOpacity);
 
@@ -581,7 +584,7 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
                         ctx.font = "34px Ubuntu";
 
                         ctx.lineWidth = 3;
-                        
+
                         ctx.strokeText("GAME OVER", centerWidth, centerHeight);
                         ctx.fillText("GAME OVER", centerWidth, centerHeight);
 
@@ -615,8 +618,8 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
                 {
                     ctx.save();
 
-                    this.deadMenuContinueButton.x = centerWidth - (this.deadMenuContinueButton.w / 2);
-                    this.deadMenuContinueButton.y = this.deadAnimationY + 50;
+                    this.deadMenuContinueButton.setX(centerWidth - (this.deadMenuContinueButton.w / 2));
+                    this.deadMenuContinueButton.setY(this.deadAnimationY + 50);
                     this.deadMenuContinueButton.setVisible(true);
 
                     ctx.translate(centerWidth, this.deadAnimationY);
@@ -675,7 +678,7 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
     set biome(biome: Biomes) {
         gameUiCurrentBiome = biome;
     }
-    
+
     get biome(): Biomes {
         return gameUiCurrentBiome;
     }

@@ -1,6 +1,7 @@
 import * as esbuild from 'esbuild';
 import { readFileSync, rm, writeFileSync } from 'fs';
 import JsConfuser from 'js-confuser';
+import { confirm } from '@inquirer/prompts';
 
 // They didnt add "do" and "with" to reserved keywords
 const reservedKeywords = [
@@ -75,11 +76,17 @@ let counter = 1;
 const prebuildedFileName = './prebuilded-' + Date.now() + '.js';
 
 async function watch() {
-  let ctx = await esbuild.context({
+  const answers = await confirm({
+    message: "Obfuscated bundled javascript?",
+  });
+
+  const obfuscateEnabled = !!answers;
+
+  await esbuild.build({
     entryPoints: ['./client/main.ts'],
     bundle: true,
     minify: true,
-    outfile: prebuildedFileName,
+    outfile: obfuscateEnabled ? prebuildedFileName : "./server/public/client.js",
     plugins: [
       {
         name: 'watch-client-only',
@@ -87,47 +94,48 @@ async function watch() {
           build.onEnd(async (result) => {
             console.clear();
 
-            console.log('Builded, start obfuscate with js-confuser');
+            if (obfuscateEnabled) {
+              console.log('Builded, start obfuscate with js-confuser');
 
-            JsConfuser.obfuscate(readFileSync(prebuildedFileName, "utf-8"), {
-              target: 'browser',
-              preset: 'low',
-              verbose: true,
-              compact: true,
-
-              // Disable shits
-              stringCompression: false,
-              stringConcealing: false,
-              shuffle: false,
-              controlFlowFlattening: false,
-
-              globalConcealing: true,
-              opaquePredicates: true,
-
-              // Disable anti bandwidth transformers
-              identifierGenerator: () => {
-                let mangledName = "";
-                do {
-                  mangledName = alphabeticalGenerator(counter++);
-                } while (reservedKeywords.includes(mangledName));
-                return mangledName;
-              },
-              hexadecimalNumbers: false,
-              deadCode: false,
-              stringEncoding: false,
-            }).then(result => {
-              writeFileSync("./server/public/client.js", result.code);
-              rm(prebuildedFileName, () => { });
-
-              console.log('Ofsucated');
-            });
+              JsConfuser.obfuscate(readFileSync(prebuildedFileName, "utf-8"), {
+                target: 'browser',
+                preset: 'low',
+                verbose: true,
+                compact: true,
+  
+                stringCompression: false,
+                stringConcealing: false,
+                controlFlowFlattening: false,
+                shuffle: false,
+                globalConcealing: false,
+                
+                opaquePredicates: true,
+  
+                // Disable anti bandwidth transformers
+                identifierGenerator: () => {
+                  let mangledName = "";
+                  do {
+                    mangledName = alphabeticalGenerator(counter++);
+                  } while (reservedKeywords.includes(mangledName));
+                  return mangledName;
+                },
+                hexadecimalNumbers: false,
+                deadCode: false,
+                stringEncoding: false,
+              }).then(result => {
+                writeFileSync("./server/public/client.js", result.code);
+                rm(prebuildedFileName, () => { });
+  
+                console.log('Ofsucated');
+              });
+            } else {
+              console.log('Builded');
+            }
           })
         }
       },
     ],
   })
-
-  await ctx.watch();
 }
 
 // IMPORTANT: this call MUST NOT have an `await`.

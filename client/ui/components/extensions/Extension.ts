@@ -2,16 +2,14 @@ import { Component } from "../Component";
 
 export type UpdateFunction = () => void;
 
-export type ComponentExtensionTemplate = Updatable & {
-    [key: string]: any;
-}
-
 export interface Updatable {
     /**
      * Update method call on rAF.
      */
     update: UpdateFunction;
-}
+};
+
+export type ComponentExtensionTemplate = Updatable & { [key: string]: any };
 
 export type ExtensionConstructor = new (...args: any[]) => Component & Partial<Updatable>;
 

@@ -175,7 +175,7 @@ export default abstract class UserInterface {
     private handleMouseMove(event: MouseEvent): void {
         this.updateMousePosition(event);
 
-        for (const component of this.interactiveComponents) {
+        this.interactiveComponents.forEach(component => {
             if (component.visible) {
                 const isHovering = component.isPointInside(this.mouseX, this.mouseY);
 
@@ -191,7 +191,7 @@ export default abstract class UserInterface {
                     this.hoveredComponent = null;
                 }
             }
-        }
+        });
     }
 
     abstract handleKeyDown(event: KeyboardEvent): void;
@@ -227,7 +227,7 @@ export default abstract class UserInterface {
         if (!ctx) return;
 
         // Render all visible components
-        for (const component of this.components) {
+        this.components.forEach(component => {
             if (component.visible) {
                 ctx.save();
 
@@ -235,7 +235,7 @@ export default abstract class UserInterface {
 
                 ctx.restore();
             }
-        }
+        });
     }
 
     protected abstract initializeComponents(): void;

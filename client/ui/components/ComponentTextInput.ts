@@ -764,10 +764,13 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
                 ctx.shadowOffsetY = self._fontShadowOffsetY;
                 ctx.textAlign = 'left';
                 ctx.textBaseline = 'middle';
-
+                
                 const normalFillStyle = (self._value !== '' && self._value !== self._placeHolder) ? self._fontColor : self._placeHolderColor;
 
                 let currentX = textX;
+
+                ctx.translate(0, textY);
+
                 for (let i = 0; i < text.length; i++) {
                     const char = text[i];
 
@@ -776,20 +779,18 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
                         ctx.fillStyle = "#ffffff";
                         ctx.lineWidth = calculateStrokeWidth(self._fontSize);
 
-                        ctx.strokeText(char, currentX, textY);
-                        ctx.fillText(char, currentX, textY);
+                        ctx.strokeText(char, currentX, 0);
+                        ctx.fillText(char, currentX, 0);
                     } else {
                         ctx.fillStyle = normalFillStyle;
 
-                        ctx.fillText(char, currentX, textY);
+                        ctx.fillText(char, currentX, 0);
                     }
 
                     currentX += self._textWidth(char);
                 }
             });
         } else if (this._value.length > 0) {
-            let textX = self._padding + self._borderWidth;
-
             ctx.lineJoin = 'round';
             ctx.lineCap = 'round';
             ctx.font = self._fontStyle + ' ' + self._fontWeight + ' ' + self._fontSize + 'px ' + self._fontFamily;
@@ -814,11 +815,11 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
             ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = calculateStrokeWidth(self._fontSize);
 
-            ctx.strokeText(this._value, textX, h / 2);
-            ctx.fillText(this._value, textX, h / 2);
-        } else {
-            let textX = self._padding + self._borderWidth;
+            ctx.translate(self._padding + self._borderWidth, h / 2);
 
+            ctx.strokeText(self._value, 0, 0);
+            ctx.fillText(self._value, 0, 0);
+        } else {
             ctx.lineJoin = 'round';
             ctx.lineCap = 'round';
             ctx.font = self._fontStyle + ' ' + self._fontWeight + ' ' + (self._fontSize - 1) + 'px ' + self._fontFamily;
@@ -843,8 +844,10 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
             ctx.strokeStyle = '#000000';
             ctx.lineWidth = calculateStrokeWidth(self._fontSize);
 
-            ctx.strokeText(self._placeHolderUnfocused, textX, h / 2);
-            ctx.fillText(self._placeHolderUnfocused, textX, h / 2);
+            ctx.translate(self._padding + self._borderWidth, h / 2);
+
+            ctx.strokeText(self._placeHolderUnfocused, 0, 0);
+            ctx.fillText(self._placeHolderUnfocused, 0, 0);
         }
     }
 

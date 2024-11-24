@@ -44,7 +44,6 @@ export default abstract class Entity {
     angle: number;
     nAngle: number;
     oAngle: number;
-    id: number;
     health: number;
     nHealth: number;
     oHealth: number;
@@ -55,10 +54,8 @@ export default abstract class Entity {
     redHealthTimer: number;
     moveCounter: number;
     hpAlpha: number;
-    maxHealth: number;
 
-    constructor(id: number, x: number, y: number, size: number, health: number, maxHealth: number, angle: number) {
-        this.id = id;
+    constructor(readonly id: number, x: number, y: number, size: number, health: number, readonly maxHealth: number, angle: number) {
         this.x = this.nx = this.ox = x;
         this.y = this.ny = this.oy = y;
         this.angle = this.nAngle = this.oAngle = angle;
@@ -73,7 +70,6 @@ export default abstract class Entity {
         this.isDead = false;
         this.moveCounter = 0;
         this.hpAlpha = 1;
-        this.maxHealth = maxHealth;
     }
 
     update() {

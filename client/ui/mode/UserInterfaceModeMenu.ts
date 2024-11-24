@@ -76,9 +76,9 @@ export default class UserInterfaceMenu extends UserInterface {
                             this.playableButtons.forEach((b) => {
                                 b.setVisible(true, true);
                             });
-                        }, 300);
+                        }, 250);
                     }, 2000);
-                }, 300);
+                }, 250);
             }, 2000);
         }, 1);
     }
@@ -265,9 +265,9 @@ export default class UserInterfaceMenu extends UserInterface {
         this.connectingText = new ComponentDynamicText(
             {
                 x: (widthRelative / 2) - (200 / 2),
-                y: (heightRelative / 2) - (30 / 2),
+                y: (heightRelative / 2) - (40 / 2),
                 w: 200,
-                h: 30,
+                h: 40,
             },
             "Connecting...",
             30,
@@ -280,11 +280,11 @@ export default class UserInterfaceMenu extends UserInterface {
         this.loggingInText = new ComponentDynamicText(
             {
                 x: (widthRelative / 2) - (200 / 2),
-                y: (heightRelative / 2) - (30 / 2),
+                y: (heightRelative / 2) - (40 / 2),
                 w: 200,
-                h: 30,
+                h: 40,
             },
-            "Loggin in...",
+            "Logging in...",
             30,
         );
 
@@ -313,7 +313,7 @@ export default class UserInterfaceMenu extends UserInterface {
         return {
             x: 0,
             y: randomFloat(-200, (this.canvas.height / scaleFactor) + 100),
-            z: randomFloat(0.8, 2.25),
+            z: randomFloat(0.7, 2),
             waveStep: Math.random() + 360,
         }
     }

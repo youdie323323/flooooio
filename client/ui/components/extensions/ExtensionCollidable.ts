@@ -7,7 +7,7 @@ type NullableAll<T extends readonly any[]> = {
 
 export default function ExtensionCollidable<T extends ExtensionConstructor>(Base: T) {
     return class CollidablePrivateAccess extends Base implements ComponentExtensionTemplate {
-        private static readonly SPEED: number = 0.2;
+        private static readonly SPEED: number = 0.5;
         private collidableComponents: Component[];
         private targetPosition: NullableAll<[number, number]>;
         private initialPosition: [number, number];
@@ -77,6 +77,7 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
             this.collidableComponents = this.collidableComponents.concat(
                 components.filter(c => !this.collidableComponents.includes(c))
             );
+            console.log(this.collidableComponents)
         }
 
         public update: UpdateFunction = () => {
@@ -101,7 +102,7 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
             if (this.targetPosition[0] !== null) {
                 this.x += (this.targetPosition[0] - this.x) * CollidablePrivateAccess.SPEED;
                 if (Math.abs(this.targetPosition[0] - this.x) < 0.1) {
-                    this.x = this.targetPosition[0];
+                    this.setX(this.targetPosition[0]);
                     this.targetPosition[0] = null;
                 }
             }
@@ -109,7 +110,7 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
             if (this.targetPosition[1] !== null) {
                 this.y += (this.targetPosition[1] - this.y) * CollidablePrivateAccess.SPEED;
                 if (Math.abs(this.targetPosition[1] - this.y) < 0.1) {
-                    this.y = this.targetPosition[1];
+                    this.setY(this.targetPosition[1]);
                     this.targetPosition[1] = null;
                 }
             }

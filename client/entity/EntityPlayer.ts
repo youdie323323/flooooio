@@ -8,14 +8,15 @@ export default class EntityPlayer extends Entity {
     angryT: number;
     sadT: number;
     mood: Mood;
-    nickname: string;
+    isDeleted: boolean;
 
-    constructor(id: number, x: number, y: number, size: number, health: number, maxHealth: number, angle: number, mood: Mood, nickname: string) {
+    constructor(id: number, x: number, y: number, size: number, health: number, maxHealth: number, angle: number, mood: Mood, readonly nickname: string) {
         super(id, x, y, size, health, maxHealth, angle);
+
         this.angryT = 0;
         this.sadT = 0;
         this.mood = mood;
-        this.nickname = nickname;
+        this.isDeleted = false;
     }
 
     update() {

@@ -85,7 +85,7 @@ export default class Networking {
                     // Chats
                     {
                         let chats = [];
-                        
+
                         const chatAmount = data.getUint8(offset++);
                         for (let i = 0; i < chatAmount; i++) {
                             chats.push(readString());
@@ -161,9 +161,16 @@ export default class Networking {
                         ids.add(clientId);
                     }
 
-                    players.forEach((client, key) => {
-                        if (!ids.has(key)) {
-                            players.delete(key);
+                    players.forEach((player, key) => {
+                        if (
+                            !ids.has(key) && 
+                            // Dont repeat them
+                            !player.isDeleted
+                        ) {
+                            player.isDeleted = true;
+                            player.isDead = true;
+                            player.deadT = 0;
+                            player.health = 0;
                         }
                     });
 

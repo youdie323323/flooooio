@@ -3,7 +3,7 @@ import Layout, { LayoutOptions } from "../layout/Layout";
 
 // Base interface for all GUI components
 export class Component {
-    private readonly ANIMATION_DURATION: number = 200;
+    private readonly ANIMATION_DURATION: number = 150;
     public isAnimating: boolean = false;
     public animationProgress: number = 1;
     public animationStartTime: number | null = null;
@@ -36,8 +36,8 @@ export class Component {
             viewportHeight
         );
 
-        this.x = x;
-        this.y = y;
+        this.setX(x);
+        this.setY(y);
         this.w = width;
         this.h = height;
     }
@@ -76,9 +76,21 @@ export class Component {
 
         const progress = easeOutExpo(this.animationProgress);
 
-        ctx.translate(this.x + this.w / 2, this.y + (-(this.h / 2) * (1 - progress)) + this.h / 2);
+        ctx.translate(this.x + this.w / 2, this.y + (-(this.h) * (1 - progress)) + this.h / 2);
         ctx.scale(progress, progress);
         ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
+    }
+
+    public setX(x: number) {
+        this.x = x;
+    }
+
+    public setY(y: number) {
+        this.y = y;
+    }
+
+    public setGlobalAlpha(globalAlpha: number) {
+        this.globalAlpha = globalAlpha;
     }
 
     public setVisible(toggle: boolean, shouldAnimate: boolean = false) {
@@ -96,10 +108,6 @@ export class Component {
         } else {
             this.visible = toggle;
         }
-    }
-
-    public setGlobalAlpha(globalAlpha: number) {
-        this.globalAlpha = globalAlpha;
     }
 
     // Getters and setters for x, y, w, h
