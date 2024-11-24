@@ -173,8 +173,6 @@ export default class ComponentTextInput extends Component {
 
                 self.keydown(e, self);
             }
-
-            self.render();
         });
 
         self._hiddenInput.addEventListener('keyup', function (e: any) {

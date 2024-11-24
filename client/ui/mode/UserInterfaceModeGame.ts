@@ -162,10 +162,10 @@ export default class UserInterfaceGame extends UserInterface {
                 } else if (!this.isDeadMenuContinued) {
                     this.isDeadMenuContinued = true;
                 }
-            } else {
-                // TODO: stop propagate (when submitted, this focus again)
-                this.chatInput.focus();
             }
+
+            // TODO: stop propagate (when submitted, this focus again)
+            if (this.chatInput) this.chatInput.focus();
         }
     }
 
