@@ -1,4 +1,4 @@
-import { Rarities } from "../shared/rarities";
+import { Rarities } from "../shared/enum";
 
 export const ARROW_START_DISTANCE = 30;
 export const TWO_PI = Math.PI * 2;

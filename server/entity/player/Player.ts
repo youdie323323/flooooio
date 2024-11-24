@@ -6,12 +6,12 @@ import { UserData } from "../../wave/WavePool";
 import { MobInstance } from "../mob/Mob";
 import { PlayerPetalOrbit } from "./PlayerPetalOrbit";
 import { PlayerReload } from "./PlayerPetalReload";
-import { MoodKind } from "../../../shared/mood";
 import { PetalSlots, MockPetalData } from "../mob/petal/Petal";
 import { PlayerDeadCamera } from "./PlayerDeadCamera";
 import { EntityWorldBoundary } from "../EntityWorldBoundary";
 import { EntityDeath } from "../EntityDeath";
 import { PlayerPetalConsume } from "./PlayerPetalConsume";
+import { Mood } from "../../../shared/enum";
 
 class BasePlayer implements Entity {
     readonly id: EntityId;
@@ -35,7 +35,7 @@ class BasePlayer implements Entity {
     /**
      * Current mood of player.
      */
-    mood: MoodKind;
+    mood: Mood;
 
     /**
      * Determine if player is dead.

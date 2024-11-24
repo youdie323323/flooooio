@@ -7,9 +7,9 @@ import { PetalData } from "./mob/petal/Petal";
 import QuadTree from "../utils/QuadTree";
 import { MOB_PROFILES } from "../../shared/mobProfiles";
 import { PETAL_PROFILES } from "../../shared/petalProfiles";
-import { MobType } from "../../shared/types";
 import { computeDelta, Ellipse, isColliding } from "../utils/collision";
 import { MAP_CENTER_X, MAP_CENTER_Y } from "./EntityWorldBoundary";
+import { MobType } from "../../shared/enum";
 
 // Arc + stroke size
 export const FLOWER_ARC_RADIUS = 25 + (2.75 / 2);
@@ -18,7 +18,7 @@ export const BUBBLE_PUSH_FACTOR = 3;
 
 export function EntityCollisionResponse<T extends new (...args: any[]) => Entity>(Base: T) {
   return class extends Base implements EntityMixinTemplate {
-    private quadTree: QuadTree;
+    private quadTree: QuadTree<Entity>;
 
     constructor(...args: any[]) {
       super(...args);

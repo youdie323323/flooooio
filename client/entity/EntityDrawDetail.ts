@@ -12,8 +12,6 @@ export function drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, 
         return;
     }
 
-    ctx.save();
-
     // Draw nickname if not self
     if (entity instanceof EntityPlayer && entity.id !== selfId) {
         ctx.save();
@@ -90,6 +88,4 @@ export function drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, 
 
         ctx.restore();
     }
-
-    ctx.restore();
 }

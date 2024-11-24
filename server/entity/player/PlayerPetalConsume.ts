@@ -1,10 +1,9 @@
 import { EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool } from "../../wave/WavePool";
 import { BasePlayer } from "./Player";
-import { MoodKind } from "../../../shared/mood";
 import { isSpawnableSlot } from "../mob/petal/Petal";
-import { PetalType } from "../../../shared/types";
 import { consumeConsumable } from "./PlayerPetalReload";
+import { Mood, PetalType } from "../../../shared/enum";
 
 export function PlayerPetalConsume<T extends new (...args: any[]) => BasePlayer>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
@@ -13,7 +12,7 @@ export function PlayerPetalConsume<T extends new (...args: any[]) => BasePlayer>
                 super[onUpdateTick](poolThis);
             }
 
-            const isMoodConsume = this.mood === MoodKind.SAD;
+            const isMoodConsume = this.mood === Mood.SAD;
 
             this.slots.surface.forEach((petals, i) => {
                 if (petals != null && isSpawnableSlot(petals)) {

@@ -2,10 +2,9 @@ import { EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool, UPDATE_FPS } from "../../wave/WavePool";
 import { Mob, MobInstance } from "../mob/Mob";
 import { BasePlayer, PlayerInstance } from "./Player";
-import { MobType, PetalType } from "../../../shared/types";
 import { isSpawnableSlot, PetalData } from "../mob/petal/Petal";
 import { PETAL_PROFILES } from "../../../shared/petalProfiles";
-import { Rarities } from "../../../shared/rarities";
+import { PetalType, MobType, Rarities } from "../../../shared/enum";
 
 export const USAGE_RELOAD_PETALS: Set<PetalType | MobType> = new Set([
     PetalType.BEETLE_EGG,

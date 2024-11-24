@@ -1,10 +1,6 @@
-import { Rarities } from "../../shared/rarities";
-import { MobType } from "../../shared/types";
-import { WaveData, WaveRoomState } from "./WaveRoom";
-import { onUpdateTick } from "../entity/Entity";
-import { WavePool } from "./WavePool";
-import { PlayerInstance } from "../entity/player/Player";
+import { WaveData } from "./WaveRoom";
 import { calculateWaveLuck } from "../utils/formula";
+import { Rarities, MobType } from "../../shared/enum";
 
 /*
 Wave 21+: Commons stop spawning

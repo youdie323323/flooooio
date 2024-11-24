@@ -587,7 +587,7 @@ export default class ComponentTextInput extends Component {
             }
         }
 
-        // Use raf to fix input lag
+        // Use rAF to fix input lag
         requestAnimationFrame(() => {
             self._value = self._hiddenInput.value;
             self._cursorPos = self._hiddenInput.selectionStart;
@@ -898,7 +898,7 @@ export default class ComponentTextInput extends Component {
 
         let textWidth = self._textWidth(value), fillPer = textWidth / ((self.w + 6) - self._padding), text = fillPer > 1 ? value.substr(-1 * Math.floor(value.length / fillPer)) : value;
 
-        return text + '';
+        return text;
     }
 
     _textWidth(text: string) {

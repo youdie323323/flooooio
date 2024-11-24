@@ -1,22 +1,18 @@
 import uWS from 'uWebSockets.js';
-import { PacketKind } from "../../shared/packet";
-import { MobType, PetalType } from "../../shared/types";
 import { Mob, MobInstance, MOB_SIZE_FACTOR, MobData } from "../entity/mob/Mob";
 import { Player, PlayerInstance, MockPlayerData } from "../entity/player/Player";
 import { EntityId, onUpdateTick } from "../entity/Entity";
 import { isPetal, kickClient } from '../utils/common';
-import { Rarities } from '../../shared/rarities';
 import { MOB_PROFILES } from '../../shared/mobProfiles';
 import { PETAL_PROFILES } from '../../shared/petalProfiles';
 import { isSpawnableSlot, PetalData, MockPetalData, Slot } from '../entity/mob/petal/Petal';
 import { USAGE_RELOAD_PETALS } from '../entity/player/PlayerPetalReload';
-import { MoodKind, MOON_KIND_VALUES } from '../../shared/mood';
 import { logger } from '../main';
 import WaveRoom, { WaveData, WaveRoomPlayer, WaveRoomPlayerId, WaveRoomState } from './WaveRoom';
 import { getRandomMapSafePosition, generateRandomEntityId, getRandomAngle, getRandomPosition } from '../utils/random';
 import WaveProbabilityPredictor from './WaveProbabilityPredictor';
-import { Biomes } from '../../shared/biomes';
 import { MAP_CENTER_X, MAP_CENTER_Y, SAFETY_DISTANCE } from '../entity/EntityWorldBoundary';
+import { Biomes, Packet, MobType, PetalType, Rarities, Mood, MOON_VALUES } from '../../shared/enum';
 
 // Define UserData for WebSocket connections
 export interface UserData {
@@ -107,7 +103,7 @@ export class WavePool {
     public startWave(biome: Biomes, roomCandidates: WaveRoomPlayer[]) {
         const waveStartBuffer = Buffer.alloc(2);
 
-        waveStartBuffer.writeUInt8(PacketKind.WAVE_ROOM_STARTING, 0);
+        waveStartBuffer.writeUInt8(Packet.WAVE_ROOM_STARTING, 0);
 
         waveStartBuffer.writeUInt8(biome, 1);
 
@@ -282,9 +278,9 @@ export class WavePool {
     /**
      * Updates the mood of a client.
      */
-    public changeMood(clientId: PlayerInstance["id"], kind: MoodKind): boolean {
+    public changeMood(clientId: PlayerInstance["id"], kind: Mood): boolean {
         if (
-            !MOON_KIND_VALUES.includes(kind)
+            !MOON_VALUES.includes(kind)
         ) {
             return false;
         }
@@ -333,7 +329,7 @@ export class WavePool {
 
         // Loop through all WebSocket connections
         this.clients.forEach((player, clientId) => {
-            buffer.writeUInt8(PacketKind.SELF_ID, 0);
+            buffer.writeUInt8(Packet.SELF_ID, 0);
             buffer.writeUInt32BE(clientId, 1);
 
             player.ws.send(buffer, true);
@@ -370,7 +366,7 @@ export class WavePool {
         let offset = 0;
 
         // Packet kind
-        buffer.writeUInt8(PacketKind.UPDATE, offset++);
+        buffer.writeUInt8(Packet.UPDATE, offset++);
 
         // Wave information
         buffer.writeUInt16BE(this.waveData.waveProgress, offset);

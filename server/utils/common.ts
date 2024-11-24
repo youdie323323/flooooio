@@ -1,5 +1,4 @@
 import { PETAL_PROFILES } from "../../shared/petalProfiles";
-import { MobType, PetalType } from "../../shared/types";
 import { WavePool } from "../wave/WavePool";
 import { MobInstance, MobStat } from "../entity/mob/Mob";
 import { PetalStat, isSpawnableSlot } from "../entity/mob/petal/Petal";
@@ -8,6 +7,7 @@ import { waveRoomService } from "../main";
 import WaveRoom, { WaveRoomState } from "../wave/WaveRoom";
 import { Entity } from "../entity/Entity";
 import { choice, getRandomPosition } from "./random";
+import { MobType, PetalType } from "../../shared/enum";
 
 export const TWO_PI = Math.PI * 2;
 

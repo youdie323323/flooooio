@@ -1,9 +1,9 @@
 import { Entity, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool } from "../../wave/WavePool";
 import { BaseMob, Mob, MobInstance } from "./Mob";
-import { MobType } from "../../../shared/types";
 import { Player, PlayerInstance } from "../player/Player";
 import { TWO_PI } from "../../utils/common";
+import { MobType } from "../../../shared/enum";
 
 export function MobHealthRegen<T extends new (...args: any[]) => BaseMob>(Base: T) {
     return class extends Base implements EntityMixinTemplate {

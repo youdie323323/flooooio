@@ -1,12 +1,6 @@
 import { EntityMixinTemplate, onUpdateTick } from "../Entity";
-import { WavePool, UPDATE_FPS } from "../../wave/WavePool";
-import { Mob } from "../mob/Mob";
+import { WavePool } from "../../wave/WavePool";
 import { BasePlayer } from "./Player";
-import { MobType, PetalType } from "../../../shared/types";
-import { isSpawnableSlot, PetalData, PetalStat } from "../mob/petal/Petal";
-import { PETAL_PROFILES } from "../../../shared/petalProfiles";
-import { MoodKind } from "../../../shared/mood";
-import { isPetal, TWO_PI } from "../../utils/common";
 import { findNearestEntity } from "../mob/MobAggressivePursuit";
 
 export function PlayerDeadCamera<T extends new (...args: any[]) => BasePlayer>(Base: T) {

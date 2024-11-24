@@ -1,16 +1,16 @@
 import { deltaTime } from "../main";
 import Entity from "./Entity";
 import { drawEntityDetail } from "./entityDrawDetail";
-import { MoodKind } from "../../shared/mood";
 import { TWO_PI } from "../constants";
+import { Mood } from "../../shared/enum";
 
 export default class EntityPlayer extends Entity {
     angryT: number;
     sadT: number;
-    mood: MoodKind;
+    mood: Mood;
     nickname: string;
 
-    constructor(id: number, x: number, y: number, size: number, health: number, maxHealth: number, angle: number, mood: MoodKind, nickname: string) {
+    constructor(id: number, x: number, y: number, size: number, health: number, maxHealth: number, angle: number, mood: Mood, nickname: string) {
         super(id, x, y, size, health, maxHealth, angle);
         this.angryT = 0;
         this.sadT = 0;

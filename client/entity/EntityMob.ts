@@ -1,10 +1,8 @@
 import Entity from "./Entity";
-import { MobType, PetalType } from "../../shared/types";
-import { Rarities } from "../../shared/rarities";
-import { deltaTime } from "../main";
 import { drawEntityDetail, HP_BAR_MAX_WIDTH } from "./entityDrawDetail";
 import { darkend, DARKEND_BASE } from "../utils/common";
 import { TWO_PI } from "../constants";
+import { MobType, PetalType, Rarities } from "../../shared/enum";
 
 function createBodyPath() {
     const p2 = new Path2D();

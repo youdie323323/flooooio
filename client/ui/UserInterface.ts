@@ -1,7 +1,12 @@
-import { Biomes } from "../../shared/biomes";
+import { Biomes } from "../../shared/enum";
 import { scaleFactor } from "../main";
 import { Clickable, Component, Focusable, Interactive } from "./components/Component";
 import { ComponentButton } from "./components/ComponentButton";
+
+export interface BiomeSetter {
+    set biome(biome: Biomes);
+    get biome(): Biomes;
+}
 
 export default abstract class UserInterface {
     protected canvas: HTMLCanvasElement;

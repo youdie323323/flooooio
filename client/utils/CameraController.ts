@@ -1,15 +1,13 @@
 import Interpolator from "./Interpolator";
 export default class CameraController {
     _zoom: Interpolator;
-    canvas: HTMLCanvasElement;
-    
-    constructor(canvas: HTMLCanvasElement) {
+
+    constructor(public canvas: HTMLCanvasElement) {
         this._zoom = new Interpolator({
             easingType: "easeOutExpo",
             duration: 500,
-            initValue: 0.6
+            initValue: 1,
         });
-        this.canvas = canvas;
     }
 
     set zoom(o) {

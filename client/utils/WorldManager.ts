@@ -1,7 +1,7 @@
 import { Canvg, presets } from "canvg";
 import { cameraController, scaleFactor } from "../main";
 import { TWO_PI } from "../constants";
-import { Biomes } from "../../shared/biomes";
+import { Biomes } from "../../shared/enum";
 
 export const BIOME_SVG_TILESETS: Record<Biomes, string[]> = {
     [Biomes.GARDEN]: [
@@ -315,7 +315,7 @@ export default class TilesetManager {
         return generatedTilesets;
     }
 
-    constructWorld(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], radius: number, playerX: number, playerY: number) {
+    renderGameWorld(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], radius: number, playerX: number, playerY: number) {
         const ctx = canvas.getContext("2d");
 
         const zoom = cameraController.zoom;
@@ -377,8 +377,6 @@ export default class TilesetManager {
         const centerX = widthRelative / 2;
         const centerY = heightRelative / 2;
 
-        ctx.save();
-
         const playerGridX = Math.floor(playerX / adjustedGridSize);
         const playerGridY = Math.floor(playerY / adjustedGridSize);
 
@@ -404,8 +402,6 @@ export default class TilesetManager {
                 }
             }
         }
-
-        ctx.restore();
     }
 }
 

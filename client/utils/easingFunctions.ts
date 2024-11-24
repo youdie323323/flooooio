@@ -87,13 +87,13 @@ function b(elapsed: number, p: number, B: number, u: number) {
     return B * 2 ** ((elapsed / u - 1) * 10) + p;
 }
 EASING_FUNCTIONS.easeInExpo = b;
-function L(elapsed: number, p: number, B: number, u: number) {
+function easeOutExpo(elapsed: number, p: number, B: number, u: number) {
     if (elapsed === u) {
         return p + B;
     }
     return B * (-(2 ** (elapsed * -10 / u)) + 1) + p;
 }
-EASING_FUNCTIONS.easeOutExpo = L;
+EASING_FUNCTIONS.easeOutExpo = easeOutExpo;
 function m(elapsed: number, p: number, B: number, u: number) {
     if (elapsed === 0) {
         return p;

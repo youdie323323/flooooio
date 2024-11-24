@@ -3,9 +3,6 @@ import { WavePool } from "../wave/WavePool";
 import { isPetal, removeAllBindings } from "../utils/common";
 import { Mob } from "./mob/Mob";
 import { Player } from "./player/Player";
-import { MOB_PROFILES } from "../../shared/mobProfiles";
-import { PETAL_PROFILES } from "../../shared/petalProfiles";
-import { MobType, PetalType } from "../../shared/types";
 
 export function EntityDeath<T extends new (...args: any[]) => Entity>(Base: T) {
     return class extends Base implements EntityMixinTemplate {

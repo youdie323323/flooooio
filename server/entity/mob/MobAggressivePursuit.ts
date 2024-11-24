@@ -2,8 +2,8 @@ import { angleToRad, isPetal, TWO_PI } from "../../utils/common";
 import { Entity, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool } from "../../wave/WavePool";
 import { BaseMob, Mob, MobInstance } from "./Mob";
-import { MobType } from "../../../shared/types";
 import { Player, PlayerInstance } from "../player/Player";
+import { MobType } from "../../../shared/enum";
 
 export function findNearestEntity(me: Entity, entites: Entity[]) {
     if (!entites.length) return null;

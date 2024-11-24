@@ -1,7 +1,4 @@
-import { Biomes } from "../shared/biomes";
-import { MoodKind } from "../shared/mood";
-import { PacketKind } from "../shared/packet";
-import { Rarities } from "../shared/rarities";
+import { Packet, Mood, Rarities, Biomes } from "../shared/enum";
 import { TWO_PI } from "./constants";
 import EntityMob from "./entity/EntityMob";
 import EntityPlayer from "./entity/EntityPlayer";
@@ -41,15 +38,15 @@ export default class Networking {
 
             const kind = data.getUint8(offset++);
             switch (kind) {
-                case PacketKind.SELF_ID: {
+                case Packet.SELF_ID: {
                     selfId = data.getUint32(offset);
                     break;
                 }
-                case PacketKind.WAVE_ROOM_SELF_ID: {
+                case Packet.WAVE_ROOM_SELF_ID: {
                     waveSelfId = data.getUint32(offset);
                     break;
                 }
-                case PacketKind.UPDATE: {
+                case Packet.UPDATE: {
                     // Wave informations
                     {
                         const waveProgress = data.getUint16(offset);
@@ -121,7 +118,7 @@ export default class Networking {
 
                         const clientAngle = angleToRad(data.getUint8(offset++));
 
-                        const clientMood = data.getUint8(offset++) as MoodKind;
+                        const clientMood = data.getUint8(offset++) as Mood;
 
                         const clientIsDead = !!data.getUint8(offset++);
 
@@ -244,7 +241,7 @@ export default class Networking {
 
                     break;
                 }
-                case PacketKind.WAVE_ROOM_UPDATE: {
+                case Packet.WAVE_ROOM_UPDATE: {
                     const waveClientCount = data.getUint8(offset++);
 
                     const clients = [];
@@ -277,35 +274,30 @@ export default class Networking {
                     console.log(waveCode, waveBiome, waveState, waveIsPublic);
 
                     if (uiManager.previousUI) {
-                        uiManager.previousUI.setBiome(waveBiome);
+                        uiManager.previousUI.biome = waveBiome;
                     }
                     if (uiManager.currentUI) {
-                        uiManager.currentUI.setBiome(waveBiome);
+                        uiManager.currentUI.biome = waveBiome;
                     }
 
                     break;
                 }
-                case PacketKind.WAVE_ROOM_STARTING: {
+                case Packet.WAVE_ROOM_STARTING: {
                     uiManager.switchUI("game");
 
                     const waveBiome = data.getUint8(offset++) as Biomes;
 
                     if (uiManager.previousUI) {
-                        uiManager.previousUI.setBiome(waveBiome);
+                        uiManager.previousUI.biome = waveBiome;
                     }
                     if (uiManager.currentUI) {
-                        uiManager.currentUI.setBiome(waveBiome);
+                        uiManager.currentUI.biome = waveBiome;
                     }
 
                     break;
                 }
-                case PacketKind.WAVE_ROOM_JOIN_FAILED: {
+                case Packet.WAVE_ROOM_JOIN_FAILED: {
                     alert("Invalid squad code");
-
-                    break;
-                }
-                case PacketKind.SERVER_CLOSED: {
-                    document.body.innerHTML = "<h1>Server closed, try again after some minutes.</h1>";
 
                     break;
                 }
@@ -315,17 +307,17 @@ export default class Networking {
 
     sendAngle(angle: number, magnitude = 1) {
         const normalizedAngle = getNormalizedAngle(angle);
-        const data = new Uint8Array([PacketKind.MOVE, normalizedAngle, Math.round(magnitude * 255)]);
+        const data = new Uint8Array([Packet.MOVE, normalizedAngle, Math.round(magnitude * 255)]);
         this.ws.send(data);
     }
 
-    sendMood(flag: MoodKind) {
-        const data = new Uint8Array([PacketKind.MOOD, flag]);
+    sendMood(flag: Mood) {
+        const data = new Uint8Array([Packet.MOOD, flag]);
         this.ws.send(data);
     }
 
     sendSwapPetal(index: number) {
-        const data = new Uint8Array([PacketKind.SWAP_PETAL, index]);
+        const data = new Uint8Array([Packet.SWAP_PETAL, index]);
         this.ws.send(data);
     }
 }

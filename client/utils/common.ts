@@ -1,7 +1,5 @@
+import { MobType, PetalType } from "../../shared/enum";
 import { PETAL_PROFILES } from "../../shared/petalProfiles";
-import { MobType, PetalType } from "../../shared/types";
-
-// Ill implements util function here because server-side source leak
 
 export function isPetal(type: MobType | PetalType): type is PetalType {
     return type in PETAL_PROFILES;

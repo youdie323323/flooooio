@@ -1,10 +1,10 @@
-import { Biomes } from "../../shared/biomes";
 import { UserData } from "./WavePool";
 import { PlayerInstance, MockPlayerData } from "../entity/player/Player";
 import { logger } from "../main";
 import WaveRoom, { PlayerReadyState, WaveRoomPlayer, WaveRoomPlayerId, WaveRoomVisibleState } from "./WaveRoom";
 import { generate } from 'generate-passphrase';
 import uWS from 'uWebSockets.js';
+import { Biomes } from "../../shared/enum";
 
 export default class WaveRoomService {
     private waveRooms: WaveRoom[] = [];

@@ -1,7 +1,3 @@
-import { Biomes } from "../../../shared/biomes";
-import { PacketKind } from "../../../shared/packet";
-import { Rarities } from "../../../shared/rarities";
-import { PetalType } from "../../../shared/types";
 import { MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../../constants";
 import EntityMob from "../../entity/EntityMob";
 import TilesetManager, { BIOME_TILESETS } from "../../utils/WorldManager";
@@ -9,6 +5,7 @@ import { ComponentSVGButton, ComponentTextButton } from "../components/Component
 import UserInterface from "../UserInterface";
 import ComponentTextInput from "../components/ComponentTextInput.js";
 import { scaleFactor, ws } from "../../main";
+import { Biomes, Packet, PetalType, Rarities } from "../../../shared/enum";
 
 function randomFloat(min: number, max: number) {
     return Math.random() * (max - min + 1) + min;
@@ -117,7 +114,7 @@ export default class UserInterfaceMenu extends UserInterface {
             },
             "#1dd129",
             async () => {
-                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_CHANGE_READY, 1]));
+                ws.send(new Uint8Array([Packet.WAVE_ROOM_CHANGE_READY, 1]));
             },
             "Ready"
         );
@@ -137,7 +134,7 @@ export default class UserInterfaceMenu extends UserInterface {
                 if (!code) {
                     return;
                 }
-                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_JOIN, code.length, ...new TextEncoder().encode(code)]));
+                ws.send(new Uint8Array([Packet.WAVE_ROOM_JOIN, code.length, ...new TextEncoder().encode(code)]));
             },
             "Join squad"
         );
@@ -153,7 +150,7 @@ export default class UserInterfaceMenu extends UserInterface {
             },
             "#1dd129",
             async () => {
-                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_JOIN_PUBLIC, Biomes.DESERT]));
+                ws.send(new Uint8Array([Packet.WAVE_ROOM_JOIN_PUBLIC, Biomes.DESERT]));
             },
             "Join public squad"
         );
@@ -169,7 +166,7 @@ export default class UserInterfaceMenu extends UserInterface {
             },
             "#1dd129",
             async () => {
-                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_LEAVE]));
+                ws.send(new Uint8Array([Packet.WAVE_ROOM_LEAVE]));
             },
             "Leave squad"
         );
@@ -185,7 +182,7 @@ export default class UserInterfaceMenu extends UserInterface {
             },
             "#1dd129",
             async () => {
-                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_CREATE, Biomes.DESERT]));
+                ws.send(new Uint8Array([Packet.WAVE_ROOM_CREATE, Biomes.DESERT]));
             },
             "Create public"
         );
@@ -201,7 +198,7 @@ export default class UserInterfaceMenu extends UserInterface {
             },
             "#1dd129",
             async () => {
-                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_CHANGE_VISIBLE, 1]));
+                ws.send(new Uint8Array([Packet.WAVE_ROOM_CHANGE_VISIBLE, 1]));
             },
             "Set public"
         );
@@ -217,7 +214,7 @@ export default class UserInterfaceMenu extends UserInterface {
             },
             "#1dd129",
             async () => {
-                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_CHANGE_VISIBLE, 0]));
+                ws.send(new Uint8Array([Packet.WAVE_ROOM_CHANGE_VISIBLE, 0]));
             },
             "Set private"
         );
@@ -241,7 +238,7 @@ export default class UserInterfaceMenu extends UserInterface {
         const widthRelative = this.canvas.width / scaleFactor;
         const heightRelative = this.canvas.height / scaleFactor;
 
-        this.worldManager.constructWorldMenu(canvas, BIOME_TILESETS.get(menuUiCurrentBiome), this.backgroundX, this.backgroundY);
+        this.worldManager.constructWorldMenu(canvas, BIOME_TILESETS.get(this.biome), this.backgroundX, this.backgroundY);
 
         this.backgroundX += 0.3;
         this.backgroundY += Math.sin(this.backgroundWaveStep / 20) * 0.3;
@@ -273,7 +270,7 @@ export default class UserInterfaceMenu extends UserInterface {
 
         this.render();
 
-        if (menuUiCurrentBiome === Biomes.OCEAN) {
+        if (this.biome === Biomes.OCEAN) {
             ctx.save();
 
             ctx.globalCompositeOperation = "multiply";
@@ -288,7 +285,11 @@ export default class UserInterfaceMenu extends UserInterface {
         this.worldManager = undefined;
     }
 
-    public setBiome(biome: Biomes) {
+    set biome(biome: Biomes) {
         menuUiCurrentBiome = biome;
+    }
+    
+    get biome(): Biomes {
+        return menuUiCurrentBiome;
     }
 }

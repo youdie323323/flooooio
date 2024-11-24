@@ -3,16 +3,15 @@ import EntityMob from "../../entity/EntityMob";
 import { players, mobs, scaleFactor, interpolatedMouseX, interpolatedMouseY, deltaTime, ws, uiManager, antennaScaleFactor } from "../../main";
 import TilesetManager, { BIOME_TILESETS } from "../../utils/WorldManager";
 import { ComponentButton, ComponentSVGButton, ComponentTextButton } from "../components/ComponentButton";
-import UserInterface from "../UserInterface";
+import UserInterface, { BiomeSetter } from "../UserInterface";
 import { selfId } from "../../Networking";
-import { Biomes } from "../../../shared/biomes";
-import { PacketKind } from "../../../shared/packet";
 import ComponentTextInput from "../components/ComponentTextInput";
+import { Biomes, Packet } from "../../../shared/enum";
 
 /**
  * Helper for draw mutable functions. (e.g. mouse movement helper)
  */
-function drawMutableFunctions(canvas: HTMLCanvasElement) {
+function renderMutableFunctions(canvas: HTMLCanvasElement) {
     const ctx = canvas.getContext("2d");
     const selfPlayer = players.get(selfId);
 
@@ -75,7 +74,7 @@ function easeOutCubic(t: number): number {
  */
 let gameUiCurrentBiome: Biomes = Biomes.GARDEN;
 
-export default class UserInterfaceGame extends UserInterface {
+export default class UserInterfaceGame extends UserInterface implements BiomeSetter {
     private readonly DEAD_BACKGROUND_TARGET_OPACITY: number = 0.3;
     private readonly DEAD_BACKGROUND_FADE_DURATION: number = 0.3;
     private readonly DEAD_MENU_ANIMATION_DURATION: number = 2;
@@ -172,7 +171,7 @@ export default class UserInterfaceGame extends UserInterface {
     private continueGameOver() {
         this.isGameOverContinued = true;
 
-        ws.send(new Uint8Array([PacketKind.WAVE_ROOM_GAME_LEAVE]));
+        ws.send(new Uint8Array([Packet.WAVE_ROOM_GAME_LEAVE]));
         uiManager.switchUI("menu");
     }
 
@@ -189,7 +188,7 @@ export default class UserInterfaceGame extends UserInterface {
             },
             "#b04c5e",
             () => {
-                ws.send(new Uint8Array([PacketKind.WAVE_ROOM_GAME_LEAVE]));
+                ws.send(new Uint8Array([Packet.WAVE_ROOM_GAME_LEAVE]));
                 uiManager.switchUI("menu");
             },
             CROSS_ICON_SVG,
@@ -269,7 +268,7 @@ export default class UserInterfaceGame extends UserInterface {
                 onsubmit: (e, self) => {
                     const chatMessage = self.value();
                     // Send chat
-                    ws.send(new Uint8Array([PacketKind.CHAT, chatMessage.length, ...new TextEncoder().encode(chatMessage)]));
+                    ws.send(new Uint8Array([Packet.CHAT, chatMessage.length, ...new TextEncoder().encode(chatMessage)]));
 
                     self.blur();
 
@@ -311,49 +310,53 @@ export default class UserInterfaceGame extends UserInterface {
             return;
         }
 
-        for (const mob of mobs.values()) {
-            mob.update();
-        }
-
-        for (const player of players.values()) {
-            player.update();
-        }
-
-        this.worldManager.constructWorld(canvas, BIOME_TILESETS.get(gameUiCurrentBiome), this.worldSize, selfPlayer.x, selfPlayer.y);
-
-        ctx.save();
-
-        ctx.translate(centerWidth, centerHeight);
-        ctx.scale(antennaScaleFactor, antennaScaleFactor);
-        ctx.translate(-selfPlayer.x, -selfPlayer.y);
-
-        mobs.forEach((v, k) => {
-            v.draw(ctx);
-            if (v.isDead && v.deadT > 1) {
-                mobs.delete(k);
+        // Update entities
+        {
+            for (const mob of mobs.values()) {
+                mob.update();
             }
-        });
 
-        players.forEach((v, k) => {
-            v.draw(ctx);
-        });
+            for (const player of players.values()) {
+                player.update();
+            }
+        }
 
-        ctx.restore();
+        this.worldManager.renderGameWorld(canvas, BIOME_TILESETS.get(this.biome), this.worldSize, selfPlayer.x, selfPlayer.y);
+
+        {
+            ctx.save();
+
+            ctx.translate(centerWidth, centerHeight);
+            ctx.scale(antennaScaleFactor, antennaScaleFactor);
+            ctx.translate(-selfPlayer.x, -selfPlayer.y);
+
+            mobs.forEach((v, k) => {
+                v.draw(ctx);
+                if (v.isDead && v.deadT > 1) {
+                    mobs.delete(k);
+                }
+            });
+
+            players.forEach((v, k) => {
+                v.draw(ctx);
+            });
+
+            ctx.restore();
+        }
 
         // Ocean background (its pattern but i dont know how)
-        {
-            if (gameUiCurrentBiome === Biomes.OCEAN) {
-                ctx.save();
+        if (this.biome === Biomes.OCEAN) {
+            ctx.save();
 
-                ctx.globalCompositeOperation = "multiply";
-                ctx.fillStyle = "#CCDBF2";
-                ctx.fillRect(0, 0, widthRelative, heightRelative);
+            ctx.globalCompositeOperation = "multiply";
+            ctx.fillStyle = "#CCDBF2";
+            ctx.fillRect(0, 0, widthRelative, heightRelative);
 
-                ctx.restore();
-            }
+            ctx.restore();
         }
 
-        drawMutableFunctions(canvas);
+        // Render mutable functions
+        renderMutableFunctions(canvas);
 
         // Wave bar
         {
@@ -367,74 +370,83 @@ export default class UserInterfaceGame extends UserInterface {
             ctx.translate(-centerWidth, -WAVE_PROGRESS_BAR_Y);
 
             {
-                ctx.save();
-
                 const maxSpawnTime = calculateWaveLength(this.waveProgress);
 
-                ctx.globalAlpha = 0.9;
+                // ctx.globalAlpha = 0.9;
 
-                ctx.save();
+                {
+                    ctx.save();
 
-                ctx.lineWidth = 25;
-                ctx.lineCap = "round";
-                ctx.strokeStyle = "black";
-                ctx.beginPath();
-                ctx.lineTo(centerWidth - WAVE_PROGRESS_BAR_LENGTH, WAVE_PROGRESS_BAR_Y);
-                ctx.lineTo(centerWidth + WAVE_PROGRESS_BAR_LENGTH, WAVE_PROGRESS_BAR_Y);
-                ctx.stroke();
+                    ctx.lineWidth = 25;
+                    ctx.lineCap = "round";
+                    ctx.strokeStyle = "black";
+                    ctx.beginPath();
+                    ctx.lineTo(centerWidth - WAVE_PROGRESS_BAR_LENGTH, WAVE_PROGRESS_BAR_Y);
+                    ctx.lineTo(centerWidth + WAVE_PROGRESS_BAR_LENGTH, WAVE_PROGRESS_BAR_Y);
+                    ctx.stroke();
 
-                ctx.restore();
+                    ctx.restore();
+                }
 
-                ctx.save();
+                {
+                    ctx.save();
 
-                ctx.lineWidth = Math.min((this.waveProgressTimer / maxSpawnTime) * (maxSpawnTime * 16.6666), 18.5);
-                ctx.lineCap = "round";
-                ctx.strokeStyle = "#6dbd7f";
-                ctx.beginPath();
-                ctx.lineTo(centerWidth - WAVE_PROGRESS_BAR_LENGTH, WAVE_PROGRESS_BAR_Y);
-                ctx.lineTo(centerWidth - WAVE_PROGRESS_BAR_LENGTH + (WAVE_PROGRESS_BAR_LENGTH * 2) * (this.waveProgressTimer / maxSpawnTime), WAVE_PROGRESS_BAR_Y);
-                ctx.stroke();
+                    ctx.lineWidth = Math.min((this.waveProgressTimer / maxSpawnTime) * (maxSpawnTime * 16.6666), 18.5);
+                    ctx.lineCap = "round";
+                    ctx.strokeStyle = "#6dbd7f";
+                    ctx.beginPath();
+                    ctx.lineTo(centerWidth - WAVE_PROGRESS_BAR_LENGTH, WAVE_PROGRESS_BAR_Y);
+                    ctx.lineTo(centerWidth - WAVE_PROGRESS_BAR_LENGTH + (WAVE_PROGRESS_BAR_LENGTH * 2) * (this.waveProgressTimer / maxSpawnTime), WAVE_PROGRESS_BAR_Y);
+                    ctx.stroke();
 
-                ctx.restore();
+                    ctx.restore();
+                }
 
-                ctx.save();
+                {
+                    ctx.save();
 
-                ctx.lineWidth = Math.min((this.waveProgressRedGageTimer / maxSpawnTime) * (maxSpawnTime * 16.6666), 15);
-                ctx.lineCap = "round";
-                ctx.strokeStyle = "#e32933";
-                ctx.beginPath();
-                ctx.lineTo(centerWidth - WAVE_PROGRESS_BAR_LENGTH, WAVE_PROGRESS_BAR_Y);
-                ctx.lineTo(centerWidth - WAVE_PROGRESS_BAR_LENGTH + (WAVE_PROGRESS_BAR_LENGTH * 2) * (this.waveProgressRedGageTimer / maxSpawnTime), WAVE_PROGRESS_BAR_Y);
-                ctx.stroke();
+                    ctx.lineWidth = Math.min((this.waveProgressRedGageTimer / maxSpawnTime) * (maxSpawnTime * 16.6666), 15);
+                    ctx.lineCap = "round";
+                    ctx.strokeStyle = "#e32933";
+                    ctx.beginPath();
+                    ctx.lineTo(centerWidth - WAVE_PROGRESS_BAR_LENGTH, WAVE_PROGRESS_BAR_Y);
+                    ctx.lineTo(centerWidth - WAVE_PROGRESS_BAR_LENGTH + (WAVE_PROGRESS_BAR_LENGTH * 2) * (this.waveProgressRedGageTimer / maxSpawnTime), WAVE_PROGRESS_BAR_Y);
+                    ctx.stroke();
 
-                ctx.restore();
+                    ctx.restore();
+                }
 
-                ctx.font = "1em Ubuntu, sans-serif";
-                ctx.textBaseline = 'middle';
-                ctx.textAlign = 'center';
-                ctx.lineWidth = 3;
-                ctx.strokeStyle = '#000000';
-                ctx.strokeText("Wave " + this.waveProgress, centerWidth, WAVE_PROGRESS_BAR_Y);
-                ctx.fillStyle = "white";
-                ctx.fillText("Wave " + this.waveProgress, centerWidth, WAVE_PROGRESS_BAR_Y);
+                {
+                    ctx.save();
 
-                ctx.restore();
+                    ctx.font = "1em Ubuntu, sans-serif";
+                    ctx.textBaseline = 'middle';
+                    ctx.textAlign = 'center';
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = '#000000';
+                    ctx.fillStyle = "white";
+                    ctx.strokeText("Wave " + this.waveProgress, centerWidth, WAVE_PROGRESS_BAR_Y);
+                    ctx.fillText("Wave " + this.waveProgress, centerWidth, WAVE_PROGRESS_BAR_Y);
+
+                    ctx.restore();
+                }
+
             }
 
             {
                 ctx.save();
 
-                const _biomeText = Biomes[gameUiCurrentBiome].toLocaleLowerCase();
-                const biomeText = _biomeText[0].toUpperCase() + _biomeText.slice(1);
+                const biomeText = Biomes[this.biome].toLocaleLowerCase();
+                const capitalizedBiomeText = biomeText[0].toUpperCase() + biomeText.slice(1);
 
                 ctx.font = "2em Ubuntu, sans-serif";
                 ctx.textBaseline = 'middle';
                 ctx.textAlign = 'center';
                 ctx.lineWidth = 4;
                 ctx.strokeStyle = '#000000';
-                ctx.strokeText(biomeText, centerWidth, WAVE_PROGRESS_BAR_Y - 36);
                 ctx.fillStyle = "white";
-                ctx.fillText(biomeText, centerWidth, WAVE_PROGRESS_BAR_Y - 36);
+                ctx.strokeText(capitalizedBiomeText, centerWidth, WAVE_PROGRESS_BAR_Y - 36);
+                ctx.fillText(capitalizedBiomeText, centerWidth, WAVE_PROGRESS_BAR_Y - 36);
 
                 ctx.restore();
             }
@@ -444,18 +456,6 @@ export default class UserInterfaceGame extends UserInterface {
 
         // Dead menu
         {
-            const resetFunc = () => {
-                this.deadMenuContinueButton.setVisible(false);
-
-                this.isDeadAnimationActive = false;
-                this.deadAnimationY = -50;
-                this.deadAnimationTimer = 0;
-
-                this.deadBackgroundOpacity = 0;
-                this.youWillRespawnNextWaveOpacity = 0;
-                this.gameOverOpacity = 0;
-            };
-
             {
                 ctx.save();
 
@@ -480,37 +480,43 @@ export default class UserInterfaceGame extends UserInterface {
 
                 this.youWillRespawnNextWaveOpacity = Math.max(Math.min(this.youWillRespawnNextWaveOpacity, 1), 0);
 
-                ctx.save();
+                {
+                    ctx.save();
 
-                ctx.translate(centerWidth, 300);
+                    ctx.translate(centerWidth, 300);
 
-                ctx.save();
+                    {
+                        ctx.save();
 
-                ctx.globalAlpha = Math.min(this.youWillRespawnNextWaveOpacity, 0.5);
+                        ctx.globalAlpha = Math.min(this.youWillRespawnNextWaveOpacity, 0.5);
 
-                ctx.strokeStyle = 'black';
-                ctx.beginPath();
-                ctx.roundRect(-(116 / 2), -(16 / 2), 116, 16, 1);
-                ctx.fill();
+                        ctx.strokeStyle = 'black';
+                        ctx.beginPath();
+                        ctx.roundRect(-(116 / 2), -(16 / 2), 116, 16, 1);
+                        ctx.fill();
 
-                ctx.restore();
+                        ctx.restore();
+                    }
 
-                ctx.save();
+                    {
+                        ctx.save();
 
-                ctx.globalAlpha = this.youWillRespawnNextWaveOpacity;
+                        ctx.globalAlpha = this.youWillRespawnNextWaveOpacity;
 
-                ctx.textBaseline = 'middle';
-                ctx.textAlign = 'center';
-                ctx.strokeStyle = '#000000';
-                ctx.fillStyle = "white";
-                ctx.font = "8.4px Ubuntu, sans-serif";
-                ctx.lineWidth = 1;
-                ctx.strokeText("You will respawn next wave", 0, 0);
-                ctx.fillText("You will respawn next wave", 0, 0);
+                        ctx.textBaseline = 'middle';
+                        ctx.textAlign = 'center';
+                        ctx.strokeStyle = '#000000';
+                        ctx.fillStyle = "white";
+                        ctx.font = "8.4px Ubuntu, sans-serif";
+                        ctx.lineWidth = 1;
+                        ctx.strokeText("You will respawn next wave", 0, 0);
+                        ctx.fillText("You will respawn next wave", 0, 0);
 
-                ctx.restore();
+                        ctx.restore();
+                    }
 
-                ctx.restore();
+                    ctx.restore();
+                }
             }
 
             if (selfPlayer.isDead) {
@@ -627,7 +633,15 @@ export default class UserInterfaceGame extends UserInterface {
                     ctx.restore();
                 };
             } else {
-                resetFunc();
+                this.deadMenuContinueButton.setVisible(false);
+
+                this.isDeadAnimationActive = false;
+                this.deadAnimationY = -50;
+                this.deadAnimationTimer = 0;
+
+                this.deadBackgroundOpacity = 0;
+                this.youWillRespawnNextWaveOpacity = 0;
+                this.gameOverOpacity = 0;
             }
         }
 
@@ -642,7 +656,11 @@ export default class UserInterfaceGame extends UserInterface {
         }
     }
 
-    public setBiome(biome: Biomes) {
+    set biome(biome: Biomes) {
         gameUiCurrentBiome = biome;
+    }
+    
+    get biome(): Biomes {
+        return gameUiCurrentBiome;
     }
 }

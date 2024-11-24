@@ -3,10 +3,9 @@ import CameraController from "./utils/CameraController";
 import EntityMob from "./entity/EntityMob";
 import { interpolate } from "./utils/Interpolator";
 import UserInterfaceManager from "./ui/UserInterfaceManager";
-import { MoodKind } from "../shared/mood";
 import Networking from "./Networking";
 import TilesetManager, { BIOME_SVG_TILESETS, BIOME_TILESETS } from "./utils/WorldManager";
-import { Biomes } from "../shared/biomes";
+import { Biomes, Mood } from "../shared/enum";
 
 export let ws: WebSocket;
 
@@ -101,13 +100,13 @@ export const uiManager = new UserInterfaceManager(canvas);
 
         window.onmousedown = function (e: MouseEvent) {
             if (e.button === 0 || e.button === 2) {
-                networking.sendMood(e.button === 0 ? MoodKind.ANGRY : e.button === 2 ? MoodKind.SAD : MoodKind.NORMAL);
+                networking.sendMood(e.button === 0 ? Mood.ANGRY : e.button === 2 ? Mood.SAD : Mood.NORMAL);
             }
         };
 
         window.onmouseup = function (e: MouseEvent) {
             if (e.button === 0 || e.button === 2) {
-                networking.sendMood(MoodKind.NORMAL);
+                networking.sendMood(Mood.NORMAL);
             }
         };
 

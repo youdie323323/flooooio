@@ -1,5 +1,3 @@
-import { Biomes } from "../../shared/biomes";
-import { PacketKind } from "../../shared/packet";
 import { choice, generateRandomWaveRoomPlayerId, getRandomMapSafePosition, getRandomPosition } from "../utils/random";
 import { WavePool } from "./WavePool";
 import { PlayerInstance, MockPlayerData } from "../entity/player/Player";
@@ -8,7 +6,7 @@ import { BrandedId } from "../entity/Entity";
 import WaveProbabilityPredictor from "./WaveProbabilityPredictor";
 import { calculateWaveLength } from "../utils/formula";
 import { MAP_CENTER_X, MAP_CENTER_Y, SAFETY_DISTANCE } from "../entity/EntityWorldBoundary";
-import { AnsiUp } from '../utils/AnsiUp'
+import { Biomes, Packet } from "../../shared/enum";
 
 /**
  * Revive player nearby other player.
@@ -85,11 +83,6 @@ export interface WaveData {
 export const ROOM_UPDATE_SEND_FPS = 30;
 
 export const WAVE_PROGRESS_UPDATE = 60;
-
-/**
- * Public instance of ansiup.
- */
-const ansiUp = new AnsiUp();
 
 /**
  * The wave room, aka squad.
@@ -251,7 +244,7 @@ export default class WaveRoom {
         const buffer = Buffer.alloc(size);
         let offset = 0;
 
-        buffer.writeUInt8(PacketKind.WAVE_ROOM_UPDATE, offset++);
+        buffer.writeUInt8(Packet.WAVE_ROOM_UPDATE, offset++);
 
         // Client count
         buffer.writeUInt8(this.roomCandidates.length, offset++);
@@ -443,7 +436,7 @@ export default class WaveRoom {
      */
     public enqueueMessage(msg: string) {
         if (msg.length > 0) {
-            this.msgQueue.push(ansiUp.ansi_to_html(msg));
+            this.msgQueue.push(msg);
             if (this.msgQueue.length > WaveRoom.MAX_MESSAGE_QUEUE_AMOUNT) {
                 this.msgQueue.shift();
             }

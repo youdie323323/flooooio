@@ -1,14 +1,13 @@
-import { MobType, PetalType } from "../../../shared/types";
 import { EntityCollisionResponse } from "../EntityCollisionResponse";
 import { BrandedId, Entity, EntityId } from "../Entity";
 import { MobOscillatingMovement } from "./MobOscillatingMovement";
 import { MobAggressivePursuit } from "./MobAggressivePursuit";
 import { EntityLinearMovement } from "../EntityLinearMovement";
-import { Rarities } from "../../../shared/rarities";
 import { BasePlayer, PlayerInstance } from "../player/Player";
 import { MobHealthRegen } from "./MobHealthRegen";
 import { EntityWorldBoundary } from "../EntityWorldBoundary";
 import { EntityDeath } from "../EntityDeath";
+import { MobType, PetalType, Rarities } from "../../../shared/enum";
 
 class BaseMob implements Entity {
     readonly id: EntityId;

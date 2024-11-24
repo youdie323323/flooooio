@@ -5,7 +5,7 @@ import { Mob } from "./mob/Mob";
 import { Player } from "./player/Player";
 import { MOB_PROFILES } from "../../shared/mobProfiles";
 import { PETAL_PROFILES } from "../../shared/petalProfiles";
-import { MobType, PetalType } from "../../shared/types";
+import { MobType } from "../../shared/enum";
 
 export const MAP_CENTER_X = 5000;
 export const MAP_CENTER_Y = 5000;

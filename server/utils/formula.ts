@@ -1,4 +1,4 @@
-import { Rarities } from "../../shared/rarities";
+import { Rarities } from "../../shared/enum";
 import { MOB_DAMAGE_FACTOR } from "../entity/mob/Mob";
 
 /**

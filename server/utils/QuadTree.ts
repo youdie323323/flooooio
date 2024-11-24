@@ -1,5 +1,3 @@
-import { Entity } from "../entity/Entity";
-
 interface Rectangle {
     // Center
     x: number;
@@ -9,25 +7,25 @@ interface Rectangle {
     h: number;
 }
 
-interface Point {
+interface Point<T> {
     x: number;
     y: number;
-    unit: Entity;
+    unit: T;
 }
 
-export default class QuadTree {
+export default class QuadTree<T> {
     private static readonly MAX_DEPTH = 10;
     private static readonly MIN_SIZE = 1;
 
     private boundary: Rectangle;
     private capacity: number;
-    private points: Point[] = [];
+    private points: Point<T>[] = [];
     private divided: boolean = false;
 
-    private northWest!: QuadTree;
-    private northEast!: QuadTree;
-    private southWest!: QuadTree;
-    private southEast!: QuadTree;
+    private northWest: QuadTree<T> | null = null;
+    private northEast: QuadTree<T> | null = null;
+    private southWest: QuadTree<T> | null = null;
+    private southEast: QuadTree<T> | null = null;
 
     private depth: number;
 
@@ -37,7 +35,7 @@ export default class QuadTree {
         this.depth = depth;
     }
 
-    public insert(point: Point): boolean {
+    public insert(point: Point<T>): boolean {
         if (!this.containsPoint(point.x, point.y)) {
             return false;
         }
@@ -51,6 +49,7 @@ export default class QuadTree {
             if (this.depth >= QuadTree.MAX_DEPTH || this.boundary.w <= QuadTree.MIN_SIZE || this.boundary.h <= QuadTree.MIN_SIZE) {
                 return false;
             }
+
             this.divide();
         }
 
@@ -62,24 +61,26 @@ export default class QuadTree {
         );
     }
 
-    public query(range: Rectangle): Point[] {
-        const found: Point[] = [];
+    public query(range: Rectangle): Point<T>[] {
+        let found: Point<T>[] = [];
 
         if (this.overlapsAABB(range, this.boundary)) {
             return found;
         }
 
-        for (const p of this.points) {
+        this.points.forEach(p => {
             if (this.containsPoint(p.x, p.y, range)) {
                 found.push(p);
             }
-        }
+        });
 
         if (this.divided) {
-            found.push(...this.northWest.query(range));
-            found.push(...this.northEast.query(range));
-            found.push(...this.southWest.query(range));
-            found.push(...this.southEast.query(range));
+            found = found.concat(
+                this.northWest.query(range),
+                this.northEast.query(range),
+                this.southWest.query(range),
+                this.southEast.query(range),
+            );
         }
 
         return found;
@@ -114,9 +115,7 @@ export default class QuadTree {
 
         this.divided = true;
 
-        for (const p of this.points) {
-            this.insert(p);
-        }
+        this.points.forEach(p => this.insert(p));
         this.points = [];
     }
 
@@ -144,9 +143,9 @@ export default class QuadTree {
         );
     }
 
-    clear() {
+    public clear() {
         this.points = [];
         this.divided = false;
-        this.northWest = this.northEast = this.southWest = this.southEast = undefined;
+        this.northWest = this.northEast = this.southWest = this.southEast = null;
     }
 }

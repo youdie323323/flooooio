@@ -2,11 +2,10 @@ import { EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool, UPDATE_FPS } from "../../wave/WavePool";
 import { Mob } from "../mob/Mob";
 import { BasePlayer } from "./Player";
-import { MobType, PetalType } from "../../../shared/types";
 import { isSpawnableSlot, PetalData, PetalStat } from "../mob/petal/Petal";
 import { PETAL_PROFILES } from "../../../shared/petalProfiles";
-import { MoodKind } from "../../../shared/mood";
 import { isPetal, TWO_PI } from "../../utils/common";
+import { PetalType, Mood } from "../../../shared/enum";
 
 const BASE_ROTATE_SPEED = 2.5;
 const BOUNCE_DECAY = 0.225;
@@ -70,8 +69,8 @@ export function PlayerPetalOrbit<T extends new (...args: any[]) => BasePlayer>(B
 
                 {
                     const baseRadius = isPetal(firstPetal.type) && UNMOODABLE_PETALS.has(firstPetal.type) ? 40 :
-                        this.mood === MoodKind.ANGRY ? 80 :
-                            this.mood === MoodKind.SAD ? 25 : 40;
+                        this.mood === Mood.ANGRY ? 80 :
+                            this.mood === Mood.SAD ? 25 : 40;
 
                     this.petalRadii[i] += this.petalBounces[i];
                     this.petalBounces[i] = (baseRadius - this.petalRadii[i]) * BOUNCE_STRENGTH + this.petalBounces[i] * (1 - BOUNCE_DECAY);

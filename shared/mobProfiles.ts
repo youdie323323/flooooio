@@ -1,6 +1,5 @@
 import { MobData } from "../server/entity/mob/Mob";
-import { Rarities } from "./rarities";
-import { MobType } from "./types";
+import { MobType, Rarities } from "./enum";
 
 export const MOB_PROFILES: Record<MobType, MobData> = {
     [MobType.BEE]: {

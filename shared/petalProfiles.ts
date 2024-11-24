@@ -1,6 +1,5 @@
 import { PetalData } from "../server/entity/mob/petal/Petal";
-import { Rarities } from "./rarities";
-import { PetalType } from "./types";
+import { PetalType, Rarities } from "./enum";
 
 export const PETAL_PROFILES: Record<PetalType, PetalData> = {
     [PetalType.BASIC]: {
