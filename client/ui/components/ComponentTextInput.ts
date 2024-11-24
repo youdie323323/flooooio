@@ -162,7 +162,9 @@ export default class ComponentTextInput extends Component {
         if (self._maxlength) {
             self._hiddenInput.maxLength = self._maxlength;
         }
+
         document.body.appendChild(self._hiddenInput);
+
         self._hiddenInput.value = self._value;
 
         self._hiddenInput.addEventListener('keydown', function (e: any) {
@@ -585,9 +587,15 @@ export default class ComponentTextInput extends Component {
             }
         }
 
-        self._value = self._hiddenInput.value;
-        self._cursorPos = self._hiddenInput.selectionStart;
-        self._selection = [0, 0];
+        // Use raf to fix input lag
+        requestAnimationFrame(() => {
+            self._value = self._hiddenInput.value;
+            self._cursorPos = self._hiddenInput.selectionStart;
+            self._selection = [
+                self._hiddenInput.selectionStart,
+                self._hiddenInput.selectionEnd
+            ];
+        });
     }
 
     click(e: MouseEvent | TouchEvent, self: this) {
