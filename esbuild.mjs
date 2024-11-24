@@ -2,7 +2,7 @@ import * as esbuild from 'esbuild';
 import { readFileSync, rm, writeFileSync } from 'fs';
 import JsConfuser from 'js-confuser';
 
-// They didnt add "do" to reserved keywords
+// They didnt add "do" and "with" to reserved keywords
 const reservedKeywords = [
   "if",
   "in",
@@ -52,6 +52,7 @@ const reservedKeywords = [
   "of",
 
   "do",
+  "with",
 ];
 
 function alphabeticalGenerator(index) {
@@ -85,7 +86,7 @@ async function watch() {
         setup(build) {
           build.onEnd(async (result) => {
             console.clear();
-            
+
             console.log('Builded, start obfuscate with js-confuser');
 
             JsConfuser.obfuscate(readFileSync(prebuildedFileName, "utf-8"), {
@@ -116,7 +117,7 @@ async function watch() {
               stringEncoding: false,
             }).then(result => {
               writeFileSync("./server/public/client.js", result.code);
-              rm(prebuildedFileName, () => { })
+              rm(prebuildedFileName, () => { });
 
               console.log('Ofsucated');
             });

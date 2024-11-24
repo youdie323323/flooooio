@@ -1,10 +1,13 @@
 import { Canvg, presets } from "canvg";
-import { darkend, DARKEND_BASE } from "../../utils/common";
+import { calculateStrokeWidth, darkend, DARKEND_BASE } from "../../utils/common";
 import { Clickable, Component, Interactive } from "./Component";
 import Layout, { LayoutOptions } from "../layout/Layout";
 import { scaleFactor } from "../../main";
+import ExtensionEmpty from "./extensions/Extension";
+import * as StackBlur from
+    '../../../node_modules/stackblur-canvas/dist/stackblur-es.min.js';
 
-export class ComponentButton extends Component implements Interactive, Clickable {
+export class ComponentButton extends ExtensionEmpty(Component) implements Interactive, Clickable {
     public isPressed: boolean = false;
     public isHovered: boolean = false;
 
@@ -58,18 +61,15 @@ export class ComponentTextButton extends ComponentButton {
     }
 
     private setFontState(ctx: CanvasRenderingContext2D): void {
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-
         let fontSize = this.h * 0.6;
-        ctx.font = `${fontSize}px Ubuntu, sans-serif`;
+        ctx.font = `${fontSize}px Ubuntu`;
 
         while (ctx.measureText(this.text).width > this.w * 0.9 && fontSize > 10) {
             fontSize -= 1;
-            ctx.font = `${fontSize}px Ubuntu, sans-serif`;
+            ctx.font = `${fontSize}px Ubuntu`;
         }
 
-        ctx.lineWidth = Math.max(1, fontSize * 0.125);
+        ctx.lineWidth = calculateStrokeWidth(fontSize);
     }
 
     private getStrokeWidth(): number {
@@ -84,6 +84,8 @@ export class ComponentTextButton extends ComponentButton {
 
     public render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
+
+        this.update();
 
         // Button background
         const strokeWidth = this.getStrokeWidth();
@@ -102,16 +104,17 @@ export class ComponentTextButton extends ComponentButton {
         // Button text
         this.setFontState(ctx);
 
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
         ctx.textBaseline = 'middle';
         ctx.textAlign = 'center';
         ctx.strokeStyle = '#000000';
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = '#ffffff';
 
-        const centerX = this.x + this.w / 2;
-        const centerY = this.y + this.h / 2;
+        ctx.translate(this.x + this.w / 2, this.y + this.h / 2)
 
-        ctx.strokeText(this.text, centerX, centerY);
-        ctx.fillText(this.text, centerX, centerY);
+        ctx.strokeText(this.text, 0, 0);
+        ctx.fillText(this.text, 0, 0);
     }
 }
 
@@ -135,9 +138,10 @@ export class ComponentSVGButton extends ComponentButton {
             });
 
             if (ctx) {
-                ctx.imageSmoothingEnabled = true;
-                ctx.imageSmoothingQuality = 'high';
                 await Canvg.fromString(ctx, this.svg, presets.offscreen()).render();
+                // Use stackblur to relief jaggy
+                StackBlur.canvasRGBA(canvas, 0, 0, canvas.width, canvas.height, 8);
+
                 this.svgCanvas = canvas;
             }
         })();
@@ -154,9 +158,9 @@ export class ComponentSVGButton extends ComponentButton {
     }
 
     public render(ctx: CanvasRenderingContext2D): void {
-        ctx.save();
-
         super.render(ctx);
+
+        this.update();
 
         const strokeWidth = this.getStrokeWidth();
         const cornerRadius = this.getCornerRadius();
@@ -173,21 +177,16 @@ export class ComponentSVGButton extends ComponentButton {
 
         // SVG rendering
         if (this.svgCanvas) {
-            const size = ComponentSVGButton.SVG_SIZE;
-            const drawWidth = this.w * size;
-            const drawHeight = this.h * size;
-            const drawX = this.x + (this.w - drawWidth) / 2;
-            const drawY = this.y + (this.h - drawHeight) / 2;
+            const drawWidth = this.w * ComponentSVGButton.SVG_SIZE;
+            const drawHeight = this.h * ComponentSVGButton.SVG_SIZE;
 
             ctx.drawImage(
                 this.svgCanvas,
-                drawX,
-                drawY,
+                this.x + (this.w - drawWidth) / 2,
+                this.y + (this.h - drawHeight) / 2,
                 drawWidth,
                 drawHeight
             );
         }
-
-        ctx.restore();
     }
 }

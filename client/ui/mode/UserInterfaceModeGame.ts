@@ -254,7 +254,7 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
                 value: this.chatValue,
 
                 fontSize: 11,
-                fontFamily: 'Ubuntu, sans-serif',
+                fontFamily: 'Ubuntu',
                 fontColor: '#212121',
                 fontWeight: 'bold',
                 placeHolder: '',
@@ -423,12 +423,13 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
 
                     ctx.lineJoin = 'round';
                     ctx.lineCap = 'round';
-                    ctx.font = "1em Ubuntu, sans-serif";
+                    ctx.font = "1em Ubuntu";
                     ctx.textBaseline = 'middle';
                     ctx.textAlign = 'center';
                     ctx.lineWidth = 3;
                     ctx.strokeStyle = '#000000';
                     ctx.fillStyle = "white";
+
                     ctx.strokeText("Wave " + this.waveProgress, centerWidth, WAVE_PROGRESS_BAR_Y);
                     ctx.fillText("Wave " + this.waveProgress, centerWidth, WAVE_PROGRESS_BAR_Y);
 
@@ -445,12 +446,13 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
 
                 ctx.lineJoin = 'round';
                 ctx.lineCap = 'round';
-                ctx.font = "2em Ubuntu, sans-serif";
+                ctx.font = "2em Ubuntu";
                 ctx.textBaseline = 'middle';
                 ctx.textAlign = 'center';
                 ctx.lineWidth = 4;
                 ctx.strokeStyle = '#000000';
                 ctx.fillStyle = "white";
+
                 ctx.strokeText(capitalizedBiomeText, centerWidth, WAVE_PROGRESS_BAR_Y - 36);
                 ctx.fillText(capitalizedBiomeText, centerWidth, WAVE_PROGRESS_BAR_Y - 36);
 
@@ -515,8 +517,9 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
                         ctx.textAlign = 'center';
                         ctx.strokeStyle = '#000000';
                         ctx.fillStyle = "white";
-                        ctx.font = "8.4px Ubuntu, sans-serif";
+                        ctx.font = "8.4px Ubuntu";
                         ctx.lineWidth = 1;
+
                         ctx.strokeText("You will respawn next wave", 0, 0);
                         ctx.fillText("You will respawn next wave", 0, 0);
 
@@ -575,14 +578,15 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
                         ctx.textAlign = 'center';
                         ctx.strokeStyle = '#000000';
                         ctx.fillStyle = "#f0666b";
-                        ctx.font = "34px Ubuntu, sans-serif";
+                        ctx.font = "34px Ubuntu";
 
                         ctx.lineWidth = 3;
+                        
                         ctx.strokeText("GAME OVER", centerWidth, centerHeight);
                         ctx.fillText("GAME OVER", centerWidth, centerHeight);
 
                         ctx.fillStyle = "white";
-                        ctx.font = "12px Ubuntu, sans-serif";
+                        ctx.font = "12px Ubuntu";
                         ctx.lineWidth = 1.2;
 
                         ctx.strokeText("(or press enter)", centerWidth, centerHeight + 75);
@@ -624,19 +628,19 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
                     ctx.strokeStyle = '#000000';
                     ctx.fillStyle = "white";
 
-                    ctx.font = "12.2px Ubuntu, sans-serif";
+                    ctx.font = "12.2px Ubuntu";
                     ctx.lineWidth = 1.5;
 
                     ctx.strokeText("You were destroyed by:", 0, -81);
                     ctx.fillText("You were destroyed by:", 0, -81);
 
-                    ctx.font = "16.1px Ubuntu, sans-serif";
+                    ctx.font = "16.1px Ubuntu";
                     ctx.lineWidth = 2;
 
                     ctx.strokeText("Poison", 0, -61);
                     ctx.fillText("Poison", 0, -61);
 
-                    ctx.font = "12px Ubuntu, sans-serif";
+                    ctx.font = "12px Ubuntu";
                     ctx.lineWidth = 1.2;
 
                     ctx.strokeText("(or press enter)", 0, 90);

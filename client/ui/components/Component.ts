@@ -3,11 +3,11 @@ import Layout, { LayoutOptions } from "../layout/Layout";
 
 // Base interface for all GUI components
 export class Component {
-    private readonly ANIMATION_DURATION: number = 300;
-    private isAnimating: boolean = false;
-    private animationProgress: number = 1;
-    private animationStartTime: number | null = null;
-    private animationDirection: 'in' | 'out';
+    private readonly ANIMATION_DURATION: number = 200;
+    public isAnimating: boolean = false;
+    public animationProgress: number = 1;
+    public animationStartTime: number | null = null;
+    public animationDirection: 'in' | 'out' = 'in';
 
     public visible: boolean = true;
 
@@ -26,11 +26,6 @@ export class Component {
     constructor(layout: LayoutOptions) {
         this.layout = layout;
 
-        this.isAnimating = true;
-        this.animationDirection = 'in';
-        this.animationProgress = 0;
-        this.animationStartTime = null;
-
         this.updateAbsolutePosition(window.innerWidth / scaleFactor, window.innerHeight / scaleFactor);
     }
 
@@ -48,11 +43,11 @@ export class Component {
     }
 
     public render(ctx: CanvasRenderingContext2D): void {
+        ctx.globalAlpha = this.globalAlpha;
+
         if (!this.visible && !this.isAnimating) {
             return;
         }
-
-        ctx.globalAlpha = this.globalAlpha;
 
         if (this.isAnimating) {
             const currentTime = performance.now();
@@ -86,16 +81,20 @@ export class Component {
         ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
     }
 
-    public setVisible(toggle: boolean) {
-        if (toggle === this.visible) return;
+    public setVisible(toggle: boolean, shouldAnimate: boolean = false) {
+        if (shouldAnimate) {
+            if (toggle === this.visible) return;
 
-        this.isAnimating = true;
-        this.animationProgress = toggle ? 0 : 1;
-        this.animationStartTime = null;
-        this.animationDirection = toggle ? 'in' : 'out';
+            this.isAnimating = true;
+            this.animationProgress = toggle ? 0 : 1;
+            this.animationStartTime = null;
+            this.animationDirection = toggle ? 'in' : 'out';
 
-        if (toggle) {
-            this.visible = true;
+            if (toggle) {
+                this.visible = true;
+            }
+        } else {
+            this.visible = toggle;
         }
     }
 

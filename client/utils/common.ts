@@ -24,3 +24,7 @@ export function darkend(color: string, strength: number) {
 
     return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 }
+
+export function calculateStrokeWidth(fontSize: number): number {
+    return fontSize / 8.3333334;
+}

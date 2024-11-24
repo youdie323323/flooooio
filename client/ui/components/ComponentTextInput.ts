@@ -1,6 +1,8 @@
 import { scaleFactor } from "../../main";
+import { calculateStrokeWidth } from "../../utils/common";
 import { LayoutOptions } from "../layout/Layout";
 import { Component } from "./Component";
+import ExtensionEmpty from "./extensions/Extension";
 
 interface CanvasInputOptions {
     canvas?: HTMLCanvasElement;
@@ -38,7 +40,7 @@ interface CanvasInputOptions {
 
 const inputs: ComponentTextInput[] = [];
 
-export default class ComponentTextInput extends Component {
+export default class ComponentTextInput extends ExtensionEmpty(Component) {
     // Make it accessible from outside
     private _value: string;
     private _canvas: HTMLCanvasElement | null;
@@ -690,6 +692,10 @@ export default class ComponentTextInput extends Component {
             return;
         }
 
+        super.render(ctx);
+
+        this.update();
+
         ctx.translate(self.x, self.y);
 
         if (self._hasFocus) {
@@ -767,8 +773,8 @@ export default class ComponentTextInput extends Component {
 
                     if (i >= self._selection[0] && i < self._selection[1]) {
                         ctx.strokeStyle = '#000000';
-                        ctx.fillStyle = "white";
-                        ctx.lineWidth = 1.2;
+                        ctx.fillStyle = "#ffffff";
+                        ctx.lineWidth = calculateStrokeWidth(self._fontSize);
 
                         ctx.strokeText(char, currentX, textY);
                         ctx.fillText(char, currentX, textY);
@@ -804,9 +810,9 @@ export default class ComponentTextInput extends Component {
 
             ctx.restore();
 
-            ctx.strokeStyle = 'white';
             ctx.fillStyle = "#000000";
-            ctx.lineWidth = 1.2;
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = calculateStrokeWidth(self._fontSize);
 
             ctx.strokeText(this._value, textX, h / 2);
             ctx.fillText(this._value, textX, h / 2);
@@ -833,9 +839,10 @@ export default class ComponentTextInput extends Component {
 
             ctx.restore();
 
+            ctx.fillStyle = "#ffffff";
             ctx.strokeStyle = '#000000';
-            ctx.fillStyle = "white";
-            ctx.lineWidth = 1.2;
+            ctx.lineWidth = calculateStrokeWidth(self._fontSize);
+
             ctx.strokeText(self._placeHolderUnfocused, textX, h / 2);
             ctx.fillText(self._placeHolderUnfocused, textX, h / 2);
         }
@@ -908,6 +915,8 @@ export default class ComponentTextInput extends Component {
 
         ctx.font = self._fontStyle + ' ' + self._fontWeight + ' ' + self._fontSize + 'px ' + self._fontFamily;
         ctx.textAlign = 'left';
+        // Disable font kerning so multiple length doesnt have wrong precision
+        ctx.fontKerning = 'none';
 
         return ctx.measureText(text).width;
     }

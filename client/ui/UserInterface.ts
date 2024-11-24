@@ -31,6 +31,7 @@ export default abstract class UserInterface {
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
         this.setupEventListeners();
+
         this.initializeComponents();
     }
 

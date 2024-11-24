@@ -1,12 +1,12 @@
 import { MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../../constants";
 import EntityMob from "../../entity/EntityMob";
 import TilesetManager, { BIOME_TILESETS } from "../../utils/WorldManager";
-import { ComponentSVGButton, ComponentTextButton } from "../components/ComponentButton";
+import { ComponentButton, ComponentSVGButton, ComponentTextButton } from "../components/ComponentButton";
 import UserInterface from "../UserInterface";
 import ComponentTextInput from "../components/ComponentTextInput.js";
 import { scaleFactor, ws } from "../../main";
 import { Biomes, Packet, PetalType, Rarities } from "../../../shared/enum";
-import { ComponentDynamicText } from "../components/ComponentDynamicText";
+import ComponentDynamicText from "../components/ComponentDynamicText";
 
 function randomFloat(min: number, max: number) {
     return Math.random() * (max - min + 1) + min;
@@ -38,6 +38,15 @@ export default class UserInterfaceMenu extends UserInterface {
     backgroundY: number;
     backgroundWaveStep: number;
 
+    connectingText: ComponentDynamicText;
+    loggingInText: ComponentDynamicText;
+
+    playableButtons: ComponentButton[];
+
+    connectingTextLoaded: boolean = false;
+    loggingInTextLoadded: boolean = false;
+    playableButtonsLoaded: boolean = false;
+
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
 
@@ -48,6 +57,30 @@ export default class UserInterfaceMenu extends UserInterface {
         this.backgroundX = 0;
         this.backgroundY = 0;
         this.backgroundWaveStep = 0;
+
+        setTimeout(() => {
+            this.connectingText.setVisible(true, true);
+            this.connectingTextLoaded = true;
+            setTimeout(() => {
+                this.connectingText.setVisible(false, true);
+                setTimeout(() => {
+                    this.loggingInText.setVisible(true, true);
+                    this.loggingInTextLoadded = true;
+                    this.connectingTextLoaded = false;
+                    setTimeout(() => {
+                        this.loggingInText.setVisible(false, true);
+                        this.loggingInTextLoadded = false;
+                        setTimeout(() => {
+                            this.playableButtonsLoaded = true;
+
+                            this.playableButtons.forEach((b) => {
+                                b.setVisible(true, true);
+                            });
+                        }, 300);
+                    }, 2000);
+                }, 300);
+            }, 2000);
+        }, 1);
     }
 
     handleKeyDown(event: KeyboardEvent): void { }
@@ -106,6 +139,8 @@ export default class UserInterfaceMenu extends UserInterface {
 
         // Squad
 
+        this.playableButtons = [];
+
         const readyButton = new ComponentTextButton(
             {
                 x: (widthRelative / 2) - 90 / 2,
@@ -119,8 +154,6 @@ export default class UserInterfaceMenu extends UserInterface {
             },
             "Ready"
         );
-
-        this.addComponent(readyButton);
 
         const joinSquadButton = new ComponentTextButton(
             {
@@ -140,8 +173,6 @@ export default class UserInterfaceMenu extends UserInterface {
             "Join squad"
         );
 
-        this.addComponent(joinSquadButton);
-
         const joinPublicSquadButton = new ComponentTextButton(
             {
                 x: (widthRelative / 2) - 90 / 2,
@@ -155,8 +186,6 @@ export default class UserInterfaceMenu extends UserInterface {
             },
             "Join public squad"
         );
-
-        this.addComponent(joinPublicSquadButton);
 
         const leaveSquadButton = new ComponentTextButton(
             {
@@ -172,8 +201,6 @@ export default class UserInterfaceMenu extends UserInterface {
             "Leave squad"
         );
 
-        this.addComponent(leaveSquadButton);
-
         const createPublicButton = new ComponentTextButton(
             {
                 x: (widthRelative / 2) - 90 / 2,
@@ -187,8 +214,6 @@ export default class UserInterfaceMenu extends UserInterface {
             },
             "Create public"
         );
-
-        this.addComponent(createPublicButton);
 
         const setPublicButton = new ComponentTextButton(
             {
@@ -204,8 +229,6 @@ export default class UserInterfaceMenu extends UserInterface {
             "Set public"
         );
 
-        this.addComponent(setPublicButton);
-
         const setPrivateButton = new ComponentTextButton(
             {
                 x: (widthRelative / 2) - 90 / 2,
@@ -220,28 +243,70 @@ export default class UserInterfaceMenu extends UserInterface {
             "Set private"
         );
 
-        this.addComponent(setPrivateButton);
+        this.playableButtons.push(readyButton);
+        this.playableButtons.push(joinSquadButton);
+        this.playableButtons.push(joinPublicSquadButton);
+        this.playableButtons.push(leaveSquadButton);
+        this.playableButtons.push(createPublicButton);
+        this.playableButtons.push(setPublicButton);
+        this.playableButtons.push(setPrivateButton);
 
-        const cfawgfa = new ComponentDynamicText(
+        this.playableButtons.forEach(b => b.setVisible(this.playableButtonsLoaded));
+
+        this.addComponent(readyButton);
+        this.addComponent(joinSquadButton);
+        this.addComponent(joinPublicSquadButton);
+        this.addComponent(leaveSquadButton);
+        this.addComponent(createPublicButton);
+        this.addComponent(setPrivateButton);
+        this.addComponent(setPublicButton);
+
+        // Text
+        this.connectingText = new ComponentDynamicText(
             {
-                x: widthRelative / 2,
-                y: heightRelative / 2,
+                x: (widthRelative / 2) - (200 / 2),
+                y: (heightRelative / 2) - (30 / 2),
                 w: 200,
-                h: 90,
+                h: 30,
             },
-            "florr.io",
-            60,
+            "Connecting...",
+            30,
         );
 
-        cfawgfa.setCollisionComponents([readyButton, createPublicButton]);
+        this.connectingText.setVisible(this.connectingTextLoaded);
 
-        this.addComponent(cfawgfa);
+        this.addComponent(this.connectingText);
 
-        let tohgh: boolean = false;
-        setInterval(() => {
-            cfawgfa.setVisible(tohgh);
-            tohgh =! tohgh;
-        }, 1000);
+        this.loggingInText = new ComponentDynamicText(
+            {
+                x: (widthRelative / 2) - (200 / 2),
+                y: (heightRelative / 2) - (30 / 2),
+                w: 200,
+                h: 30,
+            },
+            "Loggin in...",
+            30,
+        );
+
+        this.loggingInText.setVisible(this.loggingInTextLoadded);
+
+        this.addComponent(this.loggingInText);
+
+        const gameNameText = new ComponentDynamicText(
+            {
+                x: (widthRelative / 2) - (250 / 2),
+                y: (heightRelative / 2) - (80 / 2) - 40,
+                w: 250,
+                h: 80,
+            },
+            "floooo.io",
+            54,
+        );
+
+        gameNameText.addCollidableComponents([this.connectingText, this.loggingInText]);
+        gameNameText.addCollidableComponents(this.playableButtons);
+
+        this.addComponent(gameNameText);
     }
 
     private generateBackgroundEntity3D() {
@@ -310,7 +375,7 @@ export default class UserInterfaceMenu extends UserInterface {
     set biome(biome: Biomes) {
         menuUiCurrentBiome = biome;
     }
-    
+
     get biome(): Biomes {
         return menuUiCurrentBiome;
     }

@@ -21,13 +21,14 @@ export function drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, 
         ctx.translate(0, -(entity.size + 10));
         ctx.scale(0.2, 0.2);
 
-        ctx.font = "4em Ubuntu, sans-serif";
+        ctx.font = "4em Ubuntu";
         ctx.textBaseline = 'middle';
         ctx.textAlign = 'center';
         ctx.lineWidth = 8;
         ctx.strokeStyle = '#000000';
+        ctx.fillStyle = "#ffffff";
+
         ctx.strokeText(entity.nickname, 0, 0);
-        ctx.fillStyle = "white";
         ctx.fillText(entity.nickname, 0, 0);
 
         ctx.restore();
