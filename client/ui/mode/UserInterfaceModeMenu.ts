@@ -6,6 +6,7 @@ import UserInterface from "../UserInterface";
 import ComponentTextInput from "../components/ComponentTextInput.js";
 import { scaleFactor, ws } from "../../main";
 import { Biomes, Packet, PetalType, Rarities } from "../../../shared/enum";
+import { ComponentDynamicText } from "../components/ComponentDynamicText";
 
 function randomFloat(min: number, max: number) {
     return Math.random() * (max - min + 1) + min;
@@ -220,6 +221,27 @@ export default class UserInterfaceMenu extends UserInterface {
         );
 
         this.addComponent(setPrivateButton);
+
+        const cfawgfa = new ComponentDynamicText(
+            {
+                x: widthRelative / 2,
+                y: heightRelative / 2,
+                w: 200,
+                h: 90,
+            },
+            "florr.io",
+            60,
+        );
+
+        cfawgfa.setCollisionComponents([readyButton, createPublicButton]);
+
+        this.addComponent(cfawgfa);
+
+        let tohgh: boolean = false;
+        setInterval(() => {
+            cfawgfa.setVisible(tohgh);
+            tohgh =! tohgh;
+        }, 1000);
     }
 
     private generateBackgroundEntity3D() {
@@ -238,11 +260,11 @@ export default class UserInterfaceMenu extends UserInterface {
         const widthRelative = this.canvas.width / scaleFactor;
         const heightRelative = this.canvas.height / scaleFactor;
 
-        this.worldManager.constructWorldMenu(canvas, BIOME_TILESETS.get(this.biome), this.backgroundX, this.backgroundY);
+        this.worldManager.renderMapMenu(canvas, BIOME_TILESETS.get(this.biome), this.backgroundX, this.backgroundY);
 
-        this.backgroundX += 0.3;
-        this.backgroundY += Math.sin(this.backgroundWaveStep / 20) * 0.3;
-        this.backgroundWaveStep += 0.1;
+        this.backgroundX += 0.4;
+        this.backgroundY += Math.sin(this.backgroundWaveStep / 20) * 0.4;
+        this.backgroundWaveStep += 0.07;
 
         backgroundEntities.forEach((v) => {
             if (v.x > widthRelative) {

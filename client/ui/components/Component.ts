@@ -3,6 +3,12 @@ import Layout, { LayoutOptions } from "../layout/Layout";
 
 // Base interface for all GUI components
 export class Component {
+    private readonly ANIMATION_DURATION: number = 300;
+    private isAnimating: boolean = false;
+    private animationProgress: number = 1;
+    private animationStartTime: number | null = null;
+    private animationDirection: 'in' | 'out';
+
     public visible: boolean = true;
 
     /**
@@ -19,6 +25,12 @@ export class Component {
 
     constructor(layout: LayoutOptions) {
         this.layout = layout;
+
+        this.isAnimating = true;
+        this.animationDirection = 'in';
+        this.animationProgress = 0;
+        this.animationStartTime = null;
+
         this.updateAbsolutePosition(window.innerWidth / scaleFactor, window.innerHeight / scaleFactor);
     }
 
@@ -36,11 +48,55 @@ export class Component {
     }
 
     public render(ctx: CanvasRenderingContext2D): void {
+        if (!this.visible && !this.isAnimating) {
+            return;
+        }
+
         ctx.globalAlpha = this.globalAlpha;
+
+        if (this.isAnimating) {
+            const currentTime = performance.now();
+            if (this.animationStartTime === null) {
+                this.animationStartTime = currentTime;
+            }
+
+            const elapsed = currentTime - this.animationStartTime;
+            let progress = Math.max(0, Math.min(elapsed / this.ANIMATION_DURATION, 1));
+
+            this.animationProgress = this.animationDirection === 'in' ? progress : 1 - progress;
+
+            if (elapsed >= this.ANIMATION_DURATION) {
+                if (this.animationDirection === 'out') {
+                    this.visible = false;
+                }
+
+                this.isAnimating = false;
+                this.animationStartTime = null;
+            }
+        }
+
+        const easeOutExpo = (x: number): number => {
+            return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+        };
+
+        const progress = easeOutExpo(this.animationProgress);
+
+        ctx.translate(this.x + this.w / 2, this.y + (-(this.h / 2) * (1 - progress)) + this.h / 2);
+        ctx.scale(progress, progress);
+        ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
     }
 
     public setVisible(toggle: boolean) {
-        this.visible = toggle;
+        if (toggle === this.visible) return;
+
+        this.isAnimating = true;
+        this.animationProgress = toggle ? 0 : 1;
+        this.animationStartTime = null;
+        this.animationDirection = toggle ? 'in' : 'out';
+
+        if (toggle) {
+            this.visible = true;
+        }
     }
 
     public setGlobalAlpha(globalAlpha: number) {

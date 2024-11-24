@@ -16,6 +16,8 @@ export function drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, 
     if (entity instanceof EntityPlayer && entity.id !== selfId) {
         ctx.save();
 
+        if (entity.isDead) ctx.globalAlpha *= 1 - Math.sin(entity.deadT * Math.PI / 2);
+
         ctx.translate(0, -(entity.size + 10));
         ctx.scale(0.2, 0.2);
 

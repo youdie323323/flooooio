@@ -690,8 +690,6 @@ export default class ComponentTextInput extends Component {
             return;
         }
 
-        ctx.save();
-
         ctx.translate(self.x, self.y);
 
         if (self._hasFocus) {
@@ -751,6 +749,8 @@ export default class ComponentTextInput extends Component {
 
                 text = (text === '' && self._placeHolder) ? self._placeHolder : text;
 
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
                 ctx.font = self._fontStyle + ' ' + self._fontWeight + ' ' + self._fontSize + 'px ' + self._fontFamily;
                 ctx.shadowColor = self._fontShadowColor;
                 ctx.shadowBlur = self._fontShadowBlur;
@@ -784,6 +784,8 @@ export default class ComponentTextInput extends Component {
         } else if (this._value.length > 0) {
             let textX = self._padding + self._borderWidth;
 
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
             ctx.font = self._fontStyle + ' ' + self._fontWeight + ' ' + self._fontSize + 'px ' + self._fontFamily;
             ctx.shadowColor = self._fontShadowColor;
             ctx.shadowBlur = self._fontShadowBlur;
@@ -811,6 +813,8 @@ export default class ComponentTextInput extends Component {
         } else {
             let textX = self._padding + self._borderWidth;
 
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
             ctx.font = self._fontStyle + ' ' + self._fontWeight + ' ' + (self._fontSize - 1) + 'px ' + self._fontFamily;
             ctx.shadowColor = self._fontShadowColor;
             ctx.shadowBlur = self._fontShadowBlur;
@@ -835,8 +839,6 @@ export default class ComponentTextInput extends Component {
             ctx.strokeText(self._placeHolderUnfocused, textX, h / 2);
             ctx.fillText(self._placeHolderUnfocused, textX, h / 2);
         }
-
-        ctx.restore();
     }
 
     destroy() {
@@ -906,8 +908,6 @@ export default class ComponentTextInput extends Component {
 
         ctx.font = self._fontStyle + ' ' + self._fontWeight + ' ' + self._fontSize + 'px ' + self._fontFamily;
         ctx.textAlign = 'left';
-        // Disable font kerning so multiple length doesnt have wrong precision
-        ctx.fontKerning = 'none';
 
         return ctx.measureText(text).width;
     }

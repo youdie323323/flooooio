@@ -228,7 +228,11 @@ export default abstract class UserInterface {
         // Render all visible components
         for (const component of this.components) {
             if (component.visible) {
+                ctx.save();
+
                 component.render(ctx);
+
+                ctx.restore();
             }
         }
     }

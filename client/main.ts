@@ -150,6 +150,9 @@ export const uiManager = new UserInterfaceManager(canvas);
 
         ctx.scale(scaleFactor, scaleFactor);
 
+        // Disable font kerning so multiple length doesnt have wrong precision
+        ctx.fontKerning = 'none';
+
         uiManager.update();
 
         ctx.restore();

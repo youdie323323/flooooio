@@ -321,8 +321,10 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
             }
         }
 
-        this.worldManager.renderGameWorld(canvas, BIOME_TILESETS.get(this.biome), this.worldSize, selfPlayer.x, selfPlayer.y);
+        // Render map
+        this.worldManager.renderMap(canvas, BIOME_TILESETS.get(this.biome), this.worldSize, selfPlayer.x, selfPlayer.y);
 
+        // Render players&mobs
         {
             ctx.save();
 
@@ -419,6 +421,8 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
                 {
                     ctx.save();
 
+                    ctx.lineJoin = 'round';
+                    ctx.lineCap = 'round';
                     ctx.font = "1em Ubuntu, sans-serif";
                     ctx.textBaseline = 'middle';
                     ctx.textAlign = 'center';
@@ -439,6 +443,8 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
                 const biomeText = Biomes[this.biome].toLocaleLowerCase();
                 const capitalizedBiomeText = biomeText[0].toUpperCase() + biomeText.slice(1);
 
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
                 ctx.font = "2em Ubuntu, sans-serif";
                 ctx.textBaseline = 'middle';
                 ctx.textAlign = 'center';
@@ -503,6 +509,8 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
 
                         ctx.globalAlpha = this.youWillRespawnNextWaveOpacity;
 
+                        ctx.lineJoin = 'round';
+                        ctx.lineCap = 'round';
                         ctx.textBaseline = 'middle';
                         ctx.textAlign = 'center';
                         ctx.strokeStyle = '#000000';
@@ -561,6 +569,8 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
 
                         ctx.globalAlpha = this.gameOverOpacity;
 
+                        ctx.lineJoin = 'round';
+                        ctx.lineCap = 'round';
                         ctx.textBaseline = 'middle';
                         ctx.textAlign = 'center';
                         ctx.strokeStyle = '#000000';
@@ -607,6 +617,8 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
 
                     ctx.translate(centerWidth, this.deadAnimationY);
 
+                    ctx.lineJoin = 'round';
+                    ctx.lineCap = 'round';
                     ctx.textBaseline = 'middle';
                     ctx.textAlign = 'center';
                     ctx.strokeStyle = '#000000';

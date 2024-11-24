@@ -57,7 +57,10 @@ export class ComponentTextButton extends ComponentButton {
         super(layout, color, callback);
     }
 
-    private setFontSize(ctx: CanvasRenderingContext2D): void {
+    private setFontState(ctx: CanvasRenderingContext2D): void {
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+
         let fontSize = this.h * 0.6;
         ctx.font = `${fontSize}px Ubuntu, sans-serif`;
 
@@ -80,8 +83,6 @@ export class ComponentTextButton extends ComponentButton {
     }
 
     public render(ctx: CanvasRenderingContext2D): void {
-        ctx.save();
-
         super.render(ctx);
 
         // Button background
@@ -99,19 +100,18 @@ export class ComponentTextButton extends ComponentButton {
         ctx.closePath();
 
         // Button text
-        this.setFontSize(ctx);
+        this.setFontState(ctx);
+
         ctx.textBaseline = 'middle';
         ctx.textAlign = 'center';
+        ctx.strokeStyle = '#000000';
+        ctx.fillStyle = 'white';
 
         const centerX = this.x + this.w / 2;
         const centerY = this.y + this.h / 2;
 
-        ctx.strokeStyle = '#000000';
         ctx.strokeText(this.text, centerX, centerY);
-        ctx.fillStyle = 'white';
         ctx.fillText(this.text, centerX, centerY);
-
-        ctx.restore();
     }
 }
 

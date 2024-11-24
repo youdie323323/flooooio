@@ -4,7 +4,7 @@ import { darkend, DARKEND_BASE } from "../utils/common";
 import { TWO_PI } from "../constants";
 import { MobType, PetalType, Rarities } from "../../shared/enum";
 
-function createBodyPath() {
+function createBeetleBodyPath() {
     const p2 = new Path2D();
     p2.moveTo(-40, 5);
     p2.bezierCurveTo(-40, 40, 40, 40, 40, 5);
@@ -14,12 +14,11 @@ function createBodyPath() {
     return p2;
 }
 
-const bodyPath = createBodyPath();
+const beetleBodyPath = createBeetleBodyPath();
 
 export default class EntityMob extends Entity {
     type: MobType | PetalType;
     rarity: Rarities;
-    // For hp bar
     legD: number[];
     isPet: boolean;
 
@@ -63,7 +62,7 @@ export default class EntityMob extends Entity {
             case MobType.BEE: {
                 let bcolor = this.getSkinColor("#333333");
                 let fcolor = "#ffe763";
-                let scolor = darkend(fcolor, 0.1);
+                let scolor = darkend(fcolor, DARKEND_BASE);
 
                 ctx.scale(this.size / 30, this.size / 30);
 
@@ -73,7 +72,7 @@ export default class EntityMob extends Entity {
 
                 { // Stinger
                     ctx.fillStyle = "#333333";
-                    ctx.strokeStyle = this.getSkinColor(darkend("#333333", 0.1));
+                    ctx.strokeStyle = this.getSkinColor(darkend("#333333", DARKEND_BASE));
                     ctx.beginPath();
                     ctx.moveTo(-37, 0);
                     ctx.lineTo(-25, -9);
@@ -223,10 +222,10 @@ export default class EntityMob extends Entity {
                 }
                 const skinColor = this.isPet ? ["#ffe667", "#d0bb55"] : ["#8f5db0", "#754a8f"];
                 ctx.fillStyle = this.getSkinColor(skinColor[0]);
-                ctx.fill(bodyPath);
+                ctx.fill(beetleBodyPath);
                 ctx.lineWidth = 6;
                 ctx.fillStyle = ctx.strokeStyle = this.getSkinColor(skinColor[1]);
-                ctx.stroke(bodyPath);
+                ctx.stroke(beetleBodyPath);
 
                 ctx.beginPath();
                 ctx.moveTo(-21, 0);

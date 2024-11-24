@@ -1,7 +1,6 @@
 import * as esbuild from 'esbuild';
 import { readFileSync, rm, writeFileSync } from 'fs';
 import JsConfuser from 'js-confuser';
-import path from 'path';
 
 // They didnt add "do" to reserved keywords
 const reservedKeywords = [
@@ -85,19 +84,24 @@ async function watch() {
         name: 'watch-client-only',
         setup(build) {
           build.onEnd(async (result) => {
+            console.clear();
+            
             console.log('Builded, start obfuscate with js-confuser');
 
-            JsConfuser.obfuscate(readFileSync("./server/public/client.js", "utf-8"), {
+            JsConfuser.obfuscate(readFileSync(prebuildedFileName, "utf-8"), {
               target: 'browser',
               preset: 'low',
+              verbose: true,
+              compact: true,
 
               // Disable shits
               stringCompression: false,
               stringConcealing: false,
+              shuffle: false,
+              controlFlowFlattening: false,
 
               globalConcealing: true,
               opaquePredicates: true,
-              controlFlowFlattening: 1,
 
               // Disable anti bandwidth transformers
               identifierGenerator: () => {

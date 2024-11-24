@@ -315,7 +315,7 @@ export default class TilesetManager {
         return generatedTilesets;
     }
 
-    renderGameWorld(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], radius: number, playerX: number, playerY: number) {
+    renderMap(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], radius: number, playerX: number, playerY: number) {
         const ctx = canvas.getContext("2d");
 
         const zoom = cameraController.zoom;
@@ -356,7 +356,7 @@ export default class TilesetManager {
         ctx.arc(
             relativeCenterX,
             relativeCenterY,
-            radius * zoom + ctx.lineWidth / 2, 0, TWO_PI,
+            (radius + 0.5) * zoom + ctx.lineWidth / 2, 0, TWO_PI,
         );
         ctx.stroke();
         ctx.closePath();
@@ -364,7 +364,7 @@ export default class TilesetManager {
         ctx.restore();
     }
 
-    constructWorldMenu(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], playerX: number, playerY: number) {
+    renderMapMenu(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], playerX: number, playerY: number) {
         const ctx = canvas.getContext("2d");
 
         const adjustedGridSize = 300;
