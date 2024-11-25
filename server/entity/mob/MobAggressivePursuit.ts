@@ -50,9 +50,9 @@ export function MobAggressivePursuit<T extends new (...args: any[]) => BaseMob>(
             }
 
             let targets: Entity[];
-            if (this.petParentPlayer) {
+            if (this.petMaster) {
                 // Mob which summoned by player will attack other mobs expect petals, pets
-                targets = poolThis.getAllMobs().filter(p => !isPetal(p.type) && !p?.petParentPlayer);
+                targets = poolThis.getAllMobs().filter(p => !isPetal(p.type) && !p?.petMaster);
             } else {
                 // Target living players, p̶e̶t̶s̶
                 // Mob will never target pets before wave

@@ -1,5 +1,5 @@
 import { choice, generateRandomWaveRoomPlayerId, getRandomMapSafePosition, getRandomPosition } from "../utils/random";
-import { WavePool } from "./WavePool";
+import { UserData, WavePool } from "./WavePool";
 import { PlayerInstance, MockPlayerData } from "../entity/player/Player";
 import { logger } from "../main";
 import { BrandedId } from "../entity/Entity";
@@ -7,6 +7,8 @@ import WaveProbabilityPredictor from "./WaveProbabilityPredictor";
 import { calculateWaveLength } from "../utils/formula";
 import { MAP_CENTER_X, MAP_CENTER_Y, SAFETY_DISTANCE } from "../entity/EntityWorldBoundary";
 import { Biomes, Packet } from "../../shared/enum";
+import root from "../command/commandRoot";
+import { goErrorToString } from "../command/command";
 
 /**
  * Revive player nearby other player.
@@ -195,7 +197,7 @@ export default class WaveRoom {
                 if (
                     // Force start into next wave when red gage reached
                     !(this.waveData.waveProgressRedGageTimer >= waveLength) &&
-                    4 < this.wavePool.getAllMobs().filter(c => /** Dont count petals & pets. */ !c.petParentPlayer && !c.petalParentPlayer).length
+                    4 < this.wavePool.getAllMobs().filter(c => /** Dont count petals & pets. */ !c.petMaster && !c.petalMaster).length
                 ) {
                     this.waveData.waveProgressIsRedGage = true;
 
@@ -434,9 +436,29 @@ export default class WaveRoom {
     /**
      * Enqueue message into queue.
      */
-    public enqueueMessage(msg: string) {
+    public async enqueueMessage(userData: UserData, msg: string) {
         if (msg.length > 0) {
-            this.msgQueue.push(msg);
+            // Command prefix slash
+            if (msg.startsWith("/")) {
+                const executedResultString = await goErrorToString(
+                    root.execute(
+                        userData,
+                        // Remove slash, then split
+                        msg.slice(1).split(" "),
+                    )
+                );
+
+                console.log(executedResultString);
+
+                if (executedResultString.length === 0) {
+                    return;
+                }
+
+                this.msgQueue.push(executedResultString);
+            } else {
+                this.msgQueue.push(msg);
+            }
+
             if (this.msgQueue.length > WaveRoom.MAX_MESSAGE_QUEUE_AMOUNT) {
                 this.msgQueue.shift();
             }

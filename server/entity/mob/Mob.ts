@@ -43,7 +43,7 @@ class BaseMob implements Entity {
     /**
      * Player which owner of this pet.
      */
-    petParentPlayer: PlayerInstance | null;
+    petMaster: PlayerInstance | null;
 
     /**
      * Whether the pet is moving to tracking the player.
@@ -52,7 +52,7 @@ class BaseMob implements Entity {
      * 
      * To prevent move from MobOscillatingMovement.ts.
      */
-    petGoingToPlayer: boolean;
+    petGoingToMaster: boolean;
 
     /**
      * Determines if petal is usage petal. (e.g. beetle egg)
@@ -62,7 +62,7 @@ class BaseMob implements Entity {
     /**
      * Player which owns this petal.
      */
-    petalParentPlayer: PlayerInstance | null;
+    petalMaster: PlayerInstance | null;
     /**
      * Mob that usage petal spawned.
      * Always false if petalIsUsage is false.

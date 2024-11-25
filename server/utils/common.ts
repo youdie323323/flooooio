@@ -51,7 +51,7 @@ export function removeAllBindings(wavePool: WavePool, player: PlayerInstance) {
         });
 
         // Remove all their pets
-        wavePool.getAllMobs().filter(c => c.petParentPlayer === player).forEach((e) => {
+        wavePool.getAllMobs().filter(c => c.petMaster === player).forEach((e) => {
             if (e != null && wavePool.getMob(e.id)) {
                 wavePool.removeMob(e.id);
             };

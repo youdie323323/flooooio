@@ -12,6 +12,9 @@ import { MockPlayerData } from './entity/player/Player';
 import { choice, randomEnum, shuffle } from './utils/random';
 import { MockPetalData } from './entity/mob/petal/Petal';
 import { PetalType, Rarities, Packet, Mood, BIOME_VALUES } from '../shared/enum';
+import { registerSpawnMob } from './command/commands/spawnMob';
+import root from './command/commandRoot';
+import { registerSpawnMobBulk } from './command/subcommands/spawnMobBulk';
 
 /**
  * Temp player data.
@@ -136,7 +139,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             const chat = textDecoder.decode(buffer.slice(2, 2 + length));
 
-            waveRoom.enqueueMessage(chat);
+            waveRoom.enqueueMessage(userData, chat);
 
             break;
         }
@@ -318,6 +321,15 @@ app
     .listen(PORT, (token) => {
         if (token) {
             logger.info(`Server running on port ${PORT}`);
+
+            // Register all commands
+            {
+                // Spawn mob and their sub commands
+                {
+                    const spawnMob = registerSpawnMob(root);
+                    registerSpawnMobBulk(spawnMob);
+                }
+            }
         } else {
             logger.error(`Failed to listen on port ${PORT}`);
         }

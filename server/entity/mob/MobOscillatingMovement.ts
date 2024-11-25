@@ -31,9 +31,9 @@ export function MobOscillatingMovement<T extends new (...args: any[]) => BaseMob
 
             // Follows the player when the player moves away from this (pet) for a certain distance
             // Dont follows if targetting other mob
-            if (this.petParentPlayer && !this.mobTargetEntity) {
-                const dx = this.petParentPlayer.x - this.x;
-                const dy = this.petParentPlayer.y - this.y;
+            if (this.petMaster && !this.mobTargetEntity) {
+                const dx = this.petMaster.x - this.x;
+                const dy = this.petMaster.y - this.y;
                 const distanceToParent = Math.hypot(dx, dy);
 
                 if (distanceToParent > 2 * this.size) {
@@ -52,16 +52,16 @@ export function MobOscillatingMovement<T extends new (...args: any[]) => BaseMob
 
                     this.magnitude = 255 * 4;
 
-                    this.petGoingToPlayer = true;
+                    this.petGoingToMaster = true;
                 } else {
-                    this.petGoingToPlayer = false;
+                    this.petGoingToMaster = false;
                 }
             } else {
-                this.petGoingToPlayer = false;
+                this.petGoingToMaster = false;
             }
 
             // Dont move when this is petal or pet
-            if (!isPetal(this.type) && this.type !== MobType.BUBBLE && !this.petGoingToPlayer) {
+            if (!isPetal(this.type) && this.type !== MobType.BUBBLE && !this.petGoingToMaster) {
                 if (this.shouldApplyAngleShake()) {
                     this.angle += SHARED_SINE_WAVE.get(++this.sineWaveIndex) * (this.mobTargetEntity ? 2 : 1);
                 }

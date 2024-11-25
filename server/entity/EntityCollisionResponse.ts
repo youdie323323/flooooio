@@ -85,8 +85,8 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
             if (isPetal(this.type) && isPetal(otherEntity.type)) return;
 
             // Pet/petal dont damaged to player/pet
-            if ((this instanceof Player || isPetal(this.type)) && otherEntity.petParentPlayer) return;
-            if ((otherEntity instanceof Player || isPetal(otherEntity.type)) && this.petParentPlayer) return;
+            if ((this instanceof Player || isPetal(this.type)) && otherEntity.petMaster) return;
+            if ((otherEntity instanceof Player || isPetal(otherEntity.type)) && this.petMaster) return;
 
             const profile2: MobData | PetalData = MOB_PROFILES[otherEntity.type] || PETAL_PROFILES[otherEntity.type];
 
@@ -112,38 +112,38 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
               const push = this.calculatePush(this, otherEntity, delta);
               if (push) {
                 // Only pop knockback to enemy (summoned mob)
-                const multiplier1 = this.type === MobType.BUBBLE && otherEntity.petParentPlayer ? BUBBLE_PUSH_FACTOR : 1;
-                const multiplier2 = otherEntity.type === MobType.BUBBLE && this.petParentPlayer ? BUBBLE_PUSH_FACTOR : 1;
+                const multiplier1 = this.type === MobType.BUBBLE && otherEntity.petMaster ? BUBBLE_PUSH_FACTOR : 1;
+                const multiplier2 = otherEntity.type === MobType.BUBBLE && this.petMaster ? BUBBLE_PUSH_FACTOR : 1;
                 this.x -= push[0] * multiplier2 * 0.3;
                 this.y -= push[1] * multiplier2 * 0.3;
                 otherEntity.x += push[0] * multiplier1 * 0.3;
                 otherEntity.y += push[1] * multiplier1 * 0.3;
 
                 // Pet doesnt damaged to other pet
-                if (this.petParentPlayer && otherEntity.petParentPlayer) return;
+                if (this.petMaster && otherEntity.petMaster) return;
 
                 if (
                   isPetal(this.type) || isPetal(otherEntity.type) ||
-                  this.petParentPlayer || otherEntity.petParentPlayer
+                  this.petMaster || otherEntity.petMaster
                 ) {
                   this.health -= bodyDamageOrDamage(profile2[otherEntity.rarity]);
                   if (!isPetal(otherEntity.type)) {
-                    if (isPetal(this.type) && this.petalParentPlayer) {
-                      otherEntity.mobLastAttackedBy = this.petalParentPlayer;
+                    if (isPetal(this.type) && this.petalMaster) {
+                      otherEntity.mobLastAttackedBy = this.petalMaster;
                     }
                     // Can targetted to pet too
-                    if (this.petParentPlayer) {
+                    if (this.petMaster) {
                       // If pet attacked mob its target player or pet?
-                      otherEntity.mobLastAttackedBy = this.petParentPlayer;
+                      otherEntity.mobLastAttackedBy = this.petMaster;
                     }
                   }
                   otherEntity.health -= bodyDamageOrDamage(profile1[this.rarity]);
                   if (!isPetal(this.type)) {
-                    if (!isPetal(otherEntity.type) && otherEntity.petalParentPlayer) {
-                      this.mobLastAttackedBy = otherEntity.petalParentPlayer;
+                    if (!isPetal(otherEntity.type) && otherEntity.petalMaster) {
+                      this.mobLastAttackedBy = otherEntity.petalMaster;
                     }
-                    if (otherEntity.petParentPlayer) {
-                      this.mobLastAttackedBy = otherEntity.petParentPlayer;
+                    if (otherEntity.petMaster) {
+                      this.mobLastAttackedBy = otherEntity.petMaster;
                     }
                   }
                 }
@@ -209,7 +209,7 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
           if (otherEntity instanceof Mob && !isPetal(otherEntity.type)) {
             const profile1: MobData = MOB_PROFILES[otherEntity.type];
 
-            if (otherEntity.petParentPlayer) return;
+            if (otherEntity.petMaster) return;
 
             const ellipse1: Ellipse = {
               // Arc (player)

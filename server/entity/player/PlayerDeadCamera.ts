@@ -33,7 +33,7 @@ export function PlayerDeadCamera<T extends new (...args: any[]) => BasePlayer>(B
 
                             // Ygg is the highest priority
                             const cameraEntity = findNearestEntity(this, [
-                                poolThis.getAllMobs().filter(m => !m.petalParentPlayer && !m.petParentPlayer),
+                                poolThis.getAllMobs().filter(m => !m.petalMaster && !m.petMaster),
                                 poolThis.getAllClients().filter(c => !c.isDead && c.id !== this.id),
                             ].flat());
                             if (!cameraEntity) {

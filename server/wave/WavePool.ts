@@ -207,11 +207,11 @@ export class WavePool {
 
             mobLastAttackedBy: null,
 
-            petParentPlayer: eggParent,
-            petGoingToPlayer: false,
+            petMaster: eggParent,
+            petGoingToMaster: false,
 
             petalIsUsage: USAGE_RELOAD_PETALS.has(type),
-            petalParentPlayer: petalParent,
+            petalMaster: petalParent,
             petalSummonedPet: null,
 
             starfishRegeningHealth: false,
@@ -454,7 +454,7 @@ export class WavePool {
             buffer.writeInt32BE(mob.maxHealth, offset);
             offset += 4;
 
-            buffer.writeUInt8(mob.petParentPlayer ? 1 : 0, offset++);
+            buffer.writeUInt8(mob.petMaster ? 1 : 0, offset++);
         });
 
         return buffer;

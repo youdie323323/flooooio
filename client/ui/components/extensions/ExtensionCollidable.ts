@@ -7,7 +7,7 @@ type NullableAll<T extends readonly any[]> = {
 
 export default function ExtensionCollidable<T extends ExtensionConstructor>(Base: T) {
     return class CollidablePrivateAccess extends Base implements ComponentExtensionTemplate {
-        private static readonly SPEED: number = 0.5;
+        private static readonly SPEED: number = 0.4;
         private collidableComponents: Component[];
         private targetPosition: NullableAll<[number, number]>;
         private initialPosition: [number, number];
@@ -77,7 +77,6 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
             this.collidableComponents = this.collidableComponents.concat(
                 components.filter(c => !this.collidableComponents.includes(c))
             );
-            console.log(this.collidableComponents)
         }
 
         public update: UpdateFunction = () => {
