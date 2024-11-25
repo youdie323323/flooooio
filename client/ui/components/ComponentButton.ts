@@ -2,21 +2,16 @@ import { Canvg, presets } from "canvg";
 import { calculateStrokeWidth, darkend, DARKEND_BASE } from "../../utils/common";
 import { Clickable, Component, Interactive } from "./Component";
 import Layout, { LayoutOptions } from "../layout/Layout";
-import { scaleFactor } from "../../main";
-import ExtensionEmpty from "./extensions/Extension";
+import ExtensionPlaceholder from "./extensions/Extension";
 import * as StackBlur from
     '../../../node_modules/stackblur-canvas/dist/stackblur-es.min.js';
 
-export class ComponentButton extends ExtensionEmpty(Component) implements Interactive, Clickable {
+export class ComponentButton extends ExtensionPlaceholder(Component) implements Interactive, Clickable {
     public isPressed: boolean = false;
     public isHovered: boolean = false;
 
     constructor(layout: LayoutOptions, protected readonly color: string, private readonly callback: () => void) {
         super(layout);
-    }
-
-    public isPointInside(x: number, y: number): boolean {
-        return x >= this.x && x <= this.x + this.w && y >= this.y && y <= this.y + this.h;
     }
 
     public onMouseEnter(): void {

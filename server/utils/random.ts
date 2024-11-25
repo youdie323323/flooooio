@@ -95,8 +95,6 @@ export function randomEnum<T extends object>(anEnum: T): T[keyof T] {
  * @returns Coordinate of random position.
  */
 export function getRandomMapSafePosition(
-  centerX: number,
-  centerY: number,
   mapRadius: number,
   safetyDistance: number,
   clients: PlayerInstance[],
@@ -107,8 +105,8 @@ export function getRandomMapSafePosition(
     const angle = Math.random() * 2 * Math.PI;
     const distance = Math.random() * (mapRadius - safetyDistance);
 
-    const x = centerX + Math.cos(angle) * distance;
-    const y = centerY + Math.sin(angle) * distance;
+    const x = mapRadius + Math.cos(angle) * distance;
+    const y = mapRadius + Math.sin(angle) * distance;
 
     let isSafe = true;
 

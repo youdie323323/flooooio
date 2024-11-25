@@ -1,7 +1,8 @@
 import { Canvg, presets } from "canvg";
-import { cameraController, scaleFactor } from "../main";
+import { cameraController } from "../main";
 import { TWO_PI } from "../constants";
 import { Biomes } from "../../shared/enum";
+import { uiScaleFactor } from "../ui/UserInterface";
 
 export const BIOME_SVG_TILESETS: Record<Biomes, string[]> = {
     [Biomes.GARDEN]: [
@@ -287,18 +288,6 @@ export const BIOME_SVG_TILESETS: Record<Biomes, string[]> = {
     ],
 };
 
-const splitmix32 = (a: number) => {
-    return () => {
-        a |= 0;
-        a = (a + 0x9e3779b9) | 0;
-        let t = a ^ (a >>> 16);
-        t = Math.imul(t, 0x21f0aaad);
-        t = t ^ (t >>> 15);
-        t = Math.imul(t, 0x735a2d97);
-        return ((t = t ^ (t >>> 15)) >>> 0) / 4294967296;
-    };
-};
-
 export default class TilesetManager {
     static async generateTilesets<T extends keyof typeof BIOME_SVG_TILESETS>(biome: T): Promise<OffscreenCanvas[]> {
         const generatedTilesets = new Array(BIOME_SVG_TILESETS[biome].length);
@@ -318,38 +307,44 @@ export default class TilesetManager {
     renderMap(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], radius: number, playerX: number, playerY: number) {
         const ctx = canvas.getContext("2d");
 
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
         const zoom = cameraController.zoom;
 
-        const widthRelative = canvas.width / scaleFactor;
-        const heightRelative = canvas.height / scaleFactor;
+        const widthRelative = canvas.width / uiScaleFactor;
+        const heightRelative = canvas.height / uiScaleFactor;
 
-        const GRID_SIZE = 30;
+        const gridSize = radius / 100;
 
-        const adjustedGridSize = 300 * zoom;
+        const tilesetSize = 300 * zoom;
 
-        const random = splitmix32(tilesets.length);
+        const relativeCenterX = (radius - playerX) * zoom + widthRelative / 2;
+        const relativeCenterY = (radius - playerY) * zoom + heightRelative / 2;
 
-        const relativeCenterX = (5000 - playerX) * zoom + widthRelative / 2;
-        const relativeCenterY = (5000 - playerY) * zoom + heightRelative / 2;
+        const startTileX = relativeCenterX - (gridSize / 2 * tilesetSize);
+        const startTileY = relativeCenterY - (gridSize / 2 * tilesetSize);
 
-        const startTileX = relativeCenterX - (GRID_SIZE / 2 * adjustedGridSize);
-        const startTileY = relativeCenterY - (GRID_SIZE / 2 * adjustedGridSize);
+        for (let i = 0; i < gridSize; i++) {
+            for (let j = 0; j < gridSize; j++) {
+                const x = startTileX + i * tilesetSize;
+                const y = startTileY + j * tilesetSize;
 
-        for (let i = 0; i < GRID_SIZE; i++) {
-            for (let j = 0; j < GRID_SIZE; j++) {
-                const x = startTileX + i * adjustedGridSize;
-                const y = startTileY + j * adjustedGridSize;
+                // Dont show tileset outside of window
+                if (x + tilesetSize < 0 || x > widthRelative ||
+                    y + tilesetSize < 0 || y > heightRelative) {
+                    continue;
+                }
 
-                ctx.drawImage(tilesets[Math.floor(random() * tilesets.length)],
+                ctx.drawImage(tilesets[0],
                     x, y,
-                    adjustedGridSize + 1, adjustedGridSize + 1
+                    tilesetSize + 1, tilesetSize + 1
                 );
             }
         }
 
         ctx.save();
 
-        ctx.lineWidth = (widthRelative * zoom) + (heightRelative * zoom);
+        ctx.lineWidth = (widthRelative + heightRelative) * zoom;
         ctx.beginPath();
         ctx.strokeStyle = 'black';
         ctx.globalAlpha = 0.14;
@@ -371,8 +366,8 @@ export default class TilesetManager {
 
         const viewRadius = 2000;
 
-        const widthRelative = canvas.width / scaleFactor;
-        const heightRelative = canvas.height / scaleFactor;
+        const widthRelative = canvas.width / uiScaleFactor;
+        const heightRelative = canvas.height / uiScaleFactor;
 
         const centerX = widthRelative / 2;
         const centerY = heightRelative / 2;

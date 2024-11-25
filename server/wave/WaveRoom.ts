@@ -5,10 +5,10 @@ import { logger } from "../main";
 import { BrandedId } from "../entity/Entity";
 import WaveProbabilityPredictor from "./WaveProbabilityPredictor";
 import { calculateWaveLength } from "../utils/formula";
-import { MAP_CENTER_X, MAP_CENTER_Y, SAFETY_DISTANCE } from "../entity/EntityWorldBoundary";
+import { SAFETY_DISTANCE } from "../entity/EntityWorldBoundary";
 import { Biomes, Packet } from "../../shared/enum";
 import root from "../command/commandRoot";
-import { goErrorToString } from "../command/command";
+import { Command, repondValueToString } from "../command/command";
 
 /**
  * Revive player nearby other player.
@@ -75,11 +75,8 @@ export interface WaveData {
     waveProgressTimer: number;
     waveProgressRedGageTimer: number;
     waveProgressIsRedGage: boolean;
+    waveMapSize: number;
     waveEnded: boolean;
-
-    chats: string[];
-
-    mapSize: number;
 }
 
 export const ROOM_UPDATE_SEND_FPS = 30;
@@ -95,15 +92,11 @@ export default class WaveRoom {
      */
     public static readonly MAX_PLAYER_AMOUNT = 4;
 
-    private static readonly MAX_MESSAGE_QUEUE_AMOUNT = 128;
-
     state: WaveRoomState;
     visible: WaveRoomVisibleState;
     roomCandidates: WaveRoomPlayer[];
 
     wavePool: WavePool;
-
-    private msgQueue: string[];
 
     private updateInterval: NodeJS.Timeout;
 
@@ -117,12 +110,8 @@ export default class WaveRoom {
         waveProgressTimer: 0,
         waveProgressRedGageTimer: 0,
         waveProgressIsRedGage: false,
-
+        waveMapSize: 5000,
         waveEnded: false,
-
-        chats: [],
-
-        mapSize: 2600,
     };;
 
     public wavePreUpdateInterval: NodeJS.Timeout;
@@ -139,8 +128,6 @@ export default class WaveRoom {
 
         this.waveProbabilityPredictor = new WaveProbabilityPredictor();
         this.waveProbabilityPredictor.reset(this.waveData);
-
-        this.msgQueue = new Array<string>();
     }
 
     /**
@@ -162,8 +149,6 @@ export default class WaveRoom {
         this.waveProbabilityPredictor = null;
 
         this.waveData = null;
-
-        this.msgQueue = null;
     }
 
     private wavePreUpdate() {
@@ -172,8 +157,6 @@ export default class WaveRoom {
 
         this.waveData.waveEnded = this.state === WaveRoomState.ENDED;
 
-        this.waveData.chats = this.msgQueue;
-
         // Dont do anything when wave waiting/end
         if (this.state === WaveRoomState.STARTED) {
             if (!this.waveData.waveProgressIsRedGage) {
@@ -181,7 +164,7 @@ export default class WaveRoom {
                 if (mobData) {
                     const [type, rarity] = mobData;
 
-                    const randPos = getRandomMapSafePosition(MAP_CENTER_X, MAP_CENTER_Y, this.waveData.mapSize, SAFETY_DISTANCE, this.wavePool.getAllClients().filter(p => !p.isDead));
+                    const randPos = getRandomMapSafePosition(this.waveData.waveMapSize, SAFETY_DISTANCE, this.wavePool.getAllClients().filter(p => !p.isDead));
                     if (!randPos) {
                         return null;
                     }
@@ -434,33 +417,28 @@ export default class WaveRoom {
     }
 
     /**
-     * Enqueue message into queue.
+     * Proccess chat message.
      */
-    public async enqueueMessage(userData: UserData, msg: string) {
-        if (msg.length > 0) {
-            // Command prefix slash
-            if (msg.startsWith("/")) {
-                const executedResultString = await goErrorToString(
+    public async processChatMessage(userData: UserData, msg: string) {
+        if (userData && msg.length > 0) {
+            if (msg.startsWith(Command.COMMAND_PREFIX)) {
+                const executedResultString = await repondValueToString(
                     root.execute(
                         userData,
-                        // Remove slash, then split
-                        msg.slice(1).split(" "),
+                        // Remove prefix, then split
+                        msg.slice(Command.COMMAND_PREFIX.length).split(" "),
                     )
                 );
 
-                console.log(executedResultString);
-
-                if (executedResultString.length === 0) {
+                if (executedResultString === null) {
+                    this.wavePool.sendChat(userData.waveClientId, "Empty result returned. You may missed something.");
                     return;
                 }
 
-                this.msgQueue.push(executedResultString);
+                this.wavePool.sendChat(userData.waveClientId, executedResultString);
             } else {
-                this.msgQueue.push(msg);
-            }
-
-            if (this.msgQueue.length > WaveRoom.MAX_MESSAGE_QUEUE_AMOUNT) {
-                this.msgQueue.shift();
+                // Public chat
+                this.wavePool.broadcastChat(msg);
             }
         }
     }

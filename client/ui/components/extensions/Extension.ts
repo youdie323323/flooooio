@@ -20,7 +20,7 @@ export type ExtensionConstructor = new (...args: any[]) => Component & Partial<U
  * 
  * Because need to tell compiler its have update so no need to remove update() from render method.
  */
-export default function ExtensionEmpty<T extends ExtensionConstructor>(Base: T) {
+export default function ExtensionPlaceholder<T extends ExtensionConstructor>(Base: T) {
     return class extends Base implements ComponentExtensionTemplate {
         public update: UpdateFunction = () => {
             if (typeof super.update === 'function') {

@@ -1,14 +1,13 @@
-import { scaleFactor } from "../../main";
 import { calculateStrokeWidth } from "../../utils/common";
 import { LayoutOptions } from "../layout/Layout";
 import { Component, Interactive } from "./Component";
-import ExtensionEmpty from "./extensions/Extension";
+import ExtensionPlaceholder from "./extensions/Extension";
 import ExtensionCollidable from "./extensions/ExtensionCollidable";
 
 /**
  * Text component that have collision.
  */
-export default class ComponentDynamicText extends ExtensionCollidable(ExtensionEmpty(Component)) {
+export default class ComponentDynamicText extends ExtensionCollidable(ExtensionPlaceholder(Component)) {
     constructor(
         layout: LayoutOptions,
         private readonly text: string,

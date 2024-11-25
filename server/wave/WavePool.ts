@@ -11,7 +11,6 @@ import { logger } from '../main';
 import WaveRoom, { WaveData, WaveRoomPlayer, WaveRoomPlayerId, WaveRoomState } from './WaveRoom';
 import { getRandomMapSafePosition, generateRandomEntityId, getRandomAngle, getRandomPosition } from '../utils/random';
 import WaveProbabilityPredictor from './WaveProbabilityPredictor';
-import { MAP_CENTER_X, MAP_CENTER_Y, SAFETY_DISTANCE } from '../entity/EntityWorldBoundary';
 import { Biomes, Packet, MobType, PetalType, Rarities, Mood, MOON_VALUES } from '../../shared/enum';
 
 // Define UserData for WebSocket connections
@@ -108,7 +107,7 @@ export class WavePool {
         waveStartBuffer.writeUInt8(biome, 1);
 
         roomCandidates.forEach(player => {
-            const randPos = getRandomPosition(MAP_CENTER_X, MAP_CENTER_Y, this.waveData.mapSize);
+            const randPos = getRandomPosition(10000, 10000, this.waveData.waveMapSize);
             if (!randPos) {
                 return null;
             }
@@ -314,6 +313,40 @@ export class WavePool {
         }
     }
 
+    /**
+     * Send chat to specifics user.
+     */
+    public sendChat(id: PlayerInstance["id"], msg: string) {
+        if (this.clients.has(id)) {
+            const client = this.clients.get(id);
+
+            const buffer = Buffer.alloc(1 + 1 + msg.length);
+            buffer.writeUInt8(Packet.CHAT_RECV, 0);
+
+            const msgBuffer = Buffer.from(msg, 'utf-8');
+            buffer.writeUInt8(msgBuffer.length, 1);
+            msgBuffer.copy(buffer, 2);
+
+            client.ws.send(buffer, true);
+        }
+    }
+
+    /**
+     * Broadcast message.
+     */
+    public broadcastChat(msg: string) {
+        const buffer = Buffer.alloc(1 + 1 + msg.length);
+        buffer.writeUInt8(Packet.CHAT_RECV, 0);
+
+        const msgBuffer = Buffer.from(msg, 'utf-8');
+        buffer.writeUInt8(msgBuffer.length, 1);
+        msgBuffer.copy(buffer, 2);
+
+        this.clients.forEach((player) => {
+            player.ws.send(buffer, true);
+        });
+    }
+
     private broadcastUpdatePacket() {
         const updatePacket = this.createUpdatePacket();
 
@@ -340,12 +373,6 @@ export class WavePool {
         // Base size for wave data and packet kind
         let size = 1 + 2 + 8 + 8 + 2 + 1;
 
-        // Add size for chats
-        size++; // Chat amount
-        this.waveData.chats.forEach(c => {
-            size += c.length + 1;
-        });
-
         // Add size for clients
         size += 2; // Client count
         this.clients.forEach(client => {
@@ -366,7 +393,7 @@ export class WavePool {
         let offset = 0;
 
         // Packet kind
-        buffer.writeUInt8(Packet.UPDATE, offset++);
+        buffer.writeUInt8(Packet.WAVE_UPDATE, offset++);
 
         // Wave information
         buffer.writeUInt16BE(this.waveData.waveProgress, offset);
@@ -380,16 +407,8 @@ export class WavePool {
 
         buffer.writeUInt8(this.waveData.waveEnded ? 1 : 0, offset++);
 
-        buffer.writeUInt16BE(this.waveData.mapSize, offset);
+        buffer.writeUInt16BE(this.waveData.waveMapSize, offset);
         offset += 2;
-
-        buffer.writeUInt8(this.waveData.chats.length, offset++);
-        this.waveData.chats.forEach(c => {
-            const nicknameBuffer = Buffer.from(c, 'utf-8');
-            buffer.writeUInt8(nicknameBuffer.length, offset++);
-            nicknameBuffer.copy(buffer, offset);
-            offset += nicknameBuffer.length;
-        });
 
         // Write clients
         buffer.writeUInt16BE(this.clients.size, offset);

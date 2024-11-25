@@ -1,12 +1,13 @@
 import { Biomes } from "../../shared/enum";
-import { scaleFactor } from "../main";
-import { Clickable, Component, Focusable, Interactive } from "./components/Component";
+import { Clickable, Component, Interactive } from "./components/Component";
 import { ComponentButton } from "./components/ComponentButton";
 
 export interface BiomeSetter {
     set biome(biome: Biomes);
     get biome(): Biomes;
 }
+
+export let uiScaleFactor: number = 1;
 
 export default abstract class UserInterface {
     protected canvas: HTMLCanvasElement;
@@ -15,10 +16,8 @@ export default abstract class UserInterface {
 
     protected components: Component[] = [];
     private interactiveComponents: Interactive[] = [];
-    private focusableComponents: Focusable[] = [];
 
     private hoveredComponent: Interactive | null = null;
-    private focusedComponent: Focusable | null = null;
     private activeComponent: Clickable | null = null;
 
     private resizeObserver: ResizeObserver | null = null;
@@ -41,10 +40,6 @@ export default abstract class UserInterface {
         if (this.isInteractive(component)) {
             this.interactiveComponents.push(component);
         }
-
-        if (this.isFocusable(component)) {
-            this.focusableComponents.push(component);
-        }
     }
 
     protected removeComponent(component: Component): void {
@@ -59,25 +54,18 @@ export default abstract class UserInterface {
                 this.interactiveComponents.splice(interactiveIndex, 1);
             }
         }
+    }
 
-        if (this.isFocusable(component)) {
-            const focusableIndex = this.focusableComponents.indexOf(component);
-            if (focusableIndex !== -1) {
-                this.focusableComponents.splice(focusableIndex, 1);
-            }
-        }
+    public overlapsComponent(component: Component, x: number, y: number): boolean {
+        return x >= component.x && x <= component.x + component.w && y >= component.y && y <= component.y + component.h;
     }
 
     private isInteractive(component: Component): component is Interactive {
-        return 'isPointInside' in component;
-    }
-
-    private isFocusable(component: Component): component is Focusable {
-        return 'focused' in component;
+        return "onMouseEnter" in component;
     }
 
     private isClickable(component: Component): component is Clickable {
-        return 'onClick' in component;
+        return "onClick" in component;
     }
 
     private setupEventListeners(): void {
@@ -100,16 +88,19 @@ export default abstract class UserInterface {
 
             this.components = [];
             this.interactiveComponents = [];
-            this.focusableComponents = [];
 
             this.hoveredComponent = null;
-            this.focusedComponent = null;
             this.activeComponent = null;
+
+            uiScaleFactor = Math.max(
+                document.documentElement.clientWidth / 1300,
+                document.documentElement.clientHeight / 650
+            );
 
             this.initializeComponents();
 
-            const scaledWidth = width / scaleFactor;
-            const scaledHeight = height / scaleFactor;
+            const scaledWidth = width / uiScaleFactor;
+            const scaledHeight = height / uiScaleFactor;
 
             this.components.forEach(component => {
                 component.updateAbsolutePosition(scaledWidth, scaledHeight);
@@ -121,41 +112,19 @@ export default abstract class UserInterface {
 
     private updateMousePosition(event: MouseEvent): void {
         const rect = this.canvas.getBoundingClientRect();
-        this.mouseX = ((event.clientX - rect.left) * (this.canvas.width / rect.width)) / scaleFactor;
-        this.mouseY = ((event.clientY - rect.top) * (this.canvas.height / rect.height)) / scaleFactor;
+        this.mouseX = ((event.clientX - rect.left) * (this.canvas.width / rect.width)) / uiScaleFactor;
+        this.mouseY = ((event.clientY - rect.top) * (this.canvas.height / rect.height)) / uiScaleFactor;
     }
 
     private handleMouseDown(event: MouseEvent): void {
         this.updateMousePosition(event);
 
-        // Focus handling
-        let foundFocusable = false;
-        for (const component of this.focusableComponents) {
-            if (component.visible && component.isPointInside(this.mouseX, this.mouseY)) {
-                if (this.focusedComponent && this.focusedComponent !== component) {
-                    this.focusedComponent.focused = false;
-                    this.focusedComponent.onBlur?.();
-                }
-                component.focused = true;
-                component.onFocus?.();
-                this.focusedComponent = component;
-                foundFocusable = true;
-                break;
-            }
-        }
-
-        if (!foundFocusable && this.focusedComponent) {
-            this.focusedComponent.focused = false;
-            this.focusedComponent.onBlur?.();
-            this.focusedComponent = null;
-        }
-
         // Click handling
         for (const component of this.interactiveComponents) {
-            if (component.visible && component.isPointInside(this.mouseX, this.mouseY)) {
+            if (component.visible && this.overlapsComponent(component, this.mouseX, this.mouseY)) {
                 if (this.isClickable(component)) {
                     this.activeComponent = component;
-                    component.onMouseDown?.();
+                    (component as Clickable).onMouseDown?.();
                 }
                 break;
             }
@@ -165,11 +134,13 @@ export default abstract class UserInterface {
     private handleMouseUp(event: MouseEvent): void {
         this.updateMousePosition(event);
 
-        if (this.activeComponent?.isPointInside(this.mouseX, this.mouseY)) {
-            this.activeComponent.onClick?.();
-            this.activeComponent.onMouseUp?.();
+        if (this.activeComponent) {
+            if (this.overlapsComponent(this.activeComponent, this.mouseX, this.mouseY)) {
+                this.activeComponent.onClick?.();
+                this.activeComponent.onMouseUp?.();
+            }
+            this.activeComponent = null;
         }
-        this.activeComponent = null;
     }
 
     private handleMouseMove(event: MouseEvent): void {
@@ -177,7 +148,7 @@ export default abstract class UserInterface {
 
         this.interactiveComponents.forEach(component => {
             if (component.visible) {
-                const isHovering = component.isPointInside(this.mouseX, this.mouseY);
+                const isHovering = this.overlapsComponent(component, this.mouseX, this.mouseY);
 
                 if (isHovering) {
                     if (this.hoveredComponent !== component) {
@@ -185,7 +156,6 @@ export default abstract class UserInterface {
                         this.hoveredComponent = component;
                         component.onMouseEnter?.();
                     }
-                    component.onMouseMove?.(this.mouseX, this.mouseY);
                 } else if (this.hoveredComponent === component) {
                     component.onMouseLeave?.();
                     this.hoveredComponent = null;
@@ -216,9 +186,7 @@ export default abstract class UserInterface {
 
         this.components = [];
         this.interactiveComponents = [];
-        this.focusableComponents = [];
         this.hoveredComponent = null;
-        this.focusedComponent = null;
         this.activeComponent = null;
     }
 

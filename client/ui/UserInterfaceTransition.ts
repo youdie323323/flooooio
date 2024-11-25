@@ -1,5 +1,4 @@
-import { scaleFactor } from "../main";
-import UserInterface from "./UserInterface";
+import UserInterface, { uiScaleFactor } from "./UserInterface";
 import { UserInterfaceMode } from "./UserInterfaceManager";
 import UserInterfaceMenu from "./mode/UserInterfaceModeMenu";
 
@@ -15,14 +14,14 @@ export default class UserInterfaceTransition {
 
     private readonly transitionConfigs: Record<UserInterfaceMode, TransitionConfig> = {
         menu: {
-            initialRadius: (canvas) => Math.max(((canvas.height / scaleFactor) / 2) + 100, ((canvas.width / scaleFactor) / 2) + 100),
+            initialRadius: (canvas) => Math.max(((canvas.height / uiScaleFactor) / 2) + 100, ((canvas.width / uiScaleFactor) / 2) + 100),
             radiusChange: (current) => current - (0.3 + current / 40),
             isComplete: (_, radius) => radius < 0,
         },
         game: {
             initialRadius: () => 0,
             radiusChange: (current) => current + (0.4 + current / 30),
-            isComplete: (canvas, radius) => radius > Math.max(((canvas.height / scaleFactor) / 2) + 100, ((canvas.width / scaleFactor) / 2) + 100),
+            isComplete: (canvas, radius) => radius > Math.max(((canvas.height / uiScaleFactor) / 2) + 100, ((canvas.width / uiScaleFactor) / 2) + 100),
         }
     };
 
@@ -63,8 +62,8 @@ export default class UserInterfaceTransition {
     }
 
     private clipCircle(): void {
-        const widthRelative = this.canvas.width / scaleFactor;
-        const heightRelative = this.canvas.height / scaleFactor;
+        const widthRelative = this.canvas.width / uiScaleFactor;
+        const heightRelative = this.canvas.height / uiScaleFactor;
 
         this.ctx.beginPath();
 
@@ -80,8 +79,8 @@ export default class UserInterfaceTransition {
     }
 
     private drawTransitionBorder(): void {
-        const widthRelative = this.canvas.width / scaleFactor;
-        const heightRelative = this.canvas.height / scaleFactor;
+        const widthRelative = this.canvas.width / uiScaleFactor;
+        const heightRelative = this.canvas.height / uiScaleFactor;
 
         this.ctx.save();
 

@@ -55,7 +55,7 @@ export enum Packet {
     MOVE,
     MOOD,
     SWAP_PETAL,
-    CHAT,
+    CHAT_SENT,
 
     WAVE_ROOM_CREATE,
     WAVE_ROOM_JOIN,
@@ -66,11 +66,13 @@ export enum Packet {
     WAVE_ROOM_CHANGE_VISIBLE,
 
     // Server
-    UPDATE,
+    WAVE_UPDATE,
     SELF_ID,
 
     WAVE_ROOM_UPDATE,
     WAVE_ROOM_SELF_ID,
     WAVE_ROOM_JOIN_FAILED,
     WAVE_ROOM_STARTING,
+
+    CHAT_RECV,
 }

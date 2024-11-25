@@ -1,5 +1,5 @@
-import { scaleFactor } from "../../main";
 import Layout, { LayoutOptions } from "../layout/Layout";
+import { uiScaleFactor } from "../UserInterface";
 
 // Base interface for all GUI components
 export class Component {
@@ -26,7 +26,7 @@ export class Component {
     constructor(layout: LayoutOptions) {
         this.layout = layout;
 
-        this.updateAbsolutePosition(window.innerWidth / scaleFactor, window.innerHeight / scaleFactor);
+        this.updateAbsolutePosition(window.innerWidth / uiScaleFactor, window.innerHeight / uiScaleFactor);
     }
 
     public updateAbsolutePosition(viewportWidth: number, viewportHeight: number): void {
@@ -146,22 +146,13 @@ export class Component {
 
 // Interface for interactive components
 export interface Interactive extends Component {
-    isPointInside(x: number, y: number): boolean;
     onMouseEnter?(): void;
     onMouseLeave?(): void;
-    onMouseMove?(x: number, y: number): void;
 }
 
 // Interface for clickable components
-export interface Clickable extends Interactive {
+export interface Clickable extends Component {
     onClick?(): void;
     onMouseDown?(): void;
     onMouseUp?(): void;
-}
-
-// Interface for components that can be focused
-export interface Focusable extends Interactive {
-    focused: boolean;
-    onFocus?(): void;
-    onBlur?(): void;
 }

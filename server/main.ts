@@ -12,9 +12,10 @@ import { MockPlayerData } from './entity/player/Player';
 import { choice, randomEnum, shuffle } from './utils/random';
 import { MockPetalData } from './entity/mob/petal/Petal';
 import { PetalType, Rarities, Packet, Mood, BIOME_VALUES } from '../shared/enum';
-import { registerSpawnMob } from './command/commands/spawnMob';
 import root from './command/commandRoot';
 import { registerSpawnMobBulk } from './command/subcommands/spawnMobBulk';
+import { registerSpawnMob } from './command/subcommands/spawnMob';
+import { registerSpawn } from './command/commands/spawn';
 
 /**
  * Temp player data.
@@ -128,7 +129,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             break;
         }
-        case Packet.CHAT: {
+        case Packet.CHAT_SENT: {
             if (buffer.length < 2) return;
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
@@ -139,7 +140,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             const chat = textDecoder.decode(buffer.slice(2, 2 + length));
 
-            waveRoom.enqueueMessage(userData, chat);
+            waveRoom.processChatMessage(userData, chat);
 
             break;
         }
@@ -322,11 +323,12 @@ app
         if (token) {
             logger.info(`Server running on port ${PORT}`);
 
-            // Register all commands
+            // Register all commands on global root
             {
-                // Spawn mob and their sub commands
+                // Spawn and their sub commands
                 {
-                    const spawnMob = registerSpawnMob(root);
+                    const spawn = registerSpawn(root);
+                    const spawnMob = registerSpawnMob(spawn);
                     registerSpawnMobBulk(spawnMob);
                 }
             }

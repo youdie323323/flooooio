@@ -7,6 +7,7 @@ import root from "./commandRoot";
 
 // Represents the config for each individual command
 export class Command {
+    public static readonly COMMAND_PREFIX: string = "/";
     private parent: CommandPointer;
     public aliases: string[];
     public description: string;
@@ -14,7 +15,15 @@ export class Command {
     public subcommands: CommandPointer[] = [];
     public args: ArgPointer[] = [];
 
-    // Required
+    /**
+     * Command executor.
+     * 
+     * @remarks
+     * 
+     * Although this shouldnt be asynchronized, we need to response message to client quickly
+     * to stop user confuse.
+     * Promise is just for slow code like db search.
+     */
     public commandFunc: CommandFunc;
 
     constructor(source: Partial<CommandPointer>) {
@@ -28,7 +37,7 @@ export class Command {
         const middlewareBreak = cmd.commandFunc;
 
         // Middleware for logging on command execution
-        cmd.commandFunc = (ac: ArgContext, u: UserData): RespondValue => logger.region(() => {
+        cmd.commandFunc = (ac: ArgContext, u: UserData): CommandFuncReturnType => logger.region(() => {
             using _guard = logger.metadata({
                 waveClientId: u.waveClientId,
                 waveRoomClientId: u.waveRoomClientId,
@@ -40,6 +49,7 @@ export class Command {
         });
 
         cmd.parent = this;
+
         this.subcommands.push(cmd);
 
         logger.region(() => {
@@ -49,7 +59,7 @@ export class Command {
             });
 
             logger.info("Command registerd");
-        })
+        });
 
         return cmd;
     }
@@ -58,20 +68,8 @@ export class Command {
      * Indexes and categorizes subcommands.
      */
     private indexSubcommands(alias: string): CommandPointer {
-        let currentNode: CommandPointer = this;
-        if (currentNode == null) {
-            return null;
-        }
-
-        for (const cmd of currentNode.subcommands) {
-            if (!cmd.aliases.includes(alias.split("=")[0])) {
-                continue;
-            }
-
-            return cmd;
-        }
-
-        return null;
+        const commandName = alias.split('=')[0];
+        return this.subcommands.find(cmd => cmd.aliases.includes(commandName)) ?? null;
     }
 
     /**
@@ -100,8 +98,8 @@ export class Command {
      */
     public parents(): CommandPointer[] {
         const commands: CommandPointer[] = [];
-
         let currentNode: CommandPointer = this;
+        
         while (true) {
             if (currentNode.parent == null) {
                 return commands;
@@ -184,6 +182,7 @@ export class Command {
             }));
         }
 
+        // Get all unprovided args
         for (const arg of this.args.slice(ctx.args.length)) {
             if (arg.required) {
                 return new Error(`Please provide the argument ${arg.name}.`);
@@ -210,7 +209,7 @@ export class Command {
         return ctx;
     }
 
-    public async execute(userData: UserData, args: string[]): RespondValue {
+    public async execute(userData: UserData, args: string[]): CommandFuncReturnType {
         if (args.length === 0 || args[0].length === 0) {
             return null;
         }
@@ -239,12 +238,8 @@ export class Command {
             return null;
         }
 
-        const err = await cmd.commandFunc(ctx, userData);
-        if (!err) {
-            return null;
-        }
-
-        return err;
+        // 3000 is enough
+        return await withTimeout(cmd.commandFunc(ctx, userData), 3000);
     }
 }
 
@@ -254,29 +249,43 @@ export type GoPointer<T> = T | Nil;
 
 export type CommandPointer = GoPointer<Command>;
 
-export type RespondValue = Promise<string | Error> | Nil;
+export declare function MaybePromise<T>(value: T): T | Promise<T> | PromiseLike<T>;
+
+export type MaybePromiseType<T> = ReturnType<typeof MaybePromise<T>>;
+
+async function withTimeout<T>(promise: MaybePromiseType<T>, timeoutMs: number): Promise<T> {
+    const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+            reject(new Error(`Command timed out.`));
+        }, timeoutMs);
+    });
+
+    return Promise.race([Promise.resolve(promise), timeoutPromise]);
+}
+
+export type GoLikeRespondValue =
+    | MaybePromiseType<string | Error>
+    | Nil;
 
 /**
  * Converts a GoError to a string.
- * If the GoError is null (nil), returns an empty string.
- * If the GoError is an Error, returns its toString() result.
- * @param error - The GoError to convert.
- * @returns A string representation of the error or an empty string.
  */
-export async function goErrorToString(error: RespondValue): Promise<string> {
+export async function repondValueToString(resp: GoLikeRespondValue): Promise<string | null> {
     try {
-        const resolvedError = await error;
+        const resolvedRespondValue = await resp;
 
-        if (typeof resolvedError === "string") {
-            return resolvedError;
+        if (typeof resolvedRespondValue === "string") {
+            return resolvedRespondValue;
         }
 
-        return resolvedError?.message || ""; // Ensure resolvedError is not null
+        return resolvedRespondValue?.message || null; // Ensure resolvedError is not null
     } catch (err) {
         // Catch unexpected Promise rejections and convert them to strings
         return err instanceof Error ? err.toString() : String(err);
     }
 }
 
+export type CommandFuncReturnType = Promise<Awaited<GoLikeRespondValue>>;
+
 // This will called upon whenever the command is executed
-export type CommandFunc = (ctx: ArgContext, userData: UserData) => RespondValue;
+export type CommandFunc = (ctx: ArgContext, userData: UserData) => CommandFuncReturnType;

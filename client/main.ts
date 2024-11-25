@@ -6,11 +6,9 @@ import UserInterfaceManager from "./ui/UserInterfaceManager";
 import Networking from "./Networking";
 import TilesetManager, { BIOME_SVG_TILESETS, BIOME_TILESETS } from "./utils/WorldManager";
 import { Biomes, Mood } from "../shared/enum";
+import { uiScaleFactor } from "./ui/UserInterface";
 
 export let ws: WebSocket;
-
-const canvas: HTMLCanvasElement = document.querySelector('#canvas');
-const ctx: CanvasRenderingContext2D = canvas.getContext("2d");
 
 export let lastTimestamp = Date.now();
 export let deltaTime = 0;
@@ -20,18 +18,13 @@ export let prevTimestamp = lastTimestamp;
 export let interpolatedMouseX = 0;
 export let interpolatedMouseY = 0;
 
-export let targetX = 0;
-export let targetY = 0;
-
-export let scaleFactor = Math.max(
-    document.documentElement.clientWidth / 1300,
-    document.documentElement.clientHeight / 650
-);
-
 export let antennaScaleFactor = 1;
 
 export const players: Map<number, EntityPlayer> = new Map();
 export const mobs: Map<number, EntityMob> = new Map();
+
+const canvas: HTMLCanvasElement = document.querySelector('#canvas');
+const ctx: CanvasRenderingContext2D = canvas.getContext("2d");
 
 export const cameraController = new CameraController(canvas);
 
@@ -126,13 +119,6 @@ export const uiManager = new UserInterfaceManager(canvas);
                 }
             }
         };
-
-        window.onresize = () => {
-            scaleFactor = Math.max(
-                document.documentElement.clientWidth / 1300,
-                document.documentElement.clientHeight / 650
-            );
-        };
     }
 
     (function frame() {
@@ -148,7 +134,7 @@ export const uiManager = new UserInterfaceManager(canvas);
 
         ctx.save();
 
-        ctx.scale(scaleFactor, scaleFactor);
+        ctx.scale(uiScaleFactor, uiScaleFactor);
 
         uiManager.update();
 

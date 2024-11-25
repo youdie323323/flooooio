@@ -2,9 +2,9 @@ import { MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../../constants
 import EntityMob from "../../entity/EntityMob";
 import TilesetManager, { BIOME_TILESETS } from "../../utils/WorldManager";
 import { ComponentButton, ComponentSVGButton, ComponentTextButton } from "../components/ComponentButton";
-import UserInterface from "../UserInterface";
+import UserInterface, { uiScaleFactor } from "../UserInterface";
 import ComponentTextInput from "../components/ComponentTextInput.js";
-import { scaleFactor, ws } from "../../main";
+import {  ws } from "../../main";
 import { Biomes, Packet, PetalType, Rarities } from "../../../shared/enum";
 import ComponentDynamicText from "../components/ComponentDynamicText";
 
@@ -86,8 +86,8 @@ export default class UserInterfaceMenu extends UserInterface {
     handleKeyDown(event: KeyboardEvent): void { }
 
     protected initializeComponents(): void {
-        const widthRelative = this.canvas.width / scaleFactor;
-        const heightRelative = this.canvas.height / scaleFactor;
+        const widthRelative = this.canvas.width / uiScaleFactor;
+        const heightRelative = this.canvas.height / uiScaleFactor;
 
         const bagButton = new ComponentSVGButton(
             {
@@ -312,7 +312,7 @@ export default class UserInterfaceMenu extends UserInterface {
     private generateBackgroundEntity3D() {
         return {
             x: 0,
-            y: randomFloat(-200, (this.canvas.height / scaleFactor) + 100),
+            y: randomFloat(-200, (this.canvas.height / uiScaleFactor) + 100),
             z: randomFloat(0.7, 2),
             waveStep: Math.random() + 360,
         }
@@ -322,8 +322,8 @@ export default class UserInterfaceMenu extends UserInterface {
         const canvas = this.canvas;
         const ctx = canvas.getContext("2d");
 
-        const widthRelative = this.canvas.width / scaleFactor;
-        const heightRelative = this.canvas.height / scaleFactor;
+        const widthRelative = this.canvas.width / uiScaleFactor;
+        const heightRelative = this.canvas.height / uiScaleFactor;
 
         this.worldManager.renderMapMenu(canvas, BIOME_TILESETS.get(this.biome), this.backgroundX, this.backgroundY);
 

@@ -46,7 +46,7 @@ export default class Networking {
                     waveSelfId = data.getUint32(offset);
                     break;
                 }
-                case Packet.UPDATE: {
+                case Packet.WAVE_UPDATE: {
                     // Wave informations
                     {
                         const waveProgress = data.getUint16(offset);
@@ -79,20 +79,6 @@ export default class Networking {
                             uiManager.currentUI.oWorldSize = uiManager.currentUI.worldSize;
 
                             uiManager.currentUI.updateT = 0;
-                        }
-                    };
-
-                    // Chats
-                    {
-                        let chats = [];
-
-                        const chatAmount = data.getUint8(offset++);
-                        for (let i = 0; i < chatAmount; i++) {
-                            chats.push(readString());
-                        }
-
-                        if (uiManager.currentUI instanceof UserInterfaceGame) {
-                            uiManager.currentUI.chats = chats;
                         }
                     };
 
@@ -163,7 +149,7 @@ export default class Networking {
 
                     players.forEach((player, key) => {
                         if (
-                            !ids.has(key) && 
+                            !ids.has(key) &&
                             // Dont repeat them
                             !player.isDeleted
                         ) {
@@ -305,6 +291,17 @@ export default class Networking {
                 }
                 case Packet.WAVE_ROOM_JOIN_FAILED: {
                     alert("Invalid squad code");
+
+                    break;
+                }
+                case Packet.CHAT_RECV: {
+                    if (uiManager.currentUI instanceof UserInterfaceGame) {
+                        uiManager.currentUI.chats.push(readString());
+                        console.log(uiManager.currentUI.chats.slice())
+                        if (uiManager.currentUI.chats.length > UserInterfaceGame.MAX_MESSAGE_QUEUE_AMOUNT) {
+                            uiManager.currentUI.chats.shift();
+                        }
+                    }
 
                     break;
                 }

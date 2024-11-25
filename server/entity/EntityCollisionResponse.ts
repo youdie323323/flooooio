@@ -8,7 +8,6 @@ import QuadTree from "../utils/QuadTree";
 import { MOB_PROFILES } from "../../shared/mobProfiles";
 import { PETAL_PROFILES } from "../../shared/petalProfiles";
 import { computeDelta, Ellipse, isColliding } from "../utils/collision";
-import { MAP_CENTER_X, MAP_CENTER_Y } from "./EntityWorldBoundary";
 import { MobType } from "../../shared/enum";
 
 // Arc + stroke size
@@ -24,10 +23,10 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
       super(...args);
 
       this.quadTree = new QuadTree({
-        x: MAP_CENTER_X,
-        y: MAP_CENTER_Y,
-        w: MAP_CENTER_X * 2,
-        h: MAP_CENTER_Y * 2
+        x: 0,
+        y: 0,
+        w: 0,
+        h: 0,
       });
     }
 
@@ -54,6 +53,12 @@ export function EntityCollisionResponse<T extends new (...args: any[]) => Entity
       if (super[onUpdateTick]) {
         super[onUpdateTick](poolThis);
       }
+
+      const waveMapSize = poolThis.waveData.waveMapSize;
+
+      // Update quad tree boundaries
+      this.quadTree.boundary.x = this.quadTree.boundary.y = waveMapSize;
+      this.quadTree.boundary.w = this.quadTree.boundary.h = waveMapSize * 2;
 
       poolThis.mobs.forEach(mob => {
         if (this.id === mob.id) return;

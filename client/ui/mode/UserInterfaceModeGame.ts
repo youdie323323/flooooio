@@ -1,9 +1,9 @@
 import { ARROW_START_DISTANCE, CROSS_ICON_SVG, MOLECULE_SVG, SCROLL_UNFURLED_SVG, SWAP_BAG_SVG } from "../../constants";
 import EntityMob from "../../entity/EntityMob";
-import { players, mobs, scaleFactor, interpolatedMouseX, interpolatedMouseY, deltaTime, ws, uiManager, antennaScaleFactor } from "../../main";
+import { players, mobs, interpolatedMouseX, interpolatedMouseY, deltaTime, ws, uiManager, antennaScaleFactor } from "../../main";
 import TilesetManager, { BIOME_TILESETS } from "../../utils/WorldManager";
 import { ComponentButton, ComponentSVGButton, ComponentTextButton } from "../components/ComponentButton";
-import UserInterface, { BiomeSetter } from "../UserInterface";
+import UserInterface, { BiomeSetter, uiScaleFactor } from "../UserInterface";
 import { selfId } from "../../Networking";
 import ComponentTextInput from "../components/ComponentTextInput";
 import { Biomes, Packet } from "../../../shared/enum";
@@ -15,8 +15,8 @@ function renderMutableFunctions(canvas: HTMLCanvasElement) {
     const ctx = canvas.getContext("2d");
     const selfPlayer = players.get(selfId);
 
-    const widthRelative = canvas.width / scaleFactor;
-    const heightRelative = canvas.height / scaleFactor;
+    const widthRelative = canvas.width / uiScaleFactor;
+    const heightRelative = canvas.height / uiScaleFactor;
 
     if (selfPlayer && !selfPlayer.isDead) {
         ctx.save();
@@ -27,7 +27,7 @@ function renderMutableFunctions(canvas: HTMLCanvasElement) {
         ctx.rotate(Math.atan2(interpolatedMouseY, interpolatedMouseX));
         ctx.scale(adjustedScaleFactor, adjustedScaleFactor);
 
-        const distance = Math.hypot(interpolatedMouseX, interpolatedMouseY) / scaleFactor;
+        const distance = Math.hypot(interpolatedMouseX, interpolatedMouseY) / uiScaleFactor;
 
         ctx.beginPath();
         ctx.moveTo(ARROW_START_DISTANCE, 0);
@@ -79,6 +79,8 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
     private readonly DEAD_BACKGROUND_FADE_DURATION: number = 0.3;
     private readonly DEAD_MENU_ANIMATION_DURATION: number = 2;
 
+    public static readonly MAX_MESSAGE_QUEUE_AMOUNT = 128;
+
     private worldManager: TilesetManager;
 
     public updateT: number;
@@ -108,7 +110,7 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
     private gameOverOpacity: number;
 
     private isDeadAnimationActive: boolean;
-    private deadAnimationY: number;
+    private deadContinueButtonY: number;
     private deadAnimationTimer: number;
 
     public waveEnded: boolean;
@@ -133,7 +135,7 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
         this.isDeadMenuContinued = false;
         this.isGameOverContinued = false;
 
-        this.deadAnimationY = -50;
+        this.deadContinueButtonY = -50;
         this.deadAnimationTimer = 0;
         this.isDeadAnimationActive = false;
 
@@ -144,6 +146,7 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
         this.waveEnded = false;
 
         this.chatValue = "";
+
         this.chats = [];
     }
 
@@ -154,17 +157,23 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
         }
 
         if (event.key === "Enter") {
-            if (selfPlayer.isDead) {
-                // How can i enable chat with enter if player is dead
-                if (this.isDeadMenuContinued && this.waveEnded) {
-                    this.continueGameOver();
-                } else if (!this.isDeadMenuContinued) {
-                    this.isDeadMenuContinued = true;
+            // So basically user entered while chat input, blur it
+            // No blur in onsubmit because of race condition
+            if (this.chatInput.hasFocus()) {
+                this.chatInput.blur();
+            } else {
+                if (selfPlayer.isDead) {
+                    // How can i enable chat with enter if player is dead
+                    if (this.isDeadMenuContinued && this.waveEnded) {
+                        this.continueGameOver();
+                    } else if (!this.isDeadMenuContinued) {
+                        this.isDeadMenuContinued = true;
+                    }
                 }
+    
+                // TODO: stop propagate (when submitted, this focus again)
+                if (this.chatInput) this.chatInput.focus();
             }
-
-            // TODO: stop propagate (when submitted, this focus again)
-            if (this.chatInput) this.chatInput.focus();
         }
     }
 
@@ -176,8 +185,8 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
     }
 
     protected initializeComponents(): void {
-        const widthRelative = this.canvas.width / scaleFactor;
-        const heightRelative = this.canvas.height / scaleFactor;
+        const widthRelative = this.canvas.width / uiScaleFactor;
+        const heightRelative = this.canvas.height / uiScaleFactor;
 
         const exitButton = new ComponentSVGButton(
             {
@@ -263,14 +272,12 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
                 borderColor: "#000000",
                 borderRadius: 4,
                 borderWidth: 2.2,
-                maxlength: 64,
+                maxlength: 80,
 
                 onsubmit: (e, self) => {
                     const chatMessage = self.value();
                     // Send chat
-                    ws.send(new Uint8Array([Packet.CHAT, chatMessage.length, ...new TextEncoder().encode(chatMessage)]));
-
-                    self.blur();
+                    ws.send(new Uint8Array([Packet.CHAT_SENT, chatMessage.length, ...new TextEncoder().encode(chatMessage)]));
 
                     this.chatValue = "";
                     self.value(this.chatValue);
@@ -299,8 +306,8 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
         const canvas = this.canvas;
         const ctx = canvas.getContext("2d");
 
-        const widthRelative = canvas.width / scaleFactor;
-        const heightRelative = canvas.height / scaleFactor;
+        const widthRelative = canvas.width / uiScaleFactor;
+        const heightRelative = canvas.height / uiScaleFactor;
 
         const centerWidth = widthRelative / 2;
         const centerHeight = heightRelative / 2;
@@ -598,20 +605,20 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
                         ctx.restore();
                     };
 
-                    if (this.deadAnimationY >= -100) {
+                    if (this.deadContinueButtonY >= -100) {
                         this.deadAnimationTimer -= deltaTime / 300;
-                        this.deadAnimationY = -100 + easeOutCubic(Math.max(this.deadAnimationTimer / this.DEAD_MENU_ANIMATION_DURATION, 0)) * (centerHeight - (-100));
+                        this.deadContinueButtonY = -100 + easeOutCubic(Math.max(this.deadAnimationTimer / this.DEAD_MENU_ANIMATION_DURATION, 0)) * (centerHeight - (-100));
                     }
                 } else {
                     if (!this.isDeadAnimationActive) {
-                        this.deadAnimationY = -50;
+                        this.deadContinueButtonY = -50;
                         this.deadAnimationTimer = 0;
                         this.isDeadAnimationActive = true;
                     }
 
-                    if (this.deadAnimationTimer < this.DEAD_MENU_ANIMATION_DURATION && this.deadAnimationY <= centerHeight + 50) {
+                    if (this.deadAnimationTimer < this.DEAD_MENU_ANIMATION_DURATION && this.deadContinueButtonY <= centerHeight + 50) {
                         this.deadAnimationTimer += deltaTime / 1000;
-                        this.deadAnimationY = -50 + easeOutCubic(Math.min(this.deadAnimationTimer / this.DEAD_MENU_ANIMATION_DURATION, 1)) * (centerHeight + 50);
+                        this.deadContinueButtonY = -50 + easeOutCubic(Math.min(this.deadAnimationTimer / this.DEAD_MENU_ANIMATION_DURATION, 1)) * (centerHeight + 50);
                     }
                 }
 
@@ -619,10 +626,10 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
                     ctx.save();
 
                     this.deadMenuContinueButton.setX(centerWidth - (this.deadMenuContinueButton.w / 2));
-                    this.deadMenuContinueButton.setY(this.deadAnimationY + 50);
+                    this.deadMenuContinueButton.setY(this.deadContinueButtonY + 50);
                     this.deadMenuContinueButton.setVisible(true);
 
-                    ctx.translate(centerWidth, this.deadAnimationY);
+                    ctx.translate(centerWidth, this.deadContinueButtonY);
 
                     ctx.lineJoin = 'round';
                     ctx.lineCap = 'round';
@@ -640,8 +647,8 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
                     ctx.font = "16.1px Ubuntu";
                     ctx.lineWidth = 2;
 
-                    ctx.strokeText("Poison", 0, -61);
-                    ctx.fillText("Poison", 0, -61);
+                    ctx.strokeText("You", 0, -61);
+                    ctx.fillText("You", 0, -61);
 
                     ctx.font = "12px Ubuntu";
                     ctx.lineWidth = 1.2;
@@ -655,7 +662,7 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
                 this.deadMenuContinueButton.setVisible(false);
 
                 this.isDeadAnimationActive = false;
-                this.deadAnimationY = -50;
+                this.deadContinueButtonY = -50;
                 this.deadAnimationTimer = 0;
 
                 this.deadBackgroundOpacity = 0;

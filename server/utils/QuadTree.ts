@@ -17,7 +17,7 @@ export default class QuadTree<T> {
     private static readonly MAX_DEPTH = 10;
     private static readonly MIN_SIZE = 1;
 
-    private boundary: Rectangle;
+    public boundary: Rectangle;
     private capacity: number;
     private points: Point<T>[] = [];
     private divided: boolean = false;

@@ -1,8 +1,8 @@
-import { scaleFactor } from "../../main";
 import { calculateStrokeWidth } from "../../utils/common";
 import { LayoutOptions } from "../layout/Layout";
+import { uiScaleFactor } from "../UserInterface";
 import { Component } from "./Component";
-import ExtensionEmpty from "./extensions/Extension";
+import ExtensionPlaceholder from "./extensions/Extension";
 
 interface CanvasInputOptions {
     canvas?: HTMLCanvasElement;
@@ -40,7 +40,7 @@ interface CanvasInputOptions {
 
 const inputs: ComponentTextInput[] = [];
 
-export default class ComponentTextInput extends ExtensionEmpty(Component) {
+export default class ComponentTextInput extends ExtensionPlaceholder(Component) {
     // Make it accessible from outside
     private _value: string;
     private _canvas: HTMLCanvasElement | null;
@@ -161,6 +161,8 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
 
         self._hiddenInput.style.transform = 'scale(0)';
 
+        this._updateHiddenInput();
+
         if (self._maxlength) {
             self._hiddenInput.maxLength = self._maxlength;
         }
@@ -196,7 +198,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         self._inputsIndex = inputs.length - 1;
     }
 
-    canvas(data: HTMLCanvasElement = undefined) {
+    public canvas(data: HTMLCanvasElement = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -207,7 +209,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    extraX(data: number = undefined) {
+    public extraX(data: number = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -217,7 +219,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    extraY(data: number = undefined) {
+    public extraY(data: number = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -227,7 +229,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    fontSize(data: number = undefined) {
+    public fontSize(data: number = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -237,7 +239,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    fontFamily(data: string = undefined) {
+    public fontFamily(data: string = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -247,7 +249,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    fontColor(data: string = undefined) {
+    public fontColor(data: string = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -257,7 +259,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    placeHolderColor(data: string = undefined) {
+    public placeHolderColor(data: string = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -267,7 +269,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    fontWeight(data: string = undefined) {
+    public fontWeight(data: string = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -277,7 +279,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    fontStyle(data: string = undefined) {
+    public fontStyle(data: string = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -287,7 +289,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    fontShadowColor(data: string = undefined) {
+    public fontShadowColor(data: string = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -297,7 +299,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    fontShadowBlur(data: number = undefined) {
+    public fontShadowBlur(data: number = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -307,7 +309,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    fontShadowOffsetX(data: number = undefined) {
+    public fontShadowOffsetX(data: number = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -317,7 +319,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    fontShadowOffsetY(data: number = undefined) {
+    public fontShadowOffsetY(data: number = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -352,7 +354,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         return super.h;
     }
 
-    padding(data: number = undefined) {
+    public padding(data: number = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -363,7 +365,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    borderWidth(data: number = undefined) {
+    public borderWidth(data: number = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -374,7 +376,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    borderColor(data: string = undefined) {
+    public borderColor(data: string = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -384,7 +386,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    borderRadius(data: number = undefined) {
+    public borderRadius(data: number = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -394,7 +396,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    backgroundColor(data: string = undefined) {
+    public backgroundColor(data: string = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -404,7 +406,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    selectionColor(data: string = undefined) {
+    public selectionColor(data: string = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -414,7 +416,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    placeHolder(data: string = undefined) {
+    public placeHolder(data: string = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -424,7 +426,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    hasFocus(data: boolean = undefined) {
+    public hasFocus(data: boolean = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -434,7 +436,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    value(data: { toString(): string } = undefined) {
+    public value(data: { toString(): string } = undefined) {
         let self = this;
 
         if (typeof data !== 'undefined') {
@@ -447,7 +449,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    onsubmit(fn: (e?: Event, self?: ComponentTextInput) => void = undefined) {
+    public onsubmit(fn: (e?: Event, self?: ComponentTextInput) => void = undefined) {
         let self = this;
 
         if (typeof fn !== 'undefined') {
@@ -457,7 +459,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    onkeydown(fn: (e?: KeyboardEvent, self?: ComponentTextInput) => void = undefined) {
+    public onkeydown(fn: (e?: KeyboardEvent, self?: ComponentTextInput) => void = undefined) {
         let self = this;
 
         if (typeof fn !== 'undefined') {
@@ -467,7 +469,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    onkeyup(fn: (e?: KeyboardEvent, self?: ComponentTextInput) => void = undefined) {
+    public onkeyup(fn: (e?: KeyboardEvent, self?: ComponentTextInput) => void = undefined) {
         let self = this;
 
         if (typeof fn !== 'undefined') {
@@ -477,7 +479,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    focus(pos: number = undefined) {
+    public focus(pos: number = undefined) {
         let self = this;
 
         if (!self._hasFocus) {
@@ -534,7 +536,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         self._hiddenInput.selectionEnd = hasSelection ? self._selection[1] : self._cursorPos;
     }
 
-    blur() {
+    public blur() {
         let self = this;
 
         self._onblur(self);
@@ -553,10 +555,12 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    keydown(e: KeyboardEvent, self: this) {
+    private  keydown(e: KeyboardEvent, self: this) {
         let keyCode = e.which;
 
         if (self._readonly || !self._hasFocus) {
+            e.preventDefault();
+
             return;
         }
 
@@ -565,7 +569,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         if (keyCode === 65 && (e.ctrlKey || e.metaKey)) {
             e.preventDefault();
 
-            self.selectText();
+            self._selectText();
             return;
         }
 
@@ -600,7 +604,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         });
     }
 
-    click(e: MouseEvent | TouchEvent, self: this) {
+    private   click(e: MouseEvent | TouchEvent, self: this) {
         let mouse = self._mousePos(e), x = mouse.x, y = mouse.y;
 
         if (self._endSelection) {
@@ -612,7 +616,6 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         if (self._canvas && self._overInput(x, y) || !self._canvas) {
             if (self._mouseDown) {
                 self._mouseDown = false;
-                self.click(e, self);
                 return self.focus(self._clickPos(x, y));
             }
         } else if (!self._mouseDown) {
@@ -620,7 +623,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    mousemove(e: MouseEvent | TouchEvent, self: this) {
+    private  mousemove(e: MouseEvent | TouchEvent, self: this) {
         let mouse = self._mousePos(e), x = mouse.x, y = mouse.y, isOver = self._overInput(x, y);
 
         if (isOver && self._canvas) {
@@ -651,17 +654,22 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    mousedown(e: MouseEvent | TouchEvent, self: this) {
+    private mousedown(e: MouseEvent | TouchEvent, self: this) {
         let mouse = self._mousePos(e), x = mouse.x, y = mouse.y, isOver = self._overInput(x, y);
 
         self._mouseDown = isOver;
+
+        if (isOver) {
+            self._hasFocus = true;
+            self.focus(self._clickPos(x, y));
+        }
 
         if (self._hasFocus && isOver) {
             self._selectionStart = self._clickPos(x, y);
         }
     }
 
-    mouseup(e: MouseEvent | TouchEvent, self: this) {
+    private mouseup(e: MouseEvent | TouchEvent, self: this) {
         let mouse = self._mousePos(e), x = mouse.x, y = mouse.y;
 
         let isSelection = self._clickPos(x, y) !== self._selectionStart;
@@ -669,12 +677,13 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
             self._selectionUpdated = true;
         }
 
-        delete self._selectionStart;
-
+        // Refocus element again
         self.click(e, self);
+
+        delete self._selectionStart;
     }
 
-    selectText(range: [number, number] = undefined) {
+    private _selectText(range: [number, number] = undefined) {
         let self = this;
         range = range || [0, self._value.length];
 
@@ -685,7 +694,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         return self;
     }
 
-    render() {
+    public render() {
         let self = this, ctx = self._ctx, w = self.outerW, h = self.outerH, br = self._borderRadius;
 
         if (!ctx) {
@@ -697,6 +706,8 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         this.update();
 
         ctx.translate(self.x, self.y);
+
+        let text = self._clipText();
 
         if (self._hasFocus) {
             if (self._borderWidth > 0) {
@@ -714,8 +725,6 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
                 ctx.shadowOffsetX = 0;
                 ctx.shadowOffsetY = 0;
                 ctx.shadowBlur = 0;
-
-                let text = self._clipText();
 
                 const paddingBorder = self._padding + self._borderWidth,
                     selectWidth = self._textWidth(text.substring(self._selection[0], self._selection[1]));
@@ -736,10 +745,11 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
                 } else {
                     ctx.save();
 
-                    let cursorOffset = self._textWidth(text.substring(0, self._cursorPos));
                     ctx.globalAlpha = self._cursorGlobalAlpha;
 
                     const CURSOR_SIZE_WIDTH = 2.2;
+
+                    const cursorOffset = self._textWidth(text.slice(0, self._cursorPos));
 
                     ctx.fillStyle = "#000000";
                     ctx.fillRect((paddingBorder + cursorOffset) - 1, paddingBorder - (5.5 / 2), CURSOR_SIZE_WIDTH, self.h + 5.5);
@@ -764,10 +774,8 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
                 ctx.shadowOffsetY = self._fontShadowOffsetY;
                 ctx.textAlign = 'left';
                 ctx.textBaseline = 'middle';
-                
-                const normalFillStyle = (self._value !== '' && self._value !== self._placeHolder) ? self._fontColor : self._placeHolderColor;
 
-                let currentX = textX;
+                const normalFillStyle = (self._value !== '' && self._value !== self._placeHolder) ? self._fontColor : self._placeHolderColor;
 
                 ctx.translate(0, textY);
 
@@ -779,15 +787,15 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
                         ctx.fillStyle = "#ffffff";
                         ctx.lineWidth = calculateStrokeWidth(self._fontSize);
 
-                        ctx.strokeText(char, currentX, 0);
-                        ctx.fillText(char, currentX, 0);
+                        ctx.strokeText(char, textX, 0);
+                        ctx.fillText(char, textX, 0);
                     } else {
                         ctx.fillStyle = normalFillStyle;
 
-                        ctx.fillText(char, currentX, 0);
+                        ctx.fillText(char, textX, 0);
                     }
 
-                    currentX += self._textWidth(char);
+                    textX += self._textWidth(char);
                 }
             });
         } else if (this._value.length > 0) {
@@ -817,8 +825,8 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
 
             ctx.translate(self._padding + self._borderWidth, h / 2);
 
-            ctx.strokeText(self._value, 0, 0);
-            ctx.fillText(self._value, 0, 0);
+            ctx.strokeText(text, 0, 0);
+            ctx.fillText(text, 0, 0);
         } else {
             ctx.lineJoin = 'round';
             ctx.lineCap = 'round';
@@ -851,7 +859,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    destroy() {
+    public destroy() {
         let self = this;
 
         let index = inputs.indexOf(self);
@@ -866,7 +874,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         document.body.removeChild(self._hiddenInput);
     }
 
-    _drawTextBox(fn: () => void) {
+    private _drawTextBox(fn: () => void) {
         let self = this, ctx = self._ctx, w = self.outerW, h = self.outerH, br = self._borderRadius, bw = self._borderWidth;
 
         if (self._backgroundImage === '') {
@@ -887,33 +895,18 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         }
     }
 
-    _clearSelection() {
-        let self = this;
-
-        if (self._selection[1] > 0) {
-            let start = self._selection[0], end = self._selection[1];
-
-            self._value = self._value.substr(0, start) + self._value.substr(end);
-            self._cursorPos = start;
-            self._cursorPos = (self._cursorPos < 0) ? 0 : self._cursorPos;
-            self._selection = [0, 0];
-
-            return true;
-        }
-
-        return false;
-    }
-
-    _clipText(value: string = undefined) {
+    private _clipText(value: string = undefined) {
         let self = this;
         value = (typeof value === 'undefined') ? self._value : value;
 
-        let textWidth = self._textWidth(value), fillPer = textWidth / ((self.w + 6) - self._padding), text = fillPer > 1 ? value.substr(-1 * Math.floor(value.length / fillPer)) : value;
+        let textWidth = self._textWidth(value),
+            fillPer = textWidth / self.w,
+            text = fillPer > 1 ? value.substr(-1 * Math.floor(value.length / fillPer)) : value;
 
         return text;
     }
 
-    _textWidth(text: string) {
+    private _textWidth(text: string) {
         let self = this, ctx = self._ctx;
 
         ctx.font = self._fontStyle + ' ' + self._fontWeight + ' ' + self._fontSize + 'px ' + self._fontFamily;
@@ -924,14 +917,30 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         return ctx.measureText(text).width;
     }
 
-    _calcWH() {
+    /**
+     * Recalculate the outer with and height of the text box.
+     */
+    private _calcWH() {
         let self = this;
 
+        // Calculate the full width and height with padding and borders
         self.outerW = self.w + self._padding * 2 + self._borderWidth * 2;
         self.outerH = self.h + self._padding * 2 + self._borderWidth * 2;
     }
 
-    _overInput(x: number, y: number) {
+    /**
+     * Update the size and position of the hidden input (better UX on mobile).
+     */
+    private _updateHiddenInput() {
+        var self = this;
+
+        self._hiddenInput.style.left = (self.x + self._extraX + (self._canvas ? self._canvas.offsetLeft : 0)) + 'px';
+        self._hiddenInput.style.top = (self.y + self._extraY + (self._canvas ? self._canvas.offsetTop : 0)) + 'px';
+        self._hiddenInput.style.width = (self.w + self._padding * 2) + 'px';
+        self._hiddenInput.style.height = (self.h + self._padding * 2) + 'px';
+    }
+
+    private _overInput(x: number, y: number) {
         let self = this,
             xLeft = x >= self.x + self._extraX,
             xRight = x <= self.x + self._extraX + self.w + self._padding * 2,
@@ -941,7 +950,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         return xLeft && xRight && yTop && yBottom;
     }
 
-    _clickPos(x: number, y: number) {
+    private _clickPos(x: number, y: number) {
         let self = this;
         let text = self._clipText();
         let totalWidth = 0;
@@ -973,7 +982,7 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
         return pos;
     }
 
-    _mousePos(e: MouseEvent | TouchEvent) {
+    private _mousePos(e: MouseEvent | TouchEvent) {
         let elm: HTMLElement, x: number, y: number;
 
         if ("touches" in e && e.touches && e.touches.length) {
@@ -990,8 +999,8 @@ export default class ComponentTextInput extends ExtensionEmpty(Component) {
             y = e.pageY;
         }
 
-        x /= scaleFactor;
-        y /= scaleFactor;
+        x /= uiScaleFactor;
+        y /= uiScaleFactor;
 
         let style = document.defaultView.getComputedStyle(elm, undefined),
             paddingLeft = parseInt(style['paddingLeft'], 10) || 0,

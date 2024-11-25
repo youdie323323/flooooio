@@ -7,9 +7,6 @@ import { MOB_PROFILES } from "../../shared/mobProfiles";
 import { PETAL_PROFILES } from "../../shared/petalProfiles";
 import { MobType } from "../../shared/enum";
 
-export const MAP_CENTER_X = 5000;
-export const MAP_CENTER_Y = 5000;
-
 export const SAFETY_DISTANCE = 300;
 
 export const PROJECTILE_TYPES: Set<MobType> = new Set([]);
@@ -47,18 +44,19 @@ export function EntityWorldBoundary<T extends new (...args: any[]) => Entity>(Ba
                 return 0;
             };
 
-            const worldRadius = poolThis.waveData.mapSize - getRadius();
+            const waveMapSize = poolThis.waveData.waveMapSize;
+            
+            const worldRadius = waveMapSize - getRadius();
 
-            const dx = this.x - MAP_CENTER_X;
-            const dy = this.y - MAP_CENTER_Y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            const dx = this.x - waveMapSize;
+            const dy = this.y - waveMapSize;
 
-            if (distance > worldRadius) {
+            if (Math.sqrt(dx * dx + dy * dy) > worldRadius) {
                 const collisionAngle = Math.atan2(dy, dx);
                 const knockback = this instanceof Mob ? 0 : 15;
 
-                this.x = MAP_CENTER_X + Math.cos(collisionAngle) * (worldRadius - knockback);
-                this.y = MAP_CENTER_Y + Math.sin(collisionAngle) * (worldRadius - knockback);
+                this.x = waveMapSize + Math.cos(collisionAngle) * (worldRadius - knockback);
+                this.y = waveMapSize + Math.sin(collisionAngle) * (worldRadius - knockback);
             }
         }
 

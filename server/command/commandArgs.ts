@@ -1,5 +1,5 @@
 import { UserData } from "../wave/WavePool";
-import { Command, CommandPointer, GoPointer } from "./command";
+import { CommandPointer, GoPointer } from "./command";
 import { Token, Type } from "./commandLexer";
 
 /**
@@ -16,18 +16,18 @@ type NonProvided<T extends Type> = (userData: UserData, args: string[]) => TypeT
 /**
  * Force require arg object to type-safe arg.
  */
-export function typesafeArg<T extends Type>(arg: Omit<Arg<T>, 'type'> & { type: T }): Arg<T> {
+export function createTypedArg<T extends Type>(arg: Omit<Arg<T>, 'type'> & { type: T }): Arg<T> {
     return arg;
 }
 
 // Represents a placeholder which can occur after a command parent
-export class Arg<T extends Type = Type> {
+export interface Arg<T extends Type = Type> {
     name: string;
     description: string;
     openEnded: boolean;
-    required: boolean;
 
     type: T;
+    required: boolean;
     nonProvidedValue?: NonProvided<T>;
 }
 

@@ -9,15 +9,15 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
     return class CollidablePrivateAccess extends Base implements ComponentExtensionTemplate {
         private static readonly SPEED: number = 0.4;
         private collidableComponents: Component[];
-        private targetPosition: NullableAll<[number, number]>;
-        private initialPosition: [number, number];
+        private targetPos: NullableAll<[number, number]>;
+        private initialPos: [number, number];
 
         constructor(...args: any[]) {
             super(...args);
 
             this.collidableComponents = [];
-            this.targetPosition = [null, null];
-            this.initialPosition = [this.x, this.y];
+            this.targetPos = [null, null];
+            this.initialPos = [this.x, this.y];
         }
 
         private isColliding(component: Component): boolean {
@@ -41,25 +41,25 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
 
             if (overlapX < overlapY) {
                 if (this.x < component.x) {
-                    this.targetPosition[0] = component.x - this.w;
+                    this.targetPos[0] = component.x - this.w;
                 } else {
-                    this.targetPosition[0] = component.x + component.w;
+                    this.targetPos[0] = component.x + component.w;
                 }
-                this.targetPosition[1] = null;
+                this.targetPos[1] = null;
             } else {
                 if (this.y < component.y) {
-                    this.targetPosition[1] = component.y - this.h;
+                    this.targetPos[1] = component.y - this.h;
                 } else {
-                    this.targetPosition[1] = component.y + component.h;
+                    this.targetPos[1] = component.y + component.h;
                 }
-                this.targetPosition[0] = null;
+                this.targetPos[0] = null;
             }
         }
 
         private shouldReturn(): boolean {
             return this.filterCollidable(this.collidableComponents).every(component => {
-                const futureX = this.initialPosition[0];
-                const futureY = this.initialPosition[1];
+                const futureX = this.initialPos[0];
+                const futureY = this.initialPos[1];
                 return !(
                     futureX + this.w < component.x ||
                     futureX > component.x + component.w ||
@@ -94,23 +94,23 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
             });
 
             if (!hasCollision && this.shouldReturn()) {
-                this.targetPosition[0] = this.initialPosition[0];
-                this.targetPosition[1] = this.initialPosition[1];
+                this.targetPos[0] = this.initialPos[0];
+                this.targetPos[1] = this.initialPos[1];
             }
 
-            if (this.targetPosition[0] !== null) {
-                this.x += (this.targetPosition[0] - this.x) * CollidablePrivateAccess.SPEED;
-                if (Math.abs(this.targetPosition[0] - this.x) < 0.1) {
-                    this.setX(this.targetPosition[0]);
-                    this.targetPosition[0] = null;
+            if (this.targetPos[0] !== null) {
+                this.x += (this.targetPos[0] - this.x) * CollidablePrivateAccess.SPEED;
+                if (Math.abs(this.targetPos[0] - this.x) < 0.1) {
+                    this.setX(this.targetPos[0]);
+                    this.targetPos[0] = null;
                 }
             }
 
-            if (this.targetPosition[1] !== null) {
-                this.y += (this.targetPosition[1] - this.y) * CollidablePrivateAccess.SPEED;
-                if (Math.abs(this.targetPosition[1] - this.y) < 0.1) {
-                    this.setY(this.targetPosition[1]);
-                    this.targetPosition[1] = null;
+            if (this.targetPos[1] !== null) {
+                this.y += (this.targetPos[1] - this.y) * CollidablePrivateAccess.SPEED;
+                if (Math.abs(this.targetPos[1] - this.y) < 0.1) {
+                    this.setY(this.targetPos[1]);
+                    this.targetPos[1] = null;
                 }
             }
         }
