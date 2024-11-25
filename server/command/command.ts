@@ -191,8 +191,8 @@ export class Command {
 
             let provided = "";
 
-            if (typeof arg.notProvided === 'function') {
-                provided = arg.notProvided(userData, args);
+            if (typeof arg.nonProvidedValue === 'function') {
+                provided = String(arg.nonProvidedValue(userData, args));
             }
 
             const tokens = tokenize(provided, []);

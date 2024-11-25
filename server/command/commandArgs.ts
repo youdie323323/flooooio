@@ -11,7 +11,7 @@ type TypeToPrimitive<T extends Type> =
     | T extends Type.BOOL ? boolean : any;
 
 // Allows for a field which can dynamically prompt
-type NotProvided<T extends Type> = (userData: UserData, args: string[]) => TypeToPrimitive<T>;
+type NonProvided<T extends Type> = (userData: UserData, args: string[]) => TypeToPrimitive<T>;
 
 /**
  * Force require arg object to type-safe arg.
@@ -28,7 +28,7 @@ export class Arg<T extends Type = Type> {
     required: boolean;
 
     type: T;
-    notProvided?: NotProvided<T>;
+    nonProvidedValue?: NonProvided<T>;
 }
 
 // Represents what is returned from the parseArgs function

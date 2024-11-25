@@ -30,8 +30,11 @@ class Token {
         Object.assign(this, source);
     }
 
+    /**
+     * Convert any literal type to primitive value.
+     */
     public toConstructorValue?<T extends Wrapper>(
-        a: new (arg: { toString(): string }) => T
+        a: new (...args: any[]) => T
     ): WrapperToPrimitive<T> {
         return new a(this.literal) as any;
     }
