@@ -10,7 +10,6 @@ export interface BiomeSetter {
 export let uiScaleFactor: number = 1;
 
 export default abstract class UserInterface {
-    protected canvas: HTMLCanvasElement;
     private mouseX: number = 0;
     private mouseY: number = 0;
 
@@ -27,8 +26,7 @@ export default abstract class UserInterface {
     private _mousemove: (event: MouseEvent) => void;
     private _keydown: (event: KeyboardEvent) => void;
 
-    constructor(canvas: HTMLCanvasElement) {
-        this.canvas = canvas;
+    constructor(protected canvas: HTMLCanvasElement) {
         this.setupEventListeners();
 
         this.initializeComponents();

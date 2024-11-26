@@ -1,30 +1,42 @@
 import { TWO_PI } from "../constants";
 import { deltaTime } from "../main";
 
-function shortAngleDistance(a0: number, a1: number) {
-    const da = (a1 - a0) % TWO_PI;
-    return (da * 2) % TWO_PI - da;
+function calculateAngleDistance(startAngle: number, endAngle: number) {
+    const angleDiff = (endAngle - startAngle) % TWO_PI;
+    return (angleDiff * 2) % TWO_PI - angleDiff;
 }
 
-function interpolateDirection(a0: number, a1: any, t: number) {
-    return a0 + shortAngleDistance(a0, a1) * t;
+function interpolateAngle(startAngle: number, endAngle: any, progress: number) {
+    return startAngle + calculateAngleDistance(startAngle, endAngle) * progress;
 }
 
-function hx(rs: number[], rt: number[], ru: number) {
-    const rv = 1 - ru;
-    return [rs[0] * ru + rt[0] * rv, rs[1] * ru + rt[1] * rv, rs[2] * ru + rt[2] * rv];
+function interpolateColor(sourceColor: number[], targetColor: number[], progress: number) {
+    const inverseProgress = 1 - progress;
+    return [
+        sourceColor[0] * progress + targetColor[0] * inverseProgress,
+        sourceColor[1] * progress + targetColor[1] * inverseProgress,
+        sourceColor[2] * progress + targetColor[2] * inverseProgress
+    ];
 }
 
 let colorCache = {};
-function colorToNumbers(rs: string) {
-    if (!colorCache[rs]) {
-        colorCache[rs] = [parseInt(rs.slice(1, 3), 16), parseInt(rs.slice(3, 5), 16), parseInt(rs.slice(5, 7), 16)];
+function hexToRgb(hexColor: string) {
+    if (!colorCache[hexColor]) {
+        colorCache[hexColor] = [
+            parseInt(hexColor.slice(1, 3), 16),
+            parseInt(hexColor.slice(3, 5), 16),
+            parseInt(hexColor.slice(5, 7), 16)
+        ];
     }
-    return colorCache[rs];
+    return colorCache[hexColor];
 }
 
-function colorNumbersToRgbString(s5: number[]) {
-    return "rgb(" + s5.join(",") + ")";
+function rgbArrayToString(rgbArray: number[]) {
+    return "rgb(" + rgbArray.join(",") + ")";
+}
+
+function smoothInterpolate(current: number, target: number, duration: number) {
+    return current + (target - current) * Math.min(1, deltaTime / duration);
 }
 
 export default abstract class Entity {
@@ -55,7 +67,15 @@ export default abstract class Entity {
     moveCounter: number;
     hpAlpha: number;
 
-    constructor(readonly id: number, x: number, y: number, size: number, health: number, readonly maxHealth: number, angle: number) {
+    constructor(
+        readonly id: number, 
+        x: number, 
+        y: number, 
+        angle: number, 
+        size: number, 
+        health: number, 
+        readonly maxHealth: number,
+    ) {
         this.x = this.nx = this.ox = x;
         this.y = this.ny = this.oy = y;
         this.angle = this.nAngle = this.oAngle = angle;
@@ -76,12 +96,14 @@ export default abstract class Entity {
         if (this.isDead) {
             this.deadT += deltaTime / 200;
         }
+
         if (this.hurtT > 0) {
             this.hurtT -= deltaTime / 150;
             if (this.hurtT < 0) {
                 this.hurtT = 0;
             }
         }
+
         this.updateT += deltaTime / 100;
         this.t = Math.min(1, this.updateT);
         this.x = this.ox + (this.nx - this.ox) * this.t;
@@ -89,11 +111,11 @@ export default abstract class Entity {
         this.health = this.oHealth + (this.nHealth - this.oHealth) * this.t;
         this.size = this.oSize + (this.nSize - this.oSize) * this.t;
 
-        const rI = Math.min(1, deltaTime / 100);
-        this.eyeX += (Math.cos(this.nAngle) - this.eyeX) * rI;
-        this.eyeY += (Math.sin(this.nAngle) - this.eyeY) * rI;
+        const eyeTimeFactor = Math.min(1, deltaTime / 100);
+        this.eyeX += (Math.cos(this.nAngle) - this.eyeX) * eyeTimeFactor;
+        this.eyeY += (Math.sin(this.nAngle) - this.eyeY) * eyeTimeFactor;
 
-        this.angle = interpolateDirection(this.oAngle, this.nAngle, this.t);
+        this.angle = interpolateAngle(this.oAngle, this.nAngle, this.t);
         this.moveCounter += Math.hypot(this.x - this.nx, this.y - this.ny) / 50 * deltaTime / 18;
 
         if (this.redHealthTimer > 0) {
@@ -103,7 +125,7 @@ export default abstract class Entity {
             }
         }
         if (this.health < 1) {
-            this.hpAlpha = px(this.hpAlpha, 1, 200);
+            this.hpAlpha = smoothInterpolate(this.hpAlpha, 1, 200);
         }
         if (this.redHealthTimer === 0) {
             this.redHealth += (this.health - this.redHealth) * Math.min(1, deltaTime / 200);
@@ -115,9 +137,9 @@ export default abstract class Entity {
         if (rJ >= 1) {
             return color;
         }
-        color = colorToNumbers(color);
-        color = hx(color, [255, 0, 0], rJ * 0.25 + 0.75);
-        return colorNumbersToRgbString(color);
+        color = hexToRgb(color);
+        color = interpolateColor(color, [255, 0, 0], rJ * 0.25 + 0.75);
+        return rgbArrayToString(color);
     }
 
     deadPreDraw(ctx: CanvasRenderingContext2D) {
@@ -130,8 +152,4 @@ export default abstract class Entity {
     }
 
     abstract draw(ctx: CanvasRenderingContext2D): void;
-}
-
-function px(s0: number, s1: number, s2: number) {
-    return s0 + (s1 - s0) * Math.min(1, deltaTime / s2);
 }

@@ -4,7 +4,7 @@ import TilesetManager, { BIOME_TILESETS } from "../../utils/WorldManager";
 import { ComponentButton, ComponentSVGButton, ComponentTextButton } from "../components/ComponentButton";
 import UserInterface, { uiScaleFactor } from "../UserInterface";
 import ComponentTextInput from "../components/ComponentTextInput.js";
-import {  ws } from "../../main";
+import { ws } from "../../main";
 import { Biomes, Packet, PetalType, Rarities } from "../../../shared/enum";
 import ComponentDynamicText from "../components/ComponentDynamicText";
 
@@ -30,22 +30,22 @@ let backgroundEntities: Set<{
 let menuUiCurrentBiome: Biomes = Biomes.GARDEN;
 
 export default class UserInterfaceMenu extends UserInterface {
-    lastBackgroundEntitySpawn: number;
+    private worldManager: TilesetManager;
 
-    worldManager: TilesetManager;
+    private backgroundX: number;
+    private backgroundY: number;
+    private backgroundWaveStep: number;
 
-    backgroundX: number;
-    backgroundY: number;
-    backgroundWaveStep: number;
+    private lastBackgroundEntitySpawn: number;
 
-    connectingText: ComponentDynamicText;
-    loggingInText: ComponentDynamicText;
+    private connectingText: ComponentDynamicText;
+    private connectingTextLoaded: boolean = false;
 
-    playableButtons: ComponentButton[];
+    private loggingInText: ComponentDynamicText;
+    private loggingInTextLoadded: boolean = false;
 
-    connectingTextLoaded: boolean = false;
-    loggingInTextLoadded: boolean = false;
-    playableButtonsLoaded: boolean = false;
+    private playableButtons: ComponentButton[];
+    private playableButtonsLoaded: boolean = false;
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
@@ -265,12 +265,12 @@ export default class UserInterfaceMenu extends UserInterface {
         this.connectingText = new ComponentDynamicText(
             {
                 x: (widthRelative / 2) - (200 / 2),
-                y: (heightRelative / 2) - (40 / 2),
+                y: (heightRelative / 2) - (40 / 2) - 5,
                 w: 200,
                 h: 40,
             },
             "Connecting...",
-            30,
+            32,
         );
 
         this.connectingText.setVisible(this.connectingTextLoaded);
@@ -280,12 +280,12 @@ export default class UserInterfaceMenu extends UserInterface {
         this.loggingInText = new ComponentDynamicText(
             {
                 x: (widthRelative / 2) - (200 / 2),
-                y: (heightRelative / 2) - (40 / 2),
+                y: (heightRelative / 2) - (40 / 2) - 5,
                 w: 200,
                 h: 40,
             },
             "Logging in...",
-            30,
+            32,
         );
 
         this.loggingInText.setVisible(this.loggingInTextLoadded);
@@ -313,7 +313,7 @@ export default class UserInterfaceMenu extends UserInterface {
         return {
             x: 0,
             y: randomFloat(-200, (this.canvas.height / uiScaleFactor) + 100),
-            z: randomFloat(0.7, 2),
+            z: randomFloat(0.7, 1.8),
             waveStep: Math.random() + 360,
         }
     }
@@ -341,7 +341,7 @@ export default class UserInterfaceMenu extends UserInterface {
             const param = this.generateBackgroundEntity3D();
             backgroundEntities.add({
                 ...param,
-                entity: new EntityMob(-1, PetalType.BASIC, Rarities.COMMON, param.x, param.y, param.z * 5, 1, 1, 0, false)
+                entity: new EntityMob(-1, param.x, param.y, 1, param.z * 5, 1, 1, PetalType.BASIC, Rarities.COMMON, false)
             });
             this.lastBackgroundEntitySpawn = Date.now();
         }
@@ -350,12 +350,10 @@ export default class UserInterfaceMenu extends UserInterface {
             v.entity.draw(ctx);
 
             v.entity.x += v.z * 0.3;
-            v.entity.y += Math.sin(v.waveStep / 20) * 0.2;
+            v.entity.y += Math.sin(v.waveStep / 20) * 0.1;
 
             v.waveStep += 0.1;
         });
-
-        this.render();
 
         if (this.biome === Biomes.OCEAN) {
             ctx.save();
@@ -366,6 +364,8 @@ export default class UserInterfaceMenu extends UserInterface {
 
             ctx.restore();
         }
+
+        this.render();
     }
 
     public cleanup(): void {

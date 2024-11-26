@@ -17,16 +17,21 @@ function createBeetleBodyPath() {
 const beetleBodyPath = createBeetleBodyPath();
 
 export default class EntityMob extends Entity {
-    type: MobType | PetalType;
-    rarity: Rarities;
     legD: number[];
-    isPet: boolean;
 
-    constructor(id: number, type: MobType | PetalType, rarity: Rarities, x: number, y: number, size: number, health: number, maxHealth: number, angle: number, isPet: boolean) {
-        super(id, x, y, size, health, maxHealth, angle);
-        this.type = type;
-        this.rarity = rarity;
-        this.isPet = isPet;
+    constructor(
+        id: number, 
+        x: number, 
+        y: number, 
+        angle: number, 
+        size: number, 
+        health: number, 
+        maxHealth: number, 
+        readonly type: MobType | PetalType, 
+        readonly rarity: Rarities, 
+        readonly isPet: boolean,
+    ) {
+        super(id, x, y, angle, size, health, maxHealth);
     }
 
     update() {

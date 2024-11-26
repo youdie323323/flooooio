@@ -26,5 +26,5 @@ export function darkend(color: string, strength: number) {
 }
 
 export function calculateStrokeWidth(fontSize: number): number {
-    return fontSize / 8.3333334;
+    return fontSize / 7.8;
 }

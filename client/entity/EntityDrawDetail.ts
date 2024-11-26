@@ -7,8 +7,11 @@ import EntityPlayer from "./EntityPlayer";
 
 export const HP_BAR_MAX_WIDTH: number = 45;
 
-export function drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, scale = 1) {
-    if (entity.hpAlpha <= 0 || entity instanceof EntityMob && isPetal(entity.type)) {   
+export function drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D) {
+    if (
+        entity.hpAlpha <= 0 ||
+        entity instanceof EntityMob && isPetal(entity.type)
+    ) {
         return;
     }
 
@@ -48,14 +51,13 @@ export function drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D, 
             lineWidth = 5;
 
             ctx.translate(0, entity.size);
-            ctx.scale(scale, scale);
             ctx.translate(-HP_BAR_MAX_WIDTH / 2, 9 / 2 + 5);
         } else if (entity instanceof EntityMob) {
             lineWidth = 6.5;
-  
+
             const profile = MOB_PROFILES[entity.type];
-            const rQ = ((profile.rx + profile.ry) * (entity.size / profile.fraction)) / 30;
-            ctx.scale(rQ, rQ);
+            const scale = ((profile.rx + profile.ry) * (entity.size / profile.fraction)) / 30;
+            ctx.scale(scale, scale);
             ctx.translate(-HP_BAR_MAX_WIDTH / 2, 25);
         }
 

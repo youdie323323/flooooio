@@ -680,6 +680,9 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
         if (this.chatInput) {
             this.chatInput.destroy();
         }
+
+        players.clear();
+        mobs.clear();
     }
 
     set biome(biome: Biomes) {

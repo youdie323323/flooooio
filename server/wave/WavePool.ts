@@ -359,10 +359,10 @@ export class WavePool {
     private broadcastSeldIdPacket() {
         // Reuse buffer
         const buffer = Buffer.alloc(5);
+        buffer.writeUInt8(Packet.SELF_ID, 0);
 
         // Loop through all WebSocket connections
         this.clients.forEach((player, clientId) => {
-            buffer.writeUInt8(Packet.SELF_ID, 0);
             buffer.writeUInt32BE(clientId, 1);
 
             player.ws.send(buffer, true);
@@ -423,13 +423,16 @@ export class WavePool {
             buffer.writeDoubleBE(client.y, offset);
             offset += 8;
 
+            buffer.writeUInt8(client.angle, offset++);
+
             buffer.writeInt32BE(client.health, offset);
+            offset += 4;
+
+            buffer.writeInt32BE(client.maxHealth, offset);
             offset += 4;
 
             buffer.writeUInt32BE(client.size, offset);
             offset += 4;
-
-            buffer.writeUInt8(client.angle, offset++);
 
             buffer.writeUInt8(client.mood, offset++);
 
@@ -439,9 +442,6 @@ export class WavePool {
             buffer.writeUInt8(nicknameBuffer.length, offset++);
             nicknameBuffer.copy(buffer, offset);
             offset += nicknameBuffer.length;
-
-            buffer.writeInt32BE(client.maxHealth, offset);
-            offset += 4;
         });
 
         // Write mobs
@@ -449,30 +449,39 @@ export class WavePool {
         offset += 2;
 
         this.mobs.forEach(mob => {
+            // Id of mob
             buffer.writeUInt32BE(mob.id, offset);
             offset += 4;
 
+            // Coordinate of mob
             buffer.writeDoubleBE(mob.x, offset);
             offset += 8;
             buffer.writeDoubleBE(mob.y, offset);
             offset += 8;
 
-            buffer.writeInt32BE(mob.health, offset);
-            offset += 4;
-
-            buffer.writeUInt32BE(mob.size, offset);
-            offset += 4;
-
+            // Angle of mob
             buffer.writeDoubleBE(mob.angle, offset);
             offset += 8;
 
-            buffer.writeUInt8(mob.type, offset++);
+            // Health of mob
+            buffer.writeInt32BE(mob.health, offset);
+            offset += 4;
 
-            buffer.writeUInt8(mob.rarity, offset++);
-
+            // Max health of mob
             buffer.writeInt32BE(mob.maxHealth, offset);
             offset += 4;
 
+            // Size of mob
+            buffer.writeUInt32BE(mob.size, offset);
+            offset += 4;
+
+            // Type of mob
+            buffer.writeUInt8(mob.type, offset++);
+
+            // Rarity of mob
+            buffer.writeUInt8(mob.rarity, offset++);
+
+            // Mob is pet, or not
             buffer.writeUInt8(mob.petMaster ? 1 : 0, offset++);
         });
 

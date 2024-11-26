@@ -96,22 +96,22 @@ export default class Networking {
                         const clientY = data.getFloat64(offset);
                         offset += 8;
 
-                        const clientHp = data.getInt32(offset);
+                        const clientAngle = angleToRad(data.getUint8(offset++));
+
+                        const clientHealth = data.getInt32(offset);
+                        offset += 4;
+
+                        const clientMaxHealth = data.getInt32(offset);
                         offset += 4;
 
                         const clientSize = data.getUint32(offset);
                         offset += 4;
-
-                        const clientAngle = angleToRad(data.getUint8(offset++));
 
                         const clientMood = data.getUint8(offset++) as Mood;
 
                         const clientIsDead = !!data.getUint8(offset++);
 
                         const clientNickname = readString();
-
-                        const clientMaxHealth = data.getInt32(offset);
-                        offset += 4;
 
                         const client = players.get(clientId);
                         if (client) {
@@ -122,17 +122,17 @@ export default class Networking {
                             client.mood = clientMood;
                             client.isDead = clientIsDead;
 
-                            if (clientHp < client.nHealth) {
+                            if (clientHealth < client.nHealth) {
                                 client.redHealthTimer = 1;
-                            } else if (clientHp > client.nHealth) {
+                            } else if (clientHealth > client.nHealth) {
                                 client.redHealthTimer = 0;
                             }
 
-                            if (clientHp < client.nHealth) {
+                            if (clientHealth < client.nHealth) {
                                 client.hurtT = 1;
                             }
 
-                            client.nHealth = clientHp;
+                            client.nHealth = clientHealth;
 
                             client.ox = client.x;
                             client.oy = client.y;
@@ -141,7 +141,7 @@ export default class Networking {
                             client.oSize = client.size;
                             client.updateT = 0;
                         } else {
-                            players.set(clientId, new EntityPlayer(clientId, clientX, clientY, clientSize, clientHp, clientMaxHealth, clientAngle, clientMood, clientNickname));
+                            players.set(clientId, new EntityPlayer(clientId, clientX, clientY, clientAngle, clientSize, clientHealth, clientMaxHealth, clientMood, clientNickname));
                         }
 
                         ids.add(clientId);
@@ -154,6 +154,7 @@ export default class Networking {
                             !player.isDeleted
                         ) {
                             player.isDeleted = true;
+
                             player.isDead = true;
                             player.deadT = 0;
                             player.health = 0;
@@ -174,21 +175,21 @@ export default class Networking {
                         const mobY = data.getFloat64(offset);
                         offset += 8;
 
-                        const mobHp = data.getInt32(offset);
+                        const mobAngle = angleToRad(data.getFloat64(offset));
+                        offset += 8;
+
+                        const mobHealth = data.getInt32(offset);
+                        offset += 4;
+
+                        const mobMaxHealth = data.getInt32(offset);
                         offset += 4;
 
                         const mobSize = data.getUint32(offset);
                         offset += 4;
 
-                        const mobAngle = angleToRad(data.getFloat64(offset));
-                        offset += 8;
-
                         const mobType = data.getUint8(offset++);
 
                         const mobRarity = data.getUint8(offset++) as Rarities;
-
-                        const mobMaxHealth = data.getInt32(offset);
-                        offset += 4;
 
                         const mobIsPet = !!data.getUint8(offset++);
 
@@ -205,11 +206,11 @@ export default class Networking {
                                 mob.redHealthTimer = 0;
                             }
 
-                            if (mobHp < mob.nHealth) {
+                            if (mobHealth < mob.nHealth) {
                                 mob.hurtT = 1;
                             }
 
-                            mob.nHealth = mobHp;
+                            mob.nHealth = mobHealth;
 
                             mob.ox = mob.x;
                             mob.oy = mob.y;
@@ -218,7 +219,7 @@ export default class Networking {
                             mob.oSize = mob.size;
                             mob.updateT = 0;
                         } else {
-                            mobs.set(mobId, new EntityMob(mobId, mobType, mobRarity, mobX, mobY, mobSize, mobHp, mobMaxHealth, mobAngle, mobIsPet));
+                            mobs.set(mobId, new EntityMob(mobId, mobX, mobY, mobAngle, mobSize, mobHealth, mobMaxHealth, mobType, mobRarity, mobIsPet));
                         }
 
                         ids.add(mobId);

@@ -7,15 +7,23 @@ import { Mood } from "../../shared/enum";
 export default class EntityPlayer extends Entity {
     angryT: number;
     sadT: number;
-    mood: Mood;
     isDeleted: boolean;
 
-    constructor(id: number, x: number, y: number, size: number, health: number, maxHealth: number, angle: number, mood: Mood, readonly nickname: string) {
-        super(id, x, y, size, health, maxHealth, angle);
+    constructor(
+        id: number, 
+        x: number, 
+        y: number, 
+        angle: number, 
+        size: number, 
+        health: number,
+        maxHealth: number, 
+        public mood: Mood, 
+        readonly nickname: string,
+    ) {
+        super(id, x, y, angle, size, health, maxHealth);
 
         this.angryT = 0;
         this.sadT = 0;
-        this.mood = mood;
         this.isDeleted = false;
     }
 

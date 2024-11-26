@@ -77,7 +77,6 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
     private _cursorPos: number;
     private _selection: [number, number];
     private _hasFocus: boolean;
-    private _wasOver: boolean;
     private _backgroundColor: string | CanvasGradient;
     private _hiddenInput: HTMLInputElement;
     private _inputsIndex: number;
@@ -129,7 +128,6 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
         self._cursorPos = 0;
         self._hasFocus = false;
         self._selection = [0, 0];
-        self._wasOver = false;
 
         self._calcWH();
 
@@ -555,7 +553,7 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
         }
     }
 
-    private  keydown(e: KeyboardEvent, self: this) {
+    private keydown(e: KeyboardEvent, self: this) {
         let keyCode = e.which;
 
         if (self._readonly || !self._hasFocus) {
@@ -604,7 +602,7 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
         });
     }
 
-    private   click(e: MouseEvent | TouchEvent, self: this) {
+    private click(e: MouseEvent | TouchEvent, self: this) {
         let mouse = self._mousePos(e), x = mouse.x, y = mouse.y;
 
         if (self._endSelection) {
@@ -623,15 +621,15 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
         }
     }
 
-    private  mousemove(e: MouseEvent | TouchEvent, self: this) {
+    private mousemove(e: MouseEvent | TouchEvent, self: this) {
         let mouse = self._mousePos(e), x = mouse.x, y = mouse.y, isOver = self._overInput(x, y);
 
-        if (isOver && self._canvas) {
-            self._canvas.style.cursor = 'text';
-            self._wasOver = true;
-        } else if (self._wasOver && self._canvas) {
-            self._canvas.style.cursor = 'default';
-            self._wasOver = false;
+        if (self._canvas) {
+            if (isOver) {
+                self._canvas.style.cursor = 'text';
+            } else {
+                self._canvas.style.cursor = 'default';
+            }
         }
 
         if (self._hasFocus && self._selectionStart >= 0) {
@@ -659,12 +657,12 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
 
         self._mouseDown = isOver;
 
-        if (isOver) {
+        if (self._mouseDown) {
             self._hasFocus = true;
             self.focus(self._clickPos(x, y));
         }
 
-        if (self._hasFocus && isOver) {
+        if (self._hasFocus && self._mouseDown) {
             self._selectionStart = self._clickPos(x, y);
         }
     }
