@@ -1,7 +1,8 @@
 import { PetalData } from "../server/entity/mob/petal/Petal";
-import { PetalType, Rarities } from "./enum";
+import { PetalType } from "./enum";
+import { Rarities } from "./rarity";
 
-export const PETAL_PROFILES: Record<PetalType, PetalData> = {
+export const PETAL_PROFILES: Partial<Record<PetalType, PetalData>> = {
     [PetalType.BASIC]: {
         name: "Basic",
         description: "A nice petal, not too strong but not too weak.",
@@ -14,6 +15,7 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             health: 10,
             petalReload: 2.5,
             count: 1,
+
             isCluster: false,
         },
         [Rarities.UNUSUAL]: {
@@ -21,6 +23,7 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             health: 30,
             petalReload: 2.5,
             count: 1,
+
             isCluster: false,
         },
         [Rarities.RARE]: {
@@ -28,6 +31,7 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             health: 90,
             petalReload: 2.5,
             count: 1,
+
             isCluster: false,
         },
         [Rarities.EPIC]: {
@@ -35,6 +39,7 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             health: 270,
             petalReload: 2.5,
             count: 1,
+            
             isCluster: false,
         },
         [Rarities.LEGENDARY]: {
@@ -42,6 +47,7 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             health: 810,
             petalReload: 2.5,
             count: 1,
+
             isCluster: false,
         },
         [Rarities.MYTHIC]: {
@@ -49,6 +55,7 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             health: 2430,
             petalReload: 2.5,
             count: 1,
+
             isCluster: false,
         },
         [Rarities.ULTRA]: {
@@ -56,6 +63,7 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             health: 7290,
             petalReload: 2.5,
             count: 1,
+
             isCluster: false,
         },
         [Rarities.SUPER]: {
@@ -63,6 +71,7 @@ export const PETAL_PROFILES: Record<PetalType, PetalData> = {
             health: 21870,
             petalReload: 2.5,
             count: 3,
+            
             isCluster: false,
         },
     },

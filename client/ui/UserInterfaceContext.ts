@@ -9,15 +9,15 @@ export type UserInterfaceMode = 'menu' | 'game';
 
 export type UserInterfaces = UserInterfaceGame | UserInterfaceMenu;
 
-export default class UserInterfaceManager {
+export default class UserInterfaceContext {
+    private readonly transition: UserInterfaceTransition;
+
     public currentUI: UserInterfaces | null;
     public previousUI: UserInterfaces | null;
-    private readonly canvas: HTMLCanvasElement;
-    private readonly transition: UserInterfaceTransition;
+
     public isTransitioning: boolean;
 
-    constructor(canvas: HTMLCanvasElement) {
-        this.canvas = canvas;
+    constructor(private readonly canvas: HTMLCanvasElement) {
         this.currentUI = new UserInterfaceMenu(canvas);
         this.previousUI = null;
         this.transition = new UserInterfaceTransition(canvas);
@@ -27,7 +27,7 @@ export default class UserInterfaceManager {
     public cleanup(): void {
         // Cleanup special values & components
         this.previousUI?.cleanup();
-        this.previousUI?.cleanupCore();
+        this.previousUI?.cleanupRenders();
 
         this.isTransitioning = false;
     }
@@ -38,18 +38,23 @@ export default class UserInterfaceManager {
             return;
         }
 
-        this.isTransitioning = true;
         this.previousUI = this.currentUI;
         this.currentUI = this.createUI(mode);
-        this.transition.start(mode)
-        
-        // Cleanup listeners so cant touch before ui buttons
-        this.previousUI?.cleanupListeners();
+
+        // Wait for createUI to finish them
+        requestAnimationFrame(() => {
+            this.isTransitioning = true;
+
+            this.transition.start(mode)
+
+            // Cleanup listeners so cant touch before ui buttons
+            this.previousUI?.removeEventListeners();
+        });
     }
 
     private createUI(mode: UserInterfaceMode): UserInterfaces {
         switch (mode) {
-            case 'menu':
+            case 'menu': {
                 // Fake dead animation
                 const player = players.get(selfId);
                 if (player && !player.isDead) {
@@ -59,17 +64,20 @@ export default class UserInterfaceManager {
                 }
 
                 return new UserInterfaceMenu(this.canvas);
+            }
 
-            case 'game':
+            case 'game': {
                 cameraController.zoom = 1;
 
                 return new UserInterfaceGame(this.canvas);
+            }
         }
     }
 
     public update(): void {
         if (!this.isTransitioning) {
             this.currentUI?.animationFrame();
+
             return;
         }
 

@@ -43,6 +43,8 @@ export class ComponentButton extends ExtensionPlaceholder(Component) implements 
         }
         return this.color;
     }
+
+    protected onLayoutCalculated?(): void { }
 }
 
 export class ComponentTextButton extends ComponentButton {

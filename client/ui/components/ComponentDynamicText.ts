@@ -36,4 +36,6 @@ export default class ComponentDynamicText extends ExtensionCollidable(ExtensionP
         ctx.strokeText(this.text, 0, 0);
         ctx.fillText(this.text, 0, 0);
     }
+
+    protected onLayoutCalculated?(): void { }
 }

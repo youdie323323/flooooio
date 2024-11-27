@@ -1,4 +1,4 @@
-import { MobType, Rarities } from "../../../shared/enum";
+import { MobType } from "../../../shared/enum";
 import { waveRoomService } from "../../main";
 import { UserData } from "../../wave/WavePool";
 import { CommandPointer, Command, GoLikeRespondValue, CommandFuncReturnType } from "../command";
@@ -8,6 +8,7 @@ import { setTimeout } from 'node:timers/promises';
 import { SAFETY_DISTANCE } from "../../entity/EntityWorldBoundary";
 import { getRandomMapSafePosition } from "../../utils/random";
 import { SPAWN_MOB_DEFAULT_ARGS } from "./spawnMob";
+import { Rarities } from "../../../shared/rarity";
 
 export function registerSpawnMobBulk(spawnMob: CommandPointer) {
     return spawnMob.newCommand(new Command({

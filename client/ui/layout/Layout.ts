@@ -14,8 +14,8 @@ export default class Layout {
     }
     
     static calculatePosition(options: LayoutOptions, containerWidth: number, containerHeight: number) {
-        const width = this.parseSize(options.w, containerWidth);
-        const height = this.parseSize(options.h, containerHeight);
+        const w = this.parseSize(options.w, containerWidth);
+        const h = this.parseSize(options.h, containerHeight);
 
         let x = 0;
         let y = 0;
@@ -32,6 +32,6 @@ export default class Layout {
             y = options.y;
         }
 
-        return { x, y, width, height };
+        return { x, y, w, h };
     }
 }

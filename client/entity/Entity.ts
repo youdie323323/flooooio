@@ -1,9 +1,8 @@
-import { TWO_PI } from "../constants";
 import { deltaTime } from "../main";
 
 function calculateAngleDistance(startAngle: number, endAngle: number) {
-    const angleDiff = (endAngle - startAngle) % TWO_PI;
-    return (angleDiff * 2) % TWO_PI - angleDiff;
+    const angleDiff = (endAngle - startAngle) % (Math.PI * 2);
+    return (angleDiff * 2) % (Math.PI * 2) - angleDiff;
 }
 
 function interpolateAngle(startAngle: number, endAngle: any, progress: number) {

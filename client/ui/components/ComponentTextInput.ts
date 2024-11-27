@@ -82,7 +82,6 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
     private _inputsIndex: number;
     private _mouseDown: boolean;
     private _selectionStart?: number;
-    private _endSelection?: boolean;
     private _selectionUpdated?: boolean;
     private _cursorInterval?: NodeJS.Timeout;
     private outerW: number;
@@ -159,8 +158,6 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
 
         self._hiddenInput.style.transform = 'scale(0)';
 
-        this._updateHiddenInput();
-
         if (self._maxlength) {
             self._hiddenInput.maxLength = self._maxlength;
         }
@@ -171,6 +168,8 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
 
         self._hiddenInput.addEventListener('keydown', function (e: any) {
             e = e || window.event;
+
+            console.log("huh")
 
             if (self._hasFocus) {
                 self._hiddenInput.focus();
@@ -325,31 +324,6 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
         } else {
             return self._fontShadowOffsetY;
         }
-    }
-
-    // Override setters/getters
-    set w(data: number) {
-        super.w = data;
-
-        let self = this;
-
-        self._calcWH();
-    }
-
-    get w() {
-        return super.w;
-    }
-
-    set h(data: number) {
-        super.h = data;
-
-        let self = this;
-
-        self._calcWH();
-    }
-
-    get h() {
-        return super.h;
     }
 
     public padding(data: number = undefined) {
@@ -602,35 +576,8 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
         });
     }
 
-    private click(e: MouseEvent | TouchEvent, self: this) {
-        let mouse = self._mousePos(e), x = mouse.x, y = mouse.y;
-
-        if (self._endSelection) {
-            delete self._endSelection;
-            delete self._selectionUpdated;
-            return;
-        }
-
-        if (self._canvas && self._overInput(x, y) || !self._canvas) {
-            if (self._mouseDown) {
-                self._mouseDown = false;
-                return self.focus(self._clickPos(x, y));
-            }
-        } else if (!self._mouseDown) {
-            return self.blur();
-        }
-    }
-
     private mousemove(e: MouseEvent | TouchEvent, self: this) {
         let mouse = self._mousePos(e), x = mouse.x, y = mouse.y, isOver = self._overInput(x, y);
-
-        if (self._canvas) {
-            if (isOver) {
-                self._canvas.style.cursor = 'text';
-            } else {
-                self._canvas.style.cursor = 'default';
-            }
-        }
 
         if (self._hasFocus && self._selectionStart >= 0) {
             let curPos = self._clickPos(x, y);
@@ -650,6 +597,8 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
                 self._selection = [start, end];
             }
         }
+
+        this._changeCursor(isOver);
     }
 
     private mousedown(e: MouseEvent | TouchEvent, self: this) {
@@ -657,6 +606,12 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
 
         self._mouseDown = isOver;
 
+        if (self._hasFocus && !isOver) {
+            self.blur();
+            return;
+        }
+
+        // Focus if over
         if (self._mouseDown) {
             self._hasFocus = true;
             self.focus(self._clickPos(x, y));
@@ -665,18 +620,20 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
         if (self._hasFocus && self._mouseDown) {
             self._selectionStart = self._clickPos(x, y);
         }
+
+        this._changeCursor(isOver);
     }
 
     private mouseup(e: MouseEvent | TouchEvent, self: this) {
         let mouse = self._mousePos(e), x = mouse.x, y = mouse.y;
 
         let isSelection = self._clickPos(x, y) !== self._selectionStart;
-        if (self._hasFocus && self._selectionStart >= 0 && self._overInput(x, y) && isSelection) {
+        if (self._hasFocus && self._selectionStart >= 0 && isSelection) {
             self._selectionUpdated = true;
         }
 
         // Refocus element again
-        self.click(e, self);
+        if (self._hasFocus) self.focus(self._clickPos(x, y));
 
         delete self._selectionStart;
     }
@@ -688,8 +645,15 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
         self._selection = [range[0], range[1]];
         self._hiddenInput.selectionStart = range[0];
         self._hiddenInput.selectionEnd = range[1];
+    }
 
-        return self;
+    private _changeCursor(isOver: boolean) {
+        let self = this;
+
+        if (self._canvas) {
+            // Original input has two types while has focus, maybe padding?
+            self._canvas.style.cursor = isOver ? self._hasFocus ? "text" : "pointer" : "default";
+        }
     }
 
     public render() {
@@ -926,24 +890,12 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
         self.outerH = self.h + self._padding * 2 + self._borderWidth * 2;
     }
 
-    /**
-     * Update the size and position of the hidden input (better UX on mobile).
-     */
-    private _updateHiddenInput() {
-        var self = this;
-
-        self._hiddenInput.style.left = (self.x + self._extraX + (self._canvas ? self._canvas.offsetLeft : 0)) + 'px';
-        self._hiddenInput.style.top = (self.y + self._extraY + (self._canvas ? self._canvas.offsetTop : 0)) + 'px';
-        self._hiddenInput.style.width = (self.w + self._padding * 2) + 'px';
-        self._hiddenInput.style.height = (self.h + self._padding * 2) + 'px';
-    }
-
     private _overInput(x: number, y: number) {
         let self = this,
             xLeft = x >= self.x + self._extraX,
-            xRight = x <= self.x + self._extraX + self.w + self._padding * 2,
+            xRight = x <= self.x + self._extraX + self.w + self._padding * 2 + self._borderWidth * 2,
             yTop = y >= self.y + self._extraY,
-            yBottom = y <= self.y + self._extraY + self.h + self._padding * 2;
+            yBottom = y <= self.y + self._extraY + self.h + self._padding * 2 + self._borderWidth * 2;
 
         return xLeft && xRight && yTop && yBottom;
     }
@@ -1025,4 +977,6 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
             y: y - offsetY
         };
     }
+
+    protected onLayoutCalculated?(): void { }
 }

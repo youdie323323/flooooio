@@ -14,19 +14,6 @@ export enum Mood {
 
 export const MOON_VALUES = Object.values(Mood);
 
-// IMPORTANT: This will used for index
-
-export enum Rarities {
-    COMMON = 0,
-    UNUSUAL = 1,
-    RARE = 2,
-    EPIC = 3,
-    LEGENDARY = 4,
-    MYTHIC = 5,
-    ULTRA = 6,
-    SUPER = 7,
-}
-
 let currentEntityType: number = 0;
 function getNextEntityType(): number {
     if (currentEntityType > 255) {
@@ -48,31 +35,4 @@ export enum PetalType {
     FASTER = getNextEntityType(),
     BEETLE_EGG = getNextEntityType(),
     BUBBLE = getNextEntityType(),
-}
-
-export enum Packet {
-    // Client
-    MOVE,
-    MOOD,
-    SWAP_PETAL,
-    CHAT_SENT,
-
-    WAVE_ROOM_CREATE,
-    WAVE_ROOM_JOIN,
-    WAVE_ROOM_JOIN_PUBLIC,
-    WAVE_ROOM_LEAVE,
-    WAVE_ROOM_GAME_LEAVE,
-    WAVE_ROOM_CHANGE_READY,
-    WAVE_ROOM_CHANGE_VISIBLE,
-
-    // Server
-    WAVE_UPDATE,
-    SELF_ID,
-
-    WAVE_ROOM_UPDATE,
-    WAVE_ROOM_SELF_ID,
-    WAVE_ROOM_JOIN_FAILED,
-    WAVE_ROOM_STARTING,
-
-    CHAT_RECV,
 }

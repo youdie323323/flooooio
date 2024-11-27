@@ -6,9 +6,10 @@ import { BrandedId } from "../entity/Entity";
 import WaveProbabilityPredictor from "./WaveProbabilityPredictor";
 import { calculateWaveLength } from "../utils/formula";
 import { SAFETY_DISTANCE } from "../entity/EntityWorldBoundary";
-import { Biomes, Packet } from "../../shared/enum";
+import { Biomes } from "../../shared/enum";
 import root from "../command/commandRoot";
 import { Command, repondValueToString } from "../command/command";
+import { ClientBound } from "../../shared/packet";
 
 /**
  * Revive player nearby other player.
@@ -92,11 +93,11 @@ export default class WaveRoom {
      */
     public static readonly MAX_PLAYER_AMOUNT = 4;
 
-    state: WaveRoomState;
-    visible: WaveRoomVisibleState;
-    roomCandidates: WaveRoomPlayer[];
+    public state: WaveRoomState;
+    public visible: WaveRoomVisibleState;
+    public roomCandidates: WaveRoomPlayer[];
 
-    wavePool: WavePool;
+    public wavePool: WavePool;
 
     private updateInterval: NodeJS.Timeout;
 
@@ -229,7 +230,7 @@ export default class WaveRoom {
         const buffer = Buffer.alloc(size);
         let offset = 0;
 
-        buffer.writeUInt8(Packet.WAVE_ROOM_UPDATE, offset++);
+        buffer.writeUInt8(ClientBound.WAVE_ROOM_UPDATE, offset++);
 
         // Client count
         buffer.writeUInt8(this.roomCandidates.length, offset++);

@@ -7,7 +7,8 @@ import { BasePlayer, PlayerInstance } from "../player/Player";
 import { MobHealthRegen } from "./MobHealthRegen";
 import { EntityWorldBoundary } from "../EntityWorldBoundary";
 import { EntityDeath } from "../EntityDeath";
-import { MobType, PetalType, Rarities } from "../../../shared/enum";
+import { MobType, PetalType } from "../../../shared/enum";
+import { Rarities } from "../../../shared/rarity";
 
 class BaseMob implements Entity {
     readonly id: EntityId;

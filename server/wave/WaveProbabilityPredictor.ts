@@ -1,6 +1,7 @@
 import { WaveData } from "./WaveRoom";
 import { calculateWaveLuck } from "../utils/formula";
-import { Rarities, MobType } from "../../shared/enum";
+import { MobType } from "../../shared/enum";
+import { Rarities } from "../../shared/rarity";
 
 /*
 Wave 21+: Commons stop spawning
@@ -10,9 +11,7 @@ Wave 51+: Epics stop spawning
 Wave 61+: Legendaries stop spawning
 */
 
-type RarityRecordConstant = Partial<Record<Rarities, number>>;
-
-const END_SPAWN_WAVE_RARITY: RarityRecordConstant = {
+const END_SPAWN_WAVE_RARITY = {
     [Rarities.COMMON]: 20,
     [Rarities.UNUSUAL]: 30,
     [Rarities.RARE]: 40,
@@ -21,7 +20,7 @@ const END_SPAWN_WAVE_RARITY: RarityRecordConstant = {
     [Rarities.MYTHIC]: Infinity,
 } as const;
 
-const RARITY_WEIGHTS: RarityRecordConstant = {
+const RARITY_WEIGHTS = {
     [Rarities.COMMON]: 1,
     [Rarities.UNUSUAL]: 0.5,
     [Rarities.RARE]: 0.25,
@@ -30,8 +29,8 @@ const RARITY_WEIGHTS: RarityRecordConstant = {
     [Rarities.MYTHIC]: 0.01,
 } as const;
 
-function calculateSpawnProbabilities(luck: number, waveProgress: number): RarityRecordConstant {
-    const probabilities: RarityRecordConstant = {};
+function calculateSpawnProbabilities(luck: number, waveProgress: number): Partial<Record<Rarities, number>> {
+    const probabilities: Partial<Record<Rarities, number>> = {};
     let totalWeight = 0;
 
     for (const key in END_SPAWN_WAVE_RARITY) {
@@ -61,7 +60,7 @@ function calculateSpawnProbabilities(luck: number, waveProgress: number): Rarity
     return probabilities;
 }
 
-function weightedChoice(probabilities: RarityRecordConstant): Rarities | null {
+function weightedChoice(probabilities: Partial<Record<Rarities, number>>): Rarities | null {
     const randomValue = Math.random();
     let cumulative = 0;
 

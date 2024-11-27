@@ -2,7 +2,7 @@ import Layout, { LayoutOptions } from "../layout/Layout";
 import { uiScaleFactor } from "../UserInterface";
 
 // Base interface for all GUI components
-export class Component {
+export abstract class Component {
     private readonly ANIMATION_DURATION: number = 150;
     public isAnimating: boolean = false;
     public animationProgress: number = 1;
@@ -16,21 +16,21 @@ export class Component {
      */
     private globalAlpha: number = 1;
 
-    protected _x: number = 0;
-    protected _y: number = 0;
-    protected _w: number = 0;
-    protected _h: number = 0;
+    private _x: number = 0;
+    private _y: number = 0;
+    private _w: number = 0;
+    private _h: number = 0;
 
     protected layout: LayoutOptions;
 
     constructor(layout: LayoutOptions) {
         this.layout = layout;
 
-        this.updateAbsolutePosition(window.innerWidth / uiScaleFactor, window.innerHeight / uiScaleFactor);
+        this.calculateLayout(window.innerWidth / uiScaleFactor, window.innerHeight / uiScaleFactor);
     }
 
-    public updateAbsolutePosition(viewportWidth: number, viewportHeight: number): void {
-        const { x, y, width, height } = Layout.calculatePosition(
+    public calculateLayout(viewportWidth: number, viewportHeight: number): void {
+        const { x, y, w, h } = Layout.calculatePosition(
             this.layout,
             viewportWidth,
             viewportHeight
@@ -38,8 +38,10 @@ export class Component {
 
         this.setX(x);
         this.setY(y);
-        this.w = width;
-        this.h = height;
+        this.setW(w);
+        this.setH(h);
+
+        this.onLayoutCalculated();
     }
 
     public render(ctx: CanvasRenderingContext2D): void {
@@ -70,28 +72,18 @@ export class Component {
             }
         }
 
-        const easeOutExpo = (x: number): number => {
-            return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+        const easeOutCirc = (x: number): number => {
+            return Math.sqrt(1 - Math.pow(x - 1, 2));
         };
 
-        const progress = easeOutExpo(this.animationProgress);
+        const progress = easeOutCirc(this.animationProgress);
 
         ctx.translate(this.x + this.w / 2, this.y + (-(this.h) * (1 - progress)) + this.h / 2);
         ctx.scale(progress, progress);
         ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
     }
 
-    public setX(x: number) {
-        this.x = x;
-    }
-
-    public setY(y: number) {
-        this.y = y;
-    }
-
-    public setGlobalAlpha(globalAlpha: number) {
-        this.globalAlpha = globalAlpha;
-    }
+    public setGlobalAlpha(globalAlpha: number) { this.globalAlpha = globalAlpha }
 
     public setVisible(toggle: boolean, shouldAnimate: boolean = false) {
         if (shouldAnimate) {
@@ -110,38 +102,25 @@ export class Component {
         }
     }
 
-    // Getters and setters for x, y, w, h
-    public get x(): number {
-        return this._x;
-    }
+    public setX(x: number) { this.x = x }
+    public setY(y: number) { this.y = y }
+    public setW(w: number) { this.w = w }
+    public setH(h: number) { this.h = h }
 
-    public set x(value: number) {
-        this._x = value;
-    }
+    // Getters and setters
+    public get x(): number { return this._x; }
+    public set x(value: number) { this._x = value; }
 
-    public get y(): number {
-        return this._y;
-    }
+    public get y(): number { return this._y; }
+    public set y(value: number) { this._y = value; }
 
-    public set y(value: number) {
-        this._y = value;
-    }
+    public get w(): number { return this._w; }
+    public set w(value: number) { this._w = value; }
 
-    public get w(): number {
-        return this._w;
-    }
+    public get h(): number { return this._h; }
+    public set h(value: number) { this._h = value; }
 
-    public set w(value: number) {
-        this._w = value;
-    }
-
-    public get h(): number {
-        return this._h;
-    }
-
-    public set h(value: number) {
-        this._h = value;
-    }
+    protected abstract onLayoutCalculated?(): void;
 }
 
 // Interface for interactive components
@@ -153,6 +132,8 @@ export interface Interactive extends Component {
 // Interface for clickable components
 export interface Clickable extends Component {
     onClick?(): void;
+
+    // Generic
     onMouseDown?(): void;
     onMouseUp?(): void;
 }

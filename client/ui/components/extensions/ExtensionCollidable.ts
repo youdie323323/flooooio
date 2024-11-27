@@ -6,7 +6,7 @@ type NullableAll<T extends readonly any[]> = {
 };
 
 export default function ExtensionCollidable<T extends ExtensionConstructor>(Base: T) {
-    return class CollidablePrivateAccess extends Base implements ComponentExtensionTemplate {
+    abstract class MixedBase extends Base implements ComponentExtensionTemplate {
         private static readonly SPEED: number = 0.4;
         private collidableComponents: Component[];
         private targetPos: NullableAll<[number, number]>;
@@ -99,7 +99,7 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
             }
 
             if (this.targetPos[0] !== null) {
-                this.x += (this.targetPos[0] - this.x) * CollidablePrivateAccess.SPEED;
+                this.x += (this.targetPos[0] - this.x) * MixedBase.SPEED;
                 if (Math.abs(this.targetPos[0] - this.x) < 0.1) {
                     this.setX(this.targetPos[0]);
                     this.targetPos[0] = null;
@@ -107,12 +107,14 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
             }
 
             if (this.targetPos[1] !== null) {
-                this.y += (this.targetPos[1] - this.y) * CollidablePrivateAccess.SPEED;
+                this.y += (this.targetPos[1] - this.y) * MixedBase.SPEED;
                 if (Math.abs(this.targetPos[1] - this.y) < 0.1) {
                     this.setY(this.targetPos[1]);
                     this.targetPos[1] = null;
                 }
             }
         }
-    };
+    }
+
+    return MixedBase;
 }

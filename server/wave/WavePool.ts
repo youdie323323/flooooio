@@ -2,7 +2,7 @@ import uWS from 'uWebSockets.js';
 import { Mob, MobInstance, MOB_SIZE_FACTOR, MobData } from "../entity/mob/Mob";
 import { Player, PlayerInstance, MockPlayerData } from "../entity/player/Player";
 import { EntityId, onUpdateTick } from "../entity/Entity";
-import { isPetal, kickClient } from '../utils/common';
+import { isPetal } from '../utils/common';
 import { MOB_PROFILES } from '../../shared/mobProfiles';
 import { PETAL_PROFILES } from '../../shared/petalProfiles';
 import { isSpawnableSlot, PetalData, MockPetalData, Slot } from '../entity/mob/petal/Petal';
@@ -11,7 +11,9 @@ import { logger } from '../main';
 import WaveRoom, { WaveData, WaveRoomPlayer, WaveRoomPlayerId, WaveRoomState } from './WaveRoom';
 import { getRandomMapSafePosition, generateRandomEntityId, getRandomAngle, getRandomPosition } from '../utils/random';
 import WaveProbabilityPredictor from './WaveProbabilityPredictor';
-import { Biomes, Packet, MobType, PetalType, Rarities, Mood, MOON_VALUES } from '../../shared/enum';
+import { Biomes, MobType, PetalType, Mood, MOON_VALUES } from '../../shared/enum';
+import { Rarities } from '../../shared/rarity';
+import { ClientBound } from '../../shared/packet';
 
 // Define UserData for WebSocket connections
 export interface UserData {
@@ -102,7 +104,7 @@ export class WavePool {
     public startWave(biome: Biomes, roomCandidates: WaveRoomPlayer[]) {
         const waveStartBuffer = Buffer.alloc(2);
 
-        waveStartBuffer.writeUInt8(Packet.WAVE_ROOM_STARTING, 0);
+        waveStartBuffer.writeUInt8(ClientBound.WAVE_STARTING, 0);
 
         waveStartBuffer.writeUInt8(biome, 1);
 
@@ -268,7 +270,7 @@ export class WavePool {
         const client = this.clients.get(clientId);
         if (client && !client.isDead) {
             client.angle = angle;
-            client.magnitude = magnitude * 5;
+            client.magnitude = magnitude * Player.PLAYER_SPEED;
         }
 
         return true;
@@ -321,7 +323,7 @@ export class WavePool {
             const client = this.clients.get(id);
 
             const buffer = Buffer.alloc(1 + 1 + msg.length);
-            buffer.writeUInt8(Packet.CHAT_RECV, 0);
+            buffer.writeUInt8(ClientBound.CHAT_RECV, 0);
 
             const msgBuffer = Buffer.from(msg, 'utf-8');
             buffer.writeUInt8(msgBuffer.length, 1);
@@ -336,7 +338,7 @@ export class WavePool {
      */
     public broadcastChat(msg: string) {
         const buffer = Buffer.alloc(1 + 1 + msg.length);
-        buffer.writeUInt8(Packet.CHAT_RECV, 0);
+        buffer.writeUInt8(ClientBound.CHAT_RECV, 0);
 
         const msgBuffer = Buffer.from(msg, 'utf-8');
         buffer.writeUInt8(msgBuffer.length, 1);
@@ -359,7 +361,7 @@ export class WavePool {
     private broadcastSeldIdPacket() {
         // Reuse buffer
         const buffer = Buffer.alloc(5);
-        buffer.writeUInt8(Packet.SELF_ID, 0);
+        buffer.writeUInt8(ClientBound.SELF_ID, 0);
 
         // Loop through all WebSocket connections
         this.clients.forEach((player, clientId) => {
@@ -393,7 +395,7 @@ export class WavePool {
         let offset = 0;
 
         // Packet kind
-        buffer.writeUInt8(Packet.WAVE_UPDATE, offset++);
+        buffer.writeUInt8(ClientBound.WAVE_UPDATE, offset++);
 
         // Wave information
         buffer.writeUInt16BE(this.waveData.waveProgress, offset);

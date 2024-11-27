@@ -65,6 +65,10 @@ export default class WaveRoomService {
 
     /**
      * Removes a specific wave room from the manager.
+     * 
+     * @remarks
+     * 
+     * This release wavePool memory too.
      */
     public removeWaveRoom(waveRoom: WaveRoom) {
         waveRoom.releaseAllMemory();
@@ -73,7 +77,7 @@ export default class WaveRoomService {
 
         logger.region(() => {
             using _guard = logger.metadata({ code: waveRoom.code });
-            logger.info("Removed wave room");
+            logger.info("Removed wave (room)");
         });
     }
 

@@ -1,5 +1,5 @@
 import UserInterface, { uiScaleFactor } from "./UserInterface";
-import { UserInterfaceMode } from "./UserInterfaceManager";
+import { UserInterfaceMode } from "./UserInterfaceContext";
 import UserInterfaceMenu from "./mode/UserInterfaceModeMenu";
 
 export interface TransitionConfig {
@@ -9,6 +9,8 @@ export interface TransitionConfig {
 }
 
 export default class UserInterfaceTransition {
+    private readonly ctx: CanvasRenderingContext2D;
+
     private static readonly STROKE_WIDTH = 5;
     private static readonly STROKE_COLOR = '#000000';
 
@@ -26,11 +28,8 @@ export default class UserInterfaceTransition {
     };
 
     private radius: number;
-    private readonly canvas: HTMLCanvasElement;
-    private readonly ctx: CanvasRenderingContext2D;
 
-    constructor(canvas: HTMLCanvasElement) {
-        this.canvas = canvas;
+    constructor(private readonly canvas: HTMLCanvasElement) {
         this.ctx = canvas.getContext('2d');
         this.radius = -1;
     }
@@ -47,6 +46,7 @@ export default class UserInterfaceTransition {
     }
 
     public draw(currentUI: UserInterface, previousUI: UserInterface): void {
+        // Determine in or out
         const [innerUI, outerUI] = currentUI instanceof UserInterfaceMenu
             ? [currentUI, previousUI]
             : [previousUI, currentUI];

@@ -1,23 +1,24 @@
-import { Packet, Mood, Rarities, Biomes } from "../shared/enum";
-import { TWO_PI } from "./constants";
+import { Mood, Biomes } from "../shared/enum";
+import { ClientBound, ServerBound } from "../shared/packet";
+import { Rarities } from "../shared/rarity";
 import EntityMob from "./entity/EntityMob";
 import EntityPlayer from "./entity/EntityPlayer";
-import { players, mobs, uiManager } from "./main";
+import { players, mobs, uiCtx } from "./main";
 import UserInterfaceGame from "./ui/mode/UserInterfaceModeGame";
 
 export let selfId = -1;
 export let waveSelfId = -1;
 
 function angleToRad(angle: number) {
-    return angle / 255 * TWO_PI;
+    return angle / 255 * (Math.PI * 2);
 }
 
 function getNormalizedAngle(angle: number): number {
-    angle %= TWO_PI;
+    angle %= Math.PI * 2;
     if (angle < 0) {
-        angle += TWO_PI;
+        angle += Math.PI * 2;
     }
-    return Math.round(angle / TWO_PI * 255);
+    return Math.round(angle / (Math.PI * 2) * 255);
 }
 
 export default class Networking {
@@ -38,15 +39,17 @@ export default class Networking {
 
             const kind = data.getUint8(offset++);
             switch (kind) {
-                case Packet.SELF_ID: {
+                case ClientBound.SELF_ID: {
                     selfId = data.getUint32(offset);
+
                     break;
                 }
-                case Packet.WAVE_ROOM_SELF_ID: {
+                case ClientBound.WAVE_ROOM_SELF_ID: {
                     waveSelfId = data.getUint32(offset);
+
                     break;
                 }
-                case Packet.WAVE_UPDATE: {
+                case ClientBound.WAVE_UPDATE: {
                     // Wave informations
                     {
                         const waveProgress = data.getUint16(offset);
@@ -64,21 +67,21 @@ export default class Networking {
                         const waveSize = data.getUint16(offset);
                         offset += 2;
 
-                        if (uiManager.currentUI instanceof UserInterfaceGame) {
-                            uiManager.currentUI.waveProgress = waveProgress;
+                        if (uiCtx.currentUI instanceof UserInterfaceGame) {
+                            uiCtx.currentUI.waveProgress = waveProgress;
 
-                            uiManager.currentUI.nWaveProgressTimer = waveProgressTimer;
-                            uiManager.currentUI.oWaveProgressTimer = uiManager.currentUI.waveProgressTimer;
+                            uiCtx.currentUI.nWaveProgressTimer = waveProgressTimer;
+                            uiCtx.currentUI.oWaveProgressTimer = uiCtx.currentUI.waveProgressTimer;
 
-                            uiManager.currentUI.nWaveProgressRedGageTimer = waveProgressRedGageTimer;
-                            uiManager.currentUI.oWaveProgressRedGageTimer = uiManager.currentUI.waveProgressRedGageTimer;
+                            uiCtx.currentUI.nWaveProgressRedGageTimer = waveProgressRedGageTimer;
+                            uiCtx.currentUI.oWaveProgressRedGageTimer = uiCtx.currentUI.waveProgressRedGageTimer;
 
-                            uiManager.currentUI.waveEnded = waveEnded;
+                            uiCtx.currentUI.waveEnded = waveEnded;
 
-                            uiManager.currentUI.nWorldSize = waveSize;
-                            uiManager.currentUI.oWorldSize = uiManager.currentUI.worldSize;
+                            uiCtx.currentUI.nWorldSize = waveSize;
+                            uiCtx.currentUI.oWorldSize = uiCtx.currentUI.worldSize;
 
-                            uiManager.currentUI.updateT = 0;
+                            uiCtx.currentUI.updateT = 0;
                         }
                     };
 
@@ -235,7 +238,7 @@ export default class Networking {
 
                     break;
                 }
-                case Packet.WAVE_ROOM_UPDATE: {
+                case ClientBound.WAVE_ROOM_UPDATE: {
                     const waveClientCount = data.getUint8(offset++);
 
                     const clients = [];
@@ -267,40 +270,40 @@ export default class Networking {
 
                     console.log(waveCode, waveBiome, waveState, waveIsPublic);
 
-                    if (uiManager.previousUI) {
-                        uiManager.previousUI.biome = waveBiome;
+                    if (uiCtx.previousUI) {
+                        uiCtx.previousUI.biome = waveBiome;
                     }
-                    if (uiManager.currentUI) {
-                        uiManager.currentUI.biome = waveBiome;
+                    if (uiCtx.currentUI) {
+                        uiCtx.currentUI.biome = waveBiome;
                     }
 
                     break;
                 }
-                case Packet.WAVE_ROOM_STARTING: {
-                    uiManager.switchUI("game");
+                case ClientBound.WAVE_STARTING: {
+                    uiCtx.switchUI("game");
 
                     const waveBiome = data.getUint8(offset++) as Biomes;
 
-                    if (uiManager.previousUI) {
-                        uiManager.previousUI.biome = waveBiome;
+                    if (uiCtx.previousUI) {
+                        uiCtx.previousUI.biome = waveBiome;
                     }
-                    if (uiManager.currentUI) {
-                        uiManager.currentUI.biome = waveBiome;
+                    if (uiCtx.currentUI) {
+                        uiCtx.currentUI.biome = waveBiome;
                     }
 
                     break;
                 }
-                case Packet.WAVE_ROOM_JOIN_FAILED: {
+                case ClientBound.WAVE_ROOM_JOIN_FAILED: {
                     alert("Invalid squad code");
 
                     break;
                 }
-                case Packet.CHAT_RECV: {
-                    if (uiManager.currentUI instanceof UserInterfaceGame) {
-                        uiManager.currentUI.chats.push(readString());
-                        console.log(uiManager.currentUI.chats.slice())
-                        if (uiManager.currentUI.chats.length > UserInterfaceGame.MAX_MESSAGE_QUEUE_AMOUNT) {
-                            uiManager.currentUI.chats.shift();
+                case ClientBound.CHAT_RECV: {
+                    if (uiCtx.currentUI instanceof UserInterfaceGame) {
+                        uiCtx.currentUI.chats.push(readString());
+                        console.log(uiCtx.currentUI.chats.slice());
+                        if (uiCtx.currentUI.chats.length > UserInterfaceGame.MAX_MESSAGE_QUEUE_AMOUNT) {
+                            uiCtx.currentUI.chats.shift();
                         }
                     }
 
@@ -310,19 +313,19 @@ export default class Networking {
         };
     }
 
-    sendAngle(angle: number, magnitude = 1) {
+    public sendAngle(angle: number, magnitude = 1) {
         const normalizedAngle = getNormalizedAngle(angle);
-        const data = new Uint8Array([Packet.MOVE, normalizedAngle, Math.round(magnitude * 255)]);
+        const data = new Uint8Array([ServerBound.MOVE, normalizedAngle, Math.round(magnitude * 255)]);
         this.ws.send(data);
     }
 
-    sendMood(flag: Mood) {
-        const data = new Uint8Array([Packet.MOOD, flag]);
+    public sendMood(flag: Mood) {
+        const data = new Uint8Array([ServerBound.MOOD, flag]);
         this.ws.send(data);
     }
 
-    sendSwapPetal(index: number) {
-        const data = new Uint8Array([Packet.SWAP_PETAL, index]);
+    public sendSwapPetal(index: number) {
+        const data = new Uint8Array([ServerBound.SWAP_PETAL, index]);
         this.ws.send(data);
     }
 }

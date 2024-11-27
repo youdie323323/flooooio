@@ -1,6 +1,3 @@
-// Original: https://github.com/NaokiHori/EllipsesInFlows/tree/main/docs/source/collision/data
-// https://qiita.com/NaokiHori/items/daf3fd191d51a7e682f8
-
 export interface Point {
     x: number;
     y: number;

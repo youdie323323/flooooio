@@ -1,4 +1,5 @@
-import { Rarities, PetalType } from "../../../../shared/enum";
+import { PetalType } from "../../../../shared/enum";
+import { Rarities } from "../../../../shared/rarity";
 import { MobInstance } from "../Mob";
 
 export interface PetalStat {

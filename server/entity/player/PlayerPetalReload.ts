@@ -4,7 +4,8 @@ import { Mob, MobInstance } from "../mob/Mob";
 import { BasePlayer, PlayerInstance } from "./Player";
 import { isSpawnableSlot, PetalData } from "../mob/petal/Petal";
 import { PETAL_PROFILES } from "../../../shared/petalProfiles";
-import { PetalType, MobType, Rarities } from "../../../shared/enum";
+import { PetalType, MobType } from "../../../shared/enum";
+import { Rarities } from "../../../shared/rarity";
 
 export const USAGE_RELOAD_PETALS: Set<PetalType | MobType> = new Set([
     PetalType.BEETLE_EGG,

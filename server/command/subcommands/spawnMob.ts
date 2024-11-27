@@ -1,4 +1,5 @@
-import { MobType, Rarities } from "../../../shared/enum";
+import { MobType } from "../../../shared/enum";
+import { Rarities } from "../../../shared/rarity";
 import { SAFETY_DISTANCE } from "../../entity/EntityWorldBoundary";
 import { waveRoomService } from "../../main";
 import { getRandomMapSafePosition } from "../../utils/random";

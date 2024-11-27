@@ -11,7 +11,10 @@ export interface Updatable {
 
 export type ComponentExtensionTemplate = Updatable & { [key: string]: any };
 
-export type ExtensionConstructor = new (...args: any[]) => Component & Partial<Updatable>;
+/**
+ * Type alias that represent component class, with maybe update method included.
+ */
+export type ExtensionConstructor = abstract new (...args: any[]) => Component & Partial<Updatable>;
 
 /**
  * Extension that atleast ensure class has one extension.
@@ -21,11 +24,13 @@ export type ExtensionConstructor = new (...args: any[]) => Component & Partial<U
  * Because need to tell compiler its have update so no need to remove update() from render method.
  */
 export default function ExtensionPlaceholder<T extends ExtensionConstructor>(Base: T) {
-    return class extends Base implements ComponentExtensionTemplate {
+    abstract class MixedBase extends Base implements ComponentExtensionTemplate {
         public update: UpdateFunction = () => {
             if (typeof super.update === 'function') {
                 super.update();
             }
         }
-    };
+    }
+
+    return MixedBase;
 }

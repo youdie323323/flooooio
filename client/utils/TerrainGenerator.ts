@@ -1,6 +1,5 @@
 import { Canvg, presets } from "canvg";
 import { cameraController } from "../main";
-import { TWO_PI } from "../constants";
 import { Biomes } from "../../shared/enum";
 import { uiScaleFactor } from "../ui/UserInterface";
 
@@ -288,7 +287,7 @@ export const BIOME_SVG_TILESETS: Record<Biomes, string[]> = {
     ],
 };
 
-export default class TilesetManager {
+export default class TerrainGenerator {
     static async generateTilesets<T extends keyof typeof BIOME_SVG_TILESETS>(biome: T): Promise<OffscreenCanvas[]> {
         const generatedTilesets = new Array(BIOME_SVG_TILESETS[biome].length);
         for (let i = 0; i < BIOME_SVG_TILESETS[biome].length; i++) {
@@ -351,7 +350,8 @@ export default class TilesetManager {
         ctx.arc(
             relativeCenterX,
             relativeCenterY,
-            (radius + 0.5) * zoom + ctx.lineWidth / 2, 0, TWO_PI,
+            (radius + 0.5) * zoom + ctx.lineWidth / 2, 0, 
+            Math.PI * 2,
         );
         ctx.stroke();
         ctx.closePath();

@@ -2,38 +2,39 @@ import EntityPlayer from "./entity/EntityPlayer";
 import CameraController from "./utils/CameraController";
 import EntityMob from "./entity/EntityMob";
 import { interpolate } from "./utils/Interpolator";
-import UserInterfaceManager from "./ui/UserInterfaceManager";
+import UserInterfaceContext from "./ui/UserInterfaceContext";
 import Networking from "./Networking";
-import TilesetManager, { BIOME_SVG_TILESETS, BIOME_TILESETS } from "./utils/WorldManager";
+import TerrainGenerator, { BIOME_SVG_TILESETS, BIOME_TILESETS } from "./utils/TerrainGenerator";
 import { Biomes, Mood } from "../shared/enum";
 import { uiScaleFactor } from "./ui/UserInterface";
 
+const canvas: HTMLCanvasElement = document.querySelector('#canvas');
+
 export let ws: WebSocket;
+export let networking: Networking;
 
 export let lastTimestamp = Date.now();
 export let deltaTime = 0;
 export let timeFactor = 0;
 export let prevTimestamp = lastTimestamp;
 
-export let interpolatedMouseX = 0;
-export let interpolatedMouseY = 0;
-
 export let antennaScaleFactor = 1;
 
 export const players: Map<number, EntityPlayer> = new Map();
 export const mobs: Map<number, EntityMob> = new Map();
 
-const canvas: HTMLCanvasElement = document.querySelector('#canvas');
-const ctx: CanvasRenderingContext2D = canvas.getContext("2d");
-
 export const cameraController = new CameraController(canvas);
 
-export const uiManager = new UserInterfaceManager(canvas);
+/**
+ * Global instanceof ui context.
+ */
+export const uiCtx = new UserInterfaceContext(canvas);
 
 (async function () {
+    // Generate tilesets beforehand so no need to generate them multiple times
     for (const biome in BIOME_SVG_TILESETS) {
         const parsedBiome = parseInt(biome) as Biomes;
-        BIOME_TILESETS.set(parsedBiome, await TilesetManager.generateTilesets(parsedBiome));
+        BIOME_TILESETS.set(parsedBiome, await TerrainGenerator.generateTilesets(parsedBiome));
     }
 
     function showElement(id: string) {
@@ -73,53 +74,10 @@ export const uiManager = new UserInterfaceManager(canvas);
         return;
     }
 
-    const networking = new Networking(ws);
+    // Reassign them, to access networking from anywhere
+    networking = new Networking(ws);
 
-    // Add all global listeners (interaction)
-
-    let mouseXOffset = 0;
-    let mouseYOffset = 0;
-
-    {
-        // Mouse move event handler
-        canvas.onmousemove = function (event) {
-            mouseXOffset = event.clientX - document.documentElement.clientWidth / 2;
-            mouseYOffset = event.clientY - document.documentElement.clientHeight / 2;
-
-            const distance = Math.hypot(mouseXOffset, mouseYOffset);
-            const angle = Math.atan2(mouseYOffset, mouseXOffset);
-            networking.sendAngle(angle, distance < 50 ? distance / 100 : 1);
-        };
-
-        window.onmousedown = function (e: MouseEvent) {
-            if (e.button === 0 || e.button === 2) {
-                networking.sendMood(e.button === 0 ? Mood.ANGRY : e.button === 2 ? Mood.SAD : Mood.NORMAL);
-            }
-        };
-
-        window.onmouseup = function (e: MouseEvent) {
-            if (e.button === 0 || e.button === 2) {
-                networking.sendMood(Mood.NORMAL);
-            }
-        };
-
-        document.onkeydown = function (e) {
-            if (e.type === "keydown") {
-                switch (e.code) {
-                    default: {
-                        if (e.code.startsWith("Digit")) {
-                            let index = parseInt(e.code.slice(5));
-                            if (index === 0) {
-                                index = 10;
-                            }
-                            index--;
-                            networking.sendSwapPetal(index);
-                        }
-                    }
-                }
-            }
-        };
-    }
+    const ctx: CanvasRenderingContext2D = canvas.getContext("2d");
 
     (function frame() {
         lastTimestamp = Date.now();
@@ -129,14 +87,11 @@ export const uiManager = new UserInterfaceManager(canvas);
 
         antennaScaleFactor = cameraController.zoom;
 
-        interpolatedMouseX = interpolate(interpolatedMouseX, mouseXOffset / antennaScaleFactor, 50);
-        interpolatedMouseY = interpolate(interpolatedMouseY, mouseYOffset / antennaScaleFactor, 50);
-
         ctx.save();
 
         ctx.scale(uiScaleFactor, uiScaleFactor);
 
-        uiManager.update();
+        uiCtx.update();
 
         ctx.restore();
 
