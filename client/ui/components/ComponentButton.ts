@@ -1,5 +1,5 @@
 import { Canvg, presets } from "canvg";
-import { calculateStrokeWidth, darkend, DARKEND_BASE } from "../../utils/common";
+import { calculateStrokeWidth, ColorCode, darkend, DARKEND_BASE } from "../../utils/common";
 import { Clickable, Component, Interactive } from "./Component";
 import Layout, { LayoutOptions } from "../layout/Layout";
 import ExtensionPlaceholder from "./extensions/Extension";
@@ -10,7 +10,7 @@ export class ComponentButton extends ExtensionPlaceholder(Component) implements 
     public isPressed: boolean = false;
     public isHovered: boolean = false;
 
-    constructor(layout: LayoutOptions, protected readonly color: string, private readonly callback: () => void) {
+    constructor(layout: LayoutOptions, protected readonly color: ColorCode, private readonly callback: () => void) {
         super(layout);
     }
 
@@ -44,13 +44,13 @@ export class ComponentButton extends ExtensionPlaceholder(Component) implements 
         return this.color;
     }
 
-    protected onLayoutCalculated?(): void { }
+    public destroy?(): void { }
 }
 
 export class ComponentTextButton extends ComponentButton {
     constructor(
         layout: LayoutOptions,
-        color: string,
+        color: ColorCode,
         callback: () => void,
         private readonly text: string
     ) {
@@ -121,7 +121,7 @@ export class ComponentSVGButton extends ComponentButton {
 
     constructor(
         layout: LayoutOptions,
-        color: string,
+        color: ColorCode,
         callback: () => void,
         private readonly svg: string
     ) {

@@ -1,5 +1,5 @@
 import { Biomes } from "../../shared/enum";
-import { Clickable, Component, Interactive } from "./components/Component";
+import { Clickable, Component, Container, Interactive } from "./components/Component";
 import { ComponentButton } from "./components/ComponentButton";
 
 export interface BiomeSetter {
@@ -18,6 +18,9 @@ export default abstract class UserInterface {
 
     private components: Component[] = [];
 
+    // Store children component to not render from UserInterface
+    private childrenComponents: Set<Component> = new Set();
+
     private hoveredComponent: Interactive | null = null;
     private clickedComponent: Clickable | null = null;
 
@@ -32,29 +35,9 @@ export default abstract class UserInterface {
     private _onresize: () => void;
 
     constructor(protected canvas: HTMLCanvasElement) {
-        // Initialize components first
-        this.regenerateComponents();
+        // Initialize components
+        this.initializeComponents();
 
-        this.setupEventListeners();
-    }
-
-    protected addComponent(component: Component): void {
-        this.components.push(component);
-    }
-
-    public overlapsComponent(component: Component, x: number, y: number): boolean {
-        return x >= component.x && x <= component.x + component.w && y >= component.y && y <= component.y + component.h;
-    }
-
-    private isInteractive(component: Component): component is Interactive {
-        return "onMouseEnter" in component;
-    }
-
-    private isClickable(component: Component): component is Clickable {
-        return "onClick" in component;
-    }
-
-    private setupEventListeners(): void {
         this._mousedown = this.handleMouseDown.bind(this);
         this._mouseup = this.handleMouseUp.bind(this);
         this._mousemove = this.handleMouseMove.bind(this);
@@ -77,7 +60,12 @@ export default abstract class UserInterface {
             this.canvas.width = width;
             this.canvas.height = height;
 
-            this.regenerateComponents();
+            uiScaleFactor = Math.max(
+                document.documentElement.clientWidth / UI_BASE_WIDTH,
+                document.documentElement.clientHeight / UI_BASE_HEIGHT
+            );
+
+            this.updateComponentsLayout();
         };
 
         // Call them first like resize observer
@@ -98,6 +86,47 @@ export default abstract class UserInterface {
 
         this.resizeObserver.observe(this.canvas);
         */
+    }
+
+    protected addComponent(component: Component): void {
+        this.components.push(component);
+    }
+
+    protected removeComponent(component: Component): void {
+        const index = this.components.indexOf(component);
+        if (index > -1) {
+            this.components.splice(index, 1);
+        }
+    }
+
+    protected addChildrenComponent(targetContainer: Container, component: Component): void {
+        targetContainer.addChildren(component);
+
+        this.addComponent(component);
+
+        if (!this.childrenComponents.has(component)) {
+            this.childrenComponents.add(component);
+        }
+    }
+
+    protected removeChildrenComponent(targetContainer: Container, component: Component): void {
+        targetContainer.removeChildren(component);
+
+        this.removeComponent(component);
+
+        this.childrenComponents.delete(component);
+    }
+    
+    public overlapsComponent(component: Component, x: number, y: number): boolean {
+        return x >= component.x && x <= component.x + component.w && y >= component.y && y <= component.y + component.h;
+    }
+
+    private isInteractive(component: Component): component is Interactive {
+        return "onMouseEnter" in component;
+    }
+
+    private isClickable(component: Component): component is Clickable {
+        return "onClick" in component;
     }
 
     public removeEventListeners(): void {
@@ -123,21 +152,7 @@ export default abstract class UserInterface {
         this._keyup = null;
     }
 
-    private regenerateComponents() {
-        uiScaleFactor = Math.max(
-            document.documentElement.clientWidth / UI_BASE_WIDTH,
-            document.documentElement.clientHeight / UI_BASE_HEIGHT
-        );
-
-        // TODO: dont initialize components in resize, too laggy
-
-        this.components = [];
-
-        this.hoveredComponent = null;
-        this.clickedComponent = null;
-
-        this.initializeComponents();
-
+    private updateComponentsLayout() {
         const scaledWidth = this.canvas.width / uiScaleFactor;
         const scaledHeight = this.canvas.height / uiScaleFactor;
 
@@ -231,7 +246,14 @@ export default abstract class UserInterface {
     }
 
     public cleanupRenders(): void {
+        this.components.forEach(c => {
+            c.destroy();
+        });
+
         this.components = [];
+
+        this.childrenComponents = new Set();
+
         this.hoveredComponent = null;
         this.clickedComponent = null;
     }
@@ -242,7 +264,7 @@ export default abstract class UserInterface {
 
         // Render all visible components
         this.components.forEach(component => {
-            if (component.visible) {
+            if (component.visible && !this.childrenComponents.has(component)) {
                 ctx.save();
 
                 component.render(ctx);
@@ -253,7 +275,7 @@ export default abstract class UserInterface {
     }
 
     /**
-     * Method for initialize components, call upon every resize.
+     * Method for initialize components, only called for once.
      */
     protected abstract initializeComponents(): void;
     public abstract animationFrame(): void;

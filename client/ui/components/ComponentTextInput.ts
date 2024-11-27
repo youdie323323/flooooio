@@ -821,7 +821,7 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
         }
     }
 
-    public destroy() {
+    public destroy?() {
         let self = this;
 
         let index = inputs.indexOf(self);
@@ -888,6 +888,24 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
         // Calculate the full width and height with padding and borders
         self.outerW = self.w + self._padding * 2 + self._borderWidth * 2;
         self.outerH = self.h + self._padding * 2 + self._borderWidth * 2;
+    }
+
+    // Override them to calc wh
+
+    public override setW(w: number) {
+        let self = this;
+
+        this.w = w;
+
+        self._calcWH();
+    }
+
+    public override setH(h: number) {
+        let self = this;
+
+        this.h = h;
+
+        self._calcWH();
     }
 
     private _overInput(x: number, y: number) {

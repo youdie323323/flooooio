@@ -4,10 +4,7 @@ import { Component, Interactive } from "./Component";
 import ExtensionPlaceholder from "./extensions/Extension";
 import ExtensionCollidable from "./extensions/ExtensionCollidable";
 
-/**
- * Text component that have collision.
- */
-export default class ComponentDynamicText extends ExtensionCollidable(ExtensionPlaceholder(Component)) {
+export default class ComponentDynamicText extends ExtensionPlaceholder(Component) {
     constructor(
         layout: LayoutOptions,
         private readonly text: string,
@@ -37,5 +34,5 @@ export default class ComponentDynamicText extends ExtensionCollidable(ExtensionP
         ctx.fillText(this.text, 0, 0);
     }
 
-    protected onLayoutCalculated?(): void { }
+    public destroy?(): void { }
 }

@@ -16,32 +16,33 @@ export abstract class Component {
      */
     private globalAlpha: number = 1;
 
-    private _x: number = 0;
-    private _y: number = 0;
-    private _w: number = 0;
-    private _h: number = 0;
+    public x: number = 0;
+    public y: number = 0;
+    public w: number = 0;
+    public h: number = 0;
 
-    protected layout: LayoutOptions;
-
-    constructor(layout: LayoutOptions) {
-        this.layout = layout;
-
+    constructor(protected layout: LayoutOptions) {
         this.calculateLayout(window.innerWidth / uiScaleFactor, window.innerHeight / uiScaleFactor);
     }
 
-    public calculateLayout(viewportWidth: number, viewportHeight: number): void {
+    public calculateLayout(
+        viewportWidth: number, 
+        viewportHeight: number,
+        originX: number = 0,
+        originY: number = 0 
+    ): void {
         const { x, y, w, h } = Layout.calculatePosition(
             this.layout,
             viewportWidth,
-            viewportHeight
+            viewportHeight,
+            originX,
+            originY,
         );
 
         this.setX(x);
         this.setY(y);
         this.setW(w);
         this.setH(h);
-
-        this.onLayoutCalculated();
     }
 
     public render(ctx: CanvasRenderingContext2D): void {
@@ -102,25 +103,13 @@ export abstract class Component {
         }
     }
 
+    // Wrap these prop so components can override this method
     public setX(x: number) { this.x = x }
     public setY(y: number) { this.y = y }
     public setW(w: number) { this.w = w }
     public setH(h: number) { this.h = h }
 
-    // Getters and setters
-    public get x(): number { return this._x; }
-    public set x(value: number) { this._x = value; }
-
-    public get y(): number { return this._y; }
-    public set y(value: number) { this._y = value; }
-
-    public get w(): number { return this._w; }
-    public set w(value: number) { this._w = value; }
-
-    public get h(): number { return this._h; }
-    public set h(value: number) { this._h = value; }
-
-    protected abstract onLayoutCalculated?(): void;
+    public abstract destroy?(): void;
 }
 
 // Interface for interactive components
@@ -136,4 +125,12 @@ export interface Clickable extends Component {
     // Generic
     onMouseDown?(): void;
     onMouseUp?(): void;
+}
+
+// Interface for container components
+export interface Container extends Component {
+    children: Component[];
+
+    addChildren(child: Component): void;
+    removeChildren(child: Component): void;
 }

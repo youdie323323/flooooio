@@ -8,6 +8,8 @@ import { Biomes, PetalType } from "../../../shared/enum";
 import ComponentDynamicText from "../components/ComponentDynamicText";
 import { Rarities } from "../../../shared/rarity";
 import { ServerBound } from "../../../shared/packet";
+import ComponentContainer from "../components/ComponentContainer";
+import ExtensionCollidable from "../components/extensions/ExtensionCollidable";
 
 // Ui svg icons
 
@@ -51,13 +53,8 @@ export default class UserInterfaceMenu extends UserInterface {
     private lastBackgroundEntitySpawn: number;
 
     private connectingText: ComponentDynamicText;
-    private connectingTextLoaded: boolean = false;
-
     private loggingInText: ComponentDynamicText;
-    private loggingInTextLoadded: boolean = false;
-
     private playableButtons: ComponentButton[];
-    private playableButtonsLoaded: boolean = false;
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
@@ -72,19 +69,13 @@ export default class UserInterfaceMenu extends UserInterface {
 
         setTimeout(() => {
             this.connectingText.setVisible(true, true);
-            this.connectingTextLoaded = true;
             setTimeout(() => {
                 this.connectingText.setVisible(false, true);
                 setTimeout(() => {
                     this.loggingInText.setVisible(true, true);
-                    this.loggingInTextLoadded = true;
-                    this.connectingTextLoaded = false;
                     setTimeout(() => {
                         this.loggingInText.setVisible(false, true);
-                        this.loggingInTextLoadded = false;
                         setTimeout(() => {
-                            this.playableButtonsLoaded = true;
-
                             this.playableButtons.forEach((b) => {
                                 b.setVisible(true, true);
                             });
@@ -103,15 +94,14 @@ export default class UserInterfaceMenu extends UserInterface {
     onMouseMove(event: MouseEvent): void { }
 
     protected initializeComponents(): void {
-        const widthRelative = this.canvas.width / uiScaleFactor;
-        const heightRelative = this.canvas.height / uiScaleFactor;
-
         const bagButton = new ComponentSVGButton(
             {
                 x: 15,
-                y: heightRelative - 229,
+                y: 229,
                 w: 45,
                 h: 45,
+
+                invertYCoordinate: true,
             },
             "#599dd8",
             () => {
@@ -125,9 +115,11 @@ export default class UserInterfaceMenu extends UserInterface {
         const craftButton = new ComponentSVGButton(
             {
                 x: 15,
-                y: heightRelative - 173,
+                y: 173,
                 w: 45,
                 h: 45,
+
+                invertYCoordinate: true,
             },
             "#db9d5a",
             () => {
@@ -141,9 +133,11 @@ export default class UserInterfaceMenu extends UserInterface {
         const changelogButton = new ComponentSVGButton(
             {
                 x: 15,
-                y: heightRelative - 116,
+                y: 116,
                 w: 45,
                 h: 45,
+
+                invertYCoordinate: true,
             },
             "#9bb56b",
             () => {
@@ -160,10 +154,13 @@ export default class UserInterfaceMenu extends UserInterface {
 
         const readyButton = new ComponentTextButton(
             {
-                x: (widthRelative / 2) - 90 / 2,
-                y: ((heightRelative / 2) - 40 * 3),
+                x: -(90 / 2),
+                y: -(40 * 3),
                 w: 90,
                 h: 30,
+
+                alignFromCenterX: true,
+                alignFromCenterY: true,
             },
             "#1dd129",
             async () => {
@@ -174,10 +171,13 @@ export default class UserInterfaceMenu extends UserInterface {
 
         const joinSquadButton = new ComponentTextButton(
             {
-                x: (widthRelative / 2) - 90 / 2,
-                y: ((heightRelative / 2) - 40 * 3) + 40,
+                x: -(90 / 2),
+                y: (-(40 * 3)) + 40,
                 w: 90,
                 h: 30,
+
+                alignFromCenterX: true,
+                alignFromCenterY: true,
             },
             "#1dd129",
             async () => {
@@ -192,10 +192,13 @@ export default class UserInterfaceMenu extends UserInterface {
 
         const joinPublicSquadButton = new ComponentTextButton(
             {
-                x: (widthRelative / 2) - 90 / 2,
-                y: ((heightRelative / 2) - 40 * 3) + 40 + 40,
+                x: - (90 / 2),
+                y: (-(40 * 3)) + 40 + 40,
                 w: 90,
                 h: 30,
+
+                alignFromCenterX: true,
+                alignFromCenterY: true,
             },
             "#1dd129",
             async () => {
@@ -206,10 +209,13 @@ export default class UserInterfaceMenu extends UserInterface {
 
         const leaveSquadButton = new ComponentTextButton(
             {
-                x: (widthRelative / 2) - 90 / 2,
-                y: ((heightRelative / 2) - 40 * 3) + 40 + 40 + 40,
+                x: -(90 / 2),
+                y: (-(40 * 3)) + 40 + 40 + 40,
                 w: 90,
                 h: 30,
+
+                alignFromCenterX: true,
+                alignFromCenterY: true,
             },
             "#1dd129",
             async () => {
@@ -220,10 +226,13 @@ export default class UserInterfaceMenu extends UserInterface {
 
         const createPublicButton = new ComponentTextButton(
             {
-                x: (widthRelative / 2) - 90 / 2,
-                y: ((heightRelative / 2) - 40 * 3) + 40 + 40 + 40 + 40,
+                x: -(90 / 2),
+                y: (-(40 * 3)) + 40 + 40 + 40 + 40,
                 w: 90,
                 h: 30,
+
+                alignFromCenterX: true,
+                alignFromCenterY: true,
             },
             "#1dd129",
             async () => {
@@ -234,10 +243,13 @@ export default class UserInterfaceMenu extends UserInterface {
 
         const setPublicButton = new ComponentTextButton(
             {
-                x: (widthRelative / 2) - 90 / 2,
-                y: ((heightRelative / 2) - 40 * 3) + 40 + 40 + 40 + 40 + 40,
+                x: -(90 / 2),
+                y: (-(40 * 3)) + 40 + 40 + 40 + 40 + 40,
                 w: 90,
                 h: 30,
+
+                alignFromCenterX: true,
+                alignFromCenterY: true,
             },
             "#1dd129",
             async () => {
@@ -248,10 +260,13 @@ export default class UserInterfaceMenu extends UserInterface {
 
         const setPrivateButton = new ComponentTextButton(
             {
-                x: (widthRelative / 2) - 90 / 2,
-                y: ((heightRelative / 2) - 40 * 3) + 40 + 40 + 40 + 40 + 40 + 40,
+                x: -(90 / 2),
+                y: (-(40 * 3)) + 40 + 40 + 40 + 40 + 40 + 40,
                 w: 90,
                 h: 30,
+
+                alignFromCenterX: true,
+                alignFromCenterY: true,
             },
             "#1dd129",
             async () => {
@@ -268,7 +283,7 @@ export default class UserInterfaceMenu extends UserInterface {
         this.playableButtons.push(setPublicButton);
         this.playableButtons.push(setPrivateButton);
 
-        this.playableButtons.forEach(b => b.setVisible(this.playableButtonsLoaded));
+        this.playableButtons.forEach(b => b.setVisible(false));
 
         this.addComponent(readyButton);
         this.addComponent(joinSquadButton);
@@ -281,40 +296,49 @@ export default class UserInterfaceMenu extends UserInterface {
         // Text
         this.connectingText = new ComponentDynamicText(
             {
-                x: (widthRelative / 2) - (200 / 2),
-                y: (heightRelative / 2) - (40 / 2) - 5,
+                x: -(200 / 2),
+                y: (-(40 / 2)) - 5,
                 w: 200,
                 h: 40,
+
+                alignFromCenterX: true,
+                alignFromCenterY: true,
             },
             "Connecting...",
             32,
         );
 
-        this.connectingText.setVisible(this.connectingTextLoaded);
+        this.connectingText.setVisible(false);
 
         this.addComponent(this.connectingText);
 
         this.loggingInText = new ComponentDynamicText(
             {
-                x: (widthRelative / 2) - (200 / 2),
-                y: (heightRelative / 2) - (40 / 2) - 5,
+                x: -(200 / 2),
+                y: (-(40 / 2)) - 5,
                 w: 200,
                 h: 40,
+
+                alignFromCenterX: true,
+                alignFromCenterY: true,
             },
             "Logging in...",
             32,
         );
 
-        this.loggingInText.setVisible(this.loggingInTextLoadded);
+        this.loggingInText.setVisible(false);
 
         this.addComponent(this.loggingInText);
 
-        const gameNameText = new ComponentDynamicText(
+        const gameNameText = new (ExtensionCollidable(ComponentDynamicText))(
             {
-                x: (widthRelative / 2) - (250 / 2),
-                y: (heightRelative / 2) - (80 / 2) - 40,
+                x: -(250 / 2),
+                y: (-(80 / 2)) - 40,
                 w: 250,
                 h: 80,
+
+                alignFromCenterX: true,
+                alignFromCenterY: true,
             },
             "floooo.io",
             54,
@@ -324,6 +348,32 @@ export default class UserInterfaceMenu extends UserInterface {
         gameNameText.addCollidableComponents(this.playableButtons);
 
         this.addComponent(gameNameText);
+
+        const testContainer = new ComponentContainer(
+            {
+                x: 300,
+                y: 300,
+                w: 300,
+                h: 100,
+            },
+            "#5a9fdb",
+        );
+
+        const haheheh = new ComponentTextButton(
+            {
+                x: 10,
+                y: 10,
+                w: 40,
+                h: 40,
+            },
+            "#1dd129",
+            async () => {},
+            "Set private"
+        );
+
+        this.addChildrenComponent(testContainer, haheheh);
+
+        this.addComponent(testContainer);
     }
 
     private generateRandomBgVector(): Vector3 {

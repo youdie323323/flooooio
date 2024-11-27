@@ -126,7 +126,6 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
     private deadAnimationTimer: number;
 
     private chatInput: ComponentTextInput;
-    private chatValue: string;
     public chats: string[];
 
     private terrainGenerator: TerrainGenerator;
@@ -156,8 +155,6 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
         this.gameOverOpacity = 0;
 
         this.waveEnded = false;
-
-        this.chatValue = "";
 
         this.chats = [];
     }
@@ -316,22 +313,20 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
 
         this.addComponent(this.deadMenuContinueButton);
 
-        if (this.chatInput) {
-            this.chatInput.destroy();
-        }
-
         // TODO: dont continue if 
 
         this.chatInput = new ComponentTextInput(
             {
                 x: 13,
-                y: heightRelative - 34,
+                y: 34,
                 w: 192,
                 h: 8,
+
+                invertYCoordinate: true,
             },
             {
                 canvas: this.canvas,
-                value: this.chatValue,
+                value: "",
 
                 fontSize: 11,
                 fontFamily: 'Ubuntu',
@@ -350,12 +345,7 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
                     // Send chat
                     ws.send(new Uint8Array([ServerBound.CHAT_SENT, chatMessage.length, ...new TextEncoder().encode(chatMessage)]));
 
-                    this.chatValue = "";
-                    self.value(this.chatValue);
-                },
-
-                onkeyup: (e, self) => {
-                    this.chatValue = self.value();
+                    self.value("");
                 },
             },
         );
@@ -750,10 +740,6 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
 
     public cleanup(): void {
         this.terrainGenerator = undefined;
-
-        if (this.chatInput) {
-            this.chatInput.destroy();
-        }
 
         players.clear();
         mobs.clear();

@@ -20,6 +20,17 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
             this.initialPos = [this.x, this.y];
         }
 
+        // Override layout calculate to reset initial pos
+        public override calculateLayout(
+            viewportWidth: number,
+            viewportHeight: number,
+            originX: number = 0,
+            originY: number = 0
+        ): void {
+            super.calculateLayout(viewportWidth, viewportHeight, originX, originY);
+            this.initialPos = [this.x, this.y];
+        }
+
         private isColliding(component: Component): boolean {
             return !(
                 this.x + this.w < component.x ||
@@ -83,7 +94,7 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
             if (typeof super.update === 'function') {
                 super.update();
             }
-            
+
             let hasCollision = false;
 
             this.filterCollidable(this.collidableComponents).forEach(component => {
