@@ -611,7 +611,7 @@ export default class TextInput extends ExtensionPlaceholder(Component) {
             }
         }
 
-        this._changeCursor(isOver);
+        this._changeCursor(x, y, isOver);
     }
 
     private mousedown(e: MouseEvent | TouchEvent, self: this) {
@@ -634,7 +634,7 @@ export default class TextInput extends ExtensionPlaceholder(Component) {
             self._selectionStart = self._clickPos(x, y);
         }
 
-        this._changeCursor(isOver);
+        this._changeCursor(x, y, isOver);
     }
 
     private mouseup(e: MouseEvent | TouchEvent, self: this) {
@@ -660,12 +660,24 @@ export default class TextInput extends ExtensionPlaceholder(Component) {
         self._hiddenInput.selectionEnd = range[1];
     }
 
-    private _changeCursor(isOver: boolean) {
+    private _changeCursor(x: number, y: number, isOver: boolean) {
         let self = this;
 
         if (self._canvas) {
             // Original input has two types while has focus, maybe padding?
-            self._canvas.style.cursor = isOver ? self._hasFocus ? "text" : "pointer" : "default";
+            if (inputs.length > 1) {
+                self._canvas.style.cursor = isOver ? self._hasFocus ? "text" : "pointer" : "default";
+
+                for (let input of inputs) {
+                    const cursorStyle = input._overInput(x, y) ? input._hasFocus ? "text" : "pointer" : "default";
+                    if (cursorStyle !== "default") {
+                        self._canvas.style.cursor = cursorStyle;
+                        break;
+                    }
+                }
+            } else {
+                self._canvas.style.cursor = isOver ? self._hasFocus ? "text" : "pointer" : "default";
+            }
         }
     }
 
@@ -917,9 +929,9 @@ export default class TextInput extends ExtensionPlaceholder(Component) {
     private _overInput(x: number, y: number) {
         let self = this,
             xLeft = x >= self.x + self._extraX,
-            xRight = x <= self.x + self._extraX + self.w + self._padding * 2 + self._borderWidth * 2,
+            xRight = x <= self.x + self._extraX + self.w,
             yTop = y >= self.y + self._extraY,
-            yBottom = y <= self.y + self._extraY + self.h + self._padding * 2 + self._borderWidth * 2;
+            yBottom = y <= self.y + self._extraY + self.h;
 
         return xLeft && xRight && yTop && yBottom;
     }

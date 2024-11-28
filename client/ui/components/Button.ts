@@ -1,6 +1,6 @@
 import { Canvg, presets } from "canvg";
 import { calculateStrokeWidth, ColorCode, darkend, DARKEND_BASE } from "../../utils/common.js";
-import { Clickable, Component, Interactive } from "./Component.js";
+import { Clickable, Component, DynamicLayoutable, Interactive } from "./Component.js";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout.js";
 import ExtensionPlaceholder from "./extensions/Extension.js";
 import * as StackBlur from
@@ -16,7 +16,7 @@ export class Button extends ExtensionPlaceholder(Component) implements Interacti
         protected layout: LayoutOptions,
         protected readonly color: ColorCode,
         private callback: () => void,
-        private invalidate?: () => boolean,
+        private validate: DynamicLayoutable<boolean>,
     ) {
         super();
     }
@@ -36,6 +36,20 @@ export class Button extends ExtensionPlaceholder(Component) implements Interacti
         );
     }
 
+    public render(ctx: CanvasRenderingContext2D): void {
+        super.render(ctx);
+
+        if (this.validate !== undefined) {
+            this.isValid = this.computeDynamicLayoutable(this.validate);
+            if (!this.isValid) {
+                this.isHovered = false;
+                this.isPressed = false;
+            }
+        }
+    }
+
+    public destroy?(): void { }
+    
     public onMouseEnter(): void {
         if (!this.isValid) {
             return;
@@ -89,52 +103,6 @@ export class Button extends ExtensionPlaceholder(Component) implements Interacti
         }
         return this.color;
     }
-
-    public render(ctx: CanvasRenderingContext2D): void {
-        super.render(ctx);
-
-        if (this?.invalidate) {
-            this.isValid = this.invalidate();
-            if (!this.isValid) {
-                this.isHovered = false;
-                this.isPressed = false;
-            }
-        }
-    }
-
-    public destroy?(): void { }
-}
-
-export class NormalButton extends Button {
-    protected getStrokeWidth(): number {
-        const minDimension = Math.min(this.w, this.h);
-        return Math.max(2, minDimension * 0.07);
-    }
-
-    protected getCornerRadius(): number {
-        const minDimension = Math.min(this.w, this.h);
-        return Math.max(2, minDimension * 0.07);
-    }
-
-    public render(ctx: CanvasRenderingContext2D): void {
-        super.render(ctx);
-
-        this.update();
-
-        // Button background
-        const strokeWidth = this.getStrokeWidth();
-        const cornerRadius = this.getCornerRadius();
-
-        ctx.lineWidth = strokeWidth;
-        ctx.strokeStyle = darkend(this.isValid ? this.color : this.getButtonColor(), DARKEND_BASE);
-        ctx.fillStyle = this.getButtonColor();
-
-        ctx.beginPath();
-        ctx.roundRect(this.x, this.y, this.w, this.h, cornerRadius);
-        ctx.fill();
-        ctx.stroke();
-        ctx.closePath();
-    }
 }
 
 export class TextButton extends Button {
@@ -142,11 +110,11 @@ export class TextButton extends Button {
         layout: LayoutOptions,
         color: ColorCode,
         callback: () => void,
-        invalidate: () => boolean,
+        validate: DynamicLayoutable<boolean>,
         private readonly text: string,
         private customDraw?: (ctx: CanvasRenderingContext2D, textWidth: number) => void,
     ) {
-        super(layout, color, callback, invalidate);
+        super(layout, color, callback, validate);
     }
 
     private setFontState(ctx: CanvasRenderingContext2D): void {
@@ -182,9 +150,11 @@ export class TextButton extends Button {
         const strokeWidth = this.getStrokeWidth();
         const cornerRadius = this.getCornerRadius();
 
+        const color = this.getButtonColor();
+
         ctx.lineWidth = strokeWidth;
-        ctx.strokeStyle = darkend(this.isValid ? this.color : this.getButtonColor(), DARKEND_BASE);
-        ctx.fillStyle = this.getButtonColor();
+        ctx.strokeStyle = darkend(color, DARKEND_BASE);
+        ctx.fillStyle = color;
 
         ctx.beginPath();
         ctx.roundRect(this.x, this.y, this.w, this.h, cornerRadius);
@@ -224,10 +194,10 @@ export class SVGButton extends Button {
         layout: LayoutOptions,
         color: ColorCode,
         callback: () => void,
-        invalidate: () => boolean,
+        validate: DynamicLayoutable<boolean>,
         private readonly svg: string,
     ) {
-        super(layout, color, callback, invalidate);
+        super(layout, color, callback, validate);
 
         (async () => {
             const canvas = new OffscreenCanvas(512, 512);
@@ -264,9 +234,11 @@ export class SVGButton extends Button {
         const strokeWidth = this.getStrokeWidth();
         const cornerRadius = this.getCornerRadius();
 
+        const color = this.getButtonColor();
+
         ctx.lineWidth = strokeWidth;
-        ctx.strokeStyle = darkend(this.isValid ? this.color : this.getButtonColor(), DARKEND_BASE);
-        ctx.fillStyle = this.getButtonColor();
+        ctx.strokeStyle = darkend(color, DARKEND_BASE);
+        ctx.fillStyle = color;
 
         ctx.beginPath();
         ctx.roundRect(this.x, this.y, this.w, this.h, cornerRadius);

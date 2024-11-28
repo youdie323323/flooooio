@@ -10,13 +10,13 @@ type DynamicLayoutableContainerLayoutOptions = DynamicLayoutable<Omit<LayoutOpti
  * Container component that can add/render childrens.
  */
 export class StaticContainer extends ExtensionPlaceholder(Component) implements ComponentContainer {
+    public children: Component[] = [];
+
     constructor(
         public layout: DynamicLayoutableContainerLayoutOptions,
     ) {
         super();
     }
-
-    public children: Component[] = [];
 
     public override render(ctx: CanvasRenderingContext2D): void {
         ctx.globalAlpha = this.globalAlpha;

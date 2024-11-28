@@ -1,7 +1,7 @@
 import EntityMob from "../../entity/EntityMob.js";
 import TerrainGenerator, { BIOME_TILESETS } from "../../utils/TerrainGenerator.js";
-import { Button, NormalButton, SVGButton, TextButton } from "../components/Button.js";
-import UserInterface, { uiScaleFactor } from "../UserInterface.js";
+import { Button, SVGButton, TextButton } from "../components/Button.js";
+import UserInterface, { BiomeSetter, uiScaleFactor } from "../UserInterface.js";
 import TextInput from "../components/TextInput.js";
 import { ws } from "../../main.js";
 import { Biomes, PetalType } from "../../../shared/enum.js";
@@ -14,6 +14,8 @@ import { Component } from "../components/Component.js";
 import { CROSS_ICON_SVG } from "./UserInterfaceModeGame.js";
 import { WaveRoomState, WaveRoomVisibleState } from "../../../shared/waveRoom.js";
 import Toggle from "../components/Toggle.js";
+import { ExtensionDynamicLayoutable } from "../components/extensions/ExtensionDynamicLayoutable.js";
+import PlayerProfile from "../components/PlayerProfile.js";
 
 // Ui svg icons
 
@@ -89,7 +91,12 @@ function drawRoundedPolygon(
     ctx.closePath();
 }
 
-export default class UserInterfaceTitle extends UserInterface {
+export interface WaveRoomPlayerInformation {
+    id: number;
+    name: string;
+}
+
+export default class UserInterfaceTitle extends UserInterface implements BiomeSetter {
     private terrainGenerator: TerrainGenerator;
 
     private backgroundX: number;
@@ -114,11 +121,7 @@ export default class UserInterfaceTitle extends UserInterface {
 
     // Wave informations
 
-    public waveRoomClients: {
-        id: number;
-        isOwner: boolean;
-        name: string;
-    }[];
+    public waveRoomPlayers: WaveRoomPlayerInformation[];
     public waveRoomCode: string;
     public waveRoomState: WaveRoomState;
     public waveRoomVisible: WaveRoomVisibleState;
@@ -163,6 +166,8 @@ export default class UserInterfaceTitle extends UserInterface {
     onMouseMove(event: MouseEvent): void { }
 
     protected initializeComponents(): void {
+        this.waveRoomPlayers = [];
+
         const bagButton = new SVGButton(
             {
                 x: 15,
@@ -176,7 +181,7 @@ export default class UserInterfaceTitle extends UserInterface {
             () => {
                 console.log("called")
             },
-            () => true,
+            true,
             SWAP_BAG_SVG
         );
 
@@ -195,7 +200,7 @@ export default class UserInterfaceTitle extends UserInterface {
             () => {
                 console.log("called")
             },
-            () => true,
+            true,
             MOLECULE_SVG
         );
 
@@ -214,7 +219,7 @@ export default class UserInterfaceTitle extends UserInterface {
             () => {
                 console.log("called")
             },
-            () => true,
+            true,
             SCROLL_UNFURLED_SVG
         );
 
@@ -222,7 +227,7 @@ export default class UserInterfaceTitle extends UserInterface {
 
         // Text
         this.connectingText = new StaticText(
-            () => ({
+            {
                 x: -(200 / 2),
                 y: (-(40 / 2)) - 5,
                 w: 200,
@@ -230,9 +235,9 @@ export default class UserInterfaceTitle extends UserInterface {
 
                 alignFromCenterX: true,
                 alignFromCenterY: true,
-            }),
-            () => "Connecting...",
-            () => 32,
+            },
+            "Connecting...",
+            32,
         );
 
         this.connectingText.setVisible(false);
@@ -240,7 +245,7 @@ export default class UserInterfaceTitle extends UserInterface {
         this.addComponent(this.connectingText);
 
         this.loggingInText = new StaticText(
-            () => ({
+            {
                 x: -(200 / 2),
                 y: (-(40 / 2)) - 5,
                 w: 200,
@@ -248,9 +253,9 @@ export default class UserInterfaceTitle extends UserInterface {
 
                 alignFromCenterX: true,
                 alignFromCenterY: true,
-            }),
-            () => "Logging in...",
-            () => 32,
+            },
+            "Logging in...",
+            32,
         );
 
         this.loggingInText.setVisible(false);
@@ -258,7 +263,7 @@ export default class UserInterfaceTitle extends UserInterface {
         this.addComponent(this.loggingInText);
 
         const gameNameText = new (ExtensionCollidable(StaticText))(
-            () => ({
+            {
                 x: -(250 / 2),
                 y: (-(80 / 2)) - 40,
                 w: 250,
@@ -266,9 +271,9 @@ export default class UserInterfaceTitle extends UserInterface {
 
                 alignFromCenterX: true,
                 alignFromCenterY: true,
-            }),
-            () => "florr.io",
-            () => 54,
+            },
+            "florr.io",
+            54,
         );
 
         gameNameText.addCollidableComponents([this.connectingText, this.loggingInText]);
@@ -277,7 +282,7 @@ export default class UserInterfaceTitle extends UserInterface {
             this.onLoadedComponents = [];
 
             const nameInputDescription = new (ExtensionCollidable(StaticText))(
-                () => ({
+                {
                     x: -(100 / 2),
                     y: (-(50 / 2)) - 10,
                     w: 100,
@@ -285,9 +290,9 @@ export default class UserInterfaceTitle extends UserInterface {
 
                     alignFromCenterX: true,
                     alignFromCenterY: true,
-                }),
-                () => "This pretty little flower is called...",
-                () => 13,
+                },
+                "This pretty little flower is called...",
+                13,
             );
 
             this.nameInput = new (ExtensionCollidable(TextInput))(
@@ -318,15 +323,20 @@ export default class UserInterfaceTitle extends UserInterface {
                     padding: 1,
 
                     unfocusedState: false,
+
+                    onkeyup(e, self) {
+                        const name = self.value();
+                        ws.send(new Uint8Array([ServerBound.WAVE_ROOM_CHANGE_NAME, name.length, ...new TextEncoder().encode(name)]));
+                    },
                 },
             );
 
             this.readyButton = new (ExtensionCollidable(TextButton))(
                 {
                     x: (-(100 / 2)) + 140,
-                    y: (-(50 / 2)) + 4,
-                    w: 80,
-                    h: 28,
+                    y: (-(50 / 2)) + 5,
+                    w: 76,
+                    h: 26,
 
                     alignFromCenterX: true,
                     alignFromCenterY: true,
@@ -335,7 +345,7 @@ export default class UserInterfaceTitle extends UserInterface {
                 () => {
                     console.log("called")
                 },
-                () => true,
+                true,
                 "Ready",
                 (ctx: CanvasRenderingContext2D, textWidth: number) => {
                     ctx.translate(textWidth + 12, 0);
@@ -343,7 +353,7 @@ export default class UserInterfaceTitle extends UserInterface {
                     ctx.fillStyle = "black";
                     ctx.globalAlpha = 0.2;
 
-                    drawRoundedPolygon(ctx, 0, 0, 11, 90, 40, 3);
+                    drawRoundedPolygon(ctx, 0, 0, 10, 90, 40, 3);
 
                     ctx.fill();
                 },
@@ -351,9 +361,9 @@ export default class UserInterfaceTitle extends UserInterface {
 
             this.squadButton = new TextButton(
                 {
-                    x: (-(100 / 2)) + 140 + 12,
-                    y: (-(50 / 2)) + 20 + 17,
-                    w: 68,
+                    x: (-(100 / 2)) + 140 + 13,
+                    y: (-(50 / 2)) + 20 + 16,
+                    w: 63,
                     h: 22,
 
                     alignFromCenterX: true,
@@ -363,15 +373,15 @@ export default class UserInterfaceTitle extends UserInterface {
                 () => {
                     this.squadMenuContainer.setVisible(true, true);
                 },
-                () => true,
+                true,
                 "Squad",
                 (ctx: CanvasRenderingContext2D, textWidth: number) => {
-                    ctx.translate(textWidth + 11, 0);
+                    ctx.translate(textWidth + 9, 0);
 
                     ctx.fillStyle = "black";
                     ctx.globalAlpha = 0.2;
 
-                    drawRoundedPolygon(ctx, 0, 0, 8.5, 90, 40, 4);
+                    drawRoundedPolygon(ctx, 0, 0, 8, 90, 40, 4);
 
                     ctx.fill();
                 },
@@ -397,7 +407,7 @@ export default class UserInterfaceTitle extends UserInterface {
                         () => {
                             this.biome = Biomes.GARDEN;
                         },
-                        () => true,
+                        true,
                         "Garden",
                     ),
                     new StaticSpace(5, 0),
@@ -410,7 +420,7 @@ export default class UserInterfaceTitle extends UserInterface {
                         () => {
                             this.biome = Biomes.DESERT;
                         },
-                        () => true,
+                        true,
                         "Desert",
                     ),
                     new StaticSpace(5, 0),
@@ -423,7 +433,7 @@ export default class UserInterfaceTitle extends UserInterface {
                         () => {
                             this.biome = Biomes.OCEAN;
                         },
-                        () => true,
+                        true,
                         "Ocean",
                     ),
                 ],
@@ -431,8 +441,20 @@ export default class UserInterfaceTitle extends UserInterface {
 
             // TODO: move biomeSwitchers, readyButton too
 
+            const makePlayerProfileColumn = (i: number): PlayerProfile => {
+                return new PlayerProfile(
+                    {
+                        w: 72.6,
+                        h: 120,
+                    },
+                    () => this.waveRoomPlayers[i]?.id,
+                    () => this.waveRoomPlayers[i]?.name,
+                    () => this.waveRoomPlayers[i] === undefined,
+                );
+            }
+
             this.squadMenuContainer = this.createContainer(
-                new StaticPanelContainer(
+                new (ExtensionDynamicLayoutable(StaticPanelContainer))(
                     {
                         x: -170,
                         y: -60,
@@ -443,9 +465,27 @@ export default class UserInterfaceTitle extends UserInterface {
                     "#5aa0db",
                 ),
                 [
+                    this.createContainer(
+                        new StaticHContainer(
+                            {
+                                x: 6,
+                                y: 50,
+                            },
+                        ),
+                        [
+                            makePlayerProfileColumn(0),
+                            new StaticSpace(8, 0),
+                            makePlayerProfileColumn(1),
+                            new StaticSpace(8, 0),
+                            makePlayerProfileColumn(2),
+                            new StaticSpace(8, 0),
+                            makePlayerProfileColumn(3),
+                        ],
+                    ),
+
                     new SVGButton(
                         {
-                            x: 319,
+                            x: 312,
                             y: 1,
                             w: 15,
                             h: 15,
@@ -454,11 +494,17 @@ export default class UserInterfaceTitle extends UserInterface {
                         () => {
                             this.squadMenuContainer.setVisible(false, true);
 
+                            this.waveRoomPlayers = [];
+                            this.waveRoomCode = null;
+                            this.waveRoomVisible = WaveRoomVisibleState.PRIVATE;
+                            this.waveRoomState = WaveRoomState.WAITING;
+
                             ws.send(new Uint8Array([ServerBound.WAVE_ROOM_LEAVE]));
                         },
-                        () => true,
+                        true,
                         CROSS_ICON_SVG,
                     ),
+                    new CoordinatedSpace(313, 191, 15, 15),
 
                     (this.publicToggle = new Toggle(
                         {
@@ -472,19 +518,19 @@ export default class UserInterfaceTitle extends UserInterface {
                         }
                     )),
                     new StaticText(
-                        () => ({
+                        {
                             x: 44,
                             y: 24 + 8,
                             w: 0,
                             h: 0,
-                        }),
-                        () => "Public",
-                        () => 10,
+                        },
+                        "Public",
+                        10,
                     ),
 
                     new StaticText(
                         () => ({
-                            x: this.waveRoomVisible === WaveRoomVisibleState.PRIVATE ? 100 : 110,
+                            x: this.waveRoomVisible === WaveRoomVisibleState.PRIVATE ? 100 : 114,
                             y: 24 + 8,
                             w: 0,
                             h: 0,
@@ -501,8 +547,8 @@ export default class UserInterfaceTitle extends UserInterface {
                     // Code inputer
                     (this.codeInput = new TextInput(
                         {
-                            x: 190,
-                            y: 158,
+                            x: 184,
+                            y: 183,
                             w: 75,
                             h: 14,
                         },
@@ -528,8 +574,8 @@ export default class UserInterfaceTitle extends UserInterface {
                     )),
                     new TextButton(
                         {
-                            x: 277,
-                            y: 158 + 1,
+                            x: 271,
+                            y: 183 + 1,
                             w: 50,
                             h: 18,
                         },
@@ -544,7 +590,7 @@ export default class UserInterfaceTitle extends UserInterface {
 
                     new TextButton(
                         {
-                            x: 277,
+                            x: 271,
                             y: 24,
                             w: 50,
                             h: 18,
@@ -559,41 +605,40 @@ export default class UserInterfaceTitle extends UserInterface {
 
                     new TextButton(
                         {
-                            x: 200,
+                            x: 192,
                             y: 24,
-                            w: 70,
+                            w: 72,
                             h: 18,
                         },
                         "#5aa0db",
                         () => { },
-                        () => false,
+                        false,
                         "Find public",
                     ),
 
                     new StaticText(
-                        () => ({
+                        {
                             x: 8,
-                            y: 170,
+                            y: 195,
                             w: 0,
                             h: 0,
-                        }),
+                        },
                         () => "Code: " + (this.waveRoomCode || "UNKNOWN"),
-                        () => 8,
-                        () => "#ffffff",
+                        8,
+                        "#ffffff",
                         true,
                     ),
 
                     new StaticText(
-                        () => ({
-                            x: 170,
-                            y: 12,
+                        {
+                            x: 162,
+                            y: 10,
                             w: 0,
                             h: 0,
-                        }),
-                        () => "Squad",
-                        () => 18,
+                        },
+                        "Squad",
+                        14,
                     ),
-                    new CoordinatedSpace(320, 171, 15, 15),
                 ],
             );
 

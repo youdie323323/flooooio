@@ -323,7 +323,7 @@ export class WavePool {
             const client = this.clients.get(id);
 
             const buffer = Buffer.alloc(1 + 1 + msg.length);
-            buffer.writeUInt8(ClientBound.CHAT_RECV, 0);
+            buffer.writeUInt8(ClientBound.WAVE_CHAT_RECV, 0);
 
             const msgBuffer = Buffer.from(msg, 'utf-8');
             buffer.writeUInt8(msgBuffer.length, 1);
@@ -338,7 +338,7 @@ export class WavePool {
      */
     public broadcastChat(msg: string) {
         const buffer = Buffer.alloc(1 + 1 + msg.length);
-        buffer.writeUInt8(ClientBound.CHAT_RECV, 0);
+        buffer.writeUInt8(ClientBound.WAVE_CHAT_RECV, 0);
 
         const msgBuffer = Buffer.from(msg, 'utf-8');
         buffer.writeUInt8(msgBuffer.length, 1);
@@ -361,7 +361,7 @@ export class WavePool {
     private broadcastSeldIdPacket() {
         // Reuse buffer
         const buffer = Buffer.alloc(5);
-        buffer.writeUInt8(ClientBound.SELF_ID, 0);
+        buffer.writeUInt8(ClientBound.WAVE_SELF_ID, 0);
 
         // Loop through all WebSocket connections
         this.clients.forEach((player, clientId) => {

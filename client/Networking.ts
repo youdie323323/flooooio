@@ -6,10 +6,10 @@ import EntityMob from "./entity/EntityMob";
 import EntityPlayer from "./entity/EntityPlayer";
 import { players, mobs, uiCtx } from "./main";
 import UserInterfaceGame from "./ui/mode/UserInterfaceModeGame";
-import UserInterfaceTitle from "./ui/mode/UserInterfaceModeTitle";
+import UserInterfaceTitle, { WaveRoomPlayerInformation } from "./ui/mode/UserInterfaceModeTitle";
 
-export let selfId = -1;
-export let waveSelfId = -1;
+export let wameSelfId = -1;
+export let waveRoomSelfId = -1;
 
 function angleToRad(angle: number) {
     return angle / 255 * (Math.PI * 2);
@@ -41,35 +41,35 @@ export default class Networking {
 
             const kind = data.getUint8(offset++);
             switch (kind) {
-                case ClientBound.SELF_ID: {
-                    selfId = data.getUint32(offset);
+                case ClientBound.WAVE_SELF_ID: {
+                    wameSelfId = data.getUint32(offset);
 
                     break;
                 }
                 case ClientBound.WAVE_ROOM_SELF_ID: {
-                    waveSelfId = data.getUint32(offset);
+                    waveRoomSelfId = data.getUint32(offset);
 
                     break;
                 }
                 case ClientBound.WAVE_UPDATE: {
-                    // Wave informations
-                    {
-                        const waveProgress = data.getUint16(offset);
-                        offset += 2;
+                    if (uiCtx.currentUI instanceof UserInterfaceGame) {
+                        // Wave informations
+                        {
+                            const waveProgress = data.getUint16(offset);
+                            offset += 2;
 
-                        const waveProgressTimer = data.getFloat64(offset);
-                        offset += 8;
+                            const waveProgressTimer = data.getFloat64(offset);
+                            offset += 8;
 
-                        const waveProgressRedGageTimer = data.getFloat64(offset);
-                        offset += 8;
+                            const waveProgressRedGageTimer = data.getFloat64(offset);
+                            offset += 8;
 
-                        const waveEnded = !!data.getUint8(offset++);
+                            const waveEnded = !!data.getUint8(offset++);
 
-                        // World size
-                        const waveSize = data.getUint16(offset);
-                        offset += 2;
+                            // World size
+                            const waveSize = data.getUint16(offset);
+                            offset += 2;
 
-                        if (uiCtx.currentUI instanceof UserInterfaceGame) {
                             uiCtx.currentUI.waveProgress = waveProgress;
 
                             uiCtx.currentUI.nWaveProgressTimer = waveProgressTimer;
@@ -85,158 +85,159 @@ export default class Networking {
 
                             uiCtx.currentUI.updateT = 0;
                         }
+
+                        let ids: Set<number> = new Set();
+
+                        const clientCount = data.getUint16(offset);
+                        offset += 2;
+
+                        for (let i = 0; i < clientCount; i++) {
+                            const clientId = data.getUint32(offset);
+                            offset += 4;
+
+                            const clientX = data.getFloat64(offset);
+                            offset += 8;
+                            const clientY = data.getFloat64(offset);
+                            offset += 8;
+
+                            const clientAngle = angleToRad(data.getUint8(offset++));
+
+                            const clientHealth = data.getInt32(offset);
+                            offset += 4;
+
+                            const clientMaxHealth = data.getInt32(offset);
+                            offset += 4;
+
+                            const clientSize = data.getUint32(offset);
+                            offset += 4;
+
+                            const clientMood = data.getUint8(offset++) as Mood;
+
+                            const clientIsDead = !!data.getUint8(offset++);
+
+                            const clientNickname = readString();
+
+                            const client = players.get(clientId);
+                            if (client) {
+                                client.nx = clientX;
+                                client.ny = clientY;
+                                client.nAngle = clientAngle;
+                                client.nSize = clientSize;
+                                client.mood = clientMood;
+                                client.isDead = clientIsDead;
+
+                                if (clientHealth < client.nHealth) {
+                                    client.redHealthTimer = 1;
+                                } else if (clientHealth > client.nHealth) {
+                                    client.redHealthTimer = 0;
+                                }
+
+                                if (clientHealth < client.nHealth) {
+                                    client.hurtT = 1;
+                                }
+
+                                client.nHealth = clientHealth;
+
+                                client.ox = client.x;
+                                client.oy = client.y;
+                                client.oAngle = client.angle;
+                                client.oHealth = client.health;
+                                client.oSize = client.size;
+                                client.updateT = 0;
+                            } else {
+                                players.set(clientId, new EntityPlayer(clientId, clientX, clientY, clientAngle, clientSize, clientHealth, clientMaxHealth, clientMood, clientNickname));
+                            }
+
+                            ids.add(clientId);
+                        }
+
+                        players.forEach((player, key) => {
+                            if (
+                                !ids.has(key) &&
+                                // Dont repeat them
+                                !player.isDeleted
+                            ) {
+                                player.isDeleted = true;
+
+                                player.isDead = true;
+                                player.deadT = 0;
+                                player.health = 0;
+                            }
+                        });
+
+                        ids.clear();
+
+                        const mobCount = data.getUint16(offset);
+                        offset += 2;
+
+                        for (let i = 0; i < mobCount; i++) {
+                            const mobId = data.getUint32(offset);
+                            offset += 4;
+
+                            const mobX = data.getFloat64(offset);
+                            offset += 8;
+                            const mobY = data.getFloat64(offset);
+                            offset += 8;
+
+                            const mobAngle = angleToRad(data.getFloat64(offset));
+                            offset += 8;
+
+                            const mobHealth = data.getInt32(offset);
+                            offset += 4;
+
+                            const mobMaxHealth = data.getInt32(offset);
+                            offset += 4;
+
+                            const mobSize = data.getUint32(offset);
+                            offset += 4;
+
+                            const mobType = data.getUint8(offset++);
+
+                            const mobRarity = data.getUint8(offset++) as Rarities;
+
+                            const mobIsPet = !!data.getUint8(offset++);
+
+                            const mob = mobs.get(mobId);
+                            if (mob) {
+                                mob.nx = mobX;
+                                mob.ny = mobY;
+                                mob.nAngle = mobAngle;
+                                mob.nSize = mobSize;
+
+                                if (mob.health < mob.nHealth) {
+                                    mob.redHealthTimer = 1;
+                                } else if (mob.health > mob.nHealth) {
+                                    mob.redHealthTimer = 0;
+                                }
+
+                                if (mobHealth < mob.nHealth) {
+                                    mob.hurtT = 1;
+                                }
+
+                                mob.nHealth = mobHealth;
+
+                                mob.ox = mob.x;
+                                mob.oy = mob.y;
+                                mob.oAngle = mob.angle;
+                                mob.oHealth = mob.health;
+                                mob.oSize = mob.size;
+                                mob.updateT = 0;
+                            } else {
+                                mobs.set(mobId, new EntityMob(mobId, mobX, mobY, mobAngle, mobSize, mobHealth, mobMaxHealth, mobType, mobRarity, mobIsPet));
+                            }
+
+                            ids.add(mobId);
+                        }
+
+                        mobs.forEach((mob, key) => {
+                            if (!ids.has(key)) {
+                                mob.isDead = true;
+                            }
+                        });
+
+                        ids.clear();
+
                     };
-
-                    let ids: Set<number> = new Set();
-
-                    const clientCount = data.getUint16(offset);
-                    offset += 2;
-
-                    for (let i = 0; i < clientCount; i++) {
-                        const clientId = data.getUint32(offset);
-                        offset += 4;
-
-                        const clientX = data.getFloat64(offset);
-                        offset += 8;
-                        const clientY = data.getFloat64(offset);
-                        offset += 8;
-
-                        const clientAngle = angleToRad(data.getUint8(offset++));
-
-                        const clientHealth = data.getInt32(offset);
-                        offset += 4;
-
-                        const clientMaxHealth = data.getInt32(offset);
-                        offset += 4;
-
-                        const clientSize = data.getUint32(offset);
-                        offset += 4;
-
-                        const clientMood = data.getUint8(offset++) as Mood;
-
-                        const clientIsDead = !!data.getUint8(offset++);
-
-                        const clientNickname = readString();
-
-                        const client = players.get(clientId);
-                        if (client) {
-                            client.nx = clientX;
-                            client.ny = clientY;
-                            client.nAngle = clientAngle;
-                            client.nSize = clientSize;
-                            client.mood = clientMood;
-                            client.isDead = clientIsDead;
-
-                            if (clientHealth < client.nHealth) {
-                                client.redHealthTimer = 1;
-                            } else if (clientHealth > client.nHealth) {
-                                client.redHealthTimer = 0;
-                            }
-
-                            if (clientHealth < client.nHealth) {
-                                client.hurtT = 1;
-                            }
-
-                            client.nHealth = clientHealth;
-
-                            client.ox = client.x;
-                            client.oy = client.y;
-                            client.oAngle = client.angle;
-                            client.oHealth = client.health;
-                            client.oSize = client.size;
-                            client.updateT = 0;
-                        } else {
-                            players.set(clientId, new EntityPlayer(clientId, clientX, clientY, clientAngle, clientSize, clientHealth, clientMaxHealth, clientMood, clientNickname));
-                        }
-
-                        ids.add(clientId);
-                    }
-
-                    players.forEach((player, key) => {
-                        if (
-                            !ids.has(key) &&
-                            // Dont repeat them
-                            !player.isDeleted
-                        ) {
-                            player.isDeleted = true;
-
-                            player.isDead = true;
-                            player.deadT = 0;
-                            player.health = 0;
-                        }
-                    });
-
-                    ids.clear();
-
-                    const mobCount = data.getUint16(offset);
-                    offset += 2;
-
-                    for (let i = 0; i < mobCount; i++) {
-                        const mobId = data.getUint32(offset);
-                        offset += 4;
-
-                        const mobX = data.getFloat64(offset);
-                        offset += 8;
-                        const mobY = data.getFloat64(offset);
-                        offset += 8;
-
-                        const mobAngle = angleToRad(data.getFloat64(offset));
-                        offset += 8;
-
-                        const mobHealth = data.getInt32(offset);
-                        offset += 4;
-
-                        const mobMaxHealth = data.getInt32(offset);
-                        offset += 4;
-
-                        const mobSize = data.getUint32(offset);
-                        offset += 4;
-
-                        const mobType = data.getUint8(offset++);
-
-                        const mobRarity = data.getUint8(offset++) as Rarities;
-
-                        const mobIsPet = !!data.getUint8(offset++);
-
-                        const mob = mobs.get(mobId);
-                        if (mob) {
-                            mob.nx = mobX;
-                            mob.ny = mobY;
-                            mob.nAngle = mobAngle;
-                            mob.nSize = mobSize;
-
-                            if (mob.health < mob.nHealth) {
-                                mob.redHealthTimer = 1;
-                            } else if (mob.health > mob.nHealth) {
-                                mob.redHealthTimer = 0;
-                            }
-
-                            if (mobHealth < mob.nHealth) {
-                                mob.hurtT = 1;
-                            }
-
-                            mob.nHealth = mobHealth;
-
-                            mob.ox = mob.x;
-                            mob.oy = mob.y;
-                            mob.oAngle = mob.angle;
-                            mob.oHealth = mob.health;
-                            mob.oSize = mob.size;
-                            mob.updateT = 0;
-                        } else {
-                            mobs.set(mobId, new EntityMob(mobId, mobX, mobY, mobAngle, mobSize, mobHealth, mobMaxHealth, mobType, mobRarity, mobIsPet));
-                        }
-
-                        ids.add(mobId);
-                    }
-
-                    mobs.forEach((mob, key) => {
-                        if (!ids.has(key)) {
-                            mob.isDead = true;
-                        }
-                    });
-
-                    ids.clear();
 
                     break;
                 }
@@ -244,19 +245,20 @@ export default class Networking {
                     if (uiCtx.currentUI instanceof UserInterfaceTitle) {
                         const waveClientCount = data.getUint8(offset++);
 
-                        const clients = [];
+                        const _players: WaveRoomPlayerInformation[] = [];
 
                         for (let i = 0; i < waveClientCount; i++) {
                             const waveClientId = data.getUint32(offset);
                             offset += 4;
 
-                            const waveClientIsOwner = data.getUint8(offset++) === 1;
+                            let waveClientName = readString();
+                            // This operation should be server side?
+                            if (waveClientName === "") {
+                                waveClientName = "Unnamed";
+                            }
 
-                            const waveClientName = readString();
-
-                            clients.push({
+                            _players.push({
                                 id: waveClientId,
-                                isOwner: waveClientIsOwner,
                                 name: waveClientName,
                             });
                         }
@@ -269,7 +271,7 @@ export default class Networking {
 
                         const waveVisible = data.getUint8(offset++) as WaveRoomVisibleState;
 
-                        uiCtx.currentUI.waveRoomClients = clients;
+                        uiCtx.currentUI.waveRoomPlayers = _players;
                         uiCtx.currentUI.waveRoomCode = waveCode;
                         uiCtx.currentUI.waveRoomState = waveState;
                         uiCtx.currentUI.waveRoomVisible = waveVisible;
@@ -294,11 +296,11 @@ export default class Networking {
                     break;
                 }
                 case ClientBound.WAVE_ROOM_JOIN_FAILED: {
-                    alert("Invalid squad code");
+                    alert("Failed to join");
 
                     break;
                 }
-                case ClientBound.CHAT_RECV: {
+                case ClientBound.WAVE_CHAT_RECV: {
                     if (uiCtx.currentUI instanceof UserInterfaceGame) {
                         uiCtx.currentUI.chats.push(readString());
                         if (uiCtx.currentUI.chats.length > UserInterfaceGame.MAX_MESSAGE_QUEUE_AMOUNT) {
@@ -314,17 +316,17 @@ export default class Networking {
 
     public sendAngle(angle: number, magnitude = 1) {
         const normalizedAngle = getNormalizedAngle(angle);
-        const data = new Uint8Array([ServerBound.MOVE, normalizedAngle, Math.round(magnitude * 255)]);
+        const data = new Uint8Array([ServerBound.WAVE_CHANGE_MOVE, normalizedAngle, Math.round(magnitude * 255)]);
         this.ws.send(data);
     }
 
     public sendMood(flag: Mood) {
-        const data = new Uint8Array([ServerBound.MOOD, flag]);
+        const data = new Uint8Array([ServerBound.WAVE_CHANGE_MOOD, flag]);
         this.ws.send(data);
     }
 
     public sendSwapPetal(index: number) {
-        const data = new Uint8Array([ServerBound.SWAP_PETAL, index]);
+        const data = new Uint8Array([ServerBound.WAVE_SWAP_PETAL, index]);
         this.ws.send(data);
     }
 }

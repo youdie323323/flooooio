@@ -2,7 +2,7 @@ import { players, mobs, deltaTime, ws, uiCtx, antennaScaleFactor, networking } f
 import TerrainGenerator, { BIOME_TILESETS } from "../../utils/TerrainGenerator";
 import { Button, SVGButton, TextButton } from "../components/Button";
 import UserInterface, { BiomeSetter, uiScaleFactor } from "../UserInterface";
-import Networking, { selfId } from "../../Networking";
+import Networking, { wameSelfId } from "../../Networking";
 import TextInput from "../components/TextInput";
 import { Biomes, Mood } from "../../../shared/enum";
 import { interpolate } from "../../utils/Interpolator";
@@ -25,7 +25,7 @@ function renderMutableFunctions(canvas: HTMLCanvasElement) {
     const ARROW_START_DISTANCE = 30;
 
     const ctx = canvas.getContext("2d");
-    const selfPlayer = players.get(selfId);
+    const selfPlayer = players.get(wameSelfId);
 
     const widthRelative = canvas.width / uiScaleFactor;
     const heightRelative = canvas.height / uiScaleFactor;
@@ -174,7 +174,7 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
                 if (this.chatInput.hasFocus()) {
                     this.chatInput.blur();
                 } else {
-                    const selfPlayer = players.get(selfId);
+                    const selfPlayer = players.get(wameSelfId);
                     if (!selfPlayer) {
                         return;
                     }
@@ -345,7 +345,7 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
                 onsubmit: (e, self) => {
                     const chatMessage = self.value();
                     // Send chat
-                    ws.send(new Uint8Array([ServerBound.CHAT_SENT, chatMessage.length, ...new TextEncoder().encode(chatMessage)]));
+                    ws.send(new Uint8Array([ServerBound.WAVE_CHAT_SENT, chatMessage.length, ...new TextEncoder().encode(chatMessage)]));
 
                     self.value("");
                 },
@@ -378,7 +378,7 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
         const centerWidth = widthRelative / 2;
         const centerHeight = heightRelative / 2;
 
-        const selfPlayer = players.get(selfId);
+        const selfPlayer = players.get(wameSelfId);
         if (!selfPlayer) {
             return;
         }

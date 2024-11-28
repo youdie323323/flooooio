@@ -1,8 +1,8 @@
 export enum ServerBound {
-    MOVE,
-    MOOD,
-    SWAP_PETAL,
-    CHAT_SENT,
+    WAVE_CHANGE_MOVE,
+    WAVE_CHANGE_MOOD,
+    WAVE_SWAP_PETAL,
+    WAVE_CHAT_SENT,
 
     WAVE_ROOM_CREATE,
     
@@ -11,24 +11,26 @@ export enum ServerBound {
 
     WAVE_ROOM_CHANGE_READY,
     WAVE_ROOM_CHANGE_VISIBLE,
+    WAVE_ROOM_CHANGE_NAME,
 
     WAVE_LEAVE,
-
     WAVE_ROOM_LEAVE,
 }
 
 export enum ClientBound {
-    WAVE_UPDATE,
-    SELF_ID,
-
-    WAVE_ROOM_UPDATE,
+    WAVE_SELF_ID,
     WAVE_ROOM_SELF_ID,
+
+    WAVE_UPDATE,
+    WAVE_ROOM_UPDATE,
+
     WAVE_ROOM_JOIN_FAILED,
+
     WAVE_STARTING,
 
     CONNECTION_KICKED,
 
-    CHAT_RECV,
+    WAVE_CHAT_RECV,
 }
 
 export enum ClientboundConnectionKickReason {

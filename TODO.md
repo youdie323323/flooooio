@@ -12,4 +12,5 @@ click the "a" and cursor position should be 10 but 0
 ```
 + More dynamatic, upgrade flexibility.
 Dynamic LayoutOptions should update layout when differs from previous options
++ Layout cache
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _

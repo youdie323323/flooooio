@@ -15,7 +15,7 @@ export default class Toggle extends ExtensionPlaceholder(Component) implements I
     ) {
         super();
     }
-
+    
     public calculateLayout(
         width: number,
         height: number,
@@ -29,45 +29,6 @@ export default class Toggle extends ExtensionPlaceholder(Component) implements I
             originX,
             originY,
         );
-    }
-
-    public onMouseEnter(): void {
-    }
-
-    public onMouseLeave(): void {
-    }
-
-    public onClick(): void {
-        this.onToggle(!this.toggle);
-    }
-
-    protected getStrokeWidth(): number {
-        const minDimension = Math.min(this.w, this.h);
-        return Math.max(2, minDimension * 0.14);
-    }
-
-    public startScaling(toggle: boolean): void {
-        this.toggle = toggle;
-
-        this.scalingStartTime = performance.now();
-        this.scalingProgress = toggle ? 0 : 1;
-    }
-
-    private scaling(): void {
-        if (this.scalingStartTime === null) return;
-
-        const now = performance.now();
-        const elapsedTime = now - this.scalingStartTime;
-
-        if (this.toggle) {
-            this.scalingProgress = Math.min(elapsedTime / Toggle.SCALING_DURATION, 1);
-        } else {
-            this.scalingProgress = Math.max(1 - (elapsedTime / Toggle.SCALING_DURATION), 0);
-        }
-
-        if (this.scalingProgress >= 1 || this.scalingProgress <= 0) {
-            this.scalingStartTime = null;
-        }
     }
 
     public render(ctx: CanvasRenderingContext2D): void {
@@ -109,4 +70,43 @@ export default class Toggle extends ExtensionPlaceholder(Component) implements I
     }
 
     public destroy?(): void { }
+    
+    public onMouseEnter(): void {
+    }
+
+    public onMouseLeave(): void {
+    }
+
+    public onClick(): void {
+        this.onToggle(!this.toggle);
+    }
+
+    protected getStrokeWidth(): number {
+        const minDimension = Math.min(this.w, this.h);
+        return Math.max(2, minDimension * 0.14);
+    }
+
+    public startScaling(toggle: boolean): void {
+        this.toggle = toggle;
+
+        this.scalingStartTime = performance.now();
+        this.scalingProgress = toggle ? 0 : 1;
+    }
+
+    private scaling(): void {
+        if (this.scalingStartTime === null) return;
+
+        const now = performance.now();
+        const elapsedTime = now - this.scalingStartTime;
+
+        if (this.toggle) {
+            this.scalingProgress = Math.min(elapsedTime / Toggle.SCALING_DURATION, 1);
+        } else {
+            this.scalingProgress = Math.max(1 - (elapsedTime / Toggle.SCALING_DURATION), 0);
+        }
+
+        if (this.scalingProgress >= 1 || this.scalingProgress <= 0) {
+            this.scalingStartTime = null;
+        }
+    }
 }

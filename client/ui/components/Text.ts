@@ -7,7 +7,7 @@ import ExtensionCollidable from "./extensions/ExtensionCollidable";
 export default class StaticText extends ExtensionPlaceholder(Component) {
     constructor(
         private layout: DynamicLayoutable<LayoutOptions>,
-        
+
         private textFn: DynamicLayoutable<string>,
         private fontSize: DynamicLayoutable<number>,
         private fillStyle: DynamicLayoutable<ColorCode> = () => "#ffffff",
@@ -42,17 +42,19 @@ export default class StaticText extends ExtensionPlaceholder(Component) {
         ctx.textBaseline = 'middle';
         ctx.textAlign = this.isLeft ? "left" : 'center';
 
-        ctx.fillStyle = this.computeDynamicLayoutable(this.fillStyle);
+        const computedFillStyle = this.computeDynamicLayoutable(this.fillStyle);
+        const computedFontSize = this.computeDynamicLayoutable(this.fontSize);
+        const computedText = this.computeDynamicLayoutable(this.textFn);
+
+        ctx.fillStyle = computedFillStyle;
         ctx.strokeStyle = '#000000';
-        ctx.font = `${this.computeDynamicLayoutable(this.fontSize)}px Ubuntu`;
-        ctx.lineWidth = calculateStrokeWidth(this.computeDynamicLayoutable(this.fontSize));
+        ctx.font = `${computedFontSize}px Ubuntu`;
+        ctx.lineWidth = calculateStrokeWidth(computedFontSize);
 
-        ctx.translate(this.x + this.w / 2, this.y + this.h / 2)
+        ctx.translate(this.x + this.w / 2, this.y + this.h / 2);
 
-        const text = this.computeDynamicLayoutable(this.textFn);
-
-        ctx.strokeText(text, 0, 0);
-        ctx.fillText(text, 0, 0);
+        ctx.strokeText(computedText, 0, 0);
+        ctx.fillText(computedText, 0, 0);
     }
 
     public destroy?(): void {

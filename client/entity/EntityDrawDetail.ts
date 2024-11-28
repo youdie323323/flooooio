@@ -1,6 +1,6 @@
 import { MOB_PROFILES } from "../../shared/mobProfiles";
 import { isPetal } from "../utils/common";
-import { selfId } from "../Networking";
+import { wameSelfId } from "../Networking";
 import Entity from "./Entity";
 import EntityMob from "./EntityMob";
 import EntityPlayer from "./EntityPlayer";
@@ -19,7 +19,7 @@ export function drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D) 
     }
 
     // Draw nickname if not self
-    if (entity instanceof EntityPlayer && entity.id !== selfId) {
+    if (entity instanceof EntityPlayer && entity.id !== wameSelfId) {
         ctx.save();
 
         if (entity.isDead) ctx.globalAlpha *= 1 - Math.sin(entity.deadT * Math.PI / 2);

@@ -1,5 +1,5 @@
 import { cameraController, mobs, players } from "../main";
-import { selfId } from "../Networking";
+import { wameSelfId } from "../Networking";
 import UserInterface from "./UserInterface";
 import UserInterfaceGame from "./mode/UserInterfaceModeGame";
 import UserInterfaceTitle from "./mode/UserInterfaceModeTitle";
@@ -25,7 +25,7 @@ export default class UserInterfaceContext {
     }
 
     public cleanup(): void {
-        // Cleanup special values & components
+        // Cleanup mode-specific values & components
         this.previousUI?.cleanup();
         this.previousUI?.cleanupRenders();
 
@@ -55,7 +55,7 @@ export default class UserInterfaceContext {
         switch (mode) {
             case 'title': {
                 // Fake dead animation
-                const player = players.get(selfId);
+                const player = players.get(wameSelfId);
                 if (player && !player.isDead) {
                     player.isDead = true;
                     player.deadT = 0;

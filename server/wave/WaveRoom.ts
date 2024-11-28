@@ -225,8 +225,6 @@ export default class WaveRoom {
             buffer.writeUInt32BE(client.id, offset);
             offset += 4;
 
-            buffer.writeUInt8(client.isOwner ? 1 : 0, offset++);
-
             // TODO: send static petal data too
 
             const nicknameBuffer = Buffer.from(client.name, 'utf-8');
@@ -353,6 +351,23 @@ export default class WaveRoom {
         });
 
         return true;
+    }
+
+    public setPlayerName(id: WaveRoomPlayer["id"], name: string): boolean {
+        if (this.state !== WaveRoomState.WAITING) {
+            return false;
+        }
+
+        using _disposable = this.onChangeAnything();
+
+        const index = this.roomCandidates.findIndex(p => p.id === id);
+        if (index >= 0) {
+            this.roomCandidates[index].name = name;
+
+            return true;
+        } else {
+            return false;
+        };
     }
 
     private startWave() {

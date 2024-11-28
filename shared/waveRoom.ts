@@ -18,3 +18,5 @@ export enum WaveRoomPlayerReadyState {
     UNREADY,
     READY,
 }
+
+export const PLAYER_STATE_VALUES = Object.values(WaveRoomPlayerReadyState);

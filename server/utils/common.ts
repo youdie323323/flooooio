@@ -4,12 +4,13 @@ import { MobInstance, MobStat } from "../entity/mob/Mob";
 import { PetalStat, isSpawnableSlot } from "../entity/mob/petal/Petal";
 import { PlayerInstance } from "../entity/player/Player";
 import { waveRoomService } from "../main";
-import WaveRoom, { WaveRoomState } from "../wave/WaveRoom";
+import WaveRoom, { WaveRoomPlayerId } from "../wave/WaveRoom";
 import { Entity, EntityId } from "../entity/Entity";
 import { choice, getRandomPosition } from "./random";
 import { MobType, PetalType } from "../../shared/enum";
 import { ClientBound, ClientboundConnectionKickReason } from "../../shared/packet";
 import uWS from 'uWebSockets.js';
+import { WaveRoomState } from "../../shared/waveRoom";
 
 export const TWO_PI = Math.PI * 2;
 
@@ -90,4 +91,25 @@ export function removeAllBindings(wavePool: WavePool, clientId: PlayerInstance["
         player.slots.cooldownsPetal = Array.from({ length: player.slots.surface.length }, e => new Array(5).fill(0));
         player.slots.cooldownsUsage = Array.from({ length: player.slots.surface.length }, e => new Array(5).fill(0));
     }
+}
+
+export const preprocessResultID = (ws: uWS.WebSocket<UserData>, id: false | WaveRoomPlayerId): Buffer => {
+    const userData = ws.getUserData();
+    if (!userData) return;
+
+    const response = Buffer.alloc(id ? 5 : 1);
+    response.writeUInt8(
+        id ?
+            ClientBound.WAVE_ROOM_SELF_ID :
+            ClientBound.WAVE_ROOM_JOIN_FAILED,
+        0,
+    );
+
+    if (id) {
+        response.writeUInt32BE(id, 1);
+
+        userData.waveRoomClientId = id;
+    };
+
+    ws.send(response, true);
 }

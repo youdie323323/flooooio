@@ -1,6 +1,7 @@
 import { Biomes } from "../../shared/enum";
 import { Clickable, Component, ComponentContainer, Interactive } from "./components/Component";
 import { Button } from "./components/Button";
+import { DYNAMIC_LAYOUTED } from "./components/extensions/ExtensionDynamicLayoutable";
 
 export interface BiomeSetter {
     set biome(biome: Biomes);
@@ -134,6 +135,10 @@ export default abstract class UserInterface {
         return "onClick" in component;
     }
 
+    private isDynamicLayoutable(component: Component): boolean {
+        return DYNAMIC_LAYOUTED in component;
+    }
+
     public removeEventListeners(): void {
         /*
         if (this.resizeObserver) {
@@ -208,11 +213,10 @@ export default abstract class UserInterface {
                 continue;
             }
 
-            if (component.visible && this.overlapsComponent(component, this.mouseX, this.mouseY)) {
-                if (this.isClickable(component)) {
-                    this.clickedComponent = component;
-                    (component as Clickable).onMouseDown?.();
-                }
+            if (component.visible && this.isClickable(component) && this.overlapsComponent(component, this.mouseX, this.mouseY)) {
+                this.clickedComponent = component;
+                (component as Clickable).onMouseDown?.();
+
                 break;
             }
         }
@@ -294,6 +298,21 @@ export default abstract class UserInterface {
         const ctx = this.canvas.getContext("2d");
         if (!ctx) return;
 
+        const scaledWidth = this.canvas.width / uiScaleFactor;
+        const scaledHeight = this.canvas.height / uiScaleFactor;
+
+        this.components
+            .filter(c => !this.childrenComponents.has(c) && this.isDynamicLayoutable(c))
+            .forEach(component => {
+                // TODO: cache layout to reduce lag                
+                const layout = component.calculateLayout(scaledWidth, scaledHeight, 0, 0);
+
+                component.setX(layout.x);
+                component.setY(layout.y);
+                component.setW(layout.w);
+                component.setH(layout.h);
+            });
+
         // Render all visible components
         this.components.forEach(component => {
             if (component.visible && !this.childrenComponents.has(component)) {
@@ -328,6 +347,7 @@ export default abstract class UserInterface {
     protected createContainer<T extends ComponentContainer>(container: T, children: Component[]): T {
         children.forEach(child => {
             this.addChildrenComponent(container, child);
+
             child.parentContainer = container;
         });
 

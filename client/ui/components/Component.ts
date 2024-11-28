@@ -1,5 +1,4 @@
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
-import { uiScaleFactor } from "../UserInterface";
 
 /**
  * Type that live regenerate value.
@@ -30,6 +29,9 @@ export abstract class Component {
     public w: number = 0;
     public h: number = 0;
 
+    /**
+     * This method calculate layout by layout options, and parent container/screen.
+     */
     public abstract calculateLayout(
         width: number,
         height: number,
