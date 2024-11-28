@@ -306,8 +306,11 @@ export default class TerrainGenerator {
     renderMap(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], radius: number, playerX: number, playerY: number) {
         const ctx = canvas.getContext("2d");
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+        let savedFillStyle = ctx.fillStyle;
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = savedFillStyle;
+        
         const zoom = cameraController.zoom;
 
         const widthRelative = canvas.width / uiScaleFactor;
@@ -350,7 +353,7 @@ export default class TerrainGenerator {
         ctx.arc(
             relativeCenterX,
             relativeCenterY,
-            (radius + 0.5) * zoom + ctx.lineWidth / 2, 0, 
+            (radius + 0.5) * zoom + ctx.lineWidth / 2, 0,
             Math.PI * 2,
         );
         ctx.stroke();

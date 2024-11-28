@@ -10,6 +10,7 @@ import { Biomes } from "../../shared/enum";
 import root from "../command/commandRoot";
 import { Command, repondValueToString } from "../command/command";
 import { ClientBound } from "../../shared/packet";
+import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../shared/waveRoom";
 
 /**
  * Revive player nearby other player.
@@ -40,32 +41,13 @@ function revivePlayer(wavePool: WavePool, player: PlayerInstance) {
     }
 }
 
-/** Represents the current state of a wave room */
-export enum WaveRoomState {
-    WAITING,
-    STARTED,
-    ENDED,
-}
-
-/** Determines if a wave room is public or private */
-export enum WaveRoomVisibleState {
-    PUBLIC,
-    PRIVATE,
-}
-
-/** Indicates if a player is ready to start the wave */
-export enum PlayerReadyState {
-    UNREADY,
-    READY,
-}
-
 export type WaveRoomPlayerId = BrandedId<"WaveRoomPlayer">;
 
 /** Extended player data with wave room data properties */
 export type WaveRoomPlayer = MockPlayerData & {
     id: WaveRoomPlayerId;
     isOwner: boolean;
-    readyState: PlayerReadyState;
+    readyState: WaveRoomPlayerReadyState;
 };
 
 export interface WaveData {
@@ -131,6 +113,14 @@ export default class WaveRoom {
         this.waveProbabilityPredictor.reset(this.waveData);
     }
 
+    public stopUpdate() {
+        clearInterval(this.updateInterval);
+        clearInterval(this.wavePreUpdateInterval);
+
+        this.updateInterval = null;
+        this.wavePreUpdateInterval = null;
+    }
+
     /**
      * Release all memory in this class.
      */
@@ -139,11 +129,7 @@ export default class WaveRoom {
 
         this.wavePool = null;
 
-        clearInterval(this.updateInterval);
-        clearInterval(this.wavePreUpdateInterval);
-
-        this.updateInterval = null;
-        this.wavePreUpdateInterval = null;
+        this.stopUpdate();
 
         this.roomCandidates = null;
 
@@ -258,7 +244,7 @@ export default class WaveRoom {
 
         buffer.writeUInt8(this.state, offset++);
 
-        buffer.writeUInt8(this.visible === WaveRoomVisibleState.PUBLIC ? 1 : 0, offset++);
+        buffer.writeUInt8(this.visible, offset++);
 
         return buffer;
     }
@@ -284,7 +270,7 @@ export default class WaveRoom {
         this.roomCandidates.push({
             ...player,
             id,
-            readyState: PlayerReadyState.UNREADY,
+            readyState: WaveRoomPlayerReadyState.UNREADY,
             // First player is owner
             isOwner: this.roomCandidates.length === 0,
         });
@@ -325,7 +311,7 @@ export default class WaveRoom {
         };
     }
 
-    public setPlayerReadyState(id: WaveRoomPlayer["id"], state: PlayerReadyState): boolean {
+    public setPlayerReadyState(id: WaveRoomPlayer["id"], state: WaveRoomPlayerReadyState): boolean {
         if (this.state !== WaveRoomState.WAITING) {
             return false;
         }
@@ -337,7 +323,7 @@ export default class WaveRoom {
             this.roomCandidates[index].readyState = state;
 
             logger.region(() => {
-                using _guard = logger.metadata({ state: PlayerReadyState[state], waveClientId: id, code: this.code });
+                using _guard = logger.metadata({ state: WaveRoomPlayerReadyState[state], waveClientId: id, code: this.code });
                 logger.info("Player changed ready state");
             });
 
@@ -371,7 +357,8 @@ export default class WaveRoom {
 
     private startWave() {
         this.state = WaveRoomState.STARTED;
-        clearInterval(this.updateInterval);
+        
+        this.stopUpdate();
         this.wavePool.startWave(this.biome, this.roomCandidates);
 
         logger.region(() => {
@@ -408,7 +395,7 @@ export default class WaveRoom {
      */
     public _roomChecksum() {
         // this.roomCandidates.length !== 0 to prevent multiple wave start, before wave room deletion
-        if (this.state === WaveRoomState.WAITING && this.roomCandidates.length !== 0 && this.roomCandidates.every(p => p.readyState === PlayerReadyState.READY)) {
+        if (this.state === WaveRoomState.WAITING && this.roomCandidates.length !== 0 && this.roomCandidates.every(p => p.readyState === WaveRoomPlayerReadyState.READY)) {
             this.startWave();
         }
 

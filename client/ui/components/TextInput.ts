@@ -1,7 +1,7 @@
 import { calculateStrokeWidth } from "../../utils/common";
-import { LayoutOptions } from "../layout/Layout";
+import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import { uiScaleFactor } from "../UserInterface";
-import { Component } from "./Component";
+import { Component, DynamicLayoutable } from "./Component";
 import ExtensionPlaceholder from "./extensions/Extension";
 
 interface CanvasInputOptions {
@@ -31,16 +31,17 @@ interface CanvasInputOptions {
     value?: string;
     backgroundGradient?: string[];
     backgroundColor?: string;
-    onsubmit?: (e?: Event, self?: ComponentTextInput) => void;
-    onkeydown?: (e?: KeyboardEvent, self?: ComponentTextInput) => void;
-    onkeyup?: (e?: KeyboardEvent, self?: ComponentTextInput) => void;
-    onfocus?: (self: ComponentTextInput) => void;
-    onblur?: (self: ComponentTextInput) => void;
+    unfocusedState?: boolean;
+    onsubmit?: (e?: Event, self?: TextInput) => void;
+    onkeydown?: (e?: KeyboardEvent, self?: TextInput) => void;
+    onkeyup?: (e?: KeyboardEvent, self?: TextInput) => void;
+    onfocus?: (self: TextInput) => void;
+    onblur?: (self: TextInput) => void;
 }
 
-const inputs: ComponentTextInput[] = [];
+const inputs: TextInput[] = [];
 
-export default class ComponentTextInput extends ExtensionPlaceholder(Component) {
+export default class TextInput extends ExtensionPlaceholder(Component) {
     // Make it accessible from outside
     private _value: string;
     private _canvas: HTMLCanvasElement | null;
@@ -67,11 +68,11 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
     private _selectionColor: string;
     private _placeHolder: string;
     private _placeHolderUnfocused: string;
-    private _onsubmit: (e?: Event, self?: ComponentTextInput) => void;
-    private _onkeydown: (e?: KeyboardEvent, self?: ComponentTextInput) => void;
-    private _onkeyup: (e?: KeyboardEvent, self?: ComponentTextInput) => void;
-    private _onfocus: (self: ComponentTextInput) => void;
-    private _onblur: (self: ComponentTextInput) => void;
+    private _onsubmit: (e?: Event, self?: TextInput) => void;
+    private _onkeydown: (e?: KeyboardEvent, self?: TextInput) => void;
+    private _onkeyup: (e?: KeyboardEvent, self?: TextInput) => void;
+    private _onfocus: (self: TextInput) => void;
+    private _onblur: (self: TextInput) => void;
     private _cursorGlobalAlpha: number;
     private _cursorGlobalAlphaBack: boolean;
     private _cursorPos: number;
@@ -84,11 +85,13 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
     private _selectionStart?: number;
     private _selectionUpdated?: boolean;
     private _cursorInterval?: NodeJS.Timeout;
-    private outerW: number;
-    private outerH: number;
+    private _unfocusedState: boolean;
 
-    constructor(layout: LayoutOptions, o: CanvasInputOptions = {}) {
-        super(layout);
+    constructor(
+        protected layout: DynamicLayoutable<LayoutOptions>,
+        o: CanvasInputOptions = {},
+    ) {
+        super();
 
         let self = this;
 
@@ -127,8 +130,7 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
         self._cursorPos = 0;
         self._hasFocus = false;
         self._selection = [0, 0];
-
-        self._calcWH();
+        self._unfocusedState = o.unfocusedState || false;
 
         self._backgroundColor = o.backgroundColor || '#fff';
 
@@ -169,8 +171,6 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
         self._hiddenInput.addEventListener('keydown', function (e: any) {
             e = e || window.event;
 
-            console.log("huh")
-
             if (self._hasFocus) {
                 self._hiddenInput.focus();
 
@@ -193,6 +193,21 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
 
         inputs.push(self);
         self._inputsIndex = inputs.length - 1;
+    }
+
+    public calculateLayout(
+        width: number,
+        height: number,
+        originX: number = 0,
+        originY: number = 0
+    ): LayoutResult {
+        return Layout.layout(
+            this.computeDynamicLayoutable(this.layout),
+            width,
+            height,
+            originX,
+            originY,
+        );
     }
 
     public canvas(data: HTMLCanvasElement = undefined) {
@@ -331,7 +346,6 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
 
         if (typeof data !== 'undefined') {
             self._padding = data;
-            self._calcWH();
         } else {
             return self._padding;
         }
@@ -342,7 +356,6 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
 
         if (typeof data !== 'undefined') {
             self._borderWidth = data;
-            self._calcWH();
         } else {
             return self._borderWidth;
         }
@@ -421,7 +434,7 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
         }
     }
 
-    public onsubmit(fn: (e?: Event, self?: ComponentTextInput) => void = undefined) {
+    public onsubmit(fn: (e?: Event, self?: TextInput) => void = undefined) {
         let self = this;
 
         if (typeof fn !== 'undefined') {
@@ -431,7 +444,7 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
         }
     }
 
-    public onkeydown(fn: (e?: KeyboardEvent, self?: ComponentTextInput) => void = undefined) {
+    public onkeydown(fn: (e?: KeyboardEvent, self?: TextInput) => void = undefined) {
         let self = this;
 
         if (typeof fn !== 'undefined') {
@@ -441,7 +454,7 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
         }
     }
 
-    public onkeyup(fn: (e?: KeyboardEvent, self?: ComponentTextInput) => void = undefined) {
+    public onkeyup(fn: (e?: KeyboardEvent, self?: TextInput) => void = undefined) {
         let self = this;
 
         if (typeof fn !== 'undefined') {
@@ -585,7 +598,7 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
             if (!isOver) {
                 if (x < self.x) {
                     curPos = 0;
-                } else if (x > self.x + self.outerW) {
+                } else if (x > self.x + self.w) {
                     curPos = self._value.length;
                 }
             }
@@ -657,7 +670,7 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
     }
 
     public render() {
-        let self = this, ctx = self._ctx, w = self.outerW, h = self.outerH, br = self._borderRadius;
+        const self = this, ctx = self._ctx, w = self.w, h = self.h, br = self._borderRadius;
 
         if (!ctx) {
             return;
@@ -669,9 +682,7 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
 
         ctx.translate(self.x, self.y);
 
-        let text = self._clipText();
-
-        if (self._hasFocus) {
+        const drawFocusing = (): void => {
             if (self._borderWidth > 0) {
                 ctx.fillStyle = self._borderColor;
                 ctx.beginPath();
@@ -696,11 +707,11 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
 
                     ctx.fillStyle = self._selectionColor;
 
-                    const heightResized = self.h * 1.7;
+                    const heightResized = h * 0.64;
                     const WIDTH_OFFSET = 4;
                     ctx.fillRect(
                         paddingBorder + selectOffset - ((selectWidth === 0 ? 0 : WIDTH_OFFSET) / 2),
-                        paddingBorder + ((self.h - heightResized) / 2),
+                        (h - heightResized) / 2,
                         selectWidth + WIDTH_OFFSET,
                         heightResized,
                     );
@@ -714,16 +725,16 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
                     const cursorOffset = self._textWidth(text.slice(0, self._cursorPos));
 
                     ctx.fillStyle = "#000000";
-                    ctx.fillRect((paddingBorder + cursorOffset) - 1, paddingBorder - (5.5 / 2), CURSOR_SIZE_WIDTH, self.h + 5.5);
+                    ctx.fillRect((paddingBorder + cursorOffset) - 1, 10 / 2, CURSOR_SIZE_WIDTH, h - 10);
 
                     const whiteWidth = CURSOR_SIZE_WIDTH * 0.65;
                     ctx.fillStyle = "#ffffff";
-                    ctx.fillRect((paddingBorder + cursorOffset + ((CURSOR_SIZE_WIDTH - whiteWidth) / 2)) - 1, paddingBorder - (5.5 / 2), whiteWidth, self.h + 5.5);
+                    ctx.fillRect((paddingBorder + cursorOffset + ((CURSOR_SIZE_WIDTH - whiteWidth) / 2)) - 1, 10 / 2, whiteWidth, h - 10);
 
                     ctx.restore();
                 }
 
-                let textX = self._padding + self._borderWidth, textY = Math.round(paddingBorder + self.h / 2);
+                let textX = self._padding + self._borderWidth, textY = Math.round(h / 2);
 
                 text = (text === '' && self._placeHolder) ? self._placeHolder : text;
 
@@ -760,64 +771,74 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
                     textX += self._textWidth(char);
                 }
             });
-        } else if (this._value.length > 0) {
-            ctx.lineJoin = 'round';
-            ctx.lineCap = 'round';
-            ctx.font = self._fontStyle + ' ' + self._fontWeight + ' ' + self._fontSize + 'px ' + self._fontFamily;
-            ctx.shadowColor = self._fontShadowColor;
-            ctx.shadowBlur = self._fontShadowBlur;
-            ctx.shadowOffsetX = self._fontShadowOffsetX;
-            ctx.shadowOffsetY = self._fontShadowOffsetY;
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'middle';
+        };
 
-            ctx.save();
+        let text = self._clipText();
 
-            ctx.globalAlpha = 0.4;
-            ctx.fillStyle = "#000000";
-            ctx.beginPath();
-            ctx.roundRect(0, 0, w, h, br);
-            ctx.fill();
+        if (self._unfocusedState) {
+            if (self._hasFocus) {
+                drawFocusing();
+            } else if (this._value.length > 0) {
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                ctx.font = self._fontStyle + ' ' + self._fontWeight + ' ' + self._fontSize + 'px ' + self._fontFamily;
+                ctx.shadowColor = self._fontShadowColor;
+                ctx.shadowBlur = self._fontShadowBlur;
+                ctx.shadowOffsetX = self._fontShadowOffsetX;
+                ctx.shadowOffsetY = self._fontShadowOffsetY;
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
 
-            ctx.restore();
+                ctx.save();
 
-            ctx.fillStyle = "#000000";
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = calculateStrokeWidth(self._fontSize);
+                ctx.globalAlpha = 0.4;
+                ctx.fillStyle = "#000000";
+                ctx.beginPath();
+                ctx.roundRect(0, 0, w, h, br);
+                ctx.fill();
 
-            ctx.translate(self._padding + self._borderWidth, h / 2);
+                ctx.restore();
 
-            ctx.strokeText(text, 0, 0);
-            ctx.fillText(text, 0, 0);
+                ctx.fillStyle = "#000000";
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = calculateStrokeWidth(self._fontSize);
+
+                ctx.translate(self._padding + self._borderWidth, h / 2);
+
+                ctx.strokeText(text, 0, 0);
+                ctx.fillText(text, 0, 0);
+            } else {
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                ctx.font = self._fontStyle + ' ' + self._fontWeight + ' ' + (self._fontSize - 1) + 'px ' + self._fontFamily;
+                ctx.shadowColor = self._fontShadowColor;
+                ctx.shadowBlur = self._fontShadowBlur;
+                ctx.shadowOffsetX = self._fontShadowOffsetX;
+                ctx.shadowOffsetY = self._fontShadowOffsetY;
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+
+                ctx.save();
+
+                ctx.globalAlpha = 0.4;
+                ctx.fillStyle = "#000000";
+                ctx.beginPath();
+                ctx.roundRect(0, 0, w, h, br);
+                ctx.fill();
+
+                ctx.restore();
+
+                ctx.fillStyle = "#ffffff";
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = calculateStrokeWidth(self._fontSize);
+
+                ctx.translate(self._padding + self._borderWidth, h / 2);
+
+                ctx.strokeText(self._placeHolderUnfocused, 0, 0);
+                ctx.fillText(self._placeHolderUnfocused, 0, 0);
+            }
         } else {
-            ctx.lineJoin = 'round';
-            ctx.lineCap = 'round';
-            ctx.font = self._fontStyle + ' ' + self._fontWeight + ' ' + (self._fontSize - 1) + 'px ' + self._fontFamily;
-            ctx.shadowColor = self._fontShadowColor;
-            ctx.shadowBlur = self._fontShadowBlur;
-            ctx.shadowOffsetX = self._fontShadowOffsetX;
-            ctx.shadowOffsetY = self._fontShadowOffsetY;
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'middle';
-
-            ctx.save();
-
-            ctx.globalAlpha = 0.4;
-            ctx.fillStyle = "#000000";
-            ctx.beginPath();
-            ctx.roundRect(0, 0, w, h, br);
-            ctx.fill();
-
-            ctx.restore();
-
-            ctx.fillStyle = "#ffffff";
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = calculateStrokeWidth(self._fontSize);
-
-            ctx.translate(self._padding + self._borderWidth, h / 2);
-
-            ctx.strokeText(self._placeHolderUnfocused, 0, 0);
-            ctx.fillText(self._placeHolderUnfocused, 0, 0);
+            drawFocusing();
         }
     }
 
@@ -837,7 +858,7 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
     }
 
     private _drawTextBox(fn: () => void) {
-        let self = this, ctx = self._ctx, w = self.outerW, h = self.outerH, br = self._borderRadius, bw = self._borderWidth;
+        let self = this, ctx = self._ctx, w = self.w, h = self.h, br = self._borderRadius, bw = self._borderWidth;
 
         if (self._backgroundImage === '') {
             ctx.fillStyle = self._backgroundColor;
@@ -879,33 +900,18 @@ export default class ComponentTextInput extends ExtensionPlaceholder(Component) 
         return ctx.measureText(text).width;
     }
 
-    /**
-     * Recalculate the outer with and height of the text box.
-     */
-    private _calcWH() {
-        let self = this;
-
-        // Calculate the full width and height with padding and borders
-        self.outerW = self.w + self._padding * 2 + self._borderWidth * 2;
-        self.outerH = self.h + self._padding * 2 + self._borderWidth * 2;
-    }
-
     // Override them to calc wh
 
     public override setW(w: number) {
         let self = this;
 
-        this.w = w;
-
-        self._calcWH();
+        self.w = w + self._padding * 2 + self._borderWidth * 2;
     }
 
     public override setH(h: number) {
         let self = this;
 
-        this.h = h;
-
-        self._calcWH();
+        this.h = h + self._padding * 2 + self._borderWidth * 2;
     }
 
     private _overInput(x: number, y: number) {

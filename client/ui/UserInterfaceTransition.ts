@@ -1,6 +1,6 @@
 import UserInterface, { uiScaleFactor } from "./UserInterface";
 import { UserInterfaceMode } from "./UserInterfaceContext";
-import UserInterfaceMenu from "./mode/UserInterfaceModeMenu";
+import UserInterfaceTitle from "./mode/UserInterfaceModeTitle";
 
 export interface TransitionConfig {
     initialRadius: (canvas: HTMLCanvasElement) => number;
@@ -15,7 +15,7 @@ export default class UserInterfaceTransition {
     private static readonly STROKE_COLOR = '#000000';
 
     private readonly transitionConfigs: Record<UserInterfaceMode, TransitionConfig> = {
-        menu: {
+        title: {
             initialRadius: (canvas) => Math.max(((canvas.height / uiScaleFactor) / 2) + 100, ((canvas.width / uiScaleFactor) / 2) + 100),
             radiusChange: (current) => current - (0.3 + current / 40),
             isComplete: (_, radius) => radius < 0,
@@ -47,7 +47,7 @@ export default class UserInterfaceTransition {
 
     public draw(currentUI: UserInterface, previousUI: UserInterface): void {
         // Determine in or out
-        const [innerUI, outerUI] = currentUI instanceof UserInterfaceMenu
+        const [innerUI, outerUI] = currentUI instanceof UserInterfaceTitle
             ? [currentUI, previousUI]
             : [previousUI, currentUI];
 

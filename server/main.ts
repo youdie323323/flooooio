@@ -4,7 +4,6 @@ import { pack } from 'msgpackr';
 import * as fs from 'fs';
 import * as path from 'path';
 import WaveRoomService from './wave/WaveRoomService';
-import { PlayerReadyState, WaveRoomVisibleState } from './wave/WaveRoom';
 import { Logger } from './logger/Logger';
 import { Mob } from './entity/mob/Mob';
 import { clientRemove, kickClient } from './utils/common';
@@ -18,6 +17,7 @@ import { registerSpawnMob } from './command/subcommands/spawnMob';
 import { registerSpawn } from './command/commands/spawn';
 import { Rarities } from '../shared/rarity';
 import { ClientBound, ClientboundConnectionKickReason, ServerBound } from '../shared/packet';
+import { VISIBLE_STATE_VALUES, WaveRoomPlayerReadyState, WaveRoomVisibleState } from '../shared/waveRoom';
 
 /**
  * Temp player data.
@@ -196,17 +196,17 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
             if (!waveRoom) return;
 
-            waveRoom.setPlayerReadyState(waveRoomClientId, buffer[1] ? PlayerReadyState.READY : PlayerReadyState.UNREADY);
+            waveRoom.setPlayerReadyState(waveRoomClientId, buffer[1] ? WaveRoomPlayerReadyState.READY : WaveRoomPlayerReadyState.UNREADY);
 
             break;
         }
         case ServerBound.WAVE_ROOM_CHANGE_VISIBLE: {
-            if (buffer.length !== 2) return;
+            if (buffer.length !== 2 || !VISIBLE_STATE_VALUES.includes(buffer[1])) return;
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
             if (!waveRoom) return;
 
-            waveRoom.setPublicState(waveRoomClientId, buffer[1] ? WaveRoomVisibleState.PUBLIC : WaveRoomVisibleState.PRIVATE);
+            waveRoom.setPublicState(waveRoomClientId, buffer[1]);
 
             break;
         }

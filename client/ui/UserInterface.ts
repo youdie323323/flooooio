@@ -1,6 +1,6 @@
 import { Biomes } from "../../shared/enum";
-import { Clickable, Component, Container, Interactive } from "./components/Component";
-import { ComponentButton } from "./components/ComponentButton";
+import { Clickable, Component, ComponentContainer, Interactive } from "./components/Component";
+import { Button } from "./components/Button";
 
 export interface BiomeSetter {
     set biome(biome: Biomes);
@@ -68,10 +68,12 @@ export default abstract class UserInterface {
             this.updateComponentsLayout();
         };
 
-        // Call them first like resize observer
-        this._onresize();
-
         window.addEventListener('resize', this._onresize);
+
+        // Call them first like resize observer
+        // Call twice to render container properly
+        this._onresize();
+        this._onresize();
 
         /*
         this.resizeObserver = new ResizeObserver((entries) => {
@@ -89,6 +91,9 @@ export default abstract class UserInterface {
     }
 
     protected addComponent(component: Component): void {
+        // Remove component if exists
+        this.removeComponent(component);
+
         this.components.push(component);
     }
 
@@ -99,7 +104,7 @@ export default abstract class UserInterface {
         }
     }
 
-    protected addChildrenComponent(targetContainer: Container, component: Component): void {
+    protected addChildrenComponent(targetContainer: ComponentContainer, component: Component): void {
         targetContainer.addChildren(component);
 
         this.addComponent(component);
@@ -109,14 +114,14 @@ export default abstract class UserInterface {
         }
     }
 
-    protected removeChildrenComponent(targetContainer: Container, component: Component): void {
+    protected removeChildrenComponent(targetContainer: ComponentContainer, component: Component): void {
         targetContainer.removeChildren(component);
 
         this.removeComponent(component);
 
         this.childrenComponents.delete(component);
     }
-    
+
     public overlapsComponent(component: Component, x: number, y: number): boolean {
         return x >= component.x && x <= component.x + component.w && y >= component.y && y <= component.y + component.h;
     }
@@ -157,7 +162,14 @@ export default abstract class UserInterface {
         const scaledHeight = this.canvas.height / uiScaleFactor;
 
         this.components.forEach(component => {
-            component.calculateLayout(scaledWidth, scaledHeight);
+            if (!this.childrenComponents.has(component)) {
+                const layout = component.calculateLayout(scaledWidth, scaledHeight, 0, 0);
+
+                component.setX(layout.x);
+                component.setY(layout.y);
+                component.setW(layout.w);
+                component.setH(layout.h);
+            }
         });
     }
 
@@ -192,6 +204,10 @@ export default abstract class UserInterface {
 
         // Click handling
         for (const component of this.components) {
+            if (!this.interactiveAllowed(component)) {
+                continue;
+            }
+
             if (component.visible && this.overlapsComponent(component, this.mouseX, this.mouseY)) {
                 if (this.isClickable(component)) {
                     this.clickedComponent = component;
@@ -210,6 +226,10 @@ export default abstract class UserInterface {
         this.onMouseUp(event);
 
         if (this.clickedComponent) {
+            if (!this.interactiveAllowed(this.clickedComponent)) {
+                return;
+            }
+
             if (this.overlapsComponent(this.clickedComponent, this.mouseX, this.mouseY)) {
                 this.clickedComponent.onClick?.();
                 this.clickedComponent.onMouseUp?.();
@@ -228,6 +248,10 @@ export default abstract class UserInterface {
         this.updateMousePosition(event);
 
         this.components.forEach(component => {
+            if (!this.interactiveAllowed(component)) {
+                return;
+            }
+
             if (component.visible && this.isInteractive(component)) {
                 const isHovering = this.overlapsComponent(component, this.mouseX, this.mouseY);
 
@@ -243,6 +267,14 @@ export default abstract class UserInterface {
                 }
             }
         });
+    }
+
+    private interactiveAllowed(component: Component): boolean {
+        if (this.childrenComponents.has(component) && component.parentContainer.isAnimating) {
+            return false;
+        }
+
+        return true;
     }
 
     public cleanupRenders(): void {
@@ -291,4 +323,14 @@ export default abstract class UserInterface {
     abstract onMouseDown(event: MouseEvent): void;
     abstract onMouseUp(event: MouseEvent): void;
     abstract onMouseMove(event: MouseEvent): void;
+
+    // Component shortener
+    protected createContainer<T extends ComponentContainer>(container: T, children: Component[]): T {
+        children.forEach(child => {
+            this.addChildrenComponent(container, child);
+            child.parentContainer = container;
+        });
+
+        return container;
+    }
 }

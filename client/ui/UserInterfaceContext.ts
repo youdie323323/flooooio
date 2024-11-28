@@ -2,12 +2,12 @@ import { cameraController, mobs, players } from "../main";
 import { selfId } from "../Networking";
 import UserInterface from "./UserInterface";
 import UserInterfaceGame from "./mode/UserInterfaceModeGame";
-import UserInterfaceMenu from "./mode/UserInterfaceModeMenu";
+import UserInterfaceTitle from "./mode/UserInterfaceModeTitle";
 import UserInterfaceTransition from "./UserInterfaceTransition";
 
-export type UserInterfaceMode = 'menu' | 'game';
+export type UserInterfaceMode = 'game' | 'title';
 
-export type UserInterfaces = UserInterfaceGame | UserInterfaceMenu;
+export type UserInterfaces = UserInterfaceGame | UserInterfaceTitle;
 
 export default class UserInterfaceContext {
     private readonly transition: UserInterfaceTransition;
@@ -18,7 +18,7 @@ export default class UserInterfaceContext {
     public isTransitioning: boolean;
 
     constructor(private readonly canvas: HTMLCanvasElement) {
-        this.currentUI = new UserInterfaceMenu(canvas);
+        this.currentUI = new UserInterfaceTitle(canvas);
         this.previousUI = null;
         this.transition = new UserInterfaceTransition(canvas);
         this.isTransitioning = false;
@@ -41,29 +41,27 @@ export default class UserInterfaceContext {
         this.previousUI = this.currentUI;
         this.currentUI = this.createUI(mode);
 
-        // Wait for createUI to finish them
-        requestAnimationFrame(() => {
-            this.isTransitioning = true;
+        // TODO: fix fancy behaivors
 
-            this.transition.start(mode)
+        this.isTransitioning = true;
 
-            // Cleanup listeners so cant touch before ui buttons
-            this.previousUI?.removeEventListeners();
-        });
+        this.transition.start(mode)
+
+        // Cleanup listeners so cant touch before ui buttons
+        this.previousUI?.removeEventListeners();
     }
 
     private createUI(mode: UserInterfaceMode): UserInterfaces {
         switch (mode) {
-            case 'menu': {
+            case 'title': {
                 // Fake dead animation
                 const player = players.get(selfId);
                 if (player && !player.isDead) {
                     player.isDead = true;
                     player.deadT = 0;
-                    player.health = 0;
                 }
 
-                return new UserInterfaceMenu(this.canvas);
+                return new UserInterfaceTitle(this.canvas);
             }
 
             case 'game': {
@@ -83,7 +81,7 @@ export default class UserInterfaceContext {
 
         this.transition.draw(this.currentUI, this.previousUI);
 
-        const type: UserInterfaceMode = this.currentUI instanceof UserInterfaceMenu ? 'menu' : 'game';
+        const type: UserInterfaceMode = this.currentUI instanceof UserInterfaceTitle ? 'title' : 'game';
 
         if (this.transition.update(type)) {
             this.cleanup();

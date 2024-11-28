@@ -15,7 +15,7 @@ export type ColorCode = `#${string}`;
  * @param color - color code
  * @param strength - strenth
  */
-export function darkend(color: ColorCode, strength: number) {
+export function darkend(color: ColorCode, strength: number): ColorCode {
     let r = parseInt(color.slice(1, 3), 16);
     let g = parseInt(color.slice(3, 5), 16);
     let b = parseInt(color.slice(5, 7), 16);
@@ -28,5 +28,5 @@ export function darkend(color: ColorCode, strength: number) {
 }
 
 export function calculateStrokeWidth(fontSize: number): number {
-    return fontSize / 7.8;
+    return fontSize / 8.33333383;
 }

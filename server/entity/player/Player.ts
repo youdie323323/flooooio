@@ -79,7 +79,6 @@ class BasePlayer implements Entity {
 
 let Player = BasePlayer;
 Player = EntityCollisionResponse(Player);
-Player = EntityLinearMovement(Player);
 // Do player mixin before checksum so petal reloads like original game (can interpolate movement)
 Player = PlayerPetalOrbit(Player);
 Player = PlayerReload(Player);
@@ -87,6 +86,7 @@ Player = EntityDeath(Player);
 Player = EntityWorldBoundary(Player);
 Player = PlayerDeadCamera(Player);
 Player = PlayerPetalConsume(Player);
+Player = EntityLinearMovement(Player);
 
 type PlayerInstance = InstanceType<typeof Player>;
 

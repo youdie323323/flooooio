@@ -1,49 +1,41 @@
-import Layout, { LayoutOptions } from "../layout/Layout";
+import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import { uiScaleFactor } from "../UserInterface";
+
+/**
+ * Type that live regenerate value.
+ */
+export type DynamicLayoutable<T> = T | (() => T);
+
+// TODO: Dynamic LayoutOptions should update layout when differs from previous options
 
 // Base interface for all GUI components
 export abstract class Component {
-    private readonly ANIMATION_DURATION: number = 150;
+    protected readonly ANIMATION_DURATION: number = 250;
     public isAnimating: boolean = false;
     public animationProgress: number = 1;
     public animationStartTime: number | null = null;
     public animationDirection: 'in' | 'out' = 'in';
+
+    public parentContainer: ComponentContainer;
 
     public visible: boolean = true;
 
     /**
      * Canvas configs.
      */
-    private globalAlpha: number = 1;
+    protected globalAlpha: number = 1;
 
     public x: number = 0;
     public y: number = 0;
     public w: number = 0;
     public h: number = 0;
 
-    constructor(protected layout: LayoutOptions) {
-        this.calculateLayout(window.innerWidth / uiScaleFactor, window.innerHeight / uiScaleFactor);
-    }
-
-    public calculateLayout(
-        viewportWidth: number, 
-        viewportHeight: number,
-        originX: number = 0,
-        originY: number = 0 
-    ): void {
-        const { x, y, w, h } = Layout.calculatePosition(
-            this.layout,
-            viewportWidth,
-            viewportHeight,
-            originX,
-            originY,
-        );
-
-        this.setX(x);
-        this.setY(y);
-        this.setW(w);
-        this.setH(h);
-    }
+    public abstract calculateLayout(
+        width: number,
+        height: number,
+        originX: number,
+        originY: number
+    ): LayoutResult;
 
     public render(ctx: CanvasRenderingContext2D): void {
         ctx.globalAlpha = this.globalAlpha;
@@ -73,13 +65,13 @@ export abstract class Component {
             }
         }
 
-        const easeOutCirc = (x: number): number => {
-            return Math.sqrt(1 - Math.pow(x - 1, 2));
+        const easeInExpo = (x: number): number => {
+            return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
         };
 
-        const progress = easeOutCirc(this.animationProgress);
+        const progress = easeInExpo(this.animationProgress);
 
-        ctx.translate(this.x + this.w / 2, this.y + (-(this.h) * (1 - progress)) + this.h / 2);
+        ctx.translate(this.x + this.w / 2, this.y + (-(this.h / 2) * (1 - progress)) + this.h / 2);
         ctx.scale(progress, progress);
         ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
     }
@@ -110,6 +102,14 @@ export abstract class Component {
     public setH(h: number) { this.h = h }
 
     public abstract destroy?(): void;
+
+    protected computeDynamicLayoutable<T>(dl: DynamicLayoutable<T>): T {
+        if (dl instanceof Function) {
+            return (dl as () => T)();
+        } else {
+            return dl;
+        }
+    }
 }
 
 // Interface for interactive components
@@ -128,7 +128,7 @@ export interface Clickable extends Component {
 }
 
 // Interface for container components
-export interface Container extends Component {
+export interface ComponentContainer extends Component {
     children: Component[];
 
     addChildren(child: Component): void;

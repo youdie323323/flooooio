@@ -1,10 +1,12 @@
 import { Mood, Biomes } from "../shared/enum";
 import { ClientBound, ServerBound } from "../shared/packet";
 import { Rarities } from "../shared/rarity";
+import { WaveRoomState, WaveRoomVisibleState } from "../shared/waveRoom";
 import EntityMob from "./entity/EntityMob";
 import EntityPlayer from "./entity/EntityPlayer";
 import { players, mobs, uiCtx } from "./main";
 import UserInterfaceGame from "./ui/mode/UserInterfaceModeGame";
+import UserInterfaceTitle from "./ui/mode/UserInterfaceModeTitle";
 
 export let selfId = -1;
 export let waveSelfId = -1;
@@ -239,41 +241,39 @@ export default class Networking {
                     break;
                 }
                 case ClientBound.WAVE_ROOM_UPDATE: {
-                    const waveClientCount = data.getUint8(offset++);
+                    if (uiCtx.currentUI instanceof UserInterfaceTitle) {
+                        const waveClientCount = data.getUint8(offset++);
 
-                    const clients = [];
+                        const clients = [];
 
-                    for (let i = 0; i < waveClientCount; i++) {
-                        const waveClientId = data.getUint32(offset);
-                        offset += 4;
+                        for (let i = 0; i < waveClientCount; i++) {
+                            const waveClientId = data.getUint32(offset);
+                            offset += 4;
 
-                        const waveClientIsOwner = data.getUint8(offset++) === 1;
+                            const waveClientIsOwner = data.getUint8(offset++) === 1;
 
-                        const waveClientName = readString();
+                            const waveClientName = readString();
 
-                        clients.push({
-                            id: waveClientId,
-                            isOwner: waveClientIsOwner,
-                            name: waveClientName,
-                        });
-                    }
+                            clients.push({
+                                id: waveClientId,
+                                isOwner: waveClientIsOwner,
+                                name: waveClientName,
+                            });
+                        }
 
-                    console.table(clients);
+                        const waveCode = readString();
 
-                    const waveCode = readString();
+                        const waveBiome = data.getUint8(offset++) as Biomes;
 
-                    const waveBiome = data.getUint8(offset++) as Biomes;
+                        const waveState = data.getUint8(offset++) as WaveRoomState;
 
-                    const waveState = data.getUint8(offset++);
+                        const waveVisible = data.getUint8(offset++) as WaveRoomVisibleState;
 
-                    const waveIsPublic = !!data.getUint8(offset++);
+                        uiCtx.currentUI.waveRoomClients = clients;
+                        uiCtx.currentUI.waveRoomCode = waveCode;
+                        uiCtx.currentUI.waveRoomState = waveState;
+                        uiCtx.currentUI.waveRoomVisible = waveVisible;
 
-                    console.log(waveCode, waveBiome, waveState, waveIsPublic);
-
-                    if (uiCtx.previousUI) {
-                        uiCtx.previousUI.biome = waveBiome;
-                    }
-                    if (uiCtx.currentUI) {
                         uiCtx.currentUI.biome = waveBiome;
                     }
 
@@ -301,7 +301,6 @@ export default class Networking {
                 case ClientBound.CHAT_RECV: {
                     if (uiCtx.currentUI instanceof UserInterfaceGame) {
                         uiCtx.currentUI.chats.push(readString());
-                        console.log(uiCtx.currentUI.chats.slice());
                         if (uiCtx.currentUI.chats.length > UserInterfaceGame.MAX_MESSAGE_QUEUE_AMOUNT) {
                             uiCtx.currentUI.chats.shift();
                         }

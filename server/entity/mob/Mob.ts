@@ -82,12 +82,12 @@ class BaseMob implements Entity {
 
 let Mob = BaseMob;
 Mob = EntityCollisionResponse(Mob);
-Mob = EntityLinearMovement(Mob);
 Mob = EntityDeath(Mob);
 Mob = EntityWorldBoundary(Mob);
 Mob = MobOscillatingMovement(Mob);
 Mob = MobAggressivePursuit(Mob);
 Mob = MobHealthRegen(Mob);
+Mob = EntityLinearMovement(Mob);
 
 type MobInstance = InstanceType<typeof Mob>;
 

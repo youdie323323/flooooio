@@ -8,7 +8,7 @@ import { PETAL_PROFILES } from '../../shared/petalProfiles';
 import { isSpawnableSlot, PetalData, MockPetalData, Slot } from '../entity/mob/petal/Petal';
 import { USAGE_RELOAD_PETALS } from '../entity/player/PlayerPetalReload';
 import { logger } from '../main';
-import WaveRoom, { WaveData, WaveRoomPlayer, WaveRoomPlayerId, WaveRoomState } from './WaveRoom';
+import WaveRoom, { WaveData, WaveRoomPlayer, WaveRoomPlayerId } from './WaveRoom';
 import { getRandomMapSafePosition, generateRandomEntityId, getRandomAngle, getRandomPosition } from '../utils/random';
 import WaveProbabilityPredictor from './WaveProbabilityPredictor';
 import { Biomes, MobType, PetalType, Mood, MOON_VALUES } from '../../shared/enum';
