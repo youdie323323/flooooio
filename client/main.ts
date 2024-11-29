@@ -1,7 +1,6 @@
 import EntityPlayer from "./entity/EntityPlayer";
 import CameraController from "./utils/CameraController";
 import EntityMob from "./entity/EntityMob";
-import { interpolate } from "./utils/Interpolator";
 import UserInterfaceContext from "./ui/UserInterfaceContext";
 import Networking from "./Networking";
 import TerrainGenerator, { BIOME_SVG_TILESETS, BIOME_TILESETS } from "./utils/TerrainGenerator";
@@ -15,15 +14,13 @@ export let networking: Networking;
 
 export let lastTimestamp = Date.now();
 export let deltaTime = 0;
-export let timeFactor = 0;
 export let prevTimestamp = lastTimestamp;
-
-export let antennaScaleFactor = 1;
 
 export const players: Map<number, EntityPlayer> = new Map();
 export const mobs: Map<number, EntityMob> = new Map();
 
 export const cameraController = new CameraController(canvas);
+export let antennaScaleFactor = 1;
 
 /**
  * Global instanceof ui context.
@@ -71,6 +68,7 @@ export const uiCtx = new UserInterfaceContext(canvas);
     } catch (e) {
         hideElement("loading");
         showElement("errorDialog");
+
         return;
     }
 
@@ -83,7 +81,6 @@ export const uiCtx = new UserInterfaceContext(canvas);
         lastTimestamp = Date.now();
         deltaTime = lastTimestamp - prevTimestamp;
         prevTimestamp = lastTimestamp;
-        timeFactor = deltaTime / 33;
 
         antennaScaleFactor = cameraController.zoom;
 

@@ -131,13 +131,13 @@ export default abstract class Entity {
         }
     }
 
-    getSkinColor(color) {
-        const rJ = 1 - this.hurtT;
-        if (rJ >= 1) {
+    getSkinColor(color: any) {
+        const rHurtT = 1 - this.hurtT;
+        if (rHurtT >= 1) {
             return color;
         }
         color = hexToRgb(color);
-        color = interpolateColor(color, [255, 0, 0], rJ * 0.25 + 0.75);
+        color = interpolateColor(color, [255, 0, 0], rHurtT * 0.25 + 0.75);
         return rgbArrayToString(color);
     }
 

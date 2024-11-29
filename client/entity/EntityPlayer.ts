@@ -18,7 +18,7 @@ export default class EntityPlayer extends Entity {
         maxHealth: number, 
         public mood: Mood, 
         readonly nickname: string,
-        readonly isProfile: boolean = false,
+        readonly isStaticLike: boolean = false,
     ) {
         super(id, x, y, angle, size, health, maxHealth);
 
@@ -40,7 +40,7 @@ export default class EntityPlayer extends Entity {
     }
 
     draw(ctx: CanvasRenderingContext2D) {
-        if (!this.isProfile && this.isDead && this.deadT > 1) {
+        if (!this.isStaticLike && this.isDead && this.deadT > 1) {
             return;
         }
 
@@ -48,7 +48,7 @@ export default class EntityPlayer extends Entity {
 
         ctx.translate(this.x, this.y);
 
-        if (!this.isProfile) {
+        if (!this.isStaticLike) {
             drawEntityDetail(this, ctx);
 
             this.deadPreDraw(ctx);    

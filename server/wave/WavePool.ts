@@ -11,7 +11,7 @@ import { logger } from '../main';
 import WaveRoom, { WaveData, WaveRoomPlayer, WaveRoomPlayerId } from './WaveRoom';
 import { getRandomMapSafePosition, generateRandomEntityId, getRandomAngle, getRandomPosition } from '../utils/random';
 import WaveProbabilityPredictor from './WaveProbabilityPredictor';
-import { Biomes, MobType, PetalType, Mood, MOON_VALUES } from '../../shared/enum';
+import { Biomes, MobType, PetalType, Mood, MOOD_VALUES } from '../../shared/enum';
 import { Rarities } from '../../shared/rarity';
 import { ClientBound } from '../../shared/packet';
 
@@ -259,39 +259,30 @@ export class WavePool {
     /**
      * Updates the movement of a client
      */
-    public updateMovement(clientId: PlayerInstance["id"], angle: number, magnitude: number): boolean {
-        if (
-            magnitude < 0 || magnitude > 255 ||
-            angle < 0 || angle > 256
-        ) {
-            return false;
-        }
+    public updateMovement(clientId: PlayerInstance["id"], angle: number, magnitude: number) {
+        // Uint always range to 0 ~ 255, so no need to check this
+        // if (
+        //     magnitude < 0 || magnitude > 255 ||
+        //     angle < 0 || angle > 256
+        // ) {
+        //     return false;
+        // }
 
         const client = this.clients.get(clientId);
         if (client && !client.isDead) {
             client.angle = angle;
             client.magnitude = magnitude * Player.PLAYER_SPEED;
         }
-
-        return true;
     }
 
     /**
      * Updates the mood of a client.
      */
-    public changeMood(clientId: PlayerInstance["id"], kind: Mood): boolean {
-        if (
-            !MOON_VALUES.includes(kind)
-        ) {
-            return false;
-        }
-
+    public changeMood(clientId: PlayerInstance["id"], kind: Mood) {
         const client = this.clients.get(clientId);
         if (client && !client.isDead) {
             client.mood = kind;
         }
-
-        return true;
     }
 
     /**

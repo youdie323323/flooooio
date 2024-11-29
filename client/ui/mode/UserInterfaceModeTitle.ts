@@ -12,10 +12,11 @@ import ExtensionCollidable from "../components/extensions/ExtensionCollidable.js
 import { CoordinatedSpace, StaticContainer, StaticHContainer, StaticPanelContainer, StaticSpace, StaticVContainer } from "../components/Container.js";
 import { Component } from "../components/Component.js";
 import { CROSS_ICON_SVG } from "./UserInterfaceModeGame.js";
-import { WaveRoomState, WaveRoomVisibleState } from "../../../shared/waveRoom.js";
+import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../shared/waveRoom.js";
 import Toggle from "../components/Toggle.js";
 import { ExtensionDynamicLayoutable } from "../components/extensions/ExtensionDynamicLayoutable.js";
 import PlayerProfile from "../components/PlayerProfile.js";
+import { DARKEND_BASE } from "../../utils/common.js";
 
 // Ui svg icons
 
@@ -91,9 +92,12 @@ function drawRoundedPolygon(
     ctx.closePath();
 }
 
+// TODO: send initial data of wave room instead of send 2 packets
+
 export interface WaveRoomPlayerInformation {
     id: number;
     name: string;
+    readyState: WaveRoomPlayerReadyState;
 }
 
 export default class UserInterfaceTitle extends UserInterface implements BiomeSetter {
@@ -115,9 +119,16 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
     private readyButton: TextButton;
     private squadButton: TextButton;
 
-    private squadMenuContainer: StaticPanelContainer;
+    // Make this public to close this from networking
+    public squadMenuContainer: StaticPanelContainer;
 
     private publicToggle: Toggle;
+
+    private loadingText: StaticText;
+    private loadingTextRef: string;
+
+    private playerProfileContainer: StaticHContainer;
+    private codeText: StaticText;
 
     // Wave informations
 
@@ -125,8 +136,7 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
     public waveRoomCode: string;
     public waveRoomState: WaveRoomState;
     public waveRoomVisible: WaveRoomVisibleState;
-
-    private oWaveRoomVisible: WaveRoomVisibleState;
+    private prevWaveRoomVisible: WaveRoomVisibleState;
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
@@ -138,6 +148,8 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
         this.backgroundX = 0;
         this.backgroundY = 0;
         this.backgroundWaveStep = 0;
+
+        this.loadingTextRef = "Loading...";
 
         setTimeout(() => {
             this.connectingText.setVisible(true, true);
@@ -165,8 +177,22 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
     onMouseUp(event: MouseEvent): void { }
     onMouseMove(event: MouseEvent): void { }
 
-    protected initializeComponents(): void {
+    private resetWaveState() {
         this.waveRoomPlayers = [];
+        this.waveRoomCode = null;
+        this.waveRoomVisible = WaveRoomVisibleState.PRIVATE;
+        this.waveRoomState = WaveRoomState.WAITING;
+    }
+
+    private toggleShowLoadingText(t: boolean): void {
+        this.loadingText.setVisible(t, false);
+
+        this.playerProfileContainer.setVisible(!t, false);
+        this.codeText.setVisible(!t, false);
+    }
+
+    protected initializeComponents(): void {
+        this.resetWaveState();
 
         const bagButton = new SVGButton(
             {
@@ -331,6 +357,8 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
                 },
             );
 
+            let readyToggle = false;
+
             this.readyButton = new (ExtensionCollidable(TextButton))(
                 {
                     x: (-(100 / 2)) + 140,
@@ -343,7 +371,19 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
                 },
                 "#1dd129",
                 () => {
-                    console.log("called")
+                    readyToggle = !readyToggle;
+
+                    if (this.squadMenuContainer.visible === false) {
+                        ws.send(new Uint8Array([ServerBound.WAVE_ROOM_FIND_PUBLIC, this.biome]));
+
+                        this.squadMenuContainer.setVisible(true, true);
+
+                        this.loadingTextRef = "Creating...";
+
+                        ws.send(new Uint8Array([ServerBound.WAVE_ROOM_CHANGE_READY, WaveRoomPlayerReadyState.READY]));
+                    } else {
+                        ws.send(new Uint8Array([ServerBound.WAVE_ROOM_CHANGE_READY, readyToggle ? WaveRoomPlayerReadyState.READY : WaveRoomPlayerReadyState.UNREADY]));
+                    }
                 },
                 true,
                 "Ready",
@@ -351,7 +391,7 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
                     ctx.translate(textWidth + 12, 0);
 
                     ctx.fillStyle = "black";
-                    ctx.globalAlpha = 0.2;
+                    ctx.globalAlpha = DARKEND_BASE;
 
                     drawRoundedPolygon(ctx, 0, 0, 10, 90, 40, 3);
 
@@ -371,7 +411,13 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
                 },
                 "#5a9fdb",
                 () => {
+                    ws.send(new Uint8Array([ServerBound.WAVE_ROOM_CREATE, this.biome]));
+
                     this.squadMenuContainer.setVisible(true, true);
+
+                    this.loadingTextRef = "Creating...";
+
+                    ws.send(new Uint8Array([ServerBound.WAVE_ROOM_CHANGE_VISIBLE, WaveRoomVisibleState.PRIVATE]));
                 },
                 true,
                 "Squad",
@@ -379,7 +425,7 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
                     ctx.translate(textWidth + 9, 0);
 
                     ctx.fillStyle = "black";
-                    ctx.globalAlpha = 0.2;
+                    ctx.globalAlpha = DARKEND_BASE;
 
                     drawRoundedPolygon(ctx, 0, 0, 8, 90, 40, 4);
 
@@ -444,11 +490,12 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
             const makePlayerProfileColumn = (i: number): PlayerProfile => {
                 return new PlayerProfile(
                     {
-                        w: 72.6,
+                        w: 74.45,
                         h: 120,
                     },
                     () => this.waveRoomPlayers[i]?.id,
                     () => this.waveRoomPlayers[i]?.name,
+                    () => this.waveRoomPlayers[i]?.readyState,
                     () => this.waveRoomPlayers[i] === undefined,
                 );
             }
@@ -456,7 +503,7 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
             this.squadMenuContainer = this.createContainer(
                 new (ExtensionDynamicLayoutable(StaticPanelContainer))(
                     {
-                        x: -170,
+                        x: -175,
                         y: -60,
 
                         alignFromCenterX: true,
@@ -465,28 +512,39 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
                     "#5aa0db",
                 ),
                 [
-                    this.createContainer(
+                    (this.loadingText = new StaticText(
+                        {
+                            x: 162,
+                            y: 110,
+                            w: 0,
+                            h: 0,
+                        },
+                        () => this.loadingTextRef,
+                        14,
+                    )),
+
+                    (this.playerProfileContainer = this.createContainer(
                         new StaticHContainer(
                             {
-                                x: 6,
+                                x: 9,
                                 y: 50,
                             },
                         ),
                         [
                             makePlayerProfileColumn(0),
-                            new StaticSpace(8, 0),
+                            new StaticSpace(5.5, 0),
                             makePlayerProfileColumn(1),
-                            new StaticSpace(8, 0),
+                            new StaticSpace(5.5, 0),
                             makePlayerProfileColumn(2),
-                            new StaticSpace(8, 0),
+                            new StaticSpace(5.5, 0),
                             makePlayerProfileColumn(3),
                         ],
-                    ),
+                    )),
 
                     new SVGButton(
                         {
-                            x: 312,
-                            y: 1,
+                            x: 316 - 0.5,
+                            y: 1 + 0.5,
                             w: 15,
                             h: 15,
                         },
@@ -494,24 +552,25 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
                         () => {
                             this.squadMenuContainer.setVisible(false, true);
 
-                            this.waveRoomPlayers = [];
-                            this.waveRoomCode = null;
-                            this.waveRoomVisible = WaveRoomVisibleState.PRIVATE;
-                            this.waveRoomState = WaveRoomState.WAITING;
+                            readyToggle = false;
+
+                            this.resetWaveState();
+
+                            this.loadingTextRef = "Loading...";
 
                             ws.send(new Uint8Array([ServerBound.WAVE_ROOM_LEAVE]));
                         },
                         true,
                         CROSS_ICON_SVG,
                     ),
-                    new CoordinatedSpace(313, 191, 15, 15),
+                    new CoordinatedSpace(317, 196, 15, 15),
 
                     (this.publicToggle = new Toggle(
                         {
-                            x: 8,
+                            x: 11,
                             y: 24,
-                            w: 16,
-                            h: 16,
+                            w: 15,
+                            h: 15,
                         },
                         (t: boolean): void => {
                             ws.send(new Uint8Array([ServerBound.WAVE_ROOM_CHANGE_VISIBLE, t ? WaveRoomVisibleState.PUBLIC : WaveRoomVisibleState.PRIVATE]));
@@ -519,7 +578,7 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
                     )),
                     new StaticText(
                         {
-                            x: 44,
+                            x: 46,
                             y: 24 + 8,
                             w: 0,
                             h: 0,
@@ -530,7 +589,7 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
 
                     new StaticText(
                         () => ({
-                            x: this.waveRoomVisible === WaveRoomVisibleState.PRIVATE ? 100 : 114,
+                            x: this.waveRoomVisible === WaveRoomVisibleState.PRIVATE ? 103 : 117,
                             y: 24 + 8,
                             w: 0,
                             h: 0,
@@ -547,7 +606,7 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
                     // Code inputer
                     (this.codeInput = new TextInput(
                         {
-                            x: 184,
+                            x: 187,
                             y: 183,
                             w: 75,
                             h: 14,
@@ -574,7 +633,7 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
                     )),
                     new TextButton(
                         {
-                            x: 271,
+                            x: 274,
                             y: 183 + 1,
                             w: 50,
                             h: 18,
@@ -590,7 +649,19 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
 
                     new TextButton(
                         {
-                            x: 271,
+                            x: 195,
+                            y: 24,
+                            w: 72,
+                            h: 18,
+                        },
+                        "#5aa0db",
+                        () => { },
+                        false,
+                        "Find public",
+                    ),
+                    new TextButton(
+                        {
+                            x: 274,
                             y: 24,
                             w: 50,
                             h: 18,
@@ -603,31 +674,18 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
                         "New",
                     ),
 
-                    new TextButton(
+                    (this.codeText = new StaticText(
                         {
-                            x: 192,
-                            y: 24,
-                            w: 72,
-                            h: 18,
-                        },
-                        "#5aa0db",
-                        () => { },
-                        false,
-                        "Find public",
-                    ),
-
-                    new StaticText(
-                        {
-                            x: 8,
-                            y: 195,
+                            x: 10,
+                            y: 193,
                             w: 0,
                             h: 0,
                         },
                         () => "Code: " + (this.waveRoomCode || "UNKNOWN"),
-                        8,
+                        9,
                         "#ffffff",
                         true,
-                    ),
+                    )),
 
                     new StaticText(
                         {
@@ -668,6 +726,8 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
             (this.readyButton as any).addCollidableComponents([this.squadMenuContainer]);
 
             gameNameText.addCollidableComponents([nameInputDescription]);
+
+            this.toggleShowLoadingText(true);
         };
 
         this.addComponent(gameNameText);
@@ -729,11 +789,20 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
             ctx.restore();
         }
 
-        if (this.waveRoomVisible !== this.oWaveRoomVisible) {
-            this.publicToggle.startScaling(this.waveRoomVisible === WaveRoomVisibleState.PUBLIC);
-        }
+        {
+            if (this.waveRoomVisible !== this.prevWaveRoomVisible) {
+                this.publicToggle.startScaling(this.waveRoomVisible === WaveRoomVisibleState.PUBLIC);
+            }
+            this.prevWaveRoomVisible = this.waveRoomVisible;
+        };
 
-        this.oWaveRoomVisible = this.waveRoomVisible;
+        {
+            if (this.waveRoomPlayers.length) {
+                this.toggleShowLoadingText(false);
+            } else {
+                this.toggleShowLoadingText(true);
+            }
+        }
 
         this.render();
     }

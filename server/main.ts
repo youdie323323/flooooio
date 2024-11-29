@@ -10,7 +10,7 @@ import { clientRemove, kickClient, preprocessResultID } from './utils/common';
 import { MockPlayerData } from './entity/player/Player';
 import { choice, randomEnum, shuffle } from './utils/random';
 import { MockPetalData } from './entity/mob/petal/Petal';
-import { PetalType, Mood, BIOME_VALUES } from '../shared/enum';
+import { PetalType, Mood, BIOME_VALUES, MOOD_VALUES } from '../shared/enum';
 import root from './command/commandRoot';
 import { registerSpawnMobBulk } from './command/subcommands/spawnMobBulk';
 import { registerSpawnMob } from './command/subcommands/spawnMob';
@@ -60,6 +60,8 @@ logger.info("App started");
  */
 const textDecoder = new TextDecoder('utf-8');
 
+const packetHistory: string[] = [];
+
 function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBinary: boolean) {
     const buffer = new Uint8Array(message);
     if (buffer.length < 1 || !isBinary) return;
@@ -69,9 +71,15 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
     const { waveRoomClientId, waveClientId } = userData;
 
+    const packetType = buffer[0];
+    packetHistory.push(ServerBound[packetType]);
+    if (packetHistory.length > 30) {
+        packetHistory.shift();
+    }
+
     // Hmm, maybe should i kick client if their packet is incorrect?
 
-    switch (buffer[0]) {
+    switch (packetType) {
         case ServerBound.WAVE_CHANGE_MOVE: {
             if (buffer.length !== 3) return;
 
@@ -81,24 +89,12 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             const client = waveRoom.wavePool.getClient(waveClientId);
             if (!client) return;
 
-            if (!waveRoom.wavePool.updateMovement(waveClientId, buffer[1], buffer[2])) {
-                logger.region(() => {
-                    using _guard = logger.metadata({
-                        waveClientId,
-                        angle: buffer[1],
-                        magnitude: buffer[2],
-                    });
-
-                    logger.warn("Invalid magnitude/angle received from client, kicking");
-                });
-
-                kickClient(ws, ClientboundConnectionKickReason.ANTICHEAT_DETECTED);
-            };
+            waveRoom.wavePool.updateMovement(waveClientId, buffer[1], buffer[2]);
 
             break;
         }
         case ServerBound.WAVE_CHANGE_MOOD: {
-            if (buffer.length !== 2) return;
+            if (buffer.length !== 2 || !MOOD_VALUES.includes(buffer[1])) return;
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
             if (!waveRoom) return;
@@ -106,18 +102,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             const client = waveRoom.wavePool.getClient(waveClientId);
             if (!client) return;
 
-            if (!waveRoom.wavePool.changeMood(waveClientId, buffer[1])) {
-                logger.region(() => {
-                    using _guard = logger.metadata({
-                        waveClientId,
-                        kind: Mood[buffer[1]],
-                    });
-
-                    logger.warn("Invalid mood kind received from client, kicking");
-                });
-
-                kickClient(ws, ClientboundConnectionKickReason.ANTICHEAT_DETECTED);
-            };
+            waveRoom.wavePool.changeMood(waveClientId, buffer[1])
 
             break;
         }
@@ -151,7 +136,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             if (buffer.length !== 2 || !BIOME_VALUES.includes(buffer[1])) return;
 
             const id = waveRoomService.createWaveRoom(userData, buffer[1]);
-            
+
             preprocessResultID(ws, id);
 
             break;
@@ -170,11 +155,11 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             break;
         }
-        case ServerBound.WAVE_ROOM_JOIN_PUBLIC: {
+        case ServerBound.WAVE_ROOM_FIND_PUBLIC: {
             if (buffer.length !== 2 || !BIOME_VALUES.includes(buffer[1])) return;
 
             const id = waveRoomService.joinPublicWaveRoom(userData, buffer[1]);
-            
+
             preprocessResultID(ws, id);
 
             break;
@@ -216,7 +201,8 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             break;
         }
         case ServerBound.WAVE_ROOM_LEAVE: {
-            if (waveRoomService.leaveWaveRoom(waveRoomClientId)) {
+            const ok = waveRoomService.leaveWaveRoom(waveRoomClientId);
+            if (ok) {
                 userData.waveRoomClientId = null;
             };
 
@@ -360,3 +346,12 @@ app
 //
 //     app.close();
 // });
+
+// ---------- BEGIN DEBUG (for data collect) ----------
+
+process.on('uncaughtException', function (err) {
+    logger.error("Uncaught exception occurred!");
+    logger.error("Last 30 packet types received: " + JSON.stringify(packetHistory.slice(), null, "\t"));
+
+    throw err;
+});

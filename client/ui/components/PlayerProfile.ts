@@ -1,4 +1,5 @@
 import { Mood } from "../../../shared/enum";
+import { WaveRoomPlayerReadyState } from "../../../shared/waveRoom";
 import EntityPlayer from "../../entity/EntityPlayer";
 import { waveRoomSelfId } from "../../Networking";
 import { calculateStrokeWidth, ColorCode, darkend, DARKEND_BASE } from "../../utils/common";
@@ -27,8 +28,11 @@ export default class PlayerProfile extends ExtensionPlaceholder(Component) {
 
     constructor(
         private layout: DynamicLayoutable<LayoutOptions>,
+
         private id: DynamicLayoutable<WaveRoomPlayerInformation["id"]>,
         private name: DynamicLayoutable<WaveRoomPlayerInformation["name"]>,
+        private readyState: DynamicLayoutable<WaveRoomPlayerInformation["readyState"]>,
+
         private isEmpty: DynamicLayoutable<boolean>,
     ) {
         super();
@@ -58,10 +62,10 @@ export default class PlayerProfile extends ExtensionPlaceholder(Component) {
 
         ctx.lineWidth = 4;
         ctx.strokeStyle = "black";
-        ctx.globalAlpha = 0.2;
+        ctx.globalAlpha = DARKEND_BASE;
 
         ctx.beginPath();
-        ctx.roundRect(this.x, this.y, this.w, this.h, 1);
+        ctx.roundRect(this.x, this.y, this.w, this.h, 0.5);
         ctx.stroke();
         ctx.closePath();
 
@@ -125,11 +129,40 @@ export default class PlayerProfile extends ExtensionPlaceholder(Component) {
                 ctx.restore();
             }
 
+            const computedReadyState = this.computeDynamicLayoutable(this.readyState);
+
+            if (computedReadyState === WaveRoomPlayerReadyState.READY) {
+                ctx.save();
+
+                ctx.translate(0, 32);
+
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                ctx.textBaseline = 'middle';
+                ctx.textAlign = "center";
+
+                ctx.fillStyle = "#70fc68";
+                ctx.strokeStyle = '#000000';
+                ctx.font = `${11}px Ubuntu`;
+                ctx.lineWidth = calculateStrokeWidth(11);
+
+                ctx.strokeText("Ready", 0, 0);
+                ctx.fillText("Ready", 0, 0);
+
+                ctx.restore();
+            }
+ 
             this.entityPlayer.draw(ctx);
         }
     }
 
     public destroy?(): void {
+        this.layout = null;
 
+        this.id = null;
+        this.name = null;
+        this.readyState = null;
+        
+        this.isEmpty = null;
     }
 }

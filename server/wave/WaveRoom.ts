@@ -231,6 +231,8 @@ export default class WaveRoom {
             buffer.writeUInt8(nicknameBuffer.length, offset++);
             nicknameBuffer.copy(buffer, offset);
             offset += nicknameBuffer.length;
+
+            buffer.writeUInt8(client.readyState, offset++);
         });
 
         const codeBuffer = Buffer.from(this.code, 'utf-8');
@@ -372,8 +374,10 @@ export default class WaveRoom {
 
     private startWave() {
         this.state = WaveRoomState.STARTED;
-        
-        this.stopUpdate();
+
+        // Only stop update packet send because need to update wave informations
+        clearInterval(this.updateInterval);
+
         this.wavePool.startWave(this.biome, this.roomCandidates);
 
         logger.region(() => {

@@ -78,6 +78,29 @@ export class StaticContainer extends ExtensionPlaceholder(Component) implements 
         this.children = [];
 
         this.children = null;
+
+        this.layout = null;
+    }
+
+    public override setVisible(toggle: boolean, shouldAnimate: boolean = false) {
+        if (shouldAnimate) {
+            if (toggle === this.visible) return;
+
+            this.isAnimating = true;
+            this.animationProgress = toggle ? 0 : 1;
+            this.animationStartTime = null;
+            this.animationDirection = toggle ? 'in' : 'out';
+
+            if (toggle) {
+                this.visible = true;
+            }
+        } else {
+            this.visible = toggle;
+        }
+
+        this.children.forEach(c => {
+            c.setVisible(toggle, false);
+        });
     }
 }
 
@@ -87,6 +110,7 @@ export class StaticContainer extends ExtensionPlaceholder(Component) implements 
 export class StaticPanelContainer extends StaticContainer {
     constructor(
         layout: DynamicLayoutableContainerLayoutOptions,
+
         private color: DynamicLayoutable<ColorCode>,
     ) {
         super(layout);
@@ -345,7 +369,10 @@ export class StaticSpace extends ExtensionPlaceholder(Component) {
 
     public render(ctx: CanvasRenderingContext2D): void { }
 
-    public destroy?(): void { }
+    public destroy?(): void {
+        this._w = null;
+        this._h = null;
+    }
 }
 
 export class CoordinatedSpace extends ExtensionPlaceholder(Component) {
@@ -374,5 +401,10 @@ export class CoordinatedSpace extends ExtensionPlaceholder(Component) {
 
     public render(ctx: CanvasRenderingContext2D): void { }
 
-    public destroy?(): void { }
+    public destroy?(): void {
+        this._x = null;
+        this._y = null;
+        this._w = null;
+        this._h = null;
+    }
 }

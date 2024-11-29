@@ -12,7 +12,7 @@ export enum Mood {
     SAD,
 }
 
-export const MOON_VALUES = Object.values(Mood);
+export const MOOD_VALUES = Object.values(Mood);
 
 let currentEntityType: number = 0;
 function getNextEntityType(): number {

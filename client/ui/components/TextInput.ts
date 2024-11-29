@@ -4,6 +4,8 @@ import { uiScaleFactor } from "../UserInterface";
 import { Component, DynamicLayoutable } from "./Component";
 import ExtensionPlaceholder from "./extensions/Extension";
 
+// Fork of CanvasInput
+
 interface CanvasInputOptions {
     canvas?: HTMLCanvasElement;
     extraX?: number;
@@ -136,16 +138,28 @@ export default class TextInput extends ExtensionPlaceholder(Component) {
 
         if (self._canvas) {
             self._canvas.addEventListener('mousemove', function (e: any) {
+                if (!self.visible) {
+                    return;
+                }
+
                 e = e || window.event;
                 self.mousemove(e, self);
             }, false);
 
             self._canvas.addEventListener('mousedown', function (e: any) {
+                if (!self.visible) {
+                    return;
+                }
+
                 e = e || window.event;
                 self.mousedown(e, self);
             }, false);
 
             self._canvas.addEventListener('mouseup', function (e: any) {
+                if (!self.visible) {
+                    return;
+                }
+
                 e = e || window.event;
                 self.mouseup(e, self);
             }, false);
@@ -169,6 +183,10 @@ export default class TextInput extends ExtensionPlaceholder(Component) {
         self._hiddenInput.value = self._value;
 
         self._hiddenInput.addEventListener('keydown', function (e: any) {
+            if (!self.visible) {
+                return;
+            }
+
             e = e || window.event;
 
             if (self._hasFocus) {
@@ -179,6 +197,10 @@ export default class TextInput extends ExtensionPlaceholder(Component) {
         });
 
         self._hiddenInput.addEventListener('keyup', function (e: any) {
+            if (!self.visible) {
+                return;
+            }
+
             e = e || window.event;
 
             self._value = self._hiddenInput.value;
@@ -660,23 +682,25 @@ export default class TextInput extends ExtensionPlaceholder(Component) {
         self._hiddenInput.selectionEnd = range[1];
     }
 
+    private _calculateCursorStyle(isOver: boolean, _hasFocus: boolean): string {
+        return isOver ? _hasFocus ? "text" : "pointer" : "default";
+    }
+
     private _changeCursor(x: number, y: number, isOver: boolean) {
         let self = this;
 
         if (self._canvas) {
             // Original input has two types while has focus, maybe padding?
+            // TODO: fix this, this code only maked for this component, blocking other component cursor style change
+            self._canvas.style.cursor = this._calculateCursorStyle(isOver, self._hasFocus);
             if (inputs.length > 1) {
-                self._canvas.style.cursor = isOver ? self._hasFocus ? "text" : "pointer" : "default";
-
                 for (let input of inputs) {
-                    const cursorStyle = input._overInput(x, y) ? input._hasFocus ? "text" : "pointer" : "default";
+                    const cursorStyle = this._calculateCursorStyle(input._overInput(x, y), input._hasFocus);
                     if (cursorStyle !== "default") {
                         self._canvas.style.cursor = cursorStyle;
                         break;
                     }
                 }
-            } else {
-                self._canvas.style.cursor = isOver ? self._hasFocus ? "text" : "pointer" : "default";
             }
         }
     }
@@ -1013,6 +1037,4 @@ export default class TextInput extends ExtensionPlaceholder(Component) {
             y: y - offsetY
         };
     }
-
-    protected onLayoutCalculated?(): void { }
 }

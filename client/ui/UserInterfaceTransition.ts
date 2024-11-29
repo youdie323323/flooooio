@@ -22,7 +22,7 @@ export default class UserInterfaceTransition {
         },
         game: {
             initialRadius: () => 0,
-            radiusChange: (current) => current + (0.4 + current / 30),
+            radiusChange: (current) => current + (0.2 + current / 35),
             isComplete: (canvas, radius) => radius > Math.max(((canvas.height / uiScaleFactor) / 2) + 100, ((canvas.width / uiScaleFactor) / 2) + 100),
         }
     };

@@ -1,6 +1,6 @@
 import Entity from "./Entity";
 import { drawEntityDetail, HP_BAR_MAX_WIDTH } from "./entityDrawDetail";
-import { darkend, DARKEND_BASE } from "../utils/common";
+import { ColorCode, darkend, DARKEND_BASE } from "../utils/common";
 import { MobType, PetalType } from "../../shared/enum";
 import { Rarities } from "../../shared/rarity";
 
@@ -66,7 +66,7 @@ export default class EntityMob extends Entity {
         switch (this.type) {
             case MobType.BEE: {
                 let bcolor = this.getSkinColor("#333333");
-                let fcolor = "#ffe763";
+                let fcolor: ColorCode = "#ffe763";
                 let scolor = darkend(fcolor, DARKEND_BASE);
 
                 ctx.scale(this.size / 30, this.size / 30);
@@ -208,6 +208,7 @@ export default class EntityMob extends Entity {
             }
             case MobType.BEETLE: {
                 ctx.scale(this.size / 40, this.size / 40);
+                
                 ctx.fillStyle = ctx.strokeStyle = this.getSkinColor("#333333");
                 ctx.lineCap = ctx.lineJoin = "round";
                 for (let i = 0; i < 2; i++) {
@@ -225,11 +226,12 @@ export default class EntityMob extends Entity {
                     ctx.stroke();
                     ctx.restore();
                 }
-                const skinColor = this.isPet ? ["#ffe667", "#d0bb55"] : ["#8f5db0", "#754a8f"];
-                ctx.fillStyle = this.getSkinColor(skinColor[0]);
+
+                const skinColor = this.isPet ? "#ffe667" : "#8f5db0";
+                ctx.fillStyle = this.getSkinColor(skinColor);
                 ctx.fill(beetleBodyPath);
                 ctx.lineWidth = 6;
-                ctx.fillStyle = ctx.strokeStyle = this.getSkinColor(skinColor[1]);
+                ctx.fillStyle = ctx.strokeStyle = this.getSkinColor(darkend(skinColor, DARKEND_BASE));
                 ctx.stroke(beetleBodyPath);
 
                 ctx.beginPath();
@@ -256,11 +258,6 @@ export default class EntityMob extends Entity {
 
                 break;
             }
-            case MobType.BUBBLE: {
-                this.drawBubble(ctx, false);
-
-                break;
-            }
             case PetalType.BASIC: {
                 drawBasicLike("#ffffff", "#cfcfcf");
 
@@ -283,8 +280,14 @@ export default class EntityMob extends Entity {
 
                 break;
             }
+
             case PetalType.BUBBLE: {
                 this.drawBubble(ctx, true);
+
+                break;
+            }
+            case MobType.BUBBLE: {
+                this.drawBubble(ctx, false);
 
                 break;
             }

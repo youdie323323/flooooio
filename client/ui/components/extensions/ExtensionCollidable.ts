@@ -102,7 +102,7 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
                 this.targetPos[1] = this.initialPos[1];
             }
 
-            const DEAD_ZONE = 5;
+            const DEAD_ZONE = 10;
 
             if (this.targetPos[0] !== null) {
                 this.x += (this.targetPos[0] - this.x) * MixedBase.SPEED;

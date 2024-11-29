@@ -19,7 +19,7 @@ export default abstract class UserInterface {
 
     private components: Component[] = [];
 
-    // Store children component to not render from UserInterface
+    // Store children component to not render from UserInterface, flattend
     private childrenComponents: Set<Component> = new Set();
 
     private hoveredComponent: Interactive | null = null;
@@ -215,7 +215,7 @@ export default abstract class UserInterface {
 
             if (component.visible && this.isClickable(component) && this.overlapsComponent(component, this.mouseX, this.mouseY)) {
                 this.clickedComponent = component;
-                (component as Clickable).onMouseDown?.();
+                component.onMouseDown?.();
 
                 break;
             }
@@ -267,6 +267,7 @@ export default abstract class UserInterface {
                     }
                 } else if (this.hoveredComponent === component) {
                     component.onMouseLeave?.();
+
                     this.hoveredComponent = null;
                 }
             }
@@ -282,13 +283,15 @@ export default abstract class UserInterface {
     }
 
     public cleanupRenders(): void {
-        this.components.forEach(c => {
+        this.components.filter(c => !this.childrenComponents.has(c)).forEach(c => {
             c.destroy();
         });
 
         this.components = [];
+        this.components = null;
 
-        this.childrenComponents = new Set();
+        this.childrenComponents.clear();
+        this.childrenComponents = null;
 
         this.hoveredComponent = null;
         this.clickedComponent = null;

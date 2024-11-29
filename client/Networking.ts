@@ -1,7 +1,7 @@
 import { Mood, Biomes } from "../shared/enum";
 import { ClientBound, ServerBound } from "../shared/packet";
 import { Rarities } from "../shared/rarity";
-import { WaveRoomState, WaveRoomVisibleState } from "../shared/waveRoom";
+import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../shared/waveRoom";
 import EntityMob from "./entity/EntityMob";
 import EntityPlayer from "./entity/EntityPlayer";
 import { players, mobs, uiCtx } from "./main";
@@ -257,9 +257,12 @@ export default class Networking {
                                 waveClientName = "Unnamed";
                             }
 
+                            const waveClientReadyState = data.getUint8(offset++) as WaveRoomPlayerReadyState;
+
                             _players.push({
                                 id: waveClientId,
                                 name: waveClientName,
+                                readyState: waveClientReadyState,
                             });
                         }
 
@@ -282,6 +285,10 @@ export default class Networking {
                     break;
                 }
                 case ClientBound.WAVE_STARTING: {
+                    if (uiCtx.currentUI instanceof UserInterfaceTitle) {
+                        uiCtx.currentUI.squadMenuContainer.setVisible(false, true);
+                    }
+
                     uiCtx.switchUI("game");
 
                     const waveBiome = data.getUint8(offset++) as Biomes;
