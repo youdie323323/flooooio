@@ -681,7 +681,7 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
                             w: 0,
                             h: 0,
                         },
-                        () => "Code: " + (this.waveRoomCode || "UNKNOWN"),
+                        () => "Code: " + (this.waveRoomCode || ""),
                         9,
                         "#ffffff",
                         true,

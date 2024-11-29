@@ -99,6 +99,7 @@ export class StaticContainer extends ExtensionPlaceholder(Component) implements 
         }
 
         this.children.forEach(c => {
+            // Dont animate it, container animation can affected to childrens
             c.setVisible(toggle, false);
         });
     }
