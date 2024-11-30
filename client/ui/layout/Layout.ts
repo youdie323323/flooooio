@@ -41,7 +41,7 @@ export default class Layout {
         let y = 0;
 
         if (typeof options.x === 'string' && options.x.endsWith('%')) {
-            x = (parseFloat(options.x) / 100) * containerWidth;
+            x = this.parseSize(options.x, containerWidth);
         } else if (typeof options.x === 'number') {
             x = options.x;
             x = options.invertXCoordinate ? containerWidth - x : x;
@@ -49,7 +49,7 @@ export default class Layout {
         }
 
         if (typeof options.y === 'string' && options.y.endsWith('%')) {
-            y = (parseFloat(options.y) / 100) * containerHeight;
+            y = this.parseSize(options.y, containerHeight);
         } else if (typeof options.y === 'number') {
             y = options.y;
             y = options.invertYCoordinate ? containerHeight - y : y;

@@ -1,7 +1,7 @@
 import { calculateStrokeWidth } from "../../utils/common";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import { uiScaleFactor } from "../UserInterface";
-import { Component, DynamicLayoutable } from "./Component";
+import { Component, MaybeDynamicLayoutablePointer } from "./Component";
 import ExtensionPlaceholder from "./extensions/Extension";
 
 // Fork of CanvasInput
@@ -90,7 +90,7 @@ export default class TextInput extends ExtensionPlaceholder(Component) {
     private _unfocusedState: boolean;
 
     constructor(
-        protected layout: DynamicLayoutable<LayoutOptions>,
+        protected layout: MaybeDynamicLayoutablePointer<LayoutOptions>,
         o: CanvasInputOptions = {},
     ) {
         super();
@@ -230,6 +230,10 @@ export default class TextInput extends ExtensionPlaceholder(Component) {
             originX,
             originY,
         );
+    }
+
+    public override getCacheKey(): string {
+        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout))}`
     }
 
     public canvas(data: HTMLCanvasElement = undefined) {

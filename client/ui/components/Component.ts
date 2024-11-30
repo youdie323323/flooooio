@@ -1,7 +1,7 @@
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import LayoutCache from "../layout/LayoutCache";
 import { Button, SVGButton, TextButton } from "./Button";
-import { AddableContainer, CoordinatedSpace as CoordinatedStaticSpace, StaticSpace } from "./Container";
+import { AddableContainer, CoordinatedStaticSpace, StaticSpace } from "./Container";
 import PlayerProfile from "./PlayerProfile";
 import StaticText from "./Text";
 import TextInput from "./TextInput";
@@ -10,7 +10,7 @@ import Toggle from "./Toggle";
 /**
  * Type that live regenerate value.
  */
-export type DynamicLayoutable<T> = T | (() => T);
+export type MaybeDynamicLayoutablePointer<T> = T | (() => T);
 
 /**
  * Union type that including all components.
@@ -30,7 +30,13 @@ export type AllComponents =
     // Below other than common components
     | PlayerProfile;
 
-// Base interface for all GUI components
+/**
+ * Base interface for all GUI components.
+ * 
+ * @remarks
+ * 
+ * Not including dynamic layoutable layout to custom-omitable/pickable layout.
+ */
 export abstract class Component {
     protected readonly ANIMATION_DURATION: number = 250;
     public isAnimating: boolean = false;
@@ -70,6 +76,9 @@ export abstract class Component {
         originY: number
     ): LayoutResult;
 
+    /**
+     * Cache layout to reduce lags.
+     */
     public _calculateLayout(
         width: number,
         height: number,
@@ -86,8 +95,6 @@ export abstract class Component {
 
         const result = this.calculateLayout(width, height, originX, originY);
 
-        console.log("ra")
-
         this.layoutCache.set(cacheKey, result);
 
         return result;
@@ -95,10 +102,16 @@ export abstract class Component {
 
     /**
      * Generate cache key that ensure cache is same.
+     * 
      * @returns Cache key.
+     * 
+     * @remarks
+     * 
+     * This should only include layout-affectable values, like "globalAlpha" is not should included, thats not changing x/y/w/h.
+     * Also, this doesnt requires separators between values etc.
      */
     public getCacheKey(): string {
-        return `${this.x}${this.y}${this.w}${this.h}${this.globalAlpha}${this.parentContainer ? this.parentContainer.getCacheKey() : ""}`;
+        return `${this.x+this.y+this.w+this.h}${this.parentContainer ? this.parentContainer.getCacheKey() : ""}`;
     }
 
     public render(ctx: CanvasRenderingContext2D): void {
@@ -167,7 +180,7 @@ export abstract class Component {
 
     public abstract destroy?(): void;
 
-    protected computeDynamicLayoutable<T>(dl: DynamicLayoutable<T>): T {
+    protected computeDynamicLayoutable<T>(dl: MaybeDynamicLayoutablePointer<T>): T {
         if (dl instanceof Function) {
             return (dl as () => T)();
         } else {

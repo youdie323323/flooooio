@@ -1,11 +1,9 @@
 import { UserData } from "./WavePool";
-import { PlayerInstance, MockPlayerData } from "../entity/player/Player";
 import { logger } from "../main";
 import WaveRoom, { WaveRoomPlayer, WaveRoomPlayerId } from "./WaveRoom";
-import { generate } from 'generate-passphrase';
-import uWS from 'uWebSockets.js';
 import { Biomes } from "../../shared/enum";
 import { WaveRoomVisibleState } from "../../shared/waveRoom";
+import { generateRandomWaveRoomCode } from "../utils/random";
 
 export default class WaveRoomService {
     private waveRooms: WaveRoom[] = [];
@@ -107,8 +105,10 @@ export default class WaveRoomService {
      * Finds a public room with available slots for the specified biome.
      */
     private findPublicRoom(biome: Biomes): WaveRoom | undefined {
-        // Maybe, we dont need to care about biome?
-        return this.waveRooms.find(room => room.biome === biome && room.visible === WaveRoomVisibleState.PUBLIC && room.canAddCandidate);
+        // Trying to find biome-specific room, if not found, try other biome
+        const isPublic = (room: WaveRoom) => room.visible === WaveRoomVisibleState.PUBLIC && room.isCandidateJoinable;
+
+        return this.waveRooms.find(room => room.biome === biome && isPublic(room)) || this.waveRooms.find(room => isPublic(room));
     }
 
     /**
@@ -119,7 +119,7 @@ export default class WaveRoomService {
      * This don't actually find a private room, just find a room with the same code.
      */
     private findPrivateRoom(code: string): WaveRoom | undefined {
-        return this.waveRooms.find(room => room.code === code && room.canAddCandidate);
+        return this.waveRooms.find(room => room.code === code && room.isCandidateJoinable);
     }
 
     /**
@@ -140,7 +140,7 @@ export default class WaveRoomService {
      * Generates a unique room code.
      */
     private generateCode(): string {
-        const randomId = generate({ length: 1, numbers: false, fast: true });
+        const randomId = generateRandomWaveRoomCode();
         if (!this.waveRooms.every((room) => room.code !== randomId)) {
             return this.generateCode();
         }
@@ -154,7 +154,7 @@ export default class WaveRoomService {
      * 
      * The first time this code is executed, the room which player was in will no finded by find○○Room.
      * However, placing this at the beginning of the code means that the player will exit the player's current room even if they are not joining a room.
-     * I don't know how this works in the original, but this may not be correct.
+     * I don't know how this works in the original, but this maybe not correct.
      */
     private leaveCurrentWaveRoom(userData: UserData) {
         if (userData?.waveRoomClientId) this.leaveWaveRoom(userData.waveRoomClientId);

@@ -1,10 +1,10 @@
 import { ColorCode, darkend, DARKEND_BASE } from "../../utils/common";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import { uiScaleFactor } from "../UserInterface";
-import { AllComponents, Component, ComponentContainer, DynamicLayoutable } from "./Component";
+import { AllComponents, Component, ComponentContainer, MaybeDynamicLayoutablePointer } from "./Component";
 import ExtensionPlaceholder from "./extensions/Extension";
 
-type DynamicLayoutableContainerLayoutOptions = DynamicLayoutable<Omit<LayoutOptions, "w" | "h">>;
+type DynamicLayoutableContainerLayoutOptions = MaybeDynamicLayoutablePointer<Omit<LayoutOptions, "w" | "h">>;
 
 /**
  * Addable type of container.
@@ -68,8 +68,30 @@ export class StaticContainer extends ExtensionPlaceholder(Component) implements 
         ctx.translate(-(this.x + this.w / 2), -(this.y));
     }
 
+    public override setVisible(toggle: boolean, shouldAnimate: boolean = false) {
+        if (shouldAnimate) {
+            if (toggle === this.visible) return;
+
+            this.isAnimating = true;
+            this.animationProgress = toggle ? 0 : 1;
+            this.animationStartTime = null;
+            this.animationDirection = toggle ? 'in' : 'out';
+
+            if (toggle) {
+                this.visible = true;
+            }
+        } else {
+            this.visible = toggle;
+        }
+
+        this.children.forEach(c => {
+            // Dont animate it, container animation can affected to childrens
+            c.setVisible(toggle, false);
+        });
+    }
+
     public override getCacheKey(): string {
-        return super.getCacheKey() + `${this.children.length}`
+        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout))}${this.children.length}`
     }
 
     // Dont call this method! call with UserInterface.addChildrenComponent
@@ -97,28 +119,6 @@ export class StaticContainer extends ExtensionPlaceholder(Component) implements 
 
         this.layout = null;
     }
-
-    public override setVisible(toggle: boolean, shouldAnimate: boolean = false) {
-        if (shouldAnimate) {
-            if (toggle === this.visible) return;
-
-            this.isAnimating = true;
-            this.animationProgress = toggle ? 0 : 1;
-            this.animationStartTime = null;
-            this.animationDirection = toggle ? 'in' : 'out';
-
-            if (toggle) {
-                this.visible = true;
-            }
-        } else {
-            this.visible = toggle;
-        }
-
-        this.children.forEach(c => {
-            // Dont animate it, container animation can affected to childrens
-            c.setVisible(toggle, false);
-        });
-    }
 }
 
 /**
@@ -128,7 +128,7 @@ export class StaticPanelContainer extends StaticContainer {
     constructor(
         layout: DynamicLayoutableContainerLayoutOptions,
 
-        private color: DynamicLayoutable<ColorCode>,
+        private color: MaybeDynamicLayoutablePointer<ColorCode>,
     ) {
         super(layout);
     }
@@ -143,9 +143,9 @@ export class StaticPanelContainer extends StaticContainer {
         const strokeWidth = this.getStrokeWidth();
 
         if (this.children) {
-            this.children.forEach(c => {
-                const childLayout = c._calculateLayout(
-                    width, height, 
+            this.children.forEach(child => {
+                const childLayout = child._calculateLayout(
+                    width, height,
                     // Dont use x, y because only wanted size
                     0, 0,
                 );
@@ -167,26 +167,22 @@ export class StaticPanelContainer extends StaticContainer {
         );
 
         if (this.children) {
-            this.children.forEach(c => {
-                const childLayout = c._calculateLayout(
+            this.children.forEach(child => {
+                const childLayout = child._calculateLayout(
                     layout.w - (strokeWidth * 4),
                     layout.h - (strokeWidth * 4),
                     layout.x + strokeWidth,
                     layout.y + strokeWidth
                 );
 
-                c.setX(childLayout.x);
-                c.setY(childLayout.y);
-                c.setW(childLayout.w);
-                c.setH(childLayout.h);
+                child.setX(childLayout.x);
+                child.setY(childLayout.y);
+                child.setW(childLayout.w);
+                child.setH(childLayout.h);
             });
         }
 
         return layout;
-    }
-
-    public override getCacheKey(): string {
-        return super.getCacheKey() + `${this.computeDynamicLayoutable(this.color)}`
     }
 
     protected getStrokeWidth(): number {
@@ -199,19 +195,21 @@ export class StaticPanelContainer extends StaticContainer {
 
         this.update();
 
-        const strokeWidth = this.getStrokeWidth();
+        {
+            const strokeWidth = this.getStrokeWidth();
 
-        const computedColor = this.computeDynamicLayoutable(this.color);
+            const computedColor = this.computeDynamicLayoutable(this.color);
 
-        ctx.lineWidth = strokeWidth;
-        ctx.strokeStyle = darkend(computedColor, DARKEND_BASE);
-        ctx.fillStyle = computedColor;
+            ctx.lineWidth = strokeWidth;
+            ctx.strokeStyle = darkend(computedColor, DARKEND_BASE);
+            ctx.fillStyle = computedColor;
 
-        ctx.beginPath();
-        ctx.roundRect(this.x, this.y, this.w, this.h, 1);
-        ctx.fill();
-        ctx.stroke();
-        ctx.closePath();
+            ctx.beginPath();
+            ctx.roundRect(this.x, this.y, this.w, this.h, 1);
+            ctx.fill();
+            ctx.stroke();
+            ctx.closePath();
+        }
 
         this.children.forEach(c => {
             if (c.visible) {
@@ -222,6 +220,12 @@ export class StaticPanelContainer extends StaticContainer {
                 ctx.restore();
             }
         });
+    }
+
+    public destroy?(): void {
+        super.destroy();
+
+        this.color = null;
     }
 }
 
@@ -240,8 +244,13 @@ export class StaticHContainer extends StaticContainer {
 
         if (this.children) {
             this.children.forEach(child => {
-                totalWidth += child.w;
-                maxHeight = Math.max(maxHeight, child.h);
+                const childLayout = child._calculateLayout(
+                    width, height,
+                    // Dont use x, y because only wanted size
+                    0, 0,
+                );
+                totalWidth += childLayout.w;
+                maxHeight = Math.max(maxHeight, childLayout.h);
             });
         }
 
@@ -312,8 +321,13 @@ export class StaticVContainer extends StaticContainer {
 
         if (this.children) {
             this.children.forEach(child => {
-                totalHeight += child.h;
-                maxWidth = Math.max(maxWidth, child.w);
+                const childLayout = child._calculateLayout(
+                    width, height,
+                    // Dont use x, y because only wanted size
+                    0, 0,
+                );
+                totalHeight += childLayout.h;
+                maxWidth = Math.max(maxWidth, childLayout.w);
             });
         }
 
@@ -345,7 +359,7 @@ export class StaticVContainer extends StaticContainer {
                 child.setW(childLayout.w);
                 child.setH(childLayout.h);
 
-                currentY += child.h;
+                currentY += childLayout.h;
             });
         }
 
@@ -369,17 +383,19 @@ export class StaticVContainer extends StaticContainer {
     }
 }
 
+type DynamicLayoutableNumber = MaybeDynamicLayoutablePointer<number>;
+
 /**
  * Component that just consume space.
  * 
  * @remarks
  * 
- * This is only used for containers whose coordinates are automatically determined.
+ * This is only used for containers whose coordinates are automatically determined (e.g. StaticHContainer).
  */
 export class StaticSpace extends ExtensionPlaceholder(Component) {
     constructor(
-        private _w: DynamicLayoutable<number>,
-        private _h: DynamicLayoutable<number>,
+        private _w: DynamicLayoutableNumber,
+        private _h: DynamicLayoutableNumber,
     ) {
         super();
     }
@@ -398,6 +414,10 @@ export class StaticSpace extends ExtensionPlaceholder(Component) {
         } as LayoutResult;
     }
 
+    public override getCacheKey(): string {
+        return super.getCacheKey() + `${this.computeDynamicLayoutable(this._w)+this.computeDynamicLayoutable(this._h)}`
+    }
+
     public render(ctx: CanvasRenderingContext2D): void { }
 
     public destroy?(): void {
@@ -406,12 +426,15 @@ export class StaticSpace extends ExtensionPlaceholder(Component) {
     }
 }
 
-export class CoordinatedSpace extends ExtensionPlaceholder(Component) {
+/**
+ * Component that just consume space, but with coordinate.
+ */
+export class CoordinatedStaticSpace extends ExtensionPlaceholder(Component) {
     constructor(
-        private _x: DynamicLayoutable<number>,
-        private _y: DynamicLayoutable<number>,
-        private _w: DynamicLayoutable<number>,
-        private _h: DynamicLayoutable<number>,
+        private _x: DynamicLayoutableNumber,
+        private _y: DynamicLayoutableNumber,
+        private _w: DynamicLayoutableNumber,
+        private _h: DynamicLayoutableNumber,
     ) {
         super();
     }
@@ -428,6 +451,11 @@ export class CoordinatedSpace extends ExtensionPlaceholder(Component) {
             w: this.computeDynamicLayoutable(this._w),
             h: this.computeDynamicLayoutable(this._h),
         } as LayoutResult;
+    }
+
+    public override getCacheKey(): string {
+        return super.getCacheKey() +
+            `${this.computeDynamicLayoutable(this._x) + this.computeDynamicLayoutable(this._y) + this.computeDynamicLayoutable(this._w) + this.computeDynamicLayoutable(this._h)}`
     }
 
     public render(ctx: CanvasRenderingContext2D): void { }

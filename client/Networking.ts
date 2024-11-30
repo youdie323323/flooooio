@@ -6,7 +6,7 @@ import EntityMob from "./entity/EntityMob";
 import EntityPlayer from "./entity/EntityPlayer";
 import { players, mobs, uiCtx } from "./main";
 import UserInterfaceGame from "./ui/mode/UserInterfaceModeGame";
-import UserInterfaceTitle, { WaveRoomPlayerInformation } from "./ui/mode/UserInterfaceModeTitle";
+import UserInterfaceTitle, { StatusText, WaveRoomPlayerInformation } from "./ui/mode/UserInterfaceModeTitle";
 
 export let wameSelfId = -1;
 export let waveRoomSelfId = -1;
@@ -303,7 +303,12 @@ export default class Networking {
                     break;
                 }
                 case ClientBound.WAVE_ROOM_JOIN_FAILED: {
-                    alert("Failed to join");
+                    if (uiCtx.currentUI instanceof UserInterfaceTitle) {
+                        // Reset squad state to render status text
+                        uiCtx.currentUI.resetWaveState();
+
+                        uiCtx.currentUI.statusTextRef = StatusText.SquadNotFound;
+                    }
 
                     break;
                 }

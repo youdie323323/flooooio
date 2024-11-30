@@ -1,6 +1,6 @@
 import { Canvg, presets } from "canvg";
 import { calculateStrokeWidth, ColorCode, darkend, DARKEND_BASE } from "../../utils/common.js";
-import { Clickable, Component, DynamicLayoutable, Interactive } from "./Component.js";
+import { Clickable, Component, MaybeDynamicLayoutablePointer, Interactive } from "./Component.js";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout.js";
 import ExtensionPlaceholder from "./extensions/Extension.js";
 import * as StackBlur from
@@ -14,9 +14,10 @@ export class Button extends ExtensionPlaceholder(Component) implements Interacti
 
     constructor(
         protected layout: LayoutOptions,
+        
         protected readonly color: ColorCode,
         private callback: () => void,
-        private validate: DynamicLayoutable<boolean>,
+        private validate: MaybeDynamicLayoutablePointer<boolean>,
     ) {
         super();
     }
@@ -39,17 +40,19 @@ export class Button extends ExtensionPlaceholder(Component) implements Interacti
     public render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
-        if (this.validate !== undefined) {
-            this.isValid = this.computeDynamicLayoutable(this.validate);
-            if (!this.isValid) {
-                this.isHovered = false;
-                this.isPressed = false;
-            }
+        this.isValid = !!this.computeDynamicLayoutable(this.validate);
+        if (!this.isValid) {
+            this.isHovered = false;
+            this.isPressed = false;
         }
     }
 
+    public override getCacheKey(): string {
+        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout))}`
+    }
+
     public destroy?(): void { }
-    
+
     public onMouseEnter(): void {
         if (!this.isValid) {
             return;
@@ -110,7 +113,7 @@ export class TextButton extends Button {
         layout: LayoutOptions,
         color: ColorCode,
         callback: () => void,
-        validate: DynamicLayoutable<boolean>,
+        validate: MaybeDynamicLayoutablePointer<boolean>,
         private readonly text: string,
         private customDraw?: (ctx: CanvasRenderingContext2D, textWidth: number) => void,
     ) {
@@ -194,7 +197,7 @@ export class SVGButton extends Button {
         layout: LayoutOptions,
         color: ColorCode,
         callback: () => void,
-        validate: DynamicLayoutable<boolean>,
+        validate: MaybeDynamicLayoutablePointer<boolean>,
         private readonly svg: string,
     ) {
         super(layout, color, callback, validate);

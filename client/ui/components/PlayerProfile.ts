@@ -6,7 +6,7 @@ import { calculateStrokeWidth, ColorCode, darkend, DARKEND_BASE } from "../../ut
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import { WaveRoomPlayerInformation } from "../mode/UserInterfaceModeTitle";
 import { uiScaleFactor } from "../UserInterface";
-import { Component, ComponentContainer, DynamicLayoutable } from "./Component";
+import { Component, ComponentContainer, MaybeDynamicLayoutablePointer } from "./Component";
 import ExtensionPlaceholder from "./extensions/Extension";
 
 export default class PlayerProfile extends ExtensionPlaceholder(Component) {
@@ -27,13 +27,13 @@ export default class PlayerProfile extends ExtensionPlaceholder(Component) {
     );
 
     constructor(
-        private layout: DynamicLayoutable<LayoutOptions>,
+        private layout: MaybeDynamicLayoutablePointer<LayoutOptions>,
 
-        private id: DynamicLayoutable<WaveRoomPlayerInformation["id"]>,
-        private name: DynamicLayoutable<WaveRoomPlayerInformation["name"]>,
-        private readyState: DynamicLayoutable<WaveRoomPlayerInformation["readyState"]>,
+        private id: MaybeDynamicLayoutablePointer<WaveRoomPlayerInformation["id"]>,
+        private name: MaybeDynamicLayoutablePointer<WaveRoomPlayerInformation["name"]>,
+        private readyState: MaybeDynamicLayoutablePointer<WaveRoomPlayerInformation["readyState"]>,
 
-        private isEmpty: DynamicLayoutable<boolean>,
+        private isEmpty: MaybeDynamicLayoutablePointer<boolean>,
     ) {
         super();
     }
@@ -53,25 +53,34 @@ export default class PlayerProfile extends ExtensionPlaceholder(Component) {
         );
     }
 
+    public override getCacheKey(): string {
+        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout))}`
+    }
+
     public render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
         this.update();
 
-        ctx.save();
+        ctx.translate(this.x, this.y);
 
-        ctx.lineWidth = 4;
-        ctx.strokeStyle = "black";
-        ctx.globalAlpha = DARKEND_BASE;
+        // Frame
+        {
+            ctx.save();
 
-        ctx.beginPath();
-        ctx.roundRect(this.x, this.y, this.w, this.h, 0.5);
-        ctx.stroke();
-        ctx.closePath();
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = "black";
+            ctx.globalAlpha = DARKEND_BASE;
 
-        ctx.restore();
+            ctx.beginPath();
+            ctx.roundRect(0, 0, this.w, this.h, 0.5);
+            ctx.stroke();
+            ctx.closePath();
 
-        ctx.translate(this.x + this.w / 2, this.y + this.h / 2);
+            ctx.restore();
+        }
+
+        ctx.translate(this.w / 2, this.h / 2);
 
         if (this.computeDynamicLayoutable(this.isEmpty)) {
             ctx.lineJoin = 'round';
@@ -87,24 +96,22 @@ export default class PlayerProfile extends ExtensionPlaceholder(Component) {
             ctx.strokeText("Empty", 0, 0);
             ctx.fillText("Empty", 0, 0);
         } else {
-            ctx.save();
+            {
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                ctx.textBaseline = 'middle';
+                ctx.textAlign = "center";
 
-            ctx.lineJoin = 'round';
-            ctx.lineCap = 'round';
-            ctx.textBaseline = 'middle';
-            ctx.textAlign = "center";
+                ctx.fillStyle = "white";
+                ctx.strokeStyle = '#000000';
+                ctx.font = `${10}px Ubuntu`;
+                ctx.lineWidth = calculateStrokeWidth(10);
 
-            ctx.fillStyle = "white";
-            ctx.strokeStyle = '#000000';
-            ctx.font = `${10}px Ubuntu`;
-            ctx.lineWidth = calculateStrokeWidth(10);
+                const computedName = this.computeDynamicLayoutable(this.name);
 
-            const computedName = this.computeDynamicLayoutable(this.name);
-
-            ctx.strokeText(computedName, 0, 0);
-            ctx.fillText(computedName, 0, 0);
-
-            ctx.restore();
+                ctx.strokeText(computedName, 0, 0);
+                ctx.fillText(computedName, 0, 0);
+            }
 
             const computedId = this.computeDynamicLayoutable(this.id);
 
@@ -151,7 +158,7 @@ export default class PlayerProfile extends ExtensionPlaceholder(Component) {
 
                 ctx.restore();
             }
- 
+
             this.entityPlayer.draw(ctx);
         }
     }
@@ -162,7 +169,9 @@ export default class PlayerProfile extends ExtensionPlaceholder(Component) {
         this.id = null;
         this.name = null;
         this.readyState = null;
-        
+
         this.isEmpty = null;
+
+        this.entityPlayer = null;
     }
 }

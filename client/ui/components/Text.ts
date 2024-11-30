@@ -1,17 +1,17 @@
 import { calculateStrokeWidth, ColorCode } from "../../utils/common";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
-import { Component, DynamicLayoutable, Interactive } from "./Component";
+import { Component, MaybeDynamicLayoutablePointer, Interactive } from "./Component";
 import ExtensionPlaceholder from "./extensions/Extension";
 
 export default class StaticText extends ExtensionPlaceholder(Component) {
     constructor(
-        private layout: DynamicLayoutable<LayoutOptions>,
+        private layout: MaybeDynamicLayoutablePointer<LayoutOptions>,
 
-        private text: DynamicLayoutable<string>,
-        private fontSize: DynamicLayoutable<number>,
-        private fillStyle: DynamicLayoutable<ColorCode> = () => "#ffffff",
+        private text: MaybeDynamicLayoutablePointer<string>,
+        private fontSize: MaybeDynamicLayoutablePointer<number>,
+        private fillStyle: MaybeDynamicLayoutablePointer<ColorCode> = () => "#ffffff",
 
-        private readonly isLeft: boolean = false,
+        private readonly textAlign: MaybeDynamicLayoutablePointer<CanvasTextAlign> = "center",
     ) {
         super();
     }
@@ -32,7 +32,7 @@ export default class StaticText extends ExtensionPlaceholder(Component) {
     }
 
     public override getCacheKey(): string {
-        return super.getCacheKey() + `${this.computeDynamicLayoutable(this.text)}${this.computeDynamicLayoutable(this.fontSize)}${this.computeDynamicLayoutable(this.fillStyle)}`
+        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout))}`
     }
 
     public render(ctx: CanvasRenderingContext2D): void {
@@ -40,14 +40,15 @@ export default class StaticText extends ExtensionPlaceholder(Component) {
 
         this.update();
 
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        ctx.textBaseline = 'middle';
-        ctx.textAlign = this.isLeft ? "left" : 'center';
-
         const computedFillStyle = this.computeDynamicLayoutable(this.fillStyle);
         const computedFontSize = this.computeDynamicLayoutable(this.fontSize);
         const computedText = this.computeDynamicLayoutable(this.text);
+        const computedTextAlign = this.computeDynamicLayoutable(this.textAlign);
+
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = computedTextAlign;
 
         ctx.fillStyle = computedFillStyle;
         ctx.strokeStyle = '#000000';

@@ -10,7 +10,5 @@ Input this, and showing is
 ajgawunheskeeiugbrepmesfwggjaw
 click the "a" and cursor position should be 10 but 0
 ```
-+ More dynamatic, upgrade flexibility.
-Dynamic LayoutOptions should update layout when differs from previous options
-+ Layout cache
++ Nested container coordinate bugging on resize
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _

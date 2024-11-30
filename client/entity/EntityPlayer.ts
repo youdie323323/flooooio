@@ -29,6 +29,7 @@ export default class EntityPlayer extends Entity {
 
     update() {
         super.update();
+        
         if (this.isDead) {
             this.sadT = 1;
             this.angryT = 0;

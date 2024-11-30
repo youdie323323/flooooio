@@ -6,7 +6,7 @@ import * as path from 'path';
 import WaveRoomService from './wave/WaveRoomService';
 import { Logger } from './logger/Logger';
 import { Mob } from './entity/mob/Mob';
-import { clientRemove, kickClient, preprocessResultID } from './utils/common';
+import { clientRemove, kickClient, processJoin } from './utils/common';
 import { MockPlayerData } from './entity/player/Player';
 import { choice, randomEnum, shuffle } from './utils/random';
 import { MockPetalData } from './entity/mob/petal/Petal';
@@ -137,7 +137,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             const id = waveRoomService.createWaveRoom(userData, buffer[1]);
 
-            preprocessResultID(ws, id);
+            processJoin(ws, id);
 
             break;
         }
@@ -151,7 +151,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             const id = waveRoomService.joinWaveRoom(userData, roomCode);
 
-            preprocessResultID(ws, id);
+            processJoin(ws, id);
 
             break;
         }
@@ -160,7 +160,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             const id = waveRoomService.joinPublicWaveRoom(userData, buffer[1]);
 
-            preprocessResultID(ws, id);
+            processJoin(ws, id);
 
             break;
         }
@@ -265,7 +265,7 @@ app
     }))
     .ws('/*', {
         compression: SHARED_COMPRESSOR,
-        maxPayloadLength: 16 * 1024 * 1024,
+        maxPayloadLength: 16 * 1024,
         sendPingsAutomatically: false,
         idleTimeout: 0,
         open: (ws: uWS.WebSocket<UserData>) => logger.region(() => {

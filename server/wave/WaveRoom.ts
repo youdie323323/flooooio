@@ -256,7 +256,7 @@ export default class WaveRoom {
 
         using _disposable = this.onChangeAnything();
 
-        if (!this.canAddCandidate) {
+        if (!this.isCandidateJoinable) {
             return false;
         }
 
@@ -451,9 +451,9 @@ export default class WaveRoom {
     }
 
     /**
-     * Determines if this wave room is joinable.
+     * Determine if this wave room is joinable.
      */
-    public get canAddCandidate() {
+    public get isCandidateJoinable() {
         return this.roomCandidates.length < WaveRoom.MAX_PLAYER_AMOUNT && this.state === WaveRoomState.WAITING;
     }
 }

@@ -161,3 +161,11 @@ export function generateRandomEntityId(): EntityId {
 export function generateRandomWaveRoomPlayerId(): WaveRoomPlayerId {
   return randomUint16() as WaveRoomPlayerId;
 }
+
+const CODE_CHARACTERS = 'abcdefghijklmnopqrstuvwxyz0123456789';
+
+export function generateRandomWaveRoomCode(): string {
+  const randStr = () => CODE_CHARACTERS[Math.floor(Math.random() * CODE_CHARACTERS.length)];
+  "XXX-XXXXXX"
+  return randStr() + randStr() + randStr() + "-" + randStr() + randStr() + randStr() + randStr() + randStr() + randStr();
+}

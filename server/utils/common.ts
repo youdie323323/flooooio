@@ -93,7 +93,7 @@ export function removeAllBindings(wavePool: WavePool, clientId: PlayerInstance["
     }
 }
 
-export const preprocessResultID = (ws: uWS.WebSocket<UserData>, id: false | WaveRoomPlayerId): Buffer => {
+export const processJoin = (ws: uWS.WebSocket<UserData>, id: false | WaveRoomPlayerId): Buffer => {
     const userData = ws.getUserData();
     if (!userData) return;
 

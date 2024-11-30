@@ -135,6 +135,11 @@ export default abstract class UserInterface {
         return DYNAMIC_LAYOUTED in component;
     }
 
+    private getTopLevelComponents(): AllComponents[] {
+        return this.components
+            .filter(c => !this.childrenComponents.has(c));
+    }
+
     public removeEventListeners(): void {
         /*
         if (this.resizeObserver) {
@@ -163,21 +168,17 @@ export default abstract class UserInterface {
         const scaledHeight = this.canvas.height / uiScaleFactor;
 
         // Invalidate all cache key, so its possible to _calculateLayout()
-        this.components.forEach(component => {
-            if (!this.childrenComponents.has(component)) {
-                component.layoutCache.invalidate();
-            }
+        this.getTopLevelComponents().forEach(component => {
+            component.layoutCache.invalidate();
         });
 
-        this.components.forEach(component => {
-            if (!this.childrenComponents.has(component)) {
-                const layout = component._calculateLayout(scaledWidth, scaledHeight, 0, 0);
+        this.getTopLevelComponents().forEach(component => {
+            const layout = component._calculateLayout(scaledWidth, scaledHeight, 0, 0);
 
-                component.setX(layout.x);
-                component.setY(layout.y);
-                component.setW(layout.w);
-                component.setH(layout.h);
-            }
+            component.setX(layout.x);
+            component.setY(layout.y);
+            component.setW(layout.w);
+            component.setH(layout.h);
         });
     }
 
@@ -280,7 +281,7 @@ export default abstract class UserInterface {
     }
 
     public cleanupRenders(): void {
-        this.components.filter(c => !this.childrenComponents.has(c)).forEach(c => {
+        this.getTopLevelComponents().forEach(c => {
             c.destroy();
         });
 
@@ -301,20 +302,18 @@ export default abstract class UserInterface {
         const scaledWidth = this.canvas.width / uiScaleFactor;
         const scaledHeight = this.canvas.height / uiScaleFactor;
 
-        this.components
-            .filter(c => !this.childrenComponents.has(c) && this.isDynamicLayoutable(c))
-            .forEach(component => {           
-                const layout = component._calculateLayout(scaledWidth, scaledHeight, 0, 0);
+        this.getTopLevelComponents().filter(c => this.isDynamicLayoutable(c)).forEach(component => {
+            const layout = component._calculateLayout(scaledWidth, scaledHeight, 0, 0);
 
-                component.setX(layout.x);
-                component.setY(layout.y);
-                component.setW(layout.w);
-                component.setH(layout.h);
-            });
+            component.setX(layout.x);
+            component.setY(layout.y);
+            component.setW(layout.w);
+            component.setH(layout.h);
+        });
 
         // Render all visible components
-        this.components.forEach(component => {
-            if (component.visible && !this.childrenComponents.has(component)) {
+        this.getTopLevelComponents().forEach(component => {
+            if (component.visible) {
                 ctx.save();
 
                 component.render(ctx);

@@ -1,6 +1,6 @@
 import { ColorCode, darkend, DARKEND_BASE } from "../../utils/common";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
-import { Component, Interactive, Clickable, DynamicLayoutable } from "./Component";
+import { Component, Interactive, Clickable, MaybeDynamicLayoutablePointer } from "./Component";
 import ExtensionPlaceholder from "./extensions/Extension";
 
 export default class Toggle extends ExtensionPlaceholder(Component) implements Interactive, Clickable {
@@ -11,7 +11,8 @@ export default class Toggle extends ExtensionPlaceholder(Component) implements I
     private toggle: boolean = false;
 
     constructor(
-        protected layout: DynamicLayoutable<LayoutOptions>,
+        protected layout: MaybeDynamicLayoutablePointer<LayoutOptions>,
+        
         private readonly onToggle: (t: boolean) => void,
     ) {
         super();
@@ -30,6 +31,10 @@ export default class Toggle extends ExtensionPlaceholder(Component) implements I
             originX,
             originY,
         );
+    }
+
+    public override getCacheKey(): string {
+        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout))}`
     }
 
     public render(ctx: CanvasRenderingContext2D): void {
