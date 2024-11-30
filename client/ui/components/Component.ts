@@ -2,7 +2,9 @@ import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import LayoutCache from "../layout/LayoutCache";
 import { Button, SVGButton, TextButton } from "./Button";
 import { AddableContainer, CoordinatedStaticSpace, StaticSpace } from "./Container";
+import { ExtensionConstructor } from "./extensions/Extension";
 import PlayerProfile from "./PlayerProfile";
+import PlayerXpBar from "./PlayerXpBar";
 import StaticText from "./Text";
 import TextInput from "./TextInput";
 import Toggle from "./Toggle";
@@ -20,7 +22,7 @@ export type MaybeDynamicLayoutablePointer<T> = T | (() => T);
  * Need to create this because of AddableContainer.
  * Although base components like "Button" is cant addable, not including ("Button" is satisfy Component, its should not work) 
  */
-export type AllComponents =
+export type AllComponents = 
     | AddableContainer 
     | StaticSpace | CoordinatedStaticSpace
     | TextButton | SVGButton
@@ -28,7 +30,8 @@ export type AllComponents =
     | TextInput
     | Toggle
     // Below other than common components
-    | PlayerProfile;
+    | PlayerProfile
+    | PlayerXpBar;
 
 /**
  * Base interface for all GUI components.
@@ -191,15 +194,14 @@ export abstract class Component {
 
 // Interface for interactive components
 export interface Interactive extends Component {
-    onMouseEnter?(): void;
-    onMouseLeave?(): void;
+    onFocus?(): void;
+    onBlur?(): void;
 }
 
 // Interface for clickable components
 export interface Clickable extends Component {
     onClick?(): void;
 
-    // Generic
     onMouseDown?(): void;
     onMouseUp?(): void;
 }

@@ -91,7 +91,8 @@ export class StaticContainer extends ExtensionPlaceholder(Component) implements 
     }
 
     public override getCacheKey(): string {
-        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout))}${this.children.length}`
+        // TODO: in here this blocking children update because this values not included child getCacheKey() values, will fix later
+        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`
     }
 
     // Dont call this method! call with UserInterface.addChildrenComponent
@@ -415,7 +416,7 @@ export class StaticSpace extends ExtensionPlaceholder(Component) {
     }
 
     public override getCacheKey(): string {
-        return super.getCacheKey() + `${this.computeDynamicLayoutable(this._w)+this.computeDynamicLayoutable(this._h)}`
+        return super.getCacheKey() + `${this.computeDynamicLayoutable(this._w) + this.computeDynamicLayoutable(this._h)}`
     }
 
     public render(ctx: CanvasRenderingContext2D): void { }

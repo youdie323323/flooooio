@@ -34,7 +34,7 @@ export default class Toggle extends ExtensionPlaceholder(Component) implements I
     }
 
     public override getCacheKey(): string {
-        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout))}`
+        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`
     }
 
     public render(ctx: CanvasRenderingContext2D): void {
@@ -77,10 +77,10 @@ export default class Toggle extends ExtensionPlaceholder(Component) implements I
 
     public destroy?(): void { }
     
-    public onMouseEnter(): void {
+    public onFocus(): void {
     }
 
-    public onMouseLeave(): void {
+    public onBlur(): void {
     }
 
     public onClick(): void {

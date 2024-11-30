@@ -8,8 +8,9 @@ export function isPetal(type: MobType | PetalType): type is PetalType {
 // #00000030
 export const DARKEND_BASE = 0.1875;
 
-export type ColorCode = `#${string}`;
+export type ColorCode = `#${string}${string}${string}`;
 
+// Cache values to make it faster
 const darkendCache = new Map<string, ColorCode>();
 
 /**
@@ -18,7 +19,6 @@ const darkendCache = new Map<string, ColorCode>();
  * @param strength - strenth
  */
 export function darkend(color: ColorCode, strength: number): ColorCode {
-    // Cache values to make it faster
     const cacheKey = `${color}${strength}`;
 
     if (darkendCache.has(cacheKey)) {

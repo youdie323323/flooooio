@@ -124,7 +124,7 @@ export default abstract class UserInterface {
     }
 
     private isInteractive(component: Component): component is Interactive {
-        return "onMouseEnter" in component;
+        return "onFocus" in component;
     }
 
     private isClickable(component: Component): component is Clickable {
@@ -267,12 +267,12 @@ export default abstract class UserInterface {
 
                 if (isHovering) {
                     if (this.hoveredComponent !== component) {
-                        this.hoveredComponent?.onMouseLeave?.();
+                        this.hoveredComponent?.onBlur?.();
                         this.hoveredComponent = component;
-                        component.onMouseEnter?.();
+                        component.onFocus?.();
                     }
                 } else if (this.hoveredComponent === component) {
-                    component.onMouseLeave?.();
+                    component.onBlur?.();
 
                     this.hoveredComponent = null;
                 }

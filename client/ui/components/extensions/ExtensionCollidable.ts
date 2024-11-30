@@ -1,5 +1,5 @@
 import { LayoutResult } from "../../layout/Layout";
-import { Component } from "../Component";
+import { AllComponents, Component } from "../Component";
 import { ComponentExtensionTemplate, ExtensionConstructor, Updatable, UpdateFunction } from "./Extension";
 
 type NullableAll<T extends readonly any[]> = {
@@ -41,27 +41,11 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
 
         private resolveCollision(component: Component) {
             const gap = MixedBase.GAP;
-        
-            const overlapX = Math.min(
-                Math.abs((this.x + this.w) - component.x),
-                Math.abs(this.x - (component.x + component.w))
-            );
-            const overlapY = Math.min(
-                Math.abs((this.y + this.h) - component.y),
-                Math.abs(this.y - (component.y + component.h))
-            );
-        
-            if (overlapX < overlapY) {
-                if (this.x < component.x) {
-                    this.targetPos[0] = component.x - this.w - gap;
-                } else {
-                    this.targetPos[0] = component.x + component.w + gap;
-                }
-                this.targetPos[1] = null;
-            } else {
-                this.targetPos[1] = component.y - this.h - gap;
-                this.targetPos[0] = null;
-            }
+
+            // Always up direction
+
+            this.targetPos[1] = component.y - this.h - gap;
+            this.targetPos[0] = null;
         }
 
         private isColliding(component: Component): boolean {
@@ -104,7 +88,7 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
                 this.targetPos[1] = this.initialPos[1];
             }
 
-            const DEAD_ZONE = 10;
+            const DEAD_ZONE = 6;
 
             if (this.targetPos[0] !== null) {
                 this.x += (this.targetPos[0] - this.x) * MixedBase.SPEED;

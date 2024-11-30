@@ -32,7 +32,7 @@ export default class StaticText extends ExtensionPlaceholder(Component) {
     }
 
     public override getCacheKey(): string {
-        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout))}`
+        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`
     }
 
     public render(ctx: CanvasRenderingContext2D): void {

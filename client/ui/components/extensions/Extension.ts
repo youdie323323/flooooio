@@ -1,6 +1,6 @@
 import { LayoutResult } from "../../layout/Layout";
 import { Button, SVGButton, TextButton } from "../Button";
-import { Component } from "../Component";
+import { AllComponents, Component } from "../Component";
 import StaticText from "../Text";
 import TextInput from "../TextInput";
 

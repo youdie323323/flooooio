@@ -6,6 +6,8 @@ import ExtensionPlaceholder from "./extensions/Extension.js";
 import * as StackBlur from
     'stackblur-canvas/dist/stackblur-es.min.js';
 
+// TODO: change style of cursor while focusing/bluring, also toggle too
+
 export class Button extends ExtensionPlaceholder(Component) implements Interactive, Clickable {
     public isPressed: boolean = false;
     public isHovered: boolean = false;
@@ -15,7 +17,7 @@ export class Button extends ExtensionPlaceholder(Component) implements Interacti
     constructor(
         protected layout: LayoutOptions,
         
-        protected readonly color: ColorCode,
+        private color: MaybeDynamicLayoutablePointer<ColorCode>,
         private callback: () => void,
         private validate: MaybeDynamicLayoutablePointer<boolean>,
     ) {
@@ -40,6 +42,8 @@ export class Button extends ExtensionPlaceholder(Component) implements Interacti
     public render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
+        // Update per rAF frame
+
         this.isValid = !!this.computeDynamicLayoutable(this.validate);
         if (!this.isValid) {
             this.isHovered = false;
@@ -48,12 +52,12 @@ export class Button extends ExtensionPlaceholder(Component) implements Interacti
     }
 
     public override getCacheKey(): string {
-        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout))}`
+        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`
     }
 
     public destroy?(): void { }
 
-    public onMouseEnter(): void {
+    public onFocus(): void {
         if (!this.isValid) {
             return;
         }
@@ -61,7 +65,7 @@ export class Button extends ExtensionPlaceholder(Component) implements Interacti
         this.isHovered = true;
     }
 
-    public onMouseLeave(): void {
+    public onBlur(): void {
         if (!this.isValid) {
             return;
         }
@@ -99,12 +103,14 @@ export class Button extends ExtensionPlaceholder(Component) implements Interacti
             return "#aaaaa9";
         }
 
+        const computedColor = this.computeDynamicLayoutable(this.color);
+
         if (this.isPressed) {
-            return darkend(this.color, DARKEND_BASE);
+            return darkend(computedColor, DARKEND_BASE);
         } else if (this.isHovered) {
-            return darkend(this.color, -0.1);
+            return darkend(computedColor, -0.1);
         }
-        return this.color;
+        return computedColor;
     }
 }
 

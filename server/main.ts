@@ -202,9 +202,9 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
         }
         case ServerBound.WAVE_ROOM_LEAVE: {
             const ok = waveRoomService.leaveWaveRoom(waveRoomClientId);
-            if (ok) {
-                userData.waveRoomClientId = null;
-            };
+            if (!ok) return;
+
+            userData.waveRoomClientId = null;
 
             break;
         }

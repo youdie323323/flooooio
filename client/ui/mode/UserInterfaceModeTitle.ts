@@ -507,7 +507,7 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
                 new (ExtensionDynamicLayoutable(StaticPanelContainer))(
                     {
                         x: -175,
-                        y: -60,
+                        y: -100,
 
                         alignFromCenterX: true,
                         alignFromCenterY: true,
@@ -727,11 +727,11 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
             this.squadMenuContainer.setVisible(false);
             this.addComponent(this.squadMenuContainer);
 
-            nameInputDescription.addCollidableComponents([nameInput]);
+            nameInputDescription.addCollidableComponents([this.squadMenuContainer, nameInput]);
+            gameNameText.addCollidableComponents([this.squadMenuContainer, nameInputDescription]);
+
             nameInput.addCollidableComponents([this.squadMenuContainer]);
             readyButton.addCollidableComponents([this.squadMenuContainer]);
-
-            gameNameText.addCollidableComponents([nameInputDescription]);
 
             this.toggleShowStatusText(true);
         };

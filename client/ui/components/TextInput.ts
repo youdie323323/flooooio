@@ -1,7 +1,7 @@
 import { calculateStrokeWidth } from "../../utils/common";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import { uiScaleFactor } from "../UserInterface";
-import { Component, MaybeDynamicLayoutablePointer } from "./Component";
+import { Component, Interactive, MaybeDynamicLayoutablePointer } from "./Component";
 import ExtensionPlaceholder from "./extensions/Extension";
 
 // Fork of CanvasInput
@@ -43,7 +43,7 @@ interface CanvasInputOptions {
 
 const inputs: TextInput[] = [];
 
-export default class TextInput extends ExtensionPlaceholder(Component) {
+export default class TextInput extends ExtensionPlaceholder(Component) implements Interactive {
     // Make it accessible from outside
     private _value: string;
     private _canvas: HTMLCanvasElement | null;
@@ -233,7 +233,7 @@ export default class TextInput extends ExtensionPlaceholder(Component) {
     }
 
     public override getCacheKey(): string {
-        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout))}`
+        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`
     }
 
     public canvas(data: HTMLCanvasElement = undefined) {
@@ -615,7 +615,7 @@ export default class TextInput extends ExtensionPlaceholder(Component) {
         });
     }
 
-    private mousemove(e: MouseEvent | TouchEvent, self: this) {
+    private mousemove(e: MouseEvent, self: this) {
         let mouse = self._mousePos(e), x = mouse.x, y = mouse.y, isOver = self._overInput(x, y);
 
         if (self._hasFocus && self._selectionStart >= 0) {
@@ -636,11 +636,9 @@ export default class TextInput extends ExtensionPlaceholder(Component) {
                 self._selection = [start, end];
             }
         }
-
-        this._changeCursor(x, y, isOver);
     }
 
-    private mousedown(e: MouseEvent | TouchEvent, self: this) {
+    private mousedown(e: MouseEvent, self: this) {
         let mouse = self._mousePos(e), x = mouse.x, y = mouse.y, isOver = self._overInput(x, y);
 
         self._mouseDown = isOver;
@@ -659,11 +657,9 @@ export default class TextInput extends ExtensionPlaceholder(Component) {
         if (self._hasFocus && self._mouseDown) {
             self._selectionStart = self._clickPos(x, y);
         }
-
-        this._changeCursor(x, y, isOver);
     }
 
-    private mouseup(e: MouseEvent | TouchEvent, self: this) {
+    private mouseup(e: MouseEvent, self: this) {
         let mouse = self._mousePos(e), x = mouse.x, y = mouse.y;
 
         let isSelection = self._clickPos(x, y) !== self._selectionStart;
@@ -686,27 +682,20 @@ export default class TextInput extends ExtensionPlaceholder(Component) {
         self._hiddenInput.selectionEnd = range[1];
     }
 
-    private _calculateCursorStyle(isOver: boolean, _hasFocus: boolean): string {
-        return isOver ? _hasFocus ? "text" : "pointer" : "default";
+    private _calculateCursorStyle(_hasFocus: boolean): string {
+        return _hasFocus ? "text" : "pointer";
     }
 
-    private _changeCursor(x: number, y: number, isOver: boolean) {
+    public onFocus(): void {
         let self = this;
 
-        if (self._canvas) {
-            // Original input has two types while has focus, maybe padding?
-            // TODO: fix this, this code only maked for this component, blocking other component cursor style change
-            self._canvas.style.cursor = this._calculateCursorStyle(isOver, self._hasFocus);
-            if (inputs.length > 1) {
-                for (let input of inputs) {
-                    const cursorStyle = this._calculateCursorStyle(input._overInput(x, y), input._hasFocus);
-                    if (cursorStyle !== "default") {
-                        self._canvas.style.cursor = cursorStyle;
-                        break;
-                    }
-                }
-            }
-        }
+        self._canvas.style.cursor = this._calculateCursorStyle(self._hasFocus);
+    }
+
+    public onBlur(): void {
+        let self = this;
+
+        self._canvas.style.cursor = "default";
     }
 
     public render() {
@@ -996,49 +985,13 @@ export default class TextInput extends ExtensionPlaceholder(Component) {
         return pos;
     }
 
-    private _mousePos(e: MouseEvent | TouchEvent) {
-        let elm: HTMLElement, x: number, y: number;
-
-        if ("touches" in e && e.touches && e.touches.length) {
-            elm = e.touches[0].target as HTMLElement;
-            x = e.touches[0].pageX;
-            y = e.touches[0].pageY;
-        } else if ("changedTouches" in e && e.changedTouches && e.changedTouches.length) {
-            elm = e.changedTouches[0].target as HTMLElement;
-            x = e.changedTouches[0].pageX;
-            y = e.changedTouches[0].pageY;
-        } else if (!("changedTouches" in e && "touches" in e)) {
-            elm = e.target as HTMLElement;
-            x = e.pageX;
-            y = e.pageY;
-        }
-
-        x /= uiScaleFactor;
-        y /= uiScaleFactor;
-
-        let style = document.defaultView.getComputedStyle(elm, undefined),
-            paddingLeft = parseInt(style['paddingLeft'], 10) || 0,
-            paddingTop = parseInt(style['paddingLeft'], 10) || 0,
-            borderLeft = parseInt(style['borderLeftWidth'], 10) || 0,
-            borderTop = parseInt(style['borderLeftWidth'], 10) || 0,
-            htmlTop = (document.body.parentNode as HTMLElement).offsetTop || 0,
-            htmlLeft = (document.body.parentNode as HTMLElement).offsetLeft || 0,
-            offsetX = 0,
-            offsetY = 0;
-
-        if (typeof elm.offsetParent !== 'undefined') {
-            do {
-                offsetX += elm.offsetLeft;
-                offsetY += elm.offsetTop;
-            } while ((elm = elm.offsetParent as HTMLElement));
-        }
-
-        offsetX += paddingLeft + borderLeft + htmlLeft;
-        offsetY += paddingTop + borderTop + htmlTop;
-
+    private _mousePos(e: MouseEvent) {
+        let self = this;
+        const rect = self._canvas.getBoundingClientRect();
+        // TODO: add the fucking interface that only for generic events, not now im fucking serious sleepy
         return {
-            x: x - offsetX,
-            y: y - offsetY
+            x: ((e.clientX - rect.left) * (self._canvas.width / rect.width)) / uiScaleFactor,
+            y: ((e.clientY - rect.top) * (self._canvas.height / rect.height)) / uiScaleFactor
         };
     }
 }
