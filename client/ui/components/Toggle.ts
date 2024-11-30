@@ -7,6 +7,7 @@ export default class Toggle extends ExtensionPlaceholder(Component) implements I
     private static readonly SCALING_DURATION: number = 100;
     private scalingProgress: number = 0;
     private scalingStartTime: number | null = null;
+    
     private toggle: boolean = false;
 
     constructor(

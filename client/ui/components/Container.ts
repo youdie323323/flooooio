@@ -1,16 +1,26 @@
 import { ColorCode, darkend, DARKEND_BASE } from "../../utils/common";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import { uiScaleFactor } from "../UserInterface";
-import { Component, ComponentContainer, DynamicLayoutable } from "./Component";
+import { AllComponents, Component, ComponentContainer, DynamicLayoutable } from "./Component";
 import ExtensionPlaceholder from "./extensions/Extension";
 
 type DynamicLayoutableContainerLayoutOptions = DynamicLayoutable<Omit<LayoutOptions, "w" | "h">>;
 
 /**
+ * Addable type of container.
+ * 
+ * @remarks
+ * 
+ * Container component cant work properly if addChildrenComponent not called / not setting parentContainer,
+ * so create new type that ensure container is addable, now we can determine if container is addable container.
+ */
+export type AddableContainer = (StaticPanelContainer | StaticHContainer | StaticVContainer) & { __addable: boolean };
+
+/**
  * Container component that can add/render childrens.
  */
 export class StaticContainer extends ExtensionPlaceholder(Component) implements ComponentContainer {
-    public children: Component[] = [];
+    public children: AllComponents[] = [];
 
     constructor(
         public layout: DynamicLayoutableContainerLayoutOptions,
@@ -18,6 +28,7 @@ export class StaticContainer extends ExtensionPlaceholder(Component) implements 
         super();
     }
 
+    // Original florr ui container will animated to the middle of container
     public override render(ctx: CanvasRenderingContext2D): void {
         ctx.globalAlpha = this.globalAlpha;
 
@@ -57,13 +68,17 @@ export class StaticContainer extends ExtensionPlaceholder(Component) implements 
         ctx.translate(-(this.x + this.w / 2), -(this.y));
     }
 
+    public override getCacheKey(): string {
+        return super.getCacheKey() + `${this.children.length}`
+    }
+
     // Dont call this method! call with UserInterface.addChildrenComponent
-    public addChildren(child: Component) {
+    public addChildren(child: AllComponents) {
         this.children.push(child);
     }
 
     // Dont call this method! call with UserInterface.removeChildrenComponent
-    public removeChildren(child: Component) {
+    public removeChildren(child: AllComponents) {
         const index = this.children.indexOf(child);
         if (index > -1) {
             this.children.splice(index, 1);
@@ -73,9 +88,10 @@ export class StaticContainer extends ExtensionPlaceholder(Component) implements 
     public destroy?(): void {
         this.children.forEach(c => {
             c.destroy();
-        });
 
-        this.children = [];
+            // Remove reference to this
+            c.parentContainer = null;
+        });
 
         this.children = null;
 
@@ -128,7 +144,11 @@ export class StaticPanelContainer extends StaticContainer {
 
         if (this.children) {
             this.children.forEach(c => {
-                const childLayout = c.calculateLayout(width, height, 0, 0);
+                const childLayout = c._calculateLayout(
+                    width, height, 
+                    // Dont use x, y because only wanted size
+                    0, 0,
+                );
                 maxW = Math.max(maxW, childLayout.x + childLayout.w);
                 maxH = Math.max(maxH, childLayout.y + childLayout.h);
             });
@@ -148,7 +168,7 @@ export class StaticPanelContainer extends StaticContainer {
 
         if (this.children) {
             this.children.forEach(c => {
-                const childLayout = c.calculateLayout(
+                const childLayout = c._calculateLayout(
                     layout.w - (strokeWidth * 4),
                     layout.h - (strokeWidth * 4),
                     layout.x + strokeWidth,
@@ -165,6 +185,10 @@ export class StaticPanelContainer extends StaticContainer {
         return layout;
     }
 
+    public override getCacheKey(): string {
+        return super.getCacheKey() + `${this.computeDynamicLayoutable(this.color)}`
+    }
+
     protected getStrokeWidth(): number {
         const minDimension = Math.min(this.w, this.h);
         return Math.max(2, minDimension * 0.02);
@@ -177,9 +201,11 @@ export class StaticPanelContainer extends StaticContainer {
 
         const strokeWidth = this.getStrokeWidth();
 
+        const computedColor = this.computeDynamicLayoutable(this.color);
+
         ctx.lineWidth = strokeWidth;
-        ctx.strokeStyle = darkend(this.computeDynamicLayoutable(this.color), DARKEND_BASE);
-        ctx.fillStyle = this.computeDynamicLayoutable(this.color);
+        ctx.strokeStyle = darkend(computedColor, DARKEND_BASE);
+        ctx.fillStyle = computedColor;
 
         ctx.beginPath();
         ctx.roundRect(this.x, this.y, this.w, this.h, 1);
@@ -235,7 +261,7 @@ export class StaticHContainer extends StaticContainer {
             let currentX = 0;
 
             this.children.forEach((child) => {
-                const childLayout = child.calculateLayout(
+                const childLayout = child._calculateLayout(
                     layout.w,
                     layout.h,
                     layout.x + currentX,
@@ -307,7 +333,7 @@ export class StaticVContainer extends StaticContainer {
             let currentY = 0;
 
             this.children.forEach((child) => {
-                const childLayout = child.calculateLayout(
+                const childLayout = child._calculateLayout(
                     layout.w,
                     layout.h,
                     layout.x,
@@ -345,6 +371,10 @@ export class StaticVContainer extends StaticContainer {
 
 /**
  * Component that just consume space.
+ * 
+ * @remarks
+ * 
+ * This is only used for containers whose coordinates are automatically determined.
  */
 export class StaticSpace extends ExtensionPlaceholder(Component) {
     constructor(

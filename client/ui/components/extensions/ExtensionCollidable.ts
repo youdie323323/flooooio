@@ -34,6 +34,8 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
 
             this.initialPos = [layout.x, layout.y];
 
+            // Maybe need to set layout to previous layout x,y position because looks ugly on resize
+
             return layout;
         }
 

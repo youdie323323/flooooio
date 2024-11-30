@@ -1,11 +1,34 @@
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
+import LayoutCache from "../layout/LayoutCache";
+import { Button, SVGButton, TextButton } from "./Button";
+import { AddableContainer, CoordinatedSpace as CoordinatedStaticSpace, StaticSpace } from "./Container";
+import PlayerProfile from "./PlayerProfile";
+import StaticText from "./Text";
+import TextInput from "./TextInput";
+import Toggle from "./Toggle";
 
 /**
  * Type that live regenerate value.
  */
 export type DynamicLayoutable<T> = T | (() => T);
 
-// TODO: Dynamic LayoutOptions should update layout when differs from previous options
+/**
+ * Union type that including all components.
+ * 
+ * @remarks
+ * 
+ * Need to create this because of AddableContainer.
+ * Although base components like "Button" is cant addable, not including ("Button" is satisfy Component, its should not work) 
+ */
+export type AllComponents =
+    | AddableContainer 
+    | StaticSpace | CoordinatedStaticSpace
+    | TextButton | SVGButton
+    | StaticText
+    | TextInput
+    | Toggle
+    // Below other than common components
+    | PlayerProfile;
 
 // Base interface for all GUI components
 export abstract class Component {
@@ -15,9 +38,15 @@ export abstract class Component {
     public animationStartTime: number | null = null;
     public animationDirection: 'in' | 'out' = 'in';
 
-    public parentContainer: ComponentContainer;
-
+    /**
+     * Component is visible, or not.
+     */
     public visible: boolean = true;
+
+    /**
+     * Parent container of component.
+     */
+    public parentContainer: ComponentContainer;
 
     /**
      * Canvas configs.
@@ -29,6 +58,8 @@ export abstract class Component {
     public w: number = 0;
     public h: number = 0;
 
+    public layoutCache: LayoutCache = new LayoutCache();
+
     /**
      * This method calculate layout by layout options, and parent container/screen.
      */
@@ -38,6 +69,37 @@ export abstract class Component {
         originX: number,
         originY: number
     ): LayoutResult;
+
+    public _calculateLayout(
+        width: number,
+        height: number,
+        originX: number,
+        originY: number
+    ): LayoutResult {
+        const cacheKey = `${width+height+originX+originY}` + this.getCacheKey();
+        if (!this.layoutCache.isDirtyCache(cacheKey)) {
+            const cached = this.layoutCache.get(cacheKey);
+            if (cached) {
+                return cached;
+            };
+        };
+
+        const result = this.calculateLayout(width, height, originX, originY);
+
+        console.log("ra")
+
+        this.layoutCache.set(cacheKey, result);
+
+        return result;
+    }
+
+    /**
+     * Generate cache key that ensure cache is same.
+     * @returns Cache key.
+     */
+    public getCacheKey(): string {
+        return `${this.x}${this.y}${this.w}${this.h}${this.globalAlpha}${this.parentContainer ? this.parentContainer.getCacheKey() : ""}`;
+    }
 
     public render(ctx: CanvasRenderingContext2D): void {
         ctx.globalAlpha = this.globalAlpha;
@@ -131,8 +193,8 @@ export interface Clickable extends Component {
 
 // Interface for container components
 export interface ComponentContainer extends Component {
-    children: Component[];
+    children: AllComponents[];
 
-    addChildren(child: Component): void;
-    removeChildren(child: Component): void;
+    addChildren(child: AllComponents): void;
+    removeChildren(child: AllComponents): void;
 }

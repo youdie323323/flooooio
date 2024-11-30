@@ -19,6 +19,7 @@ export function ExtensionDynamicLayoutable<T extends ExtensionConstructor>(Base:
 
         constructor(...args: any[]) {
             super(...args);
+            
             (this as any)[DYNAMIC_LAYOUTED] = true;
         }
 

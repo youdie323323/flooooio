@@ -13,7 +13,7 @@ export default class PlayerProfile extends ExtensionPlaceholder(Component) {
     private entityPlayer: EntityPlayer = new EntityPlayer(
         -1,
 
-        // The coordinate will transform, so we can just send transform value hre
+        // The coordinate will transform, so we can just send transform value here
         0,
         -28,
 

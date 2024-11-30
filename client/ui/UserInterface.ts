@@ -1,12 +1,8 @@
 import { Biomes } from "../../shared/enum";
-import { Clickable, Component, ComponentContainer, Interactive } from "./components/Component";
+import { AllComponents, Clickable, Component, ComponentContainer, Interactive } from "./components/Component";
 import { Button } from "./components/Button";
 import { DYNAMIC_LAYOUTED } from "./components/extensions/ExtensionDynamicLayoutable";
-
-export interface BiomeSetter {
-    set biome(biome: Biomes);
-    get biome(): Biomes;
-}
+import { AddableContainer } from "./components/Container";
 
 export let uiScaleFactor: number = 1;
 
@@ -17,7 +13,7 @@ export default abstract class UserInterface {
     private mouseX: number = 0;
     private mouseY: number = 0;
 
-    private components: Component[] = [];
+    private components: AllComponents[] = [];
 
     // Store children component to not render from UserInterface, flattend
     private childrenComponents: Set<Component> = new Set();
@@ -91,21 +87,21 @@ export default abstract class UserInterface {
         */
     }
 
-    protected addComponent(component: Component): void {
+    protected addComponent(component: AllComponents): void {
         // Remove component if exists
         this.removeComponent(component);
 
         this.components.push(component);
     }
 
-    protected removeComponent(component: Component): void {
+    protected removeComponent(component: AllComponents): void {
         const index = this.components.indexOf(component);
         if (index > -1) {
             this.components.splice(index, 1);
         }
     }
 
-    protected addChildrenComponent(targetContainer: ComponentContainer, component: Component): void {
+    protected addChildrenComponent(targetContainer: ComponentContainer, component: AllComponents): void {
         targetContainer.addChildren(component);
 
         this.addComponent(component);
@@ -115,7 +111,7 @@ export default abstract class UserInterface {
         }
     }
 
-    protected removeChildrenComponent(targetContainer: ComponentContainer, component: Component): void {
+    protected removeChildrenComponent(targetContainer: ComponentContainer, component: AllComponents): void {
         targetContainer.removeChildren(component);
 
         this.removeComponent(component);
@@ -166,9 +162,16 @@ export default abstract class UserInterface {
         const scaledWidth = this.canvas.width / uiScaleFactor;
         const scaledHeight = this.canvas.height / uiScaleFactor;
 
+        // Invalidate all cache key, so its possible to _calculateLayout()
         this.components.forEach(component => {
             if (!this.childrenComponents.has(component)) {
-                const layout = component.calculateLayout(scaledWidth, scaledHeight, 0, 0);
+                component.layoutCache.invalidate();
+            }
+        });
+
+        this.components.forEach(component => {
+            if (!this.childrenComponents.has(component)) {
+                const layout = component._calculateLayout(scaledWidth, scaledHeight, 0, 0);
 
                 component.setX(layout.x);
                 component.setY(layout.y);
@@ -200,6 +203,8 @@ export default abstract class UserInterface {
         this.onKeyUp(event);
     }
 
+    private isClickableChildren = (component: Component): boolean => !(this.childrenComponents.has(component) && component.parentContainer.isAnimating);
+
     private handleMouseDown(event: MouseEvent): void {
         if (!event.isTrusted) {
             return;
@@ -209,7 +214,7 @@ export default abstract class UserInterface {
 
         // Click handling
         for (const component of this.components) {
-            if (!this.interactiveAllowed(component)) {
+            if (!this.isClickableChildren(component)) {
                 continue;
             }
 
@@ -230,7 +235,7 @@ export default abstract class UserInterface {
         this.onMouseUp(event);
 
         if (this.clickedComponent) {
-            if (!this.interactiveAllowed(this.clickedComponent)) {
+            if (!this.isClickableChildren(this.clickedComponent)) {
                 return;
             }
 
@@ -252,7 +257,7 @@ export default abstract class UserInterface {
         this.updateMousePosition(event);
 
         this.components.forEach(component => {
-            if (!this.interactiveAllowed(component)) {
+            if (!this.isClickableChildren(component)) {
                 return;
             }
 
@@ -272,14 +277,6 @@ export default abstract class UserInterface {
                 }
             }
         });
-    }
-
-    private interactiveAllowed(component: Component): boolean {
-        if (this.childrenComponents.has(component) && component.parentContainer.isAnimating) {
-            return false;
-        }
-
-        return true;
     }
 
     public cleanupRenders(): void {
@@ -306,9 +303,8 @@ export default abstract class UserInterface {
 
         this.components
             .filter(c => !this.childrenComponents.has(c) && this.isDynamicLayoutable(c))
-            .forEach(component => {
-                // TODO: cache layout to reduce lag                
-                const layout = component.calculateLayout(scaledWidth, scaledHeight, 0, 0);
+            .forEach(component => {           
+                const layout = component._calculateLayout(scaledWidth, scaledHeight, 0, 0);
 
                 component.setX(layout.x);
                 component.setY(layout.y);
@@ -328,6 +324,21 @@ export default abstract class UserInterface {
         });
     }
 
+
+    // Component helpers
+
+    protected createAddableContainer(container: ComponentContainer, children: AllComponents[]): AddableContainer {
+        children.forEach(child => {
+            this.addChildrenComponent(container, child);
+
+            child.parentContainer = container;
+        });
+
+        const addable = container as AddableContainer;
+        addable.__addable = true;
+        return addable;
+    }
+
     /**
      * Method for initialize components, only called for once.
      */
@@ -345,15 +356,4 @@ export default abstract class UserInterface {
     abstract onMouseDown(event: MouseEvent): void;
     abstract onMouseUp(event: MouseEvent): void;
     abstract onMouseMove(event: MouseEvent): void;
-
-    // Component shortener
-    protected createContainer<T extends ComponentContainer>(container: T, children: Component[]): T {
-        children.forEach(child => {
-            this.addChildrenComponent(container, child);
-
-            child.parentContainer = container;
-        });
-
-        return container;
-    }
 }

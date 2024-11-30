@@ -1,7 +1,7 @@
 import EntityMob from "../../entity/EntityMob.js";
 import TerrainGenerator, { BIOME_TILESETS } from "../../utils/TerrainGenerator.js";
 import { Button, SVGButton, TextButton } from "../components/Button.js";
-import UserInterface, { BiomeSetter, uiScaleFactor } from "../UserInterface.js";
+import UserInterface, { uiScaleFactor } from "../UserInterface.js";
 import TextInput from "../components/TextInput.js";
 import { ws } from "../../main.js";
 import { Biomes, PetalType } from "../../../shared/enum.js";
@@ -9,9 +9,9 @@ import StaticText from "../components/Text.js";
 import { Rarities } from "../../../shared/rarity.js";
 import { ServerBound } from "../../../shared/packet.js";
 import ExtensionCollidable from "../components/extensions/ExtensionCollidable.js";
-import { CoordinatedSpace, StaticContainer, StaticHContainer, StaticPanelContainer, StaticSpace, StaticVContainer } from "../components/Container.js";
-import { Component } from "../components/Component.js";
-import { CROSS_ICON_SVG } from "./UserInterfaceModeGame.js";
+import { AddableContainer, CoordinatedSpace, StaticContainer, StaticHContainer, StaticPanelContainer, StaticSpace, StaticVContainer } from "../components/Container.js";
+import { AllComponents, Component } from "../components/Component.js";
+import { BiomeSetter, CROSS_ICON_SVG } from "./UserInterfaceModeGame.js";
 import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../shared/waveRoom.js";
 import Toggle from "../components/Toggle.js";
 import { ExtensionDynamicLayoutable } from "../components/extensions/ExtensionDynamicLayoutable.js";
@@ -111,7 +111,7 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
 
     private connectingText: StaticText;
     private loggingInText: StaticText;
-    private onLoadedComponents: Component[];
+    private onLoadedComponents: AllComponents[];
 
     private nameInput: TextInput;
     private codeInput: TextInput;
@@ -120,14 +120,14 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
     private squadButton: TextButton;
 
     // Make this public to close this from networking
-    public squadMenuContainer: StaticPanelContainer;
+    public squadMenuContainer: AddableContainer;
 
     private publicToggle: Toggle;
 
     private loadingText: StaticText;
     private loadingTextRef: string;
 
-    private playerProfileContainer: StaticHContainer;
+    private playerProfileContainer: AddableContainer;
     private codeText: StaticText;
 
     // Wave informations
@@ -433,7 +433,7 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
                 },
             )
 
-            const biomeSwitchers = this.createContainer(
+            const biomeSwitchers = this.createAddableContainer(
                 new StaticHContainer(
                     {
                         x: -144,
@@ -500,7 +500,7 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
                 );
             }
 
-            this.squadMenuContainer = this.createContainer(
+            this.squadMenuContainer = this.createAddableContainer(
                 new (ExtensionDynamicLayoutable(StaticPanelContainer))(
                     {
                         x: -175,
@@ -523,7 +523,7 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
                         14,
                     )),
 
-                    (this.playerProfileContainer = this.createContainer(
+                    (this.playerProfileContainer = this.createAddableContainer(
                         new StaticHContainer(
                             {
                                 x: 9,

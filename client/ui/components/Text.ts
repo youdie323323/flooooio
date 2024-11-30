@@ -2,13 +2,12 @@ import { calculateStrokeWidth, ColorCode } from "../../utils/common";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import { Component, DynamicLayoutable, Interactive } from "./Component";
 import ExtensionPlaceholder from "./extensions/Extension";
-import ExtensionCollidable from "./extensions/ExtensionCollidable";
 
 export default class StaticText extends ExtensionPlaceholder(Component) {
     constructor(
         private layout: DynamicLayoutable<LayoutOptions>,
 
-        private textFn: DynamicLayoutable<string>,
+        private text: DynamicLayoutable<string>,
         private fontSize: DynamicLayoutable<number>,
         private fillStyle: DynamicLayoutable<ColorCode> = () => "#ffffff",
 
@@ -32,6 +31,10 @@ export default class StaticText extends ExtensionPlaceholder(Component) {
         );
     }
 
+    public override getCacheKey(): string {
+        return super.getCacheKey() + `${this.computeDynamicLayoutable(this.text)}${this.computeDynamicLayoutable(this.fontSize)}${this.computeDynamicLayoutable(this.fillStyle)}`
+    }
+
     public render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
@@ -44,7 +47,7 @@ export default class StaticText extends ExtensionPlaceholder(Component) {
 
         const computedFillStyle = this.computeDynamicLayoutable(this.fillStyle);
         const computedFontSize = this.computeDynamicLayoutable(this.fontSize);
-        const computedText = this.computeDynamicLayoutable(this.textFn);
+        const computedText = this.computeDynamicLayoutable(this.text);
 
         ctx.fillStyle = computedFillStyle;
         ctx.strokeStyle = '#000000';
@@ -59,7 +62,7 @@ export default class StaticText extends ExtensionPlaceholder(Component) {
 
     public destroy?(): void {
         this.layout = null;
-        this.textFn = null;
+        this.text = null;
         this.fontSize = null;
         this.fillStyle = null;
     }

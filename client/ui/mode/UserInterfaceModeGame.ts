@@ -1,7 +1,7 @@
 import { players, mobs, deltaTime, ws, uiCtx, antennaScaleFactor, networking } from "../../main";
 import TerrainGenerator, { BIOME_TILESETS } from "../../utils/TerrainGenerator";
 import { Button, SVGButton, TextButton } from "../components/Button";
-import UserInterface, { BiomeSetter, uiScaleFactor } from "../UserInterface";
+import UserInterface, { uiScaleFactor } from "../UserInterface";
 import Networking, { wameSelfId } from "../../Networking";
 import TextInput from "../components/TextInput";
 import { Biomes, Mood } from "../../../shared/enum";
@@ -86,6 +86,11 @@ function easeOutCubic(t: number): number {
  */
 let gameUiCurrentBiome: Biomes = Biomes.GARDEN;
 
+export interface BiomeSetter {
+    set biome(biome: Biomes);
+    get biome(): Biomes;
+}
+
 export default class UserInterfaceGame extends UserInterface implements BiomeSetter {
     private readonly DEAD_BACKGROUND_TARGET_OPACITY: number = 0.3;
     private readonly DEAD_BACKGROUND_FADE_DURATION: number = 0.3;
@@ -114,8 +119,8 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
     private isDeadContinued: boolean;
     private isGameOverContinued: boolean;
 
-    private deadMenuContinueButton: Button;
-    private gameOverContinueButton: Button;
+    private deadMenuContinueButton: TextButton;
+    private gameOverContinueButton: TextButton;
 
     private deadBackgroundOpacity: number;
     private youWillRespawnNextWaveOpacity: number;
@@ -159,7 +164,7 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
         this.chats = [];
     }
 
-    onKeyDown(event: KeyboardEvent): void {
+    public onKeyDown(event: KeyboardEvent): void {
         switch (event.key) {
             // Space means space
             case " ":
@@ -209,7 +214,7 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
             }
         }
     }
-    onKeyUp(event: KeyboardEvent): void {
+    public onKeyUp(event: KeyboardEvent): void {
         switch (event.key) {
             // Space means space
             case " ":
@@ -221,21 +226,21 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
         }
     }
 
-    onMouseDown(event: MouseEvent): void {
+    public onMouseDown(event: MouseEvent): void {
         if (networking) {
             if (event.button === 0 || event.button === 2) {
                 networking.sendMood(event.button === 0 ? Mood.ANGRY : event.button === 2 ? Mood.SAD : Mood.NORMAL);
             }
         }
     }
-    onMouseUp(event: MouseEvent): void {
+    public onMouseUp(event: MouseEvent): void {
         if (networking) {
             if (event.button === 0 || event.button === 2) {
                 networking.sendMood(Mood.NORMAL);
             }
         }
     }
-    onMouseMove(event: MouseEvent): void {
+    public onMouseMove(event: MouseEvent): void {
         mouseXOffset = event.clientX - document.documentElement.clientWidth / 2;
         mouseYOffset = event.clientY - document.documentElement.clientHeight / 2;
 
