@@ -4,6 +4,14 @@ import { uiScaleFactor } from "../UserInterface";
 import { AllComponents, Component, ComponentContainer, MaybeDynamicLayoutablePointer } from "./Component";
 import ExtensionPlaceholder from "./extensions/Extension";
 
+/**
+ * Option for container.
+ * 
+ * @remarks
+ * 
+ * The reason omitted width and height, is w and h will automatically calculated by childs x&y&w&h,
+ * this behavior is same as original florr.io ui.
+ */
 type DynamicLayoutableContainerLayoutOptions = MaybeDynamicLayoutablePointer<Omit<LayoutOptions, "w" | "h">>;
 
 /**
@@ -91,8 +99,16 @@ export class StaticContainer extends ExtensionPlaceholder(Component) implements 
     }
 
     public override getCacheKey(): string {
-        // TODO: in here this blocking children update because this values not included child getCacheKey() values, will fix later
-        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`
+        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}` + this.children.map(c => c.getCacheKey()).join("");
+    }
+
+    public invalidateLayoutCache(): void {
+        this.layoutCache.invalidate();
+
+        // Invalidate child layout cache too
+        this.children.forEach(child => {
+            child.invalidateLayoutCache();
+        });
     }
 
     // Dont call this method! call with UserInterface.addChildrenComponent
@@ -419,6 +435,10 @@ export class StaticSpace extends ExtensionPlaceholder(Component) {
         return super.getCacheKey() + `${this.computeDynamicLayoutable(this._w) + this.computeDynamicLayoutable(this._h)}`
     }
 
+    public invalidateLayoutCache(): void {
+        this.layoutCache.invalidate();
+    }
+
     public render(ctx: CanvasRenderingContext2D): void { }
 
     public destroy?(): void {
@@ -457,6 +477,10 @@ export class CoordinatedStaticSpace extends ExtensionPlaceholder(Component) {
     public override getCacheKey(): string {
         return super.getCacheKey() +
             `${this.computeDynamicLayoutable(this._x) + this.computeDynamicLayoutable(this._y) + this.computeDynamicLayoutable(this._w) + this.computeDynamicLayoutable(this._h)}`
+    }
+
+    public invalidateLayoutCache(): void {
+        this.layoutCache.invalidate();
     }
 
     public render(ctx: CanvasRenderingContext2D): void { }

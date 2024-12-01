@@ -74,11 +74,7 @@ export interface EntityMixinTemplate {
     [onUpdateTick]: (poolThis: WavePool) => void;
 
     /**
-     * Free up their own mixin values.
-     * 
-     * @remarks
-     * 
-     * For free up like setTimeout.
+     * Free up own mixin values.
      */
     free(): void;
 

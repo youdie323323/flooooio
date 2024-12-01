@@ -167,9 +167,10 @@ export default abstract class UserInterface {
         const scaledWidth = this.canvas.width / uiScaleFactor;
         const scaledHeight = this.canvas.height / uiScaleFactor;
 
-        // Invalidate all cache key, so its possible to _calculateLayout()
+        // Only call top-level invalidateLayoutCache, 
+        // container invalidateLayoutCache will invalidate child layout too
         this.getTopLevelComponents().forEach(component => {
-            component.layoutCache.invalidate();
+            component.invalidateLayoutCache();
         });
 
         this.getTopLevelComponents().forEach(component => {
@@ -180,12 +181,6 @@ export default abstract class UserInterface {
             component.setW(layout.w);
             component.setH(layout.h);
         });
-    }
-
-    private updateMousePosition(event: MouseEvent): void {
-        const rect = this.canvas.getBoundingClientRect();
-        this.mouseX = ((event.clientX - rect.left) * (this.canvas.width / rect.width)) / uiScaleFactor;
-        this.mouseY = ((event.clientY - rect.top) * (this.canvas.height / rect.height)) / uiScaleFactor;
     }
 
     private handleKeyDown(event: KeyboardEvent): void {
@@ -255,7 +250,13 @@ export default abstract class UserInterface {
 
         this.onMouseMove(event);
 
-        this.updateMousePosition(event);
+        // Update mouse position
+
+        {
+            const rect = this.canvas.getBoundingClientRect();
+            this.mouseX = ((event.clientX - rect.left) * (this.canvas.width / rect.width)) / uiScaleFactor;
+            this.mouseY = ((event.clientY - rect.top) * (this.canvas.height / rect.height)) / uiScaleFactor;
+        }
 
         this.components.forEach(component => {
             if (!this.isClickableChildren(component)) {

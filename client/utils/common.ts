@@ -41,5 +41,6 @@ export function darkend(color: ColorCode, strength: number): ColorCode {
 }
 
 export function calculateStrokeWidth(fontSize: number): number {
-    return fontSize / 8.33333383;
+    // 80 / 8.333333830038736 = 9.59999942779541
+    return fontSize / 8.333333830038736;
 }

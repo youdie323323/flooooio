@@ -41,8 +41,6 @@ export default class UserInterfaceContext {
         this.previousUI = this.currentUI;
         this.currentUI = this.createUI(mode);
 
-        // TODO: fix fancy behaivors
-
         this.isTransitioning = true;
 
         this.transition.start(mode)

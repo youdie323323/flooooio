@@ -37,6 +37,10 @@ export default class Toggle extends ExtensionPlaceholder(Component) implements I
         return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`
     }
 
+    public invalidateLayoutCache(): void {
+        this.layoutCache.invalidate();
+    }
+
     public render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 

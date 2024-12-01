@@ -236,6 +236,10 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
         return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`
     }
 
+    public invalidateLayoutCache(): void {
+        this.layoutCache.invalidate();
+    }
+
     public canvas(data: HTMLCanvasElement = undefined) {
         let self = this;
 

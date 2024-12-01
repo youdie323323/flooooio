@@ -55,6 +55,10 @@ export class Button extends ExtensionPlaceholder(Component) implements Interacti
         return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`
     }
 
+    public invalidateLayoutCache(): void {
+        this.layoutCache.invalidate();
+    }
+
     public destroy?(): void { }
 
     public onFocus(): void {

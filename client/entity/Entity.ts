@@ -1,4 +1,5 @@
 import { deltaTime } from "../main";
+import { ColorCode } from "../utils/common";
 
 function calculateAngleDistance(startAngle: number, endAngle: number) {
     const angleDiff = (endAngle - startAngle) % (Math.PI * 2);
@@ -19,7 +20,7 @@ function interpolateColor(sourceColor: number[], targetColor: number[], progress
 }
 
 let colorCache = {};
-function hexToRgb(hexColor: string) {
+function hexToRgb(hexColor: ColorCode) {
     if (!colorCache[hexColor]) {
         colorCache[hexColor] = [
             parseInt(hexColor.slice(1, 3), 16),
@@ -27,6 +28,7 @@ function hexToRgb(hexColor: string) {
             parseInt(hexColor.slice(5, 7), 16)
         ];
     }
+
     return colorCache[hexColor];
 }
 
@@ -123,32 +125,34 @@ export default abstract class Entity {
                 this.redHealthTimer = 0;
             }
         }
+
         if (this.health < 1) {
             this.hpAlpha = smoothInterpolate(this.hpAlpha, 1, 200);
         }
+
         if (this.redHealthTimer === 0) {
             this.redHealth += (this.health - this.redHealth) * Math.min(1, deltaTime / 200);
         }
     }
 
     getSkinColor(color: any) {
-        const rHurtT = 1 - this.hurtT;
-        if (rHurtT >= 1) {
+        const invertedHurtT = 1 - this.hurtT;
+        if (invertedHurtT >= 1) {
             return color;
         }
         color = hexToRgb(color);
-        color = interpolateColor(color, [255, 0, 0], rHurtT * 0.25 + 0.75);
+        color = interpolateColor(color, [255, 0, 0], invertedHurtT * 0.25 + 0.75);
         return rgbArrayToString(color);
     }
 
     deadPreDraw(ctx: CanvasRenderingContext2D) {
         if (this.isDead) {
-            const rJ = Math.sin(this.deadT * Math.PI / 2);
-            const rK = 1 + rJ * 1;
+            const sinWavedDeadT = Math.sin(this.deadT * Math.PI / 2);
+            const rK = 1 + sinWavedDeadT;
             ctx.scale(rK, rK);
-            ctx.globalAlpha *= 1 - rJ;
+            ctx.globalAlpha *= 1 - sinWavedDeadT;
         }
     }
 
-    abstract draw(ctx: CanvasRenderingContext2D): void;
+    public abstract draw(ctx: CanvasRenderingContext2D): void;
 }

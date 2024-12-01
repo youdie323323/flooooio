@@ -1,12 +1,16 @@
 import { deltaTime } from "../main";
 import Entity from "./Entity";
-import { drawEntityDetail } from "./entityDrawDetail";
 import { Mood } from "../../shared/enum";
+import drawEntityDetail from "./entityDrawDetail";
 
 export default class EntityPlayer extends Entity {
     angryT: number;
     sadT: number;
-    isDeleted: boolean;
+
+    /**
+     * The player is completely removed (not likely death).
+     */
+    isRemoved: boolean;
 
     constructor(
         id: number, 
@@ -24,7 +28,7 @@ export default class EntityPlayer extends Entity {
 
         this.angryT = 0;
         this.sadT = 0;
-        this.isDeleted = false;
+        this.isRemoved = false;
     }
 
     update() {

@@ -35,6 +35,10 @@ export default class StaticText extends ExtensionPlaceholder(Component) {
         return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`
     }
 
+    public invalidateLayoutCache(): void {
+        this.layoutCache.invalidate();
+    }
+
     public render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 

@@ -5,12 +5,12 @@ import Entity from "./Entity";
 import EntityMob from "./EntityMob";
 import EntityPlayer from "./EntityPlayer";
 
-export const HP_BAR_MAX_WIDTH: number = 45;
+const HP_BAR_MAX_WIDTH: number = 45;
 
 /**
- * Draw entity details. (e.g. health gage)
+ * Draw entity details (e.g. health gage).
  */
-export function drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D) {
+export default function drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D) {
     if (
         entity.hpAlpha <= 0 ||
         entity instanceof EntityMob && isPetal(entity.type)

@@ -40,11 +40,9 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
         }
 
         private resolveCollision(component: Component) {
-            const gap = MixedBase.GAP;
-
             // Always up direction
 
-            this.targetPos[1] = component.y - this.h - gap;
+            this.targetPos[1] = component.y - this.h - MixedBase.GAP;
             this.targetPos[0] = null;
         }
 

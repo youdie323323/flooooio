@@ -1,15 +1,15 @@
 import Entity from "./Entity";
-import { drawEntityDetail, HP_BAR_MAX_WIDTH } from "./entityDrawDetail";
 import { ColorCode, darkend, DARKEND_BASE } from "../utils/common";
 import { MobType, PetalType } from "../../shared/enum";
 import { Rarities } from "../../shared/rarity";
+import drawEntityDetail from "./entityDrawDetail";
 
 function createBeetleBodyPath() {
     const p2 = new Path2D();
-    p2.moveTo(-40, 5);
-    p2.bezierCurveTo(-40, 40, 40, 40, 40, 5);
-    p2.lineTo(40, -5);
-    p2.bezierCurveTo(40, -40, -40, -40, -40, -5);
+    p2.moveTo(-42, 5);
+    p2.bezierCurveTo(-40, 40, 40, 40, 42, 5);
+    p2.lineTo(42, -5);
+    p2.bezierCurveTo(40, -40, -40, -40, -42, -5);
     p2.closePath();
     return p2;
 }

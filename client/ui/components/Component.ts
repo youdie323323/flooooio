@@ -10,7 +10,7 @@ import TextInput from "./TextInput";
 import Toggle from "./Toggle";
 
 /**
- * Type that live regenerate value.
+ * Convert type into dynamically type, but its possible to use raw value.
  */
 export type MaybeDynamicLayoutablePointer<T> = T | (() => T);
 
@@ -22,8 +22,8 @@ export type MaybeDynamicLayoutablePointer<T> = T | (() => T);
  * Need to create this because of AddableContainer.
  * Although base components like "Button" is cant addable, not including ("Button" is satisfy Component, its should not work) 
  */
-export type AllComponents = 
-    | AddableContainer 
+export type AllComponents =
+    | AddableContainer
     | StaticSpace | CoordinatedStaticSpace
     | TextButton | SVGButton
     | StaticText
@@ -47,6 +47,8 @@ export abstract class Component {
     public animationStartTime: number | null = null;
     public animationDirection: 'in' | 'out' = 'in';
 
+    protected layoutCache: LayoutCache = new LayoutCache();
+
     /**
      * Component is visible, or not.
      */
@@ -67,8 +69,6 @@ export abstract class Component {
     public w: number = 0;
     public h: number = 0;
 
-    public layoutCache: LayoutCache = new LayoutCache();
-
     /**
      * This method calculate layout by layout options, and parent container/screen.
      */
@@ -88,13 +88,19 @@ export abstract class Component {
         originX: number,
         originY: number
     ): LayoutResult {
-        const cacheKey = `${width+height+originX+originY}` + this.getCacheKey();
+        const cacheKey = `${width + height + originX + originY}` + this.getCacheKey();
         if (!this.layoutCache.isDirtyCache(cacheKey)) {
             const cached = this.layoutCache.get(cacheKey);
             if (cached) {
                 return cached;
             };
         };
+
+        /*
+        The current big issue:
+        If dynamic layoutable layout have 2-pattern of value, then if its both cached, 
+        its impossible to dynamically update anymore.
+        */
 
         const result = this.calculateLayout(width, height, originX, originY);
 
@@ -111,11 +117,16 @@ export abstract class Component {
      * @remarks
      * 
      * This should only include layout-affectable values, like "globalAlpha" is not should included, thats not changing x/y/w/h.
-     * Also, this doesnt requires separators between values etc.
+     * Also, this doesnt requires separators between values etc, just need to change a little bit.
      */
     public getCacheKey(): string {
-        return `${this.x+this.y+this.w+this.h}${this.parentContainer ? this.parentContainer.getCacheKey() : ""}`;
+        return `${this.x + this.y + this.w + this.h}`;
     }
+
+    /**
+     * Method for invalidate cache, this method should invalidate childs too.
+     */
+    public abstract invalidateLayoutCache(): void;
 
     public render(ctx: CanvasRenderingContext2D): void {
         ctx.globalAlpha = this.globalAlpha;
@@ -184,11 +195,7 @@ export abstract class Component {
     public abstract destroy?(): void;
 
     protected computeDynamicLayoutable<T>(dl: MaybeDynamicLayoutablePointer<T>): T {
-        if (dl instanceof Function) {
-            return (dl as () => T)();
-        } else {
-            return dl;
-        }
+        return dl instanceof Function ? dl() : dl;
     }
 }
 

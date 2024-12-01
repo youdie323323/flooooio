@@ -27,15 +27,23 @@ const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
     slots: {
         surface: [
             {
-                type: PetalType.BEETLE_EGG,
+                type: PetalType.BASIC,
                 rarity: Rarities.SUPER,
             } as MockPetalData,
             {
-                type: PetalType.BEETLE_EGG,
+                type: PetalType.BASIC,
                 rarity: Rarities.SUPER,
             } as MockPetalData,
             {
-                type: PetalType.BEETLE_EGG,
+                type: PetalType.BASIC,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BASIC,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BASIC,
                 rarity: Rarities.SUPER,
             } as MockPetalData,
         ],
@@ -73,7 +81,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
     const packetType = buffer[0];
     packetHistory.push(ServerBound[packetType]);
-    if (packetHistory.length > 30) {
+    if (packetHistory.length > 10) {
         packetHistory.shift();
     }
 
@@ -285,7 +293,7 @@ app
             // ws.send = function (...args) {
             //     setTimeout(() => {
             //         originalSend.apply(ws, args);
-            //     }, 300);
+            //     }, 100);
             // };
         }),
         // I dont log errors here because all errors are well-known (ws.send fail)
@@ -351,7 +359,7 @@ app
 
 process.on('uncaughtException', function (err) {
     logger.error("Uncaught exception occurred!");
-    logger.error("Last 30 packet types received: " + JSON.stringify(packetHistory.slice(), null, "\t"));
+    logger.error("Last 10 packet types received: " + JSON.stringify(packetHistory.slice(), null, "\t"));
 
     throw err;
 });

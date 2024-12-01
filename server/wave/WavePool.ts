@@ -14,6 +14,7 @@ import WaveProbabilityPredictor from './WaveProbabilityPredictor';
 import { Biomes, MobType, PetalType, Mood, MOOD_VALUES } from '../../shared/enum';
 import { Rarities } from '../../shared/rarity';
 import { ClientBound } from '../../shared/packet';
+import Entity from '../../client/entity/Entity';
 
 // Define UserData for WebSocket connections
 export interface UserData {
@@ -57,12 +58,16 @@ export class WavePool {
     private updateInterval: NodeJS.Timeout;
     private updateSendInterval: NodeJS.Timeout;
 
+    private eliminatedEntities: EntityId[];
+
     /**
      * @param waveData - POSSIBLY CIRCULAR REFERENCE. TODO: FIX
      */
     constructor(public waveData: WaveData) {
         this.clients = new Map();
         this.mobs = new Map();
+
+        this.eliminatedEntities = new Array();
     }
 
     /**
@@ -92,6 +97,8 @@ export class WavePool {
 
         this.clients = null;
         this.mobs = null;
+
+        this.eliminatedEntities = null;
 
         this.waveData = null;
     }
@@ -367,16 +374,22 @@ export class WavePool {
         let size = 1 + 2 + 8 + 8 + 2 + 1;
 
         // Add size for clients
-        size += 2; // Client count
+        // Client count
+        size += 2;
         this.clients.forEach(client => {
+            // String length is is dynamically changeable, so we can do is just loop
             size += 4 + 8 + 8 + 4 + 4 + 1 + 1 + 1 + client.nickname.length + 1 + 4;
         });
 
         // Add size for mobs
-        size += 2; // Mob count
-        this.mobs.forEach(mob => {
-            size += 4 + 8 + 8 + 4 + 4 + 8 + 1 + 1 + 4 + 1;
-        });
+        // Mob count
+        size += 2;
+        size += this.mobs.size * (4 + 8 + 8 + 4 + 4 + 8 + 1 + 1 + 4 + 1)
+
+        // Add size for eliminated entities
+        // Eliminated entity count
+        size += 2;
+        size += this.eliminatedEntities.length * 4;
 
         return size;
     }
@@ -478,6 +491,21 @@ export class WavePool {
             buffer.writeUInt8(mob.petMaster ? 1 : 0, offset++);
         });
 
+        // Write eliminated entities
+        buffer.writeUInt16BE(this.eliminatedEntities.length, offset);
+        offset += 2;
+
+        if (this.eliminatedEntities.length) {
+            this.eliminatedEntities.forEach((id) => {
+                // Id of entity
+                buffer.writeUInt32BE(id, offset);
+                offset += 4;
+            });
+
+            // Delete eliminated entities
+            this.eliminatedEntities.length = 0;
+        }
+
         return buffer;
     }
 
@@ -488,6 +516,8 @@ export class WavePool {
     removeClient(clientId: PlayerInstance["id"]) {
         if (this.clients.has(clientId)) {
             this.clients.delete(clientId);
+
+            this.eliminatedEntities.push(clientId);
 
             logger.region(() => {
                 using _guard = logger.metadata({ clientId });
@@ -511,6 +541,8 @@ export class WavePool {
     removeMob(mobId: MobInstance["id"]) {
         if (this.mobs.has(mobId)) {
             this.mobs.delete(mobId);
+
+            this.eliminatedEntities.push(mobId);
         }
     }
 

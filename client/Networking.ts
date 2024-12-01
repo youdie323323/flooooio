@@ -86,8 +86,6 @@ export default class Networking {
                             uiCtx.currentUI.updateT = 0;
                         }
 
-                        let ids: Set<number> = new Set();
-
                         const clientCount = data.getUint16(offset);
                         offset += 2;
 
@@ -147,25 +145,7 @@ export default class Networking {
                             } else {
                                 players.set(clientId, new EntityPlayer(clientId, clientX, clientY, clientAngle, clientSize, clientHealth, clientMaxHealth, clientMood, clientNickname));
                             }
-
-                            ids.add(clientId);
                         }
-
-                        players.forEach((player, key) => {
-                            if (
-                                !ids.has(key) &&
-                                // Dont repeat them
-                                !player.isDeleted
-                            ) {
-                                player.isDeleted = true;
-
-                                player.isDead = true;
-                                player.deadT = 0;
-                                player.health = 0;
-                            }
-                        });
-
-                        ids.clear();
 
                         const mobCount = data.getUint16(offset);
                         offset += 2;
@@ -225,18 +205,37 @@ export default class Networking {
                             } else {
                                 mobs.set(mobId, new EntityMob(mobId, mobX, mobY, mobAngle, mobSize, mobHealth, mobMaxHealth, mobType, mobRarity, mobIsPet));
                             }
-
-                            ids.add(mobId);
                         }
 
-                        mobs.forEach((mob, key) => {
-                            if (!ids.has(key)) {
+                        const eliminatedEntitesCount = data.getUint16(offset);
+                        offset += 2;
+
+                        for (let i = 0; i < eliminatedEntitesCount; i++) {
+                            const entityId = data.getUint32(offset);
+                            offset += 4;
+
+                            if (mobs.has(entityId)) {
+                                const mob = mobs.get(entityId);
+                                
                                 mob.isDead = true;
+
+                                continue;
                             }
-                        });
 
-                        ids.clear();
+                            if (players.has(entityId)) {
+                                const player = players.get(entityId);
+                                
+                                player.isRemoved = true;
 
+                                player.isDead = true;
+
+                                // Maybe client is already dead and got revived, deadT is maybe halfway
+                                player.deadT = 0;
+                                player.health = 0;
+
+                                continue;
+                            }
+                        }
                     };
 
                     break;

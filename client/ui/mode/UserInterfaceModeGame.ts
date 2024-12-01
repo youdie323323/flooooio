@@ -419,7 +419,7 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
 
             players.forEach((v, k) => {
                 v.draw(ctx);
-                if (v.isDead && v.deadT > 1 && v.isDeleted) {
+                if (v.isDead && v.deadT > 1 && v.isRemoved) {
                     players.delete(k);
                 }
             });

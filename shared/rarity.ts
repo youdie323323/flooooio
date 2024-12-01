@@ -30,11 +30,3 @@ export const RARITY_COLOR = {
     [Rarities.ULTRA]: "#FF2525",   
     [Rarities.SUPER]: "#2C0523"    
 } as const;
-
-export function nameToID(name: string): number | undefined {
-    const index = Object.values(RARITY_NAME).indexOf(name);
-    if (!index) {
-        return undefined;
-    }
-    return Number(Object.keys(RARITY_NAME)[index]);
-}

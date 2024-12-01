@@ -1,8 +1,5 @@
 import { LayoutResult } from "../../layout/Layout";
-import { Button, SVGButton, TextButton } from "../Button";
-import { AllComponents, Component } from "../Component";
-import StaticText from "../Text";
-import TextInput from "../TextInput";
+import { Component } from "../Component";
 
 export type UpdateFunction = () => void;
 
@@ -13,12 +10,15 @@ export interface Updatable {
     update: UpdateFunction;
 };
 
-export type ComponentExtensionTemplate = Updatable & { [key: string]: any };
+/**
+ * Base template for abstract extended component class.
+ */
+export type ComponentExtensionTemplate = Updatable & Record<string | number | symbol, any>;
 
 /**
  * Type alias that represent component class, with maybe update method included.
  */
-export type ExtensionConstructor = abstract new (...args: any[]) =>
+export type ExtensionConstructor = abstract new (...args: ReadonlyArray<any>) =>
     Component &
     Partial<Updatable> &
     {
@@ -35,11 +35,13 @@ export type ExtensionConstructor = abstract new (...args: any[]) =>
  * 
  * @remarks
  * 
- * Because need to tell compiler its have update so no need to remove update() from render method.
+ * Without mix this class on component, compiler gets error, impossible to mix any extension,
+ * so, dont forgot to mixed this extension always when make new component.
  */
 export default function ExtensionPlaceholder<T extends ExtensionConstructor>(Base: T) {
     abstract class MixedBase extends Base implements ComponentExtensionTemplate {
         public update: UpdateFunction = () => {
+            // Call parent extension update(), so its possible to nest the extension
             if (typeof super.update === 'function') {
                 super.update();
             }

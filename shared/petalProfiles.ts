@@ -70,7 +70,7 @@ export const PETAL_PROFILES: Partial<Record<PetalType, PetalData>> = {
             damage: 21870,
             health: 21870,
             petalReload: 2.5,
-            count: 3,
+            count: 1,
             
             isCluster: false,
         },

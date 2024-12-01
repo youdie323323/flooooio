@@ -20,7 +20,7 @@ export function EntityDeath<T extends new (...args: any[]) => Entity>(Base: T) {
                     // Stop moving
                     this.magnitude = 0;
 
-                    removeAllBindings(poolThis, this);
+                    removeAllBindings(poolThis, this.id);
                 }
 
                 if (this instanceof Mob) {

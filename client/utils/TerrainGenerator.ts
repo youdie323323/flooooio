@@ -3,6 +3,7 @@ import { cameraController } from "../main";
 import { Biomes } from "../../shared/enum";
 import { uiScaleFactor } from "../ui/UserInterface";
 
+// Retrived from florr map viewer (florr-io-map-viewer.glitch.me)
 export const BIOME_SVG_TILESETS: Record<Biomes, string[]> = {
     [Biomes.GARDEN]: [
         `<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 256 256">
