@@ -693,6 +693,8 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
     public onFocus(): void {
         let self = this;
 
+        // TODO: do this on mousemove
+
         self._canvas.style.cursor = this._calculateCursorStyle(self._hasFocus);
     }
 

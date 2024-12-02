@@ -9,6 +9,7 @@ import { EntityWorldBoundary } from "../EntityWorldBoundary";
 import { EntityDeath } from "../EntityDeath";
 import { MobType, PetalType } from "../../../shared/enum";
 import { Rarities } from "../../../shared/rarity";
+import { MobBodyConnection } from "./MobBodyConnection";
 
 class BaseMob implements Entity {
     readonly id: EntityId;
@@ -18,7 +19,7 @@ class BaseMob implements Entity {
     angle: number;
     size: number;
     health: number;
-    readonly maxHealth: number;
+    maxHealth: number;
 
     /**
      * Type of mob/petal.
@@ -66,7 +67,7 @@ class BaseMob implements Entity {
     petalMaster: PlayerInstance | null;
     /**
      * Mob that usage petal spawned.
-     * Always false if petalIsUsage is false.
+     * Always null if petalIsUsage is false.
      */
     petalSummonedPet: MobInstance | null;
 
@@ -74,6 +75,22 @@ class BaseMob implements Entity {
      * Determines if starfish is running for regen.
      */
     starfishRegeningHealth: boolean;
+
+    /**
+     * Connected mob instance.
+     */
+    connectedSegment: MobInstance | null;
+
+    /**
+     * Centi is head or not.
+     * 
+     * @remarks
+     * 
+     * The reason this is readonly, because if segments are divided, its look be ugly.
+     * 
+     * @readonly
+     */
+    readonly isFirstSegment: boolean;
 
     constructor(source: Required<BaseMob>) {
         Object.assign(this, source);
@@ -87,6 +104,7 @@ Mob = EntityWorldBoundary(Mob);
 Mob = MobOscillatingMovement(Mob);
 Mob = MobAggressivePursuit(Mob);
 Mob = MobHealthRegen(Mob);
+Mob = MobBodyConnection(Mob);
 Mob = EntityLinearMovement(Mob);
 
 type MobInstance = InstanceType<typeof Mob>;
@@ -150,8 +168,8 @@ const MOB_DAMAGE_FACTOR: Record<Rarities, number> = {
     [Rarities.LEGENDARY]: 16.0,
     [Rarities.MYTHIC]: 32.0,
 
-    [Rarities.ULTRA]: 50,
-    [Rarities.SUPER]: 100,
+    [Rarities.ULTRA]: 64.0,
+    [Rarities.SUPER]: 128.0,
 };
 
 export { BaseMob, Mob, MobData, MobStat, MobInstance, MOB_SIZE_FACTOR, MOB_HEALTH_FACTOR, MOB_DAMAGE_FACTOR };

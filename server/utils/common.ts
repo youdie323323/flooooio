@@ -1,6 +1,6 @@
 import { PETAL_PROFILES } from "../../shared/petalProfiles";
 import { UserData, WavePool } from "../wave/WavePool";
-import { MobInstance, MobStat } from "../entity/mob/Mob";
+import { MOB_SIZE_FACTOR, MobData, MobInstance, MobStat } from "../entity/mob/Mob";
 import { PetalStat, isSpawnableSlot } from "../entity/mob/petal/Petal";
 import { PlayerInstance } from "../entity/player/Player";
 import { waveRoomService } from "../main";
@@ -11,6 +11,7 @@ import { MobType, PetalType } from "../../shared/enum";
 import { ClientBound, ClientboundConnectionKickReason } from "../../shared/packet";
 import uWS from 'uWebSockets.js';
 import { WaveRoomState } from "../../shared/waveRoom";
+import { Rarities } from "../../shared/rarity";
 
 export const TWO_PI = Math.PI * 2;
 
@@ -63,6 +64,8 @@ export function kickClient(ws: uWS.WebSocket<UserData>, reason: ClientboundConne
     buffer.writeUInt8(reason, 1);
 
     ws.send(buffer, true);
+
+    ws.close();
 }
 
 export function removeAllBindings(wavePool: WavePool, clientId: PlayerInstance["id"]) {
@@ -112,4 +115,55 @@ export const processJoin = (ws: uWS.WebSocket<UserData>, id: false | WaveRoomPla
     };
 
     ws.send(response, true);
+}
+
+export const calculateMobSize = (profile: MobData, rarity: Rarities): number => (profile as MobData).baseSize * MOB_SIZE_FACTOR[rarity];
+
+/**
+ * Get first segment (head) of centi.
+ * 
+ * @remarks
+ * 
+ * This can use even mob is not centi.
+ * You may should care about maxium call stack size error.
+ */
+export const getCentiFirstSegment = (poolThis: WavePool, mob: MobInstance): MobInstance => {
+    // Walk through segments
+    const segment = mob.connectedSegment;
+    if (segment && poolThis.getMob(segment.id)) {
+        return getCentiFirstSegment(poolThis, segment);
+    }
+
+    return mob;
+};
+
+export const isCentiBody = (poolThis: WavePool, mob: MobInstance): boolean => getCentiFirstSegment(poolThis, mob) !== mob;
+
+/**
+ * Revive player nearby other player.
+ */
+export function revivePlayer(wavePool: WavePool, player: PlayerInstance) {
+    if (player.isDead) {
+        const alivePlayers = wavePool.getAllClients().filter(p => !p.isDead && p.id !== player.id);
+        if (alivePlayers.length > 0) {
+            // Select random player
+            const randomAlivePlayer = choice(alivePlayers);
+
+            const randPos = getRandomPosition(
+                randomAlivePlayer.x,
+                randomAlivePlayer.y,
+                200,
+            );
+
+            // Make it max health so player will respawn without die again
+            player.health = player.maxHealth;
+            player.isDead = false;
+
+            player.x = randPos[0];
+            player.y = randPos[1];
+
+            // Disable dead camera
+            player.deadCameraTargetEntity = null;
+        }
+    }
 }

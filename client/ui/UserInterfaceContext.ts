@@ -1,5 +1,5 @@
 import { cameraController, mobs, players } from "../main";
-import { wameSelfId } from "../Networking";
+import { waveSelfId } from "../Networking";
 import UserInterface from "./UserInterface";
 import UserInterfaceGame from "./mode/UserInterfaceModeGame";
 import UserInterfaceTitle from "./mode/UserInterfaceModeTitle";
@@ -53,7 +53,7 @@ export default class UserInterfaceContext {
         switch (mode) {
             case 'title': {
                 // Fake dead animation
-                const player = players.get(wameSelfId);
+                const player = players.get(waveSelfId);
                 if (player && !player.isDead) {
                     player.isDead = true;
                     player.deadT = 0;
@@ -63,7 +63,7 @@ export default class UserInterfaceContext {
             }
 
             case 'game': {
-                cameraController.zoom = 1;
+                cameraController.zoom = 0.2;
 
                 return new UserInterfaceGame(this.canvas);
             }

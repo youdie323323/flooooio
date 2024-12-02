@@ -121,7 +121,7 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
 
     // Make this public to close this from networking
     public squadMenuContainer: AddableContainer;
-    
+
     private publicToggle: Toggle;
 
     private statusText: StaticText;
@@ -133,11 +133,11 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
 
     // Wave informations
 
-    public waveRoomPlayers: WaveRoomPlayerInformation[];
-    public waveRoomCode: string;
-    public waveRoomState: WaveRoomState;
-    public waveRoomVisible: WaveRoomVisibleState;
-    private prevWaveRoomVisible: WaveRoomVisibleState;
+    waveRoomPlayers: WaveRoomPlayerInformation[];
+    waveRoomCode: string;
+    waveRoomState: WaveRoomState;
+    waveRoomVisible: WaveRoomVisibleState;
+    prevWaveRoomVisible: WaveRoomVisibleState;
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
@@ -661,7 +661,7 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
                         () => {
                             ws.send(new Uint8Array([ServerBound.WAVE_ROOM_FIND_PUBLIC, this.biome]));
 
-                         },
+                        },
                         true,
                         "Find public",
                     ),
@@ -771,7 +771,7 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
             backgroundEntities.add({
                 ...param,
                 waveStep: Math.random() + 360,
-                entity: new EntityMob(-1, param.x, param.y, 1, param.z * 5, 1, 1, PetalType.BASIC, Rarities.COMMON, false)
+                entity: new EntityMob(-1, param.x, param.y, 1, param.z * 5, 1, 1, PetalType.BASIC, Rarities.COMMON, false, false)
             });
             this.lastBackgroundEntitySpawn = Date.now();
         }
@@ -795,19 +795,15 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
             ctx.restore();
         }
 
-        {
-            if (this.waveRoomVisible !== this.prevWaveRoomVisible) {
-                this.publicToggle.startScaling(this.waveRoomVisible === WaveRoomVisibleState.PUBLIC);
-            }
-            this.prevWaveRoomVisible = this.waveRoomVisible;
-        };
+        if (this.waveRoomVisible !== this.prevWaveRoomVisible) {
+            this.publicToggle.setToggle(this.waveRoomVisible === WaveRoomVisibleState.PUBLIC);
+        }
+        this.prevWaveRoomVisible = this.waveRoomVisible;
 
-        {
-            if (this.waveRoomPlayers.length) {
-                this.toggleShowStatusText(false);
-            } else {
-                this.toggleShowStatusText(true);
-            }
+        if (this.waveRoomPlayers.length) {
+            this.toggleShowStatusText(false);
+        } else {
+            this.toggleShowStatusText(true);
         }
 
         this.render();

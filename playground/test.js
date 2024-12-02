@@ -45,9 +45,25 @@ ctx.translate(500, 500);
 
 ctx.scale(5, 5)
 
-const skinColor = "#8f5db0";
-ctx.fillStyle = skinColor;
-ctx.fill(beetleBodyPath);
-ctx.lineWidth = 6;
-ctx.fillStyle = ctx.strokeStyle = darkend(skinColor, DARKEND_BASE);
-ctx.stroke(beetleBodyPath);
+ctx.beginPath();
+for (let i = 0; i < 2; i++) {
+    ctx.save();
+    ctx.scale(1, i * 2 - 1);
+    ctx.translate(0, -3);
+    ctx.arc(0, 36, 18, 0, Math.PI * 2);
+    ctx.restore();
+}
+ctx.lineWidth = 7;
+ctx.lineJoin = ctx.lineCap = "round";
+ctx.strokeStyle = ctx.fillStyle = "#333333";
+ctx.fill();
+
+let bodyColor = ["#8ac255", "#709e45"];
+
+ctx.beginPath();
+ctx.arc(0, 0, 40, 0, Math.PI * 2);
+ctx.fillStyle = bodyColor[0];
+ctx.fill();
+ctx.lineWidth = 7;
+ctx.strokeStyle = bodyColor[1];
+ctx.stroke();

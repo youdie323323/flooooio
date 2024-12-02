@@ -51,7 +51,7 @@ export interface Entity {
      * 
      * @readonly
      */
-    readonly maxHealth: number;
+    maxHealth: number;
 }
 
 /**
@@ -63,7 +63,16 @@ export interface Entity {
  */
 export const onUpdateTick: unique symbol = Symbol.for("onUpdateTick");
 
-export interface EntityMixinTemplate {
+export type MaybeFreeable = Partial<{
+    /**
+     * Free up own mixin values.
+     */
+    free(): void;
+}>
+
+export type EntityMixinConstructor<T = {}> = new (...args: any[]) => T & MaybeFreeable;
+
+export interface EntityMixinTemplate extends MaybeFreeable {
     /**
      * Method call up to every UPDATE_FPS interval.
      * 
@@ -73,10 +82,5 @@ export interface EntityMixinTemplate {
      */
     [onUpdateTick]: (poolThis: WavePool) => void;
 
-    /**
-     * Free up own mixin values.
-     */
-    free(): void;
-
-    [key: string]: any;
+    [key: string | number | symbol]: any;
 }

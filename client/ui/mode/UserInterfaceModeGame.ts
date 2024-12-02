@@ -2,7 +2,7 @@ import { players, mobs, deltaTime, ws, uiCtx, antennaScaleFactor, networking } f
 import TerrainGenerator, { BIOME_TILESETS } from "../../utils/TerrainGenerator";
 import { Button, SVGButton, TextButton } from "../components/Button";
 import UserInterface, { uiScaleFactor } from "../UserInterface";
-import Networking, { wameSelfId } from "../../Networking";
+import Networking, { waveSelfId } from "../../Networking";
 import TextInput from "../components/TextInput";
 import { Biomes, Mood } from "../../../shared/enum";
 import { interpolate } from "../../utils/Interpolator";
@@ -25,7 +25,7 @@ function renderMutableFunctions(canvas: HTMLCanvasElement) {
     const ARROW_START_DISTANCE = 30;
 
     const ctx = canvas.getContext("2d");
-    const selfPlayer = players.get(wameSelfId);
+    const selfPlayer = players.get(waveSelfId);
 
     const widthRelative = canvas.width / uiScaleFactor;
     const heightRelative = canvas.height / uiScaleFactor;
@@ -179,7 +179,7 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
                 if (this.chatInput.hasFocus()) {
                     this.chatInput.blur();
                 } else {
-                    const selfPlayer = players.get(wameSelfId);
+                    const selfPlayer = players.get(waveSelfId);
                     if (!selfPlayer) {
                         return;
                     }
@@ -383,7 +383,12 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
         const centerWidth = widthRelative / 2;
         const centerHeight = heightRelative / 2;
 
-        const selfPlayer = players.get(wameSelfId);
+        let savedFillStyle = ctx.fillStyle;
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = savedFillStyle;
+
+        const selfPlayer = players.get(waveSelfId);
         if (!selfPlayer) {
             return;
         }

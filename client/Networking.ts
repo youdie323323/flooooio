@@ -8,7 +8,7 @@ import { players, mobs, uiCtx } from "./main";
 import UserInterfaceGame from "./ui/mode/UserInterfaceModeGame";
 import UserInterfaceTitle, { StatusText, WaveRoomPlayerInformation } from "./ui/mode/UserInterfaceModeTitle";
 
-export let wameSelfId = -1;
+export let waveSelfId = -1;
 export let waveRoomSelfId = -1;
 
 function angleToRad(angle: number) {
@@ -39,10 +39,9 @@ export default class Networking {
             const data = new DataView(event.data);
             let offset = 0;
 
-            const kind = data.getUint8(offset++);
-            switch (kind) {
+            switch (data.getUint8(offset++)) {
                 case ClientBound.WAVE_SELF_ID: {
-                    wameSelfId = data.getUint32(offset);
+                    waveSelfId = data.getUint32(offset);
 
                     break;
                 }
@@ -134,6 +133,8 @@ export default class Networking {
                                     client.hurtT = 1;
                                 }
 
+                                client.maxHealth = clientMaxHealth;
+
                                 client.nHealth = clientHealth;
 
                                 client.ox = client.x;
@@ -177,6 +178,8 @@ export default class Networking {
 
                             const mobIsPet = !!data.getUint8(offset++);
 
+                            const mobIsFirstSegment = !!data.getUint8(offset++);
+
                             const mob = mobs.get(mobId);
                             if (mob) {
                                 mob.nx = mobX;
@@ -194,6 +197,8 @@ export default class Networking {
                                     mob.hurtT = 1;
                                 }
 
+                                mob.maxHealth = mobMaxHealth;
+
                                 mob.nHealth = mobHealth;
 
                                 mob.ox = mob.x;
@@ -203,14 +208,14 @@ export default class Networking {
                                 mob.oSize = mob.size;
                                 mob.updateT = 0;
                             } else {
-                                mobs.set(mobId, new EntityMob(mobId, mobX, mobY, mobAngle, mobSize, mobHealth, mobMaxHealth, mobType, mobRarity, mobIsPet));
+                                mobs.set(mobId, new EntityMob(mobId, mobX, mobY, mobAngle, mobSize, mobHealth, mobMaxHealth, mobType, mobRarity, mobIsPet, mobIsFirstSegment));
                             }
                         }
 
-                        const eliminatedEntitesCount = data.getUint16(offset);
+                        const eliminatedEntitiesCount = data.getUint16(offset);
                         offset += 2;
 
-                        for (let i = 0; i < eliminatedEntitesCount; i++) {
+                        for (let i = 0; i < eliminatedEntitiesCount; i++) {
                             const entityId = data.getUint32(offset);
                             offset += 4;
 

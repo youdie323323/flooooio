@@ -110,11 +110,19 @@ export class Button extends ExtensionPlaceholder(Component) implements Interacti
         const computedColor = this.computeDynamicLayoutable(this.color);
 
         if (this.isPressed) {
-            return darkend(computedColor, DARKEND_BASE);
+            return darkend(computedColor, 0.1);
         } else if (this.isHovered) {
             return darkend(computedColor, -0.1);
         }
         return computedColor;
+    }
+
+    protected getButtonColorStroke(): ColorCode {
+        if (!this.isValid) {
+            return darkend("#aaaaa9", DARKEND_BASE);
+        }
+
+        return darkend(this.computeDynamicLayoutable(this.color), DARKEND_BASE);
     }
 }
 
@@ -164,9 +172,10 @@ export class TextButton extends Button {
         const cornerRadius = this.getCornerRadius();
 
         const color = this.getButtonColor();
+        const strokeColor = this.getButtonColorStroke();
 
         ctx.lineWidth = strokeWidth;
-        ctx.strokeStyle = darkend(color, DARKEND_BASE);
+        ctx.strokeStyle = strokeColor;
         ctx.fillStyle = color;
 
         ctx.beginPath();
@@ -248,9 +257,10 @@ export class SVGButton extends Button {
         const cornerRadius = this.getCornerRadius();
 
         const color = this.getButtonColor();
+        const strokeColor = this.getButtonColorStroke();
 
         ctx.lineWidth = strokeWidth;
-        ctx.strokeStyle = darkend(color, DARKEND_BASE);
+        ctx.strokeStyle = strokeColor;
         ctx.fillStyle = color;
 
         ctx.beginPath();

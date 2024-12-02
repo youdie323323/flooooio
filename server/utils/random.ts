@@ -94,7 +94,7 @@ export function randomEnum<T extends object>(anEnum: T): T[keyof T] {
  * Generate a safe position from the player.
  * @returns Coordinate of random position.
  */
-export function getRandomMapSafePosition(
+export function getRandomSafePosition(
   mapRadius: number,
   safetyDistance: number,
   clients: PlayerInstance[],

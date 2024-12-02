@@ -1,10 +1,10 @@
-import { Entity, EntityMixinTemplate, onUpdateTick } from "./Entity";
+import { Entity, EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "./Entity";
 import { WavePool } from "../wave/WavePool";
 import { isPetal, removeAllBindings } from "../utils/common";
 import { Mob } from "./mob/Mob";
 import { Player } from "./player/Player";
 
-export function EntityDeath<T extends new (...args: any[]) => Entity>(Base: T) {
+export function EntityDeath<T extends EntityMixinConstructor<Entity>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
         [onUpdateTick](poolThis: WavePool): void {
             // Call parent onUpdateTick
@@ -29,9 +29,9 @@ export function EntityDeath<T extends new (...args: any[]) => Entity>(Base: T) {
             }
         }
 
-        free() {
-            if (super["free"]) {
-                super["free"]();
+        free = () => {
+            if (super.free) {
+                super.free();
             }
         }
     };

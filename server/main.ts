@@ -23,28 +23,32 @@ import { PLAYER_STATE_VALUES, VISIBLE_STATE_VALUES, WaveRoomPlayerReadyState, Wa
  * Temp player data.
  */
 const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
-    name: 'YOBA',
+    name: 'A-NNCYANCHI-N',
     slots: {
         surface: [
             {
                 type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
+                rarity: Rarities.MYTHIC,
             } as MockPetalData,
             {
                 type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
+                rarity: Rarities.MYTHIC,
             } as MockPetalData,
             {
                 type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
+                rarity: Rarities.MYTHIC,
             } as MockPetalData,
             {
                 type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
+                rarity: Rarities.MYTHIC,
             } as MockPetalData,
             {
                 type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
+                rarity: Rarities.MYTHIC,
+            } as MockPetalData,
+            {
+                type: PetalType.FASTER,
+                rarity: Rarities.MYTHIC,
             } as MockPetalData,
         ],
         bottom: [],
@@ -102,7 +106,11 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             break;
         }
         case ServerBound.WAVE_CHANGE_MOOD: {
-            if (buffer.length !== 2 || !MOOD_VALUES.includes(buffer[1])) return;
+            if (buffer.length !== 2 || !MOOD_VALUES.includes(buffer[1])) {
+                kickClient(ws, ClientboundConnectionKickReason.ANTICHEAT_DETECTED);
+
+                return;
+            };
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
             if (!waveRoom) return;

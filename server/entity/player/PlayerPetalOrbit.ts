@@ -1,5 +1,5 @@
-import { EntityMixinTemplate, onUpdateTick } from "../Entity";
-import { WavePool, UPDATE_FPS } from "../../wave/WavePool";
+import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
+import { WavePool, WAVE_UPDATE_FPS } from "../../wave/WavePool";
 import { Mob } from "../mob/Mob";
 import { BasePlayer } from "./Player";
 import { isSpawnableSlot, PetalData, PetalStat } from "../mob/petal/Petal";
@@ -26,7 +26,7 @@ export const UNMOODABLE_PETALS: Set<PetalType> = new Set([
     PetalType.BEETLE_EGG,
 ]);
 
-export function PlayerPetalOrbit<T extends new (...args: any[]) => BasePlayer>(Base: T) {
+export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
         private rotation = 0;
         private historyX: Float32Array = new Float32Array(HISTORY_SIZE);
@@ -120,12 +120,12 @@ export function PlayerPetalOrbit<T extends new (...args: any[]) => BasePlayer>(B
                 }
             }
 
-            this.rotation += totalSpeed / UPDATE_FPS;
+            this.rotation += totalSpeed / WAVE_UPDATE_FPS;
         }
 
-        free() {
-            if (super["free"]) {
-                super["free"]();
+        free = () => {
+            if (super.free) {
+                super.free();
             }
 
             this.historyX = null;

@@ -17,19 +17,26 @@ function createBeetleBodyPath() {
 const beetleBodyPath = createBeetleBodyPath();
 
 export default class EntityMob extends Entity {
-    legD: number[];
+    /**
+     * Current leg rotation of starfish.
+     */
+    private legD: number[];
 
     constructor(
-        id: number, 
-        x: number, 
-        y: number, 
-        angle: number, 
-        size: number, 
-        health: number, 
-        maxHealth: number, 
-        readonly type: MobType | PetalType, 
-        readonly rarity: Rarities, 
+        id: number,
+        x: number,
+        y: number,
+        angle: number,
+        size: number,
+        health: number,
+        maxHealth: number,
+
+        readonly type: MobType | PetalType,
+        readonly rarity: Rarities,
+
         readonly isPet: boolean,
+        
+        readonly isFirstSegment: boolean,
     ) {
         super(id, x, y, angle, size, health, maxHealth);
     }
@@ -52,7 +59,9 @@ export default class EntityMob extends Entity {
 
         const drawBasicLike = (fill: string, stroke: string) => {
             const size = this.size / 20;
+
             ctx.scale(size, size);
+
             ctx.beginPath();
             ctx.arc(0, 0, 20, 0, Math.PI * 2);
             ctx.fillStyle = this.getSkinColor(fill);
@@ -63,13 +72,17 @@ export default class EntityMob extends Entity {
 
         ctx.rotate(this.angle);
 
+        let scale: number;
+
         switch (this.type) {
             case MobType.BEE: {
-                let bcolor = this.getSkinColor("#333333");
-                let fcolor: ColorCode = "#ffe763";
-                let scolor = darkend(fcolor, DARKEND_BASE);
+                const bcolor = this.getSkinColor("#333333");
+                const fcolor: ColorCode = "#ffe763";
+                const scolor = darkend(fcolor, DARKEND_BASE);
 
-                ctx.scale(this.size / 30, this.size / 30);
+                scale = this.size / 30;
+
+                ctx.scale(scale, scale);
 
                 ctx.lineJoin = "round";
                 ctx.lineCap = "round";
@@ -129,7 +142,10 @@ export default class EntityMob extends Entity {
                 break;
             }
             case MobType.STARFISH: {
-                ctx.scale(this.size / 80, this.size / 80);
+                scale = this.size / 80;
+
+                ctx.scale(scale, scale);
+
                 ctx.rotate(Date.now() / 2000 % (Math.PI * 2) + this.moveCounter * 0.4);
                 const starfishLegCount = 5;
                 if (!this.legD) {
@@ -178,7 +194,10 @@ export default class EntityMob extends Entity {
                 break;
             }
             case MobType.JELLYFISH: {
-                ctx.scale(this.size / 20, this.size / 20);
+                scale = this.size / 20;
+
+                ctx.scale(scale, scale);
+
                 const oldGlobalAlpha = ctx.globalAlpha;
                 ctx.strokeStyle = ctx.fillStyle = this.getSkinColor("#ffffff");
                 ctx.globalAlpha = oldGlobalAlpha * 0.6;
@@ -207,8 +226,10 @@ export default class EntityMob extends Entity {
                 break;
             }
             case MobType.BEETLE: {
-                ctx.scale(this.size / 40, this.size / 40);
-                
+                scale = this.size / 40;
+
+                ctx.scale(scale, scale);
+
                 ctx.fillStyle = ctx.strokeStyle = this.getSkinColor("#333333");
                 ctx.lineCap = ctx.lineJoin = "round";
                 for (let i = 0; i < 2; i++) {
@@ -269,7 +290,10 @@ export default class EntityMob extends Entity {
                 break;
             }
             case PetalType.BEETLE_EGG: {
-                ctx.scale(this.size / 20, this.size / 20);
+                scale = this.size / 20;
+
+                ctx.scale(scale, scale);
+
                 ctx.beginPath();
                 ctx.ellipse(0, 0, 30, 40, 0, 0, Math.PI * 2);
                 const eggColor = ["#fff0b8", "#cfc295"];
@@ -291,13 +315,75 @@ export default class EntityMob extends Entity {
 
                 break;
             }
+
+            case MobType.CENTIPEDE:
+            case MobType.CENTIPEDE_DESERT:
+            case MobType.CENTIPEDE_EVIL: {
+                scale = this.size / 40;
+
+                ctx.scale(scale, scale);
+
+                ctx.beginPath();
+                for (let i = 0; i < 2; i++) {
+                    ctx.save();
+                    ctx.scale(1, i * 2 - 1);
+                    ctx.translate(0, -3);
+                    ctx.arc(0, 36, 18, 0, Math.PI * 2);
+                    ctx.restore();
+                }
+                ctx.lineWidth = 7;
+                ctx.lineJoin = ctx.lineCap = "round";
+                ctx.strokeStyle = ctx.fillStyle = this.getSkinColor("#333333");
+                ctx.fill();
+
+                let bodyColor: ColorCode;
+                if (this.type === MobType.CENTIPEDE_DESERT) {
+                    bodyColor = "#d3c66d";
+                } else if (this.type === MobType.CENTIPEDE_EVIL) {
+                    bodyColor = "#8f5db0";
+                } else {
+                    bodyColor = "#8ac255";
+                }
+
+                ctx.beginPath();
+                ctx.arc(0, 0, 40, 0, Math.PI * 2);
+                ctx.fillStyle = this.getSkinColor(bodyColor);
+                ctx.fill();
+                ctx.lineWidth = 8;
+                ctx.strokeStyle = this.getSkinColor(darkend(bodyColor, DARKEND_BASE));
+                ctx.stroke();
+
+                // Antennas
+                if (this.isFirstSegment) {
+                    const acolor = this.getSkinColor("#333333");
+
+                    ctx.strokeStyle = acolor;
+                    ctx.fillStyle = acolor;
+                    ctx.lineWidth = 3;
+                    for (let dir = -1; dir <= 1; dir += 2) {
+                        ctx.beginPath();
+                        ctx.moveTo(25, 10.21 * dir);
+                        ctx.quadraticCurveTo(47.54, 11.62 * dir, 55.28, 30.63 * dir);
+                        ctx.stroke()
+
+                        ctx.beginPath();
+                        ctx.arc(55.28, 30.63 * dir, 5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                break;
+            }
         }
 
         ctx.restore();
     }
 
     drawBubble(ctx: CanvasRenderingContext2D, isPetal: boolean) {
-        ctx.scale(this.size / 15, this.size / 15);
+        const scale = this.size / 15;
+
+        ctx.scale(scale, scale);
+
         const oldGlobalAlpha = ctx.globalAlpha;
         ctx.strokeStyle = ctx.fillStyle = this.getSkinColor("#ffffff");
         ctx.globalAlpha = oldGlobalAlpha * 0.4;

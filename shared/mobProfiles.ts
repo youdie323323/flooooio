@@ -2,6 +2,8 @@ import { MobData } from "../server/entity/mob/Mob";
 import { MobType } from "./enum";
 import { Rarities } from "./rarity";
 
+// MobData cant cause source leak because its removed in compile
+
 export const MOB_PROFILES: Partial<Record<MobType, MobData>> = {
     [MobType.BEE]: {
         name: "Bee",
@@ -225,6 +227,127 @@ export const MOB_PROFILES: Partial<Record<MobType, MobData>> = {
         [Rarities.SUPER]: {
             health: 656000,
             bodyDamage: 10935,
+        },
+    },
+
+    [MobType.CENTIPEDE]: {
+        name: "Centipede",
+        description: "It's just there doing its thing.",
+        baseSize: 40,
+        fraction: 40,
+        rx: 40,
+        ry: 40,
+        [Rarities.COMMON]: {
+            health: 25,
+            bodyDamage: 10,
+        },
+        [Rarities.UNUSUAL]: {
+            health: 93.8,
+            bodyDamage: 30,
+        },
+        [Rarities.RARE]: {
+            health: 337.5,
+            bodyDamage: 90,
+        },
+        [Rarities.EPIC]: {
+            health: 1350,
+            bodyDamage: 270,
+        },
+        [Rarities.LEGENDARY]: {
+            health: 10125,
+            bodyDamage: 810,
+        },
+        [Rarities.MYTHIC]: {
+            health: 60750,
+            bodyDamage: 2430,
+        },
+        [Rarities.ULTRA]: {
+            health: 1825000,
+            bodyDamage: 7290,
+        },
+        [Rarities.SUPER]: {
+            health: 32800000,
+            bodyDamage: 21870,
+        },
+    },
+    [MobType.CENTIPEDE_EVIL]: {
+        name: "Centipede",
+        description: "This one loves flowers.",
+        baseSize: 40,
+        fraction: 40,
+        rx: 40,
+        ry: 40,
+        [Rarities.COMMON]: {
+            health: 25,
+            bodyDamage: 10,
+        },
+        [Rarities.UNUSUAL]: {
+            health: 93.8,
+            bodyDamage: 30,
+        },
+        [Rarities.RARE]: {
+            health: 337.5,
+            bodyDamage: 90,
+        },
+        [Rarities.EPIC]: {
+            health: 1350,
+            bodyDamage: 270,
+        },
+        [Rarities.LEGENDARY]: {
+            health: 10125,
+            bodyDamage: 810,
+        },
+        [Rarities.MYTHIC]: {
+            health: 60750,
+            bodyDamage: 2430,
+        },
+        [Rarities.ULTRA]: {
+            health: 1825000,
+            bodyDamage: 7290,
+        },
+        [Rarities.SUPER]: {
+            health: 32800000,
+            bodyDamage: 21870,
+        },
+    },
+    [MobType.CENTIPEDE_DESERT]: {
+        name: "Centipede",
+        description: "Gotta go fast.",
+        baseSize: 40,
+        fraction: 40,
+        rx: 40,
+        ry: 40,
+        [Rarities.COMMON]: {
+            health: 25,
+            bodyDamage: 10,
+        },
+        [Rarities.UNUSUAL]: {
+            health: 93.8,
+            bodyDamage: 30,
+        },
+        [Rarities.RARE]: {
+            health: 337.5,
+            bodyDamage: 90,
+        },
+        [Rarities.EPIC]: {
+            health: 1350,
+            bodyDamage: 270,
+        },
+        [Rarities.LEGENDARY]: {
+            health: 10125,
+            bodyDamage: 810,
+        },
+        [Rarities.MYTHIC]: {
+            health: 60750,
+            bodyDamage: 2430,
+        },
+        [Rarities.ULTRA]: {
+            health: 1825000,
+            bodyDamage: 7290,
+        },
+        [Rarities.SUPER]: {
+            health: 32800000,
+            bodyDamage: 21870,
         },
     },
 };

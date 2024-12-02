@@ -38,7 +38,7 @@ export type AllComponents =
  * 
  * @remarks
  * 
- * Not including dynamic layoutable layout to custom-omitable/pickable layout.
+ * Not including dynamic layoutable layout to custom omitable/pickable layout.
  */
 export abstract class Component {
     protected readonly ANIMATION_DURATION: number = 250;
@@ -162,7 +162,7 @@ export abstract class Component {
 
         const progress = easeInExpo(this.animationProgress);
 
-        ctx.translate(this.x + this.w / 2, this.y + (-(this.h / 2) * (1 - progress)) + this.h / 2);
+        ctx.translate(this.x + this.w / 2, this.y + (-(this.h / 1.5) * (1 - progress)) + this.h / 2);
         ctx.scale(progress, progress);
         ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
     }

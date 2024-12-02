@@ -1,7 +1,8 @@
 import { WaveData } from "./WaveRoom";
-import { calculateWaveLuck } from "../utils/formula";
-import { MobType } from "../../shared/enum";
+import { calculateWaveLength, calculateWaveLuck } from "../utils/formula";
+import { Biomes, MobType } from "../../shared/enum";
 import { Rarities } from "../../shared/rarity";
+import { choice, randomEnum } from "../utils/random";
 
 /*
 Wave 21+: Commons stop spawning
@@ -28,6 +29,75 @@ const RARITY_WEIGHTS = {
     [Rarities.LEGENDARY]: 0.025,
     [Rarities.MYTHIC]: 0.01,
 } as const;
+
+type NestedPartial<T> = {
+    [K in keyof T]?: T[K] extends Array<infer R> ? Array<NestedPartial<R>> : NestedPartial<T[K]>
+};
+
+export const LINK_MOBS: Set<MobType> = new Set([
+    MobType.CENTIPEDE, 
+    MobType.CENTIPEDE_DESERT, 
+    MobType.CENTIPEDE_EVIL,
+]);
+
+// https://official-florrio.fandom.com/wiki/Waves
+const MOB_WEIGHTS: NestedPartial<
+    Record<
+        Biomes,
+        Record<
+            MobType, 
+            [
+                // Spawn after this wave
+                number,
+                // Random weight
+                number,
+            ]
+        >
+    >
+> = {
+    [Biomes.GARDEN]: {
+        [MobType.BEE]: [
+            1,
+            10,
+        ],
+
+        [MobType.CENTIPEDE]: [
+            2,
+            1,
+        ],
+
+        [MobType.CENTIPEDE_EVIL]: [
+            3,
+            1,
+        ],
+    },
+    [Biomes.DESERT]: {
+        [MobType.CENTIPEDE_DESERT]: [
+            1,
+            1,
+        ],
+
+        [MobType.BEETLE]: [
+            2,
+            10,
+        ],
+    },
+    [Biomes.OCEAN]: {
+        [MobType.BUBBLE]: [
+            1,
+            1,
+        ],
+
+        [MobType.STARFISH]: [
+            3,
+            1,
+        ],
+        [MobType.JELLYFISH]: [
+            3,
+            1,
+        ],
+    },
+};
 
 function calculateSpawnProbabilities(luck: number, waveProgress: number): Partial<Record<Rarities, number>> {
     const probabilities: Partial<Record<Rarities, number>> = {};
@@ -75,6 +145,28 @@ function weightedChoice(probabilities: Partial<Record<Rarities, number>>): Rarit
     return null;
 }
 
+function getRandomMobType(waveProgress: number, biome: Biomes): MobType {
+    const availableMobs = Object.entries(MOB_WEIGHTS[biome])
+        .filter(([_, spawnAfter]) => spawnAfter[0] <= waveProgress);
+    
+    if (availableMobs.length === 0) {
+        return randomEnum(MobType);
+    }
+
+    const totalWeight = availableMobs.reduce((sum, [_, data]) => sum + data[1], 0);
+
+    let random = Math.random() * totalWeight;
+    for (const [mobType, data] of availableMobs) {
+        const weight = data[1];
+        random -= weight;
+        if (random <= 0) {
+            return parseInt(mobType) as MobType;
+        }
+    }
+
+    return parseInt(availableMobs[0][0]) as MobType;
+}
+
 export default class WaveProbabilityPredictor {
     private timer: number;
 
@@ -91,35 +183,38 @@ export default class WaveProbabilityPredictor {
      */
     private points: number;
 
-    public predictMockData(waveData: WaveData): [MobType, Rarities] | null {
+    public predictMockData(biome: Biomes, waveProgress: number): [MobType, Rarities] | null {
         this.timer++;
 
         // See comment of calculateWaveLuck
-        const luck = (calculateWaveLuck(waveData.waveProgress) * (( /** All players luck */ 0.0) + 1)) * 1;
+        const luck = (calculateWaveLuck(waveProgress) * (( /** All players luck */ 0.0) + 1)) * 1;
 
         if (this.timer % 10 === 0 && this.points > 0) {
-            const probabilities = calculateSpawnProbabilities(luck, waveData.waveProgress);
+            const probabilities = calculateSpawnProbabilities(luck, waveProgress);
             // Ensure atleast common
             if (!Object.keys(probabilities).length) {
                 probabilities[Rarities.COMMON] = 1;
             }
+
             const spawnRarity = weightedChoice(probabilities);
             if (spawnRarity === null) {
                 return;
             }
 
+            const mobType = getRandomMobType(waveProgress, biome);
+
             // Consume point
             this.points--;
 
-            return [MobType.BEETLE, spawnRarity]
+            return [mobType, spawnRarity]
         }
 
         return null;
     }
 
-    public reset(waveData: WaveData) {
+    public reset(waveProgress: number) {
         this.timer = -1;
-        this.points = 50 + Math.pow(waveData.waveProgress, 1.6);
+        this.points = 50 + Math.pow(waveProgress, 1.6);
         this.points += 1500;
     }
 }

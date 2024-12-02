@@ -8,7 +8,7 @@ export default class EntityPlayer extends Entity {
     sadT: number;
 
     /**
-     * The player is completely removed (not likely death).
+     * The player is completely removed from server (not likely death).
      */
     isRemoved: boolean;
 
@@ -20,8 +20,10 @@ export default class EntityPlayer extends Entity {
         size: number, 
         health: number,
         maxHealth: number, 
+
         public mood: Mood, 
         readonly nickname: string,
+
         readonly isStaticLike: boolean = false,
     ) {
         super(id, x, y, angle, size, health, maxHealth);

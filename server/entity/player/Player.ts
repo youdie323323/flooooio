@@ -14,7 +14,7 @@ import { PlayerPetalConsume } from "./PlayerPetalConsume";
 import { Mood } from "../../../shared/enum";
 
 class BasePlayer implements Entity {
-    public static PLAYER_SPEED = 5;
+    public static BASE_SPEED = 5;
 
     readonly id: EntityId;
     x: number;
@@ -23,7 +23,7 @@ class BasePlayer implements Entity {
     angle: number;
     size: number;
     health: number;
-    readonly maxHealth: number;
+    maxHealth: number;
 
     /**
      * Body damage of player.
@@ -52,7 +52,7 @@ class BasePlayer implements Entity {
     /**
      * Target entity where dead player seeing.
      */
-    playerDeadCameraTargetEntity: Entity | null;
+    deadCameraTargetEntity: Entity | null;
 
     /**
      * Nickname of player.

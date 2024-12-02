@@ -46,7 +46,7 @@ export default class Toggle extends ExtensionPlaceholder(Component) implements I
 
         this.update();
 
-        this.scaling();
+        this.updateScale();
 
         // Button background
         const strokeWidth = this.getStrokeWidth();
@@ -96,14 +96,14 @@ export default class Toggle extends ExtensionPlaceholder(Component) implements I
         return Math.max(2, minDimension * 0.14);
     }
 
-    public startScaling(toggle: boolean): void {
+    public setToggle(toggle: boolean): void {
         this.toggle = toggle;
 
         this.scalingStartTime = performance.now();
         this.scalingProgress = toggle ? 0 : 1;
     }
 
-    private scaling(): void {
+    private updateScale(): void {
         if (this.scalingStartTime === null) return;
 
         const now = performance.now();

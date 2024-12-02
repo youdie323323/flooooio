@@ -58,7 +58,7 @@ function computeEvolute(e: Ellipse, t: number): Evolute {
 }
 
 function findNormalT(e: Ellipse, p: Point): number {
-    // Compute parameter t, with which a point (a*cos(t), b*sin(t))
+    // Compute parameter t, with which a point (a*cos(t), b*sin(t)),
     // and the target point p gives a normal vector to the given ellipse
     let t = 0.25 * Math.PI;
 

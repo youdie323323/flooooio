@@ -75,7 +75,7 @@ export default abstract class Entity {
         angle: number, 
         size: number, 
         health: number, 
-        readonly maxHealth: number,
+        public maxHealth: number,
     ) {
         this.x = this.nx = this.ox = x;
         this.y = this.ny = this.oy = y;

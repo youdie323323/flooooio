@@ -1,6 +1,6 @@
 import { MOB_PROFILES } from "../../shared/mobProfiles";
 import { isPetal } from "../utils/common";
-import { wameSelfId } from "../Networking";
+import { waveSelfId } from "../Networking";
 import Entity from "./Entity";
 import EntityMob from "./EntityMob";
 import EntityPlayer from "./EntityPlayer";
@@ -19,7 +19,7 @@ export default function drawEntityDetail(entity: Entity, ctx: CanvasRenderingCon
     }
 
     // Draw nickname if not self
-    if (entity instanceof EntityPlayer && entity.id !== wameSelfId) {
+    if (entity instanceof EntityPlayer && entity.id !== waveSelfId) {
         ctx.save();
 
         if (entity.isDead) ctx.globalAlpha *= 1 - Math.sin(entity.deadT * Math.PI / 2);
@@ -75,6 +75,7 @@ export default function drawEntityDetail(entity: Entity, ctx: CanvasRenderingCon
         function setGlobalAlpha(hp: number) {
             ctx.globalAlpha = hp < 0.05 ? hp / 0.05 : 1;
         }
+
         if (entity.redHealth > 0) {
             setGlobalAlpha(entity.redHealth);
             ctx.beginPath();
@@ -84,6 +85,7 @@ export default function drawEntityDetail(entity: Entity, ctx: CanvasRenderingCon
             ctx.strokeStyle = "#f22";
             ctx.stroke();
         }
+
         if (entity.health > 0) {
             setGlobalAlpha(entity.health);
             ctx.beginPath();

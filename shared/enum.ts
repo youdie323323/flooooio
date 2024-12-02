@@ -17,7 +17,7 @@ export const MOOD_VALUES = Object.values(Mood);
 let currentEntityType: number = 0;
 function getNextEntityType(): number {
     if (currentEntityType > 255) {
-        throw new RangeError("Rarity type overflow")
+        throw new RangeError("Entity type overflow");
     }
     return currentEntityType++;
 }
@@ -28,6 +28,10 @@ export enum MobType {
     JELLYFISH = getNextEntityType(),
     BEETLE = getNextEntityType(),
     BUBBLE = getNextEntityType(),
+
+    CENTIPEDE = getNextEntityType(),
+    CENTIPEDE_EVIL = getNextEntityType(),
+    CENTIPEDE_DESERT = getNextEntityType(),
 }
 
 export enum PetalType {

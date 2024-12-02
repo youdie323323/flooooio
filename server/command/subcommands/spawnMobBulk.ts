@@ -6,7 +6,7 @@ import { ArgContext, createTypedArg } from "../commandArgs";
 import { Type } from "../commandLexer";
 import { setTimeout } from 'node:timers/promises';
 import { SAFETY_DISTANCE } from "../../entity/EntityWorldBoundary";
-import { getRandomMapSafePosition } from "../../utils/random";
+import { getRandomSafePosition } from "../../utils/random";
 import { SPAWN_MOB_DEFAULT_ARGS } from "./spawnMob";
 import { Rarities } from "../../../shared/rarity";
 
@@ -63,7 +63,7 @@ export function registerSpawnMobBulk(spawnMob: CommandPointer) {
 
                     const [x, y] =
                         coordinate === "random" ?
-                            getRandomMapSafePosition(waveRoom.wavePool.waveData.waveMapSize, SAFETY_DISTANCE, waveRoom.wavePool.getAllClients().filter(p => !p.isDead)) :
+                            getRandomSafePosition(waveRoom.wavePool.waveData.waveMapRadius, SAFETY_DISTANCE, waveRoom.wavePool.getAllClients().filter(p => !p.isDead)) :
                             coordinateSplittedXY;
 
                     waveRoom.wavePool.addPetalOrMob(mob, rarity, x, y, null, null);

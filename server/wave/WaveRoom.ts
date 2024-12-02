@@ -1,4 +1,4 @@
-import { choice, generateRandomWaveRoomPlayerId, getRandomMapSafePosition, getRandomPosition } from "../utils/random";
+import { choice, generateRandomWaveRoomPlayerId, getRandomSafePosition, getRandomPosition } from "../utils/random";
 import { UserData, WavePool } from "./WavePool";
 import { PlayerInstance, MockPlayerData } from "../entity/player/Player";
 import { logger } from "../main";
@@ -6,40 +6,11 @@ import { BrandedId } from "../entity/Entity";
 import WaveProbabilityPredictor from "./WaveProbabilityPredictor";
 import { calculateWaveLength } from "../utils/formula";
 import { SAFETY_DISTANCE } from "../entity/EntityWorldBoundary";
-import { Biomes } from "../../shared/enum";
+import { Biomes, MobType } from "../../shared/enum";
 import root from "../command/commandRoot";
 import { Command, repondValueToString } from "../command/command";
 import { ClientBound } from "../../shared/packet";
 import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../shared/waveRoom";
-
-/**
- * Revive player nearby other player.
- */
-function revivePlayer(wavePool: WavePool, player: PlayerInstance) {
-    if (player.isDead) {
-        const alivePlayers = wavePool.getAllClients().filter(p => !p.isDead && p.id !== player.id);
-        if (alivePlayers.length > 0) {
-            // Select random player
-            const randomAlivePlayer = choice(alivePlayers);
-
-            const randPos = getRandomPosition(
-                randomAlivePlayer.x,
-                randomAlivePlayer.y,
-                200,
-            );
-
-            // Make it max health so player will respawn without die again
-            player.health = player.maxHealth;
-            player.isDead = false;
-
-            player.x = randPos[0];
-            player.y = randPos[1];
-
-            // Disable dead camera
-            player.playerDeadCameraTargetEntity = null;
-        }
-    }
-}
 
 export type WaveRoomPlayerId = BrandedId<"WaveRoomPlayer">;
 
@@ -50,21 +21,24 @@ export type WaveRoomPlayer = MockPlayerData & {
     readyState: WaveRoomPlayerReadyState;
 };
 
+/**
+ * Wave data.
+ */
 export interface WaveData {
     /**
-    * Current wave progress.
-    */
+     * Wave progress (gage).
+     */
     waveProgress: number;
     waveProgressTimer: number;
     waveProgressRedGageTimer: number;
     waveProgressIsRedGage: boolean;
-    waveMapSize: number;
-    waveEnded: boolean;
+
+    waveMapRadius: number;
 }
 
-export const ROOM_UPDATE_SEND_FPS = 30;
+export const WAVE_ROOM_UPDATE_SEND_FPS = 30;
 
-export const WAVE_PROGRESS_UPDATE = 60;
+export const WAVE_ROOM_UPDATE_FPS = 60;
 
 /**
  * The wave room, aka squad.
@@ -73,7 +47,7 @@ export default class WaveRoom {
     /**
      * Max player amount.
      */
-    public static readonly MAX_PLAYER_AMOUNT = 4;
+    private static readonly MAX_PLAYER_AMOUNT = 4;
 
     public state: WaveRoomState;
     public visible: WaveRoomVisibleState;
@@ -81,44 +55,19 @@ export default class WaveRoom {
 
     public wavePool: WavePool;
 
-    private updateInterval: NodeJS.Timeout;
+    private updateSendInterval: NodeJS.Timeout;
 
-    private waveProbabilityPredictor: WaveProbabilityPredictor;
-
-    /**
-     * Current wave data transfer to entity pool.
-     */
-    public waveData: WaveData = {
-        waveProgress: 52,
-        waveProgressTimer: 0,
-        waveProgressRedGageTimer: 0,
-        waveProgressIsRedGage: false,
-        waveMapSize: 5000,
-        waveEnded: false,
-    };;
-
-    public wavePreUpdateInterval: NodeJS.Timeout;
-
-    constructor(public readonly biome: Biomes, public readonly code: string) {
+    constructor(
+        readonly biome: Biomes, 
+        readonly code: string,
+    ) {
         this.visible = WaveRoomVisibleState.PUBLIC;
         this.state = WaveRoomState.WAITING;
-        this.wavePool = new WavePool(this.waveData);
+        this.wavePool = new WavePool();
 
         this.roomCandidates = new Array<WaveRoomPlayer>();
 
-        this.updateInterval = setInterval(this.broadcastUpdatePacket.bind(this), 1000 / ROOM_UPDATE_SEND_FPS);
-        this.wavePreUpdateInterval = setInterval(this.wavePreUpdate.bind(this), 1000 / WAVE_PROGRESS_UPDATE);
-
-        this.waveProbabilityPredictor = new WaveProbabilityPredictor();
-        this.waveProbabilityPredictor.reset(this.waveData);
-    }
-
-    public stopUpdate() {
-        clearInterval(this.updateInterval);
-        clearInterval(this.wavePreUpdateInterval);
-
-        this.updateInterval = null;
-        this.wavePreUpdateInterval = null;
+        this.updateSendInterval = setInterval(this.broadcastUpdatePacket.bind(this), 1000 / WAVE_ROOM_UPDATE_SEND_FPS);
     }
 
     /**
@@ -129,67 +78,11 @@ export default class WaveRoom {
 
         this.wavePool = null;
 
-        this.stopUpdate();
+        clearInterval(this.updateSendInterval);
+
+        this.updateSendInterval = null;
 
         this.roomCandidates = null;
-
-        this.waveProbabilityPredictor = null;
-
-        this.waveData = null;
-    }
-
-    private wavePreUpdate() {
-        // Use onChangeSomething so can delete started wave if all players dead
-        using _disposable = this.onChangeAnything();
-
-        this.waveData.waveEnded = this.state === WaveRoomState.ENDED;
-
-        // Dont do anything when wave waiting/end
-        if (this.state === WaveRoomState.STARTED) {
-            if (!this.waveData.waveProgressIsRedGage) {
-                const mobData = this.waveProbabilityPredictor.predictMockData(this.waveData);
-                if (mobData) {
-                    const [type, rarity] = mobData;
-
-                    const randPos = getRandomMapSafePosition(this.waveData.waveMapSize, SAFETY_DISTANCE, this.wavePool.getAllClients().filter(p => !p.isDead));
-                    if (!randPos) {
-                        return null;
-                    }
-
-                    this.wavePool.addPetalOrMob(type, rarity, randPos[0], randPos[1]);
-                }
-            }
-
-            const waveLength = calculateWaveLength(this.waveData.waveProgress);
-
-            if (this.waveData.waveProgressTimer >= waveLength) {
-                // If mob count above 4, start red gage
-                if (
-                    // Force start into next wave when red gage reached
-                    !(this.waveData.waveProgressRedGageTimer >= waveLength) &&
-                    4 < this.wavePool.getAllMobs().filter(c => /** Dont count petals & pets. */ !c.petMaster && !c.petalMaster).length
-                ) {
-                    this.waveData.waveProgressIsRedGage = true;
-
-                    this.waveData.waveProgressRedGageTimer = Math.min(waveLength, Math.round((this.waveData.waveProgressRedGageTimer + 0.016) * 100000) / 100000);
-                } else {
-                    // Respawn all dead players
-                    this.wavePool.clients.forEach(c => revivePlayer(this.wavePool, c));
-
-                    this.waveData.waveProgressIsRedGage = false;
-
-                    this.waveData.waveProgressRedGageTimer = 0;
-
-                    this.waveData.waveProgressTimer = 0;
-
-                    this.waveData.waveProgress++;
-
-                    this.waveProbabilityPredictor.reset(this.waveData);
-                }
-            } else {
-                this.waveData.waveProgressTimer = Math.min(waveLength, Math.round((this.waveData.waveProgressTimer + 0.016) * 100000) / 100000);
-            }
-        }
     }
 
     /**
@@ -205,15 +98,16 @@ export default class WaveRoom {
 
     private calculateWaveRoomUpdatePacketSize(): number {
         let size = 1 + 1 + (this.code.length + 1) + 1 + 1 + 1;
+
         this.roomCandidates.forEach(client => {
             size += 4 + 1 + 1 + client.name.length;
         });
+
         return size;
     }
 
     private createWaveRoomUpdatePacket() {
-        const size = this.calculateWaveRoomUpdatePacketSize();
-        const buffer = Buffer.alloc(size);
+        const buffer = Buffer.alloc(this.calculateWaveRoomUpdatePacketSize());
         let offset = 0;
 
         buffer.writeUInt8(ClientBound.WAVE_ROOM_UPDATE, offset++);
@@ -376,7 +270,7 @@ export default class WaveRoom {
         this.state = WaveRoomState.STARTED;
 
         // Only stop update packet send because need to update wave informations
-        clearInterval(this.updateInterval);
+        clearInterval(this.updateSendInterval);
 
         this.wavePool.startWave(this.biome, this.roomCandidates);
 
@@ -384,7 +278,6 @@ export default class WaveRoom {
             using _guard = logger.metadata({
                 candidateIds: this.roomCandidates.map(c => c.id).join(","),
                 code: this.code,
-                wave: this.waveData.waveProgress,
             });
             logger.info("Wave starting");
         });
@@ -397,7 +290,7 @@ export default class WaveRoom {
         this.wavePool.endWave();
 
         logger.region(() => {
-            using _guard = logger.metadata({ code: this.code, wave: this.waveData.waveProgress });
+            using _guard = logger.metadata({ code: this.code });
             logger.info("Wave ended");
         });
     }

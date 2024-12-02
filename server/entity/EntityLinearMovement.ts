@@ -1,8 +1,8 @@
 import { angleToRad } from "../utils/common";
-import { Entity, EntityMixinTemplate, onUpdateTick } from "./Entity";
+import { Entity, EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "./Entity";
 import { WavePool } from "../wave/WavePool";
 
-export function EntityLinearMovement<T extends new (...args: any[]) => Entity>(Base: T) {
+export function EntityLinearMovement<T extends EntityMixinConstructor<Entity>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
         [onUpdateTick](poolThis: WavePool): void {
             // Call parent onUpdateTick
@@ -19,9 +19,9 @@ export function EntityLinearMovement<T extends new (...args: any[]) => Entity>(B
             }
         }
 
-        free() {
-            if (super["free"]) {
-                super["free"]();
+        free = () => {
+            if (super.free) {
+                super.free();
             }
         }
     };

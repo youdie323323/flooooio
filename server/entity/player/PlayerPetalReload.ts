@@ -1,5 +1,5 @@
-import { EntityMixinTemplate, onUpdateTick } from "../Entity";
-import { WavePool, UPDATE_FPS } from "../../wave/WavePool";
+import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
+import { WavePool, WAVE_UPDATE_FPS } from "../../wave/WavePool";
 import { Mob, MobInstance } from "../mob/Mob";
 import { BasePlayer, PlayerInstance } from "./Player";
 import { isSpawnableSlot, PetalData } from "../mob/petal/Petal";
@@ -15,9 +15,11 @@ export const EGG_TYPE_MAPPING: Partial<Record<PetalType, MobType>> = {
     [PetalType.BEETLE_EGG]: MobType.BEETLE,
 };
 
-export const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, petal: MobInstance, i: number, j: number) => {
+export const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, i: number, j: number) => {
     // If cooldown elapsed
     if (Date.now() >= player.slots.cooldownsUsage[i][j]) {
+        const petal = player.slots.surface[i][j];
+
         poolThis.removeMob(petal.id);
 
         switch (petal.type) {
@@ -52,7 +54,7 @@ export const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, pe
     }
 };
 
-export function PlayerReload<T extends new (...args: any[]) => BasePlayer>(Base: T) {
+export function PlayerReload<T extends EntityMixinConstructor<BasePlayer>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
         [onUpdateTick](poolThis: WavePool): void {
             if (super[onUpdateTick]) {
@@ -90,9 +92,11 @@ export function PlayerReload<T extends new (...args: any[]) => BasePlayer>(Base:
                                     petals[j] = poolThis.addPetalOrMob(
                                         e.type,
                                         e.rarity,
+                                        
                                         // Make it player coordinate so its looks like spawning from player body
                                         this.x,
                                         this.y,
+
                                         this,
                                         null,
                                     );
@@ -123,10 +127,10 @@ export function PlayerReload<T extends new (...args: any[]) => BasePlayer>(Base:
                 });
             }
         }
-
-        free() {
-            if (super["free"]) {
-                super["free"]();
+        
+        free = () => {
+            if (super.free) {
+                super.free();
             }
         }
     };

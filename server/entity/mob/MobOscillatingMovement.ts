@@ -1,14 +1,15 @@
-import { isPetal, TWO_PI } from "../../utils/common";
-import { EntityMixinTemplate, onUpdateTick } from "../Entity";
+import { getCentiFirstSegment, isCentiBody, isPetal, TWO_PI } from "../../utils/common";
+import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool } from "../../wave/WavePool";
 import { BaseMob } from "./Mob";
 import { SHARED_SINE_WAVE } from "../../utils/cosineWave";
 import { getRandomAngle } from "../../utils/random";
 import { MobType } from "../../../shared/enum";
+import { MOB_BEHAVIORS, MobBehaviors } from "./MobAggressivePursuit";
 
 const MOVEMENT_DURATION = 1 / 150;
 
-export function MobOscillatingMovement<T extends new (...args: any[]) => BaseMob>(Base: T) {
+export function MobOscillatingMovement<T extends EntityMixinConstructor<BaseMob>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
         private sineWaveIndex: number = -1;
         private movementTimer: number = 0;
@@ -28,6 +29,11 @@ export function MobOscillatingMovement<T extends new (...args: any[]) => BaseMob
             if (super[onUpdateTick]) {
                 super[onUpdateTick](poolThis);
             }
+
+            if (isPetal(this.type)) return;
+
+            // If centi, dont do anything when this is centi body
+            if (isCentiBody(poolThis, this)) return;
 
             // Follows the player when the player moves away from this (pet) for a certain distance
             // Dont follows if targetting other mob
@@ -60,8 +66,8 @@ export function MobOscillatingMovement<T extends new (...args: any[]) => BaseMob
                 this.petGoingToMaster = false;
             }
 
-            // Dont move when this is petal or pet
-            if (!isPetal(this.type) && this.type !== MobType.BUBBLE && !this.petGoingToMaster) {
+            // Dont move when passive
+            if (MOB_BEHAVIORS[this.type] !== MobBehaviors.PASSIVE && !this.petGoingToMaster) {
                 if (this.shouldApplyAngleShake()) {
                     this.angle += SHARED_SINE_WAVE.get(++this.sineWaveIndex) * (this.mobTargetEntity ? 2 : 1);
                 }
@@ -95,9 +101,9 @@ export function MobOscillatingMovement<T extends new (...args: any[]) => BaseMob
             return this.type === MobType.BEE;
         }
 
-        free() {
-            if (super["free"]) {
-                super["free"]();
+        free = () => {
+            if (super.free) {
+                super.free();
             }
         }
     };

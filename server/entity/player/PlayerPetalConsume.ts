@@ -1,11 +1,11 @@
-import { EntityMixinTemplate, onUpdateTick } from "../Entity";
+import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool } from "../../wave/WavePool";
 import { BasePlayer } from "./Player";
 import { isSpawnableSlot } from "../mob/petal/Petal";
 import { consumeConsumable } from "./PlayerPetalReload";
 import { Mood, PetalType } from "../../../shared/enum";
 
-export function PlayerPetalConsume<T extends new (...args: any[]) => BasePlayer>(Base: T) {
+export function PlayerPetalConsume<T extends EntityMixinConstructor<BasePlayer>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
         [onUpdateTick](poolThis: WavePool): void {
             if (super[onUpdateTick]) {
@@ -19,7 +19,7 @@ export function PlayerPetalConsume<T extends new (...args: any[]) => BasePlayer>
                     petals.forEach((e, j) => {
                         // Automatically consume (e.g. egg)
                         if (poolThis.getMob(e.id) && e.type === PetalType.BEETLE_EGG) {
-                            consumeConsumable(poolThis, this, e, i, j);
+                            consumeConsumable(poolThis, this, i, j);
                         }
 
                         // Bubble
@@ -32,9 +32,9 @@ export function PlayerPetalConsume<T extends new (...args: any[]) => BasePlayer>
             });
         }
 
-        free() {
-            if (super["free"]) {
-                super["free"]();
+        free = () => {
+            if (super.free) {
+                super.free();
             }
         }
     };

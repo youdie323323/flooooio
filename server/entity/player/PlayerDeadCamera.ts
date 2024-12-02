@@ -1,9 +1,9 @@
-import { EntityMixinTemplate, onUpdateTick } from "../Entity";
+import { EntityMixinConstructor, EntityMixinTemplate, MaybeFreeable, onUpdateTick } from "../Entity";
 import { WavePool } from "../../wave/WavePool";
 import { BasePlayer } from "./Player";
 import { findNearestEntity } from "../mob/MobAggressivePursuit";
 
-export function PlayerDeadCamera<T extends new (...args: any[]) => BasePlayer>(Base: T) {
+export function PlayerDeadCamera<T extends EntityMixinConstructor<BasePlayer>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
         private isExecuting: boolean = false;
         private executionTimeout: NodeJS.Timeout;
@@ -15,8 +15,8 @@ export function PlayerDeadCamera<T extends new (...args: any[]) => BasePlayer>(B
 
             if (this.isDead) {
                 const isFindable: boolean =
-                    !this.playerDeadCameraTargetEntity ||
-                    !(poolThis.getMob(this.playerDeadCameraTargetEntity.id) || poolThis.getClient(this.playerDeadCameraTargetEntity.id));
+                    !this.deadCameraTargetEntity ||
+                    !(poolThis.getMob(this.deadCameraTargetEntity.id) || poolThis.getClient(this.deadCameraTargetEntity.id));
 
                 if (isFindable) {
                     if (!this.isExecuting) {
@@ -27,7 +27,7 @@ export function PlayerDeadCamera<T extends new (...args: any[]) => BasePlayer>(B
                             this.isExecuting = false;
 
                             // Dont change camera if player is not dead
-                            if (!this.isDead) {
+                            if (!this.isDead && !poolThis) {
                                 return;
                             }
 
@@ -37,22 +37,22 @@ export function PlayerDeadCamera<T extends new (...args: any[]) => BasePlayer>(B
                                 poolThis.getAllClients().filter(c => !c.isDead && c.id !== this.id),
                             ].flat());
                             if (!cameraEntity) {
-                                this.playerDeadCameraTargetEntity = null;
+                                this.deadCameraTargetEntity = null;
                             } else {
-                                this.playerDeadCameraTargetEntity = cameraEntity;
+                                this.deadCameraTargetEntity = cameraEntity;
                             }
                         }, 1000);
                     }
                 } else {
-                    this.x = this.playerDeadCameraTargetEntity.x;
-                    this.y = this.playerDeadCameraTargetEntity.y;
+                    this.x = this.deadCameraTargetEntity.x;
+                    this.y = this.deadCameraTargetEntity.y;
                 }
             }
         }
 
-        free() {
-            if (super["free"]) {
-                super["free"]();
+        free = () => {
+            if (super.free) {
+                super.free();
             }
 
             clearTimeout(this.executionTimeout);

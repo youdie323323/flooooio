@@ -1,4 +1,4 @@
-import { Entity, EntityMixinTemplate, onUpdateTick } from "./Entity";
+import { Entity, EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "./Entity";
 import { WavePool } from "../wave/WavePool";
 import { isPetal, removeAllBindings } from "../utils/common";
 import { Mob } from "./mob/Mob";
@@ -11,7 +11,7 @@ export const SAFETY_DISTANCE = 300;
 
 export const PROJECTILE_TYPES: Set<MobType> = new Set([]);
 
-export function EntityWorldBoundary<T extends new (...args: any[]) => Entity>(Base: T) {
+export function EntityWorldBoundary<T extends EntityMixinConstructor<Entity>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
         [onUpdateTick](poolThis: WavePool): void {
             // Call parent onUpdateTick
@@ -25,7 +25,7 @@ export function EntityWorldBoundary<T extends new (...args: any[]) => Entity>(Ba
                     return;
                 }
 
-                // Mob like missile will ignore border
+                // Projectiles ignore border
                 if (!isPetal(this.type) && PROJECTILE_TYPES.has(this.type)) {
                     return;
                 }
@@ -44,25 +44,25 @@ export function EntityWorldBoundary<T extends new (...args: any[]) => Entity>(Ba
                 return 0;
             };
 
-            const waveMapSize = poolThis.waveData.waveMapSize;
+            const waveMapRadius = poolThis.waveData.waveMapRadius;
             
-            const worldRadius = waveMapSize - getRadius();
+            const worldRadius = waveMapRadius - getRadius();
 
-            const dx = this.x - waveMapSize;
-            const dy = this.y - waveMapSize;
+            const dx = this.x - waveMapRadius;
+            const dy = this.y - waveMapRadius;
 
             if (Math.sqrt(dx * dx + dy * dy) > worldRadius) {
                 const collisionAngle = Math.atan2(dy, dx);
                 const knockback = this instanceof Mob ? 0 : 15;
 
-                this.x = waveMapSize + Math.cos(collisionAngle) * (worldRadius - knockback);
-                this.y = waveMapSize + Math.sin(collisionAngle) * (worldRadius - knockback);
+                this.x = waveMapRadius + Math.cos(collisionAngle) * (worldRadius - knockback);
+                this.y = waveMapRadius + Math.sin(collisionAngle) * (worldRadius - knockback);
             }
         }
 
-        free() {
-            if (super["free"]) {
-                super["free"]();
+        free = () => {
+            if (super.free) {
+                super.free();
             }
         }
     };
