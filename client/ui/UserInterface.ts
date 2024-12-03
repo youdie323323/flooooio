@@ -21,11 +21,14 @@ export default abstract class UserInterface {
     private hoveredComponent: Interactive | null = null;
     private clickedComponent: Clickable | null = null;
 
-    // private resizeObserver: ResizeObserver | null = null;
-
     private _mousedown: (event: MouseEvent) => void;
     private _mouseup: (event: MouseEvent) => void;
     private _mousemove: (event: MouseEvent) => void;
+
+    private _touchmove: (event: TouchEvent) => void;
+    private _touchstart: (event: TouchEvent) => void;
+    private _touchend: (event: TouchEvent) => void;
+
     private _keydown: (event: KeyboardEvent) => void;
     private _keyup: (event: KeyboardEvent) => void;
 
@@ -38,53 +41,110 @@ export default abstract class UserInterface {
         this._mousedown = this.handleMouseDown.bind(this);
         this._mouseup = this.handleMouseUp.bind(this);
         this._mousemove = this.handleMouseMove.bind(this);
+
+        this._touchmove = (event: TouchEvent) => {
+            event.preventDefault();
+
+            if (!event.isTrusted) return;
+
+            const touch = event.touches[0];
+
+            this.handleMouseMove({
+                isTrusted: true,
+                clientX: touch.clientX,
+                clientY: touch.clientY,
+            } as MouseEvent);
+        };
+        this._touchstart = (event: TouchEvent) => {
+            event.preventDefault();
+
+            if (!event.isTrusted) return;
+
+            const touch = event.touches[0];
+
+            const rect = this.canvas.getBoundingClientRect();
+            this.mouseX = ((touch.clientX - rect.left) * (this.canvas.width / rect.width)) / uiScaleFactor;
+            this.mouseY = ((touch.clientY - rect.top) * (this.canvas.height / rect.height)) / uiScaleFactor;
+
+            this.handleMouseDown({ isTrusted: true } as MouseEvent);
+        };
+        this._touchend = (event: TouchEvent) => {
+            event.preventDefault();
+            
+            if (!event.isTrusted) return;
+            
+            this.handleMouseUp({ isTrusted: true } as MouseEvent);
+        };
+
         this._keydown = this.handleKeyDown.bind(this);
         this._keyup = this.handleKeyUp.bind(this);
 
-        this.canvas.addEventListener('mousedown', this._mousedown);
-        this.canvas.addEventListener('mouseup', this._mouseup);
-        this.canvas.addEventListener('mousemove', this._mousemove);
-        window.addEventListener('keydown', this._keydown);
-        window.addEventListener('keyup', this._keyup);
-
-        // Resize observer cause flash when resizing
-        // So ill use primitive methods
-
         this._onresize = () => {
-            const width = Math.round(this.canvas.clientWidth * devicePixelRatio);
-            const height = Math.round(this.canvas.clientHeight * devicePixelRatio);
+            const retinaDisplayScale = devicePixelRatio * 2;
 
-            this.canvas.width = width;
-            this.canvas.height = height;
+            this.canvas.width = this.canvas.clientWidth * retinaDisplayScale;
+            this.canvas.height = this.canvas.clientHeight * retinaDisplayScale;
 
             uiScaleFactor = Math.max(
-                document.documentElement.clientWidth / UI_BASE_WIDTH,
-                document.documentElement.clientHeight / UI_BASE_HEIGHT
+                this.canvas.width / UI_BASE_WIDTH,
+                this.canvas.height / UI_BASE_HEIGHT
             );
 
             this.updateComponentsLayout();
         };
 
+        {
+            this.canvas.addEventListener('mousedown', this._mousedown);
+            this.canvas.addEventListener('mouseup', this._mouseup);
+            this.canvas.addEventListener('mousemove', this._mousemove);
+        }
+
+        {
+            this.canvas.addEventListener('touchmove', this._touchmove);
+            this.canvas.addEventListener('touchstart', this._touchstart);
+            this.canvas.addEventListener('touchend', this._touchend);
+        }
+
+        {
+            window.addEventListener('keydown', this._keydown);
+            window.addEventListener('keyup', this._keyup);
+        }
+
+        // Resize observer cause flash when resizing
+        // So ill use primitive methods
+
         window.addEventListener('resize', this._onresize);
 
-        // Call them first like resize observer
         // Call twice to render container properly
         this._onresize();
         this._onresize();
+    }
 
-        /*
-        this.resizeObserver = new ResizeObserver((entries) => {
-            const width = Math.round(this.canvas.clientWidth * devicePixelRatio);
-            const height = Math.round(this.canvas.clientHeight * devicePixelRatio);
+    public removeEventListeners(): void {
+        {
+            this.canvas.removeEventListener('mousedown', this._mousedown);
+            this.canvas.removeEventListener('mouseup', this._mouseup);
+            this.canvas.removeEventListener('mousemove', this._mousemove);
+        }
 
-            this.canvas.width = width;
-            this.canvas.height = height;
+        {
+            this.canvas.removeEventListener('touchmove', this._touchmove);
+            this.canvas.removeEventListener('touchstart', this._touchstart);
+            this.canvas.removeEventListener('touchend', this._touchend);
+        }
 
-            this.regenerateComponents();
-        });
+        {
+            window.removeEventListener('keydown', this._keydown);
+            window.removeEventListener('keyup', this._keyup);
+        }
 
-        this.resizeObserver.observe(this.canvas);
-        */
+        window.removeEventListener('resize', this._onresize);
+
+        this._mousedown = null;
+        this._mouseup = null;
+        this._mousemove = null;
+        this._keydown = null;
+        this._keyup = null;
     }
 
     protected addComponent(component: AllComponents): void {
@@ -138,29 +198,6 @@ export default abstract class UserInterface {
     private getTopLevelComponents(): AllComponents[] {
         return this.components
             .filter(c => !this.childrenComponents.has(c));
-    }
-
-    public removeEventListeners(): void {
-        /*
-        if (this.resizeObserver) {
-            this.resizeObserver.disconnect();
-            this.resizeObserver = null;
-        }
-        */
-
-        this.canvas.removeEventListener('mousedown', this._mousedown);
-        this.canvas.removeEventListener('mouseup', this._mouseup);
-        this.canvas.removeEventListener('mousemove', this._mousemove);
-        window.removeEventListener('keydown', this._keydown);
-        window.removeEventListener('keyup', this._keyup);
-
-        window.removeEventListener('resize', this._onresize);
-
-        this._mousedown = null;
-        this._mouseup = null;
-        this._mousemove = null;
-        this._keydown = null;
-        this._keyup = null;
     }
 
     private updateComponentsLayout() {
@@ -251,12 +288,9 @@ export default abstract class UserInterface {
         this.onMouseMove(event);
 
         // Update mouse position
-
-        {
-            const rect = this.canvas.getBoundingClientRect();
-            this.mouseX = ((event.clientX - rect.left) * (this.canvas.width / rect.width)) / uiScaleFactor;
-            this.mouseY = ((event.clientY - rect.top) * (this.canvas.height / rect.height)) / uiScaleFactor;
-        }
+        const rect = this.canvas.getBoundingClientRect();
+        this.mouseX = ((event.clientX - rect.left) * (this.canvas.width / rect.width)) / uiScaleFactor;
+        this.mouseY = ((event.clientY - rect.top) * (this.canvas.height / rect.height)) / uiScaleFactor;
 
         this.components.forEach(component => {
             if (!this.isClickableChildren(component)) {

@@ -1,4 +1,4 @@
-import { angleToRad, getCentiFirstSegment, isCentiBody, isPetal, TWO_PI } from "../../utils/common";
+import { angleToRad, getCentiFirstSegment, isConnectingBody, isPetal, TWO_PI } from "../../utils/common";
 import { Entity, EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool } from "../../wave/WavePool";
 import { BaseMob, Mob, MobInstance } from "./Mob";
@@ -30,6 +30,7 @@ export enum MobBehaviors {
     PASSIVE,
     CAUTIONS,
     NEUTRAL,
+    NONE,
 }
 
 export const MOB_BEHAVIORS: Record<MobType, MobBehaviors> = {
@@ -39,7 +40,7 @@ export const MOB_BEHAVIORS: Record<MobType, MobBehaviors> = {
     [MobType.JELLYFISH]: MobBehaviors.CAUTIONS,
     [MobType.BEE]: MobBehaviors.NEUTRAL,
 
-    [MobType.CENTIPEDE]: MobBehaviors.NEUTRAL,
+    [MobType.CENTIPEDE]: MobBehaviors.NONE,
     // TODO: elucidate desert centipede move
     [MobType.CENTIPEDE_DESERT]: MobBehaviors.NEUTRAL,
     [MobType.CENTIPEDE_EVIL]: MobBehaviors.AGGRESSIVE,
@@ -57,8 +58,8 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
             // Dont chase player when this is petal
             if (isPetal(this.type)) return;
 
-            // If centi, dont do anything when this is centi body
-            if (isCentiBody(poolThis, this)) return;
+            // If body, dont do anything
+            if (isConnectingBody(poolThis, this)) return;
 
             // Dont do anything while this.starfishRegeningHealth so
             // can handle angle in MobHealthRegen.ts
@@ -229,6 +230,11 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                         }
                     }
 
+                    break;
+                }
+
+                // Do nothing
+                case MobBehaviors.NONE: {
                     break;
                 }
             }

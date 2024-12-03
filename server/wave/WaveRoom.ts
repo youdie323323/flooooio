@@ -5,7 +5,7 @@ import { logger } from "../main";
 import { BrandedId } from "../entity/Entity";
 import WaveProbabilityPredictor from "./WaveProbabilityPredictor";
 import { calculateWaveLength } from "../utils/formula";
-import { SAFETY_DISTANCE } from "../entity/EntityWorldBoundary";
+import { SAFETY_DISTANCE } from "../entity/EntityMapBoundary";
 import { Biomes, MobType } from "../../shared/enum";
 import root from "../command/commandRoot";
 import { Command, repondValueToString } from "../command/command";
@@ -17,8 +17,8 @@ export type WaveRoomPlayerId = BrandedId<"WaveRoomPlayer">;
 /** Extended player data with wave room data properties */
 export type WaveRoomPlayer = MockPlayerData & {
     id: WaveRoomPlayerId;
-    isOwner: boolean;
     readyState: WaveRoomPlayerReadyState;
+    isOwner: boolean;
 };
 
 /**
@@ -49,25 +49,25 @@ export default class WaveRoom {
      */
     private static readonly MAX_PLAYER_AMOUNT = 4;
 
-    public state: WaveRoomState;
-    public visible: WaveRoomVisibleState;
-    public roomCandidates: WaveRoomPlayer[];
+    private waveRoomPacketSendInterval: NodeJS.Timeout;
 
     public wavePool: WavePool;
 
-    private updateSendInterval: NodeJS.Timeout;
-
     constructor(
-        readonly biome: Biomes, 
-        readonly code: string,
+        // Biome and code are readonly
+        public readonly biome: Biomes,
+        public readonly code: string,
+
+        public visible: WaveRoomVisibleState = WaveRoomVisibleState.PUBLIC,
+        public state: WaveRoomState = WaveRoomState.WAITING,
+        public roomCandidates: WaveRoomPlayer[] = new Array<WaveRoomPlayer>(),
     ) {
-        this.visible = WaveRoomVisibleState.PUBLIC;
-        this.state = WaveRoomState.WAITING;
-        this.wavePool = new WavePool();
+        this.waveRoomPacketSendInterval = setInterval(this.broadcastWaveRoomPacket.bind(this), 1000 / WAVE_ROOM_UPDATE_SEND_FPS);
 
-        this.roomCandidates = new Array<WaveRoomPlayer>();
-
-        this.updateSendInterval = setInterval(this.broadcastUpdatePacket.bind(this), 1000 / WAVE_ROOM_UPDATE_SEND_FPS);
+        this.wavePool = new WavePool(
+            () => this.state, 
+            this.onChangeAnything,
+        );
     }
 
     /**
@@ -78,9 +78,9 @@ export default class WaveRoom {
 
         this.wavePool = null;
 
-        clearInterval(this.updateSendInterval);
+        clearInterval(this.waveRoomPacketSendInterval);
 
-        this.updateSendInterval = null;
+        this.waveRoomPacketSendInterval = null;
 
         this.roomCandidates = null;
     }
@@ -88,7 +88,7 @@ export default class WaveRoom {
     /**
      * Broadcasts the current room state to all players
      */
-    private broadcastUpdatePacket() {
+    private broadcastWaveRoomPacket() {
         const waveClientsPacket = this.createWaveRoomUpdatePacket();
 
         this.roomCandidates.forEach((player) => {
@@ -270,7 +270,7 @@ export default class WaveRoom {
         this.state = WaveRoomState.STARTED;
 
         // Only stop update packet send because need to update wave informations
-        clearInterval(this.updateSendInterval);
+        clearInterval(this.waveRoomPacketSendInterval);
 
         this.wavePool.startWave(this.biome, this.roomCandidates);
 

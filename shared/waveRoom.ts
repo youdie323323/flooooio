@@ -1,7 +1,10 @@
 /** Represents the current state of a wave room */
 export enum WaveRoomState {
+    // State waiting, means waiting for players
     WAITING,
+    // State started, means game playing
     STARTED,
+    // State ended, means game over
     ENDED,
 }
 

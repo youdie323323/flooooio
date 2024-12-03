@@ -1,4 +1,4 @@
-import { getCentiFirstSegment, isCentiBody, isPetal, TWO_PI } from "../../utils/common";
+import { getCentiFirstSegment, isConnectingBody, isPetal, TWO_PI } from "../../utils/common";
 import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool } from "../../wave/WavePool";
 import { BaseMob } from "./Mob";
@@ -32,8 +32,8 @@ export function MobOscillatingMovement<T extends EntityMixinConstructor<BaseMob>
 
             if (isPetal(this.type)) return;
 
-            // If centi, dont do anything when this is centi body
-            if (isCentiBody(poolThis, this)) return;
+            // If body, dont do anything
+            if (isConnectingBody(poolThis, this)) return;
 
             // Follows the player when the player moves away from this (pet) for a certain distance
             // Dont follows if targetting other mob
@@ -87,6 +87,7 @@ export function MobOscillatingMovement<T extends EntityMixinConstructor<BaseMob>
                             this.isMoving = false;
                         } else {
                             // TODO: ease move
+                            // TODO: centi always moving without stop
                             this.magnitude = 255 * (this.movementTimer * 2);
                             this.movementTimer += MOVEMENT_DURATION;
                         }

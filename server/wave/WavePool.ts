@@ -1,7 +1,7 @@
 import { Mob, MobInstance, MOB_SIZE_FACTOR, MobData } from "../entity/mob/Mob";
 import { Player, PlayerInstance, MockPlayerData } from "../entity/player/Player";
 import { EntityId, onUpdateTick } from "../entity/Entity";
-import { calculateMobSize, isCentiBody, isPetal, revivePlayer } from '../utils/common';
+import { calculateMobSize, isConnectingBody, isPetal, revivePlayer } from '../utils/common';
 import { MOB_PROFILES } from '../../shared/mobProfiles';
 import { PETAL_PROFILES } from '../../shared/petalProfiles';
 import { isSpawnableSlot, PetalData, MockPetalData } from '../entity/mob/petal/Petal';
@@ -12,9 +12,10 @@ import { generateRandomEntityId, getRandomAngle, getRandomPosition, getRandomSaf
 import { Biomes, MobType, PetalType, Mood } from '../../shared/enum';
 import { Rarities } from '../../shared/rarity';
 import { ClientBound } from '../../shared/packet';
-import { SAFETY_DISTANCE } from "../entity/EntityWorldBoundary";
+import { SAFETY_DISTANCE } from "../entity/EntityMapBoundary";
 import WaveProbabilityPredictor, { LINK_MOBS } from "./WaveProbabilityPredictor";
 import { calculateWaveLength } from "../utils/formula";
+import { WaveRoomState } from "../../shared/waveRoom";
 
 // Define UserData for WebSocket connections
 export interface UserData {
@@ -57,6 +58,9 @@ export interface WaveData {
     waveProgressRedGageTimer: number;
     waveProgressIsRedGage: boolean;
 
+    /**
+     * Radius of 
+     */
     waveMapRadius: number;
 }
 
@@ -74,16 +78,16 @@ export class WavePool {
 
     private waveProbabilityPredictor: WaveProbabilityPredictor;
 
-    private preUpdateInterval: NodeJS.Timeout;
-    private updateInterval: NodeJS.Timeout;
-    private updateSendInterval: NodeJS.Timeout;
+    private updateWaveInterval: NodeJS.Timeout;
+    private updateEntitiesInterval: NodeJS.Timeout;
+    private updatePacketSendInterval: NodeJS.Timeout;
 
     private eliminatedEntities: EntityId[];
 
     private biome: Biomes;
 
     /**
-     * Current wave data transfer to entity pool.
+     * Current wave data.
      */
     public waveData: WaveData = {
         waveProgress: 52,
@@ -91,10 +95,13 @@ export class WavePool {
         waveProgressRedGageTimer: 0,
         waveProgressIsRedGage: false,
 
-        waveMapRadius: 5000,
+        waveMapRadius: 2000,
     };
 
-    constructor() {
+    constructor(
+        private _state: () => WaveRoomState,
+        private _onChangeAnything: () => Disposable,
+    ) {
         this.clients = new Map();
         this.mobs = new Map();
 
@@ -120,13 +127,13 @@ export class WavePool {
             }
         });
 
-        clearInterval(this.preUpdateInterval);
-        clearInterval(this.updateInterval);
-        clearInterval(this.updateSendInterval);
+        clearInterval(this.updateWaveInterval);
+        clearInterval(this.updateEntitiesInterval);
+        clearInterval(this.updatePacketSendInterval);
 
-        this.preUpdateInterval = null;
-        this.updateInterval = null;
-        this.updateSendInterval = null;
+        this.updateWaveInterval = null;
+        this.updateEntitiesInterval = null;
+        this.updatePacketSendInterval = null;
 
         this.clients.clear();
         this.mobs.clear();
@@ -139,6 +146,9 @@ export class WavePool {
         this.waveProbabilityPredictor = null;
 
         this.waveData = null;
+
+        this._state = null;
+        this._onChangeAnything = null;
     }
 
     /**
@@ -167,9 +177,10 @@ export class WavePool {
         // Broadcast self id to all connection
         this.broadcastSeldIdPacket();
 
-        this.preUpdateInterval = setInterval(this.preUpdate.bind(this), 1000 / PRE_WAVE_UPDATE_FPS);
-        this.updateInterval = setInterval(this.updateEntities.bind(this), 1000 / WAVE_UPDATE_FPS);
-        this.updateSendInterval = setInterval(this.broadcastUpdatePacket.bind(this), 1000 / WAVE_UPDATE_SEND_FPS);
+        this.updateWaveInterval = setInterval(this.updateWave.bind(this), 1000 / PRE_WAVE_UPDATE_FPS);
+        this.updateEntitiesInterval = setInterval(this.updateEntities.bind(this), 1000 / WAVE_UPDATE_FPS);
+
+        this.updatePacketSendInterval = setInterval(this.broadcastUpdatePacket.bind(this), 1000 / WAVE_UPDATE_SEND_FPS);
     }
 
     public endWave() {
@@ -188,7 +199,7 @@ export class WavePool {
         let health: number = (100 * 1) * 1.02 ** (Math.max(100, 75) - 1);
 
         // Temporary (for debug)
-        health *= 500;
+        health *= 10000;
 
         const playerInstance = new Player({
             id: clientId,
@@ -284,7 +295,7 @@ export class WavePool {
 
             starfishRegeningHealth: false,
 
-            connectedSegment,
+            connectingSegment: connectedSegment,
             isFirstSegment,
         });
 
@@ -318,55 +329,59 @@ export class WavePool {
         this.mobs.forEach((mob) => mob[onUpdateTick](this));
     }
 
-    private preUpdate() {
-        // Update wave
+    private updateWave() {
+        const waveRoomState = this._state();
 
-        if (!this.waveData.waveProgressIsRedGage) {
-            const mobData = this.waveProbabilityPredictor.predictMockData(this.biome, this.waveData.waveProgress);
-            if (mobData) {
-                const [type, rarity] = mobData;
+        if (waveRoomState === WaveRoomState.STARTED) {
+            using _disposable = this._onChangeAnything();
 
-                const randPos = getRandomSafePosition(this.waveData.waveMapRadius, SAFETY_DISTANCE, this.getAllClients().filter(p => !p.isDead));
-                if (!randPos) {
-                    return null;
+            if (!this.waveData.waveProgressIsRedGage) {
+                const mobData = this.waveProbabilityPredictor.predictMockData(this.biome, this.waveData.waveProgress);
+                if (mobData) {
+                    const [type, rarity] = mobData;
+
+                    const randPos = getRandomSafePosition(this.waveData.waveMapRadius, SAFETY_DISTANCE, this.getAllClients().filter(p => !p.isDead));
+                    if (!randPos) {
+                        return null;
+                    }
+
+                    if (LINK_MOBS.has(type)) {
+                        this.createLinkedMob(type, rarity, randPos[0], randPos[1], 10);
+                    } else {
+                        this.addPetalOrMob(type, rarity, randPos[0], randPos[1]);
+                    }
                 }
+            }
 
-                if (LINK_MOBS.has(type)) {
-                    this.createLinkedMob(type, rarity, randPos[0], randPos[1], 10);
+            const waveLength = calculateWaveLength(this.waveData.waveProgress);
+
+            if (this.waveData.waveProgressTimer >= waveLength) {
+                // If mob count above 4, start red gage
+                if (
+                    // Force start into next wave when red gage reached
+                    !(this.waveData.waveProgressRedGageTimer >= waveLength) &&
+                    4 < this.getAllMobs().filter(c => /** Dont count petals & pets. */ !c.petMaster && !c.petalMaster).length
+                ) {
+                    this.waveData.waveProgressIsRedGage = true;
+
+                    this.waveData.waveProgressRedGageTimer = Math.min(waveLength, Math.round((this.waveData.waveProgressRedGageTimer + 0.016) * 10000) / 10000);
                 } else {
-                    this.addPetalOrMob(type, rarity, randPos[0], randPos[1]);
+                    // Respawn all dead players
+                    this.clients.forEach(c => revivePlayer(this, c));
+
+                    this.waveData.waveProgressIsRedGage = false;
+
+                    this.waveData.waveProgressRedGageTimer = 0;
+
+                    this.waveData.waveProgressTimer = 0;
+
+                    this.waveData.waveProgress++;
+
+                    this.waveProbabilityPredictor.reset(this.waveData.waveProgress);
                 }
-            }
-        }
-
-        const waveLength = calculateWaveLength(this.waveData.waveProgress);
-
-        if (this.waveData.waveProgressTimer >= waveLength) {
-            // If mob count above 4, start red gage
-            if (
-                // Force start into next wave when red gage reached
-                !(this.waveData.waveProgressRedGageTimer >= waveLength) &&
-                4 < this.getAllMobs().filter(c => /** Dont count petals & pets. */ !c.petMaster && !c.petalMaster).length
-            ) {
-                this.waveData.waveProgressIsRedGage = true;
-
-                this.waveData.waveProgressRedGageTimer = Math.min(waveLength, Math.round((this.waveData.waveProgressRedGageTimer + 0.016) * 10000) / 10000);
             } else {
-                // Respawn all dead players
-                this.clients.forEach(c => revivePlayer(this, c));
-
-                this.waveData.waveProgressIsRedGage = false;
-
-                this.waveData.waveProgressRedGageTimer = 0;
-
-                this.waveData.waveProgressTimer = 0;
-
-                this.waveData.waveProgress++;
-
-                this.waveProbabilityPredictor.reset(this.waveData.waveProgress);
+                this.waveData.waveProgressTimer = Math.min(waveLength, Math.round((this.waveData.waveProgressTimer + 0.016) * 10000) / 10000);
             }
-        } else {
-            this.waveData.waveProgressTimer = Math.min(waveLength, Math.round((this.waveData.waveProgressTimer + 0.016) * 10000) / 10000);
         }
     }
 
@@ -520,13 +535,13 @@ export class WavePool {
         size += 2;
         this.clients.forEach(client => {
             // String length is is dynamically changeable, so we can do is just loop
-            size += 4 + 8 + 8 + 4 + 4 + 1 + 1 + 1 + client.nickname.length + 1 + 4;
+            size += 4 + 8 + 8 + 1 + 4 + 4 + 4 + 1 + (1 + client.nickname.length) + 1;
         });
 
         // Add size for mobs
         // Mob count
         size += 2;
-        size += this.mobs.size * (4 + 8 + 8 + 4 + 4 + 8 + 1 + 1 + 4 + 1 + 1)
+        size += this.mobs.size * (4 + 8 + 8 + 8 + 4 + 4 + 4 + 1 + 1 + 1)
 
         // Add size for eliminated entities
         // Eliminated entity count
@@ -553,11 +568,11 @@ export class WavePool {
         buffer.writeDoubleBE(this.waveData.waveProgressRedGageTimer, offset);
         offset += 8;
 
-        // Wave is game overed or not
-        // TODO: how to access waveRoom from wavePool :( its not good style
-        buffer.writeUInt8(false ? 1 : 0, offset++);
+        const waveRoomState = this._state();
+        // Wave is game over or not
+        buffer.writeUInt8(waveRoomState === WaveRoomState.ENDED ? 1 : 0, offset++);
 
-        // Size of world
+        // Radius of map
         buffer.writeUInt16BE(this.waveData.waveMapRadius, offset);
         offset += 2;
 
@@ -587,12 +602,14 @@ export class WavePool {
 
             buffer.writeUInt8(client.mood, offset++);
 
-            buffer.writeUInt8(client.isDead ? 1 : 0, offset++);
-
             const nicknameBuffer = Buffer.from(client.nickname, 'utf-8');
             buffer.writeUInt8(nicknameBuffer.length, offset++);
             nicknameBuffer.copy(buffer, offset);
             offset += nicknameBuffer.length;
+
+            // Write boolean flags
+            const bFlags = (client.isDead ? 1 : 0);
+            buffer.writeUInt8(bFlags, offset++);
         });
 
         // Write mobs
@@ -632,11 +649,13 @@ export class WavePool {
             // Rarity of mob
             buffer.writeUInt8(mob.rarity, offset++);
 
-            // Mob is pet, or not
-            buffer.writeUInt8(mob.petMaster ? 1 : 0, offset++);
-
-            // Mob is first segment, or not
-            buffer.writeUInt8(mob.isFirstSegment ? 1 : 0, offset++);
+            // Write boolean flags
+            const bFlags =
+                // Mob is pet, or not
+                (mob.petMaster ? 1 : 0) |
+                // Mob is first segment, or not
+                (mob.isFirstSegment ? 2 : 0);
+            buffer.writeUInt8(bFlags, offset++);
         });
 
         // Write eliminated entities
@@ -650,7 +669,7 @@ export class WavePool {
                 offset += 4;
             });
 
-            // Delete eliminated entities
+            // Delete eliminated entities per packet send
             this.eliminatedEntities.length = 0;
         }
 

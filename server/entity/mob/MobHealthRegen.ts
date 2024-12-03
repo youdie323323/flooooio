@@ -16,12 +16,14 @@ export function MobHealthRegen<T extends EntityMixinConstructor<BaseMob>>(Base: 
 
             if (isPetal(this.type)) return;
 
-            if (this.starfishRegeningHealth || (this.type === MobType.STARFISH && this.health < this.maxHealth / 2)) {
+            if (
+                this.starfishRegeningHealth || 
+                (this.type === MobType.STARFISH && this.health < this.maxHealth / 2)
+            ) {
                 this.starfishRegeningHealth = true;
                 
                 // Hmm maybe i shouldnt use size here
-                const starfishRegenMultiplier = 2 * this.size;
-                this.health = Math.min(this.maxHealth + 1, this.health + starfishRegenMultiplier);
+                this.health = Math.min(this.maxHealth + 1, this.health + (2 * this.size));
                 if (this.health > this.maxHealth) {
                     this.starfishRegeningHealth = false;
                     return;

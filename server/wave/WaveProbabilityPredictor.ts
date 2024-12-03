@@ -58,7 +58,7 @@ const MOB_WEIGHTS: NestedPartial<
     [Biomes.GARDEN]: {
         [MobType.BEE]: [
             1,
-            10,
+            30,
         ],
 
         [MobType.CENTIPEDE]: [
@@ -79,7 +79,7 @@ const MOB_WEIGHTS: NestedPartial<
 
         [MobType.BEETLE]: [
             2,
-            10,
+            30,
         ],
     },
     [Biomes.OCEAN]: {

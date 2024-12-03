@@ -5,7 +5,7 @@ import { CommandPointer, Command, GoLikeRespondValue, CommandFuncReturnType } fr
 import { ArgContext, createTypedArg } from "../commandArgs";
 import { Type } from "../commandLexer";
 import { setTimeout } from 'node:timers/promises';
-import { SAFETY_DISTANCE } from "../../entity/EntityWorldBoundary";
+import { SAFETY_DISTANCE } from "../../entity/EntityMapBoundary";
 import { getRandomSafePosition } from "../../utils/random";
 import { SPAWN_MOB_DEFAULT_ARGS } from "./spawnMob";
 import { Rarities } from "../../../shared/rarity";

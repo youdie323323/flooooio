@@ -60,16 +60,12 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
       this.quadTree.boundary.x = this.quadTree.boundary.y = waveMapSize;
       this.quadTree.boundary.w = this.quadTree.boundary.h = waveMapSize * 2;
 
-      poolThis.mobs.forEach(mob => {
-        if (this.id === mob.id) return;
-        this.quadTree.insert({ x: mob.x, y: mob.y, unit: mob });
-      });
-      poolThis.clients.forEach(client => {
-        if (this.id === client.id) return;
-        this.quadTree.insert({ x: client.x, y: client.y, unit: client });
-      });
-
       if (this instanceof Mob) {
+        // Only insert mobs when mob
+        poolThis.mobs.forEach(mob => {
+          if (this.id !== mob.id) this.quadTree.insert(mob);
+        });
+
         const profile1: MobData | PetalData = MOB_PROFILES[this.type] || PETAL_PROFILES[this.type];
         const searchRadius = (profile1.rx + profile1.ry) * (this.size / profile1.fraction) * 2;
 
@@ -80,9 +76,7 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
           h: searchRadius
         });
 
-        nearby.forEach(point => {
-          const otherEntity = point.unit;
-          if (this.id === otherEntity.id) return;
+        nearby.forEach(otherEntity => {
           if (otherEntity instanceof Mob) {
             // TODO: fix multiple hit
 
@@ -122,7 +116,7 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
 
                 const baseMultiplier1 = isPetal(this.type) ? 0.1 : 0.3;
                 const baseMultiplier2 = isPetal(otherEntity.type) ? 0.1 : 0.3;
-            
+
                 this.x -= push[0] * multiplier2 * baseMultiplier2;
                 this.y -= push[1] * multiplier2 * baseMultiplier2;
                 otherEntity.x += push[0] * multiplier1 * baseMultiplier1;
@@ -178,6 +172,14 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
       }
 
       if (this instanceof Player && !this.isDead) {
+        // Insert both when player
+        poolThis.mobs.forEach(mob => {
+          if (this.id !== mob.id) this.quadTree.insert(mob);
+        });
+        poolThis.clients.forEach(client => {
+          if (this.id !== client.id) this.quadTree.insert(client);
+        });
+
         const searchRadius = this.size * 50;
         const nearby = this.quadTree.query({
           x: this.x,
@@ -186,9 +188,7 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
           h: searchRadius
         });
 
-        nearby.forEach(point => {
-          const otherEntity = point.unit;
-          if (this.id === otherEntity.id) return;
+        nearby.forEach(otherEntity => {
           if (otherEntity instanceof Player) {
             const ellipse1: Ellipse = {
               // Arc (player)

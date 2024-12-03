@@ -686,7 +686,7 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
         self._hiddenInput.selectionEnd = range[1];
     }
 
-    private _calculateCursorStyle(_hasFocus: boolean): string {
+    private _getCursorStyle(_hasFocus: boolean): string {
         return _hasFocus ? "text" : "pointer";
     }
 
@@ -695,7 +695,7 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
 
         // TODO: do this on mousemove
 
-        self._canvas.style.cursor = this._calculateCursorStyle(self._hasFocus);
+        self._canvas.style.cursor = this._getCursorStyle(self._hasFocus);
     }
 
     public onBlur(): void {

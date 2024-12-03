@@ -66,7 +66,7 @@ export default class Networking {
                             const waveEnded = !!data.getUint8(offset++);
 
                             // World size
-                            const waveSize = data.getUint16(offset);
+                            const waveMapRadius = data.getUint16(offset);
                             offset += 2;
 
                             uiCtx.currentUI.waveProgress = waveProgress;
@@ -79,8 +79,8 @@ export default class Networking {
 
                             uiCtx.currentUI.waveEnded = waveEnded;
 
-                            uiCtx.currentUI.nWorldSize = waveSize;
-                            uiCtx.currentUI.oWorldSize = uiCtx.currentUI.worldSize;
+                            uiCtx.currentUI.nMapRadius = waveMapRadius;
+                            uiCtx.currentUI.oMapRadius = uiCtx.currentUI.mapRadius;
 
                             uiCtx.currentUI.updateT = 0;
                         }
@@ -110,9 +110,11 @@ export default class Networking {
 
                             const clientMood = data.getUint8(offset++) as Mood;
 
-                            const clientIsDead = !!data.getUint8(offset++);
-
                             const clientNickname = readString();
+
+                            // Decode boolean flags
+                            const bFlags = data.getUint8(offset++);
+                            const clientIsDead = !!(bFlags & 1);
 
                             const client = players.get(clientId);
                             if (client) {
@@ -176,9 +178,10 @@ export default class Networking {
 
                             const mobRarity = data.getUint8(offset++) as Rarities;
 
-                            const mobIsPet = !!data.getUint8(offset++);
-
-                            const mobIsFirstSegment = !!data.getUint8(offset++);
+                            // Decode boolean flags
+                            const bFlags = data.getUint8(offset++);
+                            const mobIsPet = !!(bFlags & 1);
+                            const mobIsFirstSegment = !!(bFlags & 2);
 
                             const mob = mobs.get(mobId);
                             if (mob) {
@@ -221,7 +224,7 @@ export default class Networking {
 
                             if (mobs.has(entityId)) {
                                 const mob = mobs.get(entityId);
-                                
+
                                 mob.isDead = true;
 
                                 continue;
@@ -229,7 +232,7 @@ export default class Networking {
 
                             if (players.has(entityId)) {
                                 const player = players.get(entityId);
-                                
+
                                 player.isRemoved = true;
 
                                 player.isDead = true;

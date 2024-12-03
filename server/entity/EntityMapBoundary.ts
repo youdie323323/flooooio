@@ -11,7 +11,7 @@ export const SAFETY_DISTANCE = 300;
 
 export const PROJECTILE_TYPES: Set<MobType> = new Set([]);
 
-export function EntityWorldBoundary<T extends EntityMixinConstructor<Entity>>(Base: T) {
+export function EntityMapBoundary<T extends EntityMixinConstructor<Entity>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
         [onUpdateTick](poolThis: WavePool): void {
             // Call parent onUpdateTick
@@ -21,6 +21,7 @@ export function EntityWorldBoundary<T extends EntityMixinConstructor<Entity>>(Ba
             }
 
             if (this instanceof Mob) {
+                // Dont if petal
                 if (isPetal(this.type)) {
                     return;
                 }

@@ -15,17 +15,17 @@ export function MobBodyConnection<T extends EntityMixinConstructor<BaseMob>>(Bas
 
             if (isPetal(this.type)) return;
 
-            if (!this.connectedSegment) return;
+            if (!this.connectingSegment) return;
 
             // If connected segment dead, divide body
-            if (!poolThis.getMob(this.connectedSegment.id)) {
-                this.connectedSegment = null;
+            if (!poolThis.getMob(this.connectingSegment.id)) {
+                this.connectingSegment = null;
 
                 return;
             }
 
-            const dx = this.connectedSegment.x - this.x;
-            const dy = this.connectedSegment.y - this.y;
+            const dx = this.connectingSegment.x - this.x;
+            const dy = this.connectingSegment.y - this.y;
 
             const profile = MOB_PROFILES[this.type];
 
@@ -49,7 +49,7 @@ export function MobBodyConnection<T extends EntityMixinConstructor<BaseMob>>(Bas
                 super.free();
             }
 
-            this.connectedSegment = null;
+            this.connectingSegment = null;
         }
     };
 }

@@ -1,3 +1,5 @@
+import { Entity } from "../entity/Entity";
+
 interface Rectangle {
     // Center
     x: number;
@@ -7,19 +9,18 @@ interface Rectangle {
     h: number;
 }
 
-interface Point<T> {
+interface PointLike {
     x: number;
     y: number;
-    unit: T;
 }
 
-export default class QuadTree<T> {
+export default class QuadTree<T extends PointLike> {
     private static readonly MAX_DEPTH = 10;
     private static readonly MIN_SIZE = 1;
 
     public boundary: Rectangle;
     private capacity: number;
-    private points: Point<T>[] = [];
+    private points: T[] = [];
     private divided: boolean = false;
 
     private northWest: QuadTree<T> | null = null;
@@ -35,13 +36,13 @@ export default class QuadTree<T> {
         this.depth = depth;
     }
 
-    public insert(point: Point<T>): boolean {
-        if (!this.containsPoint(point.x, point.y)) {
+    public insert(entity: T): boolean {
+        if (!this.containsPoint(entity.x, entity.y)) {
             return false;
         }
 
         if (this.points.length < this.capacity && !this.divided) {
-            this.points.push(point);
+            this.points.push(entity);
             return true;
         }
 
@@ -54,15 +55,15 @@ export default class QuadTree<T> {
         }
 
         return (
-            this.northWest.insert(point) ||
-            this.northEast.insert(point) ||
-            this.southWest.insert(point) ||
-            this.southEast.insert(point)
+            this.northWest.insert(entity) ||
+            this.northEast.insert(entity) ||
+            this.southWest.insert(entity) ||
+            this.southEast.insert(entity)
         );
     }
 
-    public query(range: Rectangle): Point<T>[] {
-        let found: Point<T>[] = [];
+    public query(range: Rectangle): T[] {
+        let found: T[] = [];
 
         if (this.overlapsAABB(range, this.boundary)) {
             return found;

@@ -1,6 +1,6 @@
 import { MobType } from "../../../shared/enum";
 import { Rarities } from "../../../shared/rarity";
-import { SAFETY_DISTANCE } from "../../entity/EntityWorldBoundary";
+import { SAFETY_DISTANCE } from "../../entity/EntityMapBoundary";
 import { waveRoomService } from "../../main";
 import { getRandomSafePosition } from "../../utils/random";
 import { UserData } from "../../wave/WavePool";

@@ -129,7 +129,7 @@ export const calculateMobSize = (profile: MobData, rarity: Rarities): number => 
  */
 export const getCentiFirstSegment = (poolThis: WavePool, mob: MobInstance): MobInstance => {
     // Walk through segments
-    const segment = mob.connectedSegment;
+    const segment = mob.connectingSegment;
     if (segment && poolThis.getMob(segment.id)) {
         return getCentiFirstSegment(poolThis, segment);
     }
@@ -137,7 +137,10 @@ export const getCentiFirstSegment = (poolThis: WavePool, mob: MobInstance): MobI
     return mob;
 };
 
-export const isCentiBody = (poolThis: WavePool, mob: MobInstance): boolean => getCentiFirstSegment(poolThis, mob) !== mob;
+/**
+ * Detemine if mob is connected body (e.g. centi body / leech body)
+ */
+export const isConnectingBody = (poolThis: WavePool, mob: MobInstance): boolean => getCentiFirstSegment(poolThis, mob) !== mob;
 
 /**
  * Revive player nearby other player.

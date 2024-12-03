@@ -5,7 +5,7 @@ import { MobAggressivePursuit } from "./MobAggressivePursuit";
 import { EntityLinearMovement } from "../EntityLinearMovement";
 import { BasePlayer, PlayerInstance } from "../player/Player";
 import { MobHealthRegen } from "./MobHealthRegen";
-import { EntityWorldBoundary } from "../EntityWorldBoundary";
+import { EntityMapBoundary } from "../EntityMapBoundary";
 import { EntityDeath } from "../EntityDeath";
 import { MobType, PetalType } from "../../../shared/enum";
 import { Rarities } from "../../../shared/rarity";
@@ -79,14 +79,13 @@ class BaseMob implements Entity {
     /**
      * Connected mob instance.
      */
-    connectedSegment: MobInstance | null;
-
+    connectingSegment: MobInstance | null;
     /**
      * Centi is head or not.
      * 
      * @remarks
      * 
-     * The reason this is readonly, because if segments are divided, its look be ugly.
+     * The reason this is readonly bc if segments are divided, its looks be ugly.
      * 
      * @readonly
      */
@@ -100,7 +99,7 @@ class BaseMob implements Entity {
 let Mob = BaseMob;
 Mob = EntityCollisionResponse(Mob);
 Mob = EntityDeath(Mob);
-Mob = EntityWorldBoundary(Mob);
+Mob = EntityMapBoundary(Mob);
 Mob = MobOscillatingMovement(Mob);
 Mob = MobAggressivePursuit(Mob);
 Mob = MobHealthRegen(Mob);

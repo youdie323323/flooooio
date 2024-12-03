@@ -26,30 +26,7 @@ const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
     name: 'A-NNCYANCHI-N',
     slots: {
         surface: [
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.MYTHIC,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.MYTHIC,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.MYTHIC,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.MYTHIC,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.MYTHIC,
-            } as MockPetalData,
-            {
-                type: PetalType.FASTER,
-                rarity: Rarities.MYTHIC,
-            } as MockPetalData,
+
         ],
         bottom: [],
     },
@@ -332,7 +309,7 @@ app
             }
         })
     })
-    .listen(PORT, (token) => {
+    .listen("0.0.0.0", PORT, (token) => {
         if (token) {
             logger.info(`Server running on port ${PORT}`);
 

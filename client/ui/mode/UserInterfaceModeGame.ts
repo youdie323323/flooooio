@@ -7,6 +7,7 @@ import TextInput from "../components/TextInput";
 import { Biomes, Mood } from "../../../shared/enum";
 import { interpolate } from "../../utils/Interpolator";
 import { ServerBound } from "../../../shared/packet";
+import Entity from "../../entity/Entity";
 
 let interpolatedMouseX = 0;
 let interpolatedMouseY = 0;
@@ -110,9 +111,9 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
     public nWaveProgressTimer: number;
     public nWaveProgressRedGageTimer: number;
 
-    public worldSize: number;
-    public oWorldSize: number;
-    public nWorldSize: number;
+    public mapRadius: number;
+    public oMapRadius: number;
+    public nMapRadius: number;
 
     public waveEnded: boolean;
 
@@ -144,9 +145,9 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
 
         this.updateT = 0;
 
-        this.waveProgressTimer = this.waveProgressRedGageTimer = this.worldSize = 0;
-        this.oWaveProgressTimer = this.oWaveProgressRedGageTimer = this.oWorldSize = 0;
-        this.nWaveProgressTimer = this.nWaveProgressRedGageTimer = this.nWorldSize = 0;
+        this.waveProgressTimer = this.waveProgressRedGageTimer = this.mapRadius = 0;
+        this.oWaveProgressTimer = this.oWaveProgressRedGageTimer = this.oMapRadius = 0;
+        this.nWaveProgressTimer = this.nWaveProgressRedGageTimer = this.nMapRadius = 0;
 
         this.isDeadContinued = false;
         this.isGameOverContinued = false;
@@ -368,7 +369,7 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
 
             this.waveProgressTimer = this.oWaveProgressTimer + (this.nWaveProgressTimer - this.oWaveProgressTimer) * this.t;
             this.waveProgressRedGageTimer = this.oWaveProgressRedGageTimer + (this.nWaveProgressRedGageTimer - this.oWaveProgressRedGageTimer) * this.t;
-            this.worldSize = this.oWorldSize + (this.nWorldSize - this.oWorldSize) * this.t;
+            this.mapRadius = this.oMapRadius + (this.nMapRadius - this.oMapRadius) * this.t;
         }
 
         const canvas = this.canvas;
@@ -395,19 +396,31 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
 
         // Update entities
         {
-            for (const mob of mobs.values()) {
+            mobs.forEach((mob, k) => {
                 mob.update();
-            }
 
-            for (const player of players.values()) {
+                if (mob.isDead && mob.deadT > 1) {
+                    mobs.delete(k);
+                }
+            });
+
+            players.forEach((player, k) => {
                 player.update();
-            }
+
+                // Only remove when disconnected
+                if (
+                    player.isDead && player.deadT > 1 &&
+                    player.isRemoved
+                ) {
+                    players.delete(k);
+                }
+            });
         }
 
         // Render map
-        this.terrainGenerator.renderMap(canvas, BIOME_TILESETS.get(this.biome), this.worldSize, selfPlayer.x, selfPlayer.y);
+        this.terrainGenerator.renderMap(canvas, BIOME_TILESETS.get(this.biome), this.mapRadius, selfPlayer.x, selfPlayer.y);
 
-        // Render players&mobs
+        // Render players & mobs
         {
             ctx.save();
 
@@ -415,18 +428,29 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
             ctx.scale(antennaScaleFactor, antennaScaleFactor);
             ctx.translate(-selfPlayer.x, -selfPlayer.y);
 
-            mobs.forEach((v, k) => {
-                v.draw(ctx);
-                if (v.isDead && v.deadT > 1) {
-                    mobs.delete(k);
-                }
-            });
+            const entitiesToDraw = [];
 
-            players.forEach((v, k) => {
-                v.draw(ctx);
-                if (v.isDead && v.deadT > 1 && v.isRemoved) {
-                    players.delete(k);
+            const viewportWidth = canvas.width / antennaScaleFactor;
+            const viewportHeight = canvas.height / antennaScaleFactor;
+            const halfWidth = viewportWidth / 2;
+            const halfHeight = viewportHeight / 2;
+
+            const filterFunc = (v: Entity) => {
+                if (
+                    v.x >= selfPlayer.x - halfWidth &&
+                    v.x <= selfPlayer.x + halfWidth &&
+                    v.y >= selfPlayer.y - halfHeight &&
+                    v.y <= selfPlayer.y + halfHeight
+                ) {
+                    entitiesToDraw.push(v);
                 }
+            };
+
+            mobs.forEach(filterFunc);
+            players.forEach(filterFunc);
+
+            entitiesToDraw.forEach((v, k) => {
+                v.draw(ctx);
             });
 
             ctx.restore();
