@@ -6,6 +6,7 @@
     "build:client": "node esbuild.mjs",
     "build": "npm run build:client",
     "start:server": "cd server && tsx main.ts",
+    "start:server:debug": "cd server && tsx main.ts -d",
     "start": "concurrently \"npm run build\" \"npm run start:server\""
   },
   "dependencies": {
@@ -17,6 +18,7 @@
     "js-confuser": "^2.0.0",
     "msgpackr": "^1.11.2",
     "node-schedule": "^2.1.1",
+    "os-utils": "^0.0.14",
     "stackblur-canvas": "^2.7.0",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.51.0",
     "ws": "^8.18.0"

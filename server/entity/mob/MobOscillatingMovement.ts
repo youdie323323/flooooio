@@ -70,7 +70,7 @@ export function MobOscillatingMovement<T extends EntityMixinConstructor<BaseMob>
 
             // Dont move when passive
             if (MOB_BEHAVIORS[this.type] !== MobBehaviors.PASSIVE && !this.petGoingToMaster) {
-                if (this.shouldApplyAngleShake()) {
+                if (this.angleShakable) {
                     this.angle += SHARED_SINE_WAVE.get(++this.sineWaveIndex) * (this.mobTargetEntity ? 2 : 1);
                 }
 
@@ -81,9 +81,7 @@ export function MobOscillatingMovement<T extends EntityMixinConstructor<BaseMob>
                         this.rotationCounter = 0;
                     }
 
-                    if (!this.isMoving) {
-                        this.startMovement();
-                    } else {
+                    if (this.isMoving) {
                         if (this.movementTimer >= 1) {
                             this.magnitude = 0;
                             this.isMoving = false;
@@ -93,14 +91,14 @@ export function MobOscillatingMovement<T extends EntityMixinConstructor<BaseMob>
                             this.magnitude = 255 * (this.movementTimer * 2);
                             this.movementTimer += MOVEMENT_DURATION;
                         }
-                    }
+                    } else this.startMovement();
                 } else {
                     this.isMoving = false;
                 }
             }
         }
 
-        private shouldApplyAngleShake(): boolean {
+        private get angleShakable(): boolean {
             return this.type === MobType.BEE;
         }
 

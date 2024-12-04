@@ -183,6 +183,8 @@ export default class UserInterfaceTitle extends UserInterface {
 
     public onUiSwitched(): void {
         cameraController.zoom = 1;
+
+        this.canvas.style.cursor = "default";
     }
 
     public resetWaveState() {
@@ -504,7 +506,7 @@ export default class UserInterfaceTitle extends UserInterface {
                     () => this.waveRoomPlayers[i]?.id,
                     () => this.waveRoomPlayers[i]?.name,
                     () => this.waveRoomPlayers[i]?.readyState,
-                    () => this.waveRoomPlayers[i] === undefined,
+                    () => this.waveRoomPlayers[i] == undefined,
                 );
             };
 
@@ -744,20 +746,6 @@ export default class UserInterfaceTitle extends UserInterface {
         };
 
         this.addComponent(gameNameText);
-
-        let i = 0;
-
-        const playerXpBar = new PlayerXpBar(
-            {
-                x: 200,
-                y: 200,
-                w: 14,
-                h: 120,
-            },
-            () => i += 0.01,
-        );
-        
-        this.addComponent(playerXpBar);
     }
 
     private generateRandomBgVector(): Vector3 {
@@ -832,6 +820,8 @@ export default class UserInterfaceTitle extends UserInterface {
 
     public dispose(): void {
         this.terrainGenerator = undefined;
+
+        this.canvas.style.cursor = "default";
     }
 
     set biome(biome: Biomes) {

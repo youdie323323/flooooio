@@ -10,14 +10,18 @@ import { clientRemove, kickClient, processJoin } from './utils/common';
 import { MockPlayerData } from './entity/player/Player';
 import { choice, randomEnum, shuffle } from './utils/random';
 import { MockPetalData } from './entity/mob/petal/Petal';
-import { PetalType, Mood, BIOME_VALUES, MOOD_VALUES } from '../shared/enum';
+import { PetalType, Mood, BIOME_VALUES, MOOD_VALUES, Biomes } from '../shared/enum';
 import root from './command/commandRoot';
 import { registerSpawnMobBulk } from './command/subcommands/spawnMobBulk';
 import { registerSpawnMob } from './command/subcommands/spawnMob';
 import { registerSpawn } from './command/commands/spawn';
 import { Rarities } from '../shared/rarity';
 import { ClientBound, ClientboundConnectionKickReason, ServerBound } from '../shared/packet';
-import { PLAYER_STATE_VALUES, VISIBLE_STATE_VALUES, WaveRoomPlayerReadyState, WaveRoomVisibleState } from '../shared/waveRoom';
+import { PLAYER_STATE_VALUES, VISIBLE_STATE_VALUES, WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from '../shared/waveRoom';
+import os from "os";
+import osUtils from "os-utils";
+
+export const isDebug = process.argv.includes("-d");
 
 /**
  * Temp player data.
@@ -54,26 +58,6 @@ const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
                 type: PetalType.FASTER,
                 rarity: Rarities.SUPER,
             } as MockPetalData,
-            {
-                type: PetalType.BEETLE_EGG,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BEETLE_EGG,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BEETLE_EGG,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BEETLE_EGG,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BEETLE_EGG,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
         ],
         bottom: [],
     },
@@ -108,9 +92,15 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
     const { waveRoomClientId, waveClientId } = userData;
 
     const packetType = buffer[0];
-    packetHistory.push(ServerBound[packetType]);
-    if (packetHistory.length > 10) {
-        packetHistory.shift();
+    if (
+        packetType !== ServerBound.WAVE_CHANGE_MOVE &&
+        packetType !== ServerBound.WAVE_CHANGE_MOOD &&
+        packetType !== ServerBound.WAVE_SWAP_PETAL
+    ) {
+        packetHistory.push(ServerBound[packetType]);
+        if (packetHistory.length > 10) {
+            packetHistory.shift();
+        }
     }
 
     // Hmm, maybe should i kick client if their packet is incorrect?
@@ -391,7 +381,38 @@ app
 
 process.on('uncaughtException', function (err) {
     logger.error("Uncaught exception occurred!");
-    logger.error("Last 10 packet types received: " + JSON.stringify(packetHistory.slice(), null, "\t"));
+    logger.error("Last 10 packet types received (exclude movement change, etc): " + JSON.stringify(packetHistory.slice(), null, "\t"));
 
     throw err;
 });
+
+if (isDebug) {
+    setInterval(() => {
+        console.clear();
+        
+        logger.info("Showing the dump of information");
+        logger.info("Last 10 packet types received (exclude movement change, etc): " + JSON.stringify(packetHistory));
+
+        // Cpu
+        osUtils.cpuUsage(function (v) {
+            logger.info("CPU Usage (%): " + v);
+        });
+
+        if (waveRoomService.allWaveRoom.length > 0) {
+            logger.info("Wave rooms");
+            waveRoomService.allWaveRoom.forEach(wr => {
+                logger.info(`-- ${wr.code} --`);
+                logger.info(`  Biome: ${Biomes[wr.biome]}`);
+                logger.info(`  State: ${WaveRoomState[wr.state]}`);
+                logger.info(`  Visible state: ${WaveRoomVisibleState[wr.visible]}`);
+                logger.info(`  Candidates: ${wr.roomCandidates.map(c => c.name).join(",")}`);
+                if (wr.state !== WaveRoomState.WAITING) {
+                    logger.info(`  Mobs: ${wr.wavePool.mobPool.size}`);
+                    logger.info(`  Players: ${wr.wavePool.clientPool.size}`);
+                    logger.info(`  Wave progress: ${wr.wavePool.waveData.waveProgress}`);
+                    logger.info(`  Map radius: ${wr.wavePool.waveData.waveMapRadius}`);
+                }
+            });
+        }
+    }, 5000);
+}

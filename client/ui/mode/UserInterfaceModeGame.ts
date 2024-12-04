@@ -206,6 +206,8 @@ export default class UserInterfaceGame extends UserInterface {
             player.isDead = true;
             player.deadT = 0;
         }
+
+        this.canvas.style.cursor = "default";
     }
 
     private leaveGame() {
@@ -734,6 +736,8 @@ export default class UserInterfaceGame extends UserInterface {
     public dispose(): void {
         this.terrainGenerator = undefined;
 
+        this.canvas.style.cursor = "default";
+
         players.clear();
         mobs.clear();
     }
@@ -753,11 +757,9 @@ export default class UserInterfaceGame extends UserInterface {
         if (selfPlayer && !selfPlayer.isDead) {
             ctx.save();
 
-            const scaledAntennaScaleFactor = antennaScaleFactor * this.scale;
-
             ctx.translate(widthRelative / 2, heightRelative / 2);
             ctx.rotate(Math.atan2(interpolatedMouseY, interpolatedMouseX));
-            ctx.scale(scaledAntennaScaleFactor, scaledAntennaScaleFactor);
+            ctx.scale(antennaScaleFactor, antennaScaleFactor);
 
             const distance = Math.hypot(interpolatedMouseX, interpolatedMouseY) / uiScaleFactor;
 

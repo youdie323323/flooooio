@@ -10,7 +10,7 @@ import { PetalType, Mood } from "../../../shared/enum";
 const TAU = Math.PI * 2;
 
 const BASE_ROTATE_SPEED = 2.5;
-const BOUNCE_DECAY = 0.225;
+const BOUNCE_DECAY = 0.24;
 const BOUNCE_STRENGTH = 0.2;
 const PETAL_CLUSTER_RADIUS = 8;
 const HISTORY_SIZE = 10;

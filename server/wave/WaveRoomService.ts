@@ -166,4 +166,11 @@ export default class WaveRoomService {
     private canUserDataAdded(userData: UserData): boolean {
         return !userData || !userData.wavePlayerData || !new Set(this.waveRooms.map(waveRoom => waveRoom.wavePool.getAllClients().map(c => c.ws)).flat()).has(userData.wavePlayerData.ws);
     }
+
+    /**
+     * Get all wave room.
+     */
+    public get allWaveRoom(): WaveRoom[] {
+        return this.waveRooms;
+    }
 }

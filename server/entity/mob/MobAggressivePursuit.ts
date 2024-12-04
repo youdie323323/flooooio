@@ -7,7 +7,7 @@ import { MobType } from "../../../shared/enum";
 
 const TAU = Math.PI * 2;
 
-export function findNearestEntity(me: Entity, entities: Entity[]) {
+export function findNearestEntity<T extends Entity>(me: T, entities: T[]) {
     if (!entities.length) return null;
 
     return entities.reduce((nearest, current) => {
