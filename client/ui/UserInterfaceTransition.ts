@@ -72,7 +72,7 @@ export default class UserInterfaceTransition {
             heightRelative / 2,
             this.radius,
             0,
-            Math.PI * 2
+            Math.TAU
         );
 
         this.ctx.clip('evenodd');
@@ -90,7 +90,7 @@ export default class UserInterfaceTransition {
             heightRelative / 2,
             this.radius,
             0,
-            Math.PI * 2
+            Math.TAU
         );
         this.ctx.lineWidth = UserInterfaceTransition.STROKE_WIDTH;
         this.ctx.strokeStyle = UserInterfaceTransition.STROKE_COLOR;

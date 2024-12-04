@@ -124,7 +124,9 @@ export class StaticContainer extends ExtensionPlaceholder(Component) implements 
         }
     }
 
-    public destroy?(): void {
+    public destroy(): void {
+        super.destroy();
+
         this.children.forEach(c => {
             c.destroy();
 
@@ -239,10 +241,97 @@ export class StaticPanelContainer extends StaticContainer {
         });
     }
 
-    public destroy?(): void {
+    public destroy(): void {
         super.destroy();
 
         this.color = null;
+    }
+}
+
+export class StaticTransparentPanelContainer extends StaticContainer {
+    constructor(layout: DynamicLayoutableContainerLayoutOptions) {
+        super(layout);
+    }
+
+    public override calculateLayout(
+        width: number,
+        height: number,
+        originX: number,
+        originY: number
+    ): LayoutResult {
+        let maxW: number = 0, maxH: number = 0;
+
+        if (this.children) {
+            this.children.forEach(child => {
+                const childLayout = child._calculateLayout(
+                    width, height,
+                    // Dont use x, y because only wanted size
+                    0, 0,
+                );
+                maxW = Math.max(maxW, childLayout.x + childLayout.w);
+                maxH = Math.max(maxH, childLayout.y + childLayout.h);
+            });
+        }
+
+        const layout = Layout.layout(
+            {
+                ...this.computeDynamicLayoutable(this.layout),
+                w: maxW,
+                h: maxH,
+            },
+            width,
+            height,
+            originX,
+            originY,
+        );
+
+        if (this.children) {
+            this.children.forEach(child => {
+                const childLayout = child._calculateLayout(
+                    layout.w,
+                    layout.h,
+                    layout.x,
+                    layout.y
+                );
+
+                child.setX(childLayout.x);
+                child.setY(childLayout.y);
+                child.setW(childLayout.w);
+                child.setH(childLayout.h);
+            });
+        }
+
+        return layout;
+    }
+
+    public render(ctx: CanvasRenderingContext2D): void {
+        super.render(ctx);
+
+        this.update();
+
+        {
+            ctx.fillStyle = "black";
+            ctx.globalAlpha = 0.2;
+
+            ctx.beginPath();
+            ctx.roundRect(this.x, this.y, this.w, this.h, 2);
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        this.children.forEach(c => {
+            if (c.visible) {
+                ctx.save();
+
+                c.render(ctx);
+
+                ctx.restore();
+            }
+        });
+    }
+
+    public destroy(): void {
+        super.destroy();
     }
 }
 
@@ -441,7 +530,9 @@ export class StaticSpace extends ExtensionPlaceholder(Component) {
 
     public render(ctx: CanvasRenderingContext2D): void { }
 
-    public destroy?(): void {
+    public destroy(): void {
+        super.destroy();
+
         this._w = null;
         this._h = null;
     }
@@ -485,7 +576,9 @@ export class CoordinatedStaticSpace extends ExtensionPlaceholder(Component) {
 
     public render(ctx: CanvasRenderingContext2D): void { }
 
-    public destroy?(): void {
+    public destroy(): void {
+        super.destroy();
+
         this._x = null;
         this._y = null;
         this._w = null;

@@ -1,18 +1,20 @@
 import { Canvg, presets } from "canvg";
-import { calculateStrokeWidth, ColorCode, darkend, DARKEND_BASE } from "../../utils/common.js";
-import { Clickable, Component, MaybeDynamicLayoutablePointer, Interactive } from "./Component.js";
+import { ColorCode, darkend, DARKEND_BASE } from "../../utils/common.js";
+import { Clickable, Component, MaybeDynamicLayoutablePointer, Interactive, ComponentSymbol, ADDED, AllComponents } from "./Component.js";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout.js";
 import ExtensionPlaceholder from "./extensions/Extension.js";
 import * as StackBlur from
     'stackblur-canvas/dist/stackblur-es.min.js';
+import { AddableContainer, StaticTransparentPanelContainer } from "./Container.js";
+import { calculateStrokeWidth } from "./Text.js";
 
 // TODO: change style of cursor while focusing/bluring, also toggle too
 
 export class Button extends ExtensionPlaceholder(Component) implements Interactive, Clickable {
-    public isPressed: boolean = false;
-    public isHovered: boolean = false;
+    private isPressed: boolean = false;
+    private isHovered: boolean = false;
 
-    public isValid: boolean = true;
+    private isValid: boolean = true;
 
     constructor(
         protected layout: LayoutOptions,
@@ -59,12 +61,16 @@ export class Button extends ExtensionPlaceholder(Component) implements Interacti
         this.layoutCache.invalidate();
     }
 
-    public destroy?(): void { }
+    public destroy(): void {
+        super.destroy();
+     }
 
     public onFocus(): void {
         if (!this.isValid) {
             return;
         }
+
+        this.canvas.style.cursor = "pointer";
 
         this.isHovered = true;
     }
@@ -73,6 +79,8 @@ export class Button extends ExtensionPlaceholder(Component) implements Interacti
         if (!this.isValid) {
             return;
         }
+
+        this.canvas.style.cursor = "default";
 
         this.isHovered = false;
         this.isPressed = false;
@@ -132,6 +140,7 @@ export class TextButton extends Button {
         color: ColorCode,
         callback: () => void,
         validate: MaybeDynamicLayoutablePointer<boolean>,
+
         private readonly text: string,
         private customDraw?: (ctx: CanvasRenderingContext2D, textWidth: number) => void,
     ) {
@@ -209,7 +218,7 @@ export class TextButton extends Button {
 }
 
 export class SVGButton extends Button {
-    private static readonly SVG_SIZE: number = 0.67;
+    private static readonly SVG_SIZE: number = 0.7;
     private svgCanvas: OffscreenCanvas | null = null;
 
     constructor(
@@ -217,6 +226,7 @@ export class SVGButton extends Button {
         color: ColorCode,
         callback: () => void,
         validate: MaybeDynamicLayoutablePointer<boolean>,
+
         private readonly svg: string,
     ) {
         super(layout, color, callback, validate);

@@ -1,7 +1,7 @@
-import { getCentiFirstSegment, isConnectingBody, isPetal, TWO_PI } from "../../utils/common";
+import { traverseMobSegment, isPetal } from "../../utils/common";
 import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool } from "../../wave/WavePool";
-import { BaseMob } from "./Mob";
+import { BaseMob, Mob } from "./Mob";
 import { SHARED_SINE_WAVE } from "../../utils/cosineWave";
 import { getRandomAngle } from "../../utils/random";
 import { MobType } from "../../../shared/enum";
@@ -33,7 +33,7 @@ export function MobOscillatingMovement<T extends EntityMixinConstructor<BaseMob>
             if (isPetal(this.type)) return;
 
             // If body, dont do anything
-            if (isConnectingBody(poolThis, this)) return;
+            if (this.connectingSegment) return;
 
             // Follows the player when the player moves away from this (pet) for a certain distance
             // Dont follows if targetting other mob
@@ -43,7 +43,7 @@ export function MobOscillatingMovement<T extends EntityMixinConstructor<BaseMob>
                 const distanceToParent = Math.hypot(dx, dy);
 
                 if (distanceToParent > 2 * this.size) {
-                    const targetAngle = ((Math.atan2(dy, dx) / TWO_PI) * 255 + 255) % 255;
+                    const targetAngle = ((Math.atan2(dy, dx) / Math.TAU) * 255 + 255) % 255;
 
                     let currentAngle = this.angle;
                     while (currentAngle < 0) currentAngle += 255;
@@ -56,7 +56,7 @@ export function MobOscillatingMovement<T extends EntityMixinConstructor<BaseMob>
                     this.angle += angleDiff * 0.1;
                     this.angle = ((this.angle + 255) % 255);
 
-                    this.magnitude = 255 * 4;
+                    this.magnitude = 255 * Mob.BASE_SPEED;
 
                     this.petGoingToMaster = true;
                 } else {
@@ -102,9 +102,9 @@ export function MobOscillatingMovement<T extends EntityMixinConstructor<BaseMob>
             return this.type === MobType.BEE;
         }
 
-        free = () => {
-            if (super.free) {
-                super.free();
+        dispose = () => {
+            if (super.dispose) {
+                super.dispose();
             }
         }
     };

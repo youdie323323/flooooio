@@ -128,9 +128,9 @@ export function PlayerReload<T extends EntityMixinConstructor<BasePlayer>>(Base:
             }
         }
         
-        free = () => {
-            if (super.free) {
-                super.free();
+        dispose = () => {
+            if (super.dispose) {
+                super.dispose();
             }
         }
     };

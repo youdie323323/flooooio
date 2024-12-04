@@ -12,6 +12,15 @@ import { Rarities } from "../../../shared/rarity";
 import { MobBodyConnection } from "./MobBodyConnection";
 
 class BaseMob implements Entity {
+    /**
+     * Base speed of mob.
+     * 
+     * @remarks
+     * 
+     * These are test values for the beta phase, and the actual speeds are for each mob.
+     */
+    public static readonly BASE_SPEED = 3.5;
+
     readonly id: EntityId;
     x: number;
     y: number;

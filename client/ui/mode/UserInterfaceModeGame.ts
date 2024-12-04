@@ -8,6 +8,8 @@ import { Biomes, Mood } from "../../../shared/enum";
 import { interpolate } from "../../utils/Interpolator";
 import { ServerBound } from "../../../shared/packet";
 import Entity from "../../entity/Entity";
+import { calculateWaveLength } from "../../../shared/formula";
+import { calculateStrokeWidth } from "../components/Text";
 
 let interpolatedMouseX = 0;
 let interpolatedMouseY = 0;
@@ -18,56 +20,6 @@ let mouseYOffset = 0;
 // Ui svg icons
 
 export const CROSS_ICON_SVG: string = `<?xml version="1.0" encoding="iso-8859-1"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg fill="#e0e0e0" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="800px" height="800px" viewBox="0 0 41.756 41.756" xml:space="preserve"><g><path d="M27.948,20.878L40.291,8.536c1.953-1.953,1.953-5.119,0-7.071c-1.951-1.952-5.119-1.952-7.07,0L20.878,13.809L8.535,1.465c-1.951-1.952-5.119-1.952-7.07,0c-1.953,1.953-1.953,5.119,0,7.071l12.342,12.342L1.465,33.22c-1.953,1.953-1.953,5.119,0,7.071C2.44,41.268,3.721,41.755,5,41.755c1.278,0,2.56-0.487,3.535-1.464l12.343-12.342l12.343,12.343c0.976,0.977,2.256,1.464,3.535,1.464s2.56-0.487,3.535-1.464c1.953-1.953,1.953-5.119,0-7.071L27.948,20.878z"/></g></svg>`;
-
-/**
- * Helper for draw mutable functions. (e.g. mouse movement helper)
- */
-function renderMutableFunctions(canvas: HTMLCanvasElement) {
-    const ARROW_START_DISTANCE = 30;
-
-    const ctx = canvas.getContext("2d");
-    const selfPlayer = players.get(waveSelfId);
-
-    const widthRelative = canvas.width / uiScaleFactor;
-    const heightRelative = canvas.height / uiScaleFactor;
-
-    if (selfPlayer && !selfPlayer.isDead) {
-        ctx.save();
-
-        const adjustedScaleFactor = antennaScaleFactor * devicePixelRatio;
-
-        ctx.translate(widthRelative / 2, heightRelative / 2);
-        ctx.rotate(Math.atan2(interpolatedMouseY, interpolatedMouseX));
-        ctx.scale(adjustedScaleFactor, adjustedScaleFactor);
-
-        const distance = Math.hypot(interpolatedMouseX, interpolatedMouseY) / uiScaleFactor;
-
-        ctx.beginPath();
-        ctx.moveTo(ARROW_START_DISTANCE, 0);
-        ctx.lineTo(distance, 0);
-        ctx.lineTo(distance - 24, -18);
-        ctx.moveTo(distance, 0);
-        ctx.lineTo(distance - 24, 18);
-
-        ctx.lineWidth = 12;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.globalAlpha = distance < 110 ? Math.max(distance - 60, 0) / 50 : 1;
-        ctx.strokeStyle = "rgba(0,0,0,0.2)";
-        ctx.stroke();
-
-        ctx.restore();
-    }
-}
-
-/**
- * Calculate wave length.
- * 
- * @param x - Wave progress, number.
- */
-export function calculateWaveLength(x: number) {
-    return Math.max(60, x ** 0.2 * 18.9287 + 30)
-}
 
 /**
  * Ease out cubic function for smooth animation.
@@ -87,12 +39,7 @@ function easeOutCubic(t: number): number {
  */
 let gameUiCurrentBiome: Biomes = Biomes.GARDEN;
 
-export interface BiomeSetter {
-    set biome(biome: Biomes);
-    get biome(): Biomes;
-}
-
-export default class UserInterfaceGame extends UserInterface implements BiomeSetter {
+export default class UserInterfaceGame extends UserInterface {
     private readonly DEAD_BACKGROUND_TARGET_OPACITY: number = 0.3;
     private readonly DEAD_BACKGROUND_FADE_DURATION: number = 0.3;
     private readonly DEAD_MENU_ANIMATION_DURATION: number = 2;
@@ -111,11 +58,11 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
     public nWaveProgressTimer: number;
     public nWaveProgressRedGageTimer: number;
 
+    public waveEnded: boolean;
+
     public mapRadius: number;
     public oMapRadius: number;
     public nMapRadius: number;
-
-    public waveEnded: boolean;
 
     private isDeadContinued: boolean;
     private isGameOverContinued: boolean;
@@ -131,8 +78,8 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
     private deadContinueButtonY: number;
     private deadAnimationTimer: number;
 
-    private chatInput: TextInput;
     public chats: string[];
+    private chatInput: TextInput;
 
     private terrainGenerator: TerrainGenerator;
 
@@ -248,7 +195,16 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
         if (networking) {
             const distance = Math.hypot(mouseXOffset, mouseYOffset);
             const angle = Math.atan2(mouseYOffset, mouseXOffset);
-            networking.sendAngle(angle, distance < 50 ? distance / 100 : 1);
+            networking.sendMove(angle, distance < 50 ? distance / 100 : 1);
+        }
+    }
+
+    public onUiSwitched(): void {
+        // Fake dead animation
+        const player = players.get(waveSelfId);
+        if (player && !player.isDead) {
+            player.isDead = true;
+            player.deadT = 0;
         }
     }
 
@@ -350,8 +306,7 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
 
                 onsubmit: (e, self) => {
                     const chatMessage = self.value();
-                    // Send chat
-                    ws.send(new Uint8Array([ServerBound.WAVE_CHAT_SENT, chatMessage.length, ...new TextEncoder().encode(chatMessage)]));
+                    networking.sendChat(chatMessage);
 
                     self.value("");
                 },
@@ -468,7 +423,7 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
         }
 
         // Render mutable functions
-        renderMutableFunctions(canvas);
+        this.drawMutableFunctions(canvas);
 
         // Wave bar
         {
@@ -484,10 +439,12 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
             {
                 const maxSpawnTime = calculateWaveLength(this.waveProgress);
 
-                // ctx.globalAlpha = 0.9;
+                // TODO: original game all black bar has globalAlpha = 0.xxx (determine later)
 
                 {
                     ctx.save();
+
+                    ctx.globalAlpha = 0.9;
 
                     ctx.lineWidth = 25;
                     ctx.lineCap = "round";
@@ -628,7 +585,7 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
                         ctx.strokeStyle = '#000000';
                         ctx.fillStyle = "white";
                         ctx.font = "8.4px Ubuntu";
-                        ctx.lineWidth = 1;
+                        ctx.lineWidth = calculateStrokeWidth(8.4);
 
                         ctx.strokeText("You will respawn next wave", 0, 0);
                         ctx.fillText("You will respawn next wave", 0, 0);
@@ -690,14 +647,14 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
                         ctx.fillStyle = "#f0666b";
                         ctx.font = "34px Ubuntu";
 
-                        ctx.lineWidth = 3;
+                        ctx.lineWidth = calculateStrokeWidth(34);
 
                         ctx.strokeText("GAME OVER", centerWidth, centerHeight);
                         ctx.fillText("GAME OVER", centerWidth, centerHeight);
 
                         ctx.fillStyle = "white";
                         ctx.font = "12px Ubuntu";
-                        ctx.lineWidth = 1.2;
+                        ctx.lineWidth = calculateStrokeWidth(12);
 
                         ctx.strokeText("(or press enter)", centerWidth, centerHeight + 75);
                         ctx.fillText("(or press enter)", centerWidth, centerHeight + 75);
@@ -739,19 +696,19 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
                     ctx.fillStyle = "white";
 
                     ctx.font = "12.2px Ubuntu";
-                    ctx.lineWidth = 1.5;
+                    ctx.lineWidth = calculateStrokeWidth(12.2);
 
                     ctx.strokeText("You were destroyed by:", 0, -81);
                     ctx.fillText("You were destroyed by:", 0, -81);
 
                     ctx.font = "16.1px Ubuntu";
-                    ctx.lineWidth = 2;
+                    ctx.lineWidth = calculateStrokeWidth(16.1);
 
                     ctx.strokeText("You", 0, -61);
                     ctx.fillText("You", 0, -61);
 
                     ctx.font = "12px Ubuntu";
-                    ctx.lineWidth = 1.2;
+                    ctx.lineWidth = calculateStrokeWidth(12);
 
                     ctx.strokeText("(or press enter)", 0, 90);
                     ctx.fillText("(or press enter)", 0, 90);
@@ -774,11 +731,52 @@ export default class UserInterfaceGame extends UserInterface implements BiomeSet
         this.render();
     }
 
-    public cleanup(): void {
+    public dispose(): void {
         this.terrainGenerator = undefined;
 
         players.clear();
         mobs.clear();
+    }
+
+    /**
+     * Helper for draw mutable functions. (e.g. mouse movement helper)
+     */
+    private drawMutableFunctions(canvas: HTMLCanvasElement) {
+        const ARROW_START_DISTANCE = 30;
+
+        const ctx = canvas.getContext("2d");
+        const selfPlayer = players.get(waveSelfId);
+
+        const widthRelative = canvas.width / uiScaleFactor;
+        const heightRelative = canvas.height / uiScaleFactor;
+
+        if (selfPlayer && !selfPlayer.isDead) {
+            ctx.save();
+
+            const scaledAntennaScaleFactor = antennaScaleFactor * this.scale;
+
+            ctx.translate(widthRelative / 2, heightRelative / 2);
+            ctx.rotate(Math.atan2(interpolatedMouseY, interpolatedMouseX));
+            ctx.scale(scaledAntennaScaleFactor, scaledAntennaScaleFactor);
+
+            const distance = Math.hypot(interpolatedMouseX, interpolatedMouseY) / uiScaleFactor;
+
+            ctx.beginPath();
+            ctx.moveTo(ARROW_START_DISTANCE, 0);
+            ctx.lineTo(distance, 0);
+            ctx.lineTo(distance - 24, -18);
+            ctx.moveTo(distance, 0);
+            ctx.lineTo(distance - 24, 18);
+
+            ctx.lineWidth = 12;
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+            ctx.globalAlpha = distance < 110 ? Math.max(distance - 60, 0) / 50 : 1;
+            ctx.strokeStyle = "rgba(0,0,0,0.2)";
+            ctx.stroke();
+
+            ctx.restore();
+        }
     }
 
     set biome(biome: Biomes) {

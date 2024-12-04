@@ -2,7 +2,7 @@ function generateSinWaveTable(sampleRate: number) {
     const samples = [];
 
     for (let i = 0; i <= sampleRate; i++) {
-        const angle = (i / sampleRate) * 2 * Math.PI;
+        const angle = (i / sampleRate) * Math.TAU;
         let value = Math.sin(angle);
 
         samples.push(Math.round(value * 10000) / 10000);

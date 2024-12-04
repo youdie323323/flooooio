@@ -3,20 +3,21 @@ import TerrainGenerator, { BIOME_TILESETS } from "../../utils/TerrainGenerator.j
 import { Button, SVGButton, TextButton } from "../components/Button.js";
 import UserInterface, { uiScaleFactor } from "../UserInterface.js";
 import TextInput from "../components/TextInput.js";
-import { ws } from "../../main.js";
+import { cameraController, ws } from "../../main.js";
 import { Biomes, PetalType } from "../../../shared/enum.js";
 import StaticText from "../components/Text.js";
 import { Rarities } from "../../../shared/rarity.js";
 import { ServerBound } from "../../../shared/packet.js";
 import ExtensionCollidable from "../components/extensions/ExtensionCollidable.js";
-import { AddableContainer, CoordinatedStaticSpace, StaticContainer, StaticHContainer, StaticPanelContainer, StaticSpace, StaticVContainer } from "../components/Container.js";
+import { AddableContainer, CoordinatedStaticSpace, StaticContainer, StaticHContainer, StaticTransparentPanelContainer, StaticSpace, StaticVContainer, StaticPanelContainer } from "../components/Container.js";
 import { AllComponents, Component } from "../components/Component.js";
-import { BiomeSetter, CROSS_ICON_SVG } from "./UserInterfaceModeGame.js";
+import { CROSS_ICON_SVG } from "./UserInterfaceModeGame.js";
 import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../shared/waveRoom.js";
 import Toggle from "../components/Toggle.js";
 import { ExtensionDynamicLayoutable } from "../components/extensions/ExtensionDynamicLayoutable.js";
 import PlayerProfile from "../components/PlayerProfile.js";
 import { DARKEND_BASE } from "../../utils/common.js";
+import PlayerXpBar from "../components/PlayerXpBar.js";
 
 // Ui svg icons
 
@@ -60,7 +61,7 @@ function drawRoundedPolygon(
     numberOfCorners: number,
 ) {
     function getPolygonCorner(index: number, numberOfCorners: number): number[] {
-        const angle = ((index + 0.5) * 2 * Math.PI) / numberOfCorners
+        const angle = ((index + 0.5) * Math.TAU) / numberOfCorners
         return [Math.sin(angle), Math.cos(angle)]
     }
 
@@ -106,7 +107,7 @@ export enum StatusText {
     SquadNotFound = "Squad not found",
 }
 
-export default class UserInterfaceTitle extends UserInterface implements BiomeSetter {
+export default class UserInterfaceTitle extends UserInterface {
     private terrainGenerator: TerrainGenerator;
 
     private backgroundX: number;
@@ -177,6 +178,10 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
     onMouseDown(event: MouseEvent): void { }
     onMouseUp(event: MouseEvent): void { }
     onMouseMove(event: MouseEvent): void { }
+
+    public onUiSwitched(): void {
+        cameraController.zoom = 1;
+    }
 
     public resetWaveState() {
         this.waveRoomPlayers = [];
@@ -737,6 +742,20 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
         };
 
         this.addComponent(gameNameText);
+
+        let i = 0;
+
+        const playerXpBar = new PlayerXpBar(
+            {
+                x: 200,
+                y: 200,
+                w: 14,
+                h: 120,
+            },
+            () => i += 0.01,
+        );
+        
+        this.addComponent(playerXpBar);
     }
 
     private generateRandomBgVector(): Vector3 {
@@ -809,7 +828,7 @@ export default class UserInterfaceTitle extends UserInterface implements BiomeSe
         this.render();
     }
 
-    public cleanup(): void {
+    public dispose(): void {
         this.terrainGenerator = undefined;
     }
 

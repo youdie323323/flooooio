@@ -1,14 +1,11 @@
-import { choice, generateRandomWaveRoomPlayerId, getRandomSafePosition, getRandomPosition } from "../utils/random";
+import { generateRandomWaveRoomPlayerId } from "../utils/random";
 import { UserData, WavePool } from "./WavePool";
-import { PlayerInstance, MockPlayerData } from "../entity/player/Player";
+import { MockPlayerData } from "../entity/player/Player";
 import { logger } from "../main";
 import { BrandedId } from "../entity/Entity";
-import WaveProbabilityPredictor from "./WaveProbabilityPredictor";
-import { calculateWaveLength } from "../utils/formula";
-import { SAFETY_DISTANCE } from "../entity/EntityMapBoundary";
-import { Biomes, MobType } from "../../shared/enum";
+import { Biomes } from "../../shared/enum";
 import root from "../command/commandRoot";
-import { Command, repondValueToString } from "../command/command";
+import { Command } from "../command/command";
 import { ClientBound } from "../../shared/packet";
 import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../shared/waveRoom";
 
@@ -83,6 +80,8 @@ export default class WaveRoom {
         this.waveRoomPacketSendInterval = null;
 
         this.roomCandidates = null;
+
+        logger.info("Released wave room memory");
     }
 
     /**
@@ -319,26 +318,17 @@ export default class WaveRoom {
     /**
      * Proccess chat message.
      */
-    public async processChatMessage(userData: UserData, msg: string) {
-        if (userData && msg.length > 0) {
-            if (msg.startsWith(Command.COMMAND_PREFIX)) {
-                const executedResultString = await repondValueToString(
-                    root.execute(
-                        userData,
-                        // Remove prefix, then split
-                        msg.slice(Command.COMMAND_PREFIX.length).split(" "),
-                    )
+    public async processChatMessage(userData: UserData, chatMsg: string) {
+        if (userData?.waveClientId && chatMsg.length > 0) {
+            if (chatMsg.startsWith(Command.COMMAND_PREFIX)) {
+                root.execute(
+                    userData,
+                    // Remove prefix, then split
+                    chatMsg.slice(Command.COMMAND_PREFIX.length).split(" "),
                 );
-
-                if (executedResultString === null) {
-                    this.wavePool.sendChat(userData.waveClientId, "Empty result returned. You may missed something.");
-                    return;
-                }
-
-                this.wavePool.sendChat(userData.waveClientId, executedResultString);
             } else {
                 // Public chat
-                this.wavePool.broadcastChat(msg);
+                this.wavePool.broadcastChat(userData.waveClientId, chatMsg);
             }
         }
     }

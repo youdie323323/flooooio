@@ -5,8 +5,6 @@ import Entity from "./Entity";
 import EntityMob from "./EntityMob";
 import EntityPlayer from "./EntityPlayer";
 
-const HP_BAR_MAX_WIDTH: number = 45;
-
 /**
  * Draw entity details (e.g. health gage).
  */
@@ -39,6 +37,8 @@ export default function drawEntityDetail(entity: Entity, ctx: CanvasRenderingCon
 
         ctx.restore();
     }
+
+    const HP_BAR_MAX_WIDTH: number = 45;
 
     // Draw hp bar if health decreasing and living
     if (!entity.isDead && entity.maxHealth > entity.health) {

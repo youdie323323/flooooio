@@ -1,4 +1,4 @@
-import { angleToRad, bodyDamageOrDamage, getCentiFirstSegment, isPetal } from "../utils/common";
+import { angleToRad, bodyDamageOrDamage, traverseMobSegment, isPetal } from "../utils/common";
 import { Entity, EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "./Entity";
 import { WavePool } from "../wave/WavePool";
 import { Mob, MobData } from "./mob/Mob";
@@ -12,6 +12,8 @@ import { MobType } from "../../shared/enum";
 
 // Arc + stroke size
 export const FLOWER_ARC_RADIUS = 25 + (2.75 / 2);
+
+export const FLOWER_FRACTION = 25;
 
 export const BUBBLE_PUSH_FACTOR = 3;
 
@@ -54,15 +56,15 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
         super[onUpdateTick](poolThis);
       }
 
-      const waveMapSize = poolThis.waveData.waveMapRadius;
+      const waveMapRadius = poolThis.waveData.waveMapRadius;
 
       // Update quad tree boundaries
-      this.quadTree.boundary.x = this.quadTree.boundary.y = waveMapSize;
-      this.quadTree.boundary.w = this.quadTree.boundary.h = waveMapSize * 2;
+      this.quadTree.boundary.x = this.quadTree.boundary.y = waveMapRadius;
+      this.quadTree.boundary.w = this.quadTree.boundary.h = waveMapRadius * 2;
 
       if (this instanceof Mob) {
         // Only insert mobs when mob
-        poolThis.mobs.forEach(mob => {
+        poolThis.mobPool.forEach(mob => {
           if (this.id !== mob.id) this.quadTree.insert(mob);
         });
 
@@ -136,7 +138,7 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
 
                   if (!isPetal(otherEntity.type)) {
                     // Propagate hit to centi head
-                    const maybeCentiHead = getCentiFirstSegment(poolThis, otherEntity);
+                    const maybeCentiHead = traverseMobSegment(poolThis, otherEntity);
 
                     if (this.petalMaster) {
                       maybeCentiHead.mobLastAttackedBy = this.petalMaster;
@@ -150,7 +152,7 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
                   }
 
                   if (!isPetal(this.type)) {
-                    const maybeCentiHead = getCentiFirstSegment(poolThis, this);
+                    const maybeCentiHead = traverseMobSegment(poolThis, this);
 
                     if (otherEntity.petalMaster) {
                       maybeCentiHead.mobLastAttackedBy = otherEntity.petalMaster;
@@ -173,10 +175,14 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
 
       if (this instanceof Player && !this.isDead) {
         // Insert both when player
-        poolThis.mobs.forEach(mob => {
-          if (this.id !== mob.id) this.quadTree.insert(mob);
+        poolThis.mobPool.forEach(mob => {
+          if (
+            this.id !== mob.id &&
+            // Dont insert when petal
+            !mob.petalMaster
+          ) this.quadTree.insert(mob);
         });
-        poolThis.clients.forEach(client => {
+        poolThis.clientPool.forEach(client => {
           if (this.id !== client.id) this.quadTree.insert(client);
         });
 
@@ -226,10 +232,8 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
 
             return;
           }
-          if (otherEntity instanceof Mob && !isPetal(otherEntity.type)) {
+          if (otherEntity instanceof Mob) {
             const profile1: MobData = MOB_PROFILES[otherEntity.type];
-
-            if (otherEntity.petMaster) return;
 
             const ellipse1: Ellipse = {
               // Arc (player)
@@ -253,9 +257,9 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
             if (isColliding(delta)) {
               const push = this.calculatePush(this, otherEntity, delta);
               if (push) {
-                const multiplier = otherEntity.type === MobType.BUBBLE ? BUBBLE_PUSH_FACTOR : 1;
-                this.x -= push[0] * multiplier * 10;
-                this.y -= push[1] * multiplier * 10;
+                const bubbleMultiplier = otherEntity.type === MobType.BUBBLE ? BUBBLE_PUSH_FACTOR : 1;
+                this.x -= push[0] * bubbleMultiplier * 5;
+                this.y -= push[1] * bubbleMultiplier * 5;
                 otherEntity.x += push[0];
                 otherEntity.y += push[1];
 
@@ -264,7 +268,7 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
                 // Take them body damage
                 otherEntity.health -= this.bodyDamage;
 
-                const maybeCentiHead = getCentiFirstSegment(poolThis, otherEntity);
+                const maybeCentiHead = traverseMobSegment(poolThis, otherEntity);
 
                 // Body hitted
                 maybeCentiHead.mobLastAttackedBy = this;
@@ -283,9 +287,9 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
       this.quadTree.clear();
     }
 
-    free = () => {
-      if (super.free) {
-        super.free();
+    dispose = () => {
+      if (super.dispose) {
+        super.dispose();
       }
 
       this.quadTree.clear();

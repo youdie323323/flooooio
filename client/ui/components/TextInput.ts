@@ -1,8 +1,8 @@
-import { calculateStrokeWidth } from "../../utils/common";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import { uiScaleFactor } from "../UserInterface";
 import { Component, Interactive, MaybeDynamicLayoutablePointer } from "./Component";
 import ExtensionPlaceholder from "./extensions/Extension";
+import { calculateStrokeWidth } from "./Text";
 
 // Fork of CanvasInput
 
@@ -238,17 +238,6 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
 
     public invalidateLayoutCache(): void {
         this.layoutCache.invalidate();
-    }
-
-    public canvas(data: HTMLCanvasElement = undefined) {
-        let self = this;
-
-        if (typeof data !== 'undefined') {
-            self._canvas = data;
-            self._ctx = self._canvas.getContext('2d');
-        } else {
-            return self._canvas;
-        }
     }
 
     public extraX(data: number = undefined) {
@@ -619,8 +608,22 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
         });
     }
 
+    private _getCursorStyle(_hasFocus: boolean): string {
+        return _hasFocus ? "text" : "pointer";
+    }
+
+    private _updateCursorStyle(e: boolean): void {
+        let self = this;
+
+        if (e) {
+            self._canvas.style.cursor = this._getCursorStyle(self._hasFocus);
+        }
+    }
+
     private mousemove(e: MouseEvent, self: this) {
         let mouse = self._mousePos(e), x = mouse.x, y = mouse.y, isOver = self._overInput(x, y);
+
+        this._updateCursorStyle(isOver);
 
         if (self._hasFocus && self._selectionStart >= 0) {
             let curPos = self._clickPos(x, y);
@@ -644,6 +647,8 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
 
     private mousedown(e: MouseEvent, self: this) {
         let mouse = self._mousePos(e), x = mouse.x, y = mouse.y, isOver = self._overInput(x, y);
+
+        this._updateCursorStyle(isOver);
 
         self._mouseDown = isOver;
 
@@ -686,17 +691,7 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
         self._hiddenInput.selectionEnd = range[1];
     }
 
-    private _getCursorStyle(_hasFocus: boolean): string {
-        return _hasFocus ? "text" : "pointer";
-    }
-
-    public onFocus(): void {
-        let self = this;
-
-        // TODO: do this on mousemove
-
-        self._canvas.style.cursor = this._getCursorStyle(self._hasFocus);
-    }
+    public onFocus(): void { }
 
     public onBlur(): void {
         let self = this;
@@ -877,7 +872,9 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
         }
     }
 
-    public destroy?() {
+    public destroy() {
+        super.destroy();
+
         let self = this;
 
         let index = inputs.indexOf(self);

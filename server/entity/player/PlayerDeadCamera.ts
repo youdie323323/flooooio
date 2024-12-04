@@ -1,4 +1,4 @@
-import { EntityMixinConstructor, EntityMixinTemplate, MaybeFreeable, onUpdateTick } from "../Entity";
+import { EntityMixinConstructor, EntityMixinTemplate, MaybeDisposable, onUpdateTick } from "../Entity";
 import { WavePool } from "../../wave/WavePool";
 import { BasePlayer } from "./Player";
 import { findNearestEntity } from "../mob/MobAggressivePursuit";
@@ -50,9 +50,9 @@ export function PlayerDeadCamera<T extends EntityMixinConstructor<BasePlayer>>(B
             }
         }
 
-        free = () => {
-            if (super.free) {
-                super.free();
+        dispose = () => {
+            if (super.dispose) {
+                super.dispose();
             }
 
             clearTimeout(this.executionTimeout);

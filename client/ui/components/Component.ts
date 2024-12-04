@@ -1,5 +1,6 @@
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import LayoutCache from "../layout/LayoutCache";
+import UserInterface from "../UserInterface";
 import { Button, SVGButton, TextButton } from "./Button";
 import { AddableContainer, CoordinatedStaticSpace, StaticSpace } from "./Container";
 import { ExtensionConstructor } from "./extensions/Extension";
@@ -34,6 +35,20 @@ export type AllComponents =
     | PlayerXpBar;
 
 /**
+ * A component is added to components, or not.
+ */
+export const ADDED = Symbol("added");
+
+/**
+ * Symbols describe precomputed semantics of a component, allowing the component to make the base choices for the component.
+ */
+export interface ComponentSymbol {
+    [ADDED]?: boolean;
+}
+
+// TODO: allow components to voluntarily display other components easily
+
+/**
  * Base interface for all GUI components.
  * 
  * @remarks
@@ -63,6 +78,11 @@ export abstract class Component {
      * Canvas configs.
      */
     protected globalAlpha: number = 1;
+
+    /**
+     * Canvas element.
+     */
+    public canvas: HTMLCanvasElement;
 
     public x: number = 0;
     public y: number = 0;
@@ -186,17 +206,19 @@ export abstract class Component {
         }
     }
 
+    public destroy(): void {
+        this.canvas = null;
+    };
+
+    protected computeDynamicLayoutable<T>(maybeDynamicLayoutable: MaybeDynamicLayoutablePointer<T>): T {
+        return maybeDynamicLayoutable instanceof Function ? maybeDynamicLayoutable() : maybeDynamicLayoutable;
+    }
+
     // Wrap these prop so components can override this method
     public setX(x: number) { this.x = x }
     public setY(y: number) { this.y = y }
     public setW(w: number) { this.w = w }
     public setH(h: number) { this.h = h }
-
-    public abstract destroy?(): void;
-
-    protected computeDynamicLayoutable<T>(dl: MaybeDynamicLayoutablePointer<T>): T {
-        return dl instanceof Function ? dl() : dl;
-    }
 }
 
 // Interface for interactive components

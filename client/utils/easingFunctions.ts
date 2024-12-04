@@ -136,9 +136,9 @@ function v(elapsed: number, B: number, u: number, z: number) {
         u = u;
         _a = V / 4;
     } else {
-        _a = V / (Math.PI * 2) * Math.asin(u / u);
+        _a = V / Math.TAU * Math.asin(u / u);
     }
-    return -(u * 2 ** ((elapsed -= 1) * 10) * Math.sin((elapsed * z - _a) * (Math.PI * 2) / V)) + B;
+    return -(u * 2 ** ((elapsed -= 1) * 10) * Math.sin((elapsed * z - _a) * Math.TAU / V)) + B;
 }
 EASING_FUNCTIONS.easeInElastic = v;
 function K(elapsed: number, B: any, u: number, z: number) {
@@ -157,9 +157,9 @@ function K(elapsed: number, B: any, u: number, z: number) {
         u = u;
         U = a / 4;
     } else {
-        U = a / (Math.PI * 2) * Math.asin(u / u);
+        U = a / Math.TAU * Math.asin(u / u);
     }
-    return u * 2 ** (elapsed * -10) * Math.sin((elapsed * z - U) * (Math.PI * 2) / a) + u + B;
+    return u * 2 ** (elapsed * -10) * Math.sin((elapsed * z - U) * Math.TAU / a) + u + B;
 }
 EASING_FUNCTIONS.easeOutElastic = K;
 function Y(elapsed: number, B: number, u: number, z: number) {
@@ -178,12 +178,12 @@ function Y(elapsed: number, B: number, u: number, z: number) {
         u = u;
         U = a / 4;
     } else {
-        U = a / (Math.PI * 2) * Math.asin(u / u);
+        U = a / Math.TAU * Math.asin(u / u);
     }
     if (elapsed < 1) {
-        return u * 2 ** ((elapsed -= 1) * 10) * Math.sin((elapsed * z - U) * (Math.PI * 2) / a) * -0.5 + B;
+        return u * 2 ** ((elapsed -= 1) * 10) * Math.sin((elapsed * z - U) * Math.TAU / a) * -0.5 + B;
     }
-    return u * 2 ** ((elapsed -= 1) * -10) * Math.sin((elapsed * z - U) * (Math.PI * 2) / a) * 0.5 + u + B;
+    return u * 2 ** ((elapsed -= 1) * -10) * Math.sin((elapsed * z - U) * Math.TAU / a) * 0.5 + u + B;
 }
 EASING_FUNCTIONS.easeInOutElastic = Y;
 function T(elapsed: number, p: number, B: number, u: number, z = F) {

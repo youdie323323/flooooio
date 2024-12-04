@@ -350,7 +350,7 @@ export default class TerrainGenerator {
             relativeCenterX,
             relativeCenterY,
             (radius + 0.5) * zoom + ctx.lineWidth / 2, 0,
-            Math.PI * 2,
+            Math.TAU,
         );
         ctx.stroke();
         ctx.closePath();
@@ -389,7 +389,8 @@ export default class TerrainGenerator {
                     const x = centerX + tileDistX - (playerX % adjustedGridSize);
                     const y = centerY + tileDistY - (playerY % adjustedGridSize);
 
-                    ctx.drawImage(tilesets[Math.abs((worldGridX + worldGridY) % tilesets.length)],
+                    ctx.drawImage(
+                        tilesets[Math.abs((worldGridX + worldGridY) % tilesets.length)],
                         x, y,
                         adjustedGridSize + 1, adjustedGridSize + 1
                     );

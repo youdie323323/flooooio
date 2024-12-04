@@ -1,7 +1,7 @@
 import { Component, MaybeDynamicLayoutablePointer } from "../Component";
 import { ComponentExtensionTemplate, ExtensionConstructor, Updatable, UpdateFunction } from "./Extension";
 
-export const DYNAMIC_LAYOUTED: unique symbol = Symbol("dynamicLayoutable");
+export const DYNAMIC_LAYOUTED: unique symbol = Symbol("dynamicLayouted");
 
 /**
  * Make component dynamic layoutable.

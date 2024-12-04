@@ -63,16 +63,16 @@ export interface Entity {
  */
 export const onUpdateTick: unique symbol = Symbol.for("onUpdateTick");
 
-export type MaybeFreeable = Partial<{
+export type MaybeDisposable = Partial<{
     /**
-     * Free up own mixin values.
+     * Dispose up own mixin values.
      */
-    free(): void;
+    dispose(): void;
 }>
 
-export type EntityMixinConstructor<T = {}> = new (...args: any[]) => T & MaybeFreeable;
+export type EntityMixinConstructor<T = {}> = new (...args: any[]) => T & MaybeDisposable;
 
-export interface EntityMixinTemplate extends MaybeFreeable {
+export interface EntityMixinTemplate extends MaybeDisposable {
     /**
      * Method call up to every UPDATE_FPS interval.
      * 

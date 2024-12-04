@@ -33,16 +33,18 @@ async function watch() {
                 preset: 'low',
                 verbose: true,
                 compact: true,
-  
+
                 stringCompression: false,
                 stringConcealing: false,
 
                 shuffle: false,
                 globalConcealing: false,
-                controlFlowFlattening: true,
+                controlFlowFlattening: false,
 
                 opaquePredicates: true,
-  
+
+                variableMasking: true,
+
                 // Disable anti bandwidth transformers
                 identifierGenerator: "mangled",
                 hexadecimalNumbers: false,
@@ -51,7 +53,7 @@ async function watch() {
               }).then(result => {
                 writeFileSync("./server/public/client.js", result.code);
                 rm(prebuildedFileName, () => { });
-  
+
                 console.log('Ofsucated');
               });
             } else {

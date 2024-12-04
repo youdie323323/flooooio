@@ -14,7 +14,10 @@ import { PlayerPetalConsume } from "./PlayerPetalConsume";
 import { Mood } from "../../../shared/enum";
 
 class BasePlayer implements Entity {
-    public static BASE_SPEED = 5;
+    /**
+     * Base speed of player.
+     */
+    public static readonly BASE_SPEED = 4;
 
     readonly id: EntityId;
     x: number;

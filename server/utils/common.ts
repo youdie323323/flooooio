@@ -13,10 +13,8 @@ import uWS from 'uWebSockets.js';
 import { WaveRoomState } from "../../shared/waveRoom";
 import { Rarities } from "../../shared/rarity";
 
-export const TWO_PI = Math.PI * 2;
-
 export function angleToRad(angle: number): number {
-    return (angle / 255) * TWO_PI
+    return (angle / 255) * Math.TAU
 }
 
 export function isPetal(type: MobType | PetalType): type is PetalType {
@@ -34,7 +32,7 @@ export function clientRemove(waveRoom: WaveRoom, waveClientId: EntityId) {
 
     // Check size, if all players leaved, remove wave room
     // Maybe should do this in WavePool.removeClient?
-    if (waveRoom.wavePool.clients.size === 0) {
+    if (waveRoom.wavePool.clientPool.size === 0) {
         // This is not mistake, removeWaveRoom release wavePool memory too
         waveRoomService.removeWaveRoom(waveRoom);
     }
@@ -120,27 +118,21 @@ export const processJoin = (ws: uWS.WebSocket<UserData>, id: false | WaveRoomPla
 export const calculateMobSize = (profile: MobData, rarity: Rarities): number => (profile as MobData).baseSize * MOB_SIZE_FACTOR[rarity];
 
 /**
- * Get first segment (head) of centi.
+ * Get first segment (head) of mob.
  * 
- * @remarks
- * 
- * This can use even mob is not centi.
+ * @privateremarks
+ *
  * You may should care about maxium call stack size error.
  */
-export const getCentiFirstSegment = (poolThis: WavePool, mob: MobInstance): MobInstance => {
+export const traverseMobSegment = (poolThis: WavePool, mob: MobInstance): MobInstance => {
     // Walk through segments
     const segment = mob.connectingSegment;
     if (segment && poolThis.getMob(segment.id)) {
-        return getCentiFirstSegment(poolThis, segment);
+        return traverseMobSegment(poolThis, segment);
     }
 
     return mob;
 };
-
-/**
- * Detemine if mob is connected body (e.g. centi body / leech body)
- */
-export const isConnectingBody = (poolThis: WavePool, mob: MobInstance): boolean => getCentiFirstSegment(poolThis, mob) !== mob;
 
 /**
  * Revive player nearby other player.

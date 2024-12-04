@@ -19,9 +19,9 @@ export function EntityLinearMovement<T extends EntityMixinConstructor<Entity>>(B
             }
         }
 
-        free = () => {
-            if (super.free) {
-                super.free();
+        dispose = () => {
+            if (super.dispose) {
+                super.dispose();
             }
         }
     };

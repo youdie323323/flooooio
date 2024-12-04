@@ -1,5 +1,5 @@
 import { Biomes } from "../../shared/enum";
-import { AllComponents, Clickable, Component, ComponentContainer, Interactive } from "./components/Component";
+import { ADDED, AllComponents, Clickable, Component, ComponentContainer, ComponentSymbol, Interactive } from "./components/Component";
 import { Button } from "./components/Button";
 import { DYNAMIC_LAYOUTED } from "./components/extensions/ExtensionDynamicLayoutable";
 import { AddableContainer } from "./components/Container";
@@ -60,19 +60,13 @@ export default abstract class UserInterface {
 
             if (!event.isTrusted) return;
 
-            const touch = event.touches[0];
-
-            const rect = this.canvas.getBoundingClientRect();
-            this.mouseX = ((touch.clientX - rect.left) * (this.canvas.width / rect.width)) / uiScaleFactor;
-            this.mouseY = ((touch.clientY - rect.top) * (this.canvas.height / rect.height)) / uiScaleFactor;
-
             this.handleMouseDown({ isTrusted: true } as MouseEvent);
         };
         this._touchend = (event: TouchEvent) => {
             event.preventDefault();
-            
+
             if (!event.isTrusted) return;
-            
+
             this.handleMouseUp({ isTrusted: true } as MouseEvent);
         };
 
@@ -80,10 +74,8 @@ export default abstract class UserInterface {
         this._keyup = this.handleKeyUp.bind(this);
 
         this._onresize = () => {
-            const retinaDisplayScale = devicePixelRatio * 2;
-
-            this.canvas.width = this.canvas.clientWidth * retinaDisplayScale;
-            this.canvas.height = this.canvas.clientHeight * retinaDisplayScale;
+            this.canvas.width = this.canvas.clientWidth * this.scale;
+            this.canvas.height = this.canvas.clientHeight * this.scale;
 
             uiScaleFactor = Math.max(
                 this.canvas.width / UI_BASE_WIDTH,
@@ -147,16 +139,25 @@ export default abstract class UserInterface {
         this._keyup = null;
     }
 
-    protected addComponent(component: AllComponents): void {
+    protected addComponent(component: AllComponents): AllComponents {
+        // Set properties to component (take as constructor arg too bored)
+        component.canvas = this.canvas;
+
         // Remove component if exists
         this.removeComponent(component);
 
         this.components.push(component);
+
+        (component as ComponentSymbol)[ADDED] = true;
+
+        return component;
     }
 
     protected removeComponent(component: AllComponents): void {
         const index = this.components.indexOf(component);
         if (index > -1) {
+            this.components[index].destroy();
+
             this.components.splice(index, 1);
         }
     }
@@ -292,6 +293,8 @@ export default abstract class UserInterface {
         this.mouseX = ((event.clientX - rect.left) * (this.canvas.width / rect.width)) / uiScaleFactor;
         this.mouseY = ((event.clientY - rect.top) * (this.canvas.height / rect.height)) / uiScaleFactor;
 
+        // TODO: priority is given to components before and after
+
         this.components.forEach(component => {
             if (!this.isClickableChildren(component)) {
                 return;
@@ -373,12 +376,34 @@ export default abstract class UserInterface {
         return addable;
     }
 
+    // Getter / setters
+
+    protected get scale() {
+        return devicePixelRatio || 1;
+    }
+
+    abstract set biome(biome: Biomes);
+    abstract get biome(): Biomes;
+
     /**
      * Method for initialize components, only called for once.
      */
     protected abstract initializeComponents(): void;
+
+    /**
+     * Method call up every rAF frame.
+     */
     public abstract animationFrame(): void;
-    public abstract cleanup(): void;
+
+    /**
+     * Dispose ui specific values.
+     */
+    public abstract dispose(): void;
+
+    /**
+     * Method call on ui switched.
+     */
+    public abstract onUiSwitched(): void;
 
     // Interactive
 

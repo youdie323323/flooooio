@@ -4,7 +4,7 @@ import { Mob } from "../mob/Mob";
 import { BasePlayer } from "./Player";
 import { isSpawnableSlot, PetalData, PetalStat } from "../mob/petal/Petal";
 import { PETAL_PROFILES } from "../../../shared/petalProfiles";
-import { isPetal, TWO_PI } from "../../utils/common";
+import { isPetal } from "../../utils/common";
 import { PetalType, Mood } from "../../../shared/enum";
 
 const BASE_ROTATE_SPEED = 2.5;
@@ -17,7 +17,7 @@ const PRECALC_SIZE = 360;
 const cosTable = new Float32Array(PRECALC_SIZE);
 const sinTable = new Float32Array(PRECALC_SIZE);
 for (let i = 0; i < PRECALC_SIZE; i++) {
-    const angle = (i * TWO_PI) / PRECALC_SIZE;
+    const angle = (i * Math.TAU) / PRECALC_SIZE;
     cosTable[i] = Math.cos(angle);
     sinTable[i] = Math.sin(angle);
 }
@@ -76,9 +76,10 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 const profile = PETAL_PROFILES[firstPetal.type];
                 const rarityProfile = profile[firstPetal.rarity];
 
-                const baseRadius = isPetal(firstPetal.type) && UNMOODABLE_PETALS.has(firstPetal.type) ? 40 :
-                    this.mood === Mood.ANGRY ? 80 :
-                        this.mood === Mood.SAD ? 25 : 40;
+                const baseRadius =
+                    this.mood === Mood.ANGRY ? isPetal(firstPetal.type) && UNMOODABLE_PETALS.has(firstPetal.type) ? 40 : 80 :
+                        this.mood === Mood.SAD ? 25 :
+                            40;
 
                 const bounce = this.petalBounces[i];
                 this.petalRadii[i] += bounce;
@@ -91,26 +92,26 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 const rad = this.petalRadii[i];
 
                 if (rarityProfile.isCluster && petals.length > 1) {
-                    const baseAngle = TWO_PI * currentAngleIndex / realLength + this.rotation;
+                    const baseAngle = Math.TAU * currentAngleIndex / realLength + this.rotation;
                     currentAngleIndex++;
 
-                    const angleIndex = ((baseAngle % TWO_PI) * PRECALC_SIZE / TWO_PI) | 0;
+                    const angleIndex = ((baseAngle % Math.TAU) * PRECALC_SIZE / Math.TAU) | 0;
                     const slotBaseX = targetX + cosTable[angleIndex] * rad;
                     const slotBaseY = targetY + sinTable[angleIndex] * rad;
 
                     for (let j = 0; j < petals.length; j++) {
                         // Bit faster than rotation
-                        const petalAngle = TWO_PI * j / petals.length + 1.1 * this.rotation;
-                        const petalAngleIndex = ((petalAngle % TWO_PI) * PRECALC_SIZE / TWO_PI) | 0;
-                        
+                        const petalAngle = Math.TAU * j / petals.length + 1.1 * this.rotation;
+                        const petalAngleIndex = ((petalAngle % Math.TAU) * PRECALC_SIZE / Math.TAU) | 0;
+
                         const petal = petals[j];
                         petal.x = slotBaseX + cosTable[petalAngleIndex] * PETAL_CLUSTER_RADIUS;
                         petal.y = slotBaseY + sinTable[petalAngleIndex] * PETAL_CLUSTER_RADIUS;
                     }
                 } else {
                     for (let j = 0; j < petals.length; j++) {
-                        const baseAngle = TWO_PI * currentAngleIndex / realLength + this.rotation;
-                        const angleIndex = ((baseAngle % TWO_PI) * PRECALC_SIZE / TWO_PI) | 0;
+                        const baseAngle = Math.TAU * currentAngleIndex / realLength + this.rotation;
+                        const angleIndex = ((baseAngle % Math.TAU) * PRECALC_SIZE / Math.TAU) | 0;
                         currentAngleIndex++;
 
                         const petal = petals[j];
@@ -123,9 +124,9 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
             this.rotation += totalSpeed / WAVE_UPDATE_FPS;
         }
 
-        free = () => {
-            if (super.free) {
-                super.free();
+        dispose = () => {
+            if (super.dispose) {
+                super.dispose();
             }
 
             this.historyX = null;

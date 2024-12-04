@@ -1,7 +1,7 @@
 import { Mob, MobInstance, MOB_SIZE_FACTOR, MobData } from "../entity/mob/Mob";
 import { Player, PlayerInstance, MockPlayerData } from "../entity/player/Player";
 import { EntityId, onUpdateTick } from "../entity/Entity";
-import { calculateMobSize, isConnectingBody, isPetal, revivePlayer } from '../utils/common';
+import { calculateMobSize, isPetal, revivePlayer } from '../utils/common';
 import { MOB_PROFILES } from '../../shared/mobProfiles';
 import { PETAL_PROFILES } from '../../shared/petalProfiles';
 import { isSpawnableSlot, PetalData, MockPetalData } from '../entity/mob/petal/Petal';
@@ -14,8 +14,8 @@ import { Rarities } from '../../shared/rarity';
 import { ClientBound } from '../../shared/packet';
 import { SAFETY_DISTANCE } from "../entity/EntityMapBoundary";
 import WaveProbabilityPredictor, { LINK_MOBS } from "./WaveProbabilityPredictor";
-import { calculateWaveLength } from "../utils/formula";
 import { WaveRoomState } from "../../shared/waveRoom";
+import { calculateWaveLength } from "../../shared/formula";
 
 // Define UserData for WebSocket connections
 export interface UserData {
@@ -59,22 +59,17 @@ export interface WaveData {
     waveProgressIsRedGage: boolean;
 
     /**
-     * Radius of 
+     * Radius of wave.
      */
     waveMapRadius: number;
 }
 
 /**
  * Pool of entities, aka wave.
- * 
- * @remarks
- * 
- * Data such as the overall wave luck and the current wave number are stored in this class.
- * Spawning and other processes are also handled in this class.
  */
 export class WavePool {
-    public clients: Map<PlayerInstance["id"], PlayerInstance>;
-    public mobs: Map<MobInstance["id"], MobInstance>;
+    public clientPool: Map<PlayerInstance["id"], PlayerInstance>;
+    public mobPool: Map<MobInstance["id"], MobInstance>;
 
     private waveProbabilityPredictor: WaveProbabilityPredictor;
 
@@ -102,8 +97,8 @@ export class WavePool {
         private _state: () => WaveRoomState,
         private _onChangeAnything: () => Disposable,
     ) {
-        this.clients = new Map();
-        this.mobs = new Map();
+        this.clientPool = new Map();
+        this.mobPool = new Map();
 
         this.eliminatedEntities = new Array();
 
@@ -115,17 +110,8 @@ export class WavePool {
      * Release all memory in this class.
      */
     public releaseAllMemory() {
-        this.clients.forEach((v) => {
-            if (v["free"]) {
-                v["free"]();
-            }
-        });
-
-        this.mobs.forEach((v) => {
-            if (v["free"]) {
-                v["free"]();
-            }
-        });
+        this.clientPool.forEach((v) => v["dispose"]());
+        this.mobPool.forEach((v) => v["dispose"]());
 
         clearInterval(this.updateWaveInterval);
         clearInterval(this.updateEntitiesInterval);
@@ -135,11 +121,11 @@ export class WavePool {
         this.updateEntitiesInterval = null;
         this.updatePacketSendInterval = null;
 
-        this.clients.clear();
-        this.mobs.clear();
+        this.clientPool.clear();
+        this.mobPool.clear();
 
-        this.clients = null;
-        this.mobs = null;
+        this.clientPool = null;
+        this.mobPool = null;
 
         this.eliminatedEntities = null;
 
@@ -149,6 +135,8 @@ export class WavePool {
 
         this._state = null;
         this._onChangeAnything = null;
+
+        logger.info("Released wave pool memory");
     }
 
     /**
@@ -190,7 +178,7 @@ export class WavePool {
         const clientId = generateRandomEntityId();
 
         // Ensure unique clientId
-        if (this.clients.has(clientId)) {
+        if (this.clientPool.has(clientId)) {
             return this.addClient(playerData, x, y);
         }
 
@@ -236,7 +224,7 @@ export class WavePool {
         playerInstance.slots.surface = playerData.slots.surface.map(c => c && !isSpawnableSlot(c) && this.mockPetalDataToReal(c, playerInstance));
         playerInstance.slots.bottom = playerData.slots.bottom.map(c => c && !isSpawnableSlot(c) && this.mockPetalDataToReal(c, playerInstance));
 
-        this.clients.set(clientId, playerInstance);
+        this.clientPool.set(clientId, playerInstance);
 
         playerData.ws.getUserData().waveClientId = clientId;
 
@@ -257,12 +245,12 @@ export class WavePool {
         petalMaster: PlayerInstance = null,
         petMaster: PlayerInstance = null,
 
-        connectedSegment: MobInstance = null,
+        connectingSegment: MobInstance = null,
         isFirstSegment: boolean = false,
     ): MobInstance | null {
         const mobId = generateRandomEntityId();
-        if (this.mobs.has(mobId)) {
-            return this.addPetalOrMob(type, rarity, x, y, petalMaster, petMaster, connectedSegment, isFirstSegment);
+        if (this.mobPool.has(mobId)) {
+            return this.addPetalOrMob(type, rarity, x, y, petalMaster, petMaster, connectingSegment, isFirstSegment);
         }
 
         const profile: MobData | PetalData = MOB_PROFILES[type] || PETAL_PROFILES[type];
@@ -295,12 +283,12 @@ export class WavePool {
 
             starfishRegeningHealth: false,
 
-            connectingSegment: connectedSegment,
+            connectingSegment,
             isFirstSegment,
         });
 
         // Add mob to pool
-        this.mobs.set(mobId, mobInstance);
+        this.mobPool.set(mobId, mobInstance);
 
         return mobInstance;
     }
@@ -325,8 +313,8 @@ export class WavePool {
      * Run all entity mixin.
      */
     private updateEntities() {
-        this.clients.forEach((client) => client[onUpdateTick](this));
-        this.mobs.forEach((mob) => mob[onUpdateTick](this));
+        this.clientPool.forEach((client) => client[onUpdateTick](this));
+        this.mobPool.forEach((mob) => mob[onUpdateTick](this));
     }
 
     private updateWave() {
@@ -367,7 +355,7 @@ export class WavePool {
                     this.waveData.waveProgressRedGageTimer = Math.min(waveLength, Math.round((this.waveData.waveProgressRedGageTimer + 0.016) * 10000) / 10000);
                 } else {
                     // Respawn all dead players
-                    this.clients.forEach(c => revivePlayer(this, c));
+                    this.clientPool.forEach(c => revivePlayer(this, c));
 
                     this.waveData.waveProgressIsRedGage = false;
 
@@ -432,7 +420,7 @@ export class WavePool {
         //     return false;
         // }
 
-        const client = this.clients.get(clientId);
+        const client = this.clientPool.get(clientId);
         if (client && !client.isDead) {
             client.angle = angle;
             client.magnitude = magnitude * Player.BASE_SPEED;
@@ -443,7 +431,7 @@ export class WavePool {
      * Updates the mood of a client.
      */
     public changeMood(clientId: PlayerInstance["id"], kind: Mood) {
-        const client = this.clients.get(clientId);
+        const client = this.clientPool.get(clientId);
         if (client && !client.isDead) {
             client.mood = kind;
         }
@@ -453,7 +441,7 @@ export class WavePool {
      * Swaps a petal between surface and bottom slots for a client.
      */
     public swapPetal(clientId: PlayerInstance["id"], at: number) {
-        const client = this.clients.get(clientId);
+        const client = this.clientPool.get(clientId);
         if (
             client &&
             !client.isDead &&
@@ -471,35 +459,19 @@ export class WavePool {
     }
 
     /**
-     * Send chat to specifics user.
-     */
-    public sendChat(id: PlayerInstance["id"], msg: string) {
-        if (this.clients.has(id)) {
-            const client = this.clients.get(id);
-
-            const buffer = Buffer.alloc(1 + 1 + msg.length);
-            buffer.writeUInt8(ClientBound.WAVE_CHAT_RECV, 0);
-
-            const msgBuffer = Buffer.from(msg, 'utf-8');
-            buffer.writeUInt8(msgBuffer.length, 1);
-            msgBuffer.copy(buffer, 2);
-
-            client.ws.send(buffer, true);
-        }
-    }
-
-    /**
      * Broadcast message.
      */
-    public broadcastChat(msg: string) {
+    public broadcastChat(calleeId: PlayerInstance["id"], msg: string) {
         const buffer = Buffer.alloc(1 + 1 + msg.length);
         buffer.writeUInt8(ClientBound.WAVE_CHAT_RECV, 0);
 
-        const msgBuffer = Buffer.from(msg, 'utf-8');
-        buffer.writeUInt8(msgBuffer.length, 1);
-        msgBuffer.copy(buffer, 2);
+        buffer.writeUInt32BE(calleeId, 1);
 
-        this.clients.forEach((player) => {
+        const msgBuffer = Buffer.from(msg, 'utf-8');
+        buffer.writeUInt8(msgBuffer.length, 5);
+        msgBuffer.copy(buffer, 6);
+
+        this.clientPool.forEach((player) => {
             player.ws.send(buffer, true);
         });
     }
@@ -508,7 +480,7 @@ export class WavePool {
         const updatePacket = this.createUpdatePacket();
 
         // Loop through all WebSocket connections
-        this.clients.forEach((player) => {
+        this.clientPool.forEach((player) => {
             player.ws.send(updatePacket, true);
         });
     }
@@ -519,7 +491,7 @@ export class WavePool {
         buffer.writeUInt8(ClientBound.WAVE_SELF_ID, 0);
 
         // Loop through all WebSocket connections
-        this.clients.forEach((player, clientId) => {
+        this.clientPool.forEach((player, clientId) => {
             buffer.writeUInt32BE(clientId, 1);
 
             player.ws.send(buffer, true);
@@ -533,7 +505,7 @@ export class WavePool {
         // Add size for clients
         // Client count
         size += 2;
-        this.clients.forEach(client => {
+        this.clientPool.forEach(client => {
             // String length is is dynamically changeable, so we can do is just loop
             size += 4 + 8 + 8 + 1 + 4 + 4 + 4 + 1 + (1 + client.nickname.length) + 1;
         });
@@ -541,7 +513,7 @@ export class WavePool {
         // Add size for mobs
         // Mob count
         size += 2;
-        size += this.mobs.size * (4 + 8 + 8 + 8 + 4 + 4 + 4 + 1 + 1 + 1)
+        size += this.mobPool.size * (4 + 8 + 8 + 8 + 4 + 4 + 4 + 1 + 1 + 1)
 
         // Add size for eliminated entities
         // Eliminated entity count
@@ -577,10 +549,10 @@ export class WavePool {
         offset += 2;
 
         // Write clients
-        buffer.writeUInt16BE(this.clients.size, offset);
+        buffer.writeUInt16BE(this.clientPool.size, offset);
         offset += 2;
 
-        this.clients.forEach(client => {
+        this.clientPool.forEach(client => {
             buffer.writeUInt32BE(client.id, offset);
             offset += 4;
 
@@ -613,10 +585,10 @@ export class WavePool {
         });
 
         // Write mobs
-        buffer.writeUInt16BE(this.mobs.size, offset);
+        buffer.writeUInt16BE(this.mobPool.size, offset);
         offset += 2;
 
-        this.mobs.forEach(mob => {
+        this.mobPool.forEach(mob => {
             // Id of mob
             buffer.writeUInt32BE(mob.id, offset);
             offset += 4;
@@ -677,15 +649,16 @@ export class WavePool {
     }
 
     getClient(clientId: PlayerInstance["id"]): PlayerInstance | undefined {
-        return this.clients.get(clientId);
+        return this.clientPool.get(clientId);
     }
 
     removeClient(clientId: PlayerInstance["id"]) {
-        if (this.clients.has(clientId)) {
+        const client = this.getClient(clientId);
+        if (client) {
             // Free memory
-            this.getClient(clientId)["free"]();
+            client["dispose"]();
 
-            this.clients.delete(clientId);
+            this.clientPool.delete(clientId);
 
             this.eliminatedEntities.push(clientId);
 
@@ -697,33 +670,34 @@ export class WavePool {
     }
 
     getAllClients() {
-        return Array.from(this.clients.values());
+        return Array.from(this.clientPool.values());
     }
 
     getAllClientIds() {
-        return Array.from(this.clients.keys());
+        return Array.from(this.clientPool.keys());
     }
 
     getMob(mobId: MobInstance["id"]): MobInstance | undefined {
-        return this.mobs.get(mobId);
+        return this.mobPool.get(mobId);
     }
 
     removeMob(mobId: MobInstance["id"]) {
-        if (this.mobs.has(mobId)) {
+        const mob = this.getMob(mobId);
+        if (mob) {
             // Free memory
-            this.getMob(mobId)["free"]();
+            mob["dispose"]();
 
-            this.mobs.delete(mobId);
+            this.mobPool.delete(mobId);
 
             this.eliminatedEntities.push(mobId);
         }
     }
 
     getAllMobs() {
-        return Array.from(this.mobs.values());
+        return Array.from(this.mobPool.values());
     }
 
     getAllMobIds() {
-        return Array.from(this.mobs.keys());
+        return Array.from(this.mobPool.keys());
     }
 }

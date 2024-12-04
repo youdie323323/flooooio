@@ -20,13 +20,47 @@ import { ClientBound, ClientboundConnectionKickReason, ServerBound } from '../sh
 import { PLAYER_STATE_VALUES, VISIBLE_STATE_VALUES, WaveRoomPlayerReadyState, WaveRoomVisibleState } from '../shared/waveRoom';
 
 /**
+ * Set all global extended constant in shared/types/global.d.ts.
+ */
+{
+    Math.TAU = Math.PI * 2;
+}
+
+/**
  * Temp player data.
  */
 const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
     name: 'A-NNCYANCHI-N',
     slots: {
         surface: [
-
+            {
+                type: PetalType.BASIC,
+                rarity: Rarities.MYTHIC,
+            } as MockPetalData,
+            {
+                type: PetalType.BASIC,
+                rarity: Rarities.MYTHIC,
+            } as MockPetalData,
+            {
+                type: PetalType.BASIC,
+                rarity: Rarities.MYTHIC,
+            } as MockPetalData,
+            {
+                type: PetalType.BASIC,
+                rarity: Rarities.MYTHIC,
+            } as MockPetalData,
+            {
+                type: PetalType.BASIC,
+                rarity: Rarities.MYTHIC,
+            } as MockPetalData,
+            {
+                type: PetalType.FASTER,
+                rarity: Rarities.MYTHIC,
+            } as MockPetalData,
+            {
+                type: PetalType.FASTER,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
         ],
         bottom: [],
     },
@@ -278,7 +312,9 @@ app
             // ws.send = function (...args) {
             //     setTimeout(() => {
             //         originalSend.apply(ws, args);
-            //     }, 100);
+            //     }, 200);
+            //     
+            //     return 0;
             // };
         }),
         // I dont log errors here because all errors are well-known (ws.send fail)

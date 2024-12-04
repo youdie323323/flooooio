@@ -7,6 +7,13 @@ import TerrainGenerator, { BIOME_SVG_TILESETS, BIOME_TILESETS } from "./utils/Te
 import { Biomes, Mood } from "../shared/enum";
 import { uiScaleFactor } from "./ui/UserInterface";
 
+/**
+ * Set all global extended constant in shared/types/global.d.ts.
+ */
+{
+    Math.TAU = Math.PI * 2;
+}
+
 const canvas: HTMLCanvasElement = document.querySelector('#canvas');
 
 export let ws: WebSocket;
@@ -27,7 +34,7 @@ export let antennaScaleFactor = 1;
  */
 export const uiCtx = new UserInterfaceContext(canvas);
 
-(async function () {
+const init = async function () {
     // Generate tilesets beforehand so no need to generate them multiple times
     for (const biome in BIOME_SVG_TILESETS) {
         const parsedBiome = parseInt(biome) as Biomes;
@@ -77,6 +84,30 @@ export const uiCtx = new UserInterfaceContext(canvas);
 
     const ctx: CanvasRenderingContext2D = canvas.getContext("2d");
 
+    // Disable reload
+    canvas.addEventListener("contextmenu", e => {
+        e.preventDefault();
+    });
+
+    // Disable in-out
+    addEventListener("keydown", e => {
+        if ((e.ctrlKey || e.metaKey) && (e.key === "+" || e.key === "-" || e.key === ";")) {
+            e.preventDefault();
+        }
+
+        // Disable reload
+        if (e.keyCode == 116 || (e.ctrlKey && e.keyCode == 82)) {
+            e.preventDefault();
+        }
+    }, false);
+    document.body.addEventListener("wheel", e => {
+        if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+        }
+    }, {
+        passive: false
+    });
+
     (function frame() {
         lastTimestamp = Date.now();
         deltaTime = lastTimestamp - prevTimestamp;
@@ -94,4 +125,15 @@ export const uiCtx = new UserInterfaceContext(canvas);
 
         requestAnimationFrame(frame);
     })();
-})();
+};
+
+addEventListener("contextmenu", e => e.preventDefault());
+
+// TODO: do this only game ui
+addEventListener("beforeunload", e => e.preventDefault());
+
+if (document.readyState === 'loading') {
+    addEventListener("DOMContentLoaded", init);
+} else {
+    init();
+}

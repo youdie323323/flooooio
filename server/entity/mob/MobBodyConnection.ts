@@ -1,4 +1,4 @@
-import { isPetal, TWO_PI } from "../../utils/common";
+import { isPetal } from "../../utils/common";
 import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool } from "../../wave/WavePool";
 import { BaseMob } from "./Mob";
@@ -15,6 +15,7 @@ export function MobBodyConnection<T extends EntityMixinConstructor<BaseMob>>(Bas
 
             if (isPetal(this.type)) return;
 
+            // If not body, return
             if (!this.connectingSegment) return;
 
             // If connected segment dead, divide body
@@ -36,7 +37,7 @@ export function MobBodyConnection<T extends EntityMixinConstructor<BaseMob>>(Bas
 
             if (currentDistance > centiDistance) {
                 this.magnitude = 0;
-                this.angle = ((Math.atan2(dy, dx) / TWO_PI) * 255 + 255) % 255;
+                this.angle = ((Math.atan2(dy, dx) / Math.TAU) * 255 + 255) % 255;
 
                 const ratio = (currentDistance - centiDistance) / currentDistance;
                 this.x += dx * ratio;
@@ -44,9 +45,9 @@ export function MobBodyConnection<T extends EntityMixinConstructor<BaseMob>>(Bas
             }
         }
 
-        free = () => {
-            if (super.free) {
-                super.free();
+        dispose = () => {
+            if (super.dispose) {
+                super.dispose();
             }
 
             this.connectingSegment = null;

@@ -12,22 +12,22 @@ export type UserInterfaces = UserInterfaceGame | UserInterfaceTitle;
 export default class UserInterfaceContext {
     private readonly transition: UserInterfaceTransition;
 
-    public currentUI: UserInterfaces | null;
-    public previousUI: UserInterfaces | null;
+    public cCtx: UserInterfaces | null;
+    public pCtx: UserInterfaces | null;
 
     public isTransitioning: boolean;
 
     constructor(private readonly canvas: HTMLCanvasElement) {
-        this.currentUI = new UserInterfaceTitle(canvas);
-        this.previousUI = null;
+        this.cCtx = new UserInterfaceTitle(canvas);
+        this.pCtx = null;
         this.transition = new UserInterfaceTransition(canvas);
         this.isTransitioning = false;
     }
 
     public cleanup(): void {
         // Cleanup mode-specific values & components
-        this.previousUI?.cleanup();
-        this.previousUI?.cleanupRenders();
+        this.pCtx?.dispose();
+        this.pCtx?.cleanupRenders();
 
         this.isTransitioning = false;
     }
@@ -38,33 +38,27 @@ export default class UserInterfaceContext {
             return;
         }
 
-        this.previousUI = this.currentUI;
-        this.currentUI = this.createUI(mode);
+        this.pCtx = this.cCtx;
+
+        this.pCtx.onUiSwitched();
+
+        // Cleanup listeners so cant touch before ui buttons
+        this.pCtx?.removeEventListeners();
+
+        this.cCtx = this.createUI(mode);
 
         this.isTransitioning = true;
 
         this.transition.start(mode)
-
-        // Cleanup listeners so cant touch before ui buttons
-        this.previousUI?.removeEventListeners();
     }
 
     private createUI(mode: UserInterfaceMode): UserInterfaces {
         switch (mode) {
             case 'title': {
-                // Fake dead animation
-                const player = players.get(waveSelfId);
-                if (player && !player.isDead) {
-                    player.isDead = true;
-                    player.deadT = 0;
-                }
-
                 return new UserInterfaceTitle(this.canvas);
             }
 
             case 'game': {
-                cameraController.zoom = 0.2;
-
                 return new UserInterfaceGame(this.canvas);
             }
         }
@@ -72,14 +66,14 @@ export default class UserInterfaceContext {
 
     public update(): void {
         if (!this.isTransitioning) {
-            this.currentUI?.animationFrame();
+            this.cCtx?.animationFrame();
 
             return;
         }
 
-        this.transition.draw(this.currentUI, this.previousUI);
+        this.transition.draw(this.cCtx, this.pCtx);
 
-        const type: UserInterfaceMode = this.currentUI instanceof UserInterfaceTitle ? 'title' : 'game';
+        const type: UserInterfaceMode = this.cCtx instanceof UserInterfaceTitle ? 'title' : 'game';
 
         if (this.transition.update(type)) {
             this.cleanup();

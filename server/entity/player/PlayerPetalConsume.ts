@@ -32,9 +32,9 @@ export function PlayerPetalConsume<T extends EntityMixinConstructor<BasePlayer>>
             });
         }
 
-        free = () => {
-            if (super.free) {
-                super.free();
+        dispose = () => {
+            if (super.dispose) {
+                super.dispose();
             }
         }
     };

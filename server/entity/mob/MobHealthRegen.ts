@@ -2,7 +2,7 @@ import { Entity, EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } fro
 import { WavePool } from "../../wave/WavePool";
 import { BaseMob, Mob, MobInstance } from "./Mob";
 import { Player, PlayerInstance } from "../player/Player";
-import { isPetal, TWO_PI } from "../../utils/common";
+import { isPetal } from "../../utils/common";
 import { MobType } from "../../../shared/enum";
 
 export function MobHealthRegen<T extends EntityMixinConstructor<BaseMob>>(Base: T) {
@@ -34,7 +34,7 @@ export function MobHealthRegen<T extends EntityMixinConstructor<BaseMob>>(Base: 
                     const dx = this.mobTargetEntity.x - this.x;
                     const dy = this.mobTargetEntity.y - this.y;
 
-                    const targetAngle = ((Math.atan2(dy, dx) / TWO_PI) * 255 + 255) % 255;
+                    const targetAngle = ((Math.atan2(dy, dx) / Math.TAU) * 255 + 255) % 255;
 
                     let currentAngle = this.angle;
                     while (currentAngle < 0) currentAngle += 255;
@@ -47,14 +47,14 @@ export function MobHealthRegen<T extends EntityMixinConstructor<BaseMob>>(Base: 
                     this.angle -= angleDiff * 0.1;
                     this.angle = ((this.angle + 255) % 255);
 
-                    this.magnitude = 255 * 4;
+                    this.magnitude = 255 * Mob.BASE_SPEED;
                 }
             }
         }
 
-        free = () => {
-            if (super.free) {
-                super.free();
+        dispose = () => {
+            if (super.dispose) {
+                super.dispose();
             }
         }
     };

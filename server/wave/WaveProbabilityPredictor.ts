@@ -1,5 +1,4 @@
-import { WaveData } from "./WaveRoom";
-import { calculateWaveLength, calculateWaveLuck } from "../utils/formula";
+import { calculateWaveLuck } from "../utils/formula";
 import { Biomes, MobType } from "../../shared/enum";
 import { Rarities } from "../../shared/rarity";
 import { choice, randomEnum } from "../utils/random";

@@ -29,9 +29,9 @@ export function EntityDeath<T extends EntityMixinConstructor<Entity>>(Base: T) {
             }
         }
 
-        free = () => {
-            if (super.free) {
-                super.free();
+        dispose = () => {
+            if (super.dispose) {
+                super.dispose();
             }
         }
     };

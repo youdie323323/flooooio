@@ -11,19 +11,24 @@ import UserInterfaceTitle, { StatusText, WaveRoomPlayerInformation } from "./ui/
 export let waveSelfId = -1;
 export let waveRoomSelfId = -1;
 
+// TODO: rewrite these shit
+
 function angleToRad(angle: number) {
-    return angle / 255 * (Math.PI * 2);
+    return angle / 255 * Math.TAU;
 }
 
 function getNormalizedAngle(angle: number): number {
-    angle %= Math.PI * 2;
+    angle %= Math.TAU;
     if (angle < 0) {
-        angle += Math.PI * 2;
+        angle += Math.TAU;
     }
-    return Math.round(angle / (Math.PI * 2) * 255);
+    return Math.round(angle / Math.TAU * 255);
 }
 
 export default class Networking {
+    // Message senders
+    [key: `send${string}`]: (...args: ReadonlyArray<any>) => void;
+
     constructor(public ws: WebSocket) {
         const textDecoder = new TextDecoder("utf-8");
 
@@ -51,7 +56,7 @@ export default class Networking {
                     break;
                 }
                 case ClientBound.WAVE_UPDATE: {
-                    if (uiCtx.currentUI instanceof UserInterfaceGame) {
+                    if (uiCtx.cCtx instanceof UserInterfaceGame) {
                         // Wave informations
                         {
                             const waveProgress = data.getUint16(offset);
@@ -69,20 +74,20 @@ export default class Networking {
                             const waveMapRadius = data.getUint16(offset);
                             offset += 2;
 
-                            uiCtx.currentUI.waveProgress = waveProgress;
+                            uiCtx.cCtx.waveProgress = waveProgress;
 
-                            uiCtx.currentUI.nWaveProgressTimer = waveProgressTimer;
-                            uiCtx.currentUI.oWaveProgressTimer = uiCtx.currentUI.waveProgressTimer;
+                            uiCtx.cCtx.nWaveProgressTimer = waveProgressTimer;
+                            uiCtx.cCtx.oWaveProgressTimer = uiCtx.cCtx.waveProgressTimer;
 
-                            uiCtx.currentUI.nWaveProgressRedGageTimer = waveProgressRedGageTimer;
-                            uiCtx.currentUI.oWaveProgressRedGageTimer = uiCtx.currentUI.waveProgressRedGageTimer;
+                            uiCtx.cCtx.nWaveProgressRedGageTimer = waveProgressRedGageTimer;
+                            uiCtx.cCtx.oWaveProgressRedGageTimer = uiCtx.cCtx.waveProgressRedGageTimer;
 
-                            uiCtx.currentUI.waveEnded = waveEnded;
+                            uiCtx.cCtx.waveEnded = waveEnded;
 
-                            uiCtx.currentUI.nMapRadius = waveMapRadius;
-                            uiCtx.currentUI.oMapRadius = uiCtx.currentUI.mapRadius;
+                            uiCtx.cCtx.nMapRadius = waveMapRadius;
+                            uiCtx.cCtx.oMapRadius = uiCtx.cCtx.mapRadius;
 
-                            uiCtx.currentUI.updateT = 0;
+                            uiCtx.cCtx.updateT = 0;
                         }
 
                         const clientCount = data.getUint16(offset);
@@ -249,7 +254,7 @@ export default class Networking {
                     break;
                 }
                 case ClientBound.WAVE_ROOM_UPDATE: {
-                    if (uiCtx.currentUI instanceof UserInterfaceTitle) {
+                    if (uiCtx.cCtx instanceof UserInterfaceTitle) {
                         const waveClientCount = data.getUint8(offset++);
 
                         const _players: WaveRoomPlayerInformation[] = [];
@@ -281,49 +286,55 @@ export default class Networking {
 
                         const waveVisible = data.getUint8(offset++) as WaveRoomVisibleState;
 
-                        uiCtx.currentUI.waveRoomPlayers = _players;
-                        uiCtx.currentUI.waveRoomCode = waveCode;
-                        uiCtx.currentUI.waveRoomState = waveState;
-                        uiCtx.currentUI.waveRoomVisible = waveVisible;
+                        uiCtx.cCtx.waveRoomPlayers = _players;
+                        uiCtx.cCtx.waveRoomCode = waveCode;
+                        uiCtx.cCtx.waveRoomState = waveState;
+                        uiCtx.cCtx.waveRoomVisible = waveVisible;
 
-                        uiCtx.currentUI.biome = waveBiome;
+                        uiCtx.cCtx.biome = waveBiome;
                     }
 
                     break;
                 }
                 case ClientBound.WAVE_STARTING: {
-                    if (uiCtx.currentUI instanceof UserInterfaceTitle) {
-                        uiCtx.currentUI.squadMenuContainer.setVisible(false, true);
+                    if (uiCtx.cCtx instanceof UserInterfaceTitle) {
+                        uiCtx.cCtx.squadMenuContainer.setVisible(false, true);
                     }
 
                     uiCtx.switchUI("game");
 
                     const waveBiome = data.getUint8(offset++) as Biomes;
 
-                    if (uiCtx.previousUI) {
-                        uiCtx.previousUI.biome = waveBiome;
+                    if (uiCtx.pCtx) {
+                        uiCtx.pCtx.biome = waveBiome;
                     }
-                    if (uiCtx.currentUI) {
-                        uiCtx.currentUI.biome = waveBiome;
+                    if (uiCtx.cCtx) {
+                        uiCtx.cCtx.biome = waveBiome;
                     }
 
                     break;
                 }
                 case ClientBound.WAVE_ROOM_JOIN_FAILED: {
-                    if (uiCtx.currentUI instanceof UserInterfaceTitle) {
+                    if (uiCtx.cCtx instanceof UserInterfaceTitle) {
                         // Reset squad state to render status text
-                        uiCtx.currentUI.resetWaveState();
+                        uiCtx.cCtx.resetWaveState();
 
-                        uiCtx.currentUI.statusTextRef = StatusText.SquadNotFound;
+                        uiCtx.cCtx.statusTextRef = StatusText.SquadNotFound;
                     }
 
                     break;
                 }
                 case ClientBound.WAVE_CHAT_RECV: {
-                    if (uiCtx.currentUI instanceof UserInterfaceGame) {
-                        uiCtx.currentUI.chats.push(readString());
-                        if (uiCtx.currentUI.chats.length > UserInterfaceGame.MAX_MESSAGE_QUEUE_AMOUNT) {
-                            uiCtx.currentUI.chats.shift();
+                    if (uiCtx.cCtx instanceof UserInterfaceGame) {
+                        const waveClientId = data.getUint32(offset);
+                        offset += 4;
+
+                        const chatMsg = readString();
+
+                        const player = players.get(waveClientId);
+
+                        if (player) {
+                            // TODO: implement
                         }
                     }
 
@@ -333,7 +344,7 @@ export default class Networking {
         };
     }
 
-    public sendAngle(angle: number, magnitude = 1) {
+    public sendMove(angle: number, magnitude = 1) {
         const normalizedAngle = getNormalizedAngle(angle);
         const data = new Uint8Array([ServerBound.WAVE_CHANGE_MOVE, normalizedAngle, Math.round(magnitude * 255)]);
         this.ws.send(data);
@@ -346,6 +357,11 @@ export default class Networking {
 
     public sendSwapPetal(index: number) {
         const data = new Uint8Array([ServerBound.WAVE_SWAP_PETAL, index]);
+        this.ws.send(data);
+    }
+
+    public sendChat(chatMsg: string) {
+        const data = new Uint8Array([ServerBound.WAVE_CHAT_SENT, chatMsg.length, ...new TextEncoder().encode(chatMsg)]);
         this.ws.send(data);
     }
 }

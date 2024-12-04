@@ -1,7 +1,6 @@
 import { UserData } from "../wave/WavePool";
 import { Command } from "./command";
 import { ArgContext } from "./commandArgs";
-import { registerSpawnMob } from "./commands/spawnMob";
 
 let root: Command = new Command({
     aliases: ["<root_node>"],

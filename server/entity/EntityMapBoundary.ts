@@ -61,9 +61,9 @@ export function EntityMapBoundary<T extends EntityMixinConstructor<Entity>>(Base
             }
         }
 
-        free = () => {
-            if (super.free) {
-                super.free();
+        dispose = () => {
+            if (super.dispose) {
+                super.dispose();
             }
         }
     };

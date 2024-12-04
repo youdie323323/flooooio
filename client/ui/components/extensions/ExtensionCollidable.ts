@@ -30,12 +30,18 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
             originX: number,
             originY: number
         ): LayoutResult {
+            // Moving collision always up direction
+            const diffX = this.initialPos[0] - this.x,
+                diffY = this.initialPos[1] - this.y;
+
             const layout = super.calculateLayout(width, height, originX, originY);
 
             this.initialPos = [layout.x, layout.y];
 
-            // Maybe need to set layout to previous layout x,y position because looks ugly on resize
+            layout.x -= diffX;
+            layout.y -= diffY;
 
+            // TODO: do screen clamp
             return layout;
         }
 

@@ -1,4 +1,5 @@
 import Interpolator from "./Interpolator";
+
 export default class CameraController {
     _zoom: Interpolator;
 

@@ -7,17 +7,17 @@ export default class Toggle extends ExtensionPlaceholder(Component) implements I
     private static readonly SCALING_DURATION: number = 100;
     private scalingProgress: number = 0;
     private scalingStartTime: number | null = null;
-    
+
     private toggle: boolean = false;
 
     constructor(
         protected layout: MaybeDynamicLayoutablePointer<LayoutOptions>,
-        
+
         private readonly onToggle: (t: boolean) => void,
     ) {
         super();
     }
-    
+
     public calculateLayout(
         width: number,
         height: number,
@@ -79,12 +79,16 @@ export default class Toggle extends ExtensionPlaceholder(Component) implements I
         ctx.closePath();
     }
 
-    public destroy?(): void { }
-    
+    public destroy(): void {
+        super.destroy();
+    }
+
     public onFocus(): void {
+        this.canvas.style.cursor = "pointer";
     }
 
     public onBlur(): void {
+        this.canvas.style.cursor = "default";
     }
 
     public onClick(): void {

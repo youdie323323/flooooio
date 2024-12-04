@@ -1,4 +1,4 @@
-import { angleToRad, getCentiFirstSegment, isConnectingBody, isPetal, TWO_PI } from "../../utils/common";
+import { angleToRad, traverseMobSegment, isPetal } from "../../utils/common";
 import { Entity, EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool } from "../../wave/WavePool";
 import { BaseMob, Mob, MobInstance } from "./Mob";
@@ -59,7 +59,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
             if (isPetal(this.type)) return;
 
             // If body, dont do anything
-            if (isConnectingBody(poolThis, this)) return;
+            if (this.connectingSegment) return;
 
             // Dont do anything while this.starfishRegeningHealth so
             // can handle angle in MobHealthRegen.ts
@@ -97,7 +97,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                             const distance = Math.hypot(dx, dy);
 
                             if (distance < MOB_DETECTION_FACTOR * this.size) {
-                                const targetAngle = ((Math.atan2(dy, dx) / TWO_PI) * 255 + 255) % 255;
+                                const targetAngle = ((Math.atan2(dy, dx) / Math.TAU) * 255 + 255) % 255;
 
                                 let currentAngle = this.angle;
                                 while (currentAngle < 0) currentAngle += 255;
@@ -110,7 +110,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                                 this.angle += angleDiff * 0.1;
                                 this.angle = ((this.angle + 255) % 255);
 
-                                this.magnitude = 255 * 4;
+                                this.magnitude = 255 * Mob.BASE_SPEED;
 
                                 this.mobTargetEntity = nearestTarget;
                             } else {
@@ -151,7 +151,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                             const distance = Math.hypot(dx, dy);
 
                             if (distance < MOB_DETECTION_FACTOR * this.size) {
-                                const targetAngle = ((Math.atan2(dy, dx) / TWO_PI) * 255 + 255) % 255;
+                                const targetAngle = ((Math.atan2(dy, dx) / Math.TAU) * 255 + 255) % 255;
 
                                 let currentAngle = this.angle;
                                 while (currentAngle < 0) currentAngle += 255;
@@ -209,7 +209,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                             const dx = this.mobLastAttackedBy.x - this.x;
                             const dy = this.mobLastAttackedBy.y - this.y;
 
-                            const targetAngle = ((Math.atan2(dy, dx) / TWO_PI) * 255 + 255) % 255;
+                            const targetAngle = ((Math.atan2(dy, dx) / Math.TAU) * 255 + 255) % 255;
 
                             let currentAngle = this.angle;
                             while (currentAngle < 0) currentAngle += 255;
@@ -222,7 +222,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                             this.angle += angleDiff * 0.1;
                             this.angle = ((this.angle + 255) % 255);
 
-                            this.magnitude = 255 * 5;
+                            this.magnitude = 255 * Mob.BASE_SPEED;
 
                             this.mobTargetEntity = this.mobLastAttackedBy;
                         } else {
@@ -240,9 +240,9 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
             }
         }
 
-        free = () => {
-            if (super.free) {
-                super.free();
+        dispose = () => {
+            if (super.dispose) {
+                super.dispose();
             }
 
             this.mobTargetEntity = null;
