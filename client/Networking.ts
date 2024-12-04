@@ -8,21 +8,23 @@ import { players, mobs, uiCtx } from "./main";
 import UserInterfaceGame from "./ui/mode/UserInterfaceModeGame";
 import UserInterfaceTitle, { StatusText, WaveRoomPlayerInformation } from "./ui/mode/UserInterfaceModeTitle";
 
+const TAU = Math.PI * 2;
+
 export let waveSelfId = -1;
 export let waveRoomSelfId = -1;
 
 // TODO: rewrite these shit
 
 function angleToRad(angle: number) {
-    return angle / 255 * Math.TAU;
+    return angle / 255 * TAU;
 }
 
 function getNormalizedAngle(angle: number): number {
-    angle %= Math.TAU;
+    angle %= TAU;
     if (angle < 0) {
-        angle += Math.TAU;
+        angle += TAU;
     }
-    return Math.round(angle / Math.TAU * 255);
+    return Math.round(angle / TAU * 255);
 }
 
 export default class Networking {

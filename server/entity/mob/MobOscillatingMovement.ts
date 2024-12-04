@@ -7,6 +7,8 @@ import { getRandomAngle } from "../../utils/random";
 import { MobType } from "../../../shared/enum";
 import { MOB_BEHAVIORS, MobBehaviors } from "./MobAggressivePursuit";
 
+const TAU = Math.PI * 2;
+
 const MOVEMENT_DURATION = 1 / 150;
 
 export function MobOscillatingMovement<T extends EntityMixinConstructor<BaseMob>>(Base: T) {
@@ -43,7 +45,7 @@ export function MobOscillatingMovement<T extends EntityMixinConstructor<BaseMob>
                 const distanceToParent = Math.hypot(dx, dy);
 
                 if (distanceToParent > 2 * this.size) {
-                    const targetAngle = ((Math.atan2(dy, dx) / Math.TAU) * 255 + 255) % 255;
+                    const targetAngle = ((Math.atan2(dy, dx) / TAU) * 255 + 255) % 255;
 
                     let currentAngle = this.angle;
                     while (currentAngle < 0) currentAngle += 255;

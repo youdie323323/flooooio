@@ -2,6 +2,8 @@ import UserInterface, { uiScaleFactor } from "./UserInterface";
 import { UserInterfaceMode } from "./UserInterfaceContext";
 import UserInterfaceTitle from "./mode/UserInterfaceModeTitle";
 
+const TAU = Math.PI * 2;
+
 export interface TransitionConfig {
     initialRadius: (canvas: HTMLCanvasElement) => number;
     radiusChange: (current: number) => number;
@@ -72,7 +74,7 @@ export default class UserInterfaceTransition {
             heightRelative / 2,
             this.radius,
             0,
-            Math.TAU
+            TAU
         );
 
         this.ctx.clip('evenodd');
@@ -90,7 +92,7 @@ export default class UserInterfaceTransition {
             heightRelative / 2,
             this.radius,
             0,
-            Math.TAU
+            TAU
         );
         this.ctx.lineWidth = UserInterfaceTransition.STROKE_WIDTH;
         this.ctx.strokeStyle = UserInterfaceTransition.STROKE_COLOR;

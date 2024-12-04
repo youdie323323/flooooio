@@ -27,8 +27,10 @@ export const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, i:
                 petal.petalSummonedPet = poolThis.addPetalOrMob(
                     EGG_TYPE_MAPPING[petal.type],
                     Math.max(Rarities.COMMON, Math.min(Rarities.MYTHIC, petal.rarity - 1)),
+                    
                     petal.x,
                     petal.y,
+
                     null,
                     player,
                 );

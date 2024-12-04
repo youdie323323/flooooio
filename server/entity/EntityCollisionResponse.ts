@@ -179,7 +179,9 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
           if (
             this.id !== mob.id &&
             // Dont insert when petal
-            !mob.petalMaster
+            !mob.petalMaster &&
+            // Dont insert when pet
+            !mob.petMaster
           ) this.quadTree.insert(mob);
         });
         poolThis.clientPool.forEach(client => {

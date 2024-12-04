@@ -2,7 +2,7 @@ import { Rarities } from "../../shared/rarity";
 import { MOB_DAMAGE_FACTOR } from "../entity/mob/Mob";
 
 /**
- * Private formula, other formula will go into shared/formula.ts .
+ * Private formulas, other formula will go into shared/formula.ts .
  */
 
 /**

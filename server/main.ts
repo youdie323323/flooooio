@@ -20,13 +20,6 @@ import { ClientBound, ClientboundConnectionKickReason, ServerBound } from '../sh
 import { PLAYER_STATE_VALUES, VISIBLE_STATE_VALUES, WaveRoomPlayerReadyState, WaveRoomVisibleState } from '../shared/waveRoom';
 
 /**
- * Set all global extended constant in shared/types/global.d.ts.
- */
-{
-    Math.TAU = Math.PI * 2;
-}
-
-/**
  * Temp player data.
  */
 const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
@@ -59,6 +52,26 @@ const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
             } as MockPetalData,
             {
                 type: PetalType.FASTER,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BEETLE_EGG,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BEETLE_EGG,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BEETLE_EGG,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BEETLE_EGG,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BEETLE_EGG,
                 rarity: Rarities.SUPER,
             } as MockPetalData,
         ],
@@ -319,9 +332,7 @@ app
         }),
         // I dont log errors here because all errors are well-known (ws.send fail)
         // its maybe impact performance
-        message: (ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBinary: boolean) => {
-            handleMessage(ws, message, isBinary);
-        },
+        message: handleMessage,
         close: (ws: uWS.WebSocket<UserData>, code, message) => logger.region(() => {
             const { waveRoomClientId, waveClientId } = ws.getUserData();
 

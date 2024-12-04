@@ -1,9 +1,11 @@
 import { deltaTime } from "../main";
 import { ColorCode } from "../utils/common";
 
+const TAU = Math.PI * 2;
+
 function calculateAngleDistance(startAngle: number, endAngle: number) {
-    const angleDiff = (endAngle - startAngle) % Math.TAU;
-    return (angleDiff * 2) % Math.TAU - angleDiff;
+    const angleDiff = (endAngle - startAngle) % TAU;
+    return (angleDiff * 2) % TAU - angleDiff;
 }
 
 function interpolateAngle(startAngle: number, endAngle: any, progress: number) {

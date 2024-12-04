@@ -3,6 +3,8 @@ import { cameraController } from "../main";
 import { Biomes } from "../../shared/enum";
 import { uiScaleFactor } from "../ui/UserInterface";
 
+const TAU = Math.PI * 2;
+
 // Retrived from florr map viewer (florr-io-map-viewer.glitch.me)
 export const BIOME_SVG_TILESETS: Record<Biomes, string[]> = {
     [Biomes.GARDEN]: [
@@ -350,7 +352,7 @@ export default class TerrainGenerator {
             relativeCenterX,
             relativeCenterY,
             (radius + 0.5) * zoom + ctx.lineWidth / 2, 0,
-            Math.TAU,
+            TAU,
         );
         ctx.stroke();
         ctx.closePath();

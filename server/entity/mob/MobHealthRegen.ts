@@ -5,6 +5,8 @@ import { Player, PlayerInstance } from "../player/Player";
 import { isPetal } from "../../utils/common";
 import { MobType } from "../../../shared/enum";
 
+const TAU = Math.PI * 2;
+
 export function MobHealthRegen<T extends EntityMixinConstructor<BaseMob>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
         [onUpdateTick](poolThis: WavePool): void {
@@ -34,7 +36,7 @@ export function MobHealthRegen<T extends EntityMixinConstructor<BaseMob>>(Base: 
                     const dx = this.mobTargetEntity.x - this.x;
                     const dy = this.mobTargetEntity.y - this.y;
 
-                    const targetAngle = ((Math.atan2(dy, dx) / Math.TAU) * 255 + 255) % 255;
+                    const targetAngle = ((Math.atan2(dy, dx) / TAU) * 255 + 255) % 255;
 
                     let currentAngle = this.angle;
                     while (currentAngle < 0) currentAngle += 255;

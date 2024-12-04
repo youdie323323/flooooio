@@ -7,6 +7,8 @@ import { PETAL_PROFILES } from "../../../shared/petalProfiles";
 import { isPetal } from "../../utils/common";
 import { PetalType, Mood } from "../../../shared/enum";
 
+const TAU = Math.PI * 2;
+
 const BASE_ROTATE_SPEED = 2.5;
 const BOUNCE_DECAY = 0.225;
 const BOUNCE_STRENGTH = 0.2;
@@ -17,7 +19,7 @@ const PRECALC_SIZE = 360;
 const cosTable = new Float32Array(PRECALC_SIZE);
 const sinTable = new Float32Array(PRECALC_SIZE);
 for (let i = 0; i < PRECALC_SIZE; i++) {
-    const angle = (i * Math.TAU) / PRECALC_SIZE;
+    const angle = (i * TAU) / PRECALC_SIZE;
     cosTable[i] = Math.cos(angle);
     sinTable[i] = Math.sin(angle);
 }
@@ -92,17 +94,17 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 const rad = this.petalRadii[i];
 
                 if (rarityProfile.isCluster && petals.length > 1) {
-                    const baseAngle = Math.TAU * currentAngleIndex / realLength + this.rotation;
+                    const baseAngle = TAU * currentAngleIndex / realLength + this.rotation;
                     currentAngleIndex++;
 
-                    const angleIndex = ((baseAngle % Math.TAU) * PRECALC_SIZE / Math.TAU) | 0;
+                    const angleIndex = ((baseAngle % TAU) * PRECALC_SIZE / TAU) | 0;
                     const slotBaseX = targetX + cosTable[angleIndex] * rad;
                     const slotBaseY = targetY + sinTable[angleIndex] * rad;
 
                     for (let j = 0; j < petals.length; j++) {
                         // Bit faster than rotation
-                        const petalAngle = Math.TAU * j / petals.length + 1.1 * this.rotation;
-                        const petalAngleIndex = ((petalAngle % Math.TAU) * PRECALC_SIZE / Math.TAU) | 0;
+                        const petalAngle = TAU * j / petals.length + 1.1 * this.rotation;
+                        const petalAngleIndex = ((petalAngle % TAU) * PRECALC_SIZE / TAU) | 0;
 
                         const petal = petals[j];
                         petal.x = slotBaseX + cosTable[petalAngleIndex] * PETAL_CLUSTER_RADIUS;
@@ -110,8 +112,8 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                     }
                 } else {
                     for (let j = 0; j < petals.length; j++) {
-                        const baseAngle = Math.TAU * currentAngleIndex / realLength + this.rotation;
-                        const angleIndex = ((baseAngle % Math.TAU) * PRECALC_SIZE / Math.TAU) | 0;
+                        const baseAngle = TAU * currentAngleIndex / realLength + this.rotation;
+                        const angleIndex = ((baseAngle % TAU) * PRECALC_SIZE / TAU) | 0;
                         currentAngleIndex++;
 
                         const petal = petals[j];

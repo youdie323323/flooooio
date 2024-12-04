@@ -13,8 +13,10 @@ import uWS from 'uWebSockets.js';
 import { WaveRoomState } from "../../shared/waveRoom";
 import { Rarities } from "../../shared/rarity";
 
+const TAU = Math.PI * 2;
+
 export function angleToRad(angle: number): number {
-    return (angle / 255) * Math.TAU
+    return (angle / 255) * TAU
 }
 
 export function isPetal(type: MobType | PetalType): type is PetalType {

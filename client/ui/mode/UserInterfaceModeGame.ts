@@ -391,16 +391,14 @@ export default class UserInterfaceGame extends UserInterface {
             const halfHeight = viewportHeight / 2;
 
             const filterFunc = (v: Entity) => {
-                // if (
-                //     v.x >= selfPlayer.x - halfWidth &&
-                //     v.x <= selfPlayer.x + halfWidth &&
-                //     v.y >= selfPlayer.y - halfHeight &&
-                //     v.y <= selfPlayer.y + halfHeight
-                // ) {
-                //     entitiesToDraw.push(v);
-                // }
-                
-                entitiesToDraw.push(v);
+                if (
+                    v.x >= selfPlayer.x - halfWidth &&
+                    v.x <= selfPlayer.x + halfWidth &&
+                    v.y >= selfPlayer.y - halfHeight &&
+                    v.y <= selfPlayer.y + halfHeight
+                ) {
+                    entitiesToDraw.push(v);
+                }
             };
 
             mobs.forEach(filterFunc);

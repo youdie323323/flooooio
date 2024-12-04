@@ -1,8 +1,10 @@
+const TAU = Math.PI * 2;
+
 function generateSinWaveTable(sampleRate: number) {
     const samples = [];
 
     for (let i = 0; i <= sampleRate; i++) {
-        const angle = (i / sampleRate) * Math.TAU;
+        const angle = (i / sampleRate) * TAU;
         let value = Math.sin(angle);
 
         samples.push(Math.round(value * 10000) / 10000);

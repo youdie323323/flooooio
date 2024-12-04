@@ -4,6 +4,8 @@ import { WavePool } from "../../wave/WavePool";
 import { BaseMob } from "./Mob";
 import { MOB_PROFILES } from "../../../shared/mobProfiles";
 
+const TAU = Math.PI * 2;
+
 export function MobBodyConnection<T extends EntityMixinConstructor<BaseMob>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
         [onUpdateTick](poolThis: WavePool): void {
@@ -37,7 +39,7 @@ export function MobBodyConnection<T extends EntityMixinConstructor<BaseMob>>(Bas
 
             if (currentDistance > centiDistance) {
                 this.magnitude = 0;
-                this.angle = ((Math.atan2(dy, dx) / Math.TAU) * 255 + 255) % 255;
+                this.angle = ((Math.atan2(dy, dx) / TAU) * 255 + 255) % 255;
 
                 const ratio = (currentDistance - centiDistance) / currentDistance;
                 this.x += dx * ratio;

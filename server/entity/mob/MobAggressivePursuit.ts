@@ -5,6 +5,8 @@ import { BaseMob, Mob, MobInstance } from "./Mob";
 import { Player, PlayerInstance } from "../player/Player";
 import { MobType } from "../../../shared/enum";
 
+const TAU = Math.PI * 2;
+
 export function findNearestEntity(me: Entity, entities: Entity[]) {
     if (!entities.length) return null;
 
@@ -97,7 +99,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                             const distance = Math.hypot(dx, dy);
 
                             if (distance < MOB_DETECTION_FACTOR * this.size) {
-                                const targetAngle = ((Math.atan2(dy, dx) / Math.TAU) * 255 + 255) % 255;
+                                const targetAngle = ((Math.atan2(dy, dx) / TAU) * 255 + 255) % 255;
 
                                 let currentAngle = this.angle;
                                 while (currentAngle < 0) currentAngle += 255;
@@ -151,7 +153,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                             const distance = Math.hypot(dx, dy);
 
                             if (distance < MOB_DETECTION_FACTOR * this.size) {
-                                const targetAngle = ((Math.atan2(dy, dx) / Math.TAU) * 255 + 255) % 255;
+                                const targetAngle = ((Math.atan2(dy, dx) / TAU) * 255 + 255) % 255;
 
                                 let currentAngle = this.angle;
                                 while (currentAngle < 0) currentAngle += 255;
@@ -209,7 +211,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                             const dx = this.mobLastAttackedBy.x - this.x;
                             const dy = this.mobLastAttackedBy.y - this.y;
 
-                            const targetAngle = ((Math.atan2(dy, dx) / Math.TAU) * 255 + 255) % 255;
+                            const targetAngle = ((Math.atan2(dy, dx) / TAU) * 255 + 255) % 255;
 
                             let currentAngle = this.angle;
                             while (currentAngle < 0) currentAngle += 255;

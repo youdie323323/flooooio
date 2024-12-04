@@ -238,6 +238,7 @@ export class WavePool {
     public addPetalOrMob(
         type: MobType | PetalType,
         rarity: Rarities,
+
         x: number,
         y: number,
 
@@ -302,7 +303,7 @@ export class WavePool {
         let slotPetals: MobInstance[] = new Array(count);
 
         for (let i = 0; i < count; i++) {
-            slotPetals[i] = this.addPetalOrMob(sp.type, sp.rarity, parent.x, parent.y, parent, null);
+            slotPetals[i] = this.addPetalOrMob(sp.type, sp.rarity, parent.x, parent.y, parent);
         }
 
         return slotPetals;
@@ -392,6 +393,7 @@ export class WavePool {
             prevSegment = this.addPetalOrMob(
                 type,
                 rarity,
+
                 // This is fucking important, dont use same coordinate every segment,
                 // i wasted 3 hours here, maybe this is because of collision
                 x + radius,
@@ -461,7 +463,7 @@ export class WavePool {
      * Broadcast message.
      */
     public broadcastChat(calleeId: PlayerInstance["id"], msg: string) {
-        const buffer = Buffer.alloc(1 + 1 + msg.length);
+        const buffer = Buffer.alloc(1 + 4 + (1 + msg.length));
         buffer.writeUInt8(ClientBound.WAVE_CHAT_RECV, 0);
 
         buffer.writeUInt32BE(calleeId, 1);

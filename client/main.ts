@@ -7,13 +7,6 @@ import TerrainGenerator, { BIOME_SVG_TILESETS, BIOME_TILESETS } from "./utils/Te
 import { Biomes, Mood } from "../shared/enum";
 import { uiScaleFactor } from "./ui/UserInterface";
 
-/**
- * Set all global extended constant in shared/types/global.d.ts.
- */
-{
-    Math.TAU = Math.PI * 2;
-}
-
 const canvas: HTMLCanvasElement = document.querySelector('#canvas');
 
 export let ws: WebSocket;

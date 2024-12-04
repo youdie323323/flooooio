@@ -3,6 +3,8 @@ import { Entity, EntityId } from "../entity/Entity";
 import { WaveRoomPlayerId } from "../wave/WaveRoom";
 import { PlayerInstance } from "../entity/player/Player";
 
+const TAU = Math.PI * 2;
+
 /**
  * Returns a random element from the given array.
  * @param choices - Array of items.
@@ -102,7 +104,7 @@ export function getRandomSafePosition(
   const maxAttempts = 100;
 
   for (let i = 0; i < maxAttempts; i++) {
-    const angle = Math.random() * Math.TAU;
+    const angle = Math.random() * TAU;
     const distance = Math.random() * (mapRadius - safetyDistance);
 
     const x = mapRadius + Math.cos(angle) * distance;
@@ -137,7 +139,7 @@ export function getRandomPosition(
   centerY: number,
   spawnRadius: number,
 ): [number, number] {
-  const angle = Math.random() * Math.TAU;
+  const angle = Math.random() * TAU;
   const distance = (0.5 + Math.random() * 0.5) * spawnRadius;
 
   const x = centerX + Math.cos(angle) * distance;
@@ -166,6 +168,6 @@ const CODE_CHARACTERS = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
 export function generateRandomWaveRoomCode(): string {
   const randStr = () => CODE_CHARACTERS[Math.floor(Math.random() * CODE_CHARACTERS.length)];
-  "XXX-XXXXXX"
+  // XXX-XXXXXX
   return randStr() + randStr() + randStr() + "-" + randStr() + randStr() + randStr() + randStr() + randStr() + randStr();
 }
