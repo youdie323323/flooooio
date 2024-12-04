@@ -13,7 +13,7 @@ import { Biomes, MobType, PetalType, Mood } from '../../shared/enum';
 import { Rarities } from '../../shared/rarity';
 import { ClientBound } from '../../shared/packet';
 import { SAFETY_DISTANCE } from "../entity/EntityMapBoundary";
-import WaveProbabilityPredictor, { LINK_MOBS } from "./WaveProbabilityPredictor";
+import WaveProbabilityPredictor, { LINKED_MOBS } from "./WaveProbabilityPredictor";
 import { WaveRoomState } from "../../shared/waveRoom";
 import { calculateWaveLength } from "../../shared/formula";
 
@@ -71,13 +71,13 @@ export class WavePool {
     public clientPool: Map<PlayerInstance["id"], PlayerInstance>;
     public mobPool: Map<MobInstance["id"], MobInstance>;
 
+    private eliminatedEntities: EntityId[];
+
     private waveProbabilityPredictor: WaveProbabilityPredictor;
 
     private updateWaveInterval: NodeJS.Timeout;
     private updateEntitiesInterval: NodeJS.Timeout;
     private updatePacketSendInterval: NodeJS.Timeout;
-
-    private eliminatedEntities: EntityId[];
 
     private biome: Biomes;
 
@@ -145,7 +145,7 @@ export class WavePool {
      * @param roomCandidates - list of players.
      */
     public startWave(biome: Biomes, roomCandidates: WaveRoomPlayer[]) {
-        // Set data (i dont like this codes)
+        // Set data (i dont like this code)
         this.biome = biome;
 
         const waveStartBuffer = Buffer.alloc(2);
@@ -167,7 +167,6 @@ export class WavePool {
 
         this.updateWaveInterval = setInterval(this.updateWave.bind(this), 1000 / PRE_WAVE_UPDATE_FPS);
         this.updateEntitiesInterval = setInterval(this.updateEntities.bind(this), 1000 / WAVE_UPDATE_FPS);
-
         this.updatePacketSendInterval = setInterval(this.broadcastUpdatePacket.bind(this), 1000 / WAVE_UPDATE_SEND_FPS);
     }
 
@@ -324,7 +323,7 @@ export class WavePool {
             using _disposable = this._onChangeAnything();
 
             if (!this.waveData.waveProgressIsRedGage) {
-                const mobData = this.waveProbabilityPredictor.predictMockData(this.biome, this.waveData.waveProgress);
+                const mobData = this.waveProbabilityPredictor.predictMockData(this.waveData.waveProgress, this.biome);
                 if (mobData) {
                     const [type, rarity] = mobData;
 
@@ -333,7 +332,7 @@ export class WavePool {
                         return null;
                     }
 
-                    if (LINK_MOBS.has(type)) {
+                    if (LINKED_MOBS.has(type)) {
                         this.createLinkedMob(type, rarity, randPos[0], randPos[1], 10);
                     } else {
                         this.addPetalOrMob(type, rarity, randPos[0], randPos[1]);

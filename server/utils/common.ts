@@ -135,6 +135,11 @@ export const traverseMobSegment = (poolThis: WavePool, mob: MobInstance): MobIns
 };
 
 /**
+ * Determine if mob is segment of body.
+ */
+export const isBody = (poolThis: WavePool, mob: MobInstance): boolean => traverseMobSegment(poolThis, mob) !== mob;
+
+/**
  * Revive player nearby other player.
  */
 export function revivePlayer(wavePool: WavePool, player: PlayerInstance) {

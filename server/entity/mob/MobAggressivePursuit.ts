@@ -1,4 +1,4 @@
-import { angleToRad, traverseMobSegment, isPetal } from "../../utils/common";
+import { angleToRad, traverseMobSegment, isPetal, isBody } from "../../utils/common";
 import { Entity, EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool } from "../../wave/WavePool";
 import { BaseMob, Mob, MobInstance } from "./Mob";
@@ -59,7 +59,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
             if (isPetal(this.type)) return;
 
             // If body, dont do anything
-            if (this.connectingSegment) return;
+            if (isBody(poolThis, this)) return;
 
             // Dont do anything while this.starfishRegeningHealth so
             // can handle angle in MobHealthRegen.ts

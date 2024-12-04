@@ -1,4 +1,4 @@
-import { traverseMobSegment, isPetal } from "../../utils/common";
+import { traverseMobSegment, isPetal, isBody } from "../../utils/common";
 import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool } from "../../wave/WavePool";
 import { BaseMob, Mob } from "./Mob";
@@ -33,7 +33,7 @@ export function MobOscillatingMovement<T extends EntityMixinConstructor<BaseMob>
             if (isPetal(this.type)) return;
 
             // If body, dont do anything
-            if (this.connectingSegment) return;
+            if (isBody(poolThis, this)) return;
 
             // Follows the player when the player moves away from this (pet) for a certain distance
             // Dont follows if targetting other mob

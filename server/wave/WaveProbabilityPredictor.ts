@@ -33,7 +33,7 @@ type NestedPartial<T> = {
     [K in keyof T]?: T[K] extends Array<infer R> ? Array<NestedPartial<R>> : NestedPartial<T[K]>
 };
 
-export const LINK_MOBS: Set<MobType> = new Set([
+export const LINKED_MOBS: Set<MobType> = new Set([
     MobType.CENTIPEDE, 
     MobType.CENTIPEDE_DESERT, 
     MobType.CENTIPEDE_EVIL,
@@ -182,7 +182,7 @@ export default class WaveProbabilityPredictor {
      */
     private points: number;
 
-    public predictMockData(biome: Biomes, waveProgress: number): [MobType, Rarities] | null {
+    public predictMockData(waveProgress: number, biome: Biomes): [MobType, Rarities] | null {
         this.timer++;
 
         // See comment of calculateWaveLuck
