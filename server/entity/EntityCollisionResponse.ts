@@ -56,6 +56,9 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
         super[onUpdateTick](poolThis);
       }
 
+      // Clear on return
+      using _disposable = this.quadTree.disposableClear();
+
       const waveMapRadius = poolThis.waveData.waveMapRadius;
 
       // Update quad tree boundaries
@@ -168,8 +171,6 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
           }
         });
 
-        this.quadTree.clear();
-
         return;
       }
 
@@ -280,13 +281,7 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
             return;
           }
         });
-
-        this.quadTree.clear();
-
-        return;
       }
-
-      this.quadTree.clear();
     }
 
     dispose = () => {

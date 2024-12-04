@@ -334,7 +334,7 @@ export class WavePool {
                     }
 
                     if (LINKED_MOBS.has(type)) {
-                        this.createLinkedMob(type, rarity, randPos[0], randPos[1], 10);
+                        this.linkedMobSegmentation(type, rarity, randPos[0], randPos[1], 10);
                     } else {
                         this.addPetalOrMob(type, rarity, randPos[0], randPos[1]);
                     }
@@ -373,7 +373,7 @@ export class WavePool {
         }
     }
 
-    public createLinkedMob(
+    public linkedMobSegmentation(
         type: MobType,
         rarity: Rarities,
         x: number,

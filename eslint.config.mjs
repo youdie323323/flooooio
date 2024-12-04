@@ -3,7 +3,6 @@ import tsdoc from 'eslint-plugin-tsdoc';
 import tseslint from 'typescript-eslint';
 import importPlugin from "eslint-plugin-import";
 
-// eslint-disable-next-line tsdoc/syntax
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   { files: ["**/*.{ts,js,mjs,cjs}"] },
@@ -24,7 +23,6 @@ export default [
       tsdoc,
     },
     rules: {
-      'tsdoc/syntax': 'warn',
       'no-unused-vars': 'off',
       "import/no-cycle": "error",
     },
@@ -33,6 +31,13 @@ export default [
         "typescript": true,
         "node": true,
       },
+    },
+  },
+  {
+    // Apply tsdoc rules only to TypeScript files
+    files: ["**/*.{ts,tsx}"],
+    rules: {
+      'tsdoc/syntax': 'warn',
     },
   },
 ];

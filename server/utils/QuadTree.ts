@@ -1,9 +1,8 @@
-import { Entity } from "../entity/Entity";
-
 interface Rectangle {
     // Center
     x: number;
     y: number;
+    
     // Size
     w: number;
     h: number;
@@ -14,13 +13,11 @@ interface PointLike {
     y: number;
 }
 
-export default class QuadTree<T extends PointLike> {
+export default class QuadTree<T extends PointLike & object> {
     private static readonly MAX_DEPTH = 10;
-    private static readonly MIN_SIZE = 1;
 
-    public boundary: Rectangle;
-    private capacity: number;
     private points: T[] = [];
+    
     private divided: boolean = false;
 
     private northWest: QuadTree<T> | null = null;
@@ -28,13 +25,11 @@ export default class QuadTree<T extends PointLike> {
     private southWest: QuadTree<T> | null = null;
     private southEast: QuadTree<T> | null = null;
 
-    private depth: number;
-
-    constructor(boundary: Rectangle, capacity: number = 4, depth: number = 0) {
-        this.boundary = boundary;
-        this.capacity = capacity;
-        this.depth = depth;
-    }
+    public constructor(
+        public boundary: Rectangle, 
+        private capacity: number = 4, 
+        private depth: number = 0
+    ) {};
 
     public insert(entity: T): boolean {
         if (!this.containsPoint(entity.x, entity.y)) {
@@ -47,7 +42,7 @@ export default class QuadTree<T extends PointLike> {
         }
 
         if (!this.divided) {
-            if (this.depth >= QuadTree.MAX_DEPTH || this.boundary.w <= QuadTree.MIN_SIZE || this.boundary.h <= QuadTree.MIN_SIZE) {
+            if (this.depth >= QuadTree.MAX_DEPTH) {
                 return false;
             }
 
@@ -144,9 +139,13 @@ export default class QuadTree<T extends PointLike> {
         );
     }
 
-    public clear() {
+    public clear(): void {
         this.points = [];
         this.divided = false;
         this.northWest = this.northEast = this.southWest = this.southEast = null;
+    }
+
+    public disposableClear(): Disposable {
+        return { [Symbol.dispose]: () => { this.clear() } };
     }
 }
