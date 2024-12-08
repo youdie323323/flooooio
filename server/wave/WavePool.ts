@@ -1,6 +1,6 @@
 import { Mob, MobInstance, MOB_SIZE_FACTOR, MobData } from "../entity/mob/Mob";
 import { Player, PlayerInstance, MockPlayerData } from "../entity/player/Player";
-import { EntityId, onUpdateTick } from "../entity/Entity";
+import { Entity, EntityId, onUpdateTick } from "../entity/Entity";
 import { calculateMobSize, isPetal, revivePlayer } from '../utils/common';
 import { MOB_PROFILES } from '../../shared/mobProfiles';
 import { PETAL_PROFILES } from '../../shared/petalProfiles';
@@ -16,6 +16,7 @@ import { SAFETY_DISTANCE } from "../entity/EntityMapBoundary";
 import WaveProbabilityPredictor, { LINKED_MOBS } from "./WaveProbabilityPredictor";
 import { WaveRoomState } from "../../shared/waveRoom";
 import { calculateWaveLength } from "../../shared/formula";
+import QuadTree from "../utils/QuadTree";
 
 // Define UserData for WebSocket connections
 export interface UserData {
@@ -93,6 +94,15 @@ export class WavePool {
         waveMapRadius: 1000,
     };
 
+    /**
+     * Shared quad tree instance.
+     * 
+     * @remarks
+     * 
+     * Probably unsafe, multiple access can cause dead lock?
+     */
+    public sharedQuadTree: QuadTree<Entity>;
+
     constructor(
         private _state: () => WaveRoomState,
         private _onChangeAnything: () => Disposable,
@@ -104,6 +114,8 @@ export class WavePool {
 
         this.waveProbabilityPredictor = new WaveProbabilityPredictor();
         this.waveProbabilityPredictor.reset(this.waveData.waveProgress);
+
+        this.sharedQuadTree = new QuadTree<Entity>({ x: 0, y: 0, w: 0, h: 0 });
     }
 
     /**
@@ -133,6 +145,10 @@ export class WavePool {
 
         this.waveData = null;
 
+        this.sharedQuadTree.clear();
+        // Dont set null, maybe accessed by EntityCollisionResponse quad tree clear
+        // this.sharedQuadTree = null;
+
         this._state = null;
         this._onChangeAnything = null;
 
@@ -141,8 +157,8 @@ export class WavePool {
 
     /**
      * Start wave.
-     * @param biome - biome of wave.
-     * @param roomCandidates - list of players.
+     * @param biome - Biome of wave.
+     * @param roomCandidates - List of players.
      */
     public startWave(biome: Biomes, roomCandidates: WaveRoomPlayer[]) {
         // Set data (i dont like this code)
@@ -157,14 +173,22 @@ export class WavePool {
         roomCandidates.forEach(player => {
             const randPos = getRandomPosition(this.waveData.waveMapRadius, this.waveData.waveMapRadius, this.waveData.waveMapRadius);
 
-            this.addClient(player, randPos[0], randPos[1]);
+            const { id: clientId } = this.addClient(player, randPos[0], randPos[1]);
 
             player.ws.send(waveStartBuffer, true);
+
+            player.ws.getUserData().waveClientId = clientId;
+
+            logger.region(() => {
+                using _guard = logger.metadata({ clientId });
+                logger.info("Added player on wave");
+            });
         });
 
         // Broadcast self id to all connection
         this.broadcastSeldIdPacket();
 
+        // Start all intervaler
         this.updateWaveInterval = setInterval(this.updateWave.bind(this), 1000 / PRE_WAVE_UPDATE_FPS);
         this.updateEntitiesInterval = setInterval(this.updateEntities.bind(this), 1000 / WAVE_UPDATE_FPS);
         this.updatePacketSendInterval = setInterval(this.broadcastUpdatePacket.bind(this), 1000 / WAVE_UPDATE_SEND_FPS);
@@ -225,13 +249,6 @@ export class WavePool {
 
         this.clientPool.set(clientId, playerInstance);
 
-        playerData.ws.getUserData().waveClientId = clientId;
-
-        logger.region(() => {
-            using _guard = logger.metadata({ clientId });
-            logger.info("Added player on wave");
-        });
-
         return playerInstance;
     }
 
@@ -250,7 +267,19 @@ export class WavePool {
     ): MobInstance | null {
         const mobId = generateRandomEntityId();
         if (this.mobPool.has(mobId)) {
-            return this.addPetalOrMob(type, rarity, x, y, petalMaster, petMaster, connectingSegment, isFirstSegment);
+            return this.addPetalOrMob(
+                type,
+                rarity,
+
+                x,
+                y,
+
+                petalMaster,
+                petMaster,
+
+                connectingSegment,
+                isFirstSegment
+            );
         }
 
         const profile: MobData | PetalData = MOB_PROFILES[type] || PETAL_PROFILES[type];
@@ -660,10 +689,10 @@ export class WavePool {
     removeClient(clientId: PlayerInstance["id"]) {
         const client = this.getClient(clientId);
         if (client) {
+            this.clientPool.delete(clientId);
+
             // Free memory
             client["dispose"]();
-
-            this.clientPool.delete(clientId);
 
             this.eliminatedEntities.push(clientId);
 
@@ -678,10 +707,6 @@ export class WavePool {
         return Array.from(this.clientPool.values());
     }
 
-    getAllClientIds() {
-        return Array.from(this.clientPool.keys());
-    }
-
     getMob(mobId: MobInstance["id"]): MobInstance | undefined {
         return this.mobPool.get(mobId);
     }
@@ -689,10 +714,10 @@ export class WavePool {
     removeMob(mobId: MobInstance["id"]) {
         const mob = this.getMob(mobId);
         if (mob) {
+            this.mobPool.delete(mobId);
+
             // Free memory
             mob["dispose"]();
-
-            this.mobPool.delete(mobId);
 
             this.eliminatedEntities.push(mobId);
         }
@@ -700,9 +725,5 @@ export class WavePool {
 
     getAllMobs() {
         return Array.from(this.mobPool.values());
-    }
-
-    getAllMobIds() {
-        return Array.from(this.mobPool.keys());
     }
 }

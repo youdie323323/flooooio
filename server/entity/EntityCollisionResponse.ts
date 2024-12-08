@@ -17,15 +17,6 @@ export const FLOWER_FRACTION = 25;
 
 export const BUBBLE_PUSH_FACTOR = 3;
 
-/**
- * Shared quadtree instance.
- * 
- * @remarks
- * 
- * Probably unsafe, multiple access can cause dead lock?
- */
-export const sharedQuadTree = new QuadTree<Entity>({ x: 0, y: 0, w: 0, h: 0 });
-
 export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>>(Base: T) {
   return class extends Base implements EntityMixinTemplate {
     private calculatePush(entity1: Entity, entity2: Entity, delta: number): [number, number] {
@@ -54,22 +45,22 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
 
       // Update quad tree boundaries
       const waveMapRadius = poolThis.waveData.waveMapRadius;
-      sharedQuadTree.boundary.x = sharedQuadTree.boundary.y = waveMapRadius;
-      sharedQuadTree.boundary.w = sharedQuadTree.boundary.h = waveMapRadius * 2;
+      poolThis.sharedQuadTree.boundary.x = poolThis.sharedQuadTree.boundary.y = waveMapRadius;
+      poolThis.sharedQuadTree.boundary.w = poolThis.sharedQuadTree.boundary.h = waveMapRadius * 2;
 
       // Clear on return
-      using _disposable = { [Symbol.dispose]: () => { sharedQuadTree.clear() } };
+      using _disposable = { [Symbol.dispose]: () => { poolThis.sharedQuadTree.clear() } };
 
       if (this instanceof Mob) {
         // Only insert mobs when mob
         poolThis.mobPool.forEach(mob => {
-          if (this.id !== mob.id) sharedQuadTree.insert(mob);
+          if (this.id !== mob.id) poolThis.sharedQuadTree.insert(mob);
         });
 
         const profile1: MobData | PetalData = MOB_PROFILES[this.type] || PETAL_PROFILES[this.type];
         const searchRadius = (profile1.rx + profile1.ry) * (this.size / profile1.fraction) * 2;
 
-        const nearby = sharedQuadTree.query({
+        const nearby = poolThis.sharedQuadTree.query({
           x: this.x,
           y: this.y,
           w: searchRadius,
@@ -79,15 +70,15 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
         // TODO: fix multiple hit
 
         nearby.forEach(_otherEntity => {
-          // Always mob because only inserted mob
+          // Only insert mob, can type assertion
           const otherEntity = <MobInstance>_otherEntity;
 
           // Petal dont damaged/knockbacked to petal
           if (isPetal(this.type) && isPetal(otherEntity.type)) return;
 
-          // Pet/petal dont damaged to player/pet
-          if ((this instanceof Player || isPetal(this.type)) && otherEntity.petMaster) return;
-          if ((otherEntity instanceof Player || isPetal(otherEntity.type)) && this.petMaster) return;
+          // Pet/petal dont damaged to pet/petal
+          if (isPetal(this.type) && otherEntity.petMaster) return;
+          if (isPetal(otherEntity.type) && this.petMaster) return;
 
           const profile2: MobData | PetalData = MOB_PROFILES[otherEntity.type] || PETAL_PROFILES[otherEntity.type];
 
@@ -174,23 +165,23 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
         // Insert both when player
         poolThis.mobPool.forEach(mob => {
           if (
-            this.id !== mob.id &&
+            // this.id !== mob.id &&
             // Dont insert when petal
             !mob.petalMaster &&
             // Dont insert when pet
             !mob.petMaster
-          ) sharedQuadTree.insert(mob);
+          ) poolThis.sharedQuadTree.insert(mob);
         });
         poolThis.clientPool.forEach(client => {
           if (
             this.id !== client.id && 
             // Dont collide to dead player
             !client.isDead
-          ) sharedQuadTree.insert(client);
+          ) poolThis.sharedQuadTree.insert(client);
         });
 
         const searchRadius = this.size * 50;
-        const nearby = sharedQuadTree.query({
+        const nearby = poolThis.sharedQuadTree.query({
           x: this.x,
           y: this.y,
           w: searchRadius,
