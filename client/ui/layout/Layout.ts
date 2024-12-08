@@ -1,7 +1,3 @@
-import { ExtensionConstructor } from "../components/extensions/Extension";
-import ExtensionCollidable from "../components/extensions/ExtensionCollidable";
-import { ExtensionDynamicLayoutable } from "../components/extensions/ExtensionDynamicLayoutable";
-
 export type NumberOrPercentage = number | `${number}%`;
 
 export interface LayoutOptions {

@@ -20,8 +20,7 @@ export type MaybeDynamicLayoutablePointer<T> = T | (() => T);
  * 
  * @remarks
  * 
- * Need to create this because of AddableContainer.
- * Although base components like "Button" is cant addable, not including ("Button" is satisfy Component, its should not work) 
+ * Base components like "Button" is cant addable, not including ("Button" is satisfy Component, its should not work).
  */
 export type AllComponents =
     | AddableContainer
@@ -183,7 +182,9 @@ export abstract class Component {
 
         const progress = easeInExpo(this.animationProgress);
 
-        ctx.translate(this.x + this.w / 2, this.y + (-(this.h / 1.5) * (1 - progress)) + this.h / 2);
+        const y = this.animationDirection === "out" ? -(this.h / 1.5) : this.h;
+
+        ctx.translate(this.x + this.w / 2, this.y + (y * (1 - progress)) + this.h / 2);
         ctx.scale(progress, progress);
         ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
     }

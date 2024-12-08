@@ -40,7 +40,7 @@ interface Vector3 {
 }
 
 let backgroundEntities: Set<
-    Vector3 & {
+    {
         waveStep: number;
         entity: EntityMob;
     }
@@ -169,10 +169,10 @@ export default class UserInterfaceTitle extends UserInterface {
                             this.onLoadedComponents.forEach(c => {
                                 c.setVisible(true, true);
                             });
-                        }, 200)
-                    }, 2000);
-                }, 200);
-            }, 2000);
+                        }, 170)
+                    }, 1500);
+                }, 170);
+            }, 1500);
         }, 1);
     }
 
@@ -769,7 +769,6 @@ export default class UserInterfaceTitle extends UserInterface {
             const param = this.generateRandomBgVector();
 
             backgroundEntities.add({
-                ...param,
                 waveStep: Math.random() + 360,
                 entity: new EntityMob(-1, param.x, param.y, 1, param.z * 5, 1, 1, PetalType.BASIC, Rarities.COMMON, false, false)
             });
@@ -777,10 +776,10 @@ export default class UserInterfaceTitle extends UserInterface {
             this.lastBackgroundEntitySpawn = Date.now();
         }
 
-        Array.from(backgroundEntities.values()).toSorted((a, b) => a.z + b.z).forEach(v => {
+        Array.from(backgroundEntities.values()).toSorted((a, b) => a.entity.size + b.entity.size).forEach(v => {
             v.entity.draw(ctx);
 
-            v.entity.x += v.z * 0.3;
+            v.entity.x += v.entity.size * 0.06;
             v.entity.y += Math.sin(v.waveStep / 20) * 0.1;
 
             v.waveStep += 0.1;

@@ -82,6 +82,32 @@ export default class QuadTree<T extends PointLike & object> {
         return found;
     }
 
+    public remove(entity: T): boolean {
+        if (!this.containsPoint(entity.x, entity.y)) {
+            return false;
+        }
+
+        // Check points in current node
+        for (let i = 0; i < this.points.length; i++) {
+            if (this.points[i] === entity) {
+                this.points.splice(i, 1);
+                return true;
+            }
+        }
+
+        // If divided, recursively check child nodes
+        if (this.divided) {
+            return (
+                this.northWest.remove(entity) ||
+                this.northEast.remove(entity) ||
+                this.southWest.remove(entity) ||
+                this.southEast.remove(entity)
+            );
+        }
+
+        return false;
+    }
+
     private divide() {
         const x = this.boundary.x;
         const y = this.boundary.y;
@@ -143,9 +169,5 @@ export default class QuadTree<T extends PointLike & object> {
         this.points = [];
         this.divided = false;
         this.northWest = this.northEast = this.southWest = this.southEast = null;
-    }
-
-    public disposableClear(): Disposable {
-        return { [Symbol.dispose]: () => { this.clear() } };
     }
 }

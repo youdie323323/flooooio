@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.16.0",
+    "@types/babel__parser": "^7.0.0",
     "@types/express": "^5.0.0",
     "@types/node-schedule": "^2.1.7",
     "@typescript-eslint/eslint-plugin": "^8.17.0",

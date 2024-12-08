@@ -1,7 +1,7 @@
 import { angleToRad, bodyDamageOrDamage, traverseMobSegment, isPetal } from "../utils/common";
 import { Entity, EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "./Entity";
 import { WavePool } from "../wave/WavePool";
-import { Mob, MobData } from "./mob/Mob";
+import { Mob, MobData, MobInstance } from "./mob/Mob";
 import { Player } from "./player/Player";
 import { PetalData } from "./mob/petal/Petal";
 import QuadTree from "../utils/QuadTree";
@@ -17,21 +17,17 @@ export const FLOWER_FRACTION = 25;
 
 export const BUBBLE_PUSH_FACTOR = 3;
 
+/**
+ * Shared quadtree instance.
+ * 
+ * @remarks
+ * 
+ * Probably unsafe, multiple access can cause dead lock?
+ */
+export const sharedQuadTree = new QuadTree<Entity>({ x: 0, y: 0, w: 0, h: 0 });
+
 export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>>(Base: T) {
   return class extends Base implements EntityMixinTemplate {
-    private quadTree: QuadTree<Entity>;
-
-    constructor(...args: any[]) {
-      super(...args);
-
-      this.quadTree = new QuadTree({
-        x: 0,
-        y: 0,
-        w: 0,
-        h: 0,
-      });
-    }
-
     private calculatePush(entity1: Entity, entity2: Entity, delta: number): [number, number] {
       const dx = entity2.x - entity1.x;
       const dy = entity2.y - entity1.y;
@@ -56,114 +52,114 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
         super[onUpdateTick](poolThis);
       }
 
-      // Clear on return
-      using _disposable = this.quadTree.disposableClear();
-
-      const waveMapRadius = poolThis.waveData.waveMapRadius;
-
       // Update quad tree boundaries
-      this.quadTree.boundary.x = this.quadTree.boundary.y = waveMapRadius;
-      this.quadTree.boundary.w = this.quadTree.boundary.h = waveMapRadius * 2;
+      const waveMapRadius = poolThis.waveData.waveMapRadius;
+      sharedQuadTree.boundary.x = sharedQuadTree.boundary.y = waveMapRadius;
+      sharedQuadTree.boundary.w = sharedQuadTree.boundary.h = waveMapRadius * 2;
+
+      // Clear on return
+      using _disposable = { [Symbol.dispose]: () => { sharedQuadTree.clear() } };
 
       if (this instanceof Mob) {
         // Only insert mobs when mob
         poolThis.mobPool.forEach(mob => {
-          if (this.id !== mob.id) this.quadTree.insert(mob);
+          if (this.id !== mob.id) sharedQuadTree.insert(mob);
         });
 
         const profile1: MobData | PetalData = MOB_PROFILES[this.type] || PETAL_PROFILES[this.type];
         const searchRadius = (profile1.rx + profile1.ry) * (this.size / profile1.fraction) * 2;
 
-        const nearby = this.quadTree.query({
+        const nearby = sharedQuadTree.query({
           x: this.x,
           y: this.y,
           w: searchRadius,
           h: searchRadius
         });
 
-        nearby.forEach(otherEntity => {
-          if (otherEntity instanceof Mob) {
-            // TODO: fix multiple hit
+        // TODO: fix multiple hit
 
-            // Petal dont damaged/knockbacked to petal
-            if (isPetal(this.type) && isPetal(otherEntity.type)) return;
+        nearby.forEach(_otherEntity => {
+          // Always mob because only inserted mob
+          const otherEntity = <MobInstance>_otherEntity;
 
-            // Pet/petal dont damaged to player/pet
-            if ((this instanceof Player || isPetal(this.type)) && otherEntity.petMaster) return;
-            if ((otherEntity instanceof Player || isPetal(otherEntity.type)) && this.petMaster) return;
+          // Petal dont damaged/knockbacked to petal
+          if (isPetal(this.type) && isPetal(otherEntity.type)) return;
 
-            const profile2: MobData | PetalData = MOB_PROFILES[otherEntity.type] || PETAL_PROFILES[otherEntity.type];
+          // Pet/petal dont damaged to player/pet
+          if ((this instanceof Player || isPetal(this.type)) && otherEntity.petMaster) return;
+          if ((otherEntity instanceof Player || isPetal(otherEntity.type)) && this.petMaster) return;
 
-            const ellipse1: Ellipse = {
-              x: this.x,
-              y: this.y,
-              a: profile1.rx * (this.size / profile1.fraction),
-              b: profile1.ry * (this.size / profile1.fraction),
-              theta: angleToRad(this.angle),
-            };
+          const profile2: MobData | PetalData = MOB_PROFILES[otherEntity.type] || PETAL_PROFILES[otherEntity.type];
 
-            const ellipse2: Ellipse = {
-              x: otherEntity.x,
-              y: otherEntity.y,
-              a: profile2.rx * (otherEntity.size / profile2.fraction),
-              b: profile2.ry * (otherEntity.size / profile2.fraction),
-              theta: angleToRad(otherEntity.angle),
-            };
+          const ellipse1: Ellipse = {
+            x: this.x,
+            y: this.y,
+            a: profile1.rx * (this.size / profile1.fraction),
+            b: profile1.ry * (this.size / profile1.fraction),
+            theta: angleToRad(this.angle),
+          };
 
-            const delta = computeDelta(ellipse1, ellipse2);
+          const ellipse2: Ellipse = {
+            x: otherEntity.x,
+            y: otherEntity.y,
+            a: profile2.rx * (otherEntity.size / profile2.fraction),
+            b: profile2.ry * (otherEntity.size / profile2.fraction),
+            theta: angleToRad(otherEntity.angle),
+          };
 
-            if (isColliding(delta)) {
-              const push = this.calculatePush(this, otherEntity, delta);
-              if (push) {
-                // Only pop knockback to enemy (summoned mob)
-                const multiplier1 = this.type === MobType.BUBBLE && otherEntity.petMaster ? BUBBLE_PUSH_FACTOR : 1;
-                const multiplier2 = otherEntity.type === MobType.BUBBLE && this.petMaster ? BUBBLE_PUSH_FACTOR : 1;
+          const delta = computeDelta(ellipse1, ellipse2);
 
-                const baseMultiplier1 = isPetal(this.type) ? 0.1 : 0.3;
-                const baseMultiplier2 = isPetal(otherEntity.type) ? 0.1 : 0.3;
+          if (isColliding(delta)) {
+            const push = this.calculatePush(this, otherEntity, delta);
+            if (push) {
+              // Only pop knockback to enemy (summoned mob)
+              const multiplier1 = this.type === MobType.BUBBLE && otherEntity.petMaster ? BUBBLE_PUSH_FACTOR : 1;
+              const multiplier2 = otherEntity.type === MobType.BUBBLE && this.petMaster ? BUBBLE_PUSH_FACTOR : 1;
 
-                this.x -= push[0] * multiplier2 * baseMultiplier2;
-                this.y -= push[1] * multiplier2 * baseMultiplier2;
-                otherEntity.x += push[0] * multiplier1 * baseMultiplier1;
-                otherEntity.y += push[1] * multiplier1 * baseMultiplier1;
+              const baseMultiplier1 = isPetal(this.type) ? 0.1 : 0.3;
+              const baseMultiplier2 = isPetal(otherEntity.type) ? 0.1 : 0.3;
 
-                // Pet doesnt damaged to other pet
-                if (this.petMaster && otherEntity.petMaster) return;
+              this.x -= push[0] * multiplier2 * baseMultiplier2;
+              this.y -= push[1] * multiplier2 * baseMultiplier2;
+              otherEntity.x += push[0] * multiplier1 * baseMultiplier1;
+              otherEntity.y += push[1] * multiplier1 * baseMultiplier1;
 
-                if (
-                  isPetal(this.type) || isPetal(otherEntity.type) ||
-                  this.petMaster || otherEntity.petMaster
-                ) {
-                  this.health -= bodyDamageOrDamage(profile2[otherEntity.rarity]);
-                  otherEntity.health -= bodyDamageOrDamage(profile1[this.rarity]);
+              // Pet doesnt damaged to other pet
+              if (this.petMaster && otherEntity.petMaster) return;
 
-                  // Dont trying to set mobLastAttackedBy to petal
+              if (
+                isPetal(this.type) || isPetal(otherEntity.type) ||
+                this.petMaster || otherEntity.petMaster
+              ) {
+                this.health -= bodyDamageOrDamage(profile2[otherEntity.rarity]);
+                otherEntity.health -= bodyDamageOrDamage(profile1[this.rarity]);
 
-                  if (!isPetal(otherEntity.type)) {
-                    // Propagate hit to centi head
-                    const maybeCentiHead = traverseMobSegment(poolThis, otherEntity);
+                // Dont trying to set mobLastAttackedBy to petal
 
-                    if (this.petalMaster) {
-                      maybeCentiHead.mobLastAttackedBy = this.petalMaster;
-                    }
+                if (!isPetal(otherEntity.type)) {
+                  // Propagate hit to head
+                  const maybeSegmentsHead = traverseMobSegment(poolThis, otherEntity);
 
-                    // Can targetted to pet too
-                    if (this.petMaster) {
-                      // If pet attacked mob its target player or pet?
-                      maybeCentiHead.mobLastAttackedBy = this.petMaster;
-                    }
+                  if (this.petalMaster) {
+                    maybeSegmentsHead.mobLastAttackedBy = this.petalMaster;
                   }
 
-                  if (!isPetal(this.type)) {
-                    const maybeCentiHead = traverseMobSegment(poolThis, this);
+                  // Can targetted to pet too
+                  if (this.petMaster) {
+                    // If pet attacked mob its target player or pet?
+                    maybeSegmentsHead.mobLastAttackedBy = this.petMaster;
+                  }
+                }
 
-                    if (otherEntity.petalMaster) {
-                      maybeCentiHead.mobLastAttackedBy = otherEntity.petalMaster;
-                    }
+                if (!isPetal(this.type)) {
+                  const maybeSegmentsHead = traverseMobSegment(poolThis, this);
 
-                    if (otherEntity.petMaster) {
-                      maybeCentiHead.mobLastAttackedBy = otherEntity.petMaster;
-                    }
+                  if (otherEntity.petalMaster) {
+                    maybeSegmentsHead.mobLastAttackedBy = otherEntity.petalMaster;
+                  }
+
+                  if (otherEntity.petMaster) {
+                    maybeSegmentsHead.mobLastAttackedBy = otherEntity.petMaster;
                   }
                 }
               }
@@ -183,14 +179,18 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
             !mob.petalMaster &&
             // Dont insert when pet
             !mob.petMaster
-          ) this.quadTree.insert(mob);
+          ) sharedQuadTree.insert(mob);
         });
         poolThis.clientPool.forEach(client => {
-          if (this.id !== client.id) this.quadTree.insert(client);
+          if (
+            this.id !== client.id && 
+            // Dont collide to dead player
+            !client.isDead
+          ) sharedQuadTree.insert(client);
         });
 
         const searchRadius = this.size * 50;
-        const nearby = this.quadTree.query({
+        const nearby = sharedQuadTree.query({
           x: this.x,
           y: this.y,
           w: searchRadius,
@@ -222,19 +222,16 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
             if (isColliding(delta)) {
               const push = this.calculatePush(this, otherEntity, delta);
               if (push) {
-                const thisMagnitude = this.magnitude / 255 * 1.5;
-                const otherMagnitude = otherEntity.magnitude / 255 * 1.5;
-
-                // This is like penalty (pushing someone with high speed will recive more knockback)
-                this.x -= push[0] * thisMagnitude;
-                this.y -= push[1] * thisMagnitude;
-                otherEntity.x += push[0] * otherMagnitude;
-                otherEntity.y += push[1] * otherMagnitude;
+                this.x -= push[0];
+                this.y -= push[1];
+                otherEntity.x += push[0];
+                otherEntity.y += push[1];
               }
             }
 
             return;
           }
+
           if (otherEntity instanceof Mob) {
             const profile1: MobData = MOB_PROFILES[otherEntity.type];
 
@@ -271,16 +268,18 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
                 // Take them body damage
                 otherEntity.health -= this.bodyDamage;
 
-                const maybeCentiHead = traverseMobSegment(poolThis, otherEntity);
+                const maybeSegmentsHead = traverseMobSegment(poolThis, otherEntity);
 
                 // Body hitted
-                maybeCentiHead.mobLastAttackedBy = this;
+                maybeSegmentsHead.mobLastAttackedBy = this;
               }
             }
 
             return;
           }
         });
+
+        return;
       }
     }
 
@@ -288,9 +287,6 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
       if (super.dispose) {
         super.dispose();
       }
-
-      this.quadTree.clear();
-      this.quadTree = null;
     }
   };
 }

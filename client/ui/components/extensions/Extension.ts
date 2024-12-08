@@ -5,7 +5,7 @@ export type UpdateFunction = () => void;
 
 export interface Updatable {
     /**
-     * Update method call on rAF.
+     * Update method call on rAF frame.
      */
     update: UpdateFunction;
 };
