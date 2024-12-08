@@ -56,7 +56,7 @@ export interface ComponentSymbol {
  * Not including dynamic layoutable layout to custom omitable/pickable layout.
  */
 export abstract class Component {
-    protected readonly ANIMATION_DURATION: number = 250;
+    protected readonly ANIMATION_DURATION: number = 100;
     public isAnimating: boolean = false;
     public animationProgress: number = 1;
     public animationStartTime: number | null = null;
@@ -162,6 +162,7 @@ export abstract class Component {
             }
 
             const elapsed = currentTime - this.animationStartTime;
+
             let progress = Math.max(0, Math.min(elapsed / this.ANIMATION_DURATION, 1));
 
             this.animationProgress = this.animationDirection === 'in' ? progress : 1 - progress;
@@ -176,9 +177,9 @@ export abstract class Component {
             }
         }
 
-        const easeInExpo = (x: number): number => {
+        function easeInExpo(x: number): number {
             return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
-        };
+        }
 
         const progress = easeInExpo(this.animationProgress);
 

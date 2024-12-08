@@ -3,7 +3,7 @@ import TerrainGenerator, { BIOME_TILESETS } from "../../utils/TerrainGenerator.j
 import { Button, SVGButton, TextButton } from "../components/Button.js";
 import UserInterface, { uiScaleFactor } from "../UserInterface.js";
 import TextInput from "../components/TextInput.js";
-import { cameraController, ws } from "../../main.js";
+import { cameraController, networking, ws } from "../../main.js";
 import { Biomes, PetalType } from "../../../shared/enum.js";
 import StaticText from "../components/Text.js";
 import { Rarities } from "../../../shared/rarity.js";
@@ -39,10 +39,12 @@ interface Vector3 {
     z: number;
 }
 
-let backgroundEntities: Set<{
-    waveStep: number;
-    entity: EntityMob;
-} & Vector3> = new Set();
+let backgroundEntities: Set<
+    Vector3 & {
+        waveStep: number;
+        entity: EntityMob;
+    }
+> = new Set();
 
 /**
  * Current ui of menu.
@@ -167,9 +169,9 @@ export default class UserInterfaceTitle extends UserInterface {
                             this.onLoadedComponents.forEach(c => {
                                 c.setVisible(true, true);
                             });
-                        }, 350)
+                        }, 200)
                     }, 2000);
-                }, 350);
+                }, 200);
             }, 2000);
         }, 1);
     }
@@ -180,12 +182,6 @@ export default class UserInterfaceTitle extends UserInterface {
     onMouseDown(event: MouseEvent): void { }
     onMouseUp(event: MouseEvent): void { }
     onMouseMove(event: MouseEvent): void { }
-
-    public onUiSwitched(): void {
-        cameraController.zoom = 1;
-
-        this.canvas.style.cursor = "default";
-    }
 
     public resetWaveState() {
         this.waveRoomPlayers = [];
@@ -362,7 +358,8 @@ export default class UserInterfaceTitle extends UserInterface {
 
                     onkeyup(e, self) {
                         const name = self.value();
-                        ws.send(new Uint8Array([ServerBound.WAVE_ROOM_CHANGE_NAME, name.length, ...new TextEncoder().encode(name)]));
+
+                        networking.sendRoomChangeName(name);
                     },
                 },
             );
@@ -384,15 +381,15 @@ export default class UserInterfaceTitle extends UserInterface {
                     readyToggle = !readyToggle;
 
                     if (this.squadMenuContainer.visible === false) {
-                        ws.send(new Uint8Array([ServerBound.WAVE_ROOM_FIND_PUBLIC, this.biome]));
+                        networking.sendRoomFindPublic(this.biome);
 
                         this.squadMenuContainer.setVisible(true, true);
 
                         this.statusTextRef = StatusText.SquadCreating;
 
-                        ws.send(new Uint8Array([ServerBound.WAVE_ROOM_CHANGE_READY, WaveRoomPlayerReadyState.READY]));
+                        networking.sendRoomChangeReady(WaveRoomPlayerReadyState.READY);
                     } else {
-                        ws.send(new Uint8Array([ServerBound.WAVE_ROOM_CHANGE_READY, readyToggle ? WaveRoomPlayerReadyState.READY : WaveRoomPlayerReadyState.UNREADY]));
+                        networking.sendRoomChangeReady(readyToggle ? WaveRoomPlayerReadyState.READY : WaveRoomPlayerReadyState.UNREADY);
                     }
                 },
                 true,
@@ -427,7 +424,7 @@ export default class UserInterfaceTitle extends UserInterface {
 
                     this.statusTextRef = StatusText.SquadCreating;
 
-                    ws.send(new Uint8Array([ServerBound.WAVE_ROOM_CHANGE_VISIBLE, WaveRoomVisibleState.PRIVATE]));
+                    networking.sendRoomChangeVisible(WaveRoomVisibleState.PRIVATE);
                 },
                 true,
                 "Squad",
@@ -570,7 +567,7 @@ export default class UserInterfaceTitle extends UserInterface {
 
                             this.statusTextRef = StatusText.Loading;
 
-                            ws.send(new Uint8Array([ServerBound.WAVE_ROOM_LEAVE]));
+                            networking.sendRoomLeave();
                         },
                         true,
                         CROSS_ICON_SVG,
@@ -584,9 +581,7 @@ export default class UserInterfaceTitle extends UserInterface {
                             w: 15,
                             h: 15,
                         },
-                        (t: boolean): void => {
-                            ws.send(new Uint8Array([ServerBound.WAVE_ROOM_CHANGE_VISIBLE, t ? WaveRoomVisibleState.PUBLIC : WaveRoomVisibleState.PRIVATE]));
-                        }
+                        (t: boolean): void => networking.sendRoomChangeVisible(t ? WaveRoomVisibleState.PUBLIC : WaveRoomVisibleState.PRIVATE),
                     )),
                     new StaticText(
                         {
@@ -653,7 +648,7 @@ export default class UserInterfaceTitle extends UserInterface {
                         "#1dd129",
                         () => {
                             const code = codeInput.value();
-                            ws.send(new Uint8Array([ServerBound.WAVE_ROOM_JOIN, code.length, ...new TextEncoder().encode(code)]));
+                            networking.sendRoomJoin(code);
                         },
                         () => codeInput.value().length > 0,
                         "Join",
@@ -667,10 +662,7 @@ export default class UserInterfaceTitle extends UserInterface {
                             h: 18,
                         },
                         "#5aa0db",
-                        () => {
-                            ws.send(new Uint8Array([ServerBound.WAVE_ROOM_FIND_PUBLIC, this.biome]));
-
-                        },
+                        () => networking.sendRoomFindPublic(this.biome),
                         true,
                         "Find public",
                     ),
@@ -682,9 +674,7 @@ export default class UserInterfaceTitle extends UserInterface {
                             h: 18,
                         },
                         "#5aa0db",
-                        () => {
-                            ws.send(new Uint8Array([ServerBound.WAVE_ROOM_CREATE, this.biome]));
-                        },
+                        () => networking.sendRoomCreate(this.biome),
                         () => true,
                         "New",
                     ),
@@ -770,22 +760,24 @@ export default class UserInterfaceTitle extends UserInterface {
         this.backgroundWaveStep += 0.07;
 
         backgroundEntities.forEach((v) => {
-            if (v.x > widthRelative) {
+            if (v.entity.x > widthRelative + (v.entity.size / uiScaleFactor)) {
                 backgroundEntities.delete(v);
             }
         });
 
         if (Date.now() - this.lastBackgroundEntitySpawn > 200) {
             const param = this.generateRandomBgVector();
+
             backgroundEntities.add({
                 ...param,
                 waveStep: Math.random() + 360,
                 entity: new EntityMob(-1, param.x, param.y, 1, param.z * 5, 1, 1, PetalType.BASIC, Rarities.COMMON, false, false)
             });
+
             this.lastBackgroundEntitySpawn = Date.now();
         }
 
-        Array.from(backgroundEntities.values()).sort((a, b) => a.z + b.z).forEach(v => {
+        Array.from(backgroundEntities.values()).toSorted((a, b) => a.z + b.z).forEach(v => {
             v.entity.draw(ctx);
 
             v.entity.x += v.z * 0.3;
@@ -820,6 +812,12 @@ export default class UserInterfaceTitle extends UserInterface {
 
     public dispose(): void {
         this.terrainGenerator = undefined;
+
+        this.canvas.style.cursor = "default";
+    }
+    
+    public onContextChanged(): void {
+        cameraController.zoom = 1;
 
         this.canvas.style.cursor = "default";
     }

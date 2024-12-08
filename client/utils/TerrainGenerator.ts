@@ -1,5 +1,5 @@
 import { Canvg, presets } from "canvg";
-import { cameraController } from "../main";
+import { antennaScaleFactor, cameraController } from "../main";
 import { Biomes } from "../../shared/enum";
 import { uiScaleFactor } from "../ui/UserInterface";
 
@@ -308,24 +308,23 @@ export default class TerrainGenerator {
 
     renderMap(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], radius: number, playerX: number, playerY: number) {
         const ctx = canvas.getContext("2d");
-        
-        const zoom = cameraController.zoom;
 
         const widthRelative = canvas.width / uiScaleFactor;
         const heightRelative = canvas.height / uiScaleFactor;
 
-        const gridSize = radius / 100;
+        const gridSizeX = radius / 100;
+        const gridSizeY = radius / 100;
 
-        const tilesetSize = 300 * zoom;
+        const tilesetSize = 300 * antennaScaleFactor;
 
-        const relativeCenterX = (radius - playerX) * zoom + widthRelative / 2;
-        const relativeCenterY = (radius - playerY) * zoom + heightRelative / 2;
+        const relativeCenterX = (radius - playerX) * antennaScaleFactor + widthRelative / 2;
+        const relativeCenterY = (radius - playerY) * antennaScaleFactor + heightRelative / 2;
 
-        const startTileX = relativeCenterX - (gridSize / 2 * tilesetSize);
-        const startTileY = relativeCenterY - (gridSize / 2 * tilesetSize);
+        const startTileX = relativeCenterX - (gridSizeX / 2 * tilesetSize);
+        const startTileY = relativeCenterY - (gridSizeY / 2 * tilesetSize);
 
-        for (let i = 0; i < gridSize; i++) {
-            for (let j = 0; j < gridSize; j++) {
+        for (let i = 0; i < gridSizeX; i++) {
+            for (let j = 0; j < gridSizeY; j++) {
                 const x = startTileX + i * tilesetSize;
                 const y = startTileY + j * tilesetSize;
 
@@ -344,14 +343,14 @@ export default class TerrainGenerator {
 
         ctx.save();
 
-        ctx.lineWidth = (widthRelative + heightRelative) * zoom;
+        ctx.lineWidth = (widthRelative + heightRelative) * antennaScaleFactor;
         ctx.beginPath();
         ctx.strokeStyle = 'black';
         ctx.globalAlpha = 0.14;
         ctx.arc(
             relativeCenterX,
             relativeCenterY,
-            (radius + 0.5) * zoom + ctx.lineWidth / 2, 0,
+            (radius + 0.5) * antennaScaleFactor + ctx.lineWidth / 2, 0,
             TAU,
         );
         ctx.stroke();
@@ -360,12 +359,10 @@ export default class TerrainGenerator {
         ctx.restore();
     }
 
-    renderMapMenu(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], playerX: number, playerY: number) {
+    renderMapMenu(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], tx: number, ty: number) {
         const ctx = canvas.getContext("2d");
 
-        const adjustedGridSize = 300;
-
-        const viewRadius = 2000;
+        const GRID_SIZE = 300;
 
         const widthRelative = canvas.width / uiScaleFactor;
         const heightRelative = canvas.height / uiScaleFactor;
@@ -373,30 +370,22 @@ export default class TerrainGenerator {
         const centerX = widthRelative / 2;
         const centerY = heightRelative / 2;
 
-        const playerGridX = Math.floor(playerX / adjustedGridSize);
-        const playerGridY = Math.floor(playerY / adjustedGridSize);
+        const gridX = Math.ceil(canvas.width / 800);
+        const gridY = Math.ceil(canvas.height / 800);
 
-        const tilesRadius = Math.ceil(viewRadius / adjustedGridSize) + 2;
+        for (let i = -gridX; i <= gridX; i++) {
+            for (let j = -gridY; j <= gridY; j++) {
+                const tileDistX = i * GRID_SIZE;
+                const tileDistY = j * GRID_SIZE;
 
-        for (let i = -tilesRadius; i <= tilesRadius; i++) {
-            for (let j = -tilesRadius; j <= tilesRadius; j++) {
-                const worldGridX = playerGridX + i;
-                const worldGridY = playerGridY + j;
+                const x = centerX + tileDistX - (tx % GRID_SIZE);
+                const y = centerY + tileDistY - (ty % GRID_SIZE);
 
-                const tileDistX = i * adjustedGridSize;
-                const tileDistY = j * adjustedGridSize;
-                const distance = Math.sqrt(tileDistX * tileDistX + tileDistY * tileDistY);
-
-                if (distance <= viewRadius + adjustedGridSize) {
-                    const x = centerX + tileDistX - (playerX % adjustedGridSize);
-                    const y = centerY + tileDistY - (playerY % adjustedGridSize);
-
-                    ctx.drawImage(
-                        tilesets[Math.abs((worldGridX + worldGridY) % tilesets.length)],
-                        x, y,
-                        adjustedGridSize + 1, adjustedGridSize + 1
-                    );
-                }
+                ctx.drawImage(
+                    tilesets[0],
+                    x, y,
+                    GRID_SIZE + 1, GRID_SIZE + 1
+                );
             }
         }
     }

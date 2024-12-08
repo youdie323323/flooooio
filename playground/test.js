@@ -6,9 +6,10 @@ canvas.height = window.innerHeight;
 
 function createBeetleBodyPath() {
     const p2 = new Path2D();
-    p2.moveTo(-40, 0);
-    p2.bezierCurveTo(-50, -50, 50, -50, 40, 0);
-    p2.bezierCurveTo(50, 50, -50, 50, -40, 0);
+    p2.moveTo(-42, 5);
+    p2.bezierCurveTo(-45, 40, 45, 40, 42, 5);
+    p2.lineTo(42, -5);
+    p2.bezierCurveTo(45, -40, -45, -40, -42, -5);
     p2.closePath();
     return p2;
 }
@@ -45,25 +46,9 @@ ctx.translate(500, 500);
 
 ctx.scale(5, 5)
 
-ctx.beginPath();
-for (let i = 0; i < 2; i++) {
-    ctx.save();
-    ctx.scale(1, i * 2 - 1);
-    ctx.translate(0, -3);
-    ctx.arc(0, 36, 18, 0, Math.PI * 2);
-    ctx.restore();
-}
-ctx.lineWidth = 7;
-ctx.lineJoin = ctx.lineCap = "round";
-ctx.strokeStyle = ctx.fillStyle = "#333333";
-ctx.fill();
-
-let bodyColor = ["#8ac255", "#709e45"];
-
-ctx.beginPath();
-ctx.arc(0, 0, 40, 0, Math.PI * 2);
-ctx.fillStyle = bodyColor[0];
-ctx.fill();
-ctx.lineWidth = 7;
-ctx.strokeStyle = bodyColor[1];
-ctx.stroke();
+const skinColor = "#ffe667";
+                ctx.fillStyle = skinColor;
+                ctx.fill(beetleBodyPath);
+                ctx.lineWidth = 6;
+                ctx.fillStyle = ctx.strokeStyle = darkend(skinColor, DARKEND_BASE);
+                ctx.stroke(beetleBodyPath);

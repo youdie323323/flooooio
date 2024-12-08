@@ -41,7 +41,6 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
             layout.x -= diffX;
             layout.y -= diffY;
 
-            // TODO: do screen clamp
             return layout;
         }
 

@@ -21,6 +21,7 @@ type DynamicLayoutableContainerLayoutOptions = MaybeDynamicLayoutablePointer<Omi
  * 
  * Container component cant work properly if addChildrenComponent not called / not setting parentContainer,
  * so create new type that ensure container is addable, now we can determine if container is addable container.
+ * __addable describes this is "Addable".
  */
 export type AddableContainer = (StaticPanelContainer | StaticHContainer | StaticVContainer) & { __addable: boolean };
 

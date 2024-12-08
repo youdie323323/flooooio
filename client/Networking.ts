@@ -31,14 +31,21 @@ export default class Networking {
     // Message senders
     [key: `send${string}`]: (...args: ReadonlyArray<any>) => void;
 
+    private textEncoder: TextEncoder;
+    private textDecoder: TextDecoder;
+
     constructor(public ws: WebSocket) {
-        const textDecoder = new TextDecoder("utf-8");
+        this.textEncoder = new TextEncoder();
+        this.textDecoder = new TextDecoder("utf-8", {
+            ignoreBOM: true,
+            fatal: true
+        });
 
         ws.onmessage = (event) => {
             const readString = (): string => {
                 const len = data.getUint8(offset++);
                 const buffers = new Uint8Array(data.buffer, offset, len);
-                const string = textDecoder.decode(buffers);
+                const string = this.textDecoder.decode(buffers);
                 offset += len;
                 return string;
             }
@@ -58,7 +65,7 @@ export default class Networking {
                     break;
                 }
                 case ClientBound.WAVE_UPDATE: {
-                    if (uiCtx.cCtx instanceof UserInterfaceGame) {
+                    if (uiCtx.currentCtx instanceof UserInterfaceGame) {
                         // Wave informations
                         {
                             const waveProgress = data.getUint16(offset);
@@ -76,20 +83,20 @@ export default class Networking {
                             const waveMapRadius = data.getUint16(offset);
                             offset += 2;
 
-                            uiCtx.cCtx.waveProgress = waveProgress;
+                            uiCtx.currentCtx.waveProgress = waveProgress;
 
-                            uiCtx.cCtx.nWaveProgressTimer = waveProgressTimer;
-                            uiCtx.cCtx.oWaveProgressTimer = uiCtx.cCtx.waveProgressTimer;
+                            uiCtx.currentCtx.nWaveProgressTimer = waveProgressTimer;
+                            uiCtx.currentCtx.oWaveProgressTimer = uiCtx.currentCtx.waveProgressTimer;
 
-                            uiCtx.cCtx.nWaveProgressRedGageTimer = waveProgressRedGageTimer;
-                            uiCtx.cCtx.oWaveProgressRedGageTimer = uiCtx.cCtx.waveProgressRedGageTimer;
+                            uiCtx.currentCtx.nWaveProgressRedGageTimer = waveProgressRedGageTimer;
+                            uiCtx.currentCtx.oWaveProgressRedGageTimer = uiCtx.currentCtx.waveProgressRedGageTimer;
 
-                            uiCtx.cCtx.waveEnded = waveEnded;
+                            uiCtx.currentCtx.waveEnded = waveEnded;
 
-                            uiCtx.cCtx.nMapRadius = waveMapRadius;
-                            uiCtx.cCtx.oMapRadius = uiCtx.cCtx.mapRadius;
+                            uiCtx.currentCtx.nMapRadius = waveMapRadius;
+                            uiCtx.currentCtx.oMapRadius = uiCtx.currentCtx.mapRadius;
 
-                            uiCtx.cCtx.updateT = 0;
+                            uiCtx.currentCtx.updateT = 0;
                         }
 
                         const clientCount = data.getUint16(offset);
@@ -256,7 +263,7 @@ export default class Networking {
                     break;
                 }
                 case ClientBound.WAVE_ROOM_UPDATE: {
-                    if (uiCtx.cCtx instanceof UserInterfaceTitle) {
+                    if (uiCtx.currentCtx instanceof UserInterfaceTitle) {
                         const waveClientCount = data.getUint8(offset++);
 
                         const _players: WaveRoomPlayerInformation[] = [];
@@ -288,46 +295,46 @@ export default class Networking {
 
                         const waveVisible = data.getUint8(offset++) as WaveRoomVisibleState;
 
-                        uiCtx.cCtx.waveRoomPlayers = _players;
-                        uiCtx.cCtx.waveRoomCode = waveCode;
-                        uiCtx.cCtx.waveRoomState = waveState;
-                        uiCtx.cCtx.waveRoomVisible = waveVisible;
+                        uiCtx.currentCtx.waveRoomPlayers = _players;
+                        uiCtx.currentCtx.waveRoomCode = waveCode;
+                        uiCtx.currentCtx.waveRoomState = waveState;
+                        uiCtx.currentCtx.waveRoomVisible = waveVisible;
 
-                        uiCtx.cCtx.biome = waveBiome;
+                        uiCtx.currentCtx.biome = waveBiome;
                     }
 
                     break;
                 }
                 case ClientBound.WAVE_STARTING: {
-                    if (uiCtx.cCtx instanceof UserInterfaceTitle) {
-                        uiCtx.cCtx.squadMenuContainer.setVisible(false, true);
+                    if (uiCtx.currentCtx instanceof UserInterfaceTitle) {
+                        uiCtx.currentCtx.squadMenuContainer.setVisible(false, true);
                     }
 
                     uiCtx.switchUI("game");
 
                     const waveBiome = data.getUint8(offset++) as Biomes;
 
-                    if (uiCtx.pCtx) {
-                        uiCtx.pCtx.biome = waveBiome;
+                    if (uiCtx.previousCtx) {
+                        uiCtx.previousCtx.biome = waveBiome;
                     }
-                    if (uiCtx.cCtx) {
-                        uiCtx.cCtx.biome = waveBiome;
+                    if (uiCtx.currentCtx) {
+                        uiCtx.currentCtx.biome = waveBiome;
                     }
 
                     break;
                 }
                 case ClientBound.WAVE_ROOM_JOIN_FAILED: {
-                    if (uiCtx.cCtx instanceof UserInterfaceTitle) {
+                    if (uiCtx.currentCtx instanceof UserInterfaceTitle) {
                         // Reset squad state to render status text
-                        uiCtx.cCtx.resetWaveState();
+                        uiCtx.currentCtx.resetWaveState();
 
-                        uiCtx.cCtx.statusTextRef = StatusText.SquadNotFound;
+                        uiCtx.currentCtx.statusTextRef = StatusText.SquadNotFound;
                     }
 
                     break;
                 }
                 case ClientBound.WAVE_CHAT_RECV: {
-                    if (uiCtx.cCtx instanceof UserInterfaceGame) {
+                    if (uiCtx.currentCtx instanceof UserInterfaceGame) {
                         const waveClientId = data.getUint32(offset);
                         offset += 4;
 
@@ -346,13 +353,13 @@ export default class Networking {
         };
     }
 
-    public sendMove(angle: number, magnitude = 1) {
+    public sendChangeMove(angle: number, magnitude = 1) {
         const normalizedAngle = getNormalizedAngle(angle);
         const data = new Uint8Array([ServerBound.WAVE_CHANGE_MOVE, normalizedAngle, Math.round(magnitude * 255)]);
         this.ws.send(data);
     }
 
-    public sendMood(flag: Mood) {
+    public sendChangeMood(flag: Mood) {
         const data = new Uint8Array([ServerBound.WAVE_CHANGE_MOOD, flag]);
         this.ws.send(data);
     }
@@ -363,7 +370,49 @@ export default class Networking {
     }
 
     public sendChat(chatMsg: string) {
-        const data = new Uint8Array([ServerBound.WAVE_CHAT_SENT, chatMsg.length, ...new TextEncoder().encode(chatMsg)]);
+        const data = new Uint8Array([ServerBound.WAVE_CHAT, chatMsg.length, ...this.textEncoder.encode(chatMsg)]);
+        this.ws.send(data);
+    }
+
+    public sendLeave() {
+        const data = new Uint8Array([ServerBound.WAVE_LEAVE]);
+        this.ws.send(data);
+    }
+
+    // Wave rooms
+
+    public sendRoomCreate(biome: Biomes) {
+        const data = new Uint8Array([ServerBound.WAVE_ROOM_CREATE, biome]);
+        this.ws.send(data);
+    }
+
+    public sendRoomJoin(code: string) {
+        const data = new Uint8Array([ServerBound.WAVE_ROOM_JOIN, code.length, ...this.textEncoder.encode(code)]);
+        this.ws.send(data);
+    }
+
+    public sendRoomFindPublic(biome: Biomes) {
+        const data = new Uint8Array([ServerBound.WAVE_ROOM_FIND_PUBLIC, biome]);
+        this.ws.send(data);
+    }
+
+    public sendRoomChangeReady(state: WaveRoomPlayerReadyState) {
+        const data = new Uint8Array([ServerBound.WAVE_ROOM_CHANGE_READY, state]);
+        this.ws.send(data);
+    }
+
+    public sendRoomChangeVisible(state: WaveRoomVisibleState) {
+        const data = new Uint8Array([ServerBound.WAVE_ROOM_CHANGE_VISIBLE, state]);
+        this.ws.send(data);
+    }
+
+    public sendRoomChangeName(name: string) {
+        const data = new Uint8Array([ServerBound.WAVE_ROOM_CHANGE_NAME, name.length, ...this.textEncoder.encode(name)]);
+        this.ws.send(data);
+    }
+
+    public sendRoomLeave() {
+        const data = new Uint8Array([ServerBound.WAVE_ROOM_LEAVE]);
         this.ws.send(data);
     }
 }

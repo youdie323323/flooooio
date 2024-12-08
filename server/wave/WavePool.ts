@@ -90,7 +90,7 @@ export class WavePool {
         waveProgressRedGageTimer: 0,
         waveProgressIsRedGage: false,
 
-        waveMapRadius: 2000,
+        waveMapRadius: 1000,
     };
 
     constructor(
@@ -373,6 +373,10 @@ export class WavePool {
         }
     }
 
+    /**
+     * Create linked mob.
+     * @param bodyCount - Body count not including head.
+     */
     public linkedMobSegmentation(
         type: MobType,
         rarity: Rarities,

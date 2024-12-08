@@ -11,23 +11,23 @@ export type UserInterfaces = UserInterfaceGame | UserInterfaceTitle;
 
 export default class UserInterfaceContext {
     private readonly transition: UserInterfaceTransition;
-
-    public cCtx: UserInterfaces | null;
-    public pCtx: UserInterfaces | null;
-
     public isTransitioning: boolean;
 
+    public currentCtx: UserInterfaces | null;
+    public previousCtx: UserInterfaces | null;
+
     constructor(private readonly canvas: HTMLCanvasElement) {
-        this.cCtx = new UserInterfaceTitle(canvas);
-        this.pCtx = null;
+        this.currentCtx = new UserInterfaceTitle(canvas);
+        this.previousCtx = null;
+
         this.transition = new UserInterfaceTransition(canvas);
         this.isTransitioning = false;
     }
 
     public cleanup(): void {
         // Cleanup mode-specific values & components
-        this.pCtx?.dispose();
-        this.pCtx?.cleanupRenders();
+        this.previousCtx?.dispose();
+        this.previousCtx?.cleanupRenders();
 
         this.isTransitioning = false;
     }
@@ -38,14 +38,14 @@ export default class UserInterfaceContext {
             return;
         }
 
-        this.pCtx = this.cCtx;
+        this.previousCtx = this.currentCtx;
 
-        this.pCtx.onUiSwitched();
+        this.previousCtx.onContextChanged();
 
         // Cleanup listeners so cant touch before ui buttons
-        this.pCtx?.removeEventListeners();
+        this.previousCtx?.removeEventListeners();
 
-        this.cCtx = this.createUI(mode);
+        this.currentCtx = this.createUI(mode);
 
         this.isTransitioning = true;
 
@@ -66,14 +66,14 @@ export default class UserInterfaceContext {
 
     public update(): void {
         if (!this.isTransitioning) {
-            this.cCtx?.animationFrame();
+            this.currentCtx?.animationFrame();
 
             return;
         }
 
-        this.transition.draw(this.cCtx, this.pCtx);
+        this.transition.draw(this.currentCtx, this.previousCtx);
 
-        const type: UserInterfaceMode = this.cCtx instanceof UserInterfaceTitle ? 'title' : 'game';
+        const type: UserInterfaceMode = this.currentCtx instanceof UserInterfaceTitle ? 'title' : 'game';
 
         if (this.transition.update(type)) {
             this.cleanup();

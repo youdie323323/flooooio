@@ -20,6 +20,7 @@ export const players: Map<number, EntityPlayer> = new Map();
 export const mobs: Map<number, EntityMob> = new Map();
 
 export const cameraController = new CameraController(canvas);
+
 export let antennaScaleFactor = 1;
 
 /**
@@ -99,6 +100,22 @@ const init = async function () {
         }
     }, {
         passive: false
+    });
+
+    function v(dy: number) {
+        if (dy < 0.0125) {
+            dy = 0.0125;
+        }
+        if (dy > 1) {
+            dy = 1;
+        }
+        return dy;
+    }
+
+    canvas.addEventListener("wheel", X => {
+        const E = X.deltaY * -0.0005 * (cameraController.zoom * 4);
+        const e = cameraController.zoom + E;
+        cameraController.zoom = v(e);
     });
 
     (function frame() {

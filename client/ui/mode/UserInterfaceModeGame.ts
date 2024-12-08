@@ -117,7 +117,7 @@ export default class UserInterfaceGame extends UserInterface {
             // Space means space
             case " ":
             case "Shift": {
-                networking.sendMood(event.key === " " ? Mood.ANGRY : Mood.SAD);
+                networking.sendChangeMood(event.key === " " ? Mood.ANGRY : Mood.SAD);
 
                 break;
             }
@@ -167,7 +167,7 @@ export default class UserInterfaceGame extends UserInterface {
             // Space means space
             case " ":
             case "Shift": {
-                networking.sendMood(Mood.NORMAL);
+                networking.sendChangeMood(Mood.NORMAL);
 
                 break;
             }
@@ -177,14 +177,14 @@ export default class UserInterfaceGame extends UserInterface {
     public onMouseDown(event: MouseEvent): void {
         if (networking) {
             if (event.button === 0 || event.button === 2) {
-                networking.sendMood(event.button === 0 ? Mood.ANGRY : event.button === 2 ? Mood.SAD : Mood.NORMAL);
+                networking.sendChangeMood(event.button === 0 ? Mood.ANGRY : event.button === 2 ? Mood.SAD : Mood.NORMAL);
             }
         }
     }
     public onMouseUp(event: MouseEvent): void {
         if (networking) {
             if (event.button === 0 || event.button === 2) {
-                networking.sendMood(Mood.NORMAL);
+                networking.sendChangeMood(Mood.NORMAL);
             }
         }
     }
@@ -195,19 +195,8 @@ export default class UserInterfaceGame extends UserInterface {
         if (networking) {
             const distance = Math.hypot(mouseXOffset, mouseYOffset);
             const angle = Math.atan2(mouseYOffset, mouseXOffset);
-            networking.sendMove(angle, distance < 50 ? distance / 100 : 1);
+            networking.sendChangeMove(angle, distance < 50 ? distance / 100 : 1);
         }
-    }
-
-    public onUiSwitched(): void {
-        // Fake dead animation
-        const player = players.get(waveSelfId);
-        if (player && !player.isDead) {
-            player.isDead = true;
-            player.deadT = 0;
-        }
-
-        this.canvas.style.cursor = "default";
     }
 
     private leaveGame() {
@@ -327,13 +316,13 @@ export default class UserInterfaceGame extends UserInterface {
             this.waveProgressTimer = this.oWaveProgressTimer + (this.nWaveProgressTimer - this.oWaveProgressTimer) * this.t;
             this.waveProgressRedGageTimer = this.oWaveProgressRedGageTimer + (this.nWaveProgressRedGageTimer - this.oWaveProgressRedGageTimer) * this.t;
             this.mapRadius = this.oMapRadius + (this.nMapRadius - this.oMapRadius) * this.t;
+
+            interpolatedMouseX = interpolate(interpolatedMouseX, mouseXOffset / antennaScaleFactor, 50);
+            interpolatedMouseY = interpolate(interpolatedMouseY, mouseYOffset / antennaScaleFactor, 50);
         }
 
         const canvas = this.canvas;
         const ctx = canvas.getContext("2d");
-
-        interpolatedMouseX = interpolate(interpolatedMouseX, mouseXOffset / antennaScaleFactor, 50);
-        interpolatedMouseY = interpolate(interpolatedMouseY, mouseYOffset / antennaScaleFactor, 50);
 
         const widthRelative = canvas.width / uiScaleFactor;
         const heightRelative = canvas.height / uiScaleFactor;
@@ -350,6 +339,9 @@ export default class UserInterfaceGame extends UserInterface {
         if (!selfPlayer) {
             return;
         }
+
+        // Render map
+        this.terrainGenerator.renderMap(canvas, BIOME_TILESETS.get(this.biome), this.mapRadius, selfPlayer.x, selfPlayer.y);
 
         // Update entities
         {
@@ -373,9 +365,6 @@ export default class UserInterfaceGame extends UserInterface {
                 }
             });
         }
-
-        // Render map
-        this.terrainGenerator.renderMap(canvas, BIOME_TILESETS.get(this.biome), this.mapRadius, selfPlayer.x, selfPlayer.y);
 
         // Render players & mobs
         {
@@ -740,6 +729,17 @@ export default class UserInterfaceGame extends UserInterface {
 
         players.clear();
         mobs.clear();
+    }
+
+    public onContextChanged(): void {
+        // Fake dead animation
+        const player = players.get(waveSelfId);
+        if (player && !player.isDead) {
+            player.isDead = true;
+            player.deadT = 0;
+        }
+
+        this.canvas.style.cursor = "default";
     }
 
     /**

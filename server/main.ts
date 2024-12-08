@@ -92,6 +92,8 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
     const { waveRoomClientId, waveClientId } = userData;
 
     const packetType = buffer[0];
+
+    // Log packet type
     if (
         packetType !== ServerBound.WAVE_CHANGE_MOVE &&
         packetType !== ServerBound.WAVE_CHANGE_MOOD &&
@@ -106,6 +108,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
     // Hmm, maybe should i kick client if their packet is incorrect?
 
     switch (packetType) {
+        // Wave
         case ServerBound.WAVE_CHANGE_MOVE: {
             if (buffer.length !== 3) return;
 
@@ -146,7 +149,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             break;
         }
-        case ServerBound.WAVE_CHAT_SENT: {
+        case ServerBound.WAVE_CHAT: {
             if (buffer.length < 2) return;
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
@@ -161,7 +164,21 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             break;
         }
-        // Wave
+        case ServerBound.WAVE_LEAVE: {
+            const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
+            if (!waveRoom) return;
+
+            const client = waveRoom.wavePool.getClient(waveClientId);
+            if (!client) return;
+
+            clientRemove(waveRoom, client.id);
+
+            userData.waveClientId = null;
+
+            break;
+        }
+
+        // Wave room
         case ServerBound.WAVE_ROOM_CREATE: {
             if (buffer.length !== 2 || !BIOME_VALUES.includes(buffer[1])) return;
 
@@ -235,19 +252,6 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             if (!ok) return;
 
             userData.waveRoomClientId = null;
-
-            break;
-        }
-        case ServerBound.WAVE_LEAVE: {
-            const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
-            if (!waveRoom) return;
-
-            const client = waveRoom.wavePool.getClient(waveClientId);
-            if (!client) return;
-
-            clientRemove(waveRoom, client.id);
-
-            userData.waveClientId = null;
 
             break;
         }
@@ -391,12 +395,8 @@ if (isDebug) {
         console.clear();
         
         logger.info("Showing the dump of information");
-        logger.info("Last 10 packet types received (exclude movement change, etc): " + JSON.stringify(packetHistory));
 
-        // Cpu
-        osUtils.cpuUsage(function (v) {
-            logger.info("CPU Usage (%): " + v);
-        });
+        logger.info("Last 10 packet types received (exclude movement change, etc): " + JSON.stringify(packetHistory));
 
         if (waveRoomService.allWaveRoom.length > 0) {
             logger.info("Wave rooms");

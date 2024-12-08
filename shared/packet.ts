@@ -2,19 +2,20 @@ export enum ServerBound {
     WAVE_CHANGE_MOVE,
     WAVE_CHANGE_MOOD,
     WAVE_SWAP_PETAL,
-    WAVE_CHAT_SENT,
+    WAVE_CHAT,
 
     WAVE_ROOM_CREATE,
     
     WAVE_ROOM_JOIN,
+
     WAVE_ROOM_FIND_PUBLIC,
 
     WAVE_ROOM_CHANGE_READY,
     WAVE_ROOM_CHANGE_VISIBLE,
     WAVE_ROOM_CHANGE_NAME,
 
-    WAVE_LEAVE,
     WAVE_ROOM_LEAVE,
+    WAVE_LEAVE,
 }
 
 export enum ClientBound {

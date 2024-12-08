@@ -143,6 +143,7 @@ export default class EntityMob extends Entity {
 
                 break;
             }
+
             case MobType.STARFISH: {
                 scale = this.size / 80;
 
@@ -195,6 +196,7 @@ export default class EntityMob extends Entity {
                 ctx.fill();
                 break;
             }
+
             case MobType.JELLYFISH: {
                 scale = this.size / 20;
 
@@ -227,6 +229,7 @@ export default class EntityMob extends Entity {
                 ctx.stroke();
                 break;
             }
+
             case MobType.BEETLE: {
                 scale = this.size / 40;
 
@@ -281,16 +284,19 @@ export default class EntityMob extends Entity {
 
                 break;
             }
+
             case PetalType.BASIC: {
                 drawBasicLike("#ffffff", "#cfcfcf");
 
                 break;
             }
+
             case PetalType.FASTER: {
                 drawBasicLike("#feffc9", "#cecfa3");
 
                 break;
             }
+
             case PetalType.BEETLE_EGG: {
                 scale = this.size / 20;
 
@@ -312,6 +318,7 @@ export default class EntityMob extends Entity {
 
                 break;
             }
+            
             case MobType.BUBBLE: {
                 this.drawBubble(ctx, false);
 

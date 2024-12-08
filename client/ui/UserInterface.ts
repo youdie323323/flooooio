@@ -396,14 +396,14 @@ export default abstract class UserInterface {
     public abstract animationFrame(): void;
 
     /**
-     * Dispose ui specific values.
+     * Dispose ui-specific values.
      */
     public abstract dispose(): void;
 
     /**
      * Method call on ui switched.
      */
-    public abstract onUiSwitched(): void;
+    public abstract onContextChanged(): void;
 
     // Interactive
 

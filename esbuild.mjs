@@ -34,22 +34,21 @@ async function watch() {
                 verbose: true,
                 compact: true,
 
+                stringEncoding: false,
                 stringCompression: false,
                 stringConcealing: false,
 
                 shuffle: false,
-                globalConcealing: false,
                 controlFlowFlattening: false,
-
+                globalConcealing: false,
+                
                 opaquePredicates: true,
-
                 variableMasking: true,
 
                 // Disable anti bandwidth transformers
                 identifierGenerator: "mangled",
                 hexadecimalNumbers: false,
                 deadCode: false,
-                stringEncoding: false,
               }).then(result => {
                 writeFileSync("./server/public/client.js", result.code);
                 rm(prebuildedFileName, () => { });

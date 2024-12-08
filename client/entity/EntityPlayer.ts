@@ -32,6 +32,7 @@ export default class EntityPlayer extends Entity {
 
         this.angryT = 0;
         this.sadT = 0;
+        
         this.isRemoved = false;
     }
 

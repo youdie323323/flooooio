@@ -89,6 +89,10 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
     private _cursorInterval?: NodeJS.Timeout;
     private _unfocusedState: boolean;
 
+    private _pMousemove: (e: any) => void;
+    private _pMousedown: (e: any) => void;
+    private _pMouseup: (e: any) => void;
+
     constructor(
         protected layout: MaybeDynamicLayoutablePointer<LayoutOptions>,
         o: CanvasInputOptions = {},
@@ -137,7 +141,7 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
         self._backgroundColor = o.backgroundColor || '#fff';
 
         if (self._canvas) {
-            self._canvas.addEventListener('mousemove', function (e: any) {
+            self._canvas.addEventListener('mousemove', this._pMousemove = function (e: any) {
                 if (!self.visible) {
                     return;
                 }
@@ -146,7 +150,7 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
                 self.mousemove(e, self);
             }, false);
 
-            self._canvas.addEventListener('mousedown', function (e: any) {
+            self._canvas.addEventListener('mousedown', this._pMousedown = function (e: any) {
                 if (!self.visible) {
                     return;
                 }
@@ -155,7 +159,7 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
                 self.mousedown(e, self);
             }, false);
 
-            self._canvas.addEventListener('mouseup', function (e: any) {
+            self._canvas.addEventListener('mouseup', this._pMouseup = function (e: any) {
                 if (!self.visible) {
                     return;
                 }
@@ -885,6 +889,10 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
         if (self._hasFocus) {
             self.blur();
         }
+
+        self._canvas.removeEventListener('mousemove', this._pMousemove);
+        self._canvas.removeEventListener('mousedown', this._pMousedown);
+        self._canvas.removeEventListener('mouseup', this._pMouseup);
 
         document.body.removeChild(self._hiddenInput);
     }
