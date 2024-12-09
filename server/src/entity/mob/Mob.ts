@@ -68,12 +68,6 @@ class BaseMob implements Entity {
     petGoingToMaster: boolean;
 
     /**
-     * Determines if petal is usage petal. (e.g. beetle egg)
-     * 
-     * @readonly
-     */
-    readonly petalIsUsage: boolean;
-    /**
      * Player which owns this petal.
      */
     petalMaster: PlayerInstance | null;

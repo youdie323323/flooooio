@@ -24,7 +24,7 @@ for (let i = 0; i < PRECALC_SIZE; i++) {
     lazySinTable[i] = Math.sin(angle);
 }
 
-export const UNMOODABLE_PETALS: Set<PetalType | MobType> = new Set([
+export const UNMOODABLE_PETALS: Set<PetalType> = new Set([
     PetalType.BEETLE_EGG,
 ]);
 

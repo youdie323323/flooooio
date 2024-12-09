@@ -16,6 +16,7 @@ const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, i: number
 
         const petal = cluster[j];
 
+        // Remove mob as it consumed
         poolThis.removeMob(petal.id);
 
         switch (petal.type) {
@@ -40,10 +41,10 @@ const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, i: number
 
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
-                const BOUNCE_FORCE = 50;
+                const BUBBLE_BOUNCE_FORCE = 50;
 
-                player.x -= (dx / distance) * BOUNCE_FORCE;
-                player.y -= (dy / distance) * BOUNCE_FORCE;
+                player.x -= (dx / distance) * BUBBLE_BOUNCE_FORCE;
+                player.y -= (dy / distance) * BUBBLE_BOUNCE_FORCE;
 
                 break;
             }

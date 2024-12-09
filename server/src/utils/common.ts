@@ -21,7 +21,7 @@ const TAU = Math.PI * 2;
  */
 export const angleToRad = memo((angle: number): number => (angle / 255) * TAU);
 
-export const isPetal = memo((type: MobType | PetalType): type is PetalType => type in PETAL_PROFILES);
+export const isPetal = <(type: MobType | PetalType) => type is PetalType>memo((type: MobType | PetalType): type is PetalType => type in PETAL_PROFILES);
 
 export const bodyDamageOrDamage = memo((stat: PetalStat | MobStat): number => "bodyDamage" in stat ? stat.bodyDamage : stat.damage);
 

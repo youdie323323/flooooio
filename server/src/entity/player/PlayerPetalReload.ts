@@ -5,10 +5,11 @@ import { BasePlayer, PlayerInstance } from "./Player";
 import { isUnconvertableSlot, PetalData } from "../mob/petal/Petal";
 import { PetalType, MobType } from "../../../../shared/enum";
 import { PETAL_PROFILES } from "../../../../shared/entity/mob/petal/petalProfiles";
-import { Rarities } from "../../../../shared/rarity";
+import { isPetal } from "../../utils/common";
 
-export const USAGE_RELOAD_PETALS: Set<PetalType | MobType> = new Set([
+export const USAGE_RELOAD_PETALS: Set<PetalType> = new Set([
     PetalType.BEETLE_EGG,
+    PetalType.BUBBLE,
 ]);
 
 export const EGG_TYPE_MAPPING: Partial<Record<PetalType, MobType>> = {
@@ -44,12 +45,14 @@ export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(
                                     return;
                                 }
 
-                                if (this.slots.cooldownsPetal[i][j] === 0) {
+                                const eCooldownsPetal = this.slots.cooldownsPetal[i];
+
+                                if (eCooldownsPetal[j] === 0) {
                                     const profile = PETAL_PROFILES[e.type];
-                                    this.slots.cooldownsPetal[i][j] = Date.now() + (profile[e.rarity].petalReload * 1000);
+                                    eCooldownsPetal[j] = Date.now() + (profile[e.rarity].petalReload * 1000);
                                 }
                                 // If cooldown elapsed
-                                else if (Date.now() >= this.slots.cooldownsPetal[i][j]) {
+                                else if (Date.now() >= eCooldownsPetal[j]) {
                                     petals[j] = poolThis.addPetalOrMob(
                                         e.type,
                                         e.rarity,
@@ -62,7 +65,7 @@ export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(
                                         null,
                                     );
 
-                                    this.slots.cooldownsPetal[i][j] = 0;
+                                    eCooldownsPetal[j] = 0;
                                 }
                             }
                         })
@@ -72,15 +75,18 @@ export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(
                 surface.forEach((petals, i) => {
                     if (petals != null && isUnconvertableSlot(petals)) {
                         petals.forEach((e, j) => {
-                            if (e.petalIsUsage) {
+                            if (isPetal(e.type) && USAGE_RELOAD_PETALS.has(e.type)) {
+                                const eCooldownsUsage = this.slots.cooldownsUsage[i];
+
                                 if (poolThis.getMob(e.id)) {
-                                    if (this.slots.cooldownsUsage[i][j] === 0) {
+                                    // Petal respawned, start consume timer
+                                    if (eCooldownsUsage[j] === 0) {
                                         const profile = PETAL_PROFILES[e.type];
-                                        this.slots.cooldownsUsage[i][j] = Date.now() + (profile[e.rarity].usageReload * 1000);
+                                        eCooldownsUsage[j] = Date.now() + (profile[e.rarity].usageReload * 1000);
                                     }
                                 } else {
                                     // Reset cooldown because its breaked
-                                    this.slots.cooldownsUsage[i][j] = 0;
+                                    eCooldownsUsage[j] = 0;
                                 }
                             }
                         });

@@ -309,7 +309,6 @@ export class WavePool {
             petMaster,
             petGoingToMaster: false,
 
-            petalIsUsage: USAGE_RELOAD_PETALS.has(type),
             petalMaster,
             petalSummonedPet: null,
 

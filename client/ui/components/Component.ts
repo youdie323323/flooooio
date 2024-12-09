@@ -203,7 +203,7 @@ export abstract class Component {
 
             if (this.animationDirection === "out") {
                 this.realY = this.y;
-                this.y -= 20;
+                this.y -= 25;
             }
 
             if (toggle) {

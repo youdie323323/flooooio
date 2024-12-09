@@ -2,7 +2,7 @@ import { traverseMobSegment, isPetal, isBody } from "../../utils/common";
 import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool } from "../../wave/WavePool";
 import { BaseMob, Mob } from "./Mob";
-import { SHARED_SINE_WAVE } from "../../utils/cosineWave";
+import { SHARED_SINE_WAVE } from "../../utils/sinWave";
 import { getRandomAngle } from "../../utils/random";
 import { MOB_BEHAVIORS, MobBehaviors, turnAngleToTarget } from "./MobAggressivePursuit";
 import { MobType } from "../../../../shared/enum";
@@ -15,13 +15,6 @@ export function MobDynamicMovement<T extends EntityMixinConstructor<BaseMob>>(Ba
         private movementTimer: number = 0;
         private rotationCounter: number = 0;
         private isMoving: boolean = false;
-
-        private startMovement() {
-            if (!this.isMoving) {
-                this.isMoving = true;
-                this.movementTimer = 0;
-            }
-        }
 
         [onUpdateTick](poolThis: WavePool): void {
             // Call parent onUpdateTick
@@ -89,6 +82,13 @@ export function MobDynamicMovement<T extends EntityMixinConstructor<BaseMob>>(Ba
                 } else {
                     this.isMoving = false;
                 }
+            }
+        }
+
+        private startMovement() {
+            if (!this.isMoving) {
+                this.isMoving = true;
+                this.movementTimer = 0;
             }
         }
 
