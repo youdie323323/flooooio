@@ -6,7 +6,7 @@ import EntityPlayer from "./EntityPlayer";
 import { MOB_PROFILES } from "../../shared/entity/mob/mobProfiles";
 
 /**
- * Draw entity details (e.g. health gage).
+ * Draw entity details (e.g. health gage, nickname).
  */
 export default function drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D) {
     if (

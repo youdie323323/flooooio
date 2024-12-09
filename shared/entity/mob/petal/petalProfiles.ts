@@ -2,7 +2,7 @@ import { PetalData } from "../../../../server/src/entity/mob/petal/Petal";
 import { PetalType } from "../../../enum";
 import { Rarities } from "../../../rarity";
 
-export const PETAL_PROFILES: Partial<Record<PetalType, PetalData>> = {
+export const PETAL_PROFILES: Required<Record<PetalType, PetalData>> = {
     [PetalType.BASIC]: {
         name: "Basic",
         description: "A nice petal, not too strong but not too weak.",
@@ -311,6 +311,80 @@ export const PETAL_PROFILES: Partial<Record<PetalType, PetalData>> = {
             health: 1,
             petalReload: 0.2,
             usageReload: 0.1,
+            count: 1,
+
+            isCluster: false,
+        },
+    },
+    [PetalType.YIN_YANG]: {
+        name: "Yin Yang",
+        description: "This mysterious petal affects the rotation of your petals in unpredictable ways.",
+        fraction: 20,
+        rx: 20,
+        ry: 20,
+
+        // TODO: collect missing informations
+
+        [Rarities.COMMON]: {
+            damage: 90,
+            health: 90,
+            petalReload: 2,
+            count: 1,
+
+            isCluster: false,
+        },
+        [Rarities.UNUSUAL]: {
+            damage: 90,
+            health: 90,
+            petalReload: 2,
+            count: 1,
+
+            isCluster: false,
+        },
+        [Rarities.RARE]: {
+            damage: 90,
+            health: 90,
+            petalReload: 2,
+            count: 1,
+
+            isCluster: false,
+        },
+        [Rarities.EPIC]: {
+            damage: 90,
+            health: 90,
+            petalReload: 2,
+            count: 1,
+
+            isCluster: false,
+        },
+        [Rarities.LEGENDARY]: {
+            damage: 90,
+            health: 90,
+            petalReload: 2,
+            count: 1,
+
+            isCluster: false,
+        },
+        [Rarities.MYTHIC]: {
+            damage: 90,
+            health: 90,
+            petalReload: 2,
+            count: 1,
+
+            isCluster: false,
+        },
+        [Rarities.ULTRA]: {
+            damage: 90,
+            health: 90,
+            petalReload: 2,
+            count: 1,
+
+            isCluster: false,
+        },
+        [Rarities.SUPER]: {
+            damage: 90,
+            health: 90,
+            petalReload: 2,
             count: 1,
 
             isCluster: false,

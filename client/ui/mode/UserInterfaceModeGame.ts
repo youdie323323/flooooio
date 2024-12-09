@@ -153,6 +153,7 @@ export default class UserInterfaceGame extends UserInterface {
                         if (index === 0) {
                             index = 10;
                         }
+                        
                         index--;
                         networking.sendSwapPetal(index);
                     }

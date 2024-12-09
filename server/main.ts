@@ -27,34 +27,67 @@ const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
         surface: [
             {
                 type: PetalType.BASIC,
-                rarity: Rarities.MYTHIC,
+                rarity: Rarities.SUPER,
             } as MockPetalData,
             {
                 type: PetalType.BASIC,
-                rarity: Rarities.MYTHIC,
+                rarity: Rarities.SUPER,
             } as MockPetalData,
             {
                 type: PetalType.BASIC,
-                rarity: Rarities.MYTHIC,
+                rarity: Rarities.SUPER,
             } as MockPetalData,
             {
                 type: PetalType.BASIC,
-                rarity: Rarities.MYTHIC,
+                rarity: Rarities.SUPER,
             } as MockPetalData,
             {
                 type: PetalType.BASIC,
-                rarity: Rarities.MYTHIC,
+                rarity: Rarities.SUPER,
             } as MockPetalData,
             {
-                type: PetalType.FASTER,
-                rarity: Rarities.MYTHIC,
+                type: PetalType.BASIC,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BUBBLE,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BUBBLE,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BUBBLE,
+                rarity: Rarities.SUPER,
             } as MockPetalData,
             {
                 type: PetalType.FASTER,
                 rarity: Rarities.SUPER,
             } as MockPetalData,
         ],
-        bottom: [],
+        bottom: [
+            {
+                type: PetalType.YIN_YANG,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.YIN_YANG,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.YIN_YANG,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.YIN_YANG,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.YIN_YANG,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+        ],
     },
 };
 

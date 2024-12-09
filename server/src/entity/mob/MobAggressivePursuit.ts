@@ -187,11 +187,13 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                     }
 
                     if (this.mobLastAttackedBy) {
+                        const dx = this.mobLastAttackedBy.x - this.x;
+                        const dy = this.mobLastAttackedBy.y - this.y;
+
                         this.angle = turnAngleToTarget(
                             this.angle,
-                            // Dx, dy
-                            this.mobLastAttackedBy.x - this.x,
-                            this.mobLastAttackedBy.y - this.y,
+                            dx,
+                            dy,
                         );
 
                         this.magnitude = 255 * Mob.BASE_SPEED;

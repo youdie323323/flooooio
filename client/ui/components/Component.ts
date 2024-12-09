@@ -88,6 +88,8 @@ export abstract class Component {
     public w: number = 0;
     public h: number = 0;
 
+    private realY: number = 0;
+
     /**
      * This method calculate layout by layout options, and parent container/screen.
      */
@@ -169,6 +171,7 @@ export abstract class Component {
             if (elapsed >= this.ANIMATION_DURATION) {
                 if (this.animationDirection === 'out') {
                     this.visible = false;
+                    this.y = this.realY;
                 }
 
                 this.isAnimating = false;
@@ -182,9 +185,7 @@ export abstract class Component {
 
         const progress = easeInExpo(this.animationProgress);
 
-        const y = this.animationDirection === "out" ? -(this.h / 1.5) : this.h / 1.2;
-
-        ctx.translate(this.x + this.w / 2, this.y + (y * (1 - progress)) + this.h / 2);
+        ctx.translate(this.x + this.w / 2, this.y + ((1 - progress)) + this.h / 2);
         ctx.scale(progress, progress);
         ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
     }
@@ -199,6 +200,11 @@ export abstract class Component {
             this.animationProgress = toggle ? 0 : 1;
             this.animationStartTime = null;
             this.animationDirection = toggle ? 'in' : 'out';
+
+            if (this.animationDirection === "out") {
+                this.realY = this.y;
+                this.y -= 20;
+            }
 
             if (toggle) {
                 this.visible = true;

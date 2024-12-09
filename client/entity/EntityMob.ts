@@ -8,7 +8,7 @@ const TAU = Math.PI * 2;
 
 function createBeetleBodyPath() {
     const p2 = new Path2D();
-    
+
     p2.moveTo(-42, 5);
     p2.bezierCurveTo(-40, 40, 40, 40, 42, 5);
     p2.lineTo(42, -5);
@@ -39,7 +39,7 @@ export default class EntityMob extends Entity {
         readonly rarity: Rarities,
 
         readonly isPet: boolean,
-        
+
         readonly isFirstSegment: boolean,
     ) {
         super(id, x, y, angle, size, health, maxHealth);
@@ -152,9 +152,9 @@ export default class EntityMob extends Entity {
                 ctx.scale(scale, scale);
 
                 ctx.rotate(Date.now() / 2000 % TAU + this.moveCounter * 0.4);
-                
+
                 const STARFISH_LEG_AMOUNT = 5;
-                
+
                 if (!this.legD) {
                     this.legD = Array(STARFISH_LEG_AMOUNT).fill(150);
                 }
@@ -325,7 +325,6 @@ export default class EntityMob extends Entity {
 
                 break;
             }
-            
             case MobType.BUBBLE: {
                 this.drawBubble(ctx, false);
 
@@ -387,6 +386,40 @@ export default class EntityMob extends Entity {
                         ctx.fill();
                     }
                 }
+
+                break;
+            }
+
+            case PetalType.YIN_YANG: {
+                scale = this.size / 20;
+
+                ctx.scale(scale, scale);
+
+                const clipFill = (us: ColorCode, ut: ColorCode) => {
+                    ctx.save();
+                    ctx.clip();
+                    ctx.lineCap = "round";
+                    ctx.fillStyle = this.getSkinColor(us);
+                    ctx.strokeStyle = this.getSkinColor(ut);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.restore();
+                };
+
+                ctx.lineCap = "round";
+                ctx.beginPath();
+                ctx.arc(0, 0, 20, 0, TAU);
+                clipFill("#333333", "#222222");
+                ctx.rotate(Math.PI);
+                ctx.beginPath();
+                ctx.arc(0, 0, 20, -Math.PI / 2, Math.PI / 2);
+                ctx.arc(0, 10, 10, Math.PI / 2, Math.PI * 3 / 2);
+                ctx.arc(0, -10, 10, Math.PI / 2, Math.PI * 3 / 2, true);
+                clipFill("#ffffff", "#cfcfcf");
+                ctx.rotate(-Math.PI);
+                ctx.beginPath();
+                ctx.arc(0, 10, 10, Math.PI / 2, Math.PI * 3 / 2);
+                clipFill("#333333", "#222222");
 
                 break;
             }

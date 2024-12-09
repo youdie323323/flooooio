@@ -15,47 +15,6 @@ export const EGG_TYPE_MAPPING: Partial<Record<PetalType, MobType>> = {
     [PetalType.BEETLE_EGG]: MobType.BEETLE,
 };
 
-export const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, i: number, j: number) => {
-    // If cooldown elapsed
-    if (Date.now() >= player.slots.cooldownsUsage[i][j]) {
-        const petal = player.slots.surface[i][j];
-
-        poolThis.removeMob(petal.id);
-
-        switch (petal.type) {
-            case PetalType.BEETLE_EGG: {
-                petal.petalSummonedPet = poolThis.addPetalOrMob(
-                    EGG_TYPE_MAPPING[petal.type],
-                    Math.max(Rarities.COMMON, Math.min(Rarities.MYTHIC, petal.rarity - 1)),
-                    
-                    petal.x,
-                    petal.y,
-
-                    null,
-                    player,
-                );
-
-                break;
-            }
-
-            case PetalType.BUBBLE: {
-                const dx = petal.x - player.x;
-                const dy = petal.y - player.y;
-
-                const distance = Math.sqrt(dx * dx + dy * dy);
-
-                const BOUNCE_FORCE = 100;
-                player.x -= (dx / distance) * BOUNCE_FORCE;
-                player.y -= (dy / distance) * BOUNCE_FORCE;
-
-                break;
-            }
-        }
-
-        player.slots.cooldownsUsage[i][j] = 0;
-    }
-};
-
 export function PlayerReload<T extends EntityMixinConstructor<BasePlayer>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
         [onUpdateTick](poolThis: WavePool): void {
@@ -94,7 +53,7 @@ export function PlayerReload<T extends EntityMixinConstructor<BasePlayer>>(Base:
                                     petals[j] = poolThis.addPetalOrMob(
                                         e.type,
                                         e.rarity,
-                                        
+
                                         // Make it player coordinate so its looks like spawning from player body
                                         this.x,
                                         this.y,
@@ -102,6 +61,7 @@ export function PlayerReload<T extends EntityMixinConstructor<BasePlayer>>(Base:
                                         this,
                                         null,
                                     );
+
                                     this.slots.cooldownsPetal[i][j] = 0;
                                 }
                             }
@@ -124,12 +84,11 @@ export function PlayerReload<T extends EntityMixinConstructor<BasePlayer>>(Base:
                                 }
                             }
                         });
-
                     }
                 });
             }
         }
-        
+
         dispose = () => {
             if (super.dispose) {
                 super.dispose();

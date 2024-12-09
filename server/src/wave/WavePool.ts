@@ -247,8 +247,8 @@ export class WavePool {
         });
 
         // Reload all
-        playerInstance.slots.surface = playerData.slots.surface.map(c => c && !isUnconvertableSlot(c) && this.mockPetalDataToReal(c, playerInstance));
-        playerInstance.slots.bottom = playerData.slots.bottom.map(c => c && !isUnconvertableSlot(c) && this.mockPetalDataToReal(c, playerInstance));
+        playerInstance.slots.surface = playerData.slots.surface.map(c => c && !isUnconvertableSlot(c) && this.mockPetalDataToReal(c, playerInstance, true));
+        playerInstance.slots.bottom = playerData.slots.bottom.map(c => c && !isUnconvertableSlot(c) && this.mockPetalDataToReal(c, playerInstance, false));
 
         this.clientPool.set(clientId, playerInstance);
 
@@ -325,7 +325,12 @@ export class WavePool {
         return mobInstance;
     }
 
-    private mockPetalDataToReal(sp: MockPetalData, parent: PlayerInstance): MobInstance[] | null {
+    private mockPetalDataToReal(
+        sp: MockPetalData,
+        parent: PlayerInstance,
+
+        isSurface: boolean,
+    ): MobInstance[] | null {
         if (!sp) {
             return null;
         }
@@ -336,6 +341,7 @@ export class WavePool {
 
         for (let i = 0; i < count; i++) {
             slotPetals[i] = this.addPetalOrMob(sp.type, sp.rarity, parent.x, parent.y, parent);
+            if (!isSurface) this.removeMob(slotPetals[i].id);
         }
 
         return slotPetals;
@@ -477,13 +483,24 @@ export class WavePool {
             client &&
             !client.isDead &&
             client.slots.surface.length >= at && client.slots.bottom.length >= at &&
-            client.slots.bottom[at] instanceof Mob
+            isUnconvertableSlot(client.slots.bottom[at])
         ) {
-            if (client.slots.surface[at] instanceof Mob) {
-                this.removeMob(client.slots.surface[at].id);
+            const temp = client.slots.surface[at];
+
+            // Reset cooldown
+            client.slots.cooldownsPetal[at] = new Array(5).fill(0);
+            client.slots.cooldownsUsage[at] = new Array(5).fill(0);
+
+            // Remove all petal-binded mob
+            // TODO: remove summoned mob
+            if (isUnconvertableSlot(temp)) {
+                temp.forEach(e => {
+                    if (this.getMob(e.id)) {
+                        this.removeMob(e.id);
+                    }
+                });
             }
 
-            const temp = client.slots.surface[at];
             client.slots.surface[at] = client.slots.bottom[at];
             client.slots.bottom[at] = temp;
         }

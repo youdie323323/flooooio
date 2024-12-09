@@ -57,14 +57,33 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 this.petalBounces = new Float32Array(totalPetals).fill(0);
             }
 
+            const yinYangCount = surface.reduce(
+                (acc, curr) => acc + (
+                    curr && isUnconvertableSlot(curr) && curr.length > 0 && curr[0].type === PetalType.YIN_YANG ? 1 : 0
+                ),
+                0
+            );
+
+            /**
+             * Basically, every 2 yin yangs adds 1 ring.
+             * Yin yang changes the number of petals per ring by diving it by floor(num yin yang / 2) + 1.
+             */
+
+            const numRings = Math.floor(yinYangCount / 2) + 1;
+
+            const clockwise = yinYangCount % 2;
+
             let realLength = 0;
             for (let i = 0; i < totalPetals; i++) {
                 const petals = surface[i];
                 if (!petals || !isUnconvertableSlot(petals)) continue;
+
                 const firstPetal = petals[0];
                 const profile = PETAL_PROFILES[firstPetal.type][firstPetal.rarity];
                 realLength += profile.isCluster ? 1 : petals.length;
             }
+
+            realLength = Math.ceil(realLength / numRings);
 
             let currentAngleIndex = 0;
             const targetX = this.historyX[historyTargetIndex];
@@ -90,10 +109,13 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                     totalSpeed += rarityProfile.rad;
                 }
 
-                const rad = this.petalRadii[i];
+                const ringIndex = Math.floor(currentAngleIndex / realLength);
+                const rad = this.petalRadii[i] * (1 + (ringIndex * 0.5));
+
+                const rotationMultiplied = this.rotation * (1 + (ringIndex * 0.01));
 
                 if (rarityProfile.isCluster && petals.length > 1) {
-                    const baseAngle = TAU * currentAngleIndex / realLength + this.rotation;
+                    const baseAngle = TAU * (currentAngleIndex % realLength) / realLength + rotationMultiplied;
                     currentAngleIndex++;
 
                     const angleIndex = ((baseAngle % TAU) * PRECALC_SIZE / TAU) | 0;
@@ -101,7 +123,6 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                     const slotBaseY = targetY + lazySinTable[angleIndex] * rad;
 
                     for (let j = 0; j < petals.length; j++) {
-                        // Bit faster than rotation
                         const petalAngle = TAU * j / petals.length + 1.1 * this.rotation;
                         const petalAngleIndex = ((petalAngle % TAU) * PRECALC_SIZE / TAU) | 0;
 
@@ -111,7 +132,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                     }
                 } else {
                     for (let j = 0; j < petals.length; j++) {
-                        const baseAngle = TAU * currentAngleIndex / realLength + this.rotation;
+                        const baseAngle = TAU * (currentAngleIndex % realLength) / realLength + rotationMultiplied;
                         const angleIndex = ((baseAngle % TAU) * PRECALC_SIZE / TAU) | 0;
                         currentAngleIndex++;
 
@@ -122,7 +143,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 }
             }
 
-            this.rotation += totalSpeed / WAVE_UPDATE_FPS;
+            this.rotation += (clockwise ? -1 : 1) * totalSpeed / WAVE_UPDATE_FPS;
         }
 
         dispose = () => {
