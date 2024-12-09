@@ -1,25 +1,20 @@
+import path from "path";
 import uWS, { App, SHARED_COMPRESSOR } from 'uWebSockets.js';
-import { UserData } from './wave/WavePool';
-import { pack } from 'msgpackr';
-import * as fs from 'fs';
-import * as path from 'path';
-import WaveRoomService from './wave/WaveRoomService';
-import { Logger } from './logger/Logger';
-import { Mob } from './entity/mob/Mob';
-import { clientRemove, kickClient, processJoin } from './utils/common';
-import { MockPlayerData } from './entity/player/Player';
-import { choice, randomEnum, shuffle } from './utils/random';
-import { MockPetalData } from './entity/mob/petal/Petal';
-import { PetalType, Mood, BIOME_VALUES, MOOD_VALUES, Biomes } from '../shared/enum';
-import root from './command/commandRoot';
-import { registerSpawnMobBulk } from './command/subcommands/spawnMobBulk';
-import { registerSpawnMob } from './command/subcommands/spawnMob';
-import { registerSpawn } from './command/commands/spawn';
-import { Rarities } from '../shared/rarity';
-import { ClientBound, ClientboundConnectionKickReason, ServerBound } from '../shared/packet';
-import { PLAYER_STATE_VALUES, VISIBLE_STATE_VALUES, WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from '../shared/waveRoom';
-import os from "os";
-import osUtils from "os-utils";
+import { PetalType, MOOD_VALUES, BIOME_VALUES, Biomes } from "../shared/enum";
+import { ServerBound, ClientboundConnectionKickReason } from "../shared/packet";
+import { Rarities } from "../shared/rarity";
+import { PLAYER_STATE_VALUES, VISIBLE_STATE_VALUES, WaveRoomState, WaveRoomVisibleState } from "../shared/wave";
+import root from "./src/command/commandRoot";
+import { registerSpawn } from "./src/command/commands/spawn";
+import { registerSpawnMob } from "./src/command/subcommands/spawnMob";
+import { registerSpawnMobBulk } from "./src/command/subcommands/spawnMobBulk";
+import { MockPetalData } from "./src/entity/mob/petal/Petal";
+import { MockPlayerData } from "./src/entity/player/Player";
+import { Logger } from "./src/logger/Logger";
+import { kickClient, clientRemove, processJoin } from "./src/utils/common";
+import { UserData } from "./src/wave/WavePool";
+import WaveRoomService from "./src/wave/WaveRoomService";
+import fs from "fs";
 
 export const isDebug = process.argv.includes("-d");
 
@@ -56,10 +51,6 @@ const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
             } as MockPetalData,
             {
                 type: PetalType.FASTER,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BEETLE_EGG,
                 rarity: Rarities.SUPER,
             } as MockPetalData,
         ],

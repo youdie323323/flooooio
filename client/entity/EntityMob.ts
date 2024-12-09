@@ -8,11 +8,13 @@ const TAU = Math.PI * 2;
 
 function createBeetleBodyPath() {
     const p2 = new Path2D();
+    
     p2.moveTo(-42, 5);
     p2.bezierCurveTo(-40, 40, 40, 40, 42, 5);
     p2.lineTo(42, -5);
     p2.bezierCurveTo(40, -40, -40, -40, -42, -5);
     p2.closePath();
+
     return p2;
 }
 
@@ -150,16 +152,19 @@ export default class EntityMob extends Entity {
                 ctx.scale(scale, scale);
 
                 ctx.rotate(Date.now() / 2000 % TAU + this.moveCounter * 0.4);
-                const starfishLegCount = 5;
+                
+                const STARFISH_LEG_AMOUNT = 5;
+                
                 if (!this.legD) {
-                    this.legD = Array(starfishLegCount).fill(150);
+                    this.legD = Array(STARFISH_LEG_AMOUNT).fill(150);
                 }
                 const legD = this.legD;
-                const s4 = this.isDead ? 0 : Math.floor((this.nHealth / this.maxHealth) * (starfishLegCount - 1));
+                const s4 = this.isDead ? 0 : Math.floor((this.nHealth / this.maxHealth) * (STARFISH_LEG_AMOUNT));
+
                 ctx.beginPath();
-                for (let i = 0; i < starfishLegCount; i++) {
-                    const tw = (i + 0.5) / starfishLegCount * TAU;
-                    const tx = (i + 1) / starfishLegCount * TAU;
+                for (let i = 0; i < STARFISH_LEG_AMOUNT; i++) {
+                    const tw = (i + 0.5) / STARFISH_LEG_AMOUNT * TAU;
+                    const tx = (i + 1) / STARFISH_LEG_AMOUNT * TAU;
                     legD[i] += ((i < s4 ? 175 : 105) - legD[i]) * 0.5;
                     const ty = legD[i];
                     if (i === 0) {
@@ -176,9 +181,10 @@ export default class EntityMob extends Entity {
                 ctx.strokeStyle = ctx.fillStyle = this.getSkinColor("#d0504e");
                 ctx.fill();
                 ctx.stroke();
+
                 ctx.beginPath();
-                for (let i = 0; i < starfishLegCount; i++) {
-                    const tA = i / starfishLegCount * TAU;
+                for (let i = 0; i < STARFISH_LEG_AMOUNT; i++) {
+                    const tA = i / STARFISH_LEG_AMOUNT * TAU;
                     ctx.save();
                     ctx.rotate(tA);
                     const tB = legD[i] / 175;
@@ -194,6 +200,7 @@ export default class EntityMob extends Entity {
                 }
                 ctx.fillStyle = "#d3756b";
                 ctx.fill();
+
                 break;
             }
 

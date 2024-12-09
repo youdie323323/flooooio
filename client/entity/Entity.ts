@@ -1,3 +1,4 @@
+import { memo } from "../../shared/utils/memoize";
 import { deltaTime } from "../main";
 import { ColorCode } from "../utils/common";
 
@@ -8,9 +9,10 @@ function calculateAngleDistance(startAngle: number, endAngle: number) {
     return (angleDiff * 2) % TAU - angleDiff;
 }
 
-function interpolateAngle(startAngle: number, endAngle: any, progress: number) {
-    return startAngle + calculateAngleDistance(startAngle, endAngle) * progress;
-}
+const interpolateAngle = memo(
+    (startAngle: number, endAngle: number, progress: number) =>
+        startAngle + calculateAngleDistance(startAngle, endAngle) * progress
+);
 
 function interpolateColor(sourceColor: number[], targetColor: number[], progress: number) {
     const inverseProgress = 1 - progress;
@@ -21,22 +23,17 @@ function interpolateColor(sourceColor: number[], targetColor: number[], progress
     ];
 }
 
-let colorCache = {};
-function hexToRgb(hexColor: ColorCode) {
-    if (!colorCache[hexColor]) {
-        colorCache[hexColor] = [
-            parseInt(hexColor.slice(1, 3), 16),
-            parseInt(hexColor.slice(3, 5), 16),
-            parseInt(hexColor.slice(5, 7), 16)
-        ];
-    }
-
-    return colorCache[hexColor];
-}
+const hexToRgb = memo((hexColor: ColorCode) => {
+    return [
+        parseInt(hexColor.slice(1, 3), 16),
+        parseInt(hexColor.slice(3, 5), 16),
+        parseInt(hexColor.slice(5, 7), 16)
+    ];
+});
 
 function rgbArrayToString(rgbArray: number[]) {
     return "rgb(" + rgbArray.join(",") + ")";
-}
+};
 
 function smoothInterpolate(current: number, target: number, duration: number) {
     return current + (target - current) * Math.min(1, deltaTime / duration);
@@ -71,12 +68,12 @@ export default abstract class Entity {
     hpAlpha: number;
 
     constructor(
-        readonly id: number, 
-        x: number, 
-        y: number, 
-        angle: number, 
-        size: number, 
-        health: number, 
+        readonly id: number,
+        x: number,
+        y: number,
+        angle: number,
+        size: number,
+        health: number,
         public maxHealth: number,
     ) {
         this.x = this.nx = this.ox = x;
@@ -142,8 +139,10 @@ export default abstract class Entity {
         if (invertedHurtT >= 1) {
             return color;
         }
+
         color = hexToRgb(color);
         color = interpolateColor(color, [255, 0, 0], invertedHurtT * 0.25 + 0.75);
+
         return rgbArrayToString(color);
     }
 

@@ -1,9 +1,9 @@
-import { MOB_PROFILES } from "../../shared/mobProfiles";
 import { isPetal } from "../utils/common";
 import { waveSelfId } from "../Networking";
 import Entity from "./Entity";
 import EntityMob from "./EntityMob";
 import EntityPlayer from "./EntityPlayer";
+import { MOB_PROFILES } from "../../shared/entity/mob/mobProfiles";
 
 /**
  * Draw entity details (e.g. health gage).

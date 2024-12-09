@@ -1,7 +1,7 @@
 import { Mood, Biomes } from "../shared/enum";
 import { ClientBound, ServerBound } from "../shared/packet";
 import { Rarities } from "../shared/rarity";
-import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../shared/waveRoom";
+import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../shared/wave";
 import EntityMob from "./entity/EntityMob";
 import EntityPlayer from "./entity/EntityPlayer";
 import { players, mobs, uiCtx } from "./main";

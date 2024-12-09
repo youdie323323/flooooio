@@ -12,7 +12,7 @@ import ExtensionCollidable from "../components/extensions/ExtensionCollidable.js
 import { AddableContainer, CoordinatedStaticSpace, StaticContainer, StaticHContainer, StaticTransparentPanelContainer, StaticSpace, StaticVContainer, StaticPanelContainer } from "../components/Container.js";
 import { AllComponents, Component } from "../components/Component.js";
 import { CROSS_ICON_SVG } from "./UserInterfaceModeGame.js";
-import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../shared/waveRoom.js";
+import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../shared/wave.js";
 import Toggle from "../components/Toggle.js";
 import { ExtensionDynamicLayoutable } from "../components/extensions/ExtensionDynamicLayoutable.js";
 import PlayerProfile from "../components/PlayerProfile.js";

@@ -1,5 +1,5 @@
 import { Mood } from "../../../shared/enum";
-import { WaveRoomPlayerReadyState } from "../../../shared/waveRoom";
+import { WaveRoomPlayerReadyState } from "../../../shared/wave";
 import EntityPlayer from "../../entity/EntityPlayer";
 import { waveRoomSelfId } from "../../Networking";
 import { ColorCode, darkend, DARKEND_BASE } from "../../utils/common";

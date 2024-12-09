@@ -652,8 +652,6 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
     private mousedown(e: MouseEvent, self: this) {
         let mouse = self._mousePos(e), x = mouse.x, y = mouse.y, isOver = self._overInput(x, y);
 
-        this._updateCursorStyle(isOver);
-
         self._mouseDown = isOver;
 
         if (self._hasFocus && !isOver) {
@@ -673,7 +671,9 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
     }
 
     private mouseup(e: MouseEvent, self: this) {
-        let mouse = self._mousePos(e), x = mouse.x, y = mouse.y;
+        let mouse = self._mousePos(e), x = mouse.x, y = mouse.y, isOver = self._overInput(x, y);
+
+        this._updateCursorStyle(isOver);
 
         let isSelection = self._clickPos(x, y) !== self._selectionStart;
         if (self._hasFocus && self._selectionStart >= 0 && isSelection) {
