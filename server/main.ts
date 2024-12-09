@@ -33,6 +33,7 @@ const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
                 type: PetalType.BASIC,
                 rarity: Rarities.SUPER,
             } as MockPetalData,
+
             {
                 type: PetalType.BASIC,
                 rarity: Rarities.SUPER,
@@ -59,10 +60,6 @@ const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
             } as MockPetalData,
             {
                 type: PetalType.BUBBLE,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.FASTER,
                 rarity: Rarities.SUPER,
             } as MockPetalData,
         ],

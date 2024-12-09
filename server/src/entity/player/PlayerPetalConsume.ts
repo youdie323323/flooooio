@@ -66,15 +66,14 @@ export function PlayerPetalConsume<T extends EntityMixinConstructor<BasePlayer>>
             this.slots.surface.forEach((petals, i) => {
                 if (petals != null && isUnconvertableSlot(petals)) {
                     petals.forEach((e, j) => {
-                        // Automatically consume (e.g. egg)
-                        if (poolThis.getMob(e.id) && e.type === PetalType.BEETLE_EGG) {
-                            consumeConsumable(poolThis, this, i, j);
-                        }
+                        if (poolThis.getMob(e.id)) {
+                            const doConsume = () => consumeConsumable(poolThis, this, i, j);
 
-                        // Bubble
-                        // Keeping mood in SAD causes server crash, i wonder why?
-                        if (poolThis.getMob(e.id) && isMoodConsume && e.type === PetalType.BUBBLE) {
-                            consumeConsumable(poolThis, this, i, j);
+                            // Automatically (e.g. egg)
+                            if (e.type === PetalType.BEETLE_EGG) return doConsume();
+
+                            // Bubble
+                            if (isMoodConsume && e.type === PetalType.BUBBLE) return doConsume();
                         }
                     });
                 }

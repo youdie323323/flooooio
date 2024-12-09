@@ -10,7 +10,7 @@ import { PETAL_PROFILES } from "../../../../shared/entity/mob/petal/petalProfile
 const TAU = Math.PI * 2;
 
 const BASE_ROTATE_SPEED = 2.5;
-const BOUNCE_DECAY = 0.24;
+const BOUNCE_DECAY = 0.2;
 const BOUNCE_STRENGTH = 0.2;
 const PETAL_CLUSTER_RADIUS = 8;
 const HISTORY_SIZE = 10;
@@ -112,10 +112,10 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 const ringIndex = Math.floor(currentAngleIndex / realLength);
                 const rad = this.petalRadii[i] * (1 + (ringIndex * 0.5));
 
-                const rotationMultiplied = this.rotation * (1 + (ringIndex * 0.01));
+                const multipliedRotation = this.rotation * (1 + (ringIndex * 0.05));
 
                 if (rarityProfile.isCluster && petals.length > 1) {
-                    const baseAngle = TAU * (currentAngleIndex % realLength) / realLength + rotationMultiplied;
+                    const baseAngle = TAU * (currentAngleIndex % realLength) / realLength + multipliedRotation;
                     currentAngleIndex++;
 
                     const angleIndex = ((baseAngle % TAU) * PRECALC_SIZE / TAU) | 0;
@@ -132,7 +132,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                     }
                 } else {
                     for (let j = 0; j < petals.length; j++) {
-                        const baseAngle = TAU * (currentAngleIndex % realLength) / realLength + rotationMultiplied;
+                        const baseAngle = TAU * (currentAngleIndex % realLength) / realLength + multipliedRotation;
                         const angleIndex = ((baseAngle % TAU) * PRECALC_SIZE / TAU) | 0;
                         currentAngleIndex++;
 

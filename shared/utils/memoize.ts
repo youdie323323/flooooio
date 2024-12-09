@@ -33,7 +33,7 @@ export function memo<A extends unknown[], R extends unknown, T extends unknown, 
         if (result instanceof Promise) {
             result = result.catch(error => {
                 cache.delete(id)
-                throw error
+                throw error;
             }) as R;
         }
 
@@ -51,13 +51,5 @@ export function memoize<A extends unknown[], R>(memoizeOptions: MemoizeOptions<A
     ): void => {
         descriptor.value = memo(descriptor.value, memoizeOptions);
         Object.defineProperty(target, propertyKey, descriptor);
-    }
-}
-
-export function memoizeGetter<This, Value>(memoizeOptions: MemoizeOptions<[], Value> = {}) {
-    return (target: (this: This) => Value, context: ClassGetterDecoratorContext) => {
-        
-        const memoizedGetter = memo(target, memoizeOptions);
-        return memoizedGetter;
     }
 }

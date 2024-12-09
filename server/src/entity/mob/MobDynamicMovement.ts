@@ -6,9 +6,6 @@ import { SHARED_SINE_WAVE } from "../../utils/cosineWave";
 import { getRandomAngle } from "../../utils/random";
 import { MOB_BEHAVIORS, MobBehaviors, turnAngleToTarget } from "./MobAggressivePursuit";
 import { MobType } from "../../../../shared/enum";
-import { memoize, memoizeGetter } from "../../../../shared/utils/memoize";
-
-const TAU = Math.PI * 2;
 
 const MOVEMENT_DURATION = 1 / 150;
 

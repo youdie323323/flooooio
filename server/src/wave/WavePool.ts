@@ -479,6 +479,7 @@ export class WavePool {
      */
     public swapPetal(clientId: PlayerInstance["id"], at: number) {
         const client = this.clientPool.get(clientId);
+        // TODO: server broken when client switched petal ffs, fix
         if (
             client &&
             !client.isDead &&

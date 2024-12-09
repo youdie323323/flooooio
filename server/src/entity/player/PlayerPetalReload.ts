@@ -15,7 +15,7 @@ export const EGG_TYPE_MAPPING: Partial<Record<PetalType, MobType>> = {
     [PetalType.BEETLE_EGG]: MobType.BEETLE,
 };
 
-export function PlayerReload<T extends EntityMixinConstructor<BasePlayer>>(Base: T) {
+export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
         [onUpdateTick](poolThis: WavePool): void {
             if (super[onUpdateTick]) {
