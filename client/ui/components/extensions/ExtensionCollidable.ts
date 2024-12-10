@@ -8,19 +8,20 @@ type NullableAll<T extends readonly any[]> = {
 
 export default function ExtensionCollidable<T extends ExtensionConstructor>(Base: T) {
     abstract class MixedBase extends Base implements ComponentExtensionTemplate {
-        private static readonly SPEED: number = 0.3;
+        private static readonly SPEED: number = 0.4;
         private static readonly GAP: number = 4;
+        private static readonly DEAD_ZONE: number = 10;
 
         private collidableComponents: Component[];
-        private targetPos: NullableAll<[number, number]>;
-        private initialPos: [number, number];
+        private targetYPos: number | null;
+        private initialYPos: number;
 
         constructor(...args: any[]) {
             super(...args);
 
             this.collidableComponents = [];
-            this.targetPos = [null, null];
-            this.initialPos = [this.x, this.y];
+            this.targetYPos = null;
+            this.initialYPos = this.y;
         }
 
         // Override layout calculate to reset initial pos
@@ -31,14 +32,12 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
             originY: number
         ): LayoutResult {
             // Moving collision always up direction
-            const diffX = this.initialPos[0] - this.x,
-                diffY = this.initialPos[1] - this.y;
+            const  diffY = this.initialYPos - this.y;
 
             const layout = super.calculateLayout(width, height, originX, originY);
 
-            this.initialPos = [layout.x, layout.y];
+            this.initialYPos = layout.y;
 
-            layout.x -= diffX;
             layout.y -= diffY;
 
             return layout;
@@ -46,9 +45,7 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
 
         private resolveCollision(component: Component) {
             // Always up direction
-
-            this.targetPos[1] = component.y - this.h - MixedBase.GAP;
-            this.targetPos[0] = null;
+            this.targetYPos = component.y - this.h - MixedBase.GAP;
         }
 
         private isColliding(component: Component): boolean {
@@ -86,26 +83,13 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
                 }
             });
 
-            if (!hasCollision) {
-                this.targetPos[0] = this.initialPos[0];
-                this.targetPos[1] = this.initialPos[1];
-            }
+            if (!hasCollision) this.targetYPos = this.initialYPos;
 
-            const DEAD_ZONE = 6;
-
-            if (this.targetPos[0] !== null) {
-                this.x += (this.targetPos[0] - this.x) * MixedBase.SPEED;
-                if (Math.abs(this.targetPos[0] - this.x) < DEAD_ZONE) {
-                    this.setX(this.targetPos[0]);
-                    this.targetPos[0] = null;
-                }
-            }
-
-            if (this.targetPos[1] !== null) {
-                this.y += (this.targetPos[1] - this.y) * MixedBase.SPEED;
-                if (Math.abs(this.targetPos[1] - this.y) < DEAD_ZONE) {
-                    this.setY(this.targetPos[1]);
-                    this.targetPos[1] = null;
+            if (this.targetYPos !== null) {
+                this.y += (this.targetYPos - this.y) * MixedBase.SPEED;
+                if (Math.abs(this.targetYPos - this.y) < MixedBase.DEAD_ZONE) {
+                    this.setY(this.targetYPos);
+                    this.targetYPos = null;
                 }
             }
         }

@@ -55,7 +55,7 @@ export interface ComponentSymbol {
  * Not including dynamic layoutable layout to custom omitable/pickable layout.
  */
 export abstract class Component {
-    protected readonly ANIMATION_DURATION: number = 120;
+    protected readonly ANIMATION_DURATION: number = 125;
     public isAnimating: boolean = false;
     public animationProgress: number = 1;
     public animationStartTime: number | null = null;
@@ -186,7 +186,7 @@ export abstract class Component {
 
         const progress = easeInExpo(this.animationProgress);
 
-        ctx.translate(this.x + this.w / 2, this.y + ((1 - progress)) + this.h / 2);
+        ctx.translate(this.x + this.w / 2, this.y + (1 - progress) + this.h / 2);
         ctx.scale(progress, progress);
         ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
     }
@@ -204,11 +204,7 @@ export abstract class Component {
 
             this.realY = this.y;
 
-            if (this.animationDirection === "out") {
-                this.y -= 25;
-            } else {
-                this.y += 20;
-            }
+            this.y += this.animationDirection === "out" ? -25 : 25;
 
             if (toggle) {
                 this.visible = true;

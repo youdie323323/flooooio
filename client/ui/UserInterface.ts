@@ -205,13 +205,11 @@ export default abstract class UserInterface {
         const scaledWidth = this.canvas.width / uiScaleFactor;
         const scaledHeight = this.canvas.height / uiScaleFactor;
 
-        // Only call top-level invalidateLayoutCache, 
-        // container invalidateLayoutCache will invalidate child layout too
         this.getTopLevelComponents().forEach(component => {
+            // Only call top-level invalidateLayoutCache, 
+            // container invalidateLayoutCache will invalidate child layout too
             component.invalidateLayoutCache();
-        });
 
-        this.getTopLevelComponents().forEach(component => {
             const layout = component._calculateLayout(scaledWidth, scaledHeight, 0, 0);
 
             component.setX(layout.x);
@@ -227,6 +225,8 @@ export default abstract class UserInterface {
         }
 
         this.onKeyDown(event);
+
+        this.invalidateDynamicLayoutables();
     }
 
     private handleKeyUp(event: KeyboardEvent): void {
@@ -235,6 +235,8 @@ export default abstract class UserInterface {
         }
 
         this.onKeyUp(event);
+
+        this.invalidateDynamicLayoutables();
     }
 
     private isClickableChildren = (component: Component): boolean => !(this.childrenComponents.has(component) && component.parentContainer.isAnimating);
@@ -259,6 +261,8 @@ export default abstract class UserInterface {
                 break;
             }
         }
+
+        this.invalidateDynamicLayoutables();
     }
 
     private handleMouseUp(event: MouseEvent): void {
@@ -279,6 +283,8 @@ export default abstract class UserInterface {
             }
             this.clickedComponent = null;
         }
+
+        this.invalidateDynamicLayoutables();
     }
 
     private handleMouseMove(event: MouseEvent): void {
@@ -316,12 +322,13 @@ export default abstract class UserInterface {
                 }
             }
         });
+
+        // Maybe too performance-impact?
+        // this.invalidateDynamicLayoutables();
     }
 
     public cleanupRenders(): void {
-        this.getTopLevelComponents().forEach(c => {
-            c.destroy();
-        });
+        this.getTopLevelComponents().forEach(c => c.destroy());
 
         this.components = [];
         this.components = null;
@@ -331,6 +338,10 @@ export default abstract class UserInterface {
 
         this.hoveredComponent = null;
         this.clickedComponent = null;
+    }
+
+    private invalidateDynamicLayoutables(): void {
+        this.getTopLevelComponents().filter(c => this.isDynamicLayoutable(c)).forEach(component => component.invalidateLayoutCache());
     }
 
     protected render(): void {
@@ -371,7 +382,7 @@ export default abstract class UserInterface {
             child.parentContainer = container;
         });
 
-        const addable = container as AddableContainer;
+        const addable = <AddableContainer>container;
         addable.__addable = true;
         return addable;
     }
@@ -381,6 +392,8 @@ export default abstract class UserInterface {
     protected get scale() {
         return devicePixelRatio || 1;
     }
+
+    // Biome atomic store
 
     abstract set biome(biome: Biomes);
     abstract get biome(): Biomes;

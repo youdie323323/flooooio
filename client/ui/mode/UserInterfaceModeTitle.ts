@@ -171,7 +171,7 @@ export default class UserInterfaceTitle extends UserInterface {
                             });
                         }, 100)
                     }, 1250);
-                }, 50);
+                }, 40);
             }, 1250);
         }, 1);
     }

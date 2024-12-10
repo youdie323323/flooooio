@@ -14,9 +14,8 @@ export default class StaticText extends ExtensionPlaceholder(Component) {
 
         private text: MaybeDynamicLayoutablePointer<string>,
         private fontSize: MaybeDynamicLayoutablePointer<number>,
-        private fillStyle: MaybeDynamicLayoutablePointer<ColorCode> = () => "#ffffff",
-
-        private readonly textAlign: MaybeDynamicLayoutablePointer<CanvasTextAlign> = "center",
+        private fillStyle: MaybeDynamicLayoutablePointer<ColorCode> = "#ffffff",
+        private textAlign: MaybeDynamicLayoutablePointer<CanvasTextAlign> = "center",
     ) {
         super();
     }
@@ -77,5 +76,6 @@ export default class StaticText extends ExtensionPlaceholder(Component) {
         this.text = null;
         this.fontSize = null;
         this.fillStyle = null;
+        this.textAlign = null;
     }
 }
