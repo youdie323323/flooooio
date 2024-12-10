@@ -1,6 +1,6 @@
 import path from "path";
 import uWS, { App, SHARED_COMPRESSOR } from 'uWebSockets.js';
-import { PetalType, MOOD_VALUES, BIOME_VALUES, Biomes } from "../shared/enum";
+import { PetalType, BIOME_VALUES, Biomes } from "../shared/enum";
 import { ServerBound, ClientboundConnectionKickReason } from "../shared/packet";
 import { Rarities } from "../shared/rarity";
 import { PLAYER_STATE_VALUES, VISIBLE_STATE_VALUES, WaveRoomState, WaveRoomVisibleState } from "../shared/wave";
@@ -15,6 +15,7 @@ import { kickClient, clientRemove, processJoin } from "./src/utils/common";
 import { UserData } from "./src/wave/WavePool";
 import WaveRoomService from "./src/wave/WaveRoomService";
 import fs from "fs";
+import { VALID_MOOD_FLAGS } from "../shared/mood";
 
 export const isDebug = process.argv.includes("-d");
 
@@ -55,22 +56,6 @@ const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
             } as MockPetalData,
             {
                 type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BUBBLE,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BUBBLE,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BUBBLE,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BUBBLE,
                 rarity: Rarities.SUPER,
             } as MockPetalData,
             {
@@ -187,9 +172,8 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             break;
         }
         case ServerBound.WAVE_CHANGE_MOOD: {
-            if (buffer.length !== 2 || !MOOD_VALUES.includes(buffer[1])) {
+            if (buffer.length !== 2 || !VALID_MOOD_FLAGS.includes(buffer[1])) {
                 kickClient(ws, ClientboundConnectionKickReason.ANTICHEAT_DETECTED);
-
                 return;
             };
 
@@ -199,7 +183,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             const client = waveRoom.wavePool.getClient(waveClientId);
             if (!client) return;
 
-            waveRoom.wavePool.changeMood(waveClientId, buffer[1])
+            waveRoom.wavePool.changeMood(waveClientId, buffer[1]);
 
             break;
         }
@@ -457,7 +441,7 @@ process.on('uncaughtException', function (err) {
 if (isDebug) {
     setInterval(() => {
         console.clear();
-        
+
         logger.info("Showing the dump of information");
 
         logger.info("Last 10 packet types received (exclude movement change, etc): " + JSON.stringify(packetHistory));

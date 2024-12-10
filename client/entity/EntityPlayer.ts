@@ -1,6 +1,6 @@
+import { decodeMood, Mood } from "../../shared/mood";
 import { deltaTime } from "../main";
 import Entity from "./Entity";
-import { Mood } from "../../shared/enum";
 import drawEntityDetail from "./entityDrawDetail";
 
 const TAU = Math.PI * 2;
@@ -23,10 +23,11 @@ export default class EntityPlayer extends Entity {
         health: number,
         maxHealth: number, 
 
-        public mood: Mood, 
+        public mood: number, 
+
         readonly nickname: string,
 
-        readonly isStaticLike: boolean = false,
+        private readonly isStaticLike: boolean = false,
     ) {
         super(id, x, y, angle, size, health, maxHealth);
 
@@ -43,9 +44,12 @@ export default class EntityPlayer extends Entity {
             this.sadT = 1;
             this.angryT = 0;
         } else {
-            const rI = deltaTime / 200;
-            this.angryT = Math.min(1, Math.max(0, this.angryT + (this.mood === 1 ? rI : -rI)));
-            this.sadT = Math.min(1, Math.max(0, this.sadT + (this.mood === 2 ? rI : -rI)));
+            const interpolationRate = deltaTime / 100;
+
+            const { 0: isAngry, 1: isSad } = decodeMood(this.mood);
+
+            this.angryT = Math.min(1, Math.max(0, this.angryT + (isAngry ? interpolationRate : -interpolationRate)));
+            this.sadT = Math.min(1, Math.max(0, this.sadT + (!isAngry && isSad ? interpolationRate : -interpolationRate)));
         }
     }
 
@@ -77,16 +81,16 @@ export default class EntityPlayer extends Entity {
 
         const sadT = this.sadT;
         const angryT = this.angryT;
-        const rS = sadT * 4;
-        const rR = angryT * 6;
+        const sadnessOffset = sadT * 4;
+        const angerOffset = angryT * 6;
 
-        function drawDeadEyes(s7: number, s8: number) {
+        function drawDeadEyes(eyeX: number, eyeY: number) {
             ctx.beginPath();
             const offset = 4;
-            ctx.moveTo(s7 - offset, s8 - offset);
-            ctx.lineTo(s7 + offset, s8 + offset);
-            ctx.moveTo(s7 + offset, s8 - offset);
-            ctx.lineTo(s7 - offset, s8 + offset);
+            ctx.moveTo(eyeX - offset, eyeY - offset);
+            ctx.lineTo(eyeX + offset, eyeY + offset);
+            ctx.moveTo(eyeX + offset, eyeY - offset);
+            ctx.lineTo(eyeX - offset, eyeY + offset);
             ctx.lineWidth = 3;
             ctx.lineCap = "round";
             ctx.strokeStyle = "#000000";
@@ -98,13 +102,13 @@ export default class EntityPlayer extends Entity {
             drawDeadEyes(7, -5);
             drawDeadEyes(-7, -5);
         } else {
-            let drawEyeShape = function (s9: number, sa: number, sb: number, sc: number, flag = 0) {
+            let drawEyeShape = function (centerX: number, centerY: number, widthRadius: number, heightRadius: number, flag = 0) {
                 const flippedFlag = flag ^ 1;
-                ctx.moveTo(s9 - sb, sa - sc + flag * rR + flippedFlag * rS);
-                ctx.lineTo(s9 + sb, sa - sc + flippedFlag * rR + flag * rS);
-                ctx.lineTo(s9 + sb, sa + sc);
-                ctx.lineTo(s9 - sb, sa + sc);
-                ctx.lineTo(s9 - sb, sa - sc);
+                ctx.moveTo(centerX - widthRadius, centerY - heightRadius + flag * angerOffset + flippedFlag * sadnessOffset);
+                ctx.lineTo(centerX + widthRadius, centerY - heightRadius + flippedFlag * angerOffset + flag * sadnessOffset);
+                ctx.lineTo(centerX + widthRadius, centerY + heightRadius);
+                ctx.lineTo(centerX - widthRadius, centerY + heightRadius);
+                ctx.lineTo(centerX - widthRadius, centerY - heightRadius);
             };
 
             let drawEyeOutline = function (flag = 0) {

@@ -1,4 +1,5 @@
-import { Mood, Biomes } from "../shared/enum";
+import { Biomes } from "../shared/enum";
+import { Mood } from "../shared/mood";
 import { ClientBound, ServerBound } from "../shared/packet";
 import { Rarities } from "../shared/rarity";
 import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../shared/wave";
@@ -122,7 +123,7 @@ export default class Networking {
                             const clientSize = data.getUint32(offset);
                             offset += 4;
 
-                            const clientMood = data.getUint8(offset++) as Mood;
+                            const clientMood = data.getUint8(offset++);
 
                             const clientNickname = readString();
 
@@ -359,7 +360,7 @@ export default class Networking {
         this.ws.send(data);
     }
 
-    public sendChangeMood(flag: Mood) {
+    public sendChangeMood(flag: number) {
         const data = new Uint8Array([ServerBound.WAVE_CHANGE_MOOD, flag]);
         this.ws.send(data);
     }

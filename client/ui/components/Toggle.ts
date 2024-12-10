@@ -13,7 +13,7 @@ export default class Toggle extends ExtensionPlaceholder(Component) implements I
     constructor(
         protected layout: MaybeDynamicLayoutablePointer<LayoutOptions>,
 
-        private readonly onToggle: (t: boolean) => void,
+        private onToggle: (t: boolean) => void,
     ) {
         super();
     }
@@ -77,10 +77,6 @@ export default class Toggle extends ExtensionPlaceholder(Component) implements I
         ctx.rect(rectX, rectY, rectWidth, rectHeight);
         ctx.fill();
         ctx.closePath();
-    }
-
-    public destroy(): void {
-        super.destroy();
     }
 
     public onFocus(): void {

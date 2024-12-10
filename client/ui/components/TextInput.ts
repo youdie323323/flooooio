@@ -88,10 +88,9 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
     private _selectionUpdated?: boolean;
     private _cursorInterval?: NodeJS.Timeout;
     private _unfocusedState: boolean;
-
-    private _pMousemove: (e: any) => void;
-    private _pMousedown: (e: any) => void;
-    private _pMouseup: (e: any) => void;
+    private _onmousemoveListen: (e: any) => void;
+    private _onmousedownListen: (e: any) => void;
+    private _onmouseupListen: (e: any) => void;
 
     constructor(
         protected layout: MaybeDynamicLayoutablePointer<LayoutOptions>,
@@ -141,7 +140,7 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
         self._backgroundColor = o.backgroundColor || '#fff';
 
         if (self._canvas) {
-            self._canvas.addEventListener('mousemove', this._pMousemove = function (e: any) {
+            self._canvas.addEventListener('mousemove', this._onmousemoveListen = function (e: any) {
                 if (!self.visible) {
                     return;
                 }
@@ -150,7 +149,7 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
                 self.mousemove(e, self);
             }, false);
 
-            self._canvas.addEventListener('mousedown', this._pMousedown = function (e: any) {
+            self._canvas.addEventListener('mousedown', this._onmousedownListen = function (e: any) {
                 if (!self.visible) {
                     return;
                 }
@@ -159,7 +158,7 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
                 self.mousedown(e, self);
             }, false);
 
-            self._canvas.addEventListener('mouseup', this._pMouseup = function (e: any) {
+            self._canvas.addEventListener('mouseup', this._onmouseupListen = function (e: any) {
                 if (!self.visible) {
                     return;
                 }
@@ -712,7 +711,7 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
 
         super.render(ctx);
 
-        this.update();
+        self.update();
 
         ctx.translate(self.x, self.y);
 
@@ -890,9 +889,9 @@ export default class TextInput extends ExtensionPlaceholder(Component) implement
             self.blur();
         }
 
-        self._canvas.removeEventListener('mousemove', this._pMousemove);
-        self._canvas.removeEventListener('mousedown', this._pMousedown);
-        self._canvas.removeEventListener('mouseup', this._pMouseup);
+        self._canvas.removeEventListener('mousemove', this._onmousemoveListen);
+        self._canvas.removeEventListener('mousedown', this._onmousedownListen);
+        self._canvas.removeEventListener('mouseup', this._onmouseupListen);
 
         document.body.removeChild(self._hiddenInput);
     }

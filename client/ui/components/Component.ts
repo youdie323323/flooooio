@@ -45,8 +45,6 @@ export interface ComponentSymbol {
     [ADDED]?: boolean;
 }
 
-// TODO: allow components to voluntarily display other components easily
-
 /**
  * Base interface for all GUI components.
  * 

@@ -68,14 +68,4 @@ export default class StaticText extends ExtensionPlaceholder(Component) {
         ctx.strokeText(computedText, 0, 0);
         ctx.fillText(computedText, 0, 0);
     }
-
-    public destroy(): void {
-        super.destroy();
-
-        this.layout = null;
-        this.text = null;
-        this.fontSize = null;
-        this.fillStyle = null;
-        this.textAlign = null;
-    }
 }

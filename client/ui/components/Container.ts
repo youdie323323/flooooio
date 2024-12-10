@@ -136,8 +136,6 @@ export class StaticContainer extends ExtensionPlaceholder(Component) implements 
         });
 
         this.children = null;
-
-        this.layout = null;
     }
 }
 
@@ -241,12 +239,6 @@ export class StaticPanelContainer extends StaticContainer {
             }
         });
     }
-
-    public destroy(): void {
-        super.destroy();
-
-        this.color = null;
-    }
 }
 
 export class StaticTransparentPanelContainer extends StaticContainer {
@@ -329,10 +321,6 @@ export class StaticTransparentPanelContainer extends StaticContainer {
                 ctx.restore();
             }
         });
-    }
-
-    public destroy(): void {
-        super.destroy();
     }
 }
 
@@ -530,13 +518,6 @@ export class StaticSpace extends ExtensionPlaceholder(Component) {
     }
 
     public render(ctx: CanvasRenderingContext2D): void { }
-
-    public destroy(): void {
-        super.destroy();
-
-        this._w = null;
-        this._h = null;
-    }
 }
 
 /**
@@ -576,13 +557,4 @@ export class CoordinatedStaticSpace extends ExtensionPlaceholder(Component) {
     }
 
     public render(ctx: CanvasRenderingContext2D): void { }
-
-    public destroy(): void {
-        super.destroy();
-
-        this._x = null;
-        this._y = null;
-        this._w = null;
-        this._h = null;
-    }
 }

@@ -4,12 +4,13 @@ import { Button, SVGButton, TextButton } from "../components/Button";
 import UserInterface, { uiScaleFactor } from "../UserInterface";
 import Networking, { waveSelfId } from "../../Networking";
 import TextInput from "../components/TextInput";
-import { Biomes, Mood } from "../../../shared/enum";
 import { interpolate } from "../../utils/Interpolator";
 import { ServerBound } from "../../../shared/packet";
 import Entity from "../../entity/Entity";
 import { calculateWaveLength } from "../../../shared/formula";
 import { calculateStrokeWidth } from "../components/Text";
+import { Biomes } from "../../../shared/enum";
+import { Mood } from "../../../shared/mood";
 
 let interpolatedMouseX = 0;
 let interpolatedMouseY = 0;
@@ -83,6 +84,8 @@ export default class UserInterfaceGame extends UserInterface {
 
     private terrainGenerator: TerrainGenerator;
 
+    private currentMoodFlags: number = Mood.NORMAL;
+
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
 
@@ -115,12 +118,19 @@ export default class UserInterfaceGame extends UserInterface {
     public onKeyDown(event: KeyboardEvent): void {
         switch (event.key) {
             // Space means space
-            case " ":
-            case "Shift": {
-                networking.sendChangeMood(event.key === " " ? Mood.ANGRY : Mood.SAD);
+            case " ": {
+                this.currentMoodFlags |= Mood.ANGRY;
+                networking.sendChangeMood(this.currentMoodFlags);
 
                 break;
             }
+            case "Shift": {
+                this.currentMoodFlags |= Mood.SAD;
+                networking.sendChangeMood(this.currentMoodFlags);
+
+                break;
+            }
+
             case "Enter": {
                 // So basically user entered while chat input, blur it
                 // No blur in onsubmit because of race condition
@@ -166,10 +176,14 @@ export default class UserInterfaceGame extends UserInterface {
     public onKeyUp(event: KeyboardEvent): void {
         switch (event.key) {
             // Space means space
-            case " ":
+            case " ": {
+                this.currentMoodFlags &= ~Mood.ANGRY;
+                networking.sendChangeMood(this.currentMoodFlags);
+                break;
+            }
             case "Shift": {
-                networking.sendChangeMood(Mood.NORMAL);
-
+                this.currentMoodFlags &= ~Mood.SAD;
+                networking.sendChangeMood(this.currentMoodFlags);
                 break;
             }
         }
@@ -177,15 +191,25 @@ export default class UserInterfaceGame extends UserInterface {
 
     public onMouseDown(event: MouseEvent): void {
         if (networking) {
-            if (event.button === 0 || event.button === 2) {
-                networking.sendChangeMood(event.button === 0 ? Mood.ANGRY : event.button === 2 ? Mood.SAD : Mood.NORMAL);
+            if (event.button === 0) {
+                this.currentMoodFlags |= Mood.ANGRY;
+                networking.sendChangeMood(this.currentMoodFlags);
+            }
+            if (event.button === 2) {
+                this.currentMoodFlags |= Mood.SAD;
+                networking.sendChangeMood(this.currentMoodFlags);
             }
         }
     }
     public onMouseUp(event: MouseEvent): void {
         if (networking) {
-            if (event.button === 0 || event.button === 2) {
-                networking.sendChangeMood(Mood.NORMAL);
+            if (event.button === 0) {
+                this.currentMoodFlags &= ~Mood.ANGRY;
+                networking.sendChangeMood(this.currentMoodFlags);
+            }
+            if (event.button === 2) {
+                this.currentMoodFlags &= ~Mood.SAD;
+                networking.sendChangeMood(this.currentMoodFlags);
             }
         }
     }
@@ -203,7 +227,7 @@ export default class UserInterfaceGame extends UserInterface {
     private leaveGame() {
         this.isGameOverContinued = true;
 
-        ws.send(new Uint8Array([ServerBound.WAVE_LEAVE]));
+        networking.sendLeave();
 
         uiCtx.switchUI("title");
     }
@@ -218,7 +242,7 @@ export default class UserInterfaceGame extends UserInterface {
             },
             "#b04c5e",
             () => {
-                ws.send(new Uint8Array([ServerBound.WAVE_LEAVE]));
+                networking.sendLeave();
                 uiCtx.switchUI("title");
             },
             () => true,

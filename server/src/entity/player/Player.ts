@@ -11,7 +11,6 @@ import { PlayerDeadCamera } from "./PlayerDeadCamera";
 import { EntityMapBoundary } from "../EntityMapBoundary";
 import { EntityDeath } from "../EntityDeath";
 import { PlayerPetalConsume } from "./PlayerPetalConsume";
-import { Mood } from "../../../../shared/enum";
 
 class BasePlayer implements Entity {
     /**
@@ -46,8 +45,12 @@ class BasePlayer implements Entity {
 
     /**
      * Current mood of player.
+     * 
+     * @remarks
+     * 
+     * Bit-flaged.
      */
-    mood: Mood;
+    mood: number;
 
     /**
      * Determine if player is dead.

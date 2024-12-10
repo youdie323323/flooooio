@@ -1,12 +1,11 @@
-import { Mood } from "../../../shared/enum";
+import { Mood } from "../../../shared/mood";
 import { WaveRoomPlayerReadyState } from "../../../shared/wave";
 import EntityPlayer from "../../entity/EntityPlayer";
 import { waveRoomSelfId } from "../../Networking";
-import { ColorCode, darkend, DARKEND_BASE } from "../../utils/common";
+import { DARKEND_BASE } from "../../utils/common";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import { WaveRoomPlayerInformation } from "../mode/UserInterfaceModeTitle";
-import { uiScaleFactor } from "../UserInterface";
-import { Component, ComponentContainer, MaybeDynamicLayoutablePointer } from "./Component";
+import { Component, MaybeDynamicLayoutablePointer } from "./Component";
 import ExtensionPlaceholder from "./extensions/Extension";
 import { calculateStrokeWidth } from "./Text";
 
@@ -170,14 +169,6 @@ export default class PlayerProfile extends ExtensionPlaceholder(Component) {
 
     public destroy(): void {
         super.destroy();
-
-        this.layout = null;
-
-        this.id = null;
-        this.name = null;
-        this.readyState = null;
-
-        this.isEmpty = null;
 
         this.entityPlayer = null;
     }

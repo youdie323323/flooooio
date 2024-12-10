@@ -2,9 +2,10 @@ import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../En
 import { WavePool } from "../../wave/WavePool";
 import { BasePlayer, PlayerInstance } from "./Player";
 import { isUnconvertableSlot } from "../mob/petal/Petal";
-import { Mood, PetalType } from "../../../../shared/enum";
+import { PetalType } from "../../../../shared/enum";
 import { Rarities } from "../../../../shared/rarity";
 import { EGG_TYPE_MAPPING } from "./PlayerPetalReload";
+import { decodeMood, Mood } from "../../../../shared/mood";
 
 const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, i: number, j: number):
     // Bubble velocity
@@ -52,11 +53,11 @@ export function PlayerPetalConsume<T extends EntityMixinConstructor<BasePlayer>>
                 super[onUpdateTick](poolThis);
             }
 
-            const isMoodConsume = this.mood === Mood.SAD;
-
             let totalDx = 0;
             let totalDy = 0;
             let bubbleCount = 0;
+
+            const { 1: isConsumeMood } = decodeMood(this.mood);
 
             this.slots.surface.forEach((petals, i) => {
                 if (petals != null && isUnconvertableSlot(petals)) {
@@ -68,8 +69,8 @@ export function PlayerPetalConsume<T extends EntityMixinConstructor<BasePlayer>>
                                 return;
                             };
 
-                             // Bubble
-                             if (isMoodConsume && e.type === PetalType.BUBBLE) {
+                            // Bubble
+                            if (isConsumeMood && e.type === PetalType.BUBBLE) {
                                 const result = consumeConsumable(poolThis, this, i, j);
                                 if (result) {
                                     const distance = Math.sqrt(result[0] * result[0] + result[1] * result[1]);

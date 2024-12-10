@@ -1,11 +1,10 @@
 import { Canvg, presets } from "canvg";
 import { ColorCode, darkend, DARKEND_BASE } from "../../utils/common.js";
-import { Clickable, Component, MaybeDynamicLayoutablePointer, Interactive, ComponentSymbol, ADDED, AllComponents } from "./Component.js";
+import { Clickable, Component, MaybeDynamicLayoutablePointer, Interactive } from "./Component.js";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout.js";
 import ExtensionPlaceholder from "./extensions/Extension.js";
 import * as StackBlur from
     'stackblur-canvas/dist/stackblur-es.min.js';
-import { AddableContainer, StaticTransparentPanelContainer } from "./Container.js";
 import { calculateStrokeWidth } from "./Text.js";
 
 // TODO: change style of cursor while focusing/bluring, also toggle too
@@ -17,8 +16,8 @@ export class Button extends ExtensionPlaceholder(Component) implements Interacti
     private isValid: boolean = true;
 
     constructor(
-        protected layout: LayoutOptions,
-        
+        private layout: LayoutOptions,
+
         private color: MaybeDynamicLayoutablePointer<ColorCode>,
         private callback: () => void,
         private validate: MaybeDynamicLayoutablePointer<boolean>,
@@ -63,7 +62,7 @@ export class Button extends ExtensionPlaceholder(Component) implements Interacti
 
     public destroy(): void {
         super.destroy();
-     }
+    }
 
     public onFocus(): void {
         if (!this.isValid) {
@@ -130,19 +129,23 @@ export class Button extends ExtensionPlaceholder(Component) implements Interacti
             return darkend("#aaaaa9", DARKEND_BASE);
         }
 
-        return darkend(this.computeDynamicLayoutable(this.color), DARKEND_BASE);
+        const computedColor = this.computeDynamicLayoutable(this.color);
+
+        return darkend(computedColor, DARKEND_BASE);
     }
 }
 
 export class TextButton extends Button {
     constructor(
         layout: LayoutOptions,
-        color: ColorCode,
+
+        color: MaybeDynamicLayoutablePointer<ColorCode>,
         callback: () => void,
         validate: MaybeDynamicLayoutablePointer<boolean>,
 
-        private readonly text: string,
-        private customDraw?: (ctx: CanvasRenderingContext2D, textWidth: number) => void,
+        private text: MaybeDynamicLayoutablePointer<string>,
+
+        private iconFunc?: (ctx: CanvasRenderingContext2D, textWidth: number) => void,
     ) {
         super(layout, color, callback, validate);
     }
@@ -151,7 +154,9 @@ export class TextButton extends Button {
         let fontSize = this.h * 0.54;
         ctx.font = `${fontSize}px Ubuntu`;
 
-        while (ctx.measureText(this.text).width > this.w * 0.9 && fontSize > 10) {
+        const computedText = this.computeDynamicLayoutable(this.text);
+
+        while (ctx.measureText(computedText).width > this.w * 0.9 && fontSize > 10) {
             fontSize -= 1;
             ctx.font = `${fontSize}px Ubuntu`;
         }
@@ -199,21 +204,21 @@ export class TextButton extends Button {
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
         ctx.textBaseline = 'middle';
-        ctx.textAlign = this.customDraw ? 'left' : "center";
+        ctx.textAlign = this.iconFunc ? 'left' : "center";
         ctx.strokeStyle = '#000000';
         ctx.fillStyle = '#ffffff';
 
-        const textX = this.x + (this.customDraw ? 8 : this.w / 2);
+        const computedText = this.computeDynamicLayoutable(this.text);
+
+        const textX = this.x + (this.iconFunc ? 8 : this.w / 2);
         const textY = this.y + this.h / 2;
 
         ctx.translate(textX, textY);
 
-        ctx.strokeText(this.text, 0, 0);
-        ctx.fillText(this.text, 0, 0);
+        ctx.strokeText(computedText, 0, 0);
+        ctx.fillText(computedText, 0, 0);
 
-        if (this.customDraw) {
-            this.customDraw(ctx, ctx.measureText(this.text).width);
-        }
+        if (this.iconFunc) this.iconFunc(ctx, ctx.measureText(computedText).width);
     }
 }
 
@@ -223,7 +228,8 @@ export class SVGButton extends Button {
 
     constructor(
         layout: LayoutOptions,
-        color: ColorCode,
+
+        color: MaybeDynamicLayoutablePointer<ColorCode>,
         callback: () => void,
         validate: MaybeDynamicLayoutablePointer<boolean>,
 

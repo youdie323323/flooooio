@@ -2,10 +2,6 @@ import { LayoutResult } from "../../layout/Layout";
 import { AllComponents, Component } from "../Component";
 import { ComponentExtensionTemplate, ExtensionConstructor, Updatable, UpdateFunction } from "./Extension";
 
-type NullableAll<T extends readonly any[]> = {
-    [K in keyof T]: T[K] | null;
-};
-
 export default function ExtensionCollidable<T extends ExtensionConstructor>(Base: T) {
     abstract class MixedBase extends Base implements ComponentExtensionTemplate {
         private static readonly SPEED: number = 0.4;

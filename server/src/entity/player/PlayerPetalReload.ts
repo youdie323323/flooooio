@@ -27,6 +27,9 @@ export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(
 
             if (this.slots.bottom.length !== surface.length) {
                 this.slots.bottom.length = surface.length;
+            }
+
+            if (this.slots.cooldownsPetal.length !== surface.length) {
                 this.slots.cooldownsPetal = Array.from({ length: surface.length }, e => new Array(5).fill(0));
                 this.slots.cooldownsUsage = Array.from({ length: surface.length }, e => new Array(5).fill(0));
             }
@@ -45,14 +48,14 @@ export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(
                                     return;
                                 }
 
-                                const eCooldownsPetal = this.slots.cooldownsPetal[i];
+                                const cooldownsPetal = this.slots.cooldownsPetal[i];
 
-                                if (eCooldownsPetal[j] === 0) {
+                                if (cooldownsPetal[j] === 0) {
                                     const profile = PETAL_PROFILES[e.type];
-                                    eCooldownsPetal[j] = Date.now() + (profile[e.rarity].petalReload * 1000);
+                                    cooldownsPetal[j] = Date.now() + (profile[e.rarity].petalReload * 1000);
                                 }
                                 // If cooldown elapsed
-                                else if (Date.now() >= eCooldownsPetal[j]) {
+                                else if (Date.now() >= cooldownsPetal[j]) {
                                     petals[j] = poolThis.addPetalOrMob(
                                         e.type,
                                         e.rarity,
@@ -65,7 +68,7 @@ export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(
                                         null,
                                     );
 
-                                    eCooldownsPetal[j] = 0;
+                                    cooldownsPetal[j] = 0;
                                 }
                             }
                         })
@@ -76,17 +79,17 @@ export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(
                     if (petals != null && isUnconvertableSlot(petals)) {
                         petals.forEach((e, j) => {
                             if (isPetal(e.type) && USAGE_RELOAD_PETALS.has(e.type)) {
-                                const eCooldownsUsage = this.slots.cooldownsUsage[i];
+                                const cooldownsUsage = this.slots.cooldownsUsage[i];
 
                                 if (poolThis.getMob(e.id)) {
                                     // Petal respawned, start consume timer
-                                    if (eCooldownsUsage[j] === 0) {
+                                    if (cooldownsUsage[j] === 0) {
                                         const profile = PETAL_PROFILES[e.type];
-                                        eCooldownsUsage[j] = Date.now() + (profile[e.rarity].usageReload * 1000);
+                                        cooldownsUsage[j] = Date.now() + (profile[e.rarity].usageReload * 1000);
                                     }
                                 } else {
                                     // Reset cooldown because its breaked
-                                    eCooldownsUsage[j] = 0;
+                                    cooldownsUsage[j] = 0;
                                 }
                             }
                         });

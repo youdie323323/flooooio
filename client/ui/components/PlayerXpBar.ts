@@ -111,11 +111,4 @@ export default class PlayerXpBar extends ExtensionPlaceholder(Component) {
             ctx.restore();
         }
     }
-
-    public destroy(): void {
-        super.destroy();
-
-        this.layout = null;
-        this.xp = null;
-    }
 }

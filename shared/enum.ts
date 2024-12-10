@@ -6,14 +6,6 @@ export enum Biomes {
 
 export const BIOME_VALUES = Object.values(Biomes);
 
-export enum Mood {
-    NORMAL,
-    ANGRY,
-    SAD,
-}
-
-export const MOOD_VALUES = Object.values(Mood);
-
 let currentEntityType: number = 0;
 function getNextEntityType(): number {
     if (currentEntityType > 255) {

@@ -1,11 +1,11 @@
 import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool, WAVE_UPDATE_FPS } from "../../wave/WavePool";
-import { Mob } from "../mob/Mob";
 import { BasePlayer } from "./Player";
-import { isUnconvertableSlot, PetalData, PetalStat } from "../mob/petal/Petal";
+import { isUnconvertableSlot } from "../mob/petal/Petal";
 import { isPetal } from "../../utils/common";
-import { PetalType, Mood, MobType } from "../../../../shared/enum";
+import { PetalType } from "../../../../shared/enum";
 import { PETAL_PROFILES } from "../../../../shared/entity/mob/petal/petalProfiles";
+import { decodeMood, Mood } from "../../../../shared/mood";
 
 const TAU = Math.PI * 2;
 
@@ -91,6 +91,8 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
             const targetX = this.historyX[historyTargetIndex];
             const targetY = this.historyY[historyTargetIndex];
 
+            const { 0: isAngry, 1: isSad } = decodeMood(this.mood);
+
             for (let i = 0; i < totalPetals; i++) {
                 const petals = surface[i];
                 if (!petals || !isUnconvertableSlot(petals)) continue;
@@ -100,8 +102,8 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 const rarityProfile = profile[firstPetal.rarity];
 
                 const baseRadius =
-                    this.mood === Mood.ANGRY ? isPetal(firstPetal.type) && UNMOODABLE_PETALS.has(firstPetal.type) ? 40 : 80 :
-                        this.mood === Mood.SAD ? 25 : 40;
+                    isAngry ? isPetal(firstPetal.type) && UNMOODABLE_PETALS.has(firstPetal.type) ? 40 : 80 :
+                        isSad ? 25 : 40;
 
                 const bounce = this.petalBounces[i];
                 this.petalRadii[i] += bounce;

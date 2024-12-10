@@ -1,4 +1,4 @@
-import { Biomes, MobType, PetalType, Mood } from "../../../shared/enum";
+import { Biomes, MobType, PetalType } from "../../../shared/enum";
 import { calculateWaveLength } from "../../../shared/formula";
 import { ClientBound } from "../../../shared/packet";
 import { PETAL_PROFILES } from "../../../shared/entity/mob/petal/petalProfiles";
@@ -17,6 +17,7 @@ import { getRandomPosition, generateRandomEntityId, getRandomAngle, getRandomSaf
 import WaveProbabilityPredictor, { LINKED_MOBS } from "./WaveProbabilityPredictor";
 import { WaveRoomPlayerId, WaveRoomPlayer } from "./WaveRoom";
 import { MOB_PROFILES } from "../../../shared/entity/mob/mobProfiles";
+import { Mood } from "../../../shared/mood";
 
 // Define UserData for WebSocket connections
 export interface UserData {
@@ -466,10 +467,10 @@ export class WavePool {
     /**
      * Updates the mood of a client.
      */
-    public changeMood(clientId: PlayerInstance["id"], kind: Mood) {
+    public changeMood(clientId: PlayerInstance["id"], flag: number) {
         const client = this.clientPool.get(clientId);
         if (client && !client.isDead) {
-            client.mood = kind;
+            client.mood = flag;
         }
     }
 
