@@ -24,6 +24,8 @@ for (let i = 0; i < PRECALC_SIZE; i++) {
     lazySinTable[i] = Math.sin(angle);
 }
 
+const calcTableIndex = (i: number) => (((i % TAU + TAU) % TAU) * PRECALC_SIZE / TAU) | 0;
+
 export const UNMOODABLE_PETALS: Set<PetalType> = new Set([
     PetalType.BEETLE_EGG,
 ]);
@@ -112,19 +114,20 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 const ringIndex = Math.floor(currentAngleIndex / realLength);
                 const rad = this.petalRadii[i] * (1 + (ringIndex * 0.5));
 
-                const multipliedRotation = this.rotation * (1 + (ringIndex * 0.05));
+                const multipliedRotation = this.rotation * (1 + (ringIndex * 0.1));
 
                 if (rarityProfile.isCluster && petals.length > 1) {
                     const baseAngle = TAU * (currentAngleIndex % realLength) / realLength + multipliedRotation;
                     currentAngleIndex++;
 
-                    const angleIndex = ((baseAngle % TAU) * PRECALC_SIZE / TAU) | 0;
+                    const angleIndex = calcTableIndex(baseAngle);
                     const slotBaseX = targetX + lazyCosTable[angleIndex] * rad;
                     const slotBaseY = targetY + lazySinTable[angleIndex] * rad;
 
                     for (let j = 0; j < petals.length; j++) {
-                        const petalAngle = TAU * j / petals.length + 1.1 * this.rotation;
-                        const petalAngleIndex = ((petalAngle % TAU) * PRECALC_SIZE / TAU) | 0;
+                        // Bit faster than orbit
+                        const petalAngle = TAU * j / petals.length + 1.1 * multipliedRotation;
+                        const petalAngleIndex = calcTableIndex(petalAngle);
 
                         const petal = petals[j];
                         petal.x = slotBaseX + lazyCosTable[petalAngleIndex] * PETAL_CLUSTER_RADIUS;
@@ -133,8 +136,9 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 } else {
                     for (let j = 0; j < petals.length; j++) {
                         const baseAngle = TAU * (currentAngleIndex % realLength) / realLength + multipliedRotation;
-                        const angleIndex = ((baseAngle % TAU) * PRECALC_SIZE / TAU) | 0;
                         currentAngleIndex++;
+
+                        const angleIndex = calcTableIndex(baseAngle);
 
                         const petal = petals[j];
                         petal.x = targetX + lazyCosTable[angleIndex] * rad;
@@ -144,6 +148,10 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
             }
 
             this.rotation += (clockwise ? -1 : 1) * totalSpeed / WAVE_UPDATE_FPS;
+
+            if (Math.abs(this.rotation) > Number.MAX_SAFE_INTEGER) {
+                this.rotation = this.rotation % TAU;
+            }
         }
 
         dispose = () => {
