@@ -45,6 +45,11 @@ export interface ComponentSymbol {
     [ADDED]?: boolean;
 }
 
+export enum AnimationType {
+    ZOOM,
+    SLIDE,
+}
+
 /**
  * Base interface for all GUI components.
  * 
@@ -53,11 +58,29 @@ export interface ComponentSymbol {
  * Not including dynamic layoutable layout to custom omitable/pickable layout.
  */
 export abstract class Component {
-    protected readonly ANIMATION_DURATION: number = 125;
+    protected readonly ANIMATION_ZOOM_DURATION: number = 125;
+    protected readonly ANIMATION_SLIDE_DURATION: number = 500;
+
     public isAnimating: boolean = false;
     public animationProgress: number = 1;
     public animationStartTime: number | null = null;
     public animationDirection: 'in' | 'out' = 'in';
+    public animationType: AnimationType;
+
+    private static readonly ANIMATION_EASING_FUNCTIONS = {
+        [AnimationType.ZOOM]: function easeInExpo(x: number): number {
+            return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
+        },
+        [AnimationType.SLIDE]: function easeOutExpo(x: number): number {
+            return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+        },
+    };
+
+    /**
+     * Real position to store original position to animations.
+     */
+    private realX: number = 0;
+    private realY: number = 0;
 
     protected layoutCache: LayoutCache = new LayoutCache();
 
@@ -86,8 +109,6 @@ export abstract class Component {
     public w: number = 0;
     public h: number = 0;
 
-    private realY: number = 0;
-
     /**
      * This method calculate layout by layout options, and parent container/screen.
      */
@@ -114,12 +135,6 @@ export abstract class Component {
                 return cached;
             };
         };
-
-        /*
-        The current big issue:
-        If dynamic layoutable layout have 2-pattern of value, then if its both cached, 
-        its impossible to dynamically update anymore.
-        */
 
         const result = this.calculateLayout(width, height, originX, originY);
 
@@ -148,6 +163,7 @@ export abstract class Component {
     public abstract invalidateLayoutCache(): void;
 
     public render(ctx: CanvasRenderingContext2D): void {
+        // Apply canvas configs
         ctx.globalAlpha = this.globalAlpha;
 
         if (!this.visible && !this.isAnimating) {
@@ -160,38 +176,50 @@ export abstract class Component {
                 this.animationStartTime = currentTime;
             }
 
+            const duration =
+                this.animationType === AnimationType.ZOOM ? this.ANIMATION_ZOOM_DURATION :
+                    this.animationType === AnimationType.SLIDE ? this.ANIMATION_SLIDE_DURATION :
+                        1000;
+
             const elapsed = currentTime - this.animationStartTime;
-
-            let progress = Math.max(0, Math.min(elapsed / this.ANIMATION_DURATION, 1));
-
+            let progress = Math.max(0, Math.min(elapsed / duration, 1));
             this.animationProgress = this.animationDirection === 'in' ? progress : 1 - progress;
 
-            if (elapsed >= this.ANIMATION_DURATION) {
+            if (elapsed >= duration) {
                 if (this.animationDirection === 'out') {
                     this.visible = false;
                 }
 
-                this.y = this.realY;
+                if (this.animationType === AnimationType.ZOOM) {
+                    this.x = this.realX;
+                    this.y = this.realY;
+                }
 
                 this.isAnimating = false;
                 this.animationStartTime = null;
             }
         }
 
-        function easeInExpo(x: number): number {
-            return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
+        const easingFunction = Component.ANIMATION_EASING_FUNCTIONS[this.animationType] ?? Component.ANIMATION_EASING_FUNCTIONS[AnimationType.ZOOM];
+
+        const progress = easingFunction(this.animationProgress);
+
+        if (this.animationType === AnimationType.ZOOM) {
+            ctx.translate(this.x + this.w / 2, this.y + (1 - progress) + this.h / 2);
+            ctx.scale(progress, progress);
+            ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
+        } else if (this.animationType === AnimationType.SLIDE) {
+            const slideOutX = -this.w + (-4);
+
+            // TODO: implement
         }
-
-        const progress = easeInExpo(this.animationProgress);
-
-        ctx.translate(this.x + this.w / 2, this.y + (1 - progress) + this.h / 2);
-        ctx.scale(progress, progress);
-        ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
     }
 
-    public setGlobalAlpha(globalAlpha: number) { this.globalAlpha = globalAlpha }
-
-    public setVisible(toggle: boolean, shouldAnimate: boolean = false) {
+    public setVisible(
+        toggle: boolean,
+        shouldAnimate: boolean = false,
+        animationType: AnimationType = AnimationType.ZOOM,
+    ) {
         if (shouldAnimate) {
             if (toggle === this.visible) return;
 
@@ -199,10 +227,18 @@ export abstract class Component {
             this.animationProgress = toggle ? 0 : 1;
             this.animationStartTime = null;
             this.animationDirection = toggle ? 'in' : 'out';
+            this.animationType = animationType;
 
+            this.realX = this.x;
             this.realY = this.y;
 
-            this.y += this.animationDirection === "out" ? -25 : 25;
+            switch (this.animationType) {
+                case AnimationType.ZOOM: {
+                    this.y += this.animationDirection === "out" ? -25 : 25;
+
+                    break;
+                }
+            }
 
             if (toggle) {
                 this.visible = true;
@@ -211,6 +247,8 @@ export abstract class Component {
             this.visible = toggle;
         }
     }
+
+    public setGlobalAlpha(globalAlpha: number) { this.globalAlpha = globalAlpha }
 
     public destroy(): void {
         this.canvas = null;

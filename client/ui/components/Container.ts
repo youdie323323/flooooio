@@ -1,7 +1,7 @@
 import { ColorCode, darkend, DARKEND_BASE } from "../../utils/common";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import { uiScaleFactor } from "../UserInterface";
-import { AllComponents, Component, ComponentContainer, MaybeDynamicLayoutablePointer } from "./Component";
+import { AllComponents, AnimationType, Component, ComponentContainer, MaybeDynamicLayoutablePointer } from "./Component";
 import ExtensionPlaceholder from "./extensions/Extension";
 
 /**
@@ -37,61 +37,12 @@ export class StaticContainer extends ExtensionPlaceholder(Component) implements 
         super();
     }
 
-    // Original florr ui container will animated to the middle of container
-    public override render(ctx: CanvasRenderingContext2D): void {
-        ctx.globalAlpha = this.globalAlpha;
-
-        if (!this.visible && !this.isAnimating) {
-            return;
-        }
-
-        if (this.isAnimating) {
-            const currentTime = performance.now();
-            if (this.animationStartTime === null) {
-                this.animationStartTime = currentTime;
-            }
-
-            const elapsed = currentTime - this.animationStartTime;
-            let progress = Math.max(0, Math.min(elapsed / this.ANIMATION_DURATION, 1));
-
-            this.animationProgress = this.animationDirection === 'in' ? progress : 1 - progress;
-
-            if (elapsed >= this.ANIMATION_DURATION) {
-                if (this.animationDirection === 'out') {
-                    this.visible = false;
-                }
-
-                this.isAnimating = false;
-                this.animationStartTime = null;
-            }
-        }
-
-        const easeInExpo = (x: number): number => {
-            return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
-        };
-
-        const progress = easeInExpo(this.animationProgress);
-
-        ctx.translate(this.x + this.w / 2, this.y + ((this.h / 2.2) * (1 - progress)));
-        ctx.scale(progress, progress);
-        ctx.translate(-(this.x + this.w / 2), -(this.y));
-    }
-
-    public override setVisible(toggle: boolean, shouldAnimate: boolean = false) {
-        if (shouldAnimate) {
-            if (toggle === this.visible) return;
-
-            this.isAnimating = true;
-            this.animationProgress = toggle ? 0 : 1;
-            this.animationStartTime = null;
-            this.animationDirection = toggle ? 'in' : 'out';
-
-            if (toggle) {
-                this.visible = true;
-            }
-        } else {
-            this.visible = toggle;
-        }
+    public override setVisible(
+        toggle: boolean,
+        shouldAnimate: boolean = false,
+        animationType: AnimationType = AnimationType.ZOOM,
+    ) {
+        super.setVisible(toggle, shouldAnimate, animationType);
 
         this.children.forEach(c => {
             // Dont animate it, container animation can affected to childrens

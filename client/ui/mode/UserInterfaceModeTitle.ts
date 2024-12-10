@@ -10,7 +10,7 @@ import { Rarities } from "../../../shared/rarity.js";
 import { ServerBound } from "../../../shared/packet.js";
 import ExtensionCollidable from "../components/extensions/ExtensionCollidable.js";
 import { AddableContainer, CoordinatedStaticSpace, StaticContainer, StaticHContainer, StaticTransparentPanelContainer, StaticSpace, StaticVContainer, StaticPanelContainer } from "../components/Container.js";
-import { AllComponents, Component } from "../components/Component.js";
+import { AllComponents, AnimationType, Component } from "../components/Component.js";
 import { CROSS_ICON_SVG } from "./UserInterfaceModeGame.js";
 import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../shared/wave.js";
 import Toggle from "../components/Toggle.js";
@@ -200,24 +200,47 @@ export default class UserInterfaceTitle extends UserInterface {
     protected initializeComponents(): void {
         this.resetWaveState();
 
-        const bagButton = new SVGButton(
-            {
-                x: 15,
-                y: 229,
-                w: 45,
-                h: 45,
+        {
+            const bagContainer = this.createAddableContainer(
+                new StaticPanelContainer(
+                    {
+                        x: 175,
+                        y: 100,
+                    },
+                    "#5aa0db",
+                ),
+                [
+                    new CoordinatedStaticSpace(150, 300, 15, 15),
+                ],
+            );
 
-                invertYCoordinate: true,
-            },
-            "#599dd8",
-            () => {
-                console.log("called")
-            },
-            true,
-            SWAP_BAG_SVG
-        );
+            let bagIsOpen = false;
 
-        this.addComponent(bagButton);
+            const bagButton = new SVGButton(
+                {
+                    x: 15,
+                    y: 229,
+                    w: 45,
+                    h: 45,
+
+                    invertYCoordinate: true,
+                },
+                "#599dd8",
+                () => {
+                    bagIsOpen = !bagIsOpen;
+
+                    bagContainer.setVisible(bagIsOpen, true, AnimationType.SLIDE);
+                },
+                true,
+                SWAP_BAG_SVG
+            );
+
+            bagContainer.setVisible(false);
+
+            this.addComponent(bagContainer);
+
+            this.addComponent(bagButton);
+        }
 
         const craftButton = new SVGButton(
             {
@@ -814,7 +837,7 @@ export default class UserInterfaceTitle extends UserInterface {
 
         this.canvas.style.cursor = "default";
     }
-    
+
     public onContextChanged(): void {
         cameraController.zoom = 1;
 

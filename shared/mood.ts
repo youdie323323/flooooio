@@ -1,3 +1,6 @@
+/**
+ * Mood bit flag.
+ */
 export enum Mood {
     NORMAL = 0,
     ANGRY = 1 << 0,  // 1

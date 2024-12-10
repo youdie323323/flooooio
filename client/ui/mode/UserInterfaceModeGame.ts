@@ -84,7 +84,7 @@ export default class UserInterfaceGame extends UserInterface {
 
     private terrainGenerator: TerrainGenerator;
 
-    private currentMoodFlags: number = Mood.NORMAL;
+    private currentMoodFlags: number;
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
@@ -113,6 +113,8 @@ export default class UserInterfaceGame extends UserInterface {
         this.waveEnded = false;
 
         this.chats = [];
+
+        this.currentMoodFlags = Mood.NORMAL;
     }
 
     public onKeyDown(event: KeyboardEvent): void {
@@ -155,6 +157,7 @@ export default class UserInterfaceGame extends UserInterface {
 
                 break;
             }
+
             default: {
                 // Slot swapping
                 if (networking) {
@@ -163,7 +166,7 @@ export default class UserInterfaceGame extends UserInterface {
                         if (index === 0) {
                             index = 10;
                         }
-                        
+
                         index--;
                         networking.sendSwapPetal(index);
                     }
@@ -195,6 +198,7 @@ export default class UserInterfaceGame extends UserInterface {
                 this.currentMoodFlags |= Mood.ANGRY;
                 networking.sendChangeMood(this.currentMoodFlags);
             }
+
             if (event.button === 2) {
                 this.currentMoodFlags |= Mood.SAD;
                 networking.sendChangeMood(this.currentMoodFlags);
@@ -207,6 +211,7 @@ export default class UserInterfaceGame extends UserInterface {
                 this.currentMoodFlags &= ~Mood.ANGRY;
                 networking.sendChangeMood(this.currentMoodFlags);
             }
+
             if (event.button === 2) {
                 this.currentMoodFlags &= ~Mood.SAD;
                 networking.sendChangeMood(this.currentMoodFlags);
@@ -290,8 +295,6 @@ export default class UserInterfaceGame extends UserInterface {
         this.deadMenuContinueButton.setVisible(false);
 
         this.addComponent(this.deadMenuContinueButton);
-
-        // TODO: dont continue if 
 
         this.chatInput = new TextInput(
             {
@@ -473,7 +476,7 @@ export default class UserInterfaceGame extends UserInterface {
                     ctx.restore();
                 }
 
-                {
+                if (this.waveProgressTimer > 0) {
                     ctx.save();
 
                     ctx.lineWidth = Math.min((this.waveProgressTimer / maxSpawnTime) * (maxSpawnTime * 16.6666), 18.5);
@@ -487,7 +490,7 @@ export default class UserInterfaceGame extends UserInterface {
                     ctx.restore();
                 }
 
-                {
+                if (this.waveProgressRedGageTimer > 0) {
                     ctx.save();
 
                     ctx.lineWidth = Math.min((this.waveProgressRedGageTimer / maxSpawnTime) * (maxSpawnTime * 16.6666), 15);
@@ -525,7 +528,7 @@ export default class UserInterfaceGame extends UserInterface {
                 ctx.save();
 
                 const biomeText = Biomes[this.biome].toLocaleLowerCase();
-                const capitalizedBiomeText = biomeText[0].toUpperCase() + biomeText.slice(1);
+                const capitalizedBiomeText = biomeText[0].toUpperCase() + biomeText.slice(1).toLowerCase();
 
                 ctx.lineJoin = 'round';
                 ctx.lineCap = 'round';

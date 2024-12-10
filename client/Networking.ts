@@ -6,6 +6,7 @@ import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from ".
 import EntityMob from "./entity/EntityMob";
 import EntityPlayer from "./entity/EntityPlayer";
 import { players, mobs, uiCtx } from "./main";
+import { AnimationType } from "./ui/components/Component";
 import UserInterfaceGame from "./ui/mode/UserInterfaceModeGame";
 import UserInterfaceTitle, { StatusText, WaveRoomPlayerInformation } from "./ui/mode/UserInterfaceModeTitle";
 
