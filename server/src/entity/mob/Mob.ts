@@ -113,6 +113,7 @@ type MobInstance = InstanceType<typeof Mob>;
 interface MobStat {
     bodyDamage: number;
     health: number;
+    
     [key: string]: any;
 }
 

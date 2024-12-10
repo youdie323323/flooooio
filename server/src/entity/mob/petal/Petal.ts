@@ -40,8 +40,8 @@ export interface PetalData {
  * Eliminates the need for the server to create the actual living “Mob” instance.
  */
 export interface MockPetalData {
-    type: PetalType;
-    rarity: Rarities;
+    readonly type: PetalType;
+    readonly rarity: Rarities;
 }
 
 type MaybeEmptySlot<T> = T | null | undefined;

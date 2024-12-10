@@ -51,6 +51,8 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
       // Clear on return
       using _disposable = { [Symbol.dispose]: () => { poolThis.sharedQuadTree.clear() } };
 
+      // TODO: dont push all element per tick
+
       if (this instanceof Mob) {
         // Only insert mobs when mob
         poolThis.mobPool.forEach(mob => {

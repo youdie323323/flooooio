@@ -55,7 +55,7 @@ export class Logger {
     /**
      * Emit a log message with a given level and color.
      */
-    private emit(level: string, message: string, color: (text: string) => string): void {
+    private emit(level: string, message: string, color: chalk.Chalk): void {
         const metadata = this.formatMetadata(this.#stack.render());
         const timestamp = this.getTimestamp();
         const logLine = `${timestamp} ${color(level)} ${message} ${metadata}`;

@@ -55,7 +55,7 @@ export interface ComponentSymbol {
  * Not including dynamic layoutable layout to custom omitable/pickable layout.
  */
 export abstract class Component {
-    protected readonly ANIMATION_DURATION: number = 100;
+    protected readonly ANIMATION_DURATION: number = 120;
     public isAnimating: boolean = false;
     public animationProgress: number = 1;
     public animationStartTime: number | null = null;
@@ -171,8 +171,9 @@ export abstract class Component {
             if (elapsed >= this.ANIMATION_DURATION) {
                 if (this.animationDirection === 'out') {
                     this.visible = false;
-                    this.y = this.realY;
                 }
+
+                this.y = this.realY;
 
                 this.isAnimating = false;
                 this.animationStartTime = null;
@@ -201,9 +202,12 @@ export abstract class Component {
             this.animationStartTime = null;
             this.animationDirection = toggle ? 'in' : 'out';
 
+            this.realY = this.y;
+
             if (this.animationDirection === "out") {
-                this.realY = this.y;
                 this.y -= 25;
+            } else {
+                this.y += 20;
             }
 
             if (toggle) {

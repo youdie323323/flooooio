@@ -171,14 +171,6 @@ export default class WaveProbabilityPredictor {
 
     /**
      * Consumable points.
-     * 
-     * @remarks
-     * 
-     * From m28 message:
-     * ```
-     * basically a wave has a number of points. Each mob has a cost (same regardless of rarity). 
-     * It selects random mobs from the available pool (with some weights) until the wave runs out of points.
-     * ```
      */
     private points: number;
 

@@ -1,12 +1,9 @@
-import { angleToRad, traverseMobSegment, isPetal, isBody } from "../../utils/common";
+import { isPetal, isBody } from "../../utils/common";
 import { Entity, EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool } from "../../wave/WavePool";
-import { BaseMob, Mob, MobInstance } from "./Mob";
-import { Player, PlayerInstance } from "../player/Player";
+import { BaseMob, Mob } from "./Mob";
+import { Player } from "../player/Player";
 import { MobType } from "../../../../shared/enum";
-import { memo } from "../../../../shared/utils/memoize";
-
-const TAU = Math.PI * 2;
 
 export function findNearestEntity<T extends Entity>(me: T, entities: T[]) {
     if (!entities.length) return null;
@@ -26,19 +23,16 @@ export function findNearestEntity<T extends Entity>(me: T, entities: T[]) {
     });
 }
 
-export const turnAngleToTarget = memo((thisAngle: number, dx: number, dy: number): number => {
-    const targetAngle = ((Math.atan2(dy, dx) / TAU) * 255 + 255) % 255;
-
-    while (thisAngle < 0) thisAngle += 255;
-    thisAngle = thisAngle % 255;
-
-    let angleDiff = targetAngle - thisAngle;
+export function turnAngleToTarget(thisAngle: number, dx: number, dy: number): number {
+    const targetAngle = (Math.atan2(dy, dx) * 40.549) % 255; // 255/(2*PI)≈40.549
+    const normalizedAngle = ((thisAngle % 255) + 255) % 255;
+    let angleDiff = targetAngle - normalizedAngle;
+    
     if (angleDiff > 127.5) angleDiff -= 255;
-    if (angleDiff < -127.5) angleDiff += 255;
-
-    const newAngle = thisAngle + angleDiff * 0.1;
-    return ((newAngle + 255) % 255);
-});
+    else if (angleDiff < -127.5) angleDiff += 255;
+    
+    return ((normalizedAngle + angleDiff * 0.1 + 255) % 255);
+}
 
 const MOB_DETECTION_FACTOR = 25;
 

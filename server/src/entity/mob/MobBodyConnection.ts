@@ -15,6 +15,7 @@ export function MobBodyConnection<T extends EntityMixinConstructor<BaseMob>>(Bas
                 super[onUpdateTick](poolThis);
             }
 
+            // Dont connect when this is petal
             if (isPetal(this.type)) return;
 
             // If not body, return
@@ -23,7 +24,6 @@ export function MobBodyConnection<T extends EntityMixinConstructor<BaseMob>>(Bas
             // If connected segment dead, divide body
             if (!poolThis.getMob(this.connectingSegment.id)) {
                 this.connectingSegment = null;
-
                 return;
             }
 

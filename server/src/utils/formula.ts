@@ -1,5 +1,5 @@
 /**
- * Private formulas, other formula will go into shared/formula.ts
+ * Private formula, other formula will go into shared/formula.ts
  */
 
 import { Rarities } from "../../../shared/rarity";
@@ -8,7 +8,8 @@ import { MOB_DAMAGE_FACTOR } from "../entity/mob/Mob";
 
 /**
  * Calculate hp by level.
- * @deprecated This is the formula after wave.
+ * 
+ * @deprecated - This is the formula after wave.
  */
 export function calculateHp(level: number) {
     let hp: number = 100;

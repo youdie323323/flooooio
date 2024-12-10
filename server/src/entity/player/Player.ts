@@ -83,6 +83,8 @@ class BasePlayer implements Entity {
 }
 
 let Player = BasePlayer;
+Player = EntityCollisionResponse(Player);
+
 // Do PlayerPetalConsume before PlayerReload to avoid server crash
 Player = PlayerPetalConsume(Player);
 // Do PlayerPetalOrbit before PlayerReload so petal reloads like original game (can interpolate movement)
@@ -92,7 +94,6 @@ Player = PlayerDeadCamera(Player);
 
 Player = EntityDeath(Player);
 Player = EntityMapBoundary(Player);
-Player = EntityCollisionResponse(Player);
 Player = EntityLinearMovement(Player);
 
 type PlayerInstance = InstanceType<typeof Player>;

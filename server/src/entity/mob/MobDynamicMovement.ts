@@ -23,6 +23,7 @@ export function MobDynamicMovement<T extends EntityMixinConstructor<BaseMob>>(Ba
                 super[onUpdateTick](poolThis);
             }
 
+            // Dont move when this is petal
             if (isPetal(this.type)) return;
 
             // If body, dont do anything
