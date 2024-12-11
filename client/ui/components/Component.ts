@@ -200,7 +200,7 @@ export abstract class Component {
             }
         }
 
-        const easingFunction = Component.ANIMATION_EASING_FUNCTIONS[this.animationType] ?? Component.ANIMATION_EASING_FUNCTIONS[AnimationType.ZOOM];
+        const easingFunction = Component.ANIMATION_EASING_FUNCTIONS[this.animationType] ?? ((_) => 0);
 
         const progress = easingFunction(this.animationProgress);
 
@@ -209,8 +209,6 @@ export abstract class Component {
             ctx.scale(progress, progress);
             ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
         } else if (this.animationType === AnimationType.SLIDE) {
-            const slideOutX = -this.w + (-4);
-
             // TODO: implement
         }
     }
@@ -232,12 +230,8 @@ export abstract class Component {
             this.realX = this.x;
             this.realY = this.y;
 
-            switch (this.animationType) {
-                case AnimationType.ZOOM: {
-                    this.y += this.animationDirection === "out" ? -25 : 25;
-
-                    break;
-                }
+            if (this.animationType === AnimationType.ZOOM) {
+                this.y += this.animationDirection === "out" ? -20 : 20;
             }
 
             if (toggle) {
@@ -254,8 +248,8 @@ export abstract class Component {
         this.canvas = null;
     };
 
-    protected computeDynamicLayoutable<T>(maybeDynamicLayoutable: MaybeDynamicLayoutablePointer<T>): T {
-        return maybeDynamicLayoutable instanceof Function ? maybeDynamicLayoutable() : maybeDynamicLayoutable;
+    protected computeDynamicLayoutable<T>(m: MaybeDynamicLayoutablePointer<T>): T {
+        return m instanceof Function ? m() : m;
     }
 
     // Wrap these prop so components can override this method

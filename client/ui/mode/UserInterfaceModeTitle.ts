@@ -169,10 +169,10 @@ export default class UserInterfaceTitle extends UserInterface {
                             this.onLoadedComponents.forEach(c => {
                                 c.setVisible(true, true);
                             });
-                        }, 100)
-                    }, 1250);
-                }, 40);
-            }, 1250);
+                        }, 150)
+                    }, 2000);
+                }, 50);
+            }, 2000);
         }, 1);
     }
 

@@ -46,7 +46,7 @@ export const WAVE_UPDATE_FPS = 60;
  * Packets don't need to be sent at 60fps per second. 30fps per second is enough.
  * If update sent too fast, it will feel laggy.
  */
-export const WAVE_UPDATE_SEND_FPS = 30;
+export const WAVE_UPDATE_SEND_FPS = 35;
 
 /**
  * Wave data.

@@ -35,6 +35,46 @@ const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
                 rarity: Rarities.SUPER,
             } as MockPetalData,
             {
+                type: PetalType.FASTER,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BASIC,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BASIC,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BASIC,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BASIC,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BASIC,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BASIC,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BASIC,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BASIC,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BASIC,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
                 type: PetalType.BASIC,
                 rarity: Rarities.SUPER,
             } as MockPetalData,

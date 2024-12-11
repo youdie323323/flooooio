@@ -34,7 +34,7 @@ const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, i: number
             }
 
             case PetalType.BUBBLE: {
-                return [petal.x - player.x, petal.y - player.y];
+                return [player.x - petal.x, player.y - petal.y];
             }
         }
 
@@ -44,20 +44,23 @@ const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, i: number
     return null;
 };
 
-const BUBBLE_BOUNCE_FORCE = 50;
-
 export function PlayerPetalConsume<T extends EntityMixinConstructor<BasePlayer>>(Base: T) {
-    return class extends Base implements EntityMixinTemplate {
+    return class MixedBase extends Base implements EntityMixinTemplate {
+        private static readonly BUBBLE_BOUNCE_FORCE = 30;
+        private static readonly BUBBLE_ATTENUATION_COEFFICIENT = 0.8;
+
+        private bubbleVelocityX: number = 0;
+        private bubbleVelocityY: number = 0;
+
         [onUpdateTick](poolThis: WavePool): void {
             if (super[onUpdateTick]) {
                 super[onUpdateTick](poolThis);
             }
 
-            let totalDx = 0;
-            let totalDy = 0;
-            let bubbleCount = 0;
-
             const { 1: isConsumeMood } = decodeMood(this.mood);
+
+            this.bubbleVelocityX *= MixedBase.BUBBLE_ATTENUATION_COEFFICIENT;
+            this.bubbleVelocityY *= MixedBase.BUBBLE_ATTENUATION_COEFFICIENT;
 
             this.slots.surface.forEach((petals, i) => {
                 if (petals != null && isUnconvertableSlot(petals)) {
@@ -75,9 +78,8 @@ export function PlayerPetalConsume<T extends EntityMixinConstructor<BasePlayer>>
                                 if (result) {
                                     const distance = Math.sqrt(result[0] * result[0] + result[1] * result[1]);
                                     if (distance > 0) {
-                                        totalDx += (result[0] / distance);
-                                        totalDy += (result[1] / distance);
-                                        bubbleCount++;
+                                        this.bubbleVelocityX += result[0] / distance;
+                                        this.bubbleVelocityY += result[1] / distance;
                                     }
                                 }
                             }
@@ -86,13 +88,8 @@ export function PlayerPetalConsume<T extends EntityMixinConstructor<BasePlayer>>
                 }
             });
 
-            if (bubbleCount > 0) {
-                const totalDistance = Math.sqrt(totalDx * totalDx + totalDy * totalDy);
-                if (totalDistance > 0) {
-                    this.x -= (totalDx / totalDistance) * BUBBLE_BOUNCE_FORCE * bubbleCount;
-                    this.y -= (totalDy / totalDistance) * BUBBLE_BOUNCE_FORCE * bubbleCount;
-                }
-            }
+            this.x += this.bubbleVelocityX * MixedBase.BUBBLE_BOUNCE_FORCE;
+            this.y += this.bubbleVelocityY * MixedBase.BUBBLE_BOUNCE_FORCE;
         }
 
         dispose = () => {

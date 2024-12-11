@@ -6,7 +6,7 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
     abstract class MixedBase extends Base implements ComponentExtensionTemplate {
         private static readonly SPEED: number = 0.4;
         private static readonly GAP: number = 4;
-        private static readonly DEAD_ZONE: number = 10;
+        private static readonly DEAD_ZONE: number = 6;
 
         private collidableComponents: Component[];
         private targetYPos: number | null;
