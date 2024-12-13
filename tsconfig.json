@@ -5,7 +5,7 @@
     "target": "es6",
     "strict": true,
     "esModuleInterop": true,
-    "moduleResolution": "node",
+    "moduleResolution": "node10",
     "noImplicitAny": false,
     "strictNullChecks": false
   }

@@ -1,13 +1,8 @@
 import path from "path";
 import uWS, { App, SHARED_COMPRESSOR } from 'uWebSockets.js';
-import { PetalType, BIOME_VALUES, Biomes } from "../shared/enum";
 import { ServerBound, ClientboundConnectionKickReason } from "../shared/packet";
 import { Rarities } from "../shared/rarity";
 import { PLAYER_STATE_VALUES, VISIBLE_STATE_VALUES, WaveRoomState, WaveRoomVisibleState } from "../shared/wave";
-import root from "./src/command/commandRoot";
-import { registerSpawn } from "./src/command/commands/spawn";
-import { registerSpawnMob } from "./src/command/subcommands/spawnMob";
-import { registerSpawnMobBulk } from "./src/command/subcommands/spawnMobBulk";
 import { MockPetalData } from "./src/entity/mob/petal/Petal";
 import { MockPlayerData } from "./src/entity/player/Player";
 import { Logger } from "./src/logger/Logger";
@@ -16,6 +11,8 @@ import { UserData } from "./src/wave/WavePool";
 import WaveRoomService from "./src/wave/WaveRoomService";
 import fs from "fs";
 import { VALID_MOOD_FLAGS } from "../shared/mood";
+import { BIOME_VALUES, Biomes } from "../shared/biomes";
+import { PetalType } from "../shared/enum";
 
 export const isDebug = process.argv.includes("-d");
 
@@ -165,7 +162,7 @@ export const logger = new Logger();
 logger.info("App started");
 
 /**
- * Global instance for decoding string of buffer.
+ * Global instance for decoding string section of buffer.
  */
 const textDecoder = new TextDecoder('utf-8');
 
@@ -356,7 +353,7 @@ const MIME_TYPES = {
 };
 
 app
-    .get('/*', (res, req) => logger.region(() => {
+    .get('/*', (res, req) => {
         const url = req.getUrl();
         const filePath = path.join(__dirname, 'public', url === '/' ? 'index.html' : url);
         const ext = path.extname(filePath);
@@ -368,6 +365,7 @@ app
                 res.cork(() => {
                     res.writeStatus('404 Not Found').end('File Not Found');
                 });
+                
                 return;
             }
 
@@ -384,17 +382,19 @@ app
                 res.writeHeader('Content-Type', contentType).end(data);
             });
         });
-    }))
+    })
     .ws('/*', {
         compression: SHARED_COMPRESSOR,
         maxPayloadLength: 16 * 1024,
         sendPingsAutomatically: false,
         idleTimeout: 0,
-        open: (ws: uWS.WebSocket<UserData>) => logger.region(() => {
-            using _guard = logger.metadata({
-                ipAddress: Buffer.from(ws.getRemoteAddressAsText()).toString(),
+        open: (ws: uWS.WebSocket<UserData>) => {
+            logger.region(() => {
+                using _guard = logger.metadata({
+                    ipAddress: Buffer.from(ws.getRemoteAddressAsText()).toString(),
+                });
+                logger.info("Client connected");
             });
-            logger.info("Client connected");
 
             // Safely set them null
             const userData = ws.getUserData();
@@ -411,19 +411,21 @@ app
             //     
             //     return 0;
             // };
-        }),
+        },
         // I dont log errors here because all errors are well-known (ws.send fail)
         // its maybe impact performance
         message: handleMessage,
-        close: (ws: uWS.WebSocket<UserData>, code, message) => logger.region(() => {
+        close: (ws: uWS.WebSocket<UserData>, code, message) => {
             const { waveRoomClientId, waveClientId } = ws.getUserData();
 
-            using _guard = logger.metadata({
-                reason: Buffer.from(message).toString() || "UNKNOWN",
-                waveRoomClientId,
-                waveClientId,
+            logger.region(() => {
+                using _guard = logger.metadata({
+                    reason: Buffer.from(message).toString() || "UNKNOWN",
+                    waveRoomClientId,
+                    waveClientId,
+                });
+                logger.info(`Client disconnected`);
             });
-            logger.info(`Client disconnected`);
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
 
@@ -436,21 +438,11 @@ app
                     if (waveClient) clientRemove(waveRoom, waveClient.id);
                 }
             }
-        })
+        }
     })
-    .listen("0.0.0.0", PORT, (token) => {
+    .listen("0.0.0.0", PORT, (token: any) => {
         if (token) {
             logger.info(`Server running on port ${PORT}`);
-
-            // Register all commands on global root
-            {
-                // Spawn and their sub commands
-                {
-                    const spawn = registerSpawn(root);
-                    const spawnMob = registerSpawnMob(spawn);
-                    registerSpawnMobBulk(spawnMob);
-                }
-            }
         } else {
             logger.error(`Failed to listen on port ${PORT}`);
         }

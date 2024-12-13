@@ -1,6 +1,3 @@
-import { cameraController, mobs, players } from "../main";
-import { waveSelfId } from "../Networking";
-import UserInterface from "./UserInterface";
 import UserInterfaceGame from "./mode/UserInterfaceModeGame";
 import UserInterfaceTitle from "./mode/UserInterfaceModeTitle";
 import UserInterfaceTransition from "./UserInterfaceTransition";

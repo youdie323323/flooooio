@@ -1,6 +1,6 @@
 import { Canvg, presets } from "canvg";
-import { antennaScaleFactor, cameraController } from "../main";
-import { Biomes } from "../../shared/enum";
+import { Biomes } from "../../../shared/biomes";
+import { antennaScaleFactor } from "../../main";
 import { uiScaleFactor } from "../ui/UserInterface";
 
 const TAU = Math.PI * 2;

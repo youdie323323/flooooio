@@ -1,6 +1,6 @@
-import { MobType, PetalType } from "../../shared/enum";
-import { PETAL_PROFILES } from "../../shared/entity/mob/petal/petalProfiles";
-import { memo } from "../../shared/utils/memoize";
+import { PETAL_PROFILES } from "../../../shared/entity/mob/petal/petalProfiles";
+import { MobType, PetalType } from "../../../shared/enum";
+import { memo } from "../../../shared/utils/memoize";
 
 export const isPetal = memo((type: MobType | PetalType): type is PetalType => {
     return type in PETAL_PROFILES;
@@ -16,8 +16,8 @@ export type ColorCode = `#${string}${string}${string}`;
 
 /**
  * Darkens colour.
- * @param color - color code.
- * @param strength - strenth.
+ * @param color - Color code.
+ * @param strength - Strenth.
  */
 export const darkend = memo((color: ColorCode, strength: number): ColorCode => {
     let r = parseInt(color.slice(1, 3), 16);

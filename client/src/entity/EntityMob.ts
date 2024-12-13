@@ -1,8 +1,8 @@
 import Entity from "./Entity";
 import { ColorCode, darkend, DARKEND_BASE } from "../utils/common";
-import { MobType, PetalType } from "../../shared/enum";
-import { Rarities } from "../../shared/rarity";
 import drawEntityDetail from "./entityDrawDetail";
+import { MobType, PetalType } from "../../../shared/enum";
+import { Rarities } from "../../../shared/rarity";
 
 const TAU = Math.PI * 2;
 

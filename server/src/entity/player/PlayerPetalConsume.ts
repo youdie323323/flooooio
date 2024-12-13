@@ -6,9 +6,11 @@ import { PetalType } from "../../../../shared/enum";
 import { Rarities } from "../../../../shared/rarity";
 import { EGG_TYPE_MAPPING } from "./PlayerPetalReload";
 import { decodeMood, Mood } from "../../../../shared/mood";
+import e from "express";
+import { PETAL_PROFILES } from "../../../../shared/entity/mob/petal/petalProfiles";
 
 const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, i: number, j: number):
-    // Bubble velocity
+    // Dx, dy
     [number, number]
     | null => {
     if (Date.now() >= player.slots.cooldownsUsage[i][j]) {
@@ -18,7 +20,12 @@ const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, i: number
         }
 
         const petal = cluster[j];
+
+        // Remove mob as it consumed
         poolThis.removeMob(petal.id);
+
+        // Reset cooldown (maybe do cooldown reset instead of PlayerPetalReload?)
+        // player.slots.cooldownsUsage[i][j] = 0;
 
         switch (petal.type) {
             case PetalType.BEETLE_EGG: {
@@ -30,6 +37,7 @@ const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, i: number
                     null,
                     player,
                 );
+
                 break;
             }
 
@@ -37,8 +45,6 @@ const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, i: number
                 return [player.x - petal.x, player.y - petal.y];
             }
         }
-
-        player.slots.cooldownsUsage[i][j] = 0;
     }
 
     return null;
@@ -47,7 +53,7 @@ const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, i: number
 export function PlayerPetalConsume<T extends EntityMixinConstructor<BasePlayer>>(Base: T) {
     return class MixedBase extends Base implements EntityMixinTemplate {
         private static readonly BUBBLE_BOUNCE_FORCE = 30;
-        private static readonly BUBBLE_ATTENUATION_COEFFICIENT = 0.8;
+        private static readonly BUBBLE_ATTENUATION_COEFFICIENT = 0.7;
 
         private bubbleVelocityX: number = 0;
         private bubbleVelocityY: number = 0;

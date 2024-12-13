@@ -1,4 +1,5 @@
-import { MobType, Biomes } from "../../../shared/enum";
+import { Biomes } from "../../../shared/biomes";
+import { MobType } from "../../../shared/enum";
 import { Rarities } from "../../../shared/rarity";
 import { calculateWaveLuck } from "../utils/formula";
 import { choice, randomEnum } from "../utils/random";

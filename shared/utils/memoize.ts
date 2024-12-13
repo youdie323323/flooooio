@@ -3,30 +3,30 @@ export interface MemoizeOptions<A extends unknown[], R, H = unknown> {
      * Provides a single value to use as the Key for the memoization.
      * Defaults to `JSON.stringify` (ish).
      */
-    hash?: (...args: A) => H
+    hash?: (...args: A) => H;
 
     /**
      * The Cache implementation to provide. Must be a Map or Map-alike.
      * Defaults to a Map. Useful for replacing the cache with an LRU cache or similar.
      */
-    cache?: Map<H, R>
+    cache?: Map<H, R>;
 }
 
-export type MemoizableFunction<A extends unknown[], R extends unknown, T extends unknown> = (this: T, ...args: A) => R
+export type MemoizableFunction<A extends unknown[], R extends unknown, T extends unknown> = (this: T, ...args: A) => R;
 
 export function defaultHash<A extends unknown[], H extends unknown>(...args: A): H {
     // JSON.stringify ellides `undefined` and function values by default, we do not want that
-    return JSON.stringify(args, (_: unknown, v: unknown) => (typeof v === 'object' ? v : String(v))) as H
+    return JSON.stringify(args, (_: unknown, v: unknown) => (typeof v === 'object' ? v : String(v))) as H;
 }
 
 export function memo<A extends unknown[], R extends unknown, T extends unknown, H extends unknown>(
     fn: MemoizableFunction<A, R, T>,
     opts: MemoizeOptions<A, R, H> = {}
 ): MemoizableFunction<A, R, T> {
-    const { hash = defaultHash, cache = new Map<H, R>() } = opts
+    const { hash = defaultHash, cache = new Map<H, R>() } = opts;
     
     return function (this: T, ...args: A): R {
-        const id = hash.apply(this, args)
+        const id = hash.apply(this, args);
         if (cache.has(id)) return cache.get(id)!;
 
         let result = fn.apply(this, args);
@@ -39,14 +39,14 @@ export function memo<A extends unknown[], R extends unknown, T extends unknown, 
 
         cache.set(id, result);
 
-        return result
-    }
+        return result;
+    };
 }
 
 export function memoize<A extends unknown[], R>(memoizeOptions: MemoizeOptions<A, R> = {}) {
     return (
         target: object, 
-        propertyKey: string | symbol, 
+        propertyKey: PropertyKey, 
         descriptor: TypedPropertyDescriptor<MemoizableFunction<A, R, typeof target>>
     ): void => {
         descriptor.value = memo(descriptor.value, memoizeOptions);

@@ -1,4 +1,3 @@
-import { Biomes, MobType, PetalType } from "../../../shared/enum";
 import { calculateWaveLength } from "../../../shared/formula";
 import { ClientBound } from "../../../shared/packet";
 import { PETAL_PROFILES } from "../../../shared/entity/mob/petal/petalProfiles";
@@ -18,6 +17,8 @@ import WaveProbabilityPredictor, { LINKED_MOBS } from "./WaveProbabilityPredicto
 import { WaveRoomPlayerId, WaveRoomPlayer } from "./WaveRoom";
 import { MOB_PROFILES } from "../../../shared/entity/mob/mobProfiles";
 import { Mood } from "../../../shared/mood";
+import { Biomes } from "../../../shared/biomes";
+import { MobType, PetalType } from "../../../shared/enum";
 
 // Define UserData for WebSocket connections
 export interface UserData {
@@ -34,9 +35,9 @@ export interface UserData {
     wavePlayerData: MockPlayerData;
 }
 
-export const PRE_WAVE_UPDATE_FPS = 30;
+export const UPDATE_WAVE_FPS = 30;
 
-export const WAVE_UPDATE_FPS = 60;
+export const UPDATE_ENTITIES_FPS = 60;
 
 /**
  * Frame per second to send update packet.
@@ -46,7 +47,7 @@ export const WAVE_UPDATE_FPS = 60;
  * Packets don't need to be sent at 60fps per second. 30fps per second is enough.
  * If update sent too fast, it will feel laggy.
  */
-export const WAVE_UPDATE_SEND_FPS = 35;
+export const UPDATE_PACKET_SEND_FPS = 35;
 
 /**
  * Wave data.
@@ -192,9 +193,9 @@ export class WavePool {
         this.broadcastSeldIdPacket();
 
         // Start all intervaler
-        this.updateWaveInterval = setInterval(this.updateWave.bind(this), 1000 / PRE_WAVE_UPDATE_FPS);
-        this.updateEntitiesInterval = setInterval(this.updateEntities.bind(this), 1000 / WAVE_UPDATE_FPS);
-        this.updatePacketSendInterval = setInterval(this.broadcastUpdatePacket.bind(this), 1000 / WAVE_UPDATE_SEND_FPS);
+        this.updateWaveInterval = setInterval(this.updateWave.bind(this), 1000 / UPDATE_WAVE_FPS);
+        this.updateEntitiesInterval = setInterval(this.updateEntities.bind(this), 1000 / UPDATE_ENTITIES_FPS);
+        this.updatePacketSendInterval = setInterval(this.broadcastUpdatePacket.bind(this), 1000 / UPDATE_PACKET_SEND_FPS);
     }
 
     public endWave() {
@@ -221,8 +222,8 @@ export class WavePool {
             y,
             angle: 0,
             magnitude: 0,
-            mood: 0,
-            size: 15,
+            mood: Mood.NORMAL,
+            size: Player.BASE_SIZE,
 
             // You should change maxHealth when changed health
 

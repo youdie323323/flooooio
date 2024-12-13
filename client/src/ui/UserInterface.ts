@@ -1,8 +1,8 @@
-import { Biomes } from "../../shared/enum";
 import { ADDED, AllComponents, Clickable, Component, ComponentContainer, ComponentSymbol, Interactive } from "./components/Component";
 import { Button } from "./components/Button";
 import { DYNAMIC_LAYOUTED } from "./components/extensions/ExtensionDynamicLayoutable";
 import { AddableContainer } from "./components/Container";
+import { Biomes } from "../../../shared/biomes";
 
 export let uiScaleFactor: number = 1;
 

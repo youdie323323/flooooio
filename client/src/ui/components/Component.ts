@@ -58,7 +58,7 @@ export enum AnimationType {
  * Not including dynamic layoutable layout to custom omitable/pickable layout.
  */
 export abstract class Component {
-    protected readonly ANIMATION_ZOOM_DURATION: number = 125;
+    protected readonly ANIMATION_ZOOM_DURATION: number = 150;
     protected readonly ANIMATION_SLIDE_DURATION: number = 500;
 
     public isAnimating: boolean = false;
@@ -218,9 +218,9 @@ export abstract class Component {
         shouldAnimate: boolean = false,
         animationType: AnimationType = AnimationType.ZOOM,
     ) {
-        if (shouldAnimate) {
-            if (toggle === this.visible) return;
+        if (toggle === this.visible) return;
 
+        if (shouldAnimate) {
             this.isAnimating = true;
             this.animationProgress = toggle ? 0 : 1;
             this.animationStartTime = null;

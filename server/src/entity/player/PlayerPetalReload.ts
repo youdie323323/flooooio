@@ -1,5 +1,5 @@
 import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
-import { WavePool, WAVE_UPDATE_FPS } from "../../wave/WavePool";
+import { WavePool, UPDATE_ENTITIES_FPS } from "../../wave/WavePool";
 import { Mob, MobInstance } from "../mob/Mob";
 import { BasePlayer, PlayerInstance } from "./Player";
 import { isUnconvertableSlot, PetalData } from "../mob/petal/Petal";

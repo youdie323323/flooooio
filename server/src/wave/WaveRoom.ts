@@ -1,9 +1,7 @@
-import { Biomes } from "../../../shared/enum";
+import { Biomes } from "../../../shared/biomes";
 import { ClientBound } from "../../../shared/packet";
 import { WaveRoomPlayerReadyState, WaveRoomVisibleState, WaveRoomState } from "../../../shared/wave";
 import { logger } from "../../main";
-import { Command } from "../command/command";
-import root from "../command/commandRoot";
 import { BrandedId } from "../entity/Entity";
 import { MockPlayerData } from "../entity/player/Player";
 import { generateRandomWaveRoomPlayerId } from "../utils/random";
@@ -62,7 +60,7 @@ export default class WaveRoom {
         this.waveRoomPacketSendInterval = setInterval(this.broadcastWaveRoomPacket.bind(this), 1000 / WAVE_ROOM_UPDATE_SEND_FPS);
 
         this.wavePool = new WavePool(
-            () => this.state, 
+            () => this.state,
             this.onChangeAnything,
         );
     }
@@ -320,16 +318,8 @@ export default class WaveRoom {
      */
     public async processChatMessage(userData: UserData, chatMsg: string) {
         if (userData?.waveClientId && chatMsg.length > 0) {
-            if (chatMsg.startsWith(Command.COMMAND_PREFIX)) {
-                root.execute(
-                    userData,
-                    // Remove prefix, then split
-                    chatMsg.slice(Command.COMMAND_PREFIX.length).split(" "),
-                );
-            } else {
-                // Public chat
-                this.wavePool.broadcastChat(userData.waveClientId, chatMsg);
-            }
+            // Publish chat
+            this.wavePool.broadcastChat(userData.waveClientId, chatMsg);
         }
     }
 

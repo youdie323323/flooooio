@@ -1,6 +1,6 @@
 import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
-import { WavePool, WAVE_UPDATE_FPS } from "../../wave/WavePool";
-import { BasePlayer } from "./Player";
+import { WavePool, UPDATE_ENTITIES_FPS } from "../../wave/WavePool";
+import { BasePlayer, Player } from "./Player";
 import { isUnconvertableSlot } from "../mob/petal/Petal";
 import { isPetal } from "../../utils/common";
 import { PetalType } from "../../../../shared/enum";
@@ -101,9 +101,11 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 const profile = PETAL_PROFILES[firstPetal.type];
                 const rarityProfile = profile[firstPetal.rarity];
 
-                const baseRadius =
+                let baseRadius =
                     isAngry ? isPetal(firstPetal.type) && UNMOODABLE_PETALS.has(firstPetal.type) ? 40 : 80 :
                         isSad ? 25 : 40;
+
+                baseRadius *= this.size / Player.BASE_SIZE;
 
                 const bounce = this.petalBounces[i];
                 this.petalRadii[i] += bounce;
@@ -149,7 +151,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 }
             }
 
-            this.rotation += (clockwise ? -1 : 1) * totalSpeed / WAVE_UPDATE_FPS;
+            this.rotation += (clockwise ? -1 : 1) * totalSpeed / UPDATE_ENTITIES_FPS;
 
             if (Math.abs(this.rotation) > Number.MAX_SAFE_INTEGER) {
                 this.rotation = this.rotation % TAU;

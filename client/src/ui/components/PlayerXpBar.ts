@@ -1,4 +1,4 @@
-import { levelPerXp, xpPerLevel } from "../../../shared/formula";
+import { levelPerXp, xpPerLevel } from "../../../../shared/formula";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import { Component, MaybeDynamicLayoutablePointer } from "./Component";
 import ExtensionPlaceholder from "./extensions/Extension";

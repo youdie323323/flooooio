@@ -1,4 +1,4 @@
-import { deltaTime } from "../main";
+import { deltaTime } from "../../main";
 import EASING_FUNCTIONS from "./easingFunctions";
 
 export function interpolate(start: number, end: number, duration: number): number {

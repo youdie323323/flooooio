@@ -1,23 +1,23 @@
-import EntityMob from "../../entity/EntityMob.js";
-import TerrainGenerator, { BIOME_TILESETS } from "../../utils/TerrainGenerator.js";
-import { Button, SVGButton, TextButton } from "../components/Button.js";
-import UserInterface, { uiScaleFactor } from "../UserInterface.js";
-import TextInput from "../components/TextInput.js";
-import { cameraController, networking, ws } from "../../main.js";
-import { Biomes, PetalType } from "../../../shared/enum.js";
-import StaticText from "../components/Text.js";
-import { Rarities } from "../../../shared/rarity.js";
-import { ServerBound } from "../../../shared/packet.js";
-import ExtensionCollidable from "../components/extensions/ExtensionCollidable.js";
-import { AddableContainer, CoordinatedStaticSpace, StaticContainer, StaticHContainer, StaticTransparentPanelContainer, StaticSpace, StaticVContainer, StaticPanelContainer } from "../components/Container.js";
-import { AllComponents, AnimationType, Component } from "../components/Component.js";
-import { CROSS_ICON_SVG } from "./UserInterfaceModeGame.js";
-import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../shared/wave.js";
-import Toggle from "../components/Toggle.js";
-import { ExtensionDynamicLayoutable } from "../components/extensions/ExtensionDynamicLayoutable.js";
-import PlayerProfile from "../components/PlayerProfile.js";
-import { DARKEND_BASE } from "../../utils/common.js";
-import PlayerXpBar from "../components/PlayerXpBar.js";
+import { Biomes } from "../../../../shared/biomes";
+import { PetalType } from "../../../../shared/enum";
+import { ServerBound } from "../../../../shared/packet";
+import { Rarities } from "../../../../shared/rarity";
+import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../../shared/wave";
+import { networking, ws, cameraController } from "../../../main";
+import EntityMob from "../../entity/EntityMob";
+import { DARKEND_BASE } from "../../utils/common";
+import TerrainGenerator, { BIOME_TILESETS } from "../../utils/TerrainGenerator";
+import { SVGButton, TextButton } from "../components/Button";
+import { AllComponents, AnimationType } from "../components/Component";
+import { AddableContainer, StaticPanelContainer, CoordinatedStaticSpace, StaticHContainer, StaticSpace } from "../components/Container";
+import ExtensionCollidable from "../components/extensions/ExtensionCollidable";
+import { ExtensionDynamicLayoutable } from "../components/extensions/ExtensionDynamicLayoutable";
+import PlayerProfile from "../components/PlayerProfile";
+import StaticText from "../components/Text";
+import TextInput from "../components/TextInput";
+import Toggle from "../components/Toggle";
+import UserInterface, { uiScaleFactor } from "../UserInterface";
+import { CROSS_ICON_SVG } from "./UserInterfaceModeGame";
 
 const TAU = Math.PI * 2;
 
@@ -169,9 +169,9 @@ export default class UserInterfaceTitle extends UserInterface {
                             this.onLoadedComponents.forEach(c => {
                                 c.setVisible(true, true);
                             });
-                        }, 150)
+                        }, 200)
                     }, 2000);
-                }, 50);
+                }, 150);
             }, 2000);
         }, 1);
     }
@@ -799,13 +799,13 @@ export default class UserInterfaceTitle extends UserInterface {
             this.lastBackgroundEntitySpawn = Date.now();
         }
 
-        Array.from(backgroundEntities.values()).toSorted((a, b) => a.entity.size + b.entity.size).forEach(v => {
-            v.entity.draw(ctx);
+        Array.from(backgroundEntities.values()).toSorted((a, b) => a.entity.size + b.entity.size).forEach(e => {
+            e.entity.draw(ctx);
 
-            v.entity.x += v.entity.size * 0.06;
-            v.entity.y += Math.sin(v.waveStep / 20) * 0.1;
+            e.entity.x += e.entity.size * 0.06;
+            e.entity.y += Math.sin(e.waveStep / 20) * 0.1;
 
-            v.waveStep += 0.1;
+            e.waveStep += 0.1;
         });
 
         if (this.biome === Biomes.OCEAN) {

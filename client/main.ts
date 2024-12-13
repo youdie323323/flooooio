@@ -1,11 +1,11 @@
-import EntityPlayer from "./entity/EntityPlayer";
-import CameraController from "./utils/CameraController";
-import EntityMob from "./entity/EntityMob";
-import UserInterfaceContext from "./ui/UserInterfaceContext";
-import Networking from "./Networking";
-import TerrainGenerator, { BIOME_SVG_TILESETS, BIOME_TILESETS } from "./utils/TerrainGenerator";
-import { Biomes, Mood } from "../shared/enum";
-import { uiScaleFactor } from "./ui/UserInterface";
+import { Biomes } from "../shared/biomes";
+import EntityMob from "./src/entity/EntityMob";
+import EntityPlayer from "./src/entity/EntityPlayer";
+import { uiScaleFactor } from "./src/ui/UserInterface";
+import UserInterfaceContext from "./src/ui/UserInterfaceContext";
+import CameraController from "./src/utils/CameraController";
+import Networking from "./src/utils/Networking";
+import TerrainGenerator, { BIOME_SVG_TILESETS, BIOME_TILESETS } from "./src/utils/TerrainGenerator";
 
 const canvas: HTMLCanvasElement = document.querySelector('#canvas');
 

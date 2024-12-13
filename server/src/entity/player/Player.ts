@@ -18,6 +18,11 @@ class BasePlayer implements Entity {
      */
     public static readonly BASE_SPEED = 5;
 
+    /**
+     * Base size of player.
+     */
+    public static readonly BASE_SIZE = 15;
+
     readonly id: EntityId;
     x: number;
     y: number;

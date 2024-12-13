@@ -1,5 +1,5 @@
-import { memo } from "../../shared/utils/memoize";
-import { deltaTime } from "../main";
+import { memo } from "../../../shared/utils/memoize";
+import { deltaTime } from "../../main";
 import { ColorCode } from "../utils/common";
 
 const TAU = Math.PI * 2;

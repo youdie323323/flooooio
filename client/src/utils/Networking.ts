@@ -1,14 +1,12 @@
-import { Biomes } from "../shared/enum";
-import { Mood } from "../shared/mood";
-import { ClientBound, ServerBound } from "../shared/packet";
-import { Rarities } from "../shared/rarity";
-import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../shared/wave";
-import EntityMob from "./entity/EntityMob";
-import EntityPlayer from "./entity/EntityPlayer";
-import { players, mobs, uiCtx } from "./main";
-import { AnimationType } from "./ui/components/Component";
-import UserInterfaceGame from "./ui/mode/UserInterfaceModeGame";
-import UserInterfaceTitle, { StatusText, WaveRoomPlayerInformation } from "./ui/mode/UserInterfaceModeTitle";
+import { Biomes } from "../../../shared/biomes";
+import { ClientBound, ServerBound } from "../../../shared/packet";
+import { Rarities } from "../../../shared/rarity";
+import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../shared/wave";
+import { uiCtx, players, mobs } from "../../main";
+import EntityMob from "../entity/EntityMob";
+import EntityPlayer from "../entity/EntityPlayer";
+import UserInterfaceGame from "../ui/mode/UserInterfaceModeGame";
+import UserInterfaceTitle, { WaveRoomPlayerInformation, StatusText } from "../ui/mode/UserInterfaceModeTitle";
 
 const TAU = Math.PI * 2;
 

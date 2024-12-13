@@ -13,7 +13,7 @@ export interface Updatable {
 /**
  * Base template for abstract extended component class.
  */
-export type ComponentExtensionTemplate = Updatable & Record<string | number | symbol, any>;
+export type ComponentExtensionTemplate = Updatable & Record<PropertyKey, any>;
 
 /**
  * Type alias that represent component class, with maybe update method included.

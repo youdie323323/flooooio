@@ -1,8 +1,8 @@
-import { Mood } from "../../../shared/mood";
-import { WaveRoomPlayerReadyState } from "../../../shared/wave";
+import { Mood } from "../../../../shared/mood";
+import { WaveRoomPlayerReadyState } from "../../../../shared/wave";
 import EntityPlayer from "../../entity/EntityPlayer";
-import { waveRoomSelfId } from "../../Networking";
 import { DARKEND_BASE } from "../../utils/common";
+import { waveRoomSelfId } from "../../utils/Networking";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import { WaveRoomPlayerInformation } from "../mode/UserInterfaceModeTitle";
 import { Component, MaybeDynamicLayoutablePointer } from "./Component";

@@ -1,16 +1,15 @@
-import { players, mobs, deltaTime, ws, uiCtx, antennaScaleFactor, networking } from "../../main";
-import TerrainGenerator, { BIOME_TILESETS } from "../../utils/TerrainGenerator";
-import { Button, SVGButton, TextButton } from "../components/Button";
-import UserInterface, { uiScaleFactor } from "../UserInterface";
-import Networking, { waveSelfId } from "../../Networking";
-import TextInput from "../components/TextInput";
-import { interpolate } from "../../utils/Interpolator";
-import { ServerBound } from "../../../shared/packet";
+import { Biomes, biomeToCapitalizedBiomeString } from "../../../../shared/biomes";
+import { calculateWaveLength } from "../../../../shared/formula";
+import { Mood } from "../../../../shared/mood";
+import { networking, players, uiCtx, deltaTime, antennaScaleFactor, mobs } from "../../../main";
 import Entity from "../../entity/Entity";
-import { calculateWaveLength } from "../../../shared/formula";
+import { interpolate } from "../../utils/Interpolator";
+import { waveSelfId } from "../../utils/Networking";
+import TerrainGenerator, { BIOME_TILESETS } from "../../utils/TerrainGenerator";
+import { TextButton, SVGButton } from "../components/Button";
 import { calculateStrokeWidth } from "../components/Text";
-import { Biomes } from "../../../shared/enum";
-import { Mood } from "../../../shared/mood";
+import TextInput from "../components/TextInput";
+import UserInterface, { uiScaleFactor } from "../UserInterface";
 
 let interpolatedMouseX = 0;
 let interpolatedMouseY = 0;
@@ -527,8 +526,7 @@ export default class UserInterfaceGame extends UserInterface {
             {
                 ctx.save();
 
-                const biomeText = Biomes[this.biome].toLocaleLowerCase();
-                const capitalizedBiomeText = biomeText[0].toUpperCase() + biomeText.slice(1).toLowerCase();
+                const capitalizedBiomeText = biomeToCapitalizedBiomeString(this.biome);
 
                 ctx.lineJoin = 'round';
                 ctx.lineCap = 'round';

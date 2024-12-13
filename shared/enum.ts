@@ -1,11 +1,3 @@
-export enum Biomes {
-    GARDEN,
-    DESERT,
-    OCEAN,
-}
-
-export const BIOME_VALUES = Object.values(Biomes);
-
 let currentEntityType: number = 0;
 function getNextEntityType(): number {
     if (currentEntityType > 255) {
