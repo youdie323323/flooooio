@@ -4,6 +4,7 @@ import { WavePool } from "../../wave/WavePool";
 import { BaseMob, Mob } from "./Mob";
 import { Player } from "../player/Player";
 import { MobType } from "../../../../shared/EntityType";
+import { MOB_PROFILES } from "../../../../shared/entity/mob/mobProfiles";
 
 export function findNearestEntity<T extends Entity>(me: T, entities: T[]): T | null {
     if (!entities.length) return null;
@@ -34,7 +35,7 @@ export function turnAngleToTarget(thisAngle: number, dx: number, dy: number): nu
     return ((normalizedAngle + angleDiff * 0.1 + 255) % 255);
 }
 
-const MOB_DETECTION_FACTOR = 25;
+const MOB_DETECTION_RANGE = 25;
 
 export enum MobBehaviors {
     AGGRESSIVE,
@@ -59,6 +60,10 @@ export const MOB_BEHAVIORS = {
 
 export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
+        get detectionRange(): number {
+            return MOB_DETECTION_RANGE * this.size;
+        }
+
         [onUpdateTick](poolThis: WavePool): void {
             // Call parent onUpdateTick
             // to use multiple mixin functions
@@ -90,16 +95,18 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
             }
 
             // Loss entity
-            if (distanceToTarget > (MOB_DETECTION_FACTOR + 25) * this.size) this.targetEntity = null;
+            if (distanceToTarget > (MOB_DETECTION_RANGE + 25) * this.size) this.targetEntity = null;
 
             // Select target
             let targets: Entity[];
             if (this.petMaster) {
                 // Mob which summoned by player will attack other mobs expect petals, pets
-                targets = poolThis.getAllMobs().filter(p => 
-                    p.id !== this.id && 
-                    !isPetal(p.type) && 
-                    !p?.petMaster
+                targets = poolThis.getAllMobs().filter(p =>
+                    !(
+                        p.id === this.id ||
+                        isPetal(p.type) ||
+                        p.petMaster
+                    )
                 );
             } else {
                 // Target living players, p̶e̶t̶s̶
@@ -116,7 +123,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                         const dy = targetableEntity.y - this.y;
                         const distance = Math.hypot(dx, dy);
 
-                        if (distance < MOB_DETECTION_FACTOR * this.size) {
+                        if (distance < this.detectionRange) {
                             this.angle = turnAngleToTarget(
                                 this.angle,
                                 dx,
@@ -144,7 +151,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                         const dy = targetableEntity.y - this.y;
                         const distance = Math.hypot(dx, dy);
 
-                        if (distance < MOB_DETECTION_FACTOR * this.size) {
+                        if (distance < this.detectionRange) {
                             this.angle = turnAngleToTarget(
                                 this.angle,
                                 dx,

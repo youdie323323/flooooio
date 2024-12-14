@@ -1,6 +1,4 @@
 import { WavePool } from "../wave/WavePool";
-import { MobId } from "./mob/Mob";
-import { PlayerId } from "./player/Player";
 
 /**
  * Create branded type.
@@ -26,6 +24,7 @@ export type Entity = {
      */
     angle: number;
 
+    // TODO: maybe should make setter/getter for size and not to do size fraction every ticks
     /**
      * Current size of entity.
      */

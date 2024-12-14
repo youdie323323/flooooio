@@ -26,10 +26,8 @@ export function MobDynamicMovement<T extends EntityMixinConstructor<BaseMob>>(Ba
             // Dont dynamic move when petal
             if (isPetal(this.type)) return;
 
-            if (                
-                // Dont dynamic move when passive
-                MOB_BEHAVIORS[this.type] === MobBehaviors.PASSIVE
-            ) return;
+            // Dont dynamic move when passive
+            if (MOB_BEHAVIORS[this.type] === MobBehaviors.PASSIVE) return;
 
             // If body, dont do anything
             if (isBody(poolThis, this)) return;
