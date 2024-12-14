@@ -2,16 +2,15 @@ import { angleToRad, bodyDamageOrDamage, traverseMobSegment, isPetal } from "../
 import { Entity, EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "./Entity";
 import { WavePool } from "../wave/WavePool";
 import { Mob, MobData, MobInstance } from "./mob/Mob";
-import { Player } from "./player/Player";
+import { Player, PlayerInstance } from "./player/Player";
 import { PetalData } from "./mob/petal/Petal";
 import QuadTree from "../utils/QuadTree";
 import { computeDelta, Ellipse, isColliding } from "../utils/collision";
-import { MobType } from "../../../shared/enum";
+import { MobType } from "../../../shared/EntityType";
 import { PETAL_PROFILES } from "../../../shared/entity/mob/petal/petalProfiles";
 import { MOB_PROFILES } from "../../../shared/entity/mob/mobProfiles";
 
-// Arc + stroke size
-export const FLOWER_ARC_RADIUS = 25 + (2.75 / 2);
+export const FLOWER_ARC_RADIUS = 25;
 
 export const FLOWER_FRACTION = 25;
 
@@ -36,6 +35,8 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
       return [pushX, pushY];
     }
 
+    private calculateSearchRadius = (rx: number, ry: number, size: number, fraction: number): number => (rx + ry) * (size / fraction) * 2;
+
     [onUpdateTick](poolThis: WavePool): void {
       // Call parent onUpdateTick
       // to use multiple mixin functions
@@ -54,14 +55,21 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
       // TODO: dont push all element per tick
 
       if (this instanceof Mob) {
-        // Only insert mobs when mob
+        // Insert both when mob
+        // Basically mob is bigger than the player, so the mob-to-player collision are done on mob side
         poolThis.mobPool.forEach(mob => {
           if (this.id !== mob.id) poolThis.sharedQuadTree.insert(mob);
         });
+        poolThis.clientPool.forEach(client => {
+          if (
+            // Dont collide to dead player
+            !client.isDead
+          ) poolThis.sharedQuadTree.insert(client);
+        });
 
         const profile1: MobData | PetalData = MOB_PROFILES[this.type] || PETAL_PROFILES[this.type];
-        const searchRadius = (profile1.rx + profile1.ry) * (this.size / profile1.fraction) * 2;
-
+        const searchRadius = this.calculateSearchRadius(profile1.rx, profile1.ry, this.size, profile1.fraction);
+        
         const nearby = poolThis.sharedQuadTree.query({
           x: this.x,
           y: this.y,
@@ -71,137 +79,114 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
 
         const isPetalThis = isPetal(this.type);
 
-        nearby.forEach(_otherEntity => {
-          // Only insert mob, can type assertion
-          const otherEntity = <MobInstance>_otherEntity;
+        nearby.forEach(otherEntity => {
+          // Collide mob -> mob
+          if (otherEntity instanceof Mob) {
+            const isPetalOther = isPetal(otherEntity.type);
 
-          // Petal doesnt damaged/knockbacked to petal
-          if (isPetalThis && isPetal(otherEntity.type)) return;
+            // Petal doesnt damaged/knockbacked to petal
+            if (isPetalThis && isPetalOther) return;
 
-          // Pet/petal doesnt damaged/knockbacked to petal/pet
-          if (isPetalThis && otherEntity.petMaster) return;
-          if (this.petMaster && isPetal(otherEntity.type)) return;
+            // Pet/petal doesnt damaged/knockbacked to petal/pet
+            if (isPetalThis && otherEntity.petMaster) return;
+            if (this.petMaster && isPetalOther) return;
 
-          const profile2: MobData | PetalData = MOB_PROFILES[otherEntity.type] || PETAL_PROFILES[otherEntity.type];
+            const profile2: MobData | PetalData = MOB_PROFILES[otherEntity.type] || PETAL_PROFILES[otherEntity.type];
 
-          const ellipse1: Ellipse = {
-            x: this.x,
-            y: this.y,
-            a: profile1.rx * (this.size / profile1.fraction),
-            b: profile1.ry * (this.size / profile1.fraction),
-            theta: angleToRad(this.angle),
-          };
+            const ellipse1: Ellipse = {
+              x: this.x,
+              y: this.y,
+              a: profile1.rx * (this.size / profile1.fraction),
+              b: profile1.ry * (this.size / profile1.fraction),
+              theta: angleToRad(this.angle),
+            };
 
-          const ellipse2: Ellipse = {
-            x: otherEntity.x,
-            y: otherEntity.y,
-            a: profile2.rx * (otherEntity.size / profile2.fraction),
-            b: profile2.ry * (otherEntity.size / profile2.fraction),
-            theta: angleToRad(otherEntity.angle),
-          };
+            const ellipse2: Ellipse = {
+              x: otherEntity.x,
+              y: otherEntity.y,
+              a: profile2.rx * (otherEntity.size / profile2.fraction),
+              b: profile2.ry * (otherEntity.size / profile2.fraction),
+              theta: angleToRad(otherEntity.angle),
+            };
 
-          const delta = computeDelta(ellipse1, ellipse2);
+            const delta = computeDelta(ellipse1, ellipse2);
 
-          if (isColliding(delta)) {
-            const push = this.calculatePush(this, otherEntity, delta);
-            if (push) {
-              // Only pop knockback to enemy (summoned mob)
-              const multiplier1 = this.type === MobType.BUBBLE && otherEntity.petMaster ? BUBBLE_PUSH_FACTOR : 1;
-              const multiplier2 = otherEntity.type === MobType.BUBBLE && this.petMaster ? BUBBLE_PUSH_FACTOR : 1;
+            if (isColliding(delta)) {
+              const push = this.calculatePush(this, otherEntity, delta);
+              if (push) {
+                // Pop knockback to summoned mob (enemy), not including petal
+                const bubbleMultiplierThis = otherEntity.type === MobType.BUBBLE && this.petMaster ? BUBBLE_PUSH_FACTOR : 1;
+                const bubbleMultiplierOther = this.type === MobType.BUBBLE && otherEntity.petMaster ? BUBBLE_PUSH_FACTOR : 1;
 
-              // Little knockback to mob if petal
-              const baseMultiplier1 = isPetalThis ? 0.1 : 0.3;
-              const baseMultiplier2 = isPetal(otherEntity.type) ? 0.1 : 0.3;
+                // Little knockback to mob if petal
+                const baseMultiplierThis = isPetalOther ? 0.1 : 0.3;
+                const baseMultiplierOther = isPetalThis ? 0.1 : 0.3;
 
-              this.x -= push[0] * multiplier2 * baseMultiplier2;
-              this.y -= push[1] * multiplier2 * baseMultiplier2;
-              otherEntity.x += push[0] * multiplier1 * baseMultiplier1;
-              otherEntity.y += push[1] * multiplier1 * baseMultiplier1;
+                this.x -= push[0] * baseMultiplierThis * bubbleMultiplierThis;
+                this.y -= push[1] * baseMultiplierThis * bubbleMultiplierThis;
+                otherEntity.x += push[0] * baseMultiplierOther * bubbleMultiplierOther;
+                otherEntity.y += push[1] * baseMultiplierOther * bubbleMultiplierOther;
 
-              // Pet doesnt damaged to other pet
-              if (this.petMaster && otherEntity.petMaster) return;
+                // Pet doesnt damaged to other pet
+                if (this.petMaster && otherEntity.petMaster) return;
 
-              if (
-                isPetalThis || isPetal(otherEntity.type) ||
-                this.petMaster || otherEntity.petMaster
-              ) {
-                this.health -= bodyDamageOrDamage(profile2[otherEntity.rarity]);
-                otherEntity.health -= bodyDamageOrDamage(profile1[this.rarity]);
+                if (
+                  isPetalThis || isPetalOther ||
+                  this.petMaster || otherEntity.petMaster
+                ) {
+                  this.health -= bodyDamageOrDamage(profile2[otherEntity.rarity]);
+                  otherEntity.health -= bodyDamageOrDamage(profile1[this.rarity]);
 
-                // Dont trying to set mobLastAttackedBy to petal
+                  // Dont trying to set mobLastAttackedBy to petal
 
-                if (!isPetal(otherEntity.type)) {
-                  // Propagate hit to head
-                  const maybeSegmentsHead = traverseMobSegment(poolThis, otherEntity);
+                  if (!isPetalOther) {
+                    // Propagate hit to head
+                    const maybeSegmentsHead = traverseMobSegment(poolThis, otherEntity);
 
-                  if (this.petalMaster) {
-                    maybeSegmentsHead.mobLastAttackedBy = this.petalMaster;
+                    if (this.petalMaster) {
+                      maybeSegmentsHead.lastAttackedBy = this.petalMaster;
+                    }
+
+                    if (this.petMaster) {
+                      // If pet attacked mob its target player or pet?
+                      maybeSegmentsHead.lastAttackedBy = this.petMaster;
+                    }
                   }
 
-                  if (this.petMaster) {
-                    // If pet attacked mob its target player or pet?
-                    maybeSegmentsHead.mobLastAttackedBy = this.petMaster;
-                  }
-                }
+                  if (!isPetalThis) {
+                    const maybeSegmentsHead = traverseMobSegment(poolThis, this);
 
-                if (!isPetalThis) {
-                  const maybeSegmentsHead = traverseMobSegment(poolThis, this);
+                    if (otherEntity.petalMaster) {
+                      maybeSegmentsHead.lastAttackedBy = otherEntity.petalMaster;
+                    }
 
-                  if (otherEntity.petalMaster) {
-                    maybeSegmentsHead.mobLastAttackedBy = otherEntity.petalMaster;
-                  }
-
-                  if (otherEntity.petMaster) {
-                    maybeSegmentsHead.mobLastAttackedBy = otherEntity.petMaster;
+                    if (otherEntity.petMaster) {
+                      maybeSegmentsHead.lastAttackedBy = otherEntity.petMaster;
+                    }
                   }
                 }
               }
             }
+
+            return;
           }
-        });
 
-        return;
-      }
-
-      if (
-        this instanceof Player &&
-        // Dont collide when dead
-        !this.isDead
-      ) {
-        // Insert both when player
-        poolThis.mobPool.forEach(mob => {
-          if (
-            // this.id !== mob.id &&
-            // Dont insert when petal
-            !mob.petalMaster &&
-            // Dont insert when pet
-            !mob.petMaster
-          ) poolThis.sharedQuadTree.insert(mob);
-        });
-        poolThis.clientPool.forEach(client => {
-          if (
-            this.id !== client.id && 
-            // Dont collide to dead player
-            !client.isDead
-          ) poolThis.sharedQuadTree.insert(client);
-        });
-
-        const searchRadius = this.size * 50;
-        const nearby = poolThis.sharedQuadTree.query({
-          x: this.x,
-          y: this.y,
-          w: searchRadius,
-          h: searchRadius
-        });
-
-        nearby.forEach(otherEntity => {
+          // Collide mob -> player
           if (otherEntity instanceof Player) {
+            if (
+              // Dont damage/knockback when petal
+              this.petalMaster ||
+              // Dont damage/knockback when pet
+              this.petMaster
+            ) return;
+
+            const profile1: MobData = MOB_PROFILES[this.type];
+
             const ellipse1: Ellipse = {
-              // Arc (player)
               x: this.x,
               y: this.y,
-              a: this.size,
-              b: this.size,
+              a: profile1.rx * (this.size / profile1.fraction),
+              b: profile1.ry * (this.size / profile1.fraction),
               theta: angleToRad(this.angle),
             };
 
@@ -219,60 +204,89 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
             if (isColliding(delta)) {
               const push = this.calculatePush(this, otherEntity, delta);
               if (push) {
+                const bubbleMultiplier = this.type === MobType.BUBBLE ? BUBBLE_PUSH_FACTOR : 1;
+
                 this.x -= push[0];
                 this.y -= push[1];
-                otherEntity.x += push[0];
-                otherEntity.y += push[1];
+                otherEntity.x += push[0] * 5 * bubbleMultiplier;
+                otherEntity.y += push[1] * 5 * bubbleMultiplier;
+
+                // profile1 always mob, so no need to use bodyDamageOrDamage
+                this.health -= profile1[this.rarity].bodyDamage;
+                // Take them body damage
+                otherEntity.health -= otherEntity.bodyDamage;
+
+                const maybeSegmentsHead = traverseMobSegment(poolThis, this);
+
+                // Body hitted
+                maybeSegmentsHead.lastAttackedBy = this;
               }
             }
 
             return;
           }
+        });
 
-          if (otherEntity instanceof Mob) {
-            const profile1: MobData = MOB_PROFILES[otherEntity.type];
+        return;
+      }
 
-            const ellipse1: Ellipse = {
-              // Arc (player)
-              x: this.x,
-              y: this.y,
-              a: this.size,
-              b: this.size,
-              theta: angleToRad(this.angle),
-            };
+      if (
+        this instanceof Player &&
+        // Dont collide when dead
+        !this.isDead
+      ) {
+        // Only insert players when player
+        poolThis.clientPool.forEach(client => {
+          if (
+            this.id !== client.id &&
+            // Dont collide to dead player
+            !client.isDead
+          ) poolThis.sharedQuadTree.insert(client);
+        });
 
-            const ellipse2: Ellipse = {
-              x: otherEntity.x,
-              y: otherEntity.y,
-              a: profile1.rx * (otherEntity.size / profile1.fraction),
-              b: profile1.ry * (otherEntity.size / profile1.fraction),
-              theta: angleToRad(otherEntity.angle),
-            };
+        const searchRadius = this.calculateSearchRadius(FLOWER_ARC_RADIUS, FLOWER_ARC_RADIUS, this.size, FLOWER_FRACTION);
 
-            const delta = computeDelta(ellipse1, ellipse2);
+        const nearby = poolThis.sharedQuadTree.query({
+          x: this.x,
+          y: this.y,
+          w: searchRadius,
+          h: searchRadius
+        });
 
-            if (isColliding(delta)) {
-              const push = this.calculatePush(this, otherEntity, delta);
-              if (push) {
-                const bubbleMultiplier = otherEntity.type === MobType.BUBBLE ? BUBBLE_PUSH_FACTOR : 1;
-                this.x -= push[0] * bubbleMultiplier * 5;
-                this.y -= push[1] * bubbleMultiplier * 5;
-                otherEntity.x += push[0];
-                otherEntity.y += push[1];
+        nearby.forEach(_otherEntity => {
+          // Collide player -> player
 
-                // profile1 always mob, so no need to use bodyDamageOrDamage
-                this.health -= profile1[otherEntity.rarity].bodyDamage;
-                // Take them body damage
-                otherEntity.health -= this.bodyDamage;
+          // Only insert player, can type assertion
+          const otherEntity = <PlayerInstance>_otherEntity;
 
-                const maybeSegmentsHead = traverseMobSegment(poolThis, otherEntity);
+          const ellipse1: Ellipse = {
+            // Arc (player)
+            x: this.x,
+            y: this.y,
+            a: this.size,
+            b: this.size,
+            theta: angleToRad(this.angle),
+          };
 
-                // Body hitted
-                maybeSegmentsHead.mobLastAttackedBy = this;
-              }
+          const ellipse2: Ellipse = {
+            // Arc (player)
+            x: otherEntity.x,
+            y: otherEntity.y,
+            a: otherEntity.size,
+            b: otherEntity.size,
+            theta: angleToRad(otherEntity.angle),
+          };
+
+          const delta = computeDelta(ellipse1, ellipse2);
+
+          if (isColliding(delta)) {
+            const push = this.calculatePush(this, otherEntity, delta);
+            if (push) {
+              this.x -= push[0] * 2;
+              this.y -= push[1] * 2;
+              otherEntity.x += push[0] * 2;
+              otherEntity.y += push[1] * 2;
             }
-
-            return;
           }
         });
 

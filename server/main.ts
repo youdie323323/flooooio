@@ -12,7 +12,7 @@ import WaveRoomService from "./src/wave/WaveRoomService";
 import fs from "fs";
 import { VALID_MOOD_FLAGS } from "../shared/mood";
 import { BIOME_VALUES, Biomes } from "../shared/biomes";
-import { PetalType } from "../shared/enum";
+import { PetalType } from "../shared/EntityType";
 
 export const isDebug = process.argv.includes("-d");
 
@@ -101,6 +101,46 @@ const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
             } as MockPetalData,
             {
                 type: PetalType.BUBBLE,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BEETLE_EGG,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BEETLE_EGG,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BEETLE_EGG,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BEETLE_EGG,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BEETLE_EGG,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BEETLE_EGG,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BEETLE_EGG,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BEETLE_EGG,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BEETLE_EGG,
+                rarity: Rarities.SUPER,
+            } as MockPetalData,
+            {
+                type: PetalType.BEETLE_EGG,
                 rarity: Rarities.SUPER,
             } as MockPetalData,
         ],

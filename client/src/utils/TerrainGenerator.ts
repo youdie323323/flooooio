@@ -6,7 +6,7 @@ import { uiScaleFactor } from "../ui/UserInterface";
 const TAU = Math.PI * 2;
 
 // Retrived from florr map viewer (florr-io-map-viewer.glitch.me)
-export const BIOME_SVG_TILESETS: Record<Biomes, string[]> = {
+export const BIOME_SVG_TILESETS = {
     [Biomes.GARDEN]: [
         `<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 256 256">
             <rect width="256" height="256" fill="#1EA761"/>
@@ -288,7 +288,7 @@ export const BIOME_SVG_TILESETS: Record<Biomes, string[]> = {
         	C66.98,201.81,81.15,207.68,81.88,208.86L81.88,208.86z"/>
         </svg>`,
     ],
-};
+} satisfies Record<Biomes, string[]>;
 
 export default class TerrainGenerator {
     static async generateTilesets<T extends keyof typeof BIOME_SVG_TILESETS>(biome: T): Promise<OffscreenCanvas[]> {

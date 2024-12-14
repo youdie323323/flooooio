@@ -1,5 +1,5 @@
 import { Biomes } from "../../../shared/biomes";
-import { MobType } from "../../../shared/enum";
+import { MobType } from "../../../shared/EntityType";
 import { Rarities } from "../../../shared/rarity";
 import { calculateWaveLuck } from "../utils/formula";
 import { choice, randomEnum } from "../utils/random";
@@ -19,7 +19,7 @@ const END_SPAWN_WAVE_RARITY = {
     [Rarities.EPIC]: 50,
     [Rarities.LEGENDARY]: 60,
     [Rarities.MYTHIC]: Infinity,
-} as const;
+} satisfies Partial<Record<Rarities, number>>;
 
 const RARITY_WEIGHTS = {
     [Rarities.COMMON]: 1,
@@ -28,33 +28,20 @@ const RARITY_WEIGHTS = {
     [Rarities.EPIC]: 0.1,
     [Rarities.LEGENDARY]: 0.025,
     [Rarities.MYTHIC]: 0.01,
-} as const;
+} satisfies Partial<Record<Rarities, number>>;
 
 type NestedPartial<T> = {
     [K in keyof T]?: T[K] extends Array<infer R> ? Array<NestedPartial<R>> : NestedPartial<T[K]>
 };
 
 export const LINKED_MOBS: Set<MobType> = new Set([
-    MobType.CENTIPEDE, 
-    MobType.CENTIPEDE_DESERT, 
+    MobType.CENTIPEDE,
+    MobType.CENTIPEDE_DESERT,
     MobType.CENTIPEDE_EVIL,
 ]);
 
 // https://official-florrio.fandom.com/wiki/Waves
-const MOB_WEIGHTS: NestedPartial<
-    Record<
-        Biomes,
-        Record<
-            MobType, 
-            [
-                // Spawn after this wave
-                number,
-                // Random weight
-                number,
-            ]
-        >
-    >
-> = {
+const MOB_WEIGHTS = {
     [Biomes.GARDEN]: {
         [MobType.BEE]: [
             1,
@@ -97,7 +84,20 @@ const MOB_WEIGHTS: NestedPartial<
             1,
         ],
     },
-};
+} satisfies NestedPartial<
+    Record<
+        Biomes,
+        Record<
+            MobType,
+            [
+                // Spawn after this wave
+                number,
+                // Random weight
+                number,
+            ]
+        >
+    >
+>;
 
 function calculateSpawnProbabilities(luck: number, waveProgress: number): Partial<Record<Rarities, number>> {
     const probabilities: Partial<Record<Rarities, number>> = {};
@@ -148,7 +148,7 @@ function weightedChoice(probabilities: Partial<Record<Rarities, number>>): Rarit
 function getRandomMobType(waveProgress: number, biome: Biomes): MobType {
     const availableMobs = Object.entries(MOB_WEIGHTS[biome])
         .filter(([_, spawnAfter]) => spawnAfter[0] <= waveProgress);
-    
+
     if (availableMobs.length === 0) {
         return randomEnum(MobType);
     }

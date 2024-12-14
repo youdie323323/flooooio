@@ -1,12 +1,13 @@
+import { memo } from "../../../../shared/utils/memoize";
 import { ColorCode } from "../../utils/common";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import { Component, MaybeDynamicLayoutablePointer, Interactive } from "./Component";
 import ExtensionPlaceholder from "./extensions/Extension";
 
-export function calculateStrokeWidth(fontSize: number): number {
+export const calculateStrokeWidth = memo((fontSize: number): number => {
     // 80 / 8.333333830038736 (actually this is 8+1/3 but floating point exception) = 9.59999942779541
     return fontSize / 8.333333830038736;
-}
+});
 
 export default class StaticText extends ExtensionPlaceholder(Component) {
     constructor(

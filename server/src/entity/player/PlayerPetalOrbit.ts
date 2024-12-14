@@ -1,9 +1,9 @@
 import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool, UPDATE_ENTITIES_FPS } from "../../wave/WavePool";
 import { BasePlayer, Player } from "./Player";
-import { isUnconvertableSlot } from "../mob/petal/Petal";
+import { isLivingSlot } from "../mob/petal/Petal";
 import { isPetal } from "../../utils/common";
-import { PetalType } from "../../../../shared/enum";
+import { PetalType } from "../../../../shared/EntityType";
 import { PETAL_PROFILES } from "../../../../shared/entity/mob/petal/petalProfiles";
 import { decodeMood, Mood } from "../../../../shared/mood";
 
@@ -59,9 +59,9 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 this.petalBounces = new Float32Array(totalPetals).fill(0);
             }
 
-            const yinYangCount = surface.reduce(
+            const numYinYang = surface.reduce(
                 (acc, curr) => acc + (
-                    curr && isUnconvertableSlot(curr) && curr.length > 0 && curr[0].type === PetalType.YIN_YANG ? 1 : 0
+                    curr && isLivingSlot(curr) && curr.length > 0 && curr[0].type === PetalType.YIN_YANG ? 1 : 0
                 ),
                 0
             );
@@ -71,14 +71,14 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
              * Yin yang changes the number of petals per ring by diving it by floor(num yin yang / 2) + 1.
              */
 
-            const numRings = Math.floor(yinYangCount / 2) + 1;
+            const numRings = Math.floor(numYinYang / 2) + 1;
 
-            const clockwise = yinYangCount % 2;
+            const clockwise = numYinYang % 2;
 
             let realLength = 0;
             for (let i = 0; i < totalPetals; i++) {
                 const petals = surface[i];
-                if (!petals || !isUnconvertableSlot(petals)) continue;
+                if (!petals || !isLivingSlot(petals)) continue;
 
                 const firstPetal = petals[0];
                 const profile = PETAL_PROFILES[firstPetal.type][firstPetal.rarity];
@@ -95,17 +95,20 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
 
             for (let i = 0; i < totalPetals; i++) {
                 const petals = surface[i];
-                if (!petals || !isUnconvertableSlot(petals)) continue;
+                if (!petals || !isLivingSlot(petals)) continue;
 
                 const firstPetal = petals[0];
                 const profile = PETAL_PROFILES[firstPetal.type];
                 const rarityProfile = profile[firstPetal.rarity];
 
                 let baseRadius =
-                    isAngry ? isPetal(firstPetal.type) && UNMOODABLE_PETALS.has(firstPetal.type) ? 40 : 80 :
+                    isAngry ?
+                        isPetal(firstPetal.type) && UNMOODABLE_PETALS.has(firstPetal.type) ? 40 : 80
+                        :
                         isSad ? 25 : 40;
 
-                baseRadius *= this.size / Player.BASE_SIZE;
+                // TODO: fix distance error
+                baseRadius *= this.size / Player.BASE_SIZE
 
                 const bounce = this.petalBounces[i];
                 this.petalRadii[i] += bounce;
@@ -118,8 +121,8 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 const ringIndex = Math.floor(currentAngleIndex / realLength);
                 const rad = this.petalRadii[i] * (1 + (ringIndex * 0.5));
 
-                const multipliedRotation = this.rotation * (1 + (ringIndex * 0.1));
-
+                const multipliedRotation = this.rotation * (1 + ((ringIndex - (numRings - 1)) * 0.1));
+                
                 if (rarityProfile.isCluster && petals.length > 1) {
                     const baseAngle = TAU * (currentAngleIndex % realLength) / realLength + multipliedRotation;
                     currentAngleIndex++;

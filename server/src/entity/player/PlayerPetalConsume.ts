@@ -1,13 +1,11 @@
 import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool } from "../../wave/WavePool";
 import { BasePlayer, PlayerInstance } from "./Player";
-import { isUnconvertableSlot } from "../mob/petal/Petal";
-import { PetalType } from "../../../../shared/enum";
+import { isLivingSlot } from "../mob/petal/Petal";
+import { PetalType } from "../../../../shared/EntityType";
 import { Rarities } from "../../../../shared/rarity";
 import { EGG_TYPE_MAPPING } from "./PlayerPetalReload";
 import { decodeMood, Mood } from "../../../../shared/mood";
-import e from "express";
-import { PETAL_PROFILES } from "../../../../shared/entity/mob/petal/petalProfiles";
 
 const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, i: number, j: number):
     // Dx, dy
@@ -15,7 +13,7 @@ const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, i: number
     | null => {
     if (Date.now() >= player.slots.cooldownsUsage[i][j]) {
         const cluster = player.slots.surface[i];
-        if (!isUnconvertableSlot(cluster)) {
+        if (!isLivingSlot(cluster)) {
             return;
         }
 
@@ -69,7 +67,7 @@ export function PlayerPetalConsume<T extends EntityMixinConstructor<BasePlayer>>
             this.bubbleVelocityY *= MixedBase.BUBBLE_ATTENUATION_COEFFICIENT;
 
             this.slots.surface.forEach((petals, i) => {
-                if (petals != null && isUnconvertableSlot(petals)) {
+                if (petals != null && isLivingSlot(petals)) {
                     petals.forEach((e, j) => {
                         if (poolThis.getMob(e.id)) {
                             // Automatically (e.g. egg)

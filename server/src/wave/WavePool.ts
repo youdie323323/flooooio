@@ -4,11 +4,11 @@ import { PETAL_PROFILES } from "../../../shared/entity/mob/petal/petalProfiles";
 import { Rarities } from "../../../shared/rarity";
 import { WaveRoomState } from "../../../shared/wave";
 import { logger } from "../../main";
-import { EntityId, Entity, onUpdateTick } from "../entity/Entity";
+import { Entity, onUpdateTick } from "../entity/Entity";
 import { SAFETY_DISTANCE } from "../entity/EntityMapBoundary";
-import { MobInstance, MobData, Mob } from "../entity/mob/Mob";
-import { isUnconvertableSlot, PetalData, MockPetalData } from "../entity/mob/petal/Petal";
-import { MockPlayerData, PlayerInstance, Player } from "../entity/player/Player";
+import { MobInstance, MobData, Mob, MobId } from "../entity/mob/Mob";
+import { isLivingSlot, PetalData, MockPetalData } from "../entity/mob/petal/Petal";
+import { MockPlayerData, PlayerInstance, Player, PlayerId } from "../entity/player/Player";
 import { USAGE_RELOAD_PETALS } from "../entity/player/PlayerPetalReload";
 import { isPetal, calculateMobSize, revivePlayer } from "../utils/common";
 import QuadTree from "../utils/QuadTree";
@@ -18,12 +18,12 @@ import { WaveRoomPlayerId, WaveRoomPlayer } from "./WaveRoom";
 import { MOB_PROFILES } from "../../../shared/entity/mob/mobProfiles";
 import { Mood } from "../../../shared/mood";
 import { Biomes } from "../../../shared/biomes";
-import { MobType, PetalType } from "../../../shared/enum";
+import { MobType, PetalType } from "../../../shared/EntityType";
 
 // Define UserData for WebSocket connections
 export interface UserData {
     waveRoomClientId: WaveRoomPlayerId;
-    waveClientId: EntityId;
+    waveClientId: PlayerId;
 
     /**
      * Static data of player.
@@ -74,7 +74,7 @@ export class WavePool {
     public clientPool: Map<PlayerInstance["id"], PlayerInstance>;
     public mobPool: Map<MobInstance["id"], MobInstance>;
 
-    private eliminatedEntities: Set<EntityId>;
+    private eliminatedEntities: Set<MobInstance["id"] | PlayerInstance["id"]>;
 
     /**
      * Class for randomly determining mobs.
@@ -85,6 +85,7 @@ export class WavePool {
     private updateEntitiesInterval: NodeJS.Timeout;
     private updatePacketSendInterval: NodeJS.Timeout;
 
+    // TODO: use spatial hashing instead quad tree
     /**
      * Shared quadtree instance between entities.
      */
@@ -177,14 +178,14 @@ export class WavePool {
         roomCandidates.forEach(player => {
             const randPos = getRandomPosition(this.waveData.waveMapRadius, this.waveData.waveMapRadius, this.waveData.waveMapRadius);
 
-            const { id: clientId } = this.addClient(player, randPos[0], randPos[1]);
+            const client = this.addClient(player, randPos[0], randPos[1]);
 
             player.ws.send(waveStartBuffer, true);
 
-            player.ws.getUserData().waveClientId = clientId;
+            player.ws.getUserData().waveClientId = client.id;
 
             logger.region(() => {
-                using _guard = logger.metadata({ clientId });
+                using _guard = logger.metadata({ clientId: client.id });
                 logger.info("Added player on wave");
             });
         });
@@ -202,7 +203,7 @@ export class WavePool {
     }
 
     public addClient(playerData: MockPlayerData, x: number, y: number): PlayerInstance | null {
-        const clientId = generateRandomEntityId();
+        const clientId = generateRandomEntityId<PlayerId>();
 
         // Ensure unique clientId
         if (this.clientPool.has(clientId)) {
@@ -214,7 +215,7 @@ export class WavePool {
         let health: number = (100 * 1) * 1.02 ** (Math.max(100, 75) - 1);
 
         // Temporary (for debug)
-        health *= 10000;
+        health *= 1;
 
         const playerInstance = new Player({
             id: clientId,
@@ -241,16 +242,16 @@ export class WavePool {
             slots: {
                 surface: null,
                 bottom: null,
-                cooldownsPetal: [],
-                cooldownsUsage: [],
+                cooldownsPetal: Array.from({ length: playerData.slots.surface.length }, e => new Array(5).fill(0)),
+                cooldownsUsage: Array.from({ length: playerData.slots.surface.length }, e => new Array(5).fill(0)),
             },
 
             ws: playerData.ws,
         });
 
         // Reload all
-        playerInstance.slots.surface = playerData.slots.surface.map(c => c && !isUnconvertableSlot(c) && this.mockPetalDataToReal(c, playerInstance, true));
-        playerInstance.slots.bottom = playerData.slots.bottom.map(c => c && !isUnconvertableSlot(c) && this.mockPetalDataToReal(c, playerInstance, false));
+        playerInstance.slots.surface = playerData.slots.surface.map(c => c && !isLivingSlot(c) && this.mockPetalDataToReal(c, playerInstance, true));
+        playerInstance.slots.bottom = playerData.slots.bottom.map(c => c && !isLivingSlot(c) && this.mockPetalDataToReal(c, playerInstance, false));
 
         this.clientPool.set(clientId, playerInstance);
 
@@ -270,7 +271,7 @@ export class WavePool {
         connectingSegment: MobInstance = null,
         isFirstSegment: boolean = false,
     ): MobInstance | null {
-        const mobId = generateRandomEntityId();
+        const mobId = generateRandomEntityId<MobId>();
         if (this.mobPool.has(mobId)) {
             return this.addPetalOrMob(
                 type,
@@ -304,9 +305,9 @@ export class WavePool {
             health: profile[rarity].health,
             maxHealth: profile[rarity].health,
 
-            mobTargetEntity: null,
+            targetEntity: null,
 
-            mobLastAttackedBy: null,
+            lastAttackedBy: null,
 
             petMaster,
             petGoingToMaster: false,
@@ -485,7 +486,7 @@ export class WavePool {
             client &&
             !client.isDead &&
             client.slots.surface.length >= at && client.slots.bottom.length >= at &&
-            isUnconvertableSlot(client.slots.bottom[at])
+            isLivingSlot(client.slots.bottom[at])
         ) {
             const temp = client.slots.surface[at];
 
@@ -495,7 +496,7 @@ export class WavePool {
 
             // Remove all petal-binded mob
             // TODO: remove summoned mob
-            if (isUnconvertableSlot(temp)) {
+            if (isLivingSlot(temp)) {
                 temp.forEach(e => {
                     if (this.getMob(e.id)) {
                         this.removeMob(e.id);
@@ -547,7 +548,7 @@ export class WavePool {
         // Client count
         size += 2;
         this.clientPool.forEach(client => {
-            // String length is is dynamically changeable, so we can do is just loop
+            // String length is dynamically changeable, so we can do is just loop
             size += 4 + 8 + 8 + 1 + 4 + 4 + 4 + 1 + (1 + client.nickname.length) + 1;
         });
 
@@ -682,7 +683,7 @@ export class WavePool {
                 offset += 4;
             });
 
-            // Delete eliminated entities per packet send
+            // Clear eliminated entities ids per packet send
             this.eliminatedEntities.clear();
         }
 

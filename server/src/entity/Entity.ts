@@ -1,24 +1,13 @@
 import { WavePool } from "../wave/WavePool";
+import { MobId } from "./mob/Mob";
+import { PlayerId } from "./player/Player";
 
 /**
  * Create branded type.
- * 
- * @remarks
- * 
- * Use branded type to avoid mistaking WaveRoomPlayer id and Entity id.
  */
-export type BrandedId<T extends string> = number & { __brand: T };
+export type BrandedId<T extends string> = number & { readonly __brand: T };
 
-export type EntityId = BrandedId<"Entity">;
-
-export interface Entity {
-    /**
-     * Id of entity.
-     * 
-     * @readonly
-     */
-    readonly id: EntityId;
-
+export type Entity = {
     /**
      * Current x-pos of entity.
      */
@@ -84,3 +73,14 @@ export interface EntityMixinTemplate extends MaybeDisposable {
 
     [key: string | number | symbol]: any;
 }
+
+/**
+ * Minimum required data that all mobs/petals data must meet.
+ */
+export type BaseEntityData = Required<Readonly<{
+    name: string;
+    description: string;
+    fraction: number;
+    rx: number;
+    ry: number;
+}>>;

@@ -2,9 +2,12 @@ import { EntityMixinConstructor, EntityMixinTemplate, MaybeDisposable, onUpdateT
 import { WavePool } from "../../wave/WavePool";
 import { BasePlayer } from "./Player";
 import { findNearestEntity } from "../mob/MobAggressivePursuit";
+import { isEntityDead } from "../../utils/common";
 
 export function PlayerDeadCamera<T extends EntityMixinConstructor<BasePlayer>>(Base: T) {
-    return class extends Base implements EntityMixinTemplate {
+    return class MixedBase extends Base implements EntityMixinTemplate {
+        private static readonly SWITCH_AFTER_MS = 500;
+
         private isExecuting: boolean = false;
         private executionTimeout: NodeJS.Timeout;
 
@@ -16,7 +19,8 @@ export function PlayerDeadCamera<T extends EntityMixinConstructor<BasePlayer>>(B
             if (this.isDead) {
                 const isFindable: boolean =
                     !this.deadCameraTargetEntity ||
-                    !(poolThis.getMob(this.deadCameraTargetEntity.id) || poolThis.getClient(this.deadCameraTargetEntity.id));
+                    // Camera target dead
+                    isEntityDead(poolThis, this.deadCameraTargetEntity);
 
                 if (isFindable) {
                     if (!this.isExecuting) {
@@ -27,21 +31,19 @@ export function PlayerDeadCamera<T extends EntityMixinConstructor<BasePlayer>>(B
                             this.isExecuting = false;
 
                             // Dont change camera if player is not dead
-                            if (!this.isDead && !poolThis) {
-                                return;
-                            }
+                            if (!this.isDead) return;
 
                             // Ygg is the highest priority
                             const cameraEntity = findNearestEntity(this, [
                                 poolThis.getAllMobs().filter(m => !m.petalMaster && !m.petMaster),
                                 poolThis.getAllClients().filter(c => !c.isDead && c.id !== this.id),
                             ].flat());
-                            if (!cameraEntity) {
-                                this.deadCameraTargetEntity = null;
-                            } else {
+                            if (cameraEntity) {
                                 this.deadCameraTargetEntity = cameraEntity;
+                            } else {
+                                this.deadCameraTargetEntity = null;
                             }
-                        }, 1000);
+                        }, MixedBase.SWITCH_AFTER_MS);
                     }
                 } else {
                     this.x = this.deadCameraTargetEntity.x;
@@ -56,6 +58,8 @@ export function PlayerDeadCamera<T extends EntityMixinConstructor<BasePlayer>>(B
             }
 
             clearTimeout(this.executionTimeout);
+
+            this.deadCameraTargetEntity = null;
         }
     };
 }

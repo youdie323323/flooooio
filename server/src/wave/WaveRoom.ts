@@ -266,7 +266,7 @@ export default class WaveRoom {
     private startWave() {
         this.state = WaveRoomState.STARTED;
 
-        // Only stop update packet send because need to update wave informations
+        // Stop update packet send
         clearInterval(this.waveRoomPacketSendInterval);
 
         this.wavePool.startWave(this.biome, this.roomCandidates);

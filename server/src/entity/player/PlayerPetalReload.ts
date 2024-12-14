@@ -2,8 +2,8 @@ import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../En
 import { WavePool, UPDATE_ENTITIES_FPS } from "../../wave/WavePool";
 import { Mob, MobInstance } from "../mob/Mob";
 import { BasePlayer, PlayerInstance } from "./Player";
-import { isUnconvertableSlot, PetalData } from "../mob/petal/Petal";
-import { PetalType, MobType } from "../../../../shared/enum";
+import { isLivingSlot, PetalData } from "../mob/petal/Petal";
+import { PetalType, MobType } from "../../../../shared/EntityType";
 import { PETAL_PROFILES } from "../../../../shared/entity/mob/petal/petalProfiles";
 import { isPetal } from "../../utils/common";
 
@@ -12,9 +12,9 @@ export const USAGE_RELOAD_PETALS: Set<PetalType> = new Set([
     PetalType.BUBBLE,
 ]);
 
-export const EGG_TYPE_MAPPING: Partial<Record<PetalType, MobType>> = {
+export const EGG_TYPE_MAPPING = {
     [PetalType.BEETLE_EGG]: MobType.BEETLE,
-};
+} satisfies Partial<Record<PetalType, MobType>>;
 
 export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
@@ -40,7 +40,7 @@ export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(
                 surface.forEach((petals, i) => {
                     // If e is not falsy and dont has e on mob pool, that means petal are breaked
                     // So if petal is breaked, start reloading
-                    if (petals != null && isUnconvertableSlot(petals)) {
+                    if (petals != null && isLivingSlot(petals)) {
                         petals.forEach((e, j) => {
                             if (!poolThis.getMob(e.id)) {
                                 // If summoned mob is not dead, not reloading
@@ -76,7 +76,7 @@ export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(
                 });
 
                 surface.forEach((petals, i) => {
-                    if (petals != null && isUnconvertableSlot(petals)) {
+                    if (petals != null && isLivingSlot(petals)) {
                         petals.forEach((e, j) => {
                             if (isPetal(e.type) && USAGE_RELOAD_PETALS.has(e.type)) {
                                 const cooldownsUsage = this.slots.cooldownsUsage[i];

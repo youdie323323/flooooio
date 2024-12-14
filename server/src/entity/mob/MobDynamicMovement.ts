@@ -5,7 +5,7 @@ import { BaseMob, Mob } from "./Mob";
 import { SHARED_SINE_WAVE } from "../../utils/sinWave";
 import { getRandomAngle } from "../../utils/random";
 import { MOB_BEHAVIORS, MobBehaviors, turnAngleToTarget } from "./MobAggressivePursuit";
-import { MobType } from "../../../../shared/enum";
+import { MobType } from "../../../../shared/EntityType";
 
 const MOVEMENT_DURATION = 1 / 150;
 
@@ -31,7 +31,7 @@ export function MobDynamicMovement<T extends EntityMixinConstructor<BaseMob>>(Ba
 
             // Follows the player when the player moves away from this (pet) for a certain distance
             // Dont follows if targetting other mob
-            if (this.petMaster && !this.mobTargetEntity) {
+            if (this.petMaster && !this.targetEntity) {
                 const dx = this.petMaster.x - this.x;
                 const dy = this.petMaster.y - this.y;
                 const distanceToParent = Math.hypot(dx, dy);
@@ -59,11 +59,11 @@ export function MobDynamicMovement<T extends EntityMixinConstructor<BaseMob>>(Ba
                 !this.petGoingToMaster
             ) {
                 if (this.shouldShakeAngle) {
-                    this.angle += SHARED_SINE_WAVE.get(this.sineWaveIndex++) * (this.mobTargetEntity ? 2 : 1);
+                    this.angle += SHARED_SINE_WAVE.get(this.sineWaveIndex++) * (this.targetEntity ? 2 : 1);
                 }
 
                 // Do defensive-position move if not targetting player
-                if (!this.mobTargetEntity) {
+                if (!this.targetEntity) {
                     if (this.rotationCounter++ >= 200) {
                         this.angle = getRandomAngle();
                         this.rotationCounter = 0;

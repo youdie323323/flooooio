@@ -3,7 +3,7 @@ import { WavePool } from "../wave/WavePool";
 import { isPetal, removeAllBindings } from "../utils/common";
 import { Mob } from "./mob/Mob";
 import { Player } from "./player/Player";
-import { MobType, PetalType } from "../../../shared/enum";
+import { MobType, PetalType } from "../../../shared/EntityType";
 import { PETAL_PROFILES } from "../../../shared/entity/mob/petal/petalProfiles";
 import { MOB_PROFILES } from "../../../shared/entity/mob/mobProfiles";
 

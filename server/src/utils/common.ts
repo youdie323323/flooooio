@@ -1,14 +1,14 @@
-import { MobType, PetalType } from "../../../shared/enum";
+import { MobType, PetalType } from "../../../shared/EntityType";
 import { ClientboundConnectionKickReason, ClientBound } from "../../../shared/packet";
 import { PETAL_PROFILES } from "../../../shared/entity/mob/petal/petalProfiles";
 import { Rarities } from "../../../shared/rarity";
 import { memo } from "../../../shared/utils/memoize";
 import { WaveRoomState } from "../../../shared/wave";
 import { waveRoomService } from "../../main";
-import { EntityId } from "../entity/Entity";
-import { MobStat, MobData, MOB_SIZE_FACTOR, MobInstance } from "../entity/mob/Mob";
-import { PetalStat, isUnconvertableSlot } from "../entity/mob/petal/Petal";
-import { PlayerInstance } from "../entity/player/Player";
+import { Entity } from "../entity/Entity";
+import { MobStat, MobData, MOB_SIZE_FACTOR, MobInstance, Mob } from "../entity/mob/Mob";
+import { PetalStat, isLivingSlot } from "../entity/mob/petal/Petal";
+import { Player, PlayerId, PlayerInstance } from "../entity/player/Player";
 import { UserData, WavePool } from "../wave/WavePool";
 import WaveRoom, { WaveRoomPlayerId } from "../wave/WaveRoom";
 import { choice, getRandomPosition } from "./random";
@@ -25,7 +25,7 @@ export const isPetal = <(type: MobType | PetalType) => type is PetalType>memo((t
 
 export const bodyDamageOrDamage = memo((stat: PetalStat | MobStat): number => "bodyDamage" in stat ? stat.bodyDamage : stat.damage);
 
-export function clientRemove(waveRoom: WaveRoom, waveClientId: EntityId) {
+export function clientRemove(waveRoom: WaveRoom, waveClientId: PlayerId) {
     removeAllBindings(waveRoom.wavePool, waveClientId);
 
     waveRoom.wavePool.removeClient(waveClientId);
@@ -71,7 +71,7 @@ export function removeAllBindings(wavePool: WavePool, clientId: PlayerInstance["
     if (player) {
         // Remove all petals
         player.slots.surface.forEach((petals) => {
-            if (petals != null && isUnconvertableSlot(petals)) {
+            if (petals != null && isLivingSlot(petals)) {
                 for (let i = 0; i < petals.length; i++) {
                     const e = petals[i];
                     if (wavePool.getMob(e.id)) {
@@ -166,4 +166,20 @@ export function revivePlayer(wavePool: WavePool, player: PlayerInstance) {
             player.deadCameraTargetEntity = null;
         }
     }
+}
+
+/**
+ * Determine if entity is dead.
+ * 
+ * @remarks
+ * 
+ * Note that the player is dead, not eliminated.
+ */
+export const isEntityDead = (poolThis: WavePool, entity: Entity): boolean => {
+    return (
+        // Player dead
+        (entity instanceof Player && entity.isDead) ||
+        // Mob dead
+        (entity instanceof Mob && !poolThis.getMob(entity.id))
+    )
 }

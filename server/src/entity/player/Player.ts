@@ -1,5 +1,5 @@
 import { EntityCollisionResponse } from "../EntityCollisionResponse";
-import { BrandedId, Entity, EntityId } from "../Entity";
+import { BrandedId, Entity } from "../Entity";
 import { EntityLinearMovement } from "../EntityLinearMovement";
 import uWS from 'uWebSockets.js';
 import { UserData } from "../../wave/WavePool";
@@ -12,6 +12,8 @@ import { EntityMapBoundary } from "../EntityMapBoundary";
 import { EntityDeath } from "../EntityDeath";
 import { PlayerPetalConsume } from "./PlayerPetalConsume";
 
+export type PlayerId = BrandedId<"Player">;
+
 class BasePlayer implements Entity {
     /**
      * Base speed of player.
@@ -23,7 +25,6 @@ class BasePlayer implements Entity {
      */
     public static readonly BASE_SIZE = 15;
 
-    readonly id: EntityId;
     x: number;
     y: number;
     magnitude: number;
@@ -31,6 +32,13 @@ class BasePlayer implements Entity {
     size: number;
     health: number;
     maxHealth: number;
+
+    /**
+     * Id of player.
+     * 
+     * @readonly
+     */
+    readonly id: PlayerId;
 
     /**
      * Nickname of player.
@@ -41,19 +49,11 @@ class BasePlayer implements Entity {
 
     /**
      * Body damage of player.
-     * 
-     * @remarks
-     * 
-     * We have this property because body damage is mutable by petal.
      */
     bodyDamage: number;
 
     /**
-     * Current mood of player.
-     * 
-     * @remarks
-     * 
-     * Bit-flaged.
+     * Bit-flaged current mood of player.
      */
     mood: number;
 
@@ -91,6 +91,7 @@ class BasePlayer implements Entity {
 }
 
 let Player = BasePlayer;
+
 // Do PlayerPetalConsume before PlayerReload to avoid server crash
 Player = PlayerPetalConsume(Player);
 // Do PlayerPetalOrbit before PlayerReload so petal reloads like original game (can interpolate movement)

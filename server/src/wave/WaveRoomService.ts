@@ -164,7 +164,9 @@ export default class WaveRoomService {
      * Determine if user data is allowed to join/add.
      */
     private canUserDataAdded(userData: UserData): boolean {
-        return !userData || !userData.wavePlayerData || !new Set(this.waveRooms.map(waveRoom => waveRoom.wavePool.getAllClients().map(c => c.ws)).flat()).has(userData.wavePlayerData.ws);
+        return !userData || !userData.wavePlayerData ||
+            // Anti ws duplicate
+            !new Set(this.waveRooms.map(waveRoom => waveRoom.wavePool.getAllClients().map(c => c.ws)).flat()).has(userData.wavePlayerData.ws);
     }
 
     /**

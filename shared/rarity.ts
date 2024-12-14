@@ -1,3 +1,5 @@
+import { ColorCode } from "../client/src/utils/common";
+
 export enum Rarities {
     COMMON,
     UNUSUAL,
@@ -18,7 +20,7 @@ export const RARITY_NAME = {
     [Rarities.MYTHIC]: "Mythic",
     [Rarities.ULTRA]: "Ultra",
     [Rarities.SUPER]: "Super"
-};
+} satisfies Record<Rarities, string>;
 
 export const RARITY_COLOR = {
     [Rarities.COMMON]: "#7F0D7D",  
@@ -29,4 +31,4 @@ export const RARITY_COLOR = {
     [Rarities.MYTHIC]: "#1FDE4E",  
     [Rarities.ULTRA]: "#FF2525",   
     [Rarities.SUPER]: "#2C0523"    
-} as const;
+} satisfies Record<Rarities, ColorCode>;

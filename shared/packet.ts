@@ -29,9 +29,9 @@ export enum ClientBound {
 
     WAVE_STARTING,
 
-    CONNECTION_KICKED,
-
     WAVE_CHAT_RECV,
+
+    CONNECTION_KICKED,
 }
 
 export enum ClientboundConnectionKickReason {

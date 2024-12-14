@@ -4,13 +4,15 @@ import { ComponentExtensionTemplate, ExtensionConstructor, Updatable, UpdateFunc
 
 export default function ExtensionCollidable<T extends ExtensionConstructor>(Base: T) {
     abstract class MixedBase extends Base implements ComponentExtensionTemplate {
-        private static readonly SPEED: number = 0.4;
+        private static readonly COLLISION_SPEED: number = 0.5;
+        private static readonly RETURN_SPEED: number = 0.2;
         private static readonly GAP: number = 4;
         private static readonly DEAD_ZONE: number = 6;
 
         private collidableComponents: Component[];
         private targetYPos: number | null;
         private initialYPos: number;
+        private isReturning: boolean;
 
         constructor(...args: any[]) {
             super(...args);
@@ -18,6 +20,7 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
             this.collidableComponents = [];
             this.targetYPos = null;
             this.initialYPos = this.y;
+            this.isReturning = false;
         }
 
         // Override layout calculate to reset initial pos
@@ -28,7 +31,7 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
             originY: number
         ): LayoutResult {
             // Moving collision always up direction
-            const  diffY = this.initialYPos - this.y;
+            const diffY = this.initialYPos - this.y;
 
             const layout = super.calculateLayout(width, height, originX, originY);
 
@@ -42,6 +45,7 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
         private resolveCollision(component: Component) {
             // Always up direction
             this.targetYPos = component.y - this.h - MixedBase.GAP;
+            this.isReturning = false;
         }
 
         private isColliding(component: Component): boolean {
@@ -79,10 +83,14 @@ export default function ExtensionCollidable<T extends ExtensionConstructor>(Base
                 }
             });
 
-            if (!hasCollision) this.targetYPos = this.initialYPos;
+            if (!hasCollision) {
+                this.targetYPos = this.initialYPos;
+                this.isReturning = true;
+            }
 
             if (this.targetYPos !== null) {
-                this.y += (this.targetYPos - this.y) * MixedBase.SPEED;
+                const speed = this.isReturning ? MixedBase.RETURN_SPEED : MixedBase.COLLISION_SPEED;
+                this.y += (this.targetYPos - this.y) * speed;
                 if (Math.abs(this.targetYPos - this.y) < MixedBase.DEAD_ZONE) {
                     this.setY(this.targetYPos);
                     this.targetYPos = null;

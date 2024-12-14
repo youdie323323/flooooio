@@ -1,15 +1,17 @@
 import { EntityCollisionResponse } from "../EntityCollisionResponse";
-import { BrandedId, Entity, EntityId } from "../Entity";
+import { BaseEntityData, BrandedId, Entity } from "../Entity";
 import { MobDynamicMovement } from "./MobDynamicMovement";
 import { MobAggressivePursuit } from "./MobAggressivePursuit";
 import { EntityLinearMovement } from "../EntityLinearMovement";
 import { BasePlayer, PlayerInstance } from "../player/Player";
-import { MobStarfishHealthRegen } from "./MobStarfishHealthRegen";
+import { MobHealthRegen } from "./MobHealthRegen";
 import { EntityMapBoundary } from "../EntityMapBoundary";
 import { EntityDeath } from "../EntityDeath";
 import { MobBodyConnection } from "./MobBodyConnection";
-import { MobType, PetalType } from "../../../../shared/enum";
+import { MobType, PetalType } from "../../../../shared/EntityType";
 import { Rarities } from "../../../../shared/rarity";
+
+export type MobId = BrandedId<"Mob">;
 
 class BaseMob implements Entity {
     /**
@@ -21,7 +23,6 @@ class BaseMob implements Entity {
      */
     public static readonly BASE_SPEED = 3.5;
 
-    readonly id: EntityId;
     x: number;
     y: number;
     magnitude: number;
@@ -29,6 +30,13 @@ class BaseMob implements Entity {
     size: number;
     health: number;
     maxHealth: number;
+
+    /**
+     * Id of mob.
+     * 
+     * @readonly
+     */
+    readonly id: MobId;
 
     /**
      * Type of mob/petal.
@@ -45,13 +53,13 @@ class BaseMob implements Entity {
     readonly rarity: Rarities;
 
     /**
-     * Current target entity of mob.
+     * Current target entity.
      */
-    mobTargetEntity: Entity | null;
+    targetEntity: Entity | null;
     /**
      * Entity instance which last attacked this.
      */
-    mobLastAttackedBy: Entity | null;
+    lastAttackedBy: Entity | null;
 
     /**
      * Player which owner of this pet.
@@ -99,31 +107,27 @@ class BaseMob implements Entity {
 }
 
 let Mob = BaseMob;
+
+Mob = MobDynamicMovement(Mob);
+Mob = MobAggressivePursuit(Mob);
+Mob = MobHealthRegen(Mob);
+Mob = MobBodyConnection(Mob);
+
 Mob = EntityCollisionResponse(Mob);
 Mob = EntityDeath(Mob);
 Mob = EntityMapBoundary(Mob);
-Mob = MobDynamicMovement(Mob);
-Mob = MobAggressivePursuit(Mob);
-Mob = MobStarfishHealthRegen(Mob);
-Mob = MobBodyConnection(Mob);
 Mob = EntityLinearMovement(Mob);
 
 type MobInstance = InstanceType<typeof Mob>;
 
-interface MobStat {
+type MobStat = Readonly<{
     bodyDamage: number;
     health: number;
     
     [key: string]: any;
-}
+}>;
 
-interface MobData {
-    name: string;
-    description: string;
-    fraction: number;
-    rx: number;
-    ry: number;
-
+type MobData = BaseEntityData & Readonly<{
     baseSize: number;
 
     // TODO: replace these with MOB_HEALTH_FACTOR, MOB_DAMAGE_FACTOR
@@ -136,9 +140,9 @@ interface MobData {
     [Rarities.MYTHIC]: MobStat;
     [Rarities.ULTRA]: MobStat;
     [Rarities.SUPER]: MobStat;
-}
+}>;
 
-const MOB_SIZE_FACTOR: Record<Rarities, number> = {
+const MOB_SIZE_FACTOR = {
     [Rarities.COMMON]: 1.0,
     [Rarities.UNUSUAL]: 1.2,
     [Rarities.RARE]: 1.5,
@@ -148,9 +152,9 @@ const MOB_SIZE_FACTOR: Record<Rarities, number> = {
 
     [Rarities.ULTRA]: 50,
     [Rarities.SUPER]: 100,
-};
+} satisfies Record<Rarities, number>;
 
-const MOB_HEALTH_FACTOR: Record<Rarities, number> = {
+const MOB_HEALTH_FACTOR = {
     [Rarities.COMMON]: 1.0,
     [Rarities.UNUSUAL]: 2.5,
     [Rarities.RARE]: 6.3,
@@ -160,9 +164,9 @@ const MOB_HEALTH_FACTOR: Record<Rarities, number> = {
 
     [Rarities.ULTRA]: 50,
     [Rarities.SUPER]: 100,
-};
+} satisfies Record<Rarities, number>;
 
-const MOB_DAMAGE_FACTOR: Record<Rarities, number> = {
+const MOB_DAMAGE_FACTOR = {
     [Rarities.COMMON]: 1.0,
     [Rarities.UNUSUAL]: 2.0,
     [Rarities.RARE]: 4.0,
@@ -172,6 +176,6 @@ const MOB_DAMAGE_FACTOR: Record<Rarities, number> = {
 
     [Rarities.ULTRA]: 64.0,
     [Rarities.SUPER]: 128.0,
-};
+} satisfies Record<Rarities, number>;
 
 export { BaseMob, Mob, MobData, MobStat, MobInstance, MOB_SIZE_FACTOR, MOB_HEALTH_FACTOR, MOB_DAMAGE_FACTOR };

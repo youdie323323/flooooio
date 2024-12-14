@@ -1,7 +1,7 @@
 import { ok } from "assert";
-import { EntityId } from "../entity/Entity";
-import { PlayerInstance } from "../entity/player/Player";
+import { PlayerId, PlayerInstance } from "../entity/player/Player";
 import { WaveRoomPlayerId } from "../wave/WaveRoom";
+import { MobId } from "../entity/mob/Mob";
 
 const TAU = Math.PI * 2;
 
@@ -155,8 +155,8 @@ function randomUint16(): number {
   return Math.random() * 2 ** 32 >>> 0
 }
 
-export function generateRandomEntityId(): EntityId {
-  return randomUint16() as EntityId;
+export function generateRandomEntityId<T extends MobId | PlayerId>(): T {
+  return randomUint16() as T;
 }
 
 export function generateRandomWaveRoomPlayerId(): WaveRoomPlayerId {

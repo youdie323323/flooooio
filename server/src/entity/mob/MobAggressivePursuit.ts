@@ -1,11 +1,11 @@
-import { isPetal, isBody } from "../../utils/common";
+import { isPetal, isBody, isEntityDead as isEntityDead } from "../../utils/common";
 import { Entity, EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool } from "../../wave/WavePool";
 import { BaseMob, Mob } from "./Mob";
 import { Player } from "../player/Player";
-import { MobType } from "../../../../shared/enum";
+import { MobType } from "../../../../shared/EntityType";
 
-export function findNearestEntity<T extends Entity>(me: T, entities: T[]) {
+export function findNearestEntity<T extends Entity>(me: T, entities: T[]): T | null {
     if (!entities.length) return null;
 
     return entities.reduce((nearest, current) => {
@@ -27,10 +27,10 @@ export function turnAngleToTarget(thisAngle: number, dx: number, dy: number): nu
     const targetAngle = (Math.atan2(dy, dx) * 40.549) % 255; // 255/(2*PI)≈40.549
     const normalizedAngle = ((thisAngle % 255) + 255) % 255;
     let angleDiff = targetAngle - normalizedAngle;
-    
+
     if (angleDiff > 127.5) angleDiff -= 255;
     else if (angleDiff < -127.5) angleDiff += 255;
-    
+
     return ((normalizedAngle + angleDiff * 0.1 + 255) % 255);
 }
 
@@ -44,7 +44,7 @@ export enum MobBehaviors {
     NONE,
 }
 
-export const MOB_BEHAVIORS: Record<MobType, MobBehaviors> = {
+export const MOB_BEHAVIORS = {
     [MobType.STARFISH]: MobBehaviors.AGGRESSIVE,
     [MobType.BEETLE]: MobBehaviors.AGGRESSIVE,
     [MobType.BUBBLE]: MobBehaviors.PASSIVE,
@@ -55,7 +55,7 @@ export const MOB_BEHAVIORS: Record<MobType, MobBehaviors> = {
     // TODO: elucidate desert centipede move
     [MobType.CENTIPEDE_DESERT]: MobBehaviors.NEUTRAL,
     [MobType.CENTIPEDE_EVIL]: MobBehaviors.AGGRESSIVE,
-} as const;
+} satisfies Record<MobType, MobBehaviors>;
 
 export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
@@ -76,16 +76,22 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
             // can handle angle in MobHealthRegen.ts
             if (this.starfishRegeningHealth) return;
 
+            // Target entity dead, stop target
+            if (this.targetEntity && isEntityDead(poolThis, this.targetEntity)) this.targetEntity = null;
+
+            // Last attacked entity dead, stop target
+            if (this.lastAttackedBy && isEntityDead(poolThis, this.lastAttackedBy)) this.lastAttackedBy = null;
+
             let distanceToTarget = 0;
-            if (this.mobTargetEntity) {
-                const dx = this.mobTargetEntity.x - this.x;
-                const dy = this.mobTargetEntity.y - this.y;
+            if (this.targetEntity) {
+                const dx = this.targetEntity.x - this.x;
+                const dy = this.targetEntity.y - this.y;
                 distanceToTarget = Math.hypot(dx, dy);
             }
 
             // Loss entity
-            if (this.mobTargetEntity && distanceToTarget > (MOB_DETECTION_FACTOR + 25) * this.size) {
-                this.mobTargetEntity = null;
+            if (distanceToTarget > (MOB_DETECTION_FACTOR + 25) * this.size) {
+                this.targetEntity = null;
             }
 
             // Select target
@@ -102,10 +108,10 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
             switch (MOB_BEHAVIORS[this.type]) {
                 // Aggressive
                 case MobBehaviors.AGGRESSIVE: {
-                    const nearestTarget = findNearestEntity(this, targets);
-                    if (nearestTarget) {
-                        const dx = nearestTarget.x - this.x;
-                        const dy = nearestTarget.y - this.y;
+                    const targetableEntity = this.targetEntity || findNearestEntity(this, targets);
+                    if (targetableEntity) {
+                        const dx = targetableEntity.x - this.x;
+                        const dy = targetableEntity.y - this.y;
                         const distance = Math.hypot(dx, dy);
 
                         if (distance < MOB_DETECTION_FACTOR * this.size) {
@@ -117,30 +123,23 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
 
                             this.magnitude = 255 * Mob.BASE_SPEED;
 
-                            this.mobTargetEntity = nearestTarget;
+                            this.targetEntity = targetableEntity;
                         } else {
-                            this.mobTargetEntity = null;
+                            this.targetEntity = null;
                         }
                     } else {
-                        this.mobTargetEntity = null;
+                        this.targetEntity = null;
                     }
-
-                    break;
-                }
-
-                // Immobile (bubble, stone)
-                case MobBehaviors.PASSIVE: {
-                    this.magnitude = 0;
 
                     break;
                 }
 
                 // Cautious (jellyfish)
                 case MobBehaviors.CAUTIONS: {
-                    const nearestTarget = findNearestEntity(this, targets);
-                    if (nearestTarget) {
-                        const dx = nearestTarget.x - this.x;
-                        const dy = nearestTarget.y - this.y;
+                    const targetableEntity = this.targetEntity || findNearestEntity(this, targets);
+                    if (targetableEntity) {
+                        const dx = targetableEntity.x - this.x;
+                        const dy = targetableEntity.y - this.y;
                         const distance = Math.hypot(dx, dy);
 
                         if (distance < MOB_DETECTION_FACTOR * this.size) {
@@ -150,39 +149,32 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                                 dy,
                             );
 
-                            this.magnitude = 255 * (this.mobTargetEntity && distanceToTarget < (3 * this.size) ? 0 : 2);
-                            
-                            this.mobTargetEntity = nearestTarget;
+                            this.magnitude = 255 * (this.targetEntity && distanceToTarget < (3 * this.size) ? 0 : 2);
+
+                            this.targetEntity = targetableEntity;
                         } else {
-                            this.mobTargetEntity = null;
+                            this.targetEntity = null;
                         }
                     } else {
-                        this.mobTargetEntity = null;
+                        this.targetEntity = null;
                     }
 
 
                     break;
                 }
 
+                // Passive (bubble, stone)
+                case MobBehaviors.PASSIVE: {
+                    this.magnitude = 0;
+
+                    break;
+                }
+
                 // Neutral
                 case MobBehaviors.NEUTRAL: {
-                    // Switch to other entity if last attacked entity is dead
-                    if (this.mobLastAttackedBy &&
-                        (
-                            // Player dead, stop target them
-                            (this.mobLastAttackedBy instanceof Player && this.mobLastAttackedBy.isDead) ||
-                            // Mob dead, stop target them
-                            (this.mobLastAttackedBy instanceof Mob && !poolThis.getMob(this.mobLastAttackedBy.id))
-                        )
-                    ) {
-                        this.mobLastAttackedBy = null;
-
-                        return;
-                    }
-
-                    if (this.mobLastAttackedBy) {
-                        const dx = this.mobLastAttackedBy.x - this.x;
-                        const dy = this.mobLastAttackedBy.y - this.y;
+                    if (this.lastAttackedBy) {
+                        const dx = this.lastAttackedBy.x - this.x;
+                        const dy = this.lastAttackedBy.y - this.y;
 
                         this.angle = turnAngleToTarget(
                             this.angle,
@@ -192,18 +184,16 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
 
                         this.magnitude = 255 * Mob.BASE_SPEED;
 
-                        this.mobTargetEntity = this.mobLastAttackedBy;
+                        this.targetEntity = this.lastAttackedBy;
                     } else {
-                        this.mobTargetEntity = null;
+                        this.targetEntity = null;
                     }
 
                     break;
                 }
 
                 // Do nothing
-                case MobBehaviors.NONE: {
-                    break;
-                }
+                case MobBehaviors.NONE: break;
             }
         }
 
@@ -212,8 +202,8 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                 super.dispose();
             }
 
-            this.mobTargetEntity = null;
-            this.mobLastAttackedBy = null;
+            this.targetEntity = null;
+            this.lastAttackedBy = null;
 
             this.petMaster = null;
 

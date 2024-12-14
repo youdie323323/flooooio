@@ -3,10 +3,10 @@ import { WavePool } from "../../wave/WavePool";
 import { BaseMob, Mob, MobInstance } from "./Mob";
 import { Player, PlayerInstance } from "../player/Player";
 import { isPetal } from "../../utils/common";
-import { MobType } from "../../../../shared/enum";
+import { MobType } from "../../../../shared/EntityType";
 import { turnAngleToTarget } from "./MobAggressivePursuit";
 
-export function MobStarfishHealthRegen<T extends EntityMixinConstructor<BaseMob>>(Base: T) {
+export function MobHealthRegen<T extends EntityMixinConstructor<BaseMob>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
         [onUpdateTick](poolThis: WavePool): void {
             // Call parent onUpdateTick
@@ -22,23 +22,25 @@ export function MobStarfishHealthRegen<T extends EntityMixinConstructor<BaseMob>
                 this.starfishRegeningHealth ||
                 (
                     this.type === MobType.STARFISH &&
-                    // Run if hp is less than half
+                    // Regen if hp is less than half
                     this.health < this.maxHealth / 2
                 )
             ) {
                 this.starfishRegeningHealth = true;
 
                 // Hmm maybe i shouldnt use size here
-                this.health = Math.min(this.maxHealth + 1, this.health + (5 * this.size));
-                if (this.health > this.maxHealth) {
+                const healHp = 5 * this.size;
+
+                this.health = Math.min(this.maxHealth, this.health + healHp);
+                if (this.health >= this.maxHealth) {
                     this.starfishRegeningHealth = false;
                     return;
                 }
 
                 // Running away from target
-                if (this.mobTargetEntity) {
-                    const dx = this.mobTargetEntity.x - this.x;
-                    const dy = this.mobTargetEntity.y - this.y;
+                if (this.targetEntity) {
+                    const dx = this.targetEntity.x - this.x;
+                    const dy = this.targetEntity.y - this.y;
 
                     this.angle = turnAngleToTarget(
                         this.angle,

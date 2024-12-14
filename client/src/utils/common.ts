@@ -1,5 +1,5 @@
 import { PETAL_PROFILES } from "../../../shared/entity/mob/petal/petalProfiles";
-import { MobType, PetalType } from "../../../shared/enum";
+import { MobType, PetalType } from "../../../shared/EntityType";
 import { memo } from "../../../shared/utils/memoize";
 
 export const isPetal = memo((type: MobType | PetalType): type is PetalType => {

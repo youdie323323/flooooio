@@ -1,8 +1,9 @@
-import { PetalType } from "../../../../../shared/enum";
+import { PetalType } from "../../../../../shared/EntityType";
 import { Rarities } from "../../../../../shared/rarity";
+import { BaseEntityData } from "../../Entity";
 import { MobInstance } from "../Mob";
 
-export interface PetalStat {
+export type PetalStat = Readonly<{
     damage: number;
     health: number;
     petalReload: number;
@@ -12,15 +13,9 @@ export interface PetalStat {
     isCluster: boolean;
 
     [key: string]: any;
-}
+}>;
 
-export interface PetalData {
-    name: string;
-    description: string;
-    fraction: number;
-    rx: number;
-    ry: number;
-
+export type PetalData = BaseEntityData & Readonly<{
     [Rarities.COMMON]: PetalStat;
     [Rarities.UNUSUAL]: PetalStat;
     [Rarities.RARE]: PetalStat;
@@ -29,7 +24,7 @@ export interface PetalData {
     [Rarities.MYTHIC]: PetalStat;
     [Rarities.ULTRA]: PetalStat;
     [Rarities.SUPER]: PetalStat;
-}
+}>;
 
 /**
  * Mock data of {@link Mob}.
@@ -39,10 +34,10 @@ export interface PetalData {
  * This data for visualize petals in wave room, inventory and slots.
  * Eliminates the need for the server to create the actual living “Mob” instance.
  */
-export interface MockPetalData {
-    readonly type: PetalType;
-    readonly rarity: Rarities;
-}
+export type MockPetalData = Readonly<{
+    type: PetalType;
+    rarity: Rarities;
+}>;
 
 type MaybeEmptySlot<T> = T | null | undefined;
 
@@ -63,6 +58,6 @@ export interface PetalSlots {
 /**
  * Type guard for slot.
  */
-export function isUnconvertableSlot(slot: Slot): slot is MobInstance[] {
+export function isLivingSlot(slot: Slot): slot is MobInstance[] {
     return Array.isArray(slot);
 }

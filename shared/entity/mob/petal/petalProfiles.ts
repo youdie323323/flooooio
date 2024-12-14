@@ -1,8 +1,8 @@
 import { PetalData } from "../../../../server/src/entity/mob/petal/Petal";
-import { PetalType } from "../../../enum";
+import { PetalType } from "../../../EntityType";
 import { Rarities } from "../../../rarity";
 
-export const PETAL_PROFILES: Required<Record<PetalType, PetalData>> = {
+export const PETAL_PROFILES = {
     [PetalType.BASIC]: {
         name: "Basic",
         description: "A nice petal, not too strong but not too weak.",
@@ -390,4 +390,4 @@ export const PETAL_PROFILES: Required<Record<PetalType, PetalData>> = {
             isCluster: false,
         },
     },
-};
+} satisfies Required<Record<PetalType, PetalData>>;

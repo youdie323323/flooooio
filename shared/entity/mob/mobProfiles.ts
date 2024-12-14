@@ -1,10 +1,10 @@
 // MobData cant cause source leak because its removed in compile
 
 import { MobData } from "../../../server/src/entity/mob/Mob";
-import { MobType } from "../../enum";
+import { MobType } from "../../EntityType";
 import { Rarities } from "../../rarity";
 
-export const MOB_PROFILES: Required<Record<MobType, MobData>> = {
+export const MOB_PROFILES = {
     [MobType.BEE]: {
         name: "Bee",
         description: "It stings. Don't touch it.",
@@ -350,4 +350,4 @@ export const MOB_PROFILES: Required<Record<MobType, MobData>> = {
             bodyDamage: 21870,
         },
     },
-};
+} satisfies Required<Record<MobType, MobData>>;

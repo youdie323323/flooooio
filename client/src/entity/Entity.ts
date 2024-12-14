@@ -14,14 +14,14 @@ const interpolateAngle = memo(
         startAngle + calculateAngleDistance(startAngle, endAngle) * progress
 );
 
-function interpolateColor(sourceColor: number[], targetColor: number[], progress: number) {
+const interpolateColor = memo((sourceColor: number[], targetColor: number[], progress: number): number[] => {
     const inverseProgress = 1 - progress;
     return [
         sourceColor[0] * progress + targetColor[0] * inverseProgress,
         sourceColor[1] * progress + targetColor[1] * inverseProgress,
         sourceColor[2] * progress + targetColor[2] * inverseProgress
     ];
-}
+});
 
 const hexToRgb = memo((hexColor: ColorCode) => {
     return [
@@ -31,13 +31,15 @@ const hexToRgb = memo((hexColor: ColorCode) => {
     ];
 });
 
-function rgbArrayToString(rgbArray: number[]) {
+const rgbArrayToString = memo((rgbArray: number[]): string => {
     return "rgb(" + rgbArray.join(",") + ")";
-};
+});
 
-function smoothInterpolate(current: number, target: number, duration: number) {
+const smoothInterpolate = memo((current: number, target: number, duration: number): number => {
     return current + (target - current) * Math.min(1, deltaTime / duration);
-}
+});
+
+const TARGET_COLOR = [255, 0, 0];
 
 export default abstract class Entity {
     x: number;
@@ -141,8 +143,7 @@ export default abstract class Entity {
         }
 
         color = hexToRgb(color);
-        color = interpolateColor(color, [255, 0, 0], invertedHurtT * 0.25 + 0.75);
-
+        color = interpolateColor(color, TARGET_COLOR, invertedHurtT * 0.25 + 0.75);
         return rgbArrayToString(color);
     }
 

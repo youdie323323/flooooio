@@ -1,7 +1,7 @@
 import Entity from "./Entity";
 import { ColorCode, darkend, DARKEND_BASE } from "../utils/common";
 import drawEntityDetail from "./entityDrawDetail";
-import { MobType, PetalType } from "../../../shared/enum";
+import { MobType, PetalType } from "../../../shared/EntityType";
 import { Rarities } from "../../../shared/rarity";
 
 const TAU = Math.PI * 2;
@@ -159,13 +159,13 @@ export default class EntityMob extends Entity {
                     this.legD = Array(STARFISH_LEG_AMOUNT).fill(150);
                 }
                 const legD = this.legD;
-                const s4 = this.isDead ? 0 : Math.floor((this.nHealth / this.maxHealth) * (STARFISH_LEG_AMOUNT));
+                const missingLegPercentage = this.isDead ? 0 : Math.floor((this.nHealth / this.maxHealth) * STARFISH_LEG_AMOUNT);
 
                 ctx.beginPath();
                 for (let i = 0; i < STARFISH_LEG_AMOUNT; i++) {
                     const tw = (i + 0.5) / STARFISH_LEG_AMOUNT * TAU;
                     const tx = (i + 1) / STARFISH_LEG_AMOUNT * TAU;
-                    legD[i] += ((i < s4 ? 175 : 105) - legD[i]) * 0.5;
+                    legD[i] += ((i < missingLegPercentage ? 175 : 105) - legD[i]) * 0.5;
                     const ty = legD[i];
                     if (i === 0) {
                         ctx.moveTo(ty, 0);

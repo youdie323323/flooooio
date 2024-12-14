@@ -231,7 +231,7 @@ export abstract class Component {
             this.realY = this.y;
 
             if (this.animationType === AnimationType.ZOOM) {
-                this.y += this.animationDirection === "out" ? -20 : 20;
+                this.y += this.animationDirection === "out" ? -15 : 15;
             }
 
             if (toggle) {

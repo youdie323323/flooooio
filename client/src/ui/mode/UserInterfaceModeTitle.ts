@@ -1,5 +1,5 @@
 import { Biomes } from "../../../../shared/biomes";
-import { PetalType } from "../../../../shared/enum";
+import { PetalType } from "../../../../shared/EntityType";
 import { ServerBound } from "../../../../shared/packet";
 import { Rarities } from "../../../../shared/rarity";
 import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../../shared/wave";

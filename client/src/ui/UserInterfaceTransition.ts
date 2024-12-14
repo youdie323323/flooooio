@@ -16,7 +16,7 @@ export default class UserInterfaceTransition {
     private static readonly STROKE_WIDTH = 5;
     private static readonly STROKE_COLOR = '#000000';
 
-    private readonly transitionConfigs: Record<UserInterfaceMode, TransitionConfig> = {
+    private readonly transitionConfigs = {
         title: {
             initialRadius: (canvas) => Math.max(((canvas.height / uiScaleFactor) / 2) + 100, ((canvas.width / uiScaleFactor) / 2) + 100),
             radiusChange: (current) => current - (0.3 + current / 40),
@@ -27,7 +27,7 @@ export default class UserInterfaceTransition {
             radiusChange: (current) => current + (0.2 + current / 35),
             isComplete: (canvas, radius) => radius > Math.max(((canvas.height / uiScaleFactor) / 2) + 100, ((canvas.width / uiScaleFactor) / 2) + 100),
         }
-    };
+    } satisfies Record<UserInterfaceMode, TransitionConfig>;
 
     private radius: number;
 
