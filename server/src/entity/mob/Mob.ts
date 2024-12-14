@@ -56,16 +56,16 @@ class BaseMob implements Entity {
      * Current target entity.
      */
     targetEntity: Entity | null;
+
     /**
      * Entity instance which last attacked this.
      */
-    lastAttackedBy: Entity | null;
+    lastAttackedEntity: Entity | null;
 
     /**
      * Player which owner of this pet.
      */
     petMaster: PlayerInstance | null;
-
     /**
      * Whether the pet is moving to tracking the player.
      * 

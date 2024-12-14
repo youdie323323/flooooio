@@ -137,19 +137,19 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
                   this.health -= bodyDamageOrDamage(profile2[otherEntity.rarity]);
                   otherEntity.health -= bodyDamageOrDamage(profile1[this.rarity]);
 
-                  // Dont trying to set mobLastAttackedBy to petal
+                  // Dont trying to set lastAttackedEntity to petal because its not effective
 
                   if (!isPetalOther) {
                     // Propagate hit to head
                     const maybeSegmentsHead = traverseMobSegment(poolThis, otherEntity);
 
                     if (this.petalMaster) {
-                      maybeSegmentsHead.lastAttackedBy = this.petalMaster;
+                      maybeSegmentsHead.lastAttackedEntity = this.petalMaster;
                     }
 
                     if (this.petMaster) {
                       // If pet attacked mob its target player or pet?
-                      maybeSegmentsHead.lastAttackedBy = this.petMaster;
+                      maybeSegmentsHead.lastAttackedEntity = this.petMaster;
                     }
                   }
 
@@ -157,11 +157,11 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
                     const maybeSegmentsHead = traverseMobSegment(poolThis, this);
 
                     if (otherEntity.petalMaster) {
-                      maybeSegmentsHead.lastAttackedBy = otherEntity.petalMaster;
+                      maybeSegmentsHead.lastAttackedEntity = otherEntity.petalMaster;
                     }
 
                     if (otherEntity.petMaster) {
-                      maybeSegmentsHead.lastAttackedBy = otherEntity.petMaster;
+                      maybeSegmentsHead.lastAttackedEntity = otherEntity.petMaster;
                     }
                   }
                 }
@@ -219,7 +219,7 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
                 const maybeSegmentsHead = traverseMobSegment(poolThis, this);
 
                 // Body hitted
-                maybeSegmentsHead.lastAttackedBy = this;
+                maybeSegmentsHead.lastAttackedEntity = otherEntity;
               }
             }
 

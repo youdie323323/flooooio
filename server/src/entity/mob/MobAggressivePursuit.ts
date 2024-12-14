@@ -80,7 +80,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
             if (this.targetEntity && isEntityDead(poolThis, this.targetEntity)) this.targetEntity = null;
 
             // Last attacked entity dead, stop target
-            if (this.lastAttackedBy && isEntityDead(poolThis, this.lastAttackedBy)) this.lastAttackedBy = null;
+            if (this.lastAttackedEntity && isEntityDead(poolThis, this.lastAttackedEntity)) this.lastAttackedEntity = null;
 
             let distanceToTarget = 0;
             if (this.targetEntity) {
@@ -90,15 +90,17 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
             }
 
             // Loss entity
-            if (distanceToTarget > (MOB_DETECTION_FACTOR + 25) * this.size) {
-                this.targetEntity = null;
-            }
+            if (distanceToTarget > (MOB_DETECTION_FACTOR + 25) * this.size) this.targetEntity = null;
 
             // Select target
             let targets: Entity[];
             if (this.petMaster) {
                 // Mob which summoned by player will attack other mobs expect petals, pets
-                targets = poolThis.getAllMobs().filter(p => !isPetal(p.type) && !p?.petMaster);
+                targets = poolThis.getAllMobs().filter(p => 
+                    p.id !== this.id && 
+                    !isPetal(p.type) && 
+                    !p?.petMaster
+                );
             } else {
                 // Target living players, p̶e̶t̶s̶
                 // Mob will never target pets before wave
@@ -159,7 +161,6 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                         this.targetEntity = null;
                     }
 
-
                     break;
                 }
 
@@ -170,11 +171,11 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                     break;
                 }
 
-                // Neutral
+                // Neutral (bee)
                 case MobBehaviors.NEUTRAL: {
-                    if (this.lastAttackedBy) {
-                        const dx = this.lastAttackedBy.x - this.x;
-                        const dy = this.lastAttackedBy.y - this.y;
+                    if (this.lastAttackedEntity) {
+                        const dx = this.lastAttackedEntity.x - this.x;
+                        const dy = this.lastAttackedEntity.y - this.y;
 
                         this.angle = turnAngleToTarget(
                             this.angle,
@@ -184,7 +185,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
 
                         this.magnitude = 255 * Mob.BASE_SPEED;
 
-                        this.targetEntity = this.lastAttackedBy;
+                        this.targetEntity = this.lastAttackedEntity;
                     } else {
                         this.targetEntity = null;
                     }
@@ -203,7 +204,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
             }
 
             this.targetEntity = null;
-            this.lastAttackedBy = null;
+            this.lastAttackedEntity = null;
 
             this.petMaster = null;
 

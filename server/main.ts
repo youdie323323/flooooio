@@ -28,74 +28,6 @@ const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
                 rarity: Rarities.SUPER,
             } as MockPetalData,
             {
-                type: PetalType.FASTER,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.FASTER,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
                 type: PetalType.BUBBLE,
                 rarity: Rarities.SUPER,
             } as MockPetalData,
@@ -103,46 +35,10 @@ const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
                 type: PetalType.BUBBLE,
                 rarity: Rarities.SUPER,
             } as MockPetalData,
-            {
-                type: PetalType.BEETLE_EGG,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BEETLE_EGG,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BEETLE_EGG,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BEETLE_EGG,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BEETLE_EGG,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BEETLE_EGG,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BEETLE_EGG,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BEETLE_EGG,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BEETLE_EGG,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BEETLE_EGG,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
+           // {
+           //     type: PetalType.BEETLE_EGG,
+           //     rarity: Rarities.SUPER,
+           // } as MockPetalData,
         ],
         bottom: [
             {

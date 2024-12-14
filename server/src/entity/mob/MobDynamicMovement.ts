@@ -23,8 +23,13 @@ export function MobDynamicMovement<T extends EntityMixinConstructor<BaseMob>>(Ba
                 super[onUpdateTick](poolThis);
             }
 
-            // Dont move when this is petal
+            // Dont dynamic move when petal
             if (isPetal(this.type)) return;
+
+            if (                
+                // Dont dynamic move when passive
+                MOB_BEHAVIORS[this.type] === MobBehaviors.PASSIVE
+            ) return;
 
             // If body, dont do anything
             if (isBody(poolThis, this)) return;
@@ -54,15 +59,13 @@ export function MobDynamicMovement<T extends EntityMixinConstructor<BaseMob>>(Ba
             }
 
             if (
-                // Dont move when passive
-                MOB_BEHAVIORS[this.type] !== MobBehaviors.PASSIVE &&
                 !this.petGoingToMaster
             ) {
                 if (this.shouldShakeAngle) {
                     this.angle += SHARED_SINE_WAVE.get(this.sineWaveIndex++) * (this.targetEntity ? 2 : 1);
                 }
 
-                // Do defensive-position move if not targetting player
+                // Do dynamic move if not targetting player
                 if (!this.targetEntity) {
                     if (this.rotationCounter++ >= 200) {
                         this.angle = getRandomAngle();

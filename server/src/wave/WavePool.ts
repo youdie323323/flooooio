@@ -307,7 +307,7 @@ export class WavePool {
 
             targetEntity: null,
 
-            lastAttackedBy: null,
+            lastAttackedEntity: null,
 
             petMaster,
             petGoingToMaster: false,
