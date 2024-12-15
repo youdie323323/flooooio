@@ -5,7 +5,7 @@ import { WavePool } from "../wave/WavePool";
  */
 export type BrandedId<T extends string> = number & { readonly __brand: T };
 
-export type Entity = {
+export interface Entity {
     /**
      * Current x-pos of entity.
      */
@@ -79,7 +79,15 @@ export interface EntityMixinTemplate extends MaybeDisposable {
 export type BaseEntityData = Required<Readonly<{
     name: string;
     description: string;
+
+    /**
+     * Fraction is the division factor of the size of the scaling that is pre-invoked when drawing. 1 means no scaling.
+     */
     fraction: number;
+
+    /**
+     * The x, y radius of ellipse. Setting both same value, you can reproduce a circle.
+     */
     rx: number;
     ry: number;
 }>>;

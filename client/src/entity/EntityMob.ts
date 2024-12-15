@@ -61,10 +61,12 @@ export default class EntityMob extends Entity {
 
         ctx.lineWidth = 6;
 
-        const drawBasicLike = (fill: string, stroke: string) => {
-            const size = this.size / 20;
+        let scale: number;
 
-            ctx.scale(size, size);
+        const drawBasicLike = (fill: string, stroke: string) => {
+            scale = this.size / 20;
+
+            ctx.scale(scale, scale);
 
             ctx.beginPath();
             ctx.arc(0, 0, 20, 0, TAU);
@@ -75,8 +77,6 @@ export default class EntityMob extends Entity {
         };
 
         ctx.rotate(this.angle);
-
-        let scale: number;
 
         switch (this.type) {
             case MobType.BEE: {

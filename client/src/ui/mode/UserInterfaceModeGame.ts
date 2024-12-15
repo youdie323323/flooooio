@@ -3,6 +3,9 @@ import { calculateWaveLength } from "../../../../shared/formula";
 import { Mood } from "../../../../shared/mood";
 import { networking, players, uiCtx, deltaTime, antennaScaleFactor, mobs } from "../../../main";
 import Entity from "../../entity/Entity";
+import EntityMob from "../../entity/EntityMob";
+import EntityPlayer from "../../entity/EntityPlayer";
+import { isPetal } from "../../utils/common";
 import { interpolate } from "../../utils/Interpolator";
 import { waveSelfId } from "../../utils/Networking";
 import TerrainGenerator, { BIOME_TILESETS } from "../../utils/TerrainGenerator";
@@ -401,7 +404,7 @@ export default class UserInterfaceGame extends UserInterface {
             ctx.scale(antennaScaleFactor, antennaScaleFactor);
             ctx.translate(-selfPlayer.x, -selfPlayer.y);
 
-            const entitiesToDraw = [];
+            const entitiesToDraw: Entity[] = [];
 
             const viewportWidth = canvas.width / antennaScaleFactor;
             const viewportHeight = canvas.height / antennaScaleFactor;
@@ -422,9 +425,7 @@ export default class UserInterfaceGame extends UserInterface {
             mobs.forEach(filterFunc);
             players.forEach(filterFunc);
 
-            entitiesToDraw.forEach((v, k) => {
-                v.draw(ctx);
-            });
+            entitiesToDraw.forEach((v, k) => v.draw(ctx));
 
             ctx.restore();
         }

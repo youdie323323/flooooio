@@ -11,7 +11,6 @@ import { isLivingSlot, PetalData, MockPetalData } from "../entity/mob/petal/Peta
 import { MockPlayerData, PlayerInstance, Player, PlayerId } from "../entity/player/Player";
 import { USAGE_RELOAD_PETALS } from "../entity/player/PlayerPetalReload";
 import { isPetal, calculateMobSize, revivePlayer } from "../utils/common";
-import QuadTree from "../utils/QuadTree";
 import { getRandomPosition, generateRandomEntityId, getRandomAngle, getRandomSafePosition } from "../utils/random";
 import WaveProbabilityPredictor, { LINKED_MOBS } from "./WaveProbabilityPredictor";
 import { WaveRoomPlayerId, WaveRoomPlayer } from "./WaveRoom";
@@ -19,6 +18,7 @@ import { MOB_PROFILES } from "../../../shared/entity/mob/mobProfiles";
 import { Mood } from "../../../shared/mood";
 import { Biomes } from "../../../shared/biomes";
 import { MobType, PetalType } from "../../../shared/EntityType";
+import SpatialHash from "../utils/SpatialHash";
 
 // Define UserData for WebSocket connections
 export interface UserData {
@@ -85,11 +85,12 @@ export class WavePool {
     private updateEntitiesInterval: NodeJS.Timeout;
     private updatePacketSendInterval: NodeJS.Timeout;
 
-    // TODO: use spatial hashing instead quad tree
     /**
-     * Shared quadtree instance between entities.
+     * Shared spatial hash instance between entities.
      */
-    public sharedQuadTree: QuadTree<Entity>;
+    public sharedSpatialHash: SpatialHash<Entity>;
+
+    private static readonly SPATIAL_HASH_GRID_SIZE = 1024;
 
     /**
      * Current wave data.
@@ -120,7 +121,7 @@ export class WavePool {
         this.waveProbabilityPredictor = new WaveProbabilityPredictor();
         this.waveProbabilityPredictor.reset(this.waveData.waveProgress);
 
-        this.sharedQuadTree = new QuadTree<Entity>({ x: 0, y: 0, w: 0, h: 0 });
+        this.sharedSpatialHash = new SpatialHash<Entity>(WavePool.SPATIAL_HASH_GRID_SIZE);
     }
 
     /**
@@ -150,9 +151,7 @@ export class WavePool {
 
         this.waveData = null;
 
-        this.sharedQuadTree.clear();
-        // Dont set null, maybe accessed by EntityCollisionResponse quad tree clear
-        // this.sharedQuadTree = null;
+        this.sharedSpatialHash.reset();
 
         this._state = null;
         this._onChangeAnything = null;
@@ -215,7 +214,7 @@ export class WavePool {
         let health: number = (100 * 1) * 1.02 ** (Math.max(100, 75) - 1);
 
         // Temporary (for debug)
-        health *= 1;
+        health *= 10000;
 
         const playerInstance = new Player({
             id: clientId,
@@ -254,6 +253,8 @@ export class WavePool {
         playerInstance.slots.bottom = playerData.slots.bottom.map(c => c && !isLivingSlot(c) && this.mockPetalDataToReal(c, playerInstance, false));
 
         this.clientPool.set(clientId, playerInstance);
+
+        this.sharedSpatialHash.put(playerInstance);
 
         return playerInstance;
     }
@@ -324,6 +325,8 @@ export class WavePool {
         // Add mob to pool
         this.mobPool.set(mobId, mobInstance);
 
+        this.sharedSpatialHash.put(mobInstance);
+
         return mobInstance;
     }
 
@@ -350,11 +353,14 @@ export class WavePool {
     }
 
     /**
-     * Run all entity mixin.
+     * Update all entities.
      */
     private updateEntities() {
         this.clientPool.forEach((client) => client[onUpdateTick](this));
         this.mobPool.forEach((mob) => mob[onUpdateTick](this));
+
+        this.clientPool.forEach(client => this.sharedSpatialHash.update(client));
+        this.mobPool.forEach(mob => this.sharedSpatialHash.update(mob));
     }
 
     private updateWave() {
@@ -709,6 +715,8 @@ export class WavePool {
             // Free memory
             client["dispose"]();
 
+            this.sharedSpatialHash.remove(client);
+
             this.eliminatedEntities.add(clientId);
 
             this.clientPool.delete(clientId);
@@ -733,6 +741,8 @@ export class WavePool {
         if (mob) {
             // Free memory
             mob["dispose"]();
+
+            this.sharedSpatialHash.remove(mob);
 
             this.eliminatedEntities.add(mobId);
 

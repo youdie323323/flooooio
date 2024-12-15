@@ -108,7 +108,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                         isSad ? 25 : 40;
 
                 // TODO: fix distance error
-                baseRadius *= this.size / Player.BASE_SIZE
+                // baseRadius *= this.size / Player.BASE_SIZE;
 
                 const bounce = this.petalBounces[i];
                 this.petalRadii[i] += bounce;
