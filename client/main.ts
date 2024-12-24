@@ -1,6 +1,6 @@
 import { Biomes } from "../shared/biomes";
-import EntityMob from "./src/entity/EntityMob";
-import EntityPlayer from "./src/entity/EntityPlayer";
+import Mob from "./src/entity/Mob";
+import Player from "./src/entity/Player";
 import { uiScaleFactor } from "./src/ui/UserInterface";
 import UserInterfaceContext from "./src/ui/UserInterfaceContext";
 import CameraController from "./src/utils/CameraController";
@@ -16,8 +16,8 @@ export let lastTimestamp = Date.now();
 export let deltaTime = 0;
 export let prevTimestamp = lastTimestamp;
 
-export const players: Map<number, EntityPlayer> = new Map();
-export const mobs: Map<number, EntityMob> = new Map();
+export const players: Map<number, Player> = new Map();
+export const mobs: Map<number, Mob> = new Map();
 
 export const cameraController = new CameraController(canvas);
 

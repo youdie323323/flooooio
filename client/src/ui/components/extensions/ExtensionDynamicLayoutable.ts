@@ -4,16 +4,13 @@ import { ComponentExtensionTemplate, ExtensionConstructor, Updatable, UpdateFunc
 export const DYNAMIC_LAYOUTED: unique symbol = Symbol("dynamicLayouted");
 
 /**
- * Make component dynamic layoutable.
+ * Mark component as dynamic layoutable.
  * 
  * @remarks
  * 
- * Dynamic layoutable means layout got updated every rAF frame.
- * To use this extension, must provide layout as pointer {@link MaybeDynamicLayoutablePointer},
- * to live rendering it.
  * Only top-level components can applied this.
  */
-export function ExtensionDynamicLayoutable<T extends ExtensionConstructor>(Base: T) {
+export function DynamicLayoutableExtension<T extends ExtensionConstructor>(Base: T) {
     abstract class MixedBase extends Base implements ComponentExtensionTemplate {
         // Make sure its public and readable from outside
         public static readonly [DYNAMIC_LAYOUTED] = DYNAMIC_LAYOUTED;

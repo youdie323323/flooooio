@@ -2,14 +2,12 @@ import { Canvg, presets } from "canvg";
 import { ColorCode, darkend, DARKEND_BASE } from "../../utils/common.js";
 import { Clickable, Component, MaybeDynamicLayoutablePointer, Interactive } from "./Component.js";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout.js";
-import ExtensionPlaceholder from "./extensions/Extension.js";
+import PlaceholderExtension from "./extensions/Extension.js";
 import * as StackBlur from
     'stackblur-canvas/dist/stackblur-es.min.js';
 import { calculateStrokeWidth } from "./Text.js";
 
-// TODO: change style of cursor while focusing/bluring, also toggle too
-
-export class Button extends ExtensionPlaceholder(Component) implements Interactive, Clickable {
+export class Button extends PlaceholderExtension(Component) implements Interactive, Clickable {
     private isPressed: boolean = false;
     private isHovered: boolean = false;
 

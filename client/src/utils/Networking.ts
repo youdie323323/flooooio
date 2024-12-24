@@ -3,8 +3,8 @@ import { ClientBound, ServerBound } from "../../../shared/packet";
 import { Rarities } from "../../../shared/rarity";
 import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../shared/wave";
 import { uiCtx, players, mobs } from "../../main";
-import EntityMob from "../entity/EntityMob";
-import EntityPlayer from "../entity/EntityPlayer";
+import Mob from "../entity/Mob";
+import Player from "../entity/Player";
 import UserInterfaceGame from "../ui/mode/UserInterfaceModeGame";
 import UserInterfaceTitle, { WaveRoomPlayerInformation, StatusText } from "../ui/mode/UserInterfaceModeTitle";
 
@@ -160,7 +160,7 @@ export default class Networking {
                                 client.oSize = client.size;
                                 client.updateT = 0;
                             } else {
-                                players.set(clientId, new EntityPlayer(clientId, clientX, clientY, clientAngle, clientSize, clientHealth, clientMaxHealth, clientMood, clientNickname));
+                                players.set(clientId, new Player(clientId, clientX, clientY, clientAngle, clientSize, clientHealth, clientMaxHealth, clientMood, clientNickname));
                             }
                         }
 
@@ -225,7 +225,7 @@ export default class Networking {
                                 mob.oSize = mob.size;
                                 mob.updateT = 0;
                             } else {
-                                mobs.set(mobId, new EntityMob(mobId, mobX, mobY, mobAngle, mobSize, mobHealth, mobMaxHealth, mobType, mobRarity, mobIsPet, mobIsFirstSegment));
+                                mobs.set(mobId, new Mob(mobId, mobX, mobY, mobAngle, mobSize, mobHealth, mobMaxHealth, mobType, mobRarity, mobIsPet, mobIsFirstSegment));
                             }
                         }
 

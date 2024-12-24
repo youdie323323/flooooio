@@ -2,8 +2,8 @@ import { MOB_PROFILES } from "../../../shared/entity/mob/mobProfiles";
 import { isPetal } from "../utils/common";
 import { waveSelfId } from "../utils/Networking";
 import Entity from "./Entity";
-import EntityMob from "./EntityMob";
-import EntityPlayer from "./EntityPlayer";
+import Mob from "./Mob";
+import Player from "./Player";
 
 /**
  * Draw entity details (e.g. health gage, nickname).
@@ -11,13 +11,13 @@ import EntityPlayer from "./EntityPlayer";
 export default function drawEntityDetail(entity: Entity, ctx: CanvasRenderingContext2D) {
     if (
         entity.hpAlpha <= 0 ||
-        entity instanceof EntityMob && isPetal(entity.type)
+        entity instanceof Mob && isPetal(entity.type)
     ) {
         return;
     }
 
     // Draw nickname if not self
-    if (entity instanceof EntityPlayer && entity.id !== waveSelfId) {
+    if (entity instanceof Player && entity.id !== waveSelfId) {
         ctx.save();
 
         if (entity.isDead) ctx.globalAlpha *= 1 - Math.sin(entity.deadT * Math.PI / 2);
@@ -50,12 +50,12 @@ export default function drawEntityDetail(entity: Entity, ctx: CanvasRenderingCon
 
         let lineWidth: number;
 
-        if (entity instanceof EntityPlayer) {
+        if (entity instanceof Player) {
             lineWidth = 5;
 
             ctx.translate(0, entity.size);
             ctx.translate(-HP_BAR_MAX_WIDTH / 2, 9 / 2 + 5);
-        } else if (entity instanceof EntityMob) {
+        } else if (entity instanceof Mob) {
             lineWidth = 6.5;
 
             const profile = MOB_PROFILES[entity.type];

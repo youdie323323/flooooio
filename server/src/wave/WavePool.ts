@@ -217,13 +217,14 @@ export class WavePool {
         health *= 10000;
 
         const playerInstance = new Player({
-            id: clientId,
             x,
             y,
             angle: 0,
             magnitude: 0,
             mood: Mood.NORMAL,
             size: Player.BASE_SIZE,
+
+            id: clientId,
 
             // You should change maxHealth when changed health
 
@@ -235,6 +236,8 @@ export class WavePool {
             isDead: false,
 
             deadCameraTargetEntity: null,
+
+            noclip: false,
 
             nickname: playerData.name,
 
@@ -292,7 +295,6 @@ export class WavePool {
         const profile: MobData | PetalData = MOB_PROFILES[type] || PETAL_PROFILES[type];
 
         const mobInstance = new Mob({
-            id: mobId,
             type,
             x,
             y,
@@ -300,6 +302,8 @@ export class WavePool {
             magnitude: 0,
             rarity,
             size: isPetal(type) ? 6 : calculateMobSize(profile as MobData, rarity),
+
+            id: mobId,
 
             // You should change maxHealth when changed health
 
@@ -342,10 +346,11 @@ export class WavePool {
 
         const count: number = PETAL_PROFILES[sp.type][sp.rarity].count;
 
-        let slotPetals: MobInstance[] = new Array(count);
+        const slotPetals: MobInstance[] = new Array(count);
 
         for (let i = 0; i < count; i++) {
             slotPetals[i] = this.addPetalOrMob(sp.type, sp.rarity, parent.x, parent.y, parent);
+            // Maybe should add "living" parameter
             if (!isSurface) this.removeMob(slotPetals[i].id);
         }
 
@@ -356,8 +361,8 @@ export class WavePool {
      * Update all entities.
      */
     private updateEntities() {
-        this.clientPool.forEach((client) => client[onUpdateTick](this));
-        this.mobPool.forEach((mob) => mob[onUpdateTick](this));
+        this.clientPool.forEach(client => client[onUpdateTick](this));
+        this.mobPool.forEach(mob => mob[onUpdateTick](this));
 
         this.clientPool.forEach(client => this.sharedSpatialHash.update(client));
         this.mobPool.forEach(mob => this.sharedSpatialHash.update(mob));

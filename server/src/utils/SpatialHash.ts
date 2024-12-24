@@ -9,27 +9,23 @@ interface PointLike {
  * 
  * @remarks
  *
- * The spatial hash divides the world space into square "cell" or "buckets". Each display-object added is
+ * The spatial hash divides the world space into square cell. Each display-object added is
  * tracked by which cells they intersect with.
  */
 export default class SpatialHash<Node extends PointLike & object> {
-    cellSize: number;
-    buckets: Map<string, Set<Node>>;
+    private buckets: Map<number, Set<Node>>;
 
     /**
      * @param cellSize - the size of the 2D cells in the hash.
      */
-    constructor(cellSize = 256) {
-        this.cellSize = cellSize;
+    constructor(private readonly cellSize = 256) {
         this.buckets = new Map();
     }
 
     /**
      * Puts the display-object into the hash.
-     *
-     * @param bounds - the bounds of the object. This is automatically calculated using {@link getBounds}.
      */
-    put(object: Node): this {
+    public put(object: Node): void {
         const hash = this.hashPoint(object.x, object.y);
         let bucket = this.buckets.get(hash);
 
@@ -39,68 +35,66 @@ export default class SpatialHash<Node extends PointLike & object> {
         }
 
         bucket.add(object);
-        return this;
     }
 
     /**
      * Removes the display-object from the hash.
      */
-    remove(object: Node): void {
+    public remove(object: Node): void {
         const hash = this.hashPoint(object.x, object.y);
-        const bucket = this.buckets.get(hash);
-        if (bucket) {
-            bucket.delete(object);
-        }
+        this.buckets.get(hash)?.delete(object);
     }
 
     /**
      * Updates this spatial hash to account for any changes in the display-object's bounds. This is equivalent
      * to removing & then adding the object again.
      */
-    update(object: Node): void {
+    public update(object: Node): void {
         this.remove(object);
         this.put(object);
     }
 
     /**
-     * Searches for all the display-objects that intersect with the given rectangle bounds.
+     * Searches for all the display-objects that intersect with the given parameter NodeLike.
      */
-    search(x: number, y: number, radius = this.cellSize): Set<Node> {
-        const searchResult = new Set<Node>();
+    public search(x: number, y: number, radius: number): Set<Node> {
+        const result = new Set<Node>();
         const radiusCells = Math.ceil(radius / this.cellSize);
+        const radiusSquared = radius * radius;
 
         for (let dy = -radiusCells; dy <= radiusCells; dy++) {
             for (let dx = -radiusCells; dx <= radiusCells; dx++) {
-                const searchX = x + (dx * this.cellSize);
-                const searchY = y + (dy * this.cellSize);
-                const hash = this.hashPoint(searchX, searchY);
-                const bucket = this.buckets.get(hash);
+                const bucket = this.buckets.get(
+                    this.hashPoint(
+                        x + (dx * this.cellSize),
+                        y + (dy * this.cellSize)
+                    )
+                );
 
                 if (bucket) {
                     bucket.forEach(obj => {
-                        const distance = Math.sqrt(
-                            Math.pow(obj.x - x, 2) + 
-                            Math.pow(obj.y - y, 2)
-                        );
-                        if (distance <= radius) {
-                            searchResult.add(obj);
-                        }
+                        const dx = obj.x - x;
+                        const dy = obj.y - y;
+                        if ((dx * dx + dy * dy) <= radiusSquared) result.add(obj);
                     });
                 }
             }
         }
 
-        return searchResult;
+        return result;
     }
 
     /**
      * Reset and clear the spatial hash.
      */
-    reset(): void {
+    public reset(): void {
         this.buckets.clear();
     }
 
-    private hashPoint(x: number, y: number): string {
-        return `${Math.floor(x / this.cellSize)}|${Math.floor(y / this.cellSize)}`;
+    private hashPoint(x: number, y: number): number {
+        // Szudzik's function for unique 2D to 1D mapping
+        const xx = Math.floor(x / this.cellSize);
+        const yy = Math.floor(y / this.cellSize);
+        return xx >= yy ? (xx * xx + xx + yy) : (yy * yy + xx);
     }
 }

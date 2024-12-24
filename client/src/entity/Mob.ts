@@ -1,6 +1,6 @@
 import Entity from "./Entity";
 import { ColorCode, darkend, DARKEND_BASE } from "../utils/common";
-import drawEntityDetail from "./entityDrawDetail";
+import drawEntityDetail from "./drawEntityDetail";
 import { MobType, PetalType } from "../../../shared/EntityType";
 import { Rarities } from "../../../shared/rarity";
 
@@ -20,9 +20,9 @@ function createBeetleBodyPath() {
 
 const beetleBodyPath = createBeetleBodyPath();
 
-export default class EntityMob extends Entity {
+export default class Mob extends Entity {
     /**
-     * Current leg rotation of starfish.
+     * Current leg rotation.
      */
     private legD: number[];
 

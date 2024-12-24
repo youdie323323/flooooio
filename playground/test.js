@@ -1,99 +1,84 @@
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+(() => {
+    const secretProperty = Symbol("listeners");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+    EventTarget.prototype.addEventListener = new Proxy(
+        EventTarget.prototype.addEventListener,
+        {
+            apply(_target, thisArg, [eventName, callbackFunction, _options]) {
+                thisArg = thisArg ?? window;
+                if (secretProperty in thisArg) {
+                    if (eventName in thisArg[secretProperty]) {
+                        thisArg[secretProperty][eventName].add(callbackFunction);
+                    } else {
+                        thisArg[secretProperty][eventName] = new Set([callbackFunction]);
+                    }
+                } else {
+                    thisArg[secretProperty] = {
+                        [eventName]: new Set([callbackFunction]),
+                    };
+                }
+                return Reflect.apply(...arguments);
+            },
+        }
+    );
 
-const DARKEND_BASE = 0.1875;
+    EventTarget.prototype.removeEventListener = new Proxy(
+        EventTarget.prototype.removeEventListener,
+        {
+            apply(_target, thisArg, [eventName, callbackFunction]) {
+                thisArg = thisArg ?? window;
+                if (!(secretProperty in thisArg)) {
+                    return;
+                }
+                if (!(eventName in thisArg[secretProperty])) {
+                    return;
+                }
+                if (!thisArg[secretProperty][eventName].has(callbackFunction)) {
+                    return;
+                }
 
-const darkendCache = new Map();
+                thisArg[secretProperty][eventName].delete(callbackFunction);
+                if (thisArg[secretProperty][eventName].size !== 0) {
+                    return;
+                }
 
-function darkend(color, strength) {
-    const cacheKey = `${color}${strength}`;
+                delete thisArg[secretProperty][eventName];
+                if (Object.keys(thisArg[secretProperty]).length === 0) {
+                    delete thisArg[secretProperty];
+                }
 
-    if (darkendCache.has(cacheKey)) {
-        return darkendCache.get(cacheKey);
-    }
+                return Reflect.apply(...arguments);
+            },
+        }
+    );
 
-    let r = parseInt(color.slice(1, 3), 16);
-    let g = parseInt(color.slice(3, 5), 16);
-    let b = parseInt(color.slice(5, 7), 16);
-
-    r = Math.floor(r * (1 - strength));
-    g = Math.floor(g * (1 - strength));
-    b = Math.floor(b * (1 - strength));
-
-    const result = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-
-    darkendCache.set(cacheKey, result);
-
-    return result;
-}
-
-ctx.translate(500, 500);
-
-ctx.scale(5, 5);
-
-{
-    ctx.save();
-
-    ctx.lineCap = "round";
-
-    ctx.fillStyle = '#ffe763';
-    ctx.lineWidth = 0.1;
-    ctx.strokeStyle = '#cebb50';
-
-    ctx.beginPath();
-    ctx.moveTo(28, -0.5);
-    
-    ctx.quadraticCurveTo(20, 35, 5, 25.5);
-    ctx.quadraticCurveTo(-20, 18, -22, 5);
-    ctx.quadraticCurveTo(-26, -32, 0, -23);
-    ctx.quadraticCurveTo(19, -24, 28, -0.5);
-    
-    ctx.fill();
-    ctx.stroke();
-    ctx.closePath();
-
-    ctx.restore();
-}
-
-{
-    let drawEyeOutline = function (flag = 0) {
-        ctx.beginPath();
-        ctx.ellipse(13, 8, 2.5 + flag, 6 + flag, -0.15, 0, Math.PI * 2);
-        ctx.moveTo(-7, -5);
-        ctx.ellipse(-9, -8, 2.5 + flag, 6 + flag, -0.15, 0, Math.PI * 2);
-        ctx.strokeStyle = ctx.fillStyle = "#111111";
-        ctx.fill();
-    };
-    
-    ctx.save();
-
-    ctx.beginPath();
-    drawEyeOutline(0.7);
-    drawEyeOutline(0);
-    ctx.clip();
-    ctx.beginPath();
-    ctx.arc(13 + 1 * 2, 8 + 1 * 3.5, 3.1, 0, Math.PI * 2);
-    ctx.moveTo(-7, -5);
-    ctx.arc(-9 + 1 * 2, -8 + 1 * 3.5, 3.1, 0, Math.PI * 2);
-    ctx.fillStyle = "#eee";
-    ctx.fill();
-
-    ctx.restore();
-}
-
-{
-    const verticRise = 0 * -10.5 + 0 * -9;
-
-    ctx.beginPath();
-    ctx.translate(-6, 8);
-    ctx.rotate(0.5)
-    ctx.moveTo(-3, 0);
-    ctx.quadraticCurveTo(0, 5.5 + verticRise, 3, 0);
-    ctx.lineCap = "round";
-    ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-}
+    EventTarget.prototype.dispatchEvent = new Proxy(
+        EventTarget.prototype.dispatchEvent,
+        {
+            apply(_target, thisArg, [event]) {
+                thisArg = thisArg ?? window;
+                if (!(secretProperty in thisArg)) {
+                    return Reflect.apply(...arguments);
+                }
+                if (!(event.type in thisArg[secretProperty])) {
+                    return;
+                }
+                for (const callbackFunction of [
+                    ...thisArg[secretProperty][event.type],
+                ]) {
+                    callbackFunction(
+                        new Proxy(event, {
+                            get(target, prop) {
+                                if (prop === "isTrusted") {
+                                    return true;
+                                }
+                                
+                                return target[prop];
+                            },
+                        })
+                    );
+                }
+            },
+        }
+    );
+})();

@@ -1,5 +1,5 @@
 import { EntityCollisionResponse } from "../EntityCollisionResponse";
-import { BrandedId, Entity } from "../Entity";
+import { BrandedId, Entity, ConstructorParameterObject, PartialUnion } from "../Entity";
 import { EntityLinearMovement } from "../EntityLinearMovement";
 import uWS from 'uWebSockets.js';
 import { UserData } from "../../wave/WavePool";
@@ -41,13 +41,6 @@ class BasePlayer implements Entity {
     readonly id: PlayerId;
 
     /**
-     * Nickname of player.
-     * 
-     * @readonly
-     */
-    readonly nickname: string;
-
-    /**
      * Body damage of player.
      */
     bodyDamage: number;
@@ -73,6 +66,18 @@ class BasePlayer implements Entity {
     deadCameraTargetEntity: Entity | null;
 
     /**
+     * Avoid all collisions & boundaries.
+     */
+    noclip: boolean;
+
+    /**
+     * Nickname of player.
+     * 
+     * @readonly
+     */
+    readonly nickname: string;
+
+    /**
      * Petal slots, and cooldowns.
      */
     slots: PetalSlots & {
@@ -85,8 +90,25 @@ class BasePlayer implements Entity {
      */
     ws: uWS.WebSocket<UserData>;
 
-    constructor(source: Required<BasePlayer>) {
+    constructor(
+        source: PartialUnion<
+            BasePlayer,
+            // Partial getters
+            "isCollidable"
+        >
+    ) {
         Object.assign(this, source);
+    }
+
+    /**
+     * Determine if player is collidable to any collidables.
+     * 
+     * @remarks
+     * 
+     * Using isDead here could allow users to cross the boundary.
+     */
+    get isCollidable(): boolean {
+        return !this.noclip;
     }
 }
 

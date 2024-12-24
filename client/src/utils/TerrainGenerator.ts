@@ -290,68 +290,108 @@ export const BIOME_SVG_TILESETS = {
     ],
 } satisfies Record<Biomes, string[]>;
 
+export const OCEAN_PATTERN_SVG = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="256px" height="256px" viewBox="0 0 256 256"><path fill="#3260A8" d="M0,0h256v256H0V0z"></path><path opacity="0.15" fill="#BDEEFA" d="M123.65,30.34c19.95,0.16,46.14-0.85,53.03,0.02c12.2,1.54,14.18,5.26,25.76,23.05c8.64,13.27,18.93,31.46,11.84,35.89c-7.09,4.43-9.93,2.85-29.81,4.41c-19.88,1.56-35.54,7.14-41.68,7.04c-6.15-0.11-26.49-5.28-37.68-13.82c-11.2-8.55-23.53-14.77-24.08-23.15C80.46,55.4,84.7,49.9,89.47,42.1c4.77-7.8,5.25-9.08,10.51-10.96C101.95,30.44,111.68,30.24,123.65,30.34L123.65,30.34z M256,182.86c-5.39,6.19-12.38,14.99-18.24,14.53c-5.85-0.46-40.66-17.95-63.08-29.76c-22.42-11.82-23.96-16.59-24.59-22.38c-0.87-8.03-0.95-14.25,3.03-25.81c3.98-11.56,48.23-12.79,57.69-9.59c9.46,3.2,34.26,28.99,45.19,37.7v-19.55c-9.41-7.88-21.32-16.31-21.52-23.25c-0.13-4.37,9.9-3.86,21.52-5.68V83.92c-9.61,3.32-17.42,5.59-21.96-0.19c-4.54-5.78-6.41-16.16-14.83-29.88s-16.04-21.86-15.92-26.57c0.13-4.7,14.81-17.24,23.75-27.28h-21.23c-6.23,6.39-11,11.86-18.86,13.85c-7.87,1.99-24.75,2.86-47.87,2.66c-20.87-0.18-35.66-1.36-42.64-5.03C89.47,7.81,84.58,8.9,78.51,0H49.47c12.3,5.85,25.54,14.65,27.69,19.55c2.16,4.91,0.58,14.14-2.93,20.82S62.91,60.89,54.82,64.29C46.74,67.7,9.61,80.59,0,83.92v15.14c11.62-1.83,53.35-21.55,65.98-18.18c12.63,3.37,19.4,10.76,31.81,18.52c12.42,7.76,32.02,12.52,33.1,16.94c1.07,4.43,1.29,21.47-8.76,25.39c-10.04,3.92-38.23,4.42-51,5.81c-12.48,1.35-33.17,3.13-39.61,1.44c-6.43-1.69-22.11-13.1-31.53-20.98v19.55c7.78,6.2,16.75,9.82,16.89,14.21c0.14,4.39-11.5,14.92-16.89,21.11v23.99c1.59-3.67,13.37-17.65,20.2-23.62c6.83-5.98,14.42-15.46,23.26-16.8c11.54-1.75,39.04-4.06,49.47-5.12c10.43-1.06,24.5-2.03,27.28,2.12s0.85,12.4-4.03,19.55c-4.77,7-23.01,23.08-32.62,31.87c-9.22,8.43-20.08,18.45-27.39,18.94c-8.13,0.54-17.06-1.93-28.95-6.49C12.99,221.82,1.4,219.04,0,217.2v17.32c5.91,1.03,34.74,14.42,49.47,21.48h29.04c-6.07-8.9-1.92-16.51,17.78-33s30.65-24.31,37.15-32c5.92-7.01,11.91-10.16,17.04-11.12c6.6-1.23,22.72,8.62,41.28,17.74c18.8,9.24,37.91,15,40.03,21.14c2.12,6.14-19.74,30.85-25.97,37.24h21.23c8.94-10.04,10.15-12.21,15.06-17.09c3.74-3.71,7.98-5.41,13.89-4.39V217.2c-1.4-1.84-1.79-2.84-1.8-4.72c-0.02-1.88,0.22-1.96,1.8-5.63V182.86z"></path></svg>`;
+
+interface RenderConfig {
+    canvas: HTMLCanvasElement;
+    tilesets: OffscreenCanvas[];
+    tilesetSize: number;
+}
+
+interface MapRenderOptions extends RenderConfig {
+    radius: number;
+    playerX: number;
+    playerY: number;
+}
+
+interface MenuRenderOptions extends RenderConfig {
+    translateX: number;
+    translateY: number;
+}
+
 export default class TerrainGenerator {
-    static async generateTilesets<T extends keyof typeof BIOME_SVG_TILESETS>(biome: T): Promise<OffscreenCanvas[]> {
-        const generatedTilesets = new Array(BIOME_SVG_TILESETS[biome].length);
-        for (let i = 0; i < BIOME_SVG_TILESETS[biome].length; i++) {
-            const offscreenCanvas = new OffscreenCanvas(256, 256);
-            const offscreenCtx = offscreenCanvas.getContext("2d");
-
-            await Canvg.fromString(offscreenCtx, BIOME_SVG_TILESETS[biome][i], {
-                ...presets.offscreen(),
-            }).render();
-
-            generatedTilesets[i] = offscreenCanvas;
-        }
-        return generatedTilesets;
+    static async generateTilesets<T extends keyof typeof BIOME_SVG_TILESETS>(
+        biome: T,
+    ): Promise<OffscreenCanvas[]> {
+        return Promise.all(
+            BIOME_SVG_TILESETS[biome].map(svg => this.generateTilesetFromSvg(svg))
+        );
     }
 
-    renderMap(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], radius: number, playerX: number, playerY: number) {
+    static async generateTilesetFromSvg(
+        svg: string,
+    ): Promise<OffscreenCanvas> {
+        const canvas = new OffscreenCanvas(256, 256);
         const ctx = canvas.getContext("2d");
 
-        const widthRelative = canvas.width / uiScaleFactor;
-        const heightRelative = canvas.height / uiScaleFactor;
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
-        const gridSizeX = radius / 100;
-        const gridSizeY = radius / 100;
+        await Canvg.fromString(ctx, svg, {
+            ...presets.offscreen(),
+        }).render();
 
-        const tilesetSize = 300 * antennaScaleFactor;
+        return canvas;
+    }
 
-        const relativeCenterX = (radius - playerX) * antennaScaleFactor + widthRelative / 2;
-        const relativeCenterY = (radius - playerY) * antennaScaleFactor + heightRelative / 2;
+    private getScaledDimensions(canvas: HTMLCanvasElement) {
+        return {
+            width: canvas.width / uiScaleFactor,
+            height: canvas.height / uiScaleFactor
+        };
+    }
 
-        const startTileX = relativeCenterX - (gridSizeX / 2 * tilesetSize);
-        const startTileY = relativeCenterY - (gridSizeY / 2 * tilesetSize);
+    private isWithinBounds(
+        x: number,
+        y: number,
+        tilesetSize: number,
+        width: number,
+        height: number
+    ): boolean {
+        return !(
+            x + tilesetSize < 0 ||
+            x > width ||
+            y + tilesetSize < 0 ||
+            y > height
+        );
+    }
 
-        for (let i = 0; i < gridSizeX; i++) {
-            for (let j = 0; j < gridSizeY; j++) {
-                const x = startTileX + i * tilesetSize;
-                const y = startTileY + j * tilesetSize;
+    private renderTile(
+        ctx: CanvasRenderingContext2D,
+        tileset: OffscreenCanvas,
+        x: number,
+        y: number,
+        size: number,
+        padding: number = 1
+    ) {
+        ctx.drawImage(
+            tileset,
+            x, y,
+            size + padding,
+            size + padding
+        );
+    }
 
-                // Dont show tileset outside of window
-                if (x + tilesetSize < 0 || x > widthRelative ||
-                    y + tilesetSize < 0 || y > heightRelative) {
-                    continue;
-                }
-
-                ctx.drawImage(tilesets[0],
-                    x, y,
-                    tilesetSize + 1, tilesetSize + 1
-                );
-            }
-        }
-
+    private renderBoundaryCircle(
+        ctx: CanvasRenderingContext2D,
+        centerX: number,
+        centerY: number,
+        radius: number,
+        width: number,
+        height: number
+    ) {
         ctx.save();
 
-        ctx.lineWidth = (widthRelative + heightRelative) * antennaScaleFactor;
+        ctx.lineWidth = (width + height) * antennaScaleFactor;
         ctx.beginPath();
         ctx.strokeStyle = 'black';
         ctx.globalAlpha = 0.14;
         ctx.arc(
-            relativeCenterX,
-            relativeCenterY,
-            (radius + 0.5) * antennaScaleFactor + ctx.lineWidth / 2, 0,
-            TAU,
+            centerX,
+            centerY,
+            (radius + 0.5) * antennaScaleFactor + ctx.lineWidth / 2,
+            0,
+            TAU
         );
         ctx.stroke();
         ctx.closePath();
@@ -359,33 +399,64 @@ export default class TerrainGenerator {
         ctx.restore();
     }
 
-    renderMapMenu(canvas: HTMLCanvasElement, tilesets: OffscreenCanvas[], tx: number, ty: number) {
+    public renderMap({
+        canvas,
+        tilesets,
+        tilesetSize: _tilesetSize,
+        radius,
+        playerX,
+        playerY
+    }: MapRenderOptions) {
         const ctx = canvas.getContext("2d");
+        const { width, height } = this.getScaledDimensions(canvas);
 
-        const GRID_SIZE = 300;
+        const gridSize = radius / 100;
+        const tilesetSize = _tilesetSize * antennaScaleFactor;
 
-        const widthRelative = canvas.width / uiScaleFactor;
-        const heightRelative = canvas.height / uiScaleFactor;
+        const centerX = (radius - playerX) * antennaScaleFactor + width / 2;
+        const centerY = (radius - playerY) * antennaScaleFactor + height / 2;
 
-        const centerX = widthRelative / 2;
-        const centerY = heightRelative / 2;
+        const startX = centerX - (gridSize / 2 * tilesetSize);
+        const startY = centerY - (gridSize / 2 * tilesetSize);
+
+        for (let i = 0; i < gridSize; i++) {
+            for (let j = 0; j < gridSize; j++) {
+                const x = startX + i * tilesetSize;
+                const y = startY + j * tilesetSize;
+
+                if (!this.isWithinBounds(x, y, tilesetSize, width, height)) {
+                    continue;
+                }
+
+                this.renderTile(ctx, tilesets[0], x, y, tilesetSize);
+            }
+        }
+
+        this.renderBoundaryCircle(ctx, centerX, centerY, radius, width, height);
+    }
+
+    public renderMapMenu({
+        canvas,
+        tilesets,
+        tilesetSize,
+        translateX: tx,
+        translateY: ty
+    }: MenuRenderOptions) {
+        const ctx = canvas.getContext("2d");
+        const { width, height } = this.getScaledDimensions(canvas);
+
+        const centerX = width / 2;
+        const centerY = height / 2;
 
         const gridX = Math.ceil(canvas.width / 800);
         const gridY = Math.ceil(canvas.height / 800);
 
         for (let i = -gridX; i <= gridX; i++) {
             for (let j = -gridY; j <= gridY; j++) {
-                const tileDistX = i * GRID_SIZE;
-                const tileDistY = j * GRID_SIZE;
+                const x = centerX + (i * tilesetSize) - (tx % tilesetSize);
+                const y = centerY + (j * tilesetSize) - (ty % tilesetSize);
 
-                const x = centerX + tileDistX - (tx % GRID_SIZE);
-                const y = centerY + tileDistY - (ty % GRID_SIZE);
-
-                ctx.drawImage(
-                    tilesets[0],
-                    x, y,
-                    GRID_SIZE + 1, GRID_SIZE + 1
-                );
+                this.renderTile(ctx, tilesets[0], x, y, tilesetSize, 0);
             }
         }
     }

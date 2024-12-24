@@ -91,3 +91,27 @@ export type BaseEntityData = Required<Readonly<{
     rx: number;
     ry: number;
 }>>;
+
+export type IsEqual<A, B> =
+    (<G>() => G extends A ? 1 : 2) extends
+    (<G>() => G extends B ? 1 : 2)
+    ? true
+    : false;
+
+type WritableKeysOf<T> = NonNullable<{
+    [P in keyof T]: IsEqual<{ [Q in P]: T[P] }, { readonly [Q in P]: T[P] }> extends false ? P : never
+}[keyof T]>;
+
+/**
+ * This determines the type of object passed when newing an entity.
+ * 
+ * @remarks
+ * 
+ * This type alias is used to filter out keys that are not needed when creating them, such as method/getters.
+ * But readonly value are partial'ed too, you may careful with that.
+ * 
+ * @deprecated Use {@link PartialUnion} now.
+ */
+export type ConstructorParameterObject<T> = Required<Pick<T, WritableKeysOf<T>>> & Partial<Exclude<T, WritableKeysOf<T>>>;
+
+export type PartialUnion<T, U extends keyof T = never> = Omit<T, U> & Partial<Pick<T, U>>;

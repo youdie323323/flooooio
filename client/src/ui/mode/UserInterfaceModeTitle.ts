@@ -4,14 +4,14 @@ import { ServerBound } from "../../../../shared/packet";
 import { Rarities } from "../../../../shared/rarity";
 import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../../shared/wave";
 import { networking, ws, cameraController } from "../../../main";
-import EntityMob from "../../entity/EntityMob";
+import Mob from "../../entity/Mob";
 import { DARKEND_BASE } from "../../utils/common";
 import TerrainGenerator, { BIOME_TILESETS } from "../../utils/TerrainGenerator";
 import { SVGButton, TextButton } from "../components/Button";
 import { AllComponents, AnimationType } from "../components/Component";
 import { AddableContainer, StaticPanelContainer, CoordinatedStaticSpace, StaticHContainer, StaticSpace } from "../components/Container";
-import ExtensionCollidable from "../components/extensions/ExtensionCollidable";
-import { ExtensionDynamicLayoutable } from "../components/extensions/ExtensionDynamicLayoutable";
+import CollidableExtension from "../components/extensions/ExtensionCollidable";
+import { DynamicLayoutableExtension } from "../components/extensions/ExtensionDynamicLayoutable";
 import PlayerProfile from "../components/PlayerProfile";
 import StaticText from "../components/Text";
 import TextInput from "../components/TextInput";
@@ -42,7 +42,7 @@ interface Vector3 {
 let backgroundEntities: Set<
     {
         waveStep: number;
-        entity: EntityMob;
+        entity: Mob;
     }
 > = new Set();
 
@@ -317,7 +317,7 @@ export default class UserInterfaceTitle extends UserInterface {
 
         this.addComponent(this.loggingInText);
 
-        const gameNameText = new (ExtensionCollidable(StaticText))(
+        const gameNameText = new (CollidableExtension(StaticText))(
             {
                 x: -(250 / 2),
                 y: (-(80 / 2)) - 40,
@@ -336,7 +336,7 @@ export default class UserInterfaceTitle extends UserInterface {
         {
             this.onLoadedComponents = [];
 
-            const nameInputDescription = new (ExtensionCollidable(StaticText))(
+            const nameInputDescription = new (CollidableExtension(StaticText))(
                 {
                     x: -(100 / 2),
                     y: (-(50 / 2)) - 10,
@@ -350,7 +350,7 @@ export default class UserInterfaceTitle extends UserInterface {
                 13,
             );
 
-            const nameInput = new (ExtensionCollidable(TextInput))(
+            const nameInput = new (CollidableExtension(TextInput))(
                 {
                     x: (-(100 / 2)) - 95,
                     y: (-(50 / 2)) + 3,
@@ -389,7 +389,7 @@ export default class UserInterfaceTitle extends UserInterface {
 
             let readyToggle = false;
 
-            const readyButton = new (ExtensionCollidable(TextButton))(
+            const readyButton = new (CollidableExtension(TextButton))(
                 {
                     x: (-(100 / 2)) + 140,
                     y: (-(50 / 2)) + 5,
@@ -533,7 +533,7 @@ export default class UserInterfaceTitle extends UserInterface {
             let codeInput: TextInput;
 
             this.squadMenuContainer = this.createAddableContainer(
-                new (ExtensionDynamicLayoutable(StaticPanelContainer))(
+                new (DynamicLayoutableExtension(StaticPanelContainer))(
                     {
                         x: -175,
                         y: -100,
@@ -776,11 +776,20 @@ export default class UserInterfaceTitle extends UserInterface {
         const widthRelative = this.canvas.width / uiScaleFactor;
         const heightRelative = this.canvas.height / uiScaleFactor;
 
-        this.terrainGenerator.renderMapMenu(canvas, BIOME_TILESETS.get(this.biome), this.backgroundX, this.backgroundY);
+        // Render background tilesets
+        {
+            this.backgroundX += 0.4;
+            this.backgroundY += Math.sin(this.backgroundWaveStep / 20) * 0.4;
+            this.backgroundWaveStep += 0.07;
 
-        this.backgroundX += 0.4;
-        this.backgroundY += Math.sin(this.backgroundWaveStep / 20) * 0.4;
-        this.backgroundWaveStep += 0.07;
+            this.terrainGenerator.renderMapMenu({
+                canvas,
+                tilesets: BIOME_TILESETS.get(this.biome),
+                tilesetSize: 350,
+                translateX: this.backgroundX,
+                translateY: this.backgroundY,
+            });
+        }
 
         backgroundEntities.forEach((v) => {
             if (v.entity.x > widthRelative + (v.entity.size / uiScaleFactor)) {
@@ -793,7 +802,7 @@ export default class UserInterfaceTitle extends UserInterface {
 
             backgroundEntities.add({
                 waveStep: Math.random() + 360,
-                entity: new EntityMob(-1, param.x, param.y, 1, param.z * 5, 1, 1, PetalType.BASIC, Rarities.COMMON, false, false)
+                entity: new Mob(-1, param.x, param.y, 1, param.z * 5, 1, 1, PetalType.BASIC, Rarities.COMMON, false, false)
             });
 
             this.lastBackgroundEntitySpawn = Date.now();

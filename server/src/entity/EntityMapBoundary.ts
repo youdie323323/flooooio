@@ -32,6 +32,13 @@ export function EntityMapBoundary<T extends EntityMixinConstructor<Entity>>(Base
                 }
             }
 
+            if (this instanceof Player) {
+                // Dont if uncollidable
+                if (!this.isCollidable) {
+                    return;
+                }
+            }
+
             const getRadius = () => {
                 if (this instanceof Player) {
                     return this.size;
@@ -42,11 +49,12 @@ export function EntityMapBoundary<T extends EntityMixinConstructor<Entity>>(Base
                         profile.ry * (this.size / profile.fraction)
                     );
                 }
+
                 return 0;
             };
 
             const waveMapRadius = poolThis.waveData.waveMapRadius;
-            
+
             const worldRadius = waveMapRadius - getRadius();
 
             const dx = this.x - waveMapRadius;

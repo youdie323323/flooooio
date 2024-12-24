@@ -1,14 +1,14 @@
-import { Biomes, biomeToCapitalizedBiomeString } from "../../../../shared/biomes";
+import { Biomes, biomeToCapitalizedBiomeString, WAVE_BIOME_GAUGE_COLORS } from "../../../../shared/biomes";
 import { calculateWaveLength } from "../../../../shared/formula";
 import { Mood } from "../../../../shared/mood";
 import { networking, players, uiCtx, deltaTime, antennaScaleFactor, mobs } from "../../../main";
 import Entity from "../../entity/Entity";
-import EntityMob from "../../entity/EntityMob";
-import EntityPlayer from "../../entity/EntityPlayer";
+import Mob from "../../entity/Mob";
+import Player from "../../entity/Player";
 import { isPetal } from "../../utils/common";
 import { interpolate } from "../../utils/Interpolator";
 import { waveSelfId } from "../../utils/Networking";
-import TerrainGenerator, { BIOME_TILESETS } from "../../utils/TerrainGenerator";
+import TerrainGenerator, { BIOME_TILESETS, OCEAN_PATTERN_SVG } from "../../utils/TerrainGenerator";
 import { TextButton, SVGButton } from "../components/Button";
 import { calculateStrokeWidth } from "../components/Text";
 import TextInput from "../components/TextInput";
@@ -34,11 +34,7 @@ function easeOutCubic(t: number): number {
 }
 
 /**
- * Current ui of menu.
- * 
- * @remarks
- * 
- * To store biome when ui switched.
+ * Current ui of menu
  */
 let gameUiCurrentBiome: Biomes = Biomes.GARDEN;
 
@@ -46,8 +42,6 @@ export default class UserInterfaceGame extends UserInterface {
     private readonly DEAD_BACKGROUND_TARGET_OPACITY: number = 0.3;
     private readonly DEAD_BACKGROUND_FADE_DURATION: number = 0.3;
     private readonly DEAD_MENU_ANIMATION_DURATION: number = 2;
-
-    public static readonly MAX_MESSAGE_QUEUE_AMOUNT = 128;
 
     public updateT: number;
     public t: number;
@@ -88,6 +82,11 @@ export default class UserInterfaceGame extends UserInterface {
 
     private currentMoodFlags: number;
 
+    private oceanBackgroundX: number;
+    private oceanBackgroundY: number;
+    private oceanBackgroundWaveStep: number;
+    private oceanBackgroundPatternSvg: OffscreenCanvas;
+
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
 
@@ -117,6 +116,13 @@ export default class UserInterfaceGame extends UserInterface {
         this.chats = [];
 
         this.currentMoodFlags = Mood.NORMAL;
+
+        this.oceanBackgroundX = 0;
+        this.oceanBackgroundY = 0;
+        this.oceanBackgroundWaveStep = 0;
+        (async () => {
+            this.oceanBackgroundPatternSvg = await TerrainGenerator.generateTilesetFromSvg(OCEAN_PATTERN_SVG);
+        })();
     }
 
     public onKeyDown(event: KeyboardEvent): void {
@@ -136,8 +142,6 @@ export default class UserInterfaceGame extends UserInterface {
             }
 
             case "Enter": {
-                // So basically user entered while chat input, blur it
-                // No blur in onsubmit because of race condition
                 if (this.chatInput.hasFocus()) {
                     this.chatInput.blur();
                 } else {
@@ -371,7 +375,17 @@ export default class UserInterfaceGame extends UserInterface {
         }
 
         // Render map
-        this.terrainGenerator.renderMap(canvas, BIOME_TILESETS.get(this.biome), this.mapRadius, selfPlayer.x, selfPlayer.y);
+        this.terrainGenerator.renderMap({
+            canvas,
+            tilesets: BIOME_TILESETS.get(this.biome),
+            tilesetSize: 300,
+            radius: this.mapRadius,
+            playerX: selfPlayer.x,
+            playerY: selfPlayer.y,
+        });
+
+        // Render mutable functions
+        this.drawMutableFunctions(canvas);
 
         // Update entities
         {
@@ -398,12 +412,6 @@ export default class UserInterfaceGame extends UserInterface {
 
         // Render players & mobs
         {
-            ctx.save();
-
-            ctx.translate(centerWidth, centerHeight);
-            ctx.scale(antennaScaleFactor, antennaScaleFactor);
-            ctx.translate(-selfPlayer.x, -selfPlayer.y);
-
             const entitiesToDraw: Entity[] = [];
 
             const viewportWidth = canvas.width / antennaScaleFactor;
@@ -425,24 +433,39 @@ export default class UserInterfaceGame extends UserInterface {
             mobs.forEach(filterFunc);
             players.forEach(filterFunc);
 
+            ctx.save();
+
+            ctx.translate(centerWidth, centerHeight);
+            ctx.scale(antennaScaleFactor, antennaScaleFactor);
+            ctx.translate(-selfPlayer.x, -selfPlayer.y);
+
             entitiesToDraw.forEach((v, k) => v.draw(ctx));
 
             ctx.restore();
         }
 
-        // Ocean background (its pattern but i dont know how)
+        // Ocean pattern background
         if (this.biome === Biomes.OCEAN) {
-            ctx.save();
+            this.oceanBackgroundX += 0.4;
+            this.oceanBackgroundY += Math.sin(this.oceanBackgroundWaveStep / 20) * 0.4;
+            this.oceanBackgroundWaveStep += 0.07;
 
-            ctx.globalCompositeOperation = "multiply";
-            ctx.fillStyle = "#CCDBF2";
-            ctx.fillRect(0, 0, widthRelative, heightRelative);
+            if (this.oceanBackgroundPatternSvg) {
+                ctx.save();
 
-            ctx.restore();
+                ctx.globalAlpha = 0.3;
+
+                this.terrainGenerator.renderMapMenu({
+                    canvas,
+                    tilesets: [this.oceanBackgroundPatternSvg],
+                    tilesetSize: 350,
+                    translateX: this.oceanBackgroundX,
+                    translateY: this.oceanBackgroundY,
+                });
+
+                ctx.restore();
+            }
         }
-
-        // Render mutable functions
-        this.drawMutableFunctions(canvas);
 
         // Wave bar
         {
@@ -457,8 +480,6 @@ export default class UserInterfaceGame extends UserInterface {
 
             {
                 const maxSpawnTime = calculateWaveLength(this.waveProgress);
-
-                // TODO: original game all black bar has globalAlpha = 0.xxx (determine later)
 
                 {
                     ctx.save();
@@ -481,7 +502,7 @@ export default class UserInterfaceGame extends UserInterface {
 
                     ctx.lineWidth = Math.min((this.waveProgressTimer / maxSpawnTime) * (maxSpawnTime * 16.6666), 18.5);
                     ctx.lineCap = "round";
-                    ctx.strokeStyle = "#6dbd7f";
+                    ctx.strokeStyle = WAVE_BIOME_GAUGE_COLORS[this.biome];
                     ctx.beginPath();
                     ctx.lineTo(centerWidth - WAVE_PROGRESS_BAR_LENGTH, WAVE_PROGRESS_BAR_Y);
                     ctx.lineTo(centerWidth - WAVE_PROGRESS_BAR_LENGTH + (WAVE_PROGRESS_BAR_LENGTH * 2) * (this.waveProgressTimer / maxSpawnTime), WAVE_PROGRESS_BAR_Y);

@@ -115,7 +115,7 @@ export const processJoin = (ws: uWS.WebSocket<UserData>, id: false | WaveRoomPla
     ws.send(response, true);
 }
 
-export const calculateMobSize = memo((profile: MobData, rarity: Rarities): number => (profile as MobData).baseSize * MOB_SIZE_FACTOR[rarity]);
+export const calculateMobSize = memo((profile: MobData, rarity: Rarities): number => profile.baseSize * MOB_SIZE_FACTOR[rarity]);
 
 /**
  * Get first segment (head) of mob.

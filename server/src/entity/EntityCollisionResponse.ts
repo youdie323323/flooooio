@@ -54,7 +54,7 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
         const isPetalThis = isPetal(this.type);
 
         const profile1: MobData | PetalData = MOB_PROFILES[this.type] || PETAL_PROFILES[this.type];
-        
+
         const searchRadius = this.calculateSearchRadius(profile1, this.size);
 
         const nearby = poolThis.sharedSpatialHash.search(this.x, this.y, searchRadius);
@@ -162,6 +162,8 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
             // Dont collide to dead player
             if (otherEntity.isDead) return;
 
+            if (!otherEntity.isCollidable) return;
+
             if (
               // Dont damage/knockback when petal
               this.petalMaster ||
@@ -222,7 +224,8 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
       if (
         this instanceof Player &&
         // Dont collide when dead
-        !this.isDead
+        !this.isDead &&
+        this.isCollidable
       ) {
         const searchRadius = this.calculateSearchRadius(MixedBase.FLOWER_DEFAULT_SEARCH_DATA, this.size);
 
@@ -235,6 +238,8 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
 
           // Dont collide to dead player
           if (otherEntity.isDead) return;
+
+          if (!otherEntity.isCollidable) return;
 
           // Collide player -> player
 

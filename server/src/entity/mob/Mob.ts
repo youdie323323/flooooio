@@ -1,5 +1,5 @@
 import { EntityCollisionResponse } from "../EntityCollisionResponse";
-import { BaseEntityData, BrandedId, Entity } from "../Entity";
+import { BaseEntityData, BrandedId, ConstructorParameterObject, Entity } from "../Entity";
 import { MobDynamicMovement } from "./MobDynamicMovement";
 import { MobAggressivePursuit } from "./MobAggressivePursuit";
 import { EntityLinearMovement } from "../EntityLinearMovement";

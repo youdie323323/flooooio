@@ -1,9 +1,9 @@
 import { ColorCode, darkend, DARKEND_BASE } from "../../utils/common";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import { Component, Interactive, Clickable, MaybeDynamicLayoutablePointer } from "./Component";
-import ExtensionPlaceholder from "./extensions/Extension";
+import PlaceholderExtension from "./extensions/Extension";
 
-export default class Toggle extends ExtensionPlaceholder(Component) implements Interactive, Clickable {
+export default class Toggle extends PlaceholderExtension(Component) implements Interactive, Clickable {
     private static readonly SCALING_DURATION: number = 100;
     private scalingProgress: number = 0;
     private scalingStartTime: number | null = null;

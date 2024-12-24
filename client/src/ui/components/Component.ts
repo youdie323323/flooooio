@@ -5,7 +5,6 @@ import { Button, SVGButton, TextButton } from "./Button";
 import { AddableContainer, CoordinatedStaticSpace, StaticSpace } from "./Container";
 import { ExtensionConstructor } from "./extensions/Extension";
 import PlayerProfile from "./PlayerProfile";
-import PlayerXpBar from "./PlayerXpBar";
 import StaticText from "./Text";
 import TextInput from "./TextInput";
 import Toggle from "./Toggle";
@@ -29,9 +28,7 @@ export type AllComponents =
     | StaticText
     | TextInput
     | Toggle
-    // Below other than common components
-    | PlayerProfile
-    | PlayerXpBar;
+    | PlayerProfile;
 
 /**
  * A component is added to components, or not.
@@ -52,13 +49,9 @@ export enum AnimationType {
 
 /**
  * Base interface for all GUI components.
- * 
- * @remarks
- * 
- * Not including dynamic layoutable layout to custom omitable/pickable layout.
  */
 export abstract class Component {
-    protected readonly ANIMATION_ZOOM_DURATION: number = 150;
+    protected readonly ANIMATION_ZOOM_DURATION: number = 100;
     protected readonly ANIMATION_SLIDE_DURATION: number = 500;
 
     public isAnimating: boolean = false;

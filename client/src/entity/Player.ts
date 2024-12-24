@@ -1,11 +1,11 @@
 import { decodeMood } from "../../../shared/mood";
 import { deltaTime } from "../../main";
 import Entity from "./Entity";
-import drawEntityDetail from "./entityDrawDetail";
+import drawEntityDetail from "./drawEntityDetail";
 
 const TAU = Math.PI * 2;
 
-export default class EntityPlayer extends Entity {
+export default class Player extends Entity {
     angryT: number;
     sadT: number;
 
@@ -98,12 +98,12 @@ export default class EntityPlayer extends Entity {
                 ctx.strokeStyle = '#cebb50';
             
                 ctx.beginPath();
-                ctx.moveTo(28, -0.5);
+                ctx.moveTo(27, -0.5);
                 
-                ctx.quadraticCurveTo(20, 35, 5, 25.5);
-                ctx.quadraticCurveTo(-20, 18, -22, 5);
-                ctx.quadraticCurveTo(-26, -32, 0, -23);
-                ctx.quadraticCurveTo(19, -24, 28, -0.5);
+                ctx.quadraticCurveTo(19, 35, 4, 25.5);
+                ctx.quadraticCurveTo(-21, 18, -23, 5); 
+                ctx.quadraticCurveTo(-27, -32, -1, -23); 
+                ctx.quadraticCurveTo(18, -24, 27, -0.5); 
                 
                 ctx.fill();
                 ctx.stroke();
@@ -130,14 +130,14 @@ export default class EntityPlayer extends Entity {
             }
 
             if (this.isDead) {
-                drawDeadEyes(12, 8);
-                drawDeadEyes(-9, -8);
+                drawDeadEyes(11, 8);
+                drawDeadEyes(-10, -8);
             } else {
                 let drawEyeOutline = function (flag = 0) {
                     ctx.beginPath();
-                    ctx.ellipse(12, 8, 2.5 + flag, 6 + flag, -0.15, 0, TAU);
-                    ctx.moveTo(-7, -5);
-                    ctx.ellipse(-9, -8, 2.5 + flag, 6 + flag, -0.15, 0, TAU);
+                    ctx.ellipse(11, 8, 2.5 + flag, 6 + flag, -0.15, 0, TAU);
+                    ctx.moveTo(-8, -5);
+                    ctx.ellipse(-10, -8, 2.5 + flag, 6 + flag, -0.15, 0, TAU);
                     ctx.strokeStyle = ctx.fillStyle = "#111111";
                     ctx.fill();
                 };
@@ -151,9 +151,9 @@ export default class EntityPlayer extends Entity {
                 ctx.clip();
                 
                 ctx.beginPath();
-                ctx.arc(12 + this.eyeX * 2, 8 + this.eyeY * 3.5, 3.1, 0, TAU);
-                ctx.moveTo(-7, -5);
-                ctx.arc(-9 + -this.eyeX * 2, -8 + -this.eyeY * 3.5, 3.1, 0, TAU);
+                ctx.arc(11 + this.eyeX * 2, 8 + this.eyeY * 3.5, 3.1, 0, TAU);
+                ctx.moveTo(-8, -5);
+                ctx.arc(-10 + -this.eyeX * 2, -8 + -this.eyeY * 3.5, 3.1, 0, TAU);
                 ctx.fillStyle = "#eee";
                 ctx.fill();
 
@@ -163,7 +163,7 @@ export default class EntityPlayer extends Entity {
             const verticRise = angryT * -10.5 + sadT * -9;
 
             ctx.beginPath();
-            ctx.translate(-6, 8);
+            ctx.translate(-7, 8);
             ctx.rotate(0.5)
             ctx.moveTo(-3, 0);
             ctx.quadraticCurveTo(0, 5.5 + verticRise, 3, 0);

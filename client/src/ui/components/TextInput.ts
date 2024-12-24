@@ -1,10 +1,8 @@
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import { uiScaleFactor } from "../UserInterface";
 import { Component, Interactive, MaybeDynamicLayoutablePointer } from "./Component";
-import ExtensionPlaceholder from "./extensions/Extension";
+import PlaceholderExtension from "./extensions/Extension";
 import { calculateStrokeWidth } from "./Text";
-
-// Fork of CanvasInput
 
 interface CanvasInputOptions {
     canvas?: HTMLCanvasElement;
@@ -43,7 +41,7 @@ interface CanvasInputOptions {
 
 const inputs: TextInput[] = [];
 
-export default class TextInput extends ExtensionPlaceholder(Component) implements Interactive {
+export default class TextInput extends PlaceholderExtension(Component) implements Interactive {
     // Make it accessible from outside
     private _value: string;
     private _canvas: HTMLCanvasElement | null;

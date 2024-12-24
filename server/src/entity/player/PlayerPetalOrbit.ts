@@ -9,10 +9,6 @@ import { decodeMood, Mood } from "../../../../shared/mood";
 
 const TAU = Math.PI * 2;
 
-const BASE_ROTATE_SPEED = 2.5;
-const BOUNCE_DECAY = 0.2;
-const BOUNCE_STRENGTH = 0.2;
-const PETAL_CLUSTER_RADIUS = 8;
 const HISTORY_SIZE = 10;
 
 const PRECALC_SIZE = 360;
@@ -31,7 +27,14 @@ export const UNMOODABLE_PETALS: Set<PetalType> = new Set([
 ]);
 
 export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(Base: T) {
-    return class extends Base implements EntityMixinTemplate {
+    return class MixedBase extends Base implements EntityMixinTemplate {
+        private static readonly DEFAULT_ROTATE_SPEED = 2.5;
+
+        private static readonly BOUNCE_DECAY = 0.2;
+        private static readonly BOUNCE_STRENGTH = 0.2;
+
+        private static readonly PETAL_CLUSTER_RADIUS = 8;
+
         private rotation = 0;
         private historyX: Float32Array = new Float32Array(HISTORY_SIZE);
         private historyY: Float32Array = new Float32Array(HISTORY_SIZE);
@@ -51,8 +54,6 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
 
             const surface = this.slots.surface;
             const totalPetals = surface.length;
-
-            let totalSpeed = BASE_ROTATE_SPEED;
 
             if (!this.petalRadii || this.petalRadii.length !== totalPetals) {
                 this.petalRadii = new Float32Array(totalPetals).fill(40);
@@ -88,10 +89,13 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
             realLength = Math.ceil(realLength / numRings);
 
             let currentAngleIndex = 0;
+
             const targetX = this.historyX[historyTargetIndex];
             const targetY = this.historyY[historyTargetIndex];
 
             const { 0: isAngry, 1: isSad } = decodeMood(this.mood);
+
+            let totalSpeed = MixedBase.DEFAULT_ROTATE_SPEED;
 
             for (let i = 0; i < totalPetals; i++) {
                 const petals = surface[i];
@@ -112,7 +116,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
 
                 const bounce = this.petalBounces[i];
                 this.petalRadii[i] += bounce;
-                this.petalBounces[i] = (baseRadius - this.petalRadii[i]) * BOUNCE_STRENGTH + bounce * (1 - BOUNCE_DECAY);
+                this.petalBounces[i] = (baseRadius - this.petalRadii[i]) * MixedBase.BOUNCE_STRENGTH + bounce * (1 - MixedBase.BOUNCE_DECAY);
 
                 if (firstPetal.type === PetalType.FASTER) {
                     totalSpeed += rarityProfile.rad;
@@ -122,7 +126,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 const rad = this.petalRadii[i] * (1 + (ringIndex * 0.5));
 
                 const multipliedRotation = this.rotation * (1 + ((ringIndex - (numRings - 1)) * 0.1));
-                
+
                 if (rarityProfile.isCluster && petals.length > 1) {
                     const baseAngle = TAU * (currentAngleIndex % realLength) / realLength + multipliedRotation;
                     currentAngleIndex++;
@@ -137,8 +141,8 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                         const petalAngleIndex = calcTableIndex(petalAngle);
 
                         const petal = petals[j];
-                        petal.x = slotBaseX + lazyCosTable[petalAngleIndex] * PETAL_CLUSTER_RADIUS;
-                        petal.y = slotBaseY + lazySinTable[petalAngleIndex] * PETAL_CLUSTER_RADIUS;
+                        petal.x = slotBaseX + lazyCosTable[petalAngleIndex] * MixedBase.PETAL_CLUSTER_RADIUS;
+                        petal.y = slotBaseY + lazySinTable[petalAngleIndex] * MixedBase.PETAL_CLUSTER_RADIUS;
                     }
                 } else {
                     for (let j = 0; j < petals.length; j++) {
@@ -154,7 +158,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 }
             }
 
-            this.rotation += (clockwise ? -1 : 1) * totalSpeed / UPDATE_ENTITIES_FPS;
+            this.rotation += (totalSpeed * (clockwise ? -1 : 1)) / UPDATE_ENTITIES_FPS;
 
             if (Math.abs(this.rotation) > Number.MAX_SAFE_INTEGER) {
                 this.rotation = this.rotation % TAU;

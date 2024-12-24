@@ -372,7 +372,6 @@ export default abstract class UserInterface {
         });
     }
 
-
     // Component helpers
 
     protected createAddableContainer(container: ComponentContainer, children: AllComponents[]): AddableContainer {
