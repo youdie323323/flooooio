@@ -31,7 +31,6 @@ class BasePlayer implements Entity {
     angle: number;
     size: number;
     health: number;
-    maxHealth: number;
 
     /**
      * Id of player.

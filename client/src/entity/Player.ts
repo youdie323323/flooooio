@@ -26,7 +26,6 @@ export default class Player extends Entity {
         angle: number,
         size: number,
         health: number,
-        maxHealth: number,
 
         public mood: number,
 
@@ -37,7 +36,7 @@ export default class Player extends Entity {
          */
         private readonly isStaticLike: boolean = false,
     ) {
-        super(id, x, y, angle, size, health, maxHealth);
+        super(id, x, y, angle, size, health);
 
         this.angryT = 0;
         this.sadT = 0;

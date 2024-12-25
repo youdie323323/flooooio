@@ -1,10 +1,11 @@
 import { Entity, EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool } from "../../wave/WavePool";
-import { BaseMob, Mob, MobInstance } from "./Mob";
+import { BaseMob, Mob, MobData, MobInstance } from "./Mob";
 import { Player, PlayerInstance } from "../player/Player";
-import { isPetal } from "../../utils/common";
+import { calculateMaxHealth, isPetal } from "../../utils/common";
 import { MobType } from "../../../../shared/EntityType";
 import { turnAngleToTarget } from "./MobAggressivePursuit";
+import { MOB_PROFILES } from "../../../../shared/entity/mob/mobProfiles";
 
 export function MobHealthRegen<T extends EntityMixinConstructor<BaseMob>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
@@ -23,16 +24,18 @@ export function MobHealthRegen<T extends EntityMixinConstructor<BaseMob>>(Base: 
                 (
                     this.type === MobType.STARFISH &&
                     // Regen if hp is less than half
-                    this.health < this.maxHealth / 2
+                    this.health < 0.5
                 )
             ) {
                 this.starfishRegeningHealth = true;
 
-                // Hmm maybe i shouldnt use size here
-                const healHp = 5 * this.size;
+                const maxHealth = calculateMaxHealth(this);
 
-                this.health = Math.min(this.maxHealth, this.health + healHp);
-                if (this.health >= this.maxHealth) {
+                // Hmm maybe i shouldnt use size here
+                const healHp = (5 * this.size) / maxHealth;
+
+                this.health = Math.min(1, this.health + healHp);
+                if (this.health >= 1) {
                     this.starfishRegeningHealth = false;
                     return;
                 }

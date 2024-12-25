@@ -3,8 +3,8 @@ import { ClientBound } from "../../../shared/packet";
 import { WaveRoomPlayerReadyState, WaveRoomVisibleState, WaveRoomState } from "../../../shared/wave";
 import { logger } from "../../main";
 import { BrandedId } from "../entity/Entity";
-import { MockPlayerData } from "../entity/player/Player";
-import { generateRandomWaveRoomPlayerId } from "../utils/random";
+import { MockPlayerData, Player } from "../entity/player/Player";
+import { generateRandomId } from "../utils/random";
 import { WavePool, UserData } from "./WavePool";
 
 export type WaveRoomPlayerId = BrandedId<"WaveRoomPlayer">;
@@ -151,7 +151,7 @@ export default class WaveRoom {
             return false;
         }
 
-        const id = generateRandomWaveRoomPlayerId();
+        const id = generateRandomId<WaveRoomPlayerId>();
 
         // Ensure unique clientId
         if (this.roomCandidates.map(v => v.id).includes(id)) {
@@ -316,10 +316,18 @@ export default class WaveRoom {
     /**
      * Proccess chat message.
      */
-    public async processChatMessage(userData: UserData, chatMsg: string) {
-        if (userData?.waveClientId && chatMsg.length > 0) {
+    public processChatMessage({ waveClientId }: UserData, chatMsg: string) {
+        if (waveClientId && chatMsg.length > 0) {
+            const player = this.wavePool.getClient(waveClientId);
+            if (player && !player.isDead) {
+                const size = parseInt(chatMsg);
+                if (!isNaN(size)) {
+                    player.size = Math.max(Player.BASE_SIZE, size);
+                }
+            }
+
             // Publish chat
-            this.wavePool.broadcastChat(userData.waveClientId, chatMsg);
+            this.wavePool.broadcastChat(waveClientId, chatMsg);
         }
     }
 

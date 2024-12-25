@@ -24,7 +24,6 @@ export interface Entity {
      */
     angle: number;
 
-    // TODO: maybe should make setter/getter for size and not to do size fraction every ticks
     /**
      * Current size of entity.
      */
@@ -32,14 +31,12 @@ export interface Entity {
 
     /**
      * Current health of entity.
+     * 
+     * @remarks
+     * 
+     * The health range will be [0, 1] float range.
      */
     health: number;
-    /**
-     * Max health of entity.
-     * 
-     * @readonly
-     */
-    maxHealth: number;
 }
 
 /**

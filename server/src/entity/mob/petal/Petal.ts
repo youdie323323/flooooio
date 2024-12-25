@@ -39,16 +39,10 @@ export type MockPetalData = Readonly<{
     rarity: Rarities;
 }>;
 
-type MaybeEmptySlot<T> = T | null | undefined;
-
 /**
  * Slot placeholder.
- * 
- * @remarks
- * 
- * Multiple mob instance is because of we have petals like sand (they have 4 entities)
  */
-export type Slot = MaybeEmptySlot<MockPetalData | MobInstance[]>;
+export type Slot = MockPetalData | MobInstance[] | null | undefined;
 
 export interface PetalSlots {
     surface: Slot[];

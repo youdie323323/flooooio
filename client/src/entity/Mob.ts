@@ -33,7 +33,6 @@ export default class Mob extends Entity {
         angle: number,
         size: number,
         health: number,
-        maxHealth: number,
 
         readonly type: MobType | PetalType,
         readonly rarity: Rarities,
@@ -42,7 +41,7 @@ export default class Mob extends Entity {
 
         readonly isFirstSegment: boolean,
     ) {
-        super(id, x, y, angle, size, health, maxHealth);
+        super(id, x, y, angle, size, health);
     }
 
     update() {
@@ -159,7 +158,7 @@ export default class Mob extends Entity {
                     this.legD = Array(STARFISH_LEG_AMOUNT).fill(150);
                 }
                 const legD = this.legD;
-                const missingLegPercentage = this.isDead ? 0 : Math.floor((this.nHealth / this.maxHealth) * STARFISH_LEG_AMOUNT);
+                const missingLegPercentage = this.isDead ? 0 : Math.floor(this.nHealth * STARFISH_LEG_AMOUNT);
 
                 ctx.beginPath();
                 for (let i = 0; i < STARFISH_LEG_AMOUNT; i++) {

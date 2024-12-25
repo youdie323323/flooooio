@@ -59,6 +59,7 @@ export default class SpatialHash<Node extends PointLike & object> {
      */
     public search(x: number, y: number, radius: number): Set<Node> {
         const result = new Set<Node>();
+
         const radiusCells = Math.ceil(radius / this.cellSize);
         const radiusSquared = radius * radius;
 
@@ -91,6 +92,9 @@ export default class SpatialHash<Node extends PointLike & object> {
         this.buckets.clear();
     }
 
+    /**
+     * Hash point into one key.
+     */
     private hashPoint(x: number, y: number): number {
         // Szudzik's function for unique 2D to 1D mapping
         const xx = Math.floor(x / this.cellSize);

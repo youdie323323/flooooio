@@ -113,11 +113,8 @@ export default class Networking {
 
                             const clientAngle = angleToRad(data.getUint8(offset++));
 
-                            const clientHealth = data.getInt32(offset);
-                            offset += 4;
-
-                            const clientMaxHealth = data.getInt32(offset);
-                            offset += 4;
+                            const clientHealth = data.getFloat64(offset);
+                            offset += 8;
 
                             const clientSize = data.getUint32(offset);
                             offset += 4;
@@ -149,8 +146,6 @@ export default class Networking {
                                     client.hurtT = 1;
                                 }
 
-                                client.maxHealth = clientMaxHealth;
-
                                 client.nHealth = clientHealth;
 
                                 client.ox = client.x;
@@ -160,7 +155,7 @@ export default class Networking {
                                 client.oSize = client.size;
                                 client.updateT = 0;
                             } else {
-                                players.set(clientId, new Player(clientId, clientX, clientY, clientAngle, clientSize, clientHealth, clientMaxHealth, clientMood, clientNickname));
+                                players.set(clientId, new Player(clientId, clientX, clientY, clientAngle, clientSize, clientHealth, clientMood, clientNickname));
                             }
                         }
 
@@ -179,11 +174,8 @@ export default class Networking {
                             const mobAngle = angleToRad(data.getFloat64(offset));
                             offset += 8;
 
-                            const mobHealth = data.getInt32(offset);
-                            offset += 4;
-
-                            const mobMaxHealth = data.getInt32(offset);
-                            offset += 4;
+                            const mobHealth = data.getFloat64(offset);
+                            offset += 8;
 
                             const mobSize = data.getUint32(offset);
                             offset += 4;
@@ -214,8 +206,6 @@ export default class Networking {
                                     mob.hurtT = 1;
                                 }
 
-                                mob.maxHealth = mobMaxHealth;
-
                                 mob.nHealth = mobHealth;
 
                                 mob.ox = mob.x;
@@ -225,7 +215,7 @@ export default class Networking {
                                 mob.oSize = mob.size;
                                 mob.updateT = 0;
                             } else {
-                                mobs.set(mobId, new Mob(mobId, mobX, mobY, mobAngle, mobSize, mobHealth, mobMaxHealth, mobType, mobRarity, mobIsPet, mobIsFirstSegment));
+                                mobs.set(mobId, new Mob(mobId, mobX, mobY, mobAngle, mobSize, mobHealth, mobType, mobRarity, mobIsPet, mobIsFirstSegment));
                             }
                         }
 

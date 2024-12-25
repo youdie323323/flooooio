@@ -20,7 +20,6 @@ export default class PlayerProfile extends PlaceholderExtension(Component) {
         10,
         15,
         0,
-        0,
         Mood.NORMAL,
         "",
         true,

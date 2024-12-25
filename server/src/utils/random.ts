@@ -151,22 +151,15 @@ export function getRandomAngle(): number {
   return Math.random() * 256;
 }
 
-function randomUint16(): number {
+function randomUint32(): number {
   return Math.random() * 2 ** 32 >>> 0
 }
 
-export function generateRandomEntityId<T extends MobId | PlayerId>(): T {
-  return randomUint16() as T;
+export function generateRandomId<T extends MobId | PlayerId | WaveRoomPlayerId>(): T {
+  return randomUint32() as T;
 }
-
-export function generateRandomWaveRoomPlayerId(): WaveRoomPlayerId {
-  return randomUint16() as WaveRoomPlayerId;
-}
-
-const CODE_CHARACTERS = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
 export function generateRandomWaveRoomCode(): string {
-  const randStr = () => CODE_CHARACTERS[Math.floor(Math.random() * CODE_CHARACTERS.length)];
   // XXX-XXXXXX
   // Although first three character is uid of server, but idc
   return getRandomHexString(3) + "-" + getRandomHexString(6);

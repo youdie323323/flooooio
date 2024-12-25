@@ -13,6 +13,7 @@ import fs from "fs";
 import { VALID_MOOD_FLAGS } from "../shared/mood";
 import { BIOME_VALUES, Biomes } from "../shared/biomes";
 import { PetalType } from "../shared/EntityType";
+import { randomEnum } from "./src/utils/random";
 
 export const isDebug = process.argv.includes("-d");
 
@@ -22,92 +23,10 @@ export const isDebug = process.argv.includes("-d");
 const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
     name: 'A-NNCYANCHI-N',
     slots: {
-        surface: [
-            {
-                type: PetalType.FASTER,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.FASTER,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.FASTER,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BUBBLE,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-            {
-                type: PetalType.BUBBLE,
-                rarity: Rarities.SUPER,
-            } as MockPetalData,
-           // {
-           //     type: PetalType.BEETLE_EGG,
-           //     rarity: Rarities.SUPER,
-           // } as MockPetalData,
-        ],
+        surface: Array.from({ length: 30 }, () => ({
+            type: randomEnum(PetalType),
+            rarity: Rarities.SUPER,
+        } satisfies MockPetalData)),
         bottom: [
             {
                 type: PetalType.YIN_YANG,
@@ -369,7 +288,7 @@ app
                 res.cork(() => {
                     res.writeStatus('404 Not Found').end('File Not Found');
                 });
-                
+
                 return;
             }
 

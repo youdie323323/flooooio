@@ -6,13 +6,16 @@ import { memo } from "../../../shared/utils/memoize";
 import { WaveRoomState } from "../../../shared/wave";
 import { waveRoomService } from "../../main";
 import { Entity } from "../entity/Entity";
-import { MobStat, MobData, MOB_SIZE_FACTOR, MobInstance, Mob } from "../entity/mob/Mob";
-import { PetalStat, isLivingSlot } from "../entity/mob/petal/Petal";
-import { Player, PlayerId, PlayerInstance } from "../entity/player/Player";
+import { MobStat, MobData, MOB_SIZE_FACTOR, MobInstance, Mob, BaseMob } from "../entity/mob/Mob";
+import { PetalData, PetalStat, isLivingSlot } from "../entity/mob/petal/Petal";
+import { BasePlayer, Player, PlayerId, PlayerInstance } from "../entity/player/Player";
 import { UserData, WavePool } from "../wave/WavePool";
 import WaveRoom, { WaveRoomPlayerId } from "../wave/WaveRoom";
 import { choice, getRandomPosition } from "./random";
 import uWS from 'uWebSockets.js';
+import { calculateHp } from "./formula";
+import { type } from "os";
+import { MOB_PROFILES } from "../../../shared/entity/mob/mobProfiles";
 
 const TAU = Math.PI * 2;
 
@@ -23,7 +26,7 @@ export const angleToRad = memo((angle: number): number => (angle / 255) * TAU);
 
 export const isPetal = <(type: MobType | PetalType) => type is PetalType>memo((type: MobType | PetalType): type is PetalType => type in PETAL_PROFILES);
 
-export const bodyDamageOrDamage = memo((stat: PetalStat | MobStat): number => "bodyDamage" in stat ? stat.bodyDamage : stat.damage);
+export const bodyDamageOrDamage =(stat: PetalStat | MobStat): number => "bodyDamage" in stat ? stat.bodyDamage : stat.damage;
 
 export function clientRemove(waveRoom: WaveRoom, waveClientId: PlayerId) {
     removeAllBindings(waveRoom.wavePool, waveClientId);
@@ -124,11 +127,11 @@ export const calculateMobSize = memo((profile: MobData, rarity: Rarities): numbe
  *
  * You may should care about maxium call stack size error.
  */
-export const traverseMobSegment = (poolThis: WavePool, mob: MobInstance): MobInstance => {
+export const traverseMobSegments = (poolThis: WavePool, mob: MobInstance): MobInstance => {
     // Walk through segments
     const segment = mob.connectingSegment;
     if (segment && poolThis.getMob(segment.id)) {
-        return traverseMobSegment(poolThis, segment);
+        return traverseMobSegments(poolThis, segment);
     }
 
     return mob;
@@ -137,7 +140,7 @@ export const traverseMobSegment = (poolThis: WavePool, mob: MobInstance): MobIns
 /**
  * Determine if mob is segment of body.
  */
-export const isBody = (poolThis: WavePool, mob: MobInstance): boolean => traverseMobSegment(poolThis, mob) !== mob;
+export const isBody = (poolThis: WavePool, mob: MobInstance): boolean => traverseMobSegments(poolThis, mob) !== mob;
 
 /**
  * Revive player nearby other player.
@@ -156,7 +159,8 @@ export function revivePlayer(wavePool: WavePool, player: PlayerInstance) {
             );
 
             // Make it max health so player will respawn without die again
-            player.health = player.maxHealth;
+            player.health = calculateMaxHealth(player);
+
             player.isDead = false;
 
             player.x = randPos[0];
@@ -182,4 +186,21 @@ export const isEntityDead = (poolThis: WavePool, entity: Entity): boolean => {
         // Mob dead
         (entity instanceof Mob && !poolThis.getMob(entity.id))
     )
+}
+
+/**
+ * Calculate maxHealth by entity instance.
+ */
+export function calculateMaxHealth(entity: BaseMob | BasePlayer): number {
+    if (entity instanceof BaseMob) {
+        const profile: MobData | PetalData = MOB_PROFILES[entity.type] || PETAL_PROFILES[entity.type];
+
+        const maxHealth = profile[entity.rarity].health;
+
+        return maxHealth;
+    } else {
+        const maxHealth = calculateHp(100);
+
+        return maxHealth;
+    }
 }

@@ -1,8 +1,8 @@
-import { angleToRad, bodyDamageOrDamage, traverseMobSegment, isPetal, isEntityDead } from "../utils/common";
+import { angleToRad, bodyDamageOrDamage, traverseMobSegments, isPetal, isEntityDead, calculateMaxHealth } from "../utils/common";
 import { BaseEntityData, Entity, EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "./Entity";
 import { WavePool } from "../wave/WavePool";
-import { Mob, MobData, MobInstance, MobStat } from "./mob/Mob";
-import { Player, PlayerInstance } from "./player/Player";
+import { BaseMob, Mob, MobData, MobInstance, MobStat } from "./mob/Mob";
+import { BasePlayer, Player, PlayerInstance } from "./player/Player";
 import { PetalData } from "./mob/petal/Petal";
 import { computeDelta, Ellipse, isColliding } from "../utils/collision";
 import { MobType } from "../../../shared/EntityType";
@@ -22,7 +22,7 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
 
     private static readonly BUBBLE_PUSH_FACTOR = 3;
 
-    private calculatePush(entity1: Entity, entity2: Entity, delta: number): [number, number] {
+    private static calculatePush(entity1: Entity, entity2: Entity, delta: number): [number, number] {
       const dx = entity2.x - entity1.x;
       const dy = entity2.y - entity1.y;
       const distance = Math.hypot(dx, dy);
@@ -48,12 +48,25 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
         super[onUpdateTick](poolThis);
       }
 
+      const thisMaxHealth = calculateMaxHealth(this as unknown as BaseMob | BasePlayer);
+
       if (this instanceof Mob) {
         // Basically mob is bigger than the player, so the mob-to-player collision are done on mob side
+        // When the developer makes himself very large, mobs and the like can get stuck in, but this is not taken into account
 
         const isPetalThis = isPetal(this.type);
 
         const profile1: MobData | PetalData = MOB_PROFILES[this.type] || PETAL_PROFILES[this.type];
+
+        const thisBodyDamageOrDamage = bodyDamageOrDamage(profile1[this.rarity]);
+
+        const ellipse1: Ellipse = {
+          x: this.x,
+          y: this.y,
+          a: profile1.rx * (this.size / profile1.fraction),
+          b: profile1.ry * (this.size / profile1.fraction),
+          theta: angleToRad(this.angle),
+        };
 
         const searchRadius = this.calculateSearchRadius(profile1, this.size);
 
@@ -79,14 +92,6 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
 
             const profile2: MobData | PetalData = MOB_PROFILES[otherEntity.type] || PETAL_PROFILES[otherEntity.type];
 
-            const ellipse1: Ellipse = {
-              x: this.x,
-              y: this.y,
-              a: profile1.rx * (this.size / profile1.fraction),
-              b: profile1.ry * (this.size / profile1.fraction),
-              theta: angleToRad(this.angle),
-            };
-
             const ellipse2: Ellipse = {
               x: otherEntity.x,
               y: otherEntity.y,
@@ -98,20 +103,23 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
             const delta = computeDelta(ellipse1, ellipse2);
 
             if (isColliding(delta)) {
-              const push = this.calculatePush(this, otherEntity, delta);
+              const push = MixedBase.calculatePush(this, otherEntity, delta);
               if (push) {
                 // Pop knockback to summoned mob (enemy), not including petal
                 const bubbleMultiplierThis = otherEntity.type === MobType.BUBBLE && this.petMaster ? MixedBase.BUBBLE_PUSH_FACTOR : 1;
                 const bubbleMultiplierOther = this.type === MobType.BUBBLE && otherEntity.petMaster ? MixedBase.BUBBLE_PUSH_FACTOR : 1;
 
+                const petalMultiplierThis = isPetalThis ? 10 : 1;
+                const petalMultiplierOther = isPetalOther ? 10 : 1;
+
                 // Little knockback to mob if petal
                 const baseMultiplierThis = isPetalOther ? 0.1 : 0.3;
                 const baseMultiplierOther = isPetalThis ? 0.1 : 0.3;
 
-                this.x -= push[0] * baseMultiplierThis * bubbleMultiplierThis;
-                this.y -= push[1] * baseMultiplierThis * bubbleMultiplierThis;
-                otherEntity.x += push[0] * baseMultiplierOther * bubbleMultiplierOther;
-                otherEntity.y += push[1] * baseMultiplierOther * bubbleMultiplierOther;
+                this.x -= push[0] * baseMultiplierThis * petalMultiplierThis * bubbleMultiplierThis;
+                this.y -= push[1] * baseMultiplierThis * petalMultiplierThis * bubbleMultiplierThis;
+                otherEntity.x += push[0] * baseMultiplierOther * petalMultiplierOther * bubbleMultiplierOther;
+                otherEntity.y += push[1] * baseMultiplierOther * petalMultiplierOther * bubbleMultiplierOther;
 
                 // Pet doesnt damaged to other pet
                 if (this.petMaster && otherEntity.petMaster) return;
@@ -120,14 +128,17 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
                   isPetalThis || isPetalOther ||
                   this.petMaster || otherEntity.petMaster
                 ) {
-                  this.health -= bodyDamageOrDamage(profile2[otherEntity.rarity]);
-                  otherEntity.health -= bodyDamageOrDamage(profile1[this.rarity]);
+                  const otherEntityBodyDamageOrDamage = bodyDamageOrDamage(profile2[otherEntity.rarity]);
+                  const otherEntityMaxHealth = calculateMaxHealth(otherEntity);
+
+                  this.health -= otherEntityBodyDamageOrDamage / thisMaxHealth;
+                  otherEntity.health -= thisBodyDamageOrDamage / otherEntityMaxHealth;
 
                   // Dont trying to set lastAttackedEntity to petal because its not effective
 
                   if (!isPetalOther) {
                     // Propagate hit to head
-                    const maybeSegmentsHead = traverseMobSegment(poolThis, otherEntity);
+                    const maybeSegmentsHead = traverseMobSegments(poolThis, otherEntity);
 
                     if (this.petalMaster) {
                       maybeSegmentsHead.lastAttackedEntity = this.petalMaster;
@@ -140,7 +151,7 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
                   }
 
                   if (!isPetalThis) {
-                    const maybeSegmentsHead = traverseMobSegment(poolThis, this);
+                    const maybeSegmentsHead = traverseMobSegments(poolThis, this);
 
                     if (otherEntity.petalMaster) {
                       maybeSegmentsHead.lastAttackedEntity = otherEntity.petalMaster;
@@ -171,16 +182,6 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
               this.petMaster
             ) return;
 
-            const profile1: MobData = MOB_PROFILES[this.type];
-
-            const ellipse1: Ellipse = {
-              x: this.x,
-              y: this.y,
-              a: profile1.rx * (this.size / profile1.fraction),
-              b: profile1.ry * (this.size / profile1.fraction),
-              theta: angleToRad(this.angle),
-            };
-
             const ellipse2: Ellipse = {
               // Arc (player)
               x: otherEntity.x,
@@ -193,8 +194,9 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
             const delta = computeDelta(ellipse1, ellipse2);
 
             if (isColliding(delta)) {
-              const push = this.calculatePush(this, otherEntity, delta);
+              const push = MixedBase.calculatePush(this, otherEntity, delta);
               if (push) {
+                // If this is bubble, give player more knockback
                 const bubbleMultiplier = this.type === MobType.BUBBLE ? MixedBase.BUBBLE_PUSH_FACTOR : 1;
 
                 this.x -= push[0];
@@ -202,12 +204,13 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
                 otherEntity.x += push[0] * 5 * bubbleMultiplier;
                 otherEntity.y += push[1] * 5 * bubbleMultiplier;
 
-                // profile1 always mob, so no need to use bodyDamageOrDamage
-                this.health -= profile1[this.rarity].bodyDamage;
-                // Take them body damage
-                otherEntity.health -= otherEntity.bodyDamage;
+                // Take damage to eachother
+                const otherEntityMaxHealth = calculateMaxHealth(otherEntity);
 
-                const maybeSegmentsHead = traverseMobSegment(poolThis, this);
+                this.health -= otherEntity.bodyDamage / thisMaxHealth;
+                otherEntity.health -= thisBodyDamageOrDamage / otherEntityMaxHealth;
+
+                const maybeSegmentsHead = traverseMobSegments(poolThis, this);
 
                 // Body hitted
                 maybeSegmentsHead.lastAttackedEntity = otherEntity;
@@ -227,6 +230,15 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
         !this.isDead &&
         this.isCollidable
       ) {
+        const ellipse1: Ellipse = {
+          // Arc (player)
+          x: this.x,
+          y: this.y,
+          a: this.size,
+          b: this.size,
+          theta: angleToRad(this.angle),
+        };
+
         const searchRadius = this.calculateSearchRadius(MixedBase.FLOWER_DEFAULT_SEARCH_DATA, this.size);
 
         const nearby = poolThis.sharedSpatialHash.search(this.x, this.y, searchRadius);
@@ -243,15 +255,6 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
 
           // Collide player -> player
 
-          const ellipse1: Ellipse = {
-            // Arc (player)
-            x: this.x,
-            y: this.y,
-            a: this.size,
-            b: this.size,
-            theta: angleToRad(this.angle),
-          };
-
           const ellipse2: Ellipse = {
             // Arc (player)
             x: otherEntity.x,
@@ -264,7 +267,7 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
           const delta = computeDelta(ellipse1, ellipse2);
 
           if (isColliding(delta)) {
-            const push = this.calculatePush(this, otherEntity, delta);
+            const push = MixedBase.calculatePush(this, otherEntity, delta);
             if (push) {
               this.x -= push[0] * 2;
               this.y -= push[1] * 2;

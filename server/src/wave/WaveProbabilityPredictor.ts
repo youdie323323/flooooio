@@ -30,11 +30,10 @@ const RARITY_WEIGHTS = {
     [Rarities.MYTHIC]: 0.01,
 } satisfies Partial<Record<Rarities, number>>;
 
-type NestedPartial<T> = {
-    [K in keyof T]?: T[K] extends Array<infer R> ? Array<NestedPartial<R>> : NestedPartial<T[K]>
-};
-
-export const LINKED_MOBS: Set<MobType> = new Set([
+/**
+ * Set of linkable mobs.
+ */
+export const LINKABLE_MOBS: Set<MobType> = new Set([
     MobType.CENTIPEDE,
     MobType.CENTIPEDE_DESERT,
     MobType.CENTIPEDE_EVIL,
@@ -43,59 +42,58 @@ export const LINKED_MOBS: Set<MobType> = new Set([
 // https://official-florrio.fandom.com/wiki/Waves
 const MOB_WEIGHTS = {
     [Biomes.GARDEN]: {
-        [MobType.BEE]: [
-            1,
-            30,
-        ],
+        [MobType.BEE]: {
+            spawnAfter: 1,
+            weight: 30,
+        },
 
-        [MobType.CENTIPEDE]: [
-            2,
-            1,
-        ],
+        [MobType.CENTIPEDE]: {
+            spawnAfter: 2,
+            weight: 1,
+        },
 
-        [MobType.CENTIPEDE_EVIL]: [
-            3,
-            1,
-        ],
+        [MobType.CENTIPEDE_EVIL]: {
+            spawnAfter: 3,
+            weight: 1,
+        },
     },
     [Biomes.DESERT]: {
-        [MobType.CENTIPEDE_DESERT]: [
-            1,
-            1,
-        ],
+        [MobType.CENTIPEDE_DESERT]: {
+            spawnAfter: 1,
+            weight: 1,
+        },
 
-        [MobType.BEETLE]: [
-            2,
-            30,
-        ],
+        [MobType.BEETLE]: {
+            spawnAfter: 2,
+            weight: 30,
+        },
     },
     [Biomes.OCEAN]: {
-        [MobType.BUBBLE]: [
-            1,
-            1,
-        ],
+        [MobType.BUBBLE]: {
+            spawnAfter: 1,
+            weight: 1,
+        },
 
-        [MobType.STARFISH]: [
-            3,
-            1,
-        ],
-        [MobType.JELLYFISH]: [
-            3,
-            1,
-        ],
+        [MobType.STARFISH]: {
+            spawnAfter: 3,
+            weight: 1,
+        },
+
+        [MobType.JELLYFISH]: {
+            spawnAfter: 3,
+            weight: 1,
+        },
     },
-} satisfies NestedPartial<
+} satisfies Record<
+    Biomes,
     Record<
-        Biomes,
-        Record<
-            MobType,
-            [
-                // Spawn after this wave
-                number,
-                // Random weight
-                number,
-            ]
-        >
+        MobType,
+        {
+            // Spawn after this wave
+            spawnAfter: number,
+            // Random weight
+            weight: number,
+        }
     >
 >;
 
@@ -147,24 +145,24 @@ function weightedChoice(probabilities: Partial<Record<Rarities, number>>): Rarit
 
 function getRandomMobType(waveProgress: number, biome: Biomes): MobType {
     const availableMobs = Object.entries(MOB_WEIGHTS[biome])
-        .filter(([_, spawnAfter]) => spawnAfter[0] <= waveProgress);
+        .filter(([_, spawnAfter]) => spawnAfter.spawnAfter <= waveProgress);
 
     if (availableMobs.length === 0) {
         return randomEnum(MobType);
     }
 
-    const totalWeight = availableMobs.reduce((sum, [_, data]) => sum + data[1], 0);
+    const totalWeight = availableMobs.reduce((sum, [_, data]) => sum + data.weight, 0);
 
     let random = Math.random() * totalWeight;
     for (const [mobType, data] of availableMobs) {
-        const weight = data[1];
+        const { weight } = data;
         random -= weight;
         if (random <= 0) {
             return parseInt(mobType) as MobType;
         }
     }
 
-    return parseInt(availableMobs[0][0]) as MobType;
+    throw new Error("Unreachable.");
 }
 
 export default class WaveProbabilityPredictor {

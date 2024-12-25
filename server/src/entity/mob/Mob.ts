@@ -1,5 +1,5 @@
 import { EntityCollisionResponse } from "../EntityCollisionResponse";
-import { BaseEntityData, BrandedId, ConstructorParameterObject, Entity } from "../Entity";
+import { BaseEntityData, BrandedId, ConstructorParameterObject, Entity, PartialUnion } from "../Entity";
 import { MobDynamicMovement } from "./MobDynamicMovement";
 import { MobAggressivePursuit } from "./MobAggressivePursuit";
 import { EntityLinearMovement } from "../EntityLinearMovement";
@@ -29,7 +29,6 @@ class BaseMob implements Entity {
     angle: number;
     size: number;
     health: number;
-    maxHealth: number;
 
     /**
      * Id of mob.
@@ -101,7 +100,9 @@ class BaseMob implements Entity {
      */
     readonly isFirstSegment: boolean;
 
-    constructor(source: Required<BaseMob>) {
+    constructor(source: PartialUnion<
+        BaseMob
+    >) {
         Object.assign(this, source);
     }
 }

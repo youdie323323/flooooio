@@ -1,4 +1,4 @@
-import { traverseMobSegment, isPetal, isBody } from "../../utils/common";
+import { traverseMobSegments, isPetal, isBody } from "../../utils/common";
 import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool } from "../../wave/WavePool";
 import { BaseMob, Mob } from "./Mob";

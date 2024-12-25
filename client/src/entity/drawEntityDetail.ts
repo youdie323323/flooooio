@@ -41,7 +41,10 @@ export default function drawEntityDetail(entity: Entity, ctx: CanvasRenderingCon
     const HP_BAR_MAX_WIDTH: number = 45;
 
     // Draw hp bar if health decreasing and living
-    if (!entity.isDead && entity.maxHealth > entity.health) {
+    if (
+        !entity.isDead && 
+        1 > entity.health
+    ) {
         ctx.save();
 
         ctx.globalAlpha = entity.hpAlpha;
@@ -59,7 +62,9 @@ export default function drawEntityDetail(entity: Entity, ctx: CanvasRenderingCon
             lineWidth = 6.5;
 
             const profile = MOB_PROFILES[entity.type];
+
             const scale = ((profile.rx + profile.ry) * (entity.size / profile.fraction)) / 30;
+            
             ctx.scale(scale, scale);
             ctx.translate(-HP_BAR_MAX_WIDTH / 2, 25);
         }
@@ -80,7 +85,7 @@ export default function drawEntityDetail(entity: Entity, ctx: CanvasRenderingCon
             setGlobalAlpha(entity.redHealth);
             ctx.beginPath();
             ctx.moveTo(0, 0);
-            ctx.lineTo(HP_BAR_MAX_WIDTH * (entity.redHealth / entity.maxHealth), 0);
+            ctx.lineTo(HP_BAR_MAX_WIDTH * entity.redHealth, 0);
             ctx.lineWidth = lineWidth * 0.44;
             ctx.strokeStyle = "#f22";
             ctx.stroke();
@@ -90,7 +95,7 @@ export default function drawEntityDetail(entity: Entity, ctx: CanvasRenderingCon
             setGlobalAlpha(entity.health);
             ctx.beginPath();
             ctx.moveTo(0, 0);
-            ctx.lineTo(HP_BAR_MAX_WIDTH * (entity.health / entity.maxHealth), 0);
+            ctx.lineTo(HP_BAR_MAX_WIDTH * entity.health, 0);
             ctx.lineWidth = lineWidth * 0.66;
             ctx.strokeStyle = "#75dd34";
             ctx.stroke();

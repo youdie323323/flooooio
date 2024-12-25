@@ -1,6 +1,6 @@
 import { Entity, EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "./Entity";
 import { WavePool } from "../wave/WavePool";
-import { isPetal, removeAllBindings } from "../utils/common";
+import { isEntityDead, isPetal, removeAllBindings } from "../utils/common";
 import { Mob } from "./mob/Mob";
 import { Player } from "./player/Player";
 
@@ -13,18 +13,27 @@ export function EntityDeath<T extends EntityMixinConstructor<Entity>>(Base: T) {
                 super[onUpdateTick](poolThis);
             }
 
-            if (this.health <= 0) {
-                if (this instanceof Player && !this.isDead) {
+            if (
+                !isEntityDead(poolThis, this) &&
+                0 >= this.health
+            ) {
+                if (this instanceof Player) {
                     this.isDead = true;
+
                     this.health = 0;
+
                     // Stop moving
                     this.magnitude = 0;
 
                     removeAllBindings(poolThis, this.id);
+
+                    return;
                 }
 
                 if (this instanceof Mob) {
                     poolThis.removeMob(this.id);
+
+                    return;
                 }
             }
         }

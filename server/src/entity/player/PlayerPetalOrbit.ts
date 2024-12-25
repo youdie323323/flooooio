@@ -30,8 +30,8 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
     return class MixedBase extends Base implements EntityMixinTemplate {
         private static readonly DEFAULT_ROTATE_SPEED = 2.5;
 
-        private static readonly BOUNCE_DECAY = 0.2;
-        private static readonly BOUNCE_STRENGTH = 0.2;
+        private static readonly BOUNCE_DECAY = 0.15;
+        private static readonly BOUNCE_STRENGTH = 0.1;
 
         private static readonly PETAL_CLUSTER_RADIUS = 8;
 
@@ -107,12 +107,11 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
 
                 let baseRadius =
                     isAngry ?
-                        isPetal(firstPetal.type) && UNMOODABLE_PETALS.has(firstPetal.type) ? 40 : 80
-                        :
+                        isPetal(firstPetal.type) && UNMOODABLE_PETALS.has(firstPetal.type) ? 40 : 80 :
                         isSad ? 25 : 40;
 
                 // TODO: fix distance error
-                // baseRadius *= this.size / Player.BASE_SIZE;
+                baseRadius += ((this.size / Player.BASE_SIZE) - 1) * 25;
 
                 const bounce = this.petalBounces[i];
                 this.petalRadii[i] += bounce;

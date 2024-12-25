@@ -802,7 +802,7 @@ export default class UserInterfaceTitle extends UserInterface {
 
             backgroundEntities.add({
                 waveStep: Math.random() + 360,
-                entity: new Mob(-1, param.x, param.y, 1, param.z * 5, 1, 1, PetalType.BASIC, Rarities.COMMON, false, false)
+                entity: new Mob(-1, param.x, param.y, 1, param.z * 5, 1, PetalType.BASIC, Rarities.COMMON, false, false)
             });
 
             this.lastBackgroundEntitySpawn = Date.now();
