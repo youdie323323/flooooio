@@ -1,7 +1,7 @@
 import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool, UPDATE_ENTITIES_FPS } from "../../wave/WavePool";
 import { BasePlayer, Player } from "./Player";
-import { isLivingSlot } from "../mob/petal/Petal";
+import { isLivingSlot, PetalData, PetalStat } from "../mob/petal/Petal";
 import { isPetal } from "../../utils/common";
 import { PetalType } from "../../../../shared/EntityType";
 import { PETAL_PROFILES } from "../../../../shared/entity/mob/petal/petalProfiles";
@@ -30,8 +30,10 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
     return class MixedBase extends Base implements EntityMixinTemplate {
         private static readonly DEFAULT_ROTATE_SPEED = 2.5;
 
-        private static readonly BOUNCE_DECAY = 0.15;
-        private static readonly BOUNCE_STRENGTH = 0.1;
+        private static readonly PAUSE_DURATION = 0.05;
+
+        private static readonly BOUNCE_DECAY = 0.2;
+        private static readonly BOUNCE_STRENGTH = 0.15;
 
         private static readonly PETAL_CLUSTER_RADIUS = 8;
 
@@ -41,6 +43,10 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
         private petalRadii: Float32Array;
         private petalBounces: Float32Array;
         private historyIndex = 0;
+
+        private lastMood = 0;
+        private pauseTimer = 0;
+        private isTransitioning = false;
 
         [onUpdateTick](poolThis: WavePool): void {
             if (super[onUpdateTick]) {
@@ -60,6 +66,41 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 this.petalBounces = new Float32Array(totalPetals).fill(0);
             }
 
+            if (this.lastMood !== this.mood) {
+                this.isTransitioning = true;
+                this.lastMood = this.mood;
+            }
+
+            const { 0: isAngry, 1: isSad } = decodeMood(this.mood);
+
+            // TODO: dont do pause when (!isAngry && isSad) to (!isAngry && !isSad)
+            if (
+                (!isAngry && !isSad) ||
+                (!isAngry && isSad)
+            ) {
+                let petalReachesTarget = false;
+                for (let i = 0; i < totalPetals; i++) {
+                    const petals = surface[i];
+                    if (!petals || !isLivingSlot(petals)) continue;
+
+                    const firstPetal = petals[0];
+                    const targetRadius =
+                        isAngry ?
+                            isPetal(firstPetal.type) && UNMOODABLE_PETALS.has(firstPetal.type) ? 40 : 80 :
+                            isSad ? 25 : 40;
+
+                    if (Math.abs(this.petalRadii[i] - targetRadius) < 5) {
+                        petalReachesTarget = true;
+                        break;
+                    }
+                }
+
+                if (this.isTransitioning && petalReachesTarget) {
+                    this.isTransitioning = false;
+                    this.pauseTimer = MixedBase.PAUSE_DURATION;
+                }
+            }
+
             const numYinYang = surface.reduce(
                 (acc, curr) => acc + (
                     curr && isLivingSlot(curr) && curr.length > 0 && curr[0].type === PetalType.YIN_YANG ? 1 : 0
@@ -67,10 +108,8 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 0
             );
 
-            /**
-             * Basically, every 2 yin yangs adds 1 ring.
-             * Yin yang changes the number of petals per ring by diving it by floor(num yin yang / 2) + 1.
-             */
+            // Basically, every 2 yin yangs adds 1 ring
+            // Yin yang changes the number of petals per ring by diving it by floor(num yin yang / 2) + 1
 
             const numRings = Math.floor(numYinYang / 2) + 1;
 
@@ -93,8 +132,6 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
             const targetX = this.historyX[historyTargetIndex];
             const targetY = this.historyY[historyTargetIndex];
 
-            const { 0: isAngry, 1: isSad } = decodeMood(this.mood);
-
             let totalSpeed = MixedBase.DEFAULT_ROTATE_SPEED;
 
             for (let i = 0; i < totalPetals; i++) {
@@ -102,24 +139,25 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 if (!petals || !isLivingSlot(petals)) continue;
 
                 const firstPetal = petals[0];
-                const profile = PETAL_PROFILES[firstPetal.type];
-                const rarityProfile = profile[firstPetal.rarity];
+
+                const profile: PetalData = PETAL_PROFILES[firstPetal.type];
+                const rarityProfile: PetalStat = profile[firstPetal.rarity];
+
+                // Add faster speed
+                if (firstPetal.type === PetalType.FASTER) {
+                    totalSpeed += rarityProfile.rad;
+                }
 
                 let baseRadius =
                     isAngry ?
                         isPetal(firstPetal.type) && UNMOODABLE_PETALS.has(firstPetal.type) ? 40 : 80 :
                         isSad ? 25 : 40;
 
-                // TODO: fix distance error
                 baseRadius += ((this.size / Player.BASE_SIZE) - 1) * 25;
 
                 const bounce = this.petalBounces[i];
                 this.petalRadii[i] += bounce;
                 this.petalBounces[i] = (baseRadius - this.petalRadii[i]) * MixedBase.BOUNCE_STRENGTH + bounce * (1 - MixedBase.BOUNCE_DECAY);
-
-                if (firstPetal.type === PetalType.FASTER) {
-                    totalSpeed += rarityProfile.rad;
-                }
 
                 const ringIndex = Math.floor(currentAngleIndex / realLength);
                 const rad = this.petalRadii[i] * (1 + (ringIndex * 0.5));
@@ -157,7 +195,27 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 }
             }
 
-            this.rotation += (totalSpeed * (clockwise ? -1 : 1)) / UPDATE_ENTITIES_FPS;
+            const rotationDelta = (totalSpeed * (clockwise ? -1 : 1)) / UPDATE_ENTITIES_FPS;
+
+            if (this.pauseTimer > 0) {
+                const radiusChange = Math.max(...Array.from(this.petalRadii, (r, i) => {
+                    const petals = surface[i];
+                    if (!petals || !isLivingSlot(petals)) return 0;
+                    
+                    const firstPetal = petals[0];
+                    const targetRadius = 
+                        isAngry ?
+                            isPetal(firstPetal.type) && UNMOODABLE_PETALS.has(firstPetal.type) ? 40 : 80 :
+                            isSad ? 25 : 40;
+                    
+                    return Math.abs(r - targetRadius);
+                })) / 8;
+
+                this.rotation -= rotationDelta * radiusChange;
+                this.pauseTimer -= 1 / UPDATE_ENTITIES_FPS;
+            } else {
+                this.rotation += rotationDelta;
+            }
 
             if (Math.abs(this.rotation) > Number.MAX_SAFE_INTEGER) {
                 this.rotation = this.rotation % TAU;

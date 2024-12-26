@@ -158,7 +158,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                                 dy,
                             );
 
-                            this.magnitude = 255 * (this.targetEntity && distanceToTarget < (3 * this.size) ? 0 : 2);
+                            this.magnitude = 255 * (this.targetEntity && distanceToTarget < (2 * this.size) ? 0 : 2);
 
                             this.targetEntity = targetableEntity;
                         } else {

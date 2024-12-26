@@ -19,4 +19,4 @@ export const levelPerXp = memo((xp: number) => {
  * 
  * @param x - Wave progress.
  */
-export const calculateWaveLength = memo((x: number) => Math.max(60, x ** 0.2 * 18.9287 + 30));
+export const calculateWaveLength = (x: number) => Math.max(60, x ** 0.2 * 18.9287 + 30);

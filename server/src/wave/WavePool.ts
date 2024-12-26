@@ -103,7 +103,7 @@ export class WavePool {
         waveProgressIsRed: false,
 
         waveMapRadius: 5000,
-    };
+    } satisfies WaveData;
 
     /**
      * Biome of wave.

@@ -231,9 +231,9 @@ export default class UserInterfaceGame extends UserInterface {
         if (networking) {
             const distance = Math.hypot(mouseXOffset, mouseYOffset);
             const angle = Math.atan2(mouseYOffset, mouseXOffset);
-            networking.sendChangeMove(angle, distance < 50 ? distance / 100 : 1);
+            networking.sendChangeMove(angle, distance < 100 ? distance / 100 : 1);
         }
-    }
+    }   
 
     private leaveGame() {
         this.isGameOverContinued = true;
@@ -419,15 +419,18 @@ export default class UserInterfaceGame extends UserInterface {
             const halfWidth = viewportWidth / 2;
             const halfHeight = viewportHeight / 2;
 
+            const a1 = selfPlayer.x - halfWidth;
+            const a2 = selfPlayer.x + halfWidth;
+            const b1 = selfPlayer.y - halfHeight;
+            const b2 = selfPlayer.y + halfHeight;
+
             const filterFunc = (v: Entity) => {
                 if (
-                    v.x >= selfPlayer.x - halfWidth &&
-                    v.x <= selfPlayer.x + halfWidth &&
-                    v.y >= selfPlayer.y - halfHeight &&
-                    v.y <= selfPlayer.y + halfHeight
-                ) {
-                    entitiesToDraw.push(v);
-                }
+                    v.x >= a1 &&
+                    v.x <= a2 &&
+                    v.y >= b1 &&
+                    v.y <= b2
+                ) entitiesToDraw.push(v);
             };
 
             mobs.forEach(filterFunc);

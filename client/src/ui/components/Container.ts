@@ -4,15 +4,7 @@ import { uiScaleFactor } from "../UserInterface";
 import { AllComponents, AnimationType, Component, ComponentContainer, MaybeDynamicLayoutablePointer } from "./Component";
 import PlaceholderExtension from "./extensions/Extension";
 
-/**
- * Option for container.
- * 
- * @remarks
- * 
- * The reason omitted width and height, is w and h will automatically calculated by childs x&y&w&h,
- * this behavior is same as original florr.io ui.
- */
-type DynamicLayoutableContainerLayoutOptions = MaybeDynamicLayoutablePointer<Omit<LayoutOptions, "w" | "h">>;
+export type AutomaticallyWHLayoutOptions = Omit<LayoutOptions, "w" | "h">;
 
 /**
  * Addable type of container.
@@ -21,7 +13,7 @@ type DynamicLayoutableContainerLayoutOptions = MaybeDynamicLayoutablePointer<Omi
  * 
  * Container component cant work properly if addChildrenComponent not called / not setting parentContainer,
  * so create new type that ensure container is addable, now we can determine if container is addable container.
- * __addable describes this is "Addable".
+ * __addable mark this is "Addable".
  */
 export type AddableContainer = (StaticPanelContainer | StaticHContainer | StaticVContainer) & { __addable: boolean };
 
@@ -32,7 +24,7 @@ export class StaticContainer extends PlaceholderExtension(Component) implements 
     public children: AllComponents[] = [];
 
     constructor(
-        public layout: DynamicLayoutableContainerLayoutOptions,
+        public layout: MaybeDynamicLayoutablePointer<AutomaticallyWHLayoutOptions>,
     ) {
         super();
     }
@@ -95,7 +87,7 @@ export class StaticContainer extends PlaceholderExtension(Component) implements 
  */
 export class StaticPanelContainer extends StaticContainer {
     constructor(
-        layout: DynamicLayoutableContainerLayoutOptions,
+        layout: MaybeDynamicLayoutablePointer<AutomaticallyWHLayoutOptions>,
 
         private color: MaybeDynamicLayoutablePointer<ColorCode>,
     ) {
@@ -177,89 +169,6 @@ export class StaticPanelContainer extends StaticContainer {
             ctx.roundRect(this.x, this.y, this.w, this.h, 1);
             ctx.fill();
             ctx.stroke();
-            ctx.closePath();
-        }
-
-        this.children.forEach(c => {
-            if (c.visible) {
-                ctx.save();
-
-                c.render(ctx);
-
-                ctx.restore();
-            }
-        });
-    }
-}
-
-export class StaticTransparentPanelContainer extends StaticContainer {
-    constructor(layout: DynamicLayoutableContainerLayoutOptions) {
-        super(layout);
-    }
-
-    public override calculateLayout(
-        width: number,
-        height: number,
-        originX: number,
-        originY: number
-    ): LayoutResult {
-        let maxW: number = 0, maxH: number = 0;
-
-        if (this.children) {
-            this.children.forEach(child => {
-                const childLayout = child._calculateLayout(
-                    width, height,
-                    // Dont use x, y because only wanted size
-                    0, 0,
-                );
-                maxW = Math.max(maxW, childLayout.x + childLayout.w);
-                maxH = Math.max(maxH, childLayout.y + childLayout.h);
-            });
-        }
-
-        const layout = Layout.layout(
-            {
-                ...this.computeDynamicLayoutable(this.layout),
-                w: maxW,
-                h: maxH,
-            },
-            width,
-            height,
-            originX,
-            originY,
-        );
-
-        if (this.children) {
-            this.children.forEach(child => {
-                const childLayout = child._calculateLayout(
-                    layout.w,
-                    layout.h,
-                    layout.x,
-                    layout.y
-                );
-
-                child.setX(childLayout.x);
-                child.setY(childLayout.y);
-                child.setW(childLayout.w);
-                child.setH(childLayout.h);
-            });
-        }
-
-        return layout;
-    }
-
-    public render(ctx: CanvasRenderingContext2D): void {
-        super.render(ctx);
-
-        this.update();
-
-        {
-            ctx.fillStyle = "black";
-            ctx.globalAlpha = 0.2;
-
-            ctx.beginPath();
-            ctx.roundRect(this.x, this.y, this.w, this.h, 2);
-            ctx.fill();
             ctx.closePath();
         }
 

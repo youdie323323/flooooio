@@ -23,10 +23,28 @@ export const isDebug = process.argv.includes("-d");
 const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
     name: 'A-NNCYANCHI-N',
     slots: {
-        surface: Array.from({ length: 30 }, () => ({
-            type: randomEnum(PetalType),
-            rarity: Rarities.SUPER,
-        } satisfies MockPetalData)),
+        surface: [
+            {
+                type: PetalType.BASIC,
+                rarity: Rarities.SUPER,
+            } satisfies MockPetalData,
+            {
+                type: PetalType.BASIC,
+                rarity: Rarities.SUPER,
+            } satisfies MockPetalData,
+            {
+                type: PetalType.BASIC,
+                rarity: Rarities.SUPER,
+            } satisfies MockPetalData,
+            {
+                type: PetalType.BASIC,
+                rarity: Rarities.SUPER,
+            } satisfies MockPetalData,
+            {
+                type: PetalType.BASIC,
+                rarity: Rarities.SUPER,
+            } satisfies MockPetalData,
+        ],
         bottom: [
             {
                 type: PetalType.YIN_YANG,

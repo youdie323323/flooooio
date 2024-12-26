@@ -39,7 +39,7 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
       return [pushX, pushY];
     }
 
-    private calculateSearchRadius = ({ rx, ry, fraction }: Partial<BaseEntityData>, size: number): number => (rx + ry) * (size / fraction);
+    private static calculateSearchRadius = ({ rx, ry, fraction }: Partial<BaseEntityData>, size: number): number => (rx + ry) * (size / fraction);
 
     [onUpdateTick](poolThis: WavePool): void {
       // Call parent onUpdateTick
@@ -68,7 +68,7 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
           theta: angleToRad(this.angle),
         };
 
-        const searchRadius = this.calculateSearchRadius(profile1, this.size);
+        const searchRadius = MixedBase.calculateSearchRadius(profile1, this.size);
 
         const nearby = poolThis.sharedSpatialHash.search(this.x, this.y, searchRadius);
 
@@ -239,7 +239,7 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
           theta: angleToRad(this.angle),
         };
 
-        const searchRadius = this.calculateSearchRadius(MixedBase.FLOWER_DEFAULT_SEARCH_DATA, this.size);
+        const searchRadius = MixedBase.calculateSearchRadius(MixedBase.FLOWER_DEFAULT_SEARCH_DATA, this.size);
 
         const nearby = poolThis.sharedSpatialHash.search(this.x, this.y, searchRadius);
 

@@ -22,7 +22,7 @@ export function _calculateHp(level: number) {
  * 
  * @param waveProgress - Current progress of wave.
  */
-export const calculateWaveLuck = memo((waveProgress: number): number => 1.3 ** waveProgress - 1);
+export const calculateWaveLuck = (waveProgress: number): number => 1.3 ** waveProgress - 1;
 
 /**
  * Calculate hp by level.
@@ -31,4 +31,4 @@ export const calculateWaveLuck = memo((waveProgress: number): number => 1.3 ** w
  * 
  * 100 * x, x is upgrade.
  */
-export const calculateHp = memo((level: number): number => (100 * 1) * 1.02 ** (Math.max(level, 75) - 1));
+export const calculateHp =(level: number): number => (100 * 10000) * 1.02 ** (Math.max(level, 75) - 1);

@@ -59,7 +59,7 @@ export type EntityMixinConstructor<T = {}> = new (...args: any[]) => T & MaybeDi
 
 export interface EntityMixinTemplate extends MaybeDisposable {
     /**
-     * Method call up to every UPDATE_FPS interval.
+     * Method call upon every UPDATE_FPS interval.
      * 
      * @remarks
      * 

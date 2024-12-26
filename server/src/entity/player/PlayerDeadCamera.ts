@@ -17,7 +17,9 @@ export function PlayerDeadCamera<T extends EntityMixinConstructor<BasePlayer>>(B
             }
 
             if (this.isDead) {
+                // Determine if should find dead camera entity
                 const isFindable: boolean =
+                    // Theres no deadCameraTargetEntity
                     !this.deadCameraTargetEntity ||
                     // Camera target dead
                     isEntityDead(poolThis, this.deadCameraTargetEntity);
@@ -58,6 +60,7 @@ export function PlayerDeadCamera<T extends EntityMixinConstructor<BasePlayer>>(B
             }
 
             clearTimeout(this.executionTimeout);
+            this.executionTimeout = null;
 
             this.deadCameraTargetEntity = null;
         }

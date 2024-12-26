@@ -26,7 +26,7 @@ export const angleToRad = memo((angle: number): number => (angle / 255) * TAU);
 
 export const isPetal = <(type: MobType | PetalType) => type is PetalType>memo((type: MobType | PetalType): type is PetalType => type in PETAL_PROFILES);
 
-export const bodyDamageOrDamage =(stat: PetalStat | MobStat): number => "bodyDamage" in stat ? stat.bodyDamage : stat.damage;
+export const bodyDamageOrDamage = (stat: PetalStat | MobStat): number => "bodyDamage" in stat ? stat.bodyDamage : stat.damage;
 
 export function clientRemove(waveRoom: WaveRoom, waveClientId: PlayerId) {
     removeAllBindings(waveRoom.wavePool, waveClientId);
@@ -118,7 +118,7 @@ export const processJoin = (ws: uWS.WebSocket<UserData>, id: false | WaveRoomPla
     ws.send(response, true);
 }
 
-export const calculateMobSize = memo((profile: MobData, rarity: Rarities): number => profile.baseSize * MOB_SIZE_FACTOR[rarity]);
+export const calculateMobSize = (profile: MobData, rarity: Rarities): number => profile.baseSize * MOB_SIZE_FACTOR[rarity];
 
 /**
  * Get first segment (head) of mob.

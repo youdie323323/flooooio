@@ -16,8 +16,11 @@ export default function drawEntityDetail(entity: Entity, ctx: CanvasRenderingCon
         return;
     }
 
-    // Draw nickname if not self
-    if (entity instanceof Player && entity.id !== waveSelfId) {
+    if (
+        entity instanceof Player &&
+        // Draw nickname if not self
+        entity.id !== waveSelfId
+    ) {
         ctx.save();
 
         if (entity.isDead) ctx.globalAlpha *= 1 - Math.sin(entity.deadT * Math.PI / 2);
@@ -42,7 +45,7 @@ export default function drawEntityDetail(entity: Entity, ctx: CanvasRenderingCon
 
     // Draw hp bar if health decreasing and living
     if (
-        !entity.isDead && 
+        !entity.isDead &&
         1 > entity.health
     ) {
         ctx.save();
@@ -64,7 +67,7 @@ export default function drawEntityDetail(entity: Entity, ctx: CanvasRenderingCon
             const profile = MOB_PROFILES[entity.type];
 
             const scale = ((profile.rx + profile.ry) * (entity.size / profile.fraction)) / 30;
-            
+
             ctx.scale(scale, scale);
             ctx.translate(-HP_BAR_MAX_WIDTH / 2, 25);
         }

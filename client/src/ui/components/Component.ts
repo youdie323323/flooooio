@@ -61,8 +61,8 @@ export abstract class Component {
     public animationType: AnimationType;
 
     private static readonly ANIMATION_EASING_FUNCTIONS = {
-        [AnimationType.ZOOM]: function easeInExpo(x: number): number {
-            return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
+        [AnimationType.ZOOM]: function easeInQuint(x: number): number {
+            return x * x * x * x * x;
         },
         [AnimationType.SLIDE]: function easeOutExpo(x: number): number {
             return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
@@ -224,7 +224,7 @@ export abstract class Component {
             this.realY = this.y;
 
             if (this.animationType === AnimationType.ZOOM) {
-                this.y += this.animationDirection === "out" ? -15 : 15;
+                this.y += this.animationDirection === "out" ? -30 : 15;
             }
 
             if (toggle) {

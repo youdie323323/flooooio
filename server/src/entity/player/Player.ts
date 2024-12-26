@@ -18,7 +18,7 @@ class BasePlayer implements Entity {
     /**
      * Base speed of player.
      */
-    public static readonly BASE_SPEED = 5;
+    public static readonly BASE_SPEED = 4;
 
     /**
      * Base size of player.
