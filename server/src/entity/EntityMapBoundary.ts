@@ -43,10 +43,10 @@ export function EntityMapBoundary<T extends EntityMixinConstructor<Entity>>(Base
                 if (this instanceof Player) {
                     return this.size;
                 } else if (this instanceof Mob) {
-                    const profile = MOB_PROFILES[this.type] || PETAL_PROFILES[this.type];
+                    const { collision } = MOB_PROFILES[this.type] || PETAL_PROFILES[this.type];
                     return Math.max(
-                        profile.rx * (this.size / profile.fraction),
-                        profile.ry * (this.size / profile.fraction)
+                        collision.rx * (this.size / collision.fraction),
+                        collision.ry * (this.size / collision.fraction)
                     );
                 }
 

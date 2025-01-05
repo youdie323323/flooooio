@@ -2,7 +2,7 @@ import { ADDED, AllComponents, Clickable, Component, ComponentContainer, Compone
 import { Button } from "./components/Button";
 import { DYNAMIC_LAYOUTED } from "./components/extensions/ExtensionDynamicLayoutable";
 import { AddableContainer } from "./components/Container";
-import { Biomes } from "../../../shared/biomes";
+import { Biomes } from "../../../shared/biome";
 
 export let uiScaleFactor: number = 1;
 

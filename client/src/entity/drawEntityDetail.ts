@@ -64,9 +64,9 @@ export default function drawEntityDetail(entity: Entity, ctx: CanvasRenderingCon
         } else if (entity instanceof Mob) {
             lineWidth = 6.5;
 
-            const profile = MOB_PROFILES[entity.type];
+            const { collision } = MOB_PROFILES[entity.type];
 
-            const scale = ((profile.rx + profile.ry) * (entity.size / profile.fraction)) / 30;
+            const scale = ((collision.rx + collision.ry) * (entity.size / collision.fraction)) / 30;
 
             ctx.scale(scale, scale);
             ctx.translate(-HP_BAR_MAX_WIDTH / 2, 25);

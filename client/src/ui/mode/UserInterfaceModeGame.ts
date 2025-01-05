@@ -1,4 +1,4 @@
-import { Biomes, biomeToCapitalizedBiomeString, WAVE_BIOME_GAUGE_COLORS } from "../../../../shared/biomes";
+import { Biomes, biomeToCapitalizedBiomeString, WAVE_BIOME_GAUGE_COLORS } from "../../../../shared/biome";
 import { calculateWaveLength } from "../../../../shared/formula";
 import { Mood } from "../../../../shared/mood";
 import { networking, players, uiCtx, deltaTime, antennaScaleFactor, mobs } from "../../../main";
@@ -8,7 +8,7 @@ import Player from "../../entity/Player";
 import { isPetal } from "../../utils/common";
 import { interpolate } from "../../utils/Interpolator";
 import { waveSelfId } from "../../utils/Networking";
-import TerrainGenerator, { BIOME_TILESETS, OCEAN_PATTERN_SVG } from "../../utils/TerrainGenerator";
+import TerrainGenerator, { BIOME_TILESETS, OCEAN_PATTERN_SVG, oceanBackgroundPatternTileset } from "../../utils/TerrainGenerator";
 import { TextButton, SVGButton } from "../components/Button";
 import { calculateStrokeWidth } from "../components/Text";
 import TextInput from "../components/TextInput";
@@ -22,7 +22,7 @@ let mouseYOffset = 0;
 
 // Ui svg icons
 
-export const CROSS_ICON_SVG: string = `<?xml version="1.0" encoding="iso-8859-1"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg fill="#e0e0e0" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="800px" height="800px" viewBox="0 0 41.756 41.756" xml:space="preserve"><g><path d="M27.948,20.878L40.291,8.536c1.953-1.953,1.953-5.119,0-7.071c-1.951-1.952-5.119-1.952-7.07,0L20.878,13.809L8.535,1.465c-1.951-1.952-5.119-1.952-7.07,0c-1.953,1.953-1.953,5.119,0,7.071l12.342,12.342L1.465,33.22c-1.953,1.953-1.953,5.119,0,7.071C2.44,41.268,3.721,41.755,5,41.755c1.278,0,2.56-0.487,3.535-1.464l12.343-12.342l12.343,12.343c0.976,0.977,2.256,1.464,3.535,1.464s2.56-0.487,3.535-1.464c1.953-1.953,1.953-5.119,0-7.071L27.948,20.878z"/></g></svg>`;
+export const CROSS_ICON_SVG: string = `<?xml version="1.0" encoding="iso-8859-1"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg fill="#cccccc" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="800px" height="800px" viewBox="0 0 41.756 41.756" xml:space="preserve"><g><path d="M27.948,20.878L40.291,8.536c1.953-1.953,1.953-5.119,0-7.071c-1.951-1.952-5.119-1.952-7.07,0L20.878,13.809L8.535,1.465c-1.951-1.952-5.119-1.952-7.07,0c-1.953,1.953-1.953,5.119,0,7.071l12.342,12.342L1.465,33.22c-1.953,1.953-1.953,5.119,0,7.071C2.44,41.268,3.721,41.755,5,41.755c1.278,0,2.56-0.487,3.535-1.464l12.343-12.342l12.343,12.343c0.976,0.977,2.256,1.464,3.535,1.464s2.56-0.487,3.535-1.464c1.953-1.953,1.953-5.119,0-7.071L27.948,20.878z"/></g></svg>`;
 
 /**
  * Ease out cubic function for smooth animation.
@@ -85,7 +85,6 @@ export default class UserInterfaceGame extends UserInterface {
     private oceanBackgroundX: number;
     private oceanBackgroundY: number;
     private oceanBackgroundWaveStep: number;
-    private oceanBackgroundPatternSvg: OffscreenCanvas;
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
@@ -120,9 +119,6 @@ export default class UserInterfaceGame extends UserInterface {
         this.oceanBackgroundX = 0;
         this.oceanBackgroundY = 0;
         this.oceanBackgroundWaveStep = 0;
-        (async () => {
-            this.oceanBackgroundPatternSvg = await TerrainGenerator.generateTilesetFromSvg(OCEAN_PATTERN_SVG);
-        })();
     }
 
     public onKeyDown(event: KeyboardEvent): void {
@@ -327,7 +323,7 @@ export default class UserInterfaceGame extends UserInterface {
                 borderWidth: 2.2,
                 maxlength: 80,
 
-                unfocusedState: true,
+                showUnfocusedState: true,
 
                 onsubmit: (e, self) => {
                     const chatMessage = self.value();
@@ -453,14 +449,14 @@ export default class UserInterfaceGame extends UserInterface {
             this.oceanBackgroundY += Math.sin(this.oceanBackgroundWaveStep / 20) * 0.4;
             this.oceanBackgroundWaveStep += 0.07;
 
-            if (this.oceanBackgroundPatternSvg) {
+            if (oceanBackgroundPatternTileset) {
                 ctx.save();
 
                 ctx.globalAlpha = 0.3;
 
                 this.terrainGenerator.renderMapMenu({
                     canvas,
-                    tilesets: [this.oceanBackgroundPatternSvg],
+                    tilesets: [oceanBackgroundPatternTileset],
                     tilesetSize: 350,
                     translateX: this.oceanBackgroundX,
                     translateY: this.oceanBackgroundY,

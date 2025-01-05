@@ -1,4 +1,4 @@
-import { Biomes } from "../../../shared/biomes";
+import { Biomes } from "../../../shared/biome";
 import { WaveRoomVisibleState } from "../../../shared/wave";
 import { logger } from "../../main";
 import { generateRandomWaveRoomCode } from "../utils/random";

@@ -60,10 +60,6 @@ export const MOB_BEHAVIORS = {
 
 export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
-        get detectionRange(): number {
-            return MOB_DETECTION_RANGE * this.size;
-        }
-
         [onUpdateTick](poolThis: WavePool): void {
             // Call parent onUpdateTick
             // to use multiple mixin functions
@@ -203,6 +199,13 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                 // Do nothing
                 case MobBehaviors.NONE: break;
             }
+        }
+
+        /**
+         * Get detection range within mob.
+         */
+        get detectionRange(): number {
+            return MOB_DETECTION_RANGE * this.size;
         }
 
         dispose = () => {

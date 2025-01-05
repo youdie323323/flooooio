@@ -33,8 +33,9 @@ export class StaticContainer extends PlaceholderExtension(Component) implements 
         toggle: boolean,
         shouldAnimate: boolean = false,
         animationType: AnimationType = AnimationType.ZOOM,
+        slideDirection?: "v" | "h",
     ) {
-        super.setVisible(toggle, shouldAnimate, animationType);
+        super.setVisible(toggle, shouldAnimate, animationType, slideDirection);
 
         this.children.forEach(c => {
             // Dont animate it, container animation can affected to childrens

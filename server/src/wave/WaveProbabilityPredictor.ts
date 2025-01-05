@@ -1,4 +1,4 @@
-import { Biomes } from "../../../shared/biomes";
+import { Biomes } from "../../../shared/biome";
 import { MobType } from "../../../shared/EntityType";
 import { Rarities } from "../../../shared/rarity";
 import { calculateWaveLuck } from "../utils/formula";
@@ -162,9 +162,12 @@ function getRandomMobType(waveProgress: number, biome: Biomes): MobType {
         }
     }
 
-    throw new Error("Unreachable.");
+    throw new Error("Unreachable");
 }
 
+/**
+ * Class for predict then determining spawn mobs.
+ */
 export default class WaveProbabilityPredictor {
     private timer: number;
 

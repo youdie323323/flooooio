@@ -1,5 +1,5 @@
 import { angleToRad, bodyDamageOrDamage, traverseMobSegments, isPetal, isEntityDead, calculateMaxHealth } from "../utils/common";
-import { BaseEntityData, Entity, EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "./Entity";
+import { BaseEntityData, Entity, EntityCollision, EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "./Entity";
 import { WavePool } from "../wave/WavePool";
 import { BaseMob, Mob, MobData, MobInstance, MobStat } from "./mob/Mob";
 import { BasePlayer, Player, PlayerInstance } from "./player/Player";
@@ -9,16 +9,15 @@ import { MobType } from "../../../shared/EntityType";
 import { PETAL_PROFILES } from "../../../shared/entity/mob/petal/petalProfiles";
 import { MOB_PROFILES } from "../../../shared/entity/mob/mobProfiles";
 
+export const FLOWER_ARC_RADIUS = 25;
+
 export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>>(Base: T) {
   return class MixedBase extends Base implements EntityMixinTemplate {
-    private static readonly FLOWER_ARC_RADIUS = 25;
-    private static readonly FLOWER_FRACTION = 25;
-
     private static readonly FLOWER_DEFAULT_SEARCH_DATA = {
-      fraction: MixedBase.FLOWER_FRACTION,
-      rx: MixedBase.FLOWER_ARC_RADIUS,
-      ry: MixedBase.FLOWER_ARC_RADIUS,
-    } satisfies Partial<BaseEntityData>;
+      fraction: 25,
+      rx: 25,
+      ry: 25,
+    } satisfies Partial<EntityCollision>;
 
     private static readonly BUBBLE_PUSH_FACTOR = 3;
 
@@ -39,7 +38,7 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
       return [pushX, pushY];
     }
 
-    private static calculateSearchRadius = ({ rx, ry, fraction }: Partial<BaseEntityData>, size: number): number => (rx + ry) * (size / fraction);
+    private static calculateSearchRadius = ({ rx, ry, fraction }: Partial<EntityCollision>, size: number): number => (rx + ry) * (size / fraction);
 
     [onUpdateTick](poolThis: WavePool): void {
       // Call parent onUpdateTick
@@ -58,17 +57,19 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
 
         const profile1: MobData | PetalData = MOB_PROFILES[this.type] || PETAL_PROFILES[this.type];
 
+        const collision1 = profile1.collision;
+
         const thisBodyDamageOrDamage = bodyDamageOrDamage(profile1[this.rarity]);
 
         const ellipse1: Ellipse = {
           x: this.x,
           y: this.y,
-          a: profile1.rx * (this.size / profile1.fraction),
-          b: profile1.ry * (this.size / profile1.fraction),
+          a: collision1.rx * (this.size / collision1.fraction),
+          b: collision1.ry * (this.size / collision1.fraction),
           theta: angleToRad(this.angle),
         };
 
-        const searchRadius = MixedBase.calculateSearchRadius(profile1, this.size);
+        const searchRadius = MixedBase.calculateSearchRadius(collision1, this.size);
 
         const nearby = poolThis.sharedSpatialHash.search(this.x, this.y, searchRadius);
 
@@ -92,11 +93,13 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
 
             const profile2: MobData | PetalData = MOB_PROFILES[otherEntity.type] || PETAL_PROFILES[otherEntity.type];
 
+            const collision2 = profile2.collision;
+
             const ellipse2: Ellipse = {
               x: otherEntity.x,
               y: otherEntity.y,
-              a: profile2.rx * (otherEntity.size / profile2.fraction),
-              b: profile2.ry * (otherEntity.size / profile2.fraction),
+              a: collision2.rx * (otherEntity.size / collision2.fraction),
+              b: collision2.ry * (otherEntity.size / collision2.fraction),
               theta: angleToRad(otherEntity.angle),
             };
 

@@ -1,4 +1,4 @@
-import { Biomes } from "../../../../shared/biomes";
+import { Biomes } from "../../../../shared/biome";
 import { PetalType } from "../../../../shared/EntityType";
 import { ServerBound } from "../../../../shared/packet";
 import { Rarities } from "../../../../shared/rarity";
@@ -6,7 +6,7 @@ import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from ".
 import { networking, ws, cameraController } from "../../../main";
 import Mob from "../../entity/Mob";
 import { DARKEND_BASE } from "../../utils/common";
-import TerrainGenerator, { BIOME_TILESETS } from "../../utils/TerrainGenerator";
+import TerrainGenerator, { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../../utils/TerrainGenerator";
 import { SVGButton, TextButton } from "../components/Button";
 import { AllComponents, AnimationType } from "../components/Component";
 import { AddableContainer, StaticPanelContainer, CoordinatedStaticSpace, StaticHContainer, StaticSpace } from "../components/Container";
@@ -144,6 +144,10 @@ export default class UserInterfaceTitle extends UserInterface {
     waveRoomVisible: WaveRoomVisibleState;
     prevWaveRoomVisible: WaveRoomVisibleState;
 
+    private oceanBackgroundX: number;
+    private oceanBackgroundY: number;
+    private oceanBackgroundWaveStep: number;
+
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
 
@@ -157,8 +161,12 @@ export default class UserInterfaceTitle extends UserInterface {
 
         this.statusTextRef = StatusText.Loading;
 
+        this.oceanBackgroundX = 0;
+        this.oceanBackgroundY = 0;
+        this.oceanBackgroundWaveStep = 0;
+
         setTimeout(() => {
-            this.connectingText.setVisible(true, true);
+            this.connectingText.setVisible(true, false);
             setTimeout(() => {
                 this.connectingText.setVisible(false, true);
                 setTimeout(() => {
@@ -200,48 +208,6 @@ export default class UserInterfaceTitle extends UserInterface {
     protected initializeComponents(): void {
         this.resetWaveState();
 
-        {
-            const bagContainer = this.createAddableContainer(
-                new StaticPanelContainer(
-                    {
-                        x: 175,
-                        y: 100,
-                    },
-                    "#5aa0db",
-                ),
-                [
-                    new CoordinatedStaticSpace(150, 300, 15, 15),
-                ],
-            );
-
-            let bagIsOpen = false;
-
-            const bagButton = new SVGButton(
-                {
-                    x: 15,
-                    y: 229,
-                    w: 45,
-                    h: 45,
-
-                    invertYCoordinate: true,
-                },
-                "#599dd8",
-                () => {
-                    bagIsOpen = !bagIsOpen;
-
-                    bagContainer.setVisible(bagIsOpen, true, AnimationType.SLIDE);
-                },
-                true,
-                SWAP_BAG_SVG
-            );
-
-            bagContainer.setVisible(false);
-
-            this.addComponent(bagContainer);
-
-            this.addComponent(bagButton);
-        }
-
         const craftButton = new SVGButton(
             {
                 x: 15,
@@ -279,6 +245,103 @@ export default class UserInterfaceTitle extends UserInterface {
         );
 
         this.addComponent(changelogButton);
+
+        {
+            let keyboardMovementToggle: Toggle;
+
+            const settingContainer = this.createAddableContainer(
+                new StaticPanelContainer(
+                    {
+                        x: 75,
+                        y: 225,
+
+                        invertYCoordinate: true,
+                    },
+                    "#aaaaaa",
+                ),
+                [
+                    new SVGButton(
+                        {
+                            x: 150 - 4,
+                            y: 2,
+                            w: 17,
+                            h: 17,
+                        },
+                        "#bb5555",
+                        () => {
+                            settingIsOpen = false;
+
+                            settingContainer.setVisible(settingIsOpen, true, AnimationType.SLIDE, "v");
+                        },
+                        true,
+                        CROSS_ICON_SVG,
+                    ),
+
+                    new StaticText(
+                        {
+                            x: 82,
+                            y: 14,
+                            w: 0,
+                            h: 0,
+                        },
+                        "Settings",
+                        16,
+                    ),
+
+                    // Keyboard movement
+                    (keyboardMovementToggle = new Toggle(
+                        {
+                            x: 5,
+                            y: 40,
+                            w: 17,
+                            h: 17,
+                        },
+                        (t: boolean): void => {
+                            keyboardMovementToggle.setToggle(t);
+                        },
+                    )),
+                    new StaticText(
+                        {
+                            x: 85,
+                            y: 48,
+                            w: 0,
+                            h: 0,
+                        },
+                        "Keyboard movement",
+                        11,
+                    ),
+
+                    new CoordinatedStaticSpace(150, 190, 15, 15),
+                ],
+            );
+
+            let settingIsOpen = false;
+
+            const settingButton = new SVGButton(
+                {
+                    x: 15,
+                    y: 229,
+                    w: 45,
+                    h: 45,
+
+                    invertYCoordinate: true,
+                },
+                "#599dd8",
+                () => {
+                    settingIsOpen = !settingIsOpen;
+
+                    settingContainer.setVisible(settingIsOpen, true, AnimationType.SLIDE, "v");
+                },
+                true,
+                SWAP_BAG_SVG
+            );
+
+            settingContainer.setVisible(false);
+
+            this.addComponent(settingButton);
+
+            this.addComponent(settingContainer);
+        }
 
         // Text
         this.connectingText = new StaticText(
@@ -377,7 +440,7 @@ export default class UserInterfaceTitle extends UserInterface {
 
                     padding: 1,
 
-                    unfocusedState: false,
+                    showUnfocusedState: false,
 
                     onkeyup(e, self) {
                         const name = self.value();
@@ -580,7 +643,7 @@ export default class UserInterfaceTitle extends UserInterface {
                             w: 15,
                             h: 15,
                         },
-                        "#b04c5e",
+                        "#bb5555",
                         () => {
                             this.squadMenuContainer.setVisible(false, true);
 
@@ -658,7 +721,7 @@ export default class UserInterfaceTitle extends UserInterface {
 
                             padding: 1,
 
-                            unfocusedState: false,
+                            showUnfocusedState: false,
                         },
                     )),
                     new TextButton(
@@ -817,14 +880,27 @@ export default class UserInterfaceTitle extends UserInterface {
             e.waveStep += 0.1;
         });
 
+        // Ocean pattern background
         if (this.biome === Biomes.OCEAN) {
-            ctx.save();
+            this.oceanBackgroundX += 0.4;
+            this.oceanBackgroundY += Math.sin(this.oceanBackgroundWaveStep / 20) * 0.4;
+            this.oceanBackgroundWaveStep += 0.07;
 
-            ctx.globalCompositeOperation = "multiply";
-            ctx.fillStyle = "#CCDBF2";
-            ctx.fillRect(0, 0, widthRelative, heightRelative);
+            if (oceanBackgroundPatternTileset) {
+                ctx.save();
 
-            ctx.restore();
+                ctx.globalAlpha = 0.3;
+
+                this.terrainGenerator.renderMapMenu({
+                    canvas,
+                    tilesets: [oceanBackgroundPatternTileset],
+                    tilesetSize: 350,
+                    translateX: this.oceanBackgroundX,
+                    translateY: this.oceanBackgroundY,
+                });
+
+                ctx.restore();
+            }
         }
 
         if (this.waveRoomVisible !== this.prevWaveRoomVisible) {

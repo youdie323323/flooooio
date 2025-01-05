@@ -124,11 +124,16 @@ type MobInstance = InstanceType<typeof Mob>;
 type MobStat = Readonly<{
     bodyDamage: number;
     health: number;
-    
+
     [key: string]: any;
 }>;
 
-type MobData = BaseEntityData & Readonly<{
+interface MobI18n {
+    name: string;
+    description: string;
+}
+
+type MobData = Readonly<BaseEntityData<MobI18n> & {
     baseSize: number;
 
     // TODO: replace these with MOB_HEALTH_FACTOR, MOB_DAMAGE_FACTOR

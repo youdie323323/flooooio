@@ -47,27 +47,49 @@ export enum AnimationType {
     SLIDE,
 }
 
+type InOutEasingFunction = { in(x: number): number; out(x: number): number };
+
 /**
  * Base interface for all GUI components.
  */
 export abstract class Component {
     protected readonly ANIMATION_ZOOM_DURATION: number = 100;
-    protected readonly ANIMATION_SLIDE_DURATION: number = 500;
+    protected readonly ANIMATION_SLIDE_DURATION: number = 100;
 
     public isAnimating: boolean = false;
     public animationProgress: number = 1;
     public animationStartTime: number | null = null;
     public animationDirection: 'in' | 'out' = 'in';
+    public animationSlideDirection: "v" | "h";
     public animationType: AnimationType;
 
+    private static readonly DEFAULT_EASING_FUNCTIONS = {
+        in: ((_) => 0),
+        out: ((_) => 0),
+    } satisfies InOutEasingFunction;
+
     private static readonly ANIMATION_EASING_FUNCTIONS = {
-        [AnimationType.ZOOM]: function easeInQuint(x: number): number {
-            return x * x * x * x * x;
+        [AnimationType.ZOOM]: {
+            in: function easeInQuint(x: number): number {
+                return x * x * x * x * x;
+            },
+            out: function easeInQuint(x: number): number {
+                return x * x * x * x * x;
+            },
         },
-        [AnimationType.SLIDE]: function easeOutExpo(x: number): number {
-            return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+        [AnimationType.SLIDE]: {
+            in: function easeOutExpo(x: number): number {
+                return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+            },
+            out: function easeInExpo(x: number): number {
+                return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
+            },
         },
-    };
+    } satisfies Record<AnimationType, InOutEasingFunction>;
+
+    private static readonly ZOOM_IN_OUT_EASING_FUNCTION = function easeInExpo(x: number): number {
+        return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
+    }
 
     /**
      * Real position to store original position to animations.
@@ -175,7 +197,7 @@ export abstract class Component {
                         1000;
 
             const elapsed = currentTime - this.animationStartTime;
-            let progress = Math.max(0, Math.min(elapsed / duration, 1));
+            const progress = Math.max(0, Math.min(elapsed / duration, 1));
             this.animationProgress = this.animationDirection === 'in' ? progress : 1 - progress;
 
             if (elapsed >= duration) {
@@ -183,26 +205,56 @@ export abstract class Component {
                     this.visible = false;
                 }
 
-                if (this.animationType === AnimationType.ZOOM) {
-                    this.x = this.realX;
-                    this.y = this.realY;
-                }
+                this.x = this.realX;
+                this.y = this.realY;
 
                 this.isAnimating = false;
                 this.animationStartTime = null;
+            } else {
+                switch (this.animationType) {
+                    case AnimationType.ZOOM: {
+                        const inOutProgress = 1 - Component.ZOOM_IN_OUT_EASING_FUNCTION(this.animationProgress);
+
+                        if (this.animationDirection === 'out') {
+                            this.y = this.realY - (20 * inOutProgress);
+                        } else {
+                            this.y = this.realY + (20 * inOutProgress);
+                        }
+
+                        break;
+                    }
+                }
             }
         }
 
-        const easingFunction = Component.ANIMATION_EASING_FUNCTIONS[this.animationType] ?? ((_) => 0);
+        const easingFunction = (Component.ANIMATION_EASING_FUNCTIONS[this.animationType] ?? Component.DEFAULT_EASING_FUNCTIONS)[this.animationDirection];
 
         const progress = easingFunction(this.animationProgress);
 
-        if (this.animationType === AnimationType.ZOOM) {
-            ctx.translate(this.x + this.w / 2, this.y + (1 - progress) + this.h / 2);
-            ctx.scale(progress, progress);
-            ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
-        } else if (this.animationType === AnimationType.SLIDE) {
-            // TODO: implement
+        switch (this.animationType) {
+            case AnimationType.ZOOM: {
+                ctx.translate(this.x + this.w / 2, this.y + this.h / 2);
+                ctx.scale(progress, progress);
+                ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
+
+                break;
+            }
+
+            case AnimationType.SLIDE: {
+                if (this.animationSlideDirection === "v") {
+                    const slideOffset = -(this.h + 20) * (1 - progress);
+
+                    ctx.translate(this.x + this.w / 2, this.realY - slideOffset + this.h / 2);
+                } else {
+                    const slideOffset = (this.w + 20) * (1 - progress);
+
+                    ctx.translate(this.realX - slideOffset + this.w / 2, this.y + this.h / 2);
+                }
+
+                ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
+
+                break;
+            }
         }
     }
 
@@ -210,6 +262,7 @@ export abstract class Component {
         toggle: boolean,
         shouldAnimate: boolean = false,
         animationType: AnimationType = AnimationType.ZOOM,
+        slideDirection?: "v" | "h",
     ) {
         if (toggle === this.visible) return;
 
@@ -218,14 +271,11 @@ export abstract class Component {
             this.animationProgress = toggle ? 0 : 1;
             this.animationStartTime = null;
             this.animationDirection = toggle ? 'in' : 'out';
+            this.animationSlideDirection = slideDirection;
             this.animationType = animationType;
 
             this.realX = this.x;
             this.realY = this.y;
-
-            if (this.animationType === AnimationType.ZOOM) {
-                this.y += this.animationDirection === "out" ? -30 : 15;
-            }
 
             if (toggle) {
                 this.visible = true;
@@ -245,9 +295,10 @@ export abstract class Component {
         return m instanceof Function ? m() : m;
     }
 
-    // Wrap these prop so components can override this method
-    public setX(x: number) { this.x = x }
-    public setY(y: number) { this.y = y }
+    // Wrap these prop so components can update realX, realY dynamically
+    // Although component can override method and can use it
+    public setX(x: number) { this.realX = x; this.x = x }
+    public setY(y: number) { this.realY = y; this.y = y }
     public setW(w: number) { this.w = w }
     public setH(h: number) { this.h = h }
 }

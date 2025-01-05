@@ -1,4 +1,4 @@
-import { Biomes } from "../shared/biomes";
+import { Biomes } from "../shared/biome";
 import Mob from "./src/entity/Mob";
 import Player from "./src/entity/Player";
 import { uiScaleFactor } from "./src/ui/UserInterface";
@@ -102,7 +102,7 @@ const init = async function () {
         passive: false
     });
 
-    function v(dy: number) {
+    function limitDelta(dy: number) {
         if (dy < 0.0125) {
             dy = 0.0125;
         }
@@ -115,7 +115,7 @@ const init = async function () {
     canvas.addEventListener("wheel", X => {
         const E = X.deltaY * -0.0005 * (cameraController.zoom * 4);
         const e = cameraController.zoom + E;
-        cameraController.zoom = v(e);
+        cameraController.zoom = limitDelta(e);
     });
 
     (function frame() {

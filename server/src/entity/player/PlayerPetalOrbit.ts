@@ -6,6 +6,7 @@ import { isPetal } from "../../utils/common";
 import { PetalType } from "../../../../shared/EntityType";
 import { PETAL_PROFILES } from "../../../../shared/entity/mob/petal/petalProfiles";
 import { decodeMood, Mood } from "../../../../shared/mood";
+import { FLOWER_ARC_RADIUS } from "../EntityCollisionResponse";
 
 const TAU = Math.PI * 2;
 
@@ -46,7 +47,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
 
         private lastMood = 0;
         private pauseTimer = 0;
-        private isTransitioning = false;
+        private isPausing = false;
 
         [onUpdateTick](poolThis: WavePool): void {
             if (super[onUpdateTick]) {
@@ -67,13 +68,14 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
             }
 
             if (this.lastMood !== this.mood) {
-                this.isTransitioning = true;
+                this.isPausing = true;
                 this.lastMood = this.mood;
             }
 
             const { 0: isAngry, 1: isSad } = decodeMood(this.mood);
 
             // TODO: dont do pause when (!isAngry && isSad) to (!isAngry && !isSad)
+            
             if (
                 (!isAngry && !isSad) ||
                 (!isAngry && isSad)
@@ -95,8 +97,8 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                     }
                 }
 
-                if (this.isTransitioning && petalReachesTarget) {
-                    this.isTransitioning = false;
+                if (this.isPausing && petalReachesTarget) {
+                    this.isPausing = false;
                     this.pauseTimer = MixedBase.PAUSE_DURATION;
                 }
             }
@@ -153,7 +155,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                         isPetal(firstPetal.type) && UNMOODABLE_PETALS.has(firstPetal.type) ? 40 : 80 :
                         isSad ? 25 : 40;
 
-                baseRadius += ((this.size / Player.BASE_SIZE) - 1) * 25;
+                baseRadius += ((this.size / Player.BASE_SIZE) - 1) * FLOWER_ARC_RADIUS;
 
                 const bounce = this.petalBounces[i];
                 this.petalRadii[i] += bounce;
@@ -198,20 +200,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
             const rotationDelta = (totalSpeed * (clockwise ? -1 : 1)) / UPDATE_ENTITIES_FPS;
 
             if (this.pauseTimer > 0) {
-                const radiusChange = Math.max(...Array.from(this.petalRadii, (r, i) => {
-                    const petals = surface[i];
-                    if (!petals || !isLivingSlot(petals)) return 0;
-                    
-                    const firstPetal = petals[0];
-                    const targetRadius = 
-                        isAngry ?
-                            isPetal(firstPetal.type) && UNMOODABLE_PETALS.has(firstPetal.type) ? 40 : 80 :
-                            isSad ? 25 : 40;
-                    
-                    return Math.abs(r - targetRadius);
-                })) / 8;
-
-                this.rotation -= rotationDelta * radiusChange;
+                this.rotation -= rotationDelta * 1.25;
                 this.pauseTimer -= 1 / UPDATE_ENTITIES_FPS;
             } else {
                 this.rotation += rotationDelta;

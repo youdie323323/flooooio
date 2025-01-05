@@ -15,7 +15,13 @@ export type PetalStat = Readonly<{
     [key: string]: any;
 }>;
 
-export type PetalData = BaseEntityData & Readonly<{
+interface PetalI18n {
+    name: string;
+    fullName: string;
+    description: string;
+}
+
+export type PetalData = Readonly<BaseEntityData<PetalI18n> & {
     [Rarities.COMMON]: PetalStat;
     [Rarities.UNUSUAL]: PetalStat;
     [Rarities.RARE]: PetalStat;

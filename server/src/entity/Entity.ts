@@ -1,4 +1,5 @@
 import { WavePool } from "../wave/WavePool";
+import { MobId } from "./mob/Mob";
 
 /**
  * Create branded type.
@@ -55,7 +56,7 @@ export type MaybeDisposable = Partial<{
     dispose(): void;
 }>
 
-export type EntityMixinConstructor<T = {}> = new (...args: any[]) => T & MaybeDisposable;
+export type EntityMixinConstructor<T extends object> = new (...args: any[]) => T & MaybeDisposable;
 
 export interface EntityMixinTemplate extends MaybeDisposable {
     /**
@@ -70,13 +71,7 @@ export interface EntityMixinTemplate extends MaybeDisposable {
     [key: string | number | symbol]: any;
 }
 
-/**
- * Minimum required data that all mobs/petals data must meet.
- */
-export type BaseEntityData = Required<Readonly<{
-    name: string;
-    description: string;
-
+export interface EntityCollision {
     /**
      * Fraction is the division factor of the size of the scaling that is pre-invoked when drawing. 1 means no scaling.
      */
@@ -87,7 +82,22 @@ export type BaseEntityData = Required<Readonly<{
      */
     rx: number;
     ry: number;
-}>>;
+}
+
+/**
+ * Minimum required data that all mobs/petals data must meet.
+ */
+export interface BaseEntityData<V extends object> {
+    /**
+     * Internationalization of entity data.
+     */
+    i18n: Required<V>;
+
+    /**
+     * Collision data needed for collide.
+     */
+    collision: EntityCollision;
+};
 
 export type IsEqual<A, B> =
     (<G>() => G extends A ? 1 : 2) extends

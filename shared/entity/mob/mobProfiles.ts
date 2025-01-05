@@ -6,12 +6,19 @@ import { Rarities } from "../../rarity";
 
 export const MOB_PROFILES = {
     [MobType.BEE]: {
-        name: "Bee",
-        description: "It stings. Don't touch it.",
         baseSize: 30,
-        fraction: 30,
-        rx: 30,
-        ry: 20,
+
+        i18n: {
+            name: "Bee",
+            description: "It stings. Don't touch it.",
+        },
+
+        collision: {
+            fraction: 30,
+            rx: 30,
+            ry: 20,
+        },
+
         [Rarities.COMMON]: {
             health: 37.5,
             bodyDamage: 50,
@@ -45,13 +52,21 @@ export const MOB_PROFILES = {
             bodyDamage: 109350,
         },
     },
+
     [MobType.STARFISH]: {
-        name: "Starfish",
-        description: "His name is Patrick",
         baseSize: 20,
-        fraction: 80,
-        rx: 100,
-        ry: 100,
+
+        i18n: {
+            name: "Starfish",
+            description: "His name is Patrick",
+        },
+
+        collision: {
+            fraction: 80,
+            rx: 100,
+            ry: 100,
+        },
+
         [Rarities.COMMON]: {
             health: 150,
             bodyDamage: 20,
@@ -85,13 +100,21 @@ export const MOB_PROFILES = {
             bodyDamage: 43740,
         },
     },
+
     [MobType.JELLYFISH]: {
-        name: "Jellyfish",
-        description: "Makes the most delicious jam.",
         baseSize: 40,
-        fraction: 20,
-        rx: 20,
-        ry: 20,
+
+        i18n: {
+            name: "Jellyfish",
+            description: "Makes the most delicious jam.",
+        },
+
+        collision: {
+            fraction: 20,
+            rx: 20,
+            ry: 20,
+        },
+
         [Rarities.COMMON]: {
             health: 125,
             bodyDamage: 25,
@@ -149,13 +172,21 @@ export const MOB_PROFILES = {
             bounces: 9,
         },
     },
+
     [MobType.BEETLE]: {
-        name: "Beetle",
-        description: "It's hungry and flowers are its favorite meal.",
         baseSize: 30,
-        fraction: 40,
-        rx: 40,
-        ry: 34,
+
+        i18n: {
+            name: "Beetle",
+            description: "It's hungry and flowers are its favorite meal.",
+        },
+
+        collision: {
+            fraction: 40,
+            rx: 40,
+            ry: 34,
+        },
+
         [Rarities.COMMON]: {
             health: 100,
             bodyDamage: 30,
@@ -189,13 +220,21 @@ export const MOB_PROFILES = {
             bodyDamage: 65610,
         },
     },
+
     [MobType.BUBBLE]: {
-        name: "Bubble",
-        description: "Pop",
         baseSize: 40,
-        fraction: 15,
-        rx: 20,
-        ry: 20,
+
+        i18n: {
+            name: "Bubble",
+            description: "Pop",
+        },
+
+        collision: {
+            fraction: 15,
+            rx: 20,
+            ry: 20,
+        },
+
         [Rarities.COMMON]: {
             health: 0.5,
             bodyDamage: 5,
@@ -231,12 +270,19 @@ export const MOB_PROFILES = {
     },
 
     [MobType.CENTIPEDE]: {
-        name: "Centipede",
-        description: "It's just there doing its thing.",
         baseSize: 40,
-        fraction: 40,
-        rx: 40,
-        ry: 40,
+
+        i18n: {
+            name: "Centipede",
+            description: "It's just there doing its thing.",
+        },
+
+        collision: {
+            fraction: 40,
+            rx: 40,
+            ry: 40,
+        },
+
         [Rarities.COMMON]: {
             health: 25,
             bodyDamage: 10,
@@ -270,13 +316,21 @@ export const MOB_PROFILES = {
             bodyDamage: 21870,
         },
     },
+
     [MobType.CENTIPEDE_EVIL]: {
-        name: "Centipede",
-        description: "This one loves flowers.",
         baseSize: 40,
-        fraction: 40,
-        rx: 40,
-        ry: 40,
+
+        i18n: {
+            name: "Centipede",
+            description: "This one loves flowers.",
+        },
+
+        collision: {
+            fraction: 40,
+            rx: 40,
+            ry: 40,
+        },
+
         [Rarities.COMMON]: {
             health: 25,
             bodyDamage: 10,
@@ -310,13 +364,21 @@ export const MOB_PROFILES = {
             bodyDamage: 21870,
         },
     },
+    
     [MobType.CENTIPEDE_DESERT]: {
-        name: "Centipede",
-        description: "Gotta go fast.",
         baseSize: 40,
-        fraction: 40,
-        rx: 40,
-        ry: 40,
+
+        i18n: {
+            name: "Centipede",
+            description: "Gotta go fast.",
+        },
+
+        collision: {
+            fraction: 40,
+            rx: 40,
+            ry: 40,
+        },
+
         [Rarities.COMMON]: {
             health: 25,
             bodyDamage: 10,

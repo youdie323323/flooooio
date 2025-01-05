@@ -4,7 +4,7 @@ import { ComponentExtensionTemplate, ExtensionConstructor, Updatable, UpdateFunc
 
 export default function CollidableExtension<T extends ExtensionConstructor>(Base: T) {
     abstract class MixedBase extends Base implements ComponentExtensionTemplate {
-        private static readonly COLLISION_SPEED: number = 0.3;
+        private static readonly COLLISION_SPEED: number = 0.4;
         private static readonly RETURN_SPEED: number = 0.2;
         private static readonly GAP: number = 4;
         private static readonly DEAD_ZONE: number = 6;

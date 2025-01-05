@@ -5,6 +5,7 @@ import PlaceholderExtension from "./extensions/Extension";
 
 export default class Toggle extends PlaceholderExtension(Component) implements Interactive, Clickable {
     private static readonly SCALING_DURATION: number = 100;
+
     private scalingProgress: number = 0;
     private scalingStartTime: number | null = null;
 
@@ -93,7 +94,7 @@ export default class Toggle extends PlaceholderExtension(Component) implements I
 
     protected getStrokeWidth(): number {
         const minDimension = Math.min(this.w, this.h);
-        return Math.max(2, minDimension * 0.14);
+        return Math.max(2, minDimension * 0.17);
     }
 
     public setToggle(toggle: boolean): void {

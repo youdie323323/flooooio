@@ -4,11 +4,17 @@ import { Rarities } from "../../../rarity";
 
 export const PETAL_PROFILES = {
     [PetalType.BASIC]: {
-        name: "Basic",
-        description: "A nice petal, not too strong but not too weak.",
-        fraction: 20,
-        rx: 20,
-        ry: 20,
+        i18n: {
+            name: "Basic",
+            fullName: "Basic",
+            description: "A nice petal, not too strong but not too weak.",
+        },
+
+        collision: {
+            fraction: 20,
+            rx: 20,
+            ry: 20,
+        },
 
         [Rarities.COMMON]: {
             damage: 10,
@@ -39,7 +45,7 @@ export const PETAL_PROFILES = {
             health: 270,
             petalReload: 2.5,
             count: 1,
-            
+
             isCluster: false,
         },
         [Rarities.LEGENDARY]: {
@@ -71,17 +77,24 @@ export const PETAL_PROFILES = {
             health: 21870,
             petalReload: 2.5,
             count: 1,
-            
+
             isCluster: false,
         },
     },
+
     [PetalType.FASTER]: {
-        name: "Faster",
-        description: "It's so light it makes your other petals spin faster.",
-        // Same as basic, light
-        fraction: 20,
-        rx: 20,
-        ry: 20,
+        i18n: {
+            name: "Faster",
+            fullName: "Faster",
+            description: "It's so light it makes your other petals spin faster.",
+        },
+
+        collision: {
+            // Same as basic, light
+            fraction: 20,
+            rx: 20,
+            ry: 20,
+        },
 
         [Rarities.COMMON]: {
             damage: 8,
@@ -156,12 +169,19 @@ export const PETAL_PROFILES = {
             isCluster: true,
         },
     },
+
     [PetalType.BEETLE_EGG]: {
-        name: "Beetle Egg",
-        description: "Something interesting might pop out of this.",
-        fraction: 20,
-        rx: 30,
-        ry: 40,
+        i18n: {
+            name: "Egg",
+            fullName: "Beetle Egg",
+            description: "Something interesting might pop out of this.",
+        },
+
+        collision: {
+            fraction: 20,
+            rx: 30,
+            ry: 40,
+        },
 
         [Rarities.COMMON]: {
             damage: 0,
@@ -236,12 +256,19 @@ export const PETAL_PROFILES = {
             isCluster: false,
         },
     },
+
     [PetalType.BUBBLE]: {
-        name: "Bubble",
-        description: "Physics are for the weak.",
-        fraction: 15,
-        rx: 20,
-        ry: 20,
+        i18n: {
+            name: "Bubble",
+            fullName: "Bubble",
+            description: "Physics are for the weak.",
+        },
+
+        collision: {
+            fraction: 15,
+            rx: 20,
+            ry: 20,
+        },
 
         [Rarities.COMMON]: {
             damage: 0,
@@ -316,14 +343,19 @@ export const PETAL_PROFILES = {
             isCluster: false,
         },
     },
-    [PetalType.YIN_YANG]: {
-        name: "Yin Yang",
-        description: "This mysterious petal affects the rotation of your petals in unpredictable ways.",
-        fraction: 20,
-        rx: 20,
-        ry: 20,
 
-        // TODO: collect missing informations
+    [PetalType.YIN_YANG]: {
+        i18n: {
+            name: "Yin Yang",
+            fullName: "Yin Yang",
+            description: "This mysterious petal affects the rotation of your petals in unpredictable ways.",
+        },
+
+        collision: {
+            fraction: 20,
+            rx: 20,
+            ry: 20,
+        },
 
         [Rarities.COMMON]: {
             damage: 90,

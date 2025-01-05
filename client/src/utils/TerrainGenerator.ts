@@ -1,5 +1,5 @@
 import { Canvg, presets } from "canvg";
-import { Biomes } from "../../../shared/biomes";
+import { Biomes } from "../../../shared/biome";
 import { antennaScaleFactor } from "../../main";
 import { uiScaleFactor } from "../ui/UserInterface";
 
@@ -304,7 +304,7 @@ interface MapRenderOptions extends RenderConfig {
     playerY: number;
 }
 
-interface MenuRenderOptions extends RenderConfig {
+interface MenuRenderingOptions extends RenderConfig {
     translateX: number;
     translateY: number;
 }
@@ -441,7 +441,7 @@ export default class TerrainGenerator {
         tilesetSize,
         translateX: tx,
         translateY: ty
-    }: MenuRenderOptions) {
+    }: MenuRenderingOptions) {
         const ctx = canvas.getContext("2d");
         const { width, height } = this.getScaledDimensions(canvas);
 
@@ -463,3 +463,8 @@ export default class TerrainGenerator {
 }
 
 export const BIOME_TILESETS: Map<Biomes, OffscreenCanvas[]> = new Map();
+
+export let oceanBackgroundPatternTileset: OffscreenCanvas;
+(async () => {
+    oceanBackgroundPatternTileset = await TerrainGenerator.generateTilesetFromSvg(OCEAN_PATTERN_SVG);
+})();

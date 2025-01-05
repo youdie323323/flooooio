@@ -4,7 +4,7 @@ import { Component, Interactive, MaybeDynamicLayoutablePointer } from "./Compone
 import PlaceholderExtension from "./extensions/Extension";
 import { calculateStrokeWidth } from "./Text";
 
-interface CanvasInputOptions {
+interface TextInputOptions {
     canvas?: HTMLCanvasElement;
     extraX?: number;
     extraY?: number;
@@ -31,7 +31,7 @@ interface CanvasInputOptions {
     value?: string;
     backgroundGradient?: string[];
     backgroundColor?: string;
-    unfocusedState?: boolean;
+    showUnfocusedState?: boolean;
     onsubmit?: (e?: Event, self?: TextInput) => void;
     onkeydown?: (e?: KeyboardEvent, self?: TextInput) => void;
     onkeyup?: (e?: KeyboardEvent, self?: TextInput) => void;
@@ -42,7 +42,6 @@ interface CanvasInputOptions {
 const inputs: TextInput[] = [];
 
 export default class TextInput extends PlaceholderExtension(Component) implements Interactive {
-    // Make it accessible from outside
     private _value: string;
     private _canvas: HTMLCanvasElement | null;
     private _ctx: CanvasRenderingContext2D | null;
@@ -68,11 +67,15 @@ export default class TextInput extends PlaceholderExtension(Component) implement
     private _selectionColor: string;
     private _placeHolder: string;
     private _placeHolderUnfocused: string;
+
     private _onsubmit: (e?: Event, self?: TextInput) => void;
     private _onkeydown: (e?: KeyboardEvent, self?: TextInput) => void;
     private _onkeyup: (e?: KeyboardEvent, self?: TextInput) => void;
+
     private _onfocus: (self: TextInput) => void;
     private _onblur: (self: TextInput) => void;
+
+    private _cursorInterval?: NodeJS.Timeout;
     private _cursorGlobalAlpha: number;
     private _cursorGlobalAlphaBack: boolean;
     private _cursorPos: number;
@@ -84,15 +87,18 @@ export default class TextInput extends PlaceholderExtension(Component) implement
     private _mouseDown: boolean;
     private _selectionStart?: number;
     private _selectionUpdated?: boolean;
-    private _cursorInterval?: NodeJS.Timeout;
-    private _unfocusedState: boolean;
+    private _showUnfocusedState: boolean;
+
+    /**
+     * Listeners store to remove listen on destroy.
+     */
     private _onmousemoveListen: (e: any) => void;
     private _onmousedownListen: (e: any) => void;
     private _onmouseupListen: (e: any) => void;
 
     constructor(
         protected layout: MaybeDynamicLayoutablePointer<LayoutOptions>,
-        o: CanvasInputOptions = {},
+        o: TextInputOptions = {},
     ) {
         super();
 
@@ -133,7 +139,7 @@ export default class TextInput extends PlaceholderExtension(Component) implement
         self._cursorPos = 0;
         self._hasFocus = false;
         self._selection = [0, 0];
-        self._unfocusedState = o.unfocusedState || false;
+        self._showUnfocusedState = o.showUnfocusedState || false;
 
         self._backgroundColor = o.backgroundColor || '#fff';
 
@@ -806,7 +812,7 @@ export default class TextInput extends PlaceholderExtension(Component) implement
 
         let text = self._clipText();
 
-        if (self._unfocusedState) {
+        if (self._showUnfocusedState) {
             if (self._hasFocus) {
                 drawFocusing();
             } else if (this._value.length > 0) {

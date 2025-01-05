@@ -11,7 +11,7 @@ import { UserData } from "./src/wave/WavePool";
 import WaveRoomService from "./src/wave/WaveRoomService";
 import fs from "fs";
 import { VALID_MOOD_FLAGS } from "../shared/mood";
-import { BIOME_VALUES, Biomes } from "../shared/biomes";
+import { BIOME_VALUES, Biomes } from "../shared/biome";
 import { PetalType } from "../shared/EntityType";
 import { randomEnum } from "./src/utils/random";
 

@@ -1,4 +1,4 @@
-import { Biomes } from "../../../shared/biomes";
+import { Biomes } from "../../../shared/biome";
 import { ClientBound, ServerBound } from "../../../shared/packet";
 import { Rarities } from "../../../shared/rarity";
 import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../shared/wave";

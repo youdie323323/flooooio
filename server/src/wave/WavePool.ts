@@ -16,7 +16,7 @@ import WaveProbabilityPredictor, { LINKABLE_MOBS } from "./WaveProbabilityPredic
 import { WaveRoomPlayerId, WaveRoomPlayer } from "./WaveRoom";
 import { MOB_PROFILES } from "../../../shared/entity/mob/mobProfiles";
 import { Mood } from "../../../shared/mood";
-import { Biomes } from "../../../shared/biomes";
+import { Biomes } from "../../../shared/biome";
 import { MobType, PetalType } from "../../../shared/EntityType";
 import SpatialHash from "../utils/SpatialHash";
 import { calculateHp } from "../utils/formula";
@@ -48,14 +48,14 @@ export const UPDATE_ENTITIES_FPS = 60;
  * Packets don't need to be sent at 60fps per second. 30fps per second is enough.
  * If update sent too fast, it will feel laggy.
  */
-export const UPDATE_PACKET_SEND_FPS = 35;
+export const UPDATE_PACKET_SEND_FPS = 33;
 
 /**
  * Wave data.
  */
 export interface WaveData {
     /**
-     * Wave progress (gage).
+     * Wave progress.
      */
     waveProgress: number;
     waveProgressTimer: number;
@@ -77,9 +77,6 @@ export class WavePool {
 
     private eliminatedEntities: Set<MobInstance["id"] | PlayerInstance["id"]>;
 
-    /**
-     * Class for randomly determining mobs.
-     */
     private waveProbabilityPredictor: WaveProbabilityPredictor;
 
     private updateWaveInterval: NodeJS.Timeout;
@@ -446,7 +443,9 @@ export class WavePool {
     ) {
         const profile: MobData = MOB_PROFILES[type];
 
-        const distanceBetween = (profile.rx + profile.ry) * (calculateMobSize(profile, rarity) / profile.fraction);
+        const { collision } = profile;
+
+        const distanceBetween = (collision.rx + collision.ry) * (calculateMobSize(profile, rarity) / collision.fraction);
 
         let prevSegment: MobInstance = null;
 
