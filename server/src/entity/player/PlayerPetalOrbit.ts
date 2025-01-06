@@ -30,8 +30,6 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
     return class MixedBase extends Base implements EntityMixinTemplate {
         private static readonly DEFAULT_ROTATE_SPEED = 2.5;
 
-        private static readonly PAUSE_DURATION = 0.05;
-
         private static readonly BOUNCE_DECAY = 0.2;
         private static readonly BOUNCE_STRENGTH = 0.15;
 
@@ -43,10 +41,6 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
         private petalRadii: Float32Array;
         private petalBounces: Float32Array;
         private historyIndex = 0;
-
-        private lastMood = 0;
-        private pauseTimer = 0;
-        private isPausing = false;
 
         [onUpdateTick](poolThis: WavePool): void {
             if (super[onUpdateTick]) {
@@ -66,41 +60,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 this.petalBounces = new Float32Array(totalPetals).fill(0);
             }
 
-            if (this.lastMood !== this.mood) {
-                this.isPausing = true;
-                this.lastMood = this.mood;
-            }
-
             const { 0: isAngry, 1: isSad } = decodeMood(this.mood);
-
-            // TODO: dont do pause when (!isAngry && isSad) to (!isAngry && !isSad)
-            
-            if (
-                (!isAngry && !isSad) ||
-                (!isAngry && isSad)
-            ) {
-                let petalReachesTarget = false;
-                for (let i = 0; i < totalPetals; i++) {
-                    const petals = surface[i];
-                    if (!petals || !isLivingSlot(petals)) continue;
-
-                    const firstPetal = petals[0];
-                    const targetRadius =
-                        isAngry ?
-                            isPetal(firstPetal.type) && UNMOODABLE_PETALS.has(firstPetal.type) ? 40 : 80 :
-                            isSad ? 25 : 40;
-
-                    if (Math.abs(this.petalRadii[i] - targetRadius) < 5) {
-                        petalReachesTarget = true;
-                        break;
-                    }
-                }
-
-                if (this.isPausing && petalReachesTarget) {
-                    this.isPausing = false;
-                    this.pauseTimer = MixedBase.PAUSE_DURATION;
-                }
-            }
 
             const numYinYang = surface.reduce(
                 (acc, curr) => acc + (
@@ -140,6 +100,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 if (!petals || !isLivingSlot(petals)) continue;
 
                 const firstPetal = petals[0];
+                if (!isPetal(firstPetal.type)) continue;
 
                 const profile: PetalData = PETAL_PROFILES[firstPetal.type];
                 const rarityProfile: PetalStat = profile[firstPetal.rarity];
@@ -149,10 +110,10 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                     totalSpeed += rarityProfile.rad;
                 }
 
-                let baseRadius =
-                    isAngry ?
-                        isPetal(firstPetal.type) && UNMOODABLE_PETALS.has(firstPetal.type) ? 40 : 80 :
-                        isSad ? 25 : 40;
+                let baseRadius = UNMOODABLE_PETALS.has(firstPetal.type) ? 40 :
+                    isAngry ? 80 :
+                        isSad ? 25 :
+                            40;
 
                 // 25 is FLOWER_ARC_RADIUS
                 baseRadius += ((this.size / Player.BASE_SIZE) - 1) * 25;
@@ -199,12 +160,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
 
             const rotationDelta = (totalSpeed * (clockwise ? -1 : 1)) / UPDATE_ENTITIES_FPS;
 
-            if (this.pauseTimer > 0) {
-                this.rotation -= rotationDelta * 1.25;
-                this.pauseTimer -= 1 / UPDATE_ENTITIES_FPS;
-            } else {
-                this.rotation += rotationDelta;
-            }
+            this.rotation += rotationDelta;
 
             if (Math.abs(this.rotation) > Number.MAX_SAFE_INTEGER) {
                 this.rotation = this.rotation % TAU;

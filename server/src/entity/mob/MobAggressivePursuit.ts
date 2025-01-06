@@ -127,7 +127,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                                 dy,
                             );
 
-                            this.magnitude = 255 * Mob.BASE_SPEED;
+                            this.magnitude = 255 * this.speed;
 
                             this.targetEntity = targetableEntity;
                         } else {
@@ -187,7 +187,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                             dy,
                         );
 
-                        this.magnitude = 255 * Mob.BASE_SPEED;
+                        this.magnitude = 255 * this.speed;
 
                         this.targetEntity = this.lastAttackedEntity;
                     } else {

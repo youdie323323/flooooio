@@ -7,7 +7,7 @@ import { logger } from "../../main";
 import { Entity, onUpdateTick } from "../entity/Entity";
 import { SAFETY_DISTANCE } from "../entity/EntityMapBoundary";
 import { MobInstance, MobData, Mob, MobId } from "../entity/mob/Mob";
-import { isLivingSlot, PetalData, MockPetalData, Slot, PetalClusterLike } from "../entity/mob/petal/Petal";
+import { isLivingSlot, PetalData, MockPetalData, Slot, ClusterLike } from "../entity/mob/petal/Petal";
 import { MockPlayerData as MockClientData, PlayerInstance, Player, PlayerId } from "../entity/player/Player";
 import { PETAL_INITIAL_COOLDOWN, USAGE_RELOAD_PETALS } from "../entity/player/PlayerPetalReload";
 import { isPetal, calculateMobSize, revivePlayer, calculateMaxHealth } from "../utils/common";
@@ -397,7 +397,7 @@ export class WavePool {
 
         const { count } = PETAL_PROFILES[sp.type][sp.rarity];
 
-        const slotPetals: PetalClusterLike = new Array(count);
+        const slotPetals: ClusterLike = new Array(count);
 
         for (let i = 0; i < count; i++) {
             slotPetals[i] = this.generateMob(

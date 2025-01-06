@@ -6,6 +6,7 @@ import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from ".
 import { networking, ws, cameraController } from "../../../main";
 import Mob from "../../entity/Mob";
 import { DARKEND_BASE } from "../../utils/common";
+import { isSettingTrue, setSetting } from "../../utils/settingStorage";
 import TerrainGenerator, { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../../utils/TerrainGenerator";
 import { SVGButton, TextButton } from "../components/Button";
 import { AllComponents, AnimationType } from "../components/Component";
@@ -298,6 +299,8 @@ export default class UserInterfaceTitle extends UserInterface {
                         },
                         (t: boolean): void => {
                             keyboardMovementToggle.setToggle(t);
+
+                            setSetting("keyboard_control", t);
                         },
                     )),
                     new StaticText(
@@ -314,6 +317,8 @@ export default class UserInterfaceTitle extends UserInterface {
                     new CoordinatedStaticSpace(150, 190, 15, 15),
                 ],
             );
+
+            keyboardMovementToggle.setToggle(isSettingTrue("keyboard_control"))
 
             let settingIsOpen = false;
 

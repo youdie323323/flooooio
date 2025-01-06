@@ -2,12 +2,12 @@ import { Canvg, presets } from "canvg";
 import { ColorCode, darkend, DARKEND_BASE } from "../../utils/common.js";
 import { Clickable, Component, MaybeDynamicLayoutablePointer, Interactive } from "./Component.js";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout.js";
-import PlaceholderExtension from "./extensions/Extension.js";
+import ExtensionBase from "./extensions/Extension.js";
 import * as StackBlur from
     'stackblur-canvas/dist/stackblur-es.min.js';
 import { calculateStrokeWidth } from "./Text.js";
 
-export class Button extends PlaceholderExtension(Component) implements Interactive, Clickable {
+export class Button extends ExtensionBase(Component) implements Interactive, Clickable {
     private isPressed: boolean = false;
     private isHovered: boolean = false;
 

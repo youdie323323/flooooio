@@ -2,7 +2,7 @@ import { ColorCode, darkend, DARKEND_BASE } from "../../utils/common";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import { uiScaleFactor } from "../UserInterface";
 import { AllComponents, AnimationType, Component, ComponentContainer, MaybeDynamicLayoutablePointer } from "./Component";
-import PlaceholderExtension from "./extensions/Extension";
+import ExtensionBase from "./extensions/Extension";
 
 export type AutomaticallyWHLayoutOptions = Omit<LayoutOptions, "w" | "h">;
 
@@ -20,7 +20,7 @@ export type AddableContainer = (StaticPanelContainer | StaticHContainer | Static
 /**
  * Container component that can add/render childrens.
  */
-export class StaticContainer extends PlaceholderExtension(Component) implements ComponentContainer {
+export class StaticContainer extends ExtensionBase(Component) implements ComponentContainer {
     public children: AllComponents[] = [];
 
     constructor(
@@ -348,7 +348,7 @@ type DynamicLayoutableNumber = MaybeDynamicLayoutablePointer<number>;
  * 
  * This is only used for containers whose coordinates are automatically determined (e.g. StaticHContainer).
  */
-export class StaticSpace extends PlaceholderExtension(Component) {
+export class StaticSpace extends ExtensionBase(Component) {
     constructor(
         private _w: DynamicLayoutableNumber,
         private _h: DynamicLayoutableNumber,
@@ -384,7 +384,7 @@ export class StaticSpace extends PlaceholderExtension(Component) {
 /**
  * Component that just consume space, but with coordinate.
  */
-export class CoordinatedStaticSpace extends PlaceholderExtension(Component) {
+export class CoordinatedStaticSpace extends ExtensionBase(Component) {
     constructor(
         private _x: DynamicLayoutableNumber,
         private _y: DynamicLayoutableNumber,

@@ -48,12 +48,12 @@ export type MockPetalData = Readonly<{
     rarity: Rarities;
 }>;
 
-export type PetalClusterLike = MobInstance[];
+export type ClusterLike = MobInstance[];
 
 /**
  * Slot placeholder.
  */
-export type Slot = MockPetalData | PetalClusterLike | null;
+export type Slot = MockPetalData | ClusterLike | null;
 
 export interface PetalSlots {
     surface: Slot[];
@@ -61,8 +61,8 @@ export interface PetalSlots {
 }
 
 /**
- * Type guard for slot.
+ * Determine if slot is cluster like.
  */
-export function isLivingSlot(slot: Slot): slot is PetalClusterLike {
+export function isLivingSlot(slot: Slot): slot is ClusterLike {
     return Array.isArray(slot);
 }

@@ -6,10 +6,10 @@ import { waveRoomSelfId } from "../../utils/Networking";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import { WaveRoomPlayerInformation } from "../mode/UserInterfaceModeTitle";
 import { Component, MaybeDynamicLayoutablePointer } from "./Component";
-import PlaceholderExtension from "./extensions/Extension";
+import ExtensionBase from "./extensions/Extension";
 import { calculateStrokeWidth } from "./Text";
 
-export default class PlayerProfile extends PlaceholderExtension(Component) {
+export default class PlayerProfile extends ExtensionBase(Component) {
     private entityPlayer: Player = new Player(
         -1,
 

@@ -1,7 +1,7 @@
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import { uiScaleFactor } from "../UserInterface";
 import { Component, Interactive, MaybeDynamicLayoutablePointer } from "./Component";
-import PlaceholderExtension from "./extensions/Extension";
+import ExtensionBase from "./extensions/Extension";
 import { calculateStrokeWidth } from "./Text";
 
 interface TextInputOptions {
@@ -41,7 +41,7 @@ interface TextInputOptions {
 
 const inputs: TextInput[] = [];
 
-export default class TextInput extends PlaceholderExtension(Component) implements Interactive {
+export default class TextInput extends ExtensionBase(Component) implements Interactive {
     private _value: string;
     private _canvas: HTMLCanvasElement | null;
     private _ctx: CanvasRenderingContext2D | null;

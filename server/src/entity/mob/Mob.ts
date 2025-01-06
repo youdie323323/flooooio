@@ -1,5 +1,5 @@
 import { EntityCollisionResponse } from "../EntityCollisionResponse";
-import { BaseEntityData, BrandedId, ConstructorParameterObject, Entity, onUpdateTick, PartialUnion } from "../Entity";
+import { BaseEntityData, BrandedId, ConstructorParameterObject, Entity, onUpdateTick, PartialUnion, UnderlyingMixinUnion } from "../Entity";
 import { MobDynamicMovement } from "./MobDynamicMovement";
 import { MobAggressivePursuit } from "./MobAggressivePursuit";
 import { EntityLinearMovement } from "../EntityLinearMovement";
@@ -15,15 +15,6 @@ import { WavePool } from "../../wave/WavePool";
 export type MobId = BrandedId<"Mob">;
 
 class BaseMob implements Entity {
-    /**
-     * Base speed of mob.
-     * 
-     * @remarks
-     * 
-     * These are test values for the beta phase, and the actual speeds are for each mob.
-     */
-    public static readonly BASE_SPEED = 3.5;
-
     x: number;
     y: number;
     magnitude: number;
@@ -104,7 +95,8 @@ class BaseMob implements Entity {
     constructor(source: PartialUnion<
         BaseMob,
         // No need to implement underlying methods
-        typeof onUpdateTick | "dispose"
+        UnderlyingMixinUnion
+        | "speed"
     >) {
         Object.assign(this, source);
     }
@@ -114,6 +106,13 @@ class BaseMob implements Entity {
     [onUpdateTick](poolThis: WavePool): void { }
 
     dispose(): void { }
+
+    /**
+     * Returns speed within mob.
+     */
+    get speed(): number {
+        return MOB_SPEED[this.type];
+    }
 }
 
 let Mob = BaseMob;
@@ -196,4 +195,20 @@ const MOB_DAMAGE_FACTOR = {
     [Rarities.SUPER]: 128.0,
 } satisfies Record<Rarities, number>;
 
-export { BaseMob, Mob, MobData, MobStat, MobInstance, MOB_SIZE_FACTOR, MOB_HEALTH_FACTOR, MOB_DAMAGE_FACTOR };
+/**
+ * Define speed for each mob.
+ */
+const MOB_SPEED = {
+    [MobType.BEE]: 3.5,
+    [MobType.CENTIPEDE]: 3.5,
+    [MobType.CENTIPEDE_EVIL]: 3.5,
+
+    [MobType.BEETLE]: 3.5,
+    [MobType.CENTIPEDE_DESERT]: 8,
+
+    [MobType.BUBBLE]: 3.5,
+    [MobType.JELLYFISH]: 3.5,
+    [MobType.STARFISH]: 3.5,
+} satisfies Record<MobType, number>;
+
+export { BaseMob, Mob, MobData, MobStat, MobInstance, MOB_SIZE_FACTOR, MOB_HEALTH_FACTOR, MOB_DAMAGE_FACTOR, MOB_SPEED };

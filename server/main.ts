@@ -44,6 +44,14 @@ const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
                 type: PetalType.BASIC,
                 rarity: Rarities.SUPER,
             } satisfies MockPetalData,
+            {
+                type: PetalType.BEETLE_EGG,
+                rarity: Rarities.ULTRA,
+            } satisfies MockPetalData,
+            {
+                type: PetalType.BEETLE_EGG,
+                rarity: Rarities.ULTRA,
+            } satisfies MockPetalData,
         ],
         bottom: [
             {

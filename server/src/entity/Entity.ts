@@ -65,9 +65,12 @@ export interface EntityMixinTemplate {
      * Dispose up own mixin values.
      */
     dispose(): void;
-
-    [key: PropertyKey]: any;
 }
+
+/**
+ * Union typeof EntityMixinTemplate.
+ */
+export type UnderlyingMixinUnion = typeof onUpdateTick | "dispose";
 
 export interface EntityCollision {
     /**

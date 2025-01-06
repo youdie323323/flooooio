@@ -8,6 +8,7 @@ import Player from "../../entity/Player";
 import { isPetal } from "../../utils/common";
 import { interpolate } from "../../utils/Interpolator";
 import { waveSelfId } from "../../utils/Networking";
+import { isSettingTrue } from "../../utils/settingStorage";
 import TerrainGenerator, { BIOME_TILESETS, OCEAN_PATTERN_SVG, oceanBackgroundPatternTileset } from "../../utils/TerrainGenerator";
 import { TextButton, SVGButton } from "../components/Button";
 import { calculateStrokeWidth } from "../components/Text";
@@ -224,7 +225,10 @@ export default class UserInterfaceGame extends UserInterface {
         mouseXOffset = event.clientX - document.documentElement.clientWidth / 2;
         mouseYOffset = event.clientY - document.documentElement.clientHeight / 2;
 
-        if (networking) {
+        if (
+            !isSettingTrue("keyboard_control") && 
+            networking
+        ) {
             const distance = Math.hypot(mouseXOffset, mouseYOffset);
             const angle = Math.atan2(mouseYOffset, mouseXOffset);
             networking.sendChangeMove(angle, distance < 100 ? distance / 100 : 1);
@@ -801,7 +805,10 @@ export default class UserInterfaceGame extends UserInterface {
         const widthRelative = canvas.width / uiScaleFactor;
         const heightRelative = canvas.height / uiScaleFactor;
 
-        if (selfPlayer && !selfPlayer.isDead) {
+        if (
+            !isSettingTrue("keyboard_control") &&
+            selfPlayer && !selfPlayer.isDead
+        ) {
             ctx.save();
 
             ctx.translate(widthRelative / 2, heightRelative / 2);

@@ -1,10 +1,10 @@
 import { ColorCode, darkend, DARKEND_BASE } from "../../utils/common";
 import Layout, { LayoutOptions, LayoutResult } from "../layout/Layout";
 import { Component, Interactive, Clickable, MaybeDynamicLayoutablePointer } from "./Component";
-import PlaceholderExtension from "./extensions/Extension";
+import ExtensionBase from "./extensions/Extension";
 
-export default class Toggle extends PlaceholderExtension(Component) implements Interactive, Clickable {
-    private static readonly SCALING_DURATION: number = 100;
+export default class Toggle extends ExtensionBase(Component) implements Interactive, Clickable {
+    private static readonly SCALING_DURATION: number = 50;
 
     private scalingProgress: number = 0;
     private scalingStartTime: number | null = null;
@@ -66,8 +66,10 @@ export default class Toggle extends PlaceholderExtension(Component) implements I
 
         ctx.restore();
 
-        const rectWidth = (this.w - strokeWidth) * this.scalingProgress;
-        const rectHeight = (this.h - strokeWidth) * this.scalingProgress;
+        ctx.globalAlpha = this.scalingProgress;
+
+        const rectWidth = this.w - strokeWidth;
+        const rectHeight = this.h - strokeWidth;
 
         const rectX = this.x + (this.w - rectWidth) / 2;
         const rectY = this.y + (this.h - rectHeight) / 2;

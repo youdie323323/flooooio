@@ -7,22 +7,23 @@ import { Rarities } from "../../../shared/rarity";
 const TAU = Math.PI * 2;
 
 function createBeetleBodyPath() {
-    const p2 = new Path2D();
+    const path = new Path2D();
 
-    p2.moveTo(-42, 5);
-    p2.bezierCurveTo(-40, 40, 40, 40, 42, 5);
-    p2.lineTo(42, -5);
-    p2.bezierCurveTo(40, -40, -40, -40, -42, -5);
-    p2.closePath();
+    path.moveTo(0, -30);
+    path.quadraticCurveTo(40, -30, 40, 0);
+    path.quadraticCurveTo(40, 30, 0, 30);
+    path.quadraticCurveTo(-40, 30, -40, 0);
+    path.quadraticCurveTo(-40, -30, 0, -30);
+    path.closePath();
 
-    return p2;
+    return path;
 }
 
 const beetleBodyPath = createBeetleBodyPath();
 
 export default class Mob extends Entity {
     /**
-     * Current leg rotation.
+     * Current starfish leg distance.
      */
     private legD: number[];
 
@@ -157,19 +158,24 @@ export default class Mob extends Entity {
                 if (!this.legD) {
                     this.legD = Array(STARFISH_LEG_AMOUNT).fill(150);
                 }
-                const legD = this.legD;
-                const missingLegPercentage = this.isDead ? 0 : Math.floor(this.nHealth * STARFISH_LEG_AMOUNT);
+                const legDistance = this.legD;
+                const remainingLegsCount = this.isDead ? 0 : Math.floor(this.nHealth * STARFISH_LEG_AMOUNT);
 
                 ctx.beginPath();
                 for (let i = 0; i < STARFISH_LEG_AMOUNT; i++) {
-                    const tw = (i + 0.5) / STARFISH_LEG_AMOUNT * TAU;
-                    const tx = (i + 1) / STARFISH_LEG_AMOUNT * TAU;
-                    legD[i] += ((i < missingLegPercentage ? 175 : 105) - legD[i]) * 0.5;
-                    const ty = legD[i];
+                    const midAngle = (i + 0.5) / STARFISH_LEG_AMOUNT * TAU;
+                    const endAngle = (i + 1) / STARFISH_LEG_AMOUNT * TAU;
+                    legDistance[i] += ((i < remainingLegsCount ? 175 : 105) - legDistance[i]) * 0.5;
+                    const legLength = legDistance[i];
                     if (i === 0) {
-                        ctx.moveTo(ty, 0);
+                        ctx.moveTo(legLength, 0);
                     }
-                    ctx.quadraticCurveTo(Math.cos(tw) * 15, Math.sin(tw) * 15, Math.cos(tx) * ty, Math.sin(tx) * ty);
+                    ctx.quadraticCurveTo(
+                        Math.cos(midAngle) * 15,
+                        Math.sin(midAngle) * 15,
+                        Math.cos(endAngle) * legLength,
+                        Math.sin(endAngle) * legLength
+                    );
                 }
                 ctx.closePath();
                 ctx.lineCap = ctx.lineJoin = "round";
@@ -183,17 +189,17 @@ export default class Mob extends Entity {
 
                 ctx.beginPath();
                 for (let i = 0; i < STARFISH_LEG_AMOUNT; i++) {
-                    const tA = i / STARFISH_LEG_AMOUNT * TAU;
+                    const legRotation = i / STARFISH_LEG_AMOUNT * TAU;
                     ctx.save();
-                    ctx.rotate(tA);
-                    const tB = legD[i] / 175;
-                    let step = 56;
-                    const arcCount = 3;
-                    for (let j = 0; j < arcCount; j++) {
-                        const tF = (1 - j / arcCount * 0.8) * 24 * tB;
-                        ctx.moveTo(step, 0);
-                        ctx.arc(step, 0, tF, 0, TAU);
-                        step += tF * 2 + tB * 5;
+                    ctx.rotate(legRotation);
+                    const lengthRatio = legDistance[i] / 175;
+                    let spotPosition = 56;
+                    const SPOTS_PER_LEG = 3;
+                    for (let j = 0; j < SPOTS_PER_LEG; j++) {
+                        const spotSize = (1 - j / SPOTS_PER_LEG * 0.8) * 24 * lengthRatio;
+                        ctx.moveTo(spotPosition, 0);
+                        ctx.arc(spotPosition, 0, spotSize, 0, TAU);
+                        spotPosition += spotSize * 2 + lengthRatio * 5;
                     }
                     ctx.restore();
                 }
@@ -233,6 +239,7 @@ export default class Mob extends Entity {
                 ctx.clip();
                 ctx.lineWidth = 3;
                 ctx.stroke();
+
                 break;
             }
 
@@ -241,40 +248,49 @@ export default class Mob extends Entity {
 
                 ctx.scale(scale, scale);
 
-                ctx.fillStyle = ctx.strokeStyle = this.getSkinColor("#333333");
-                ctx.lineCap = ctx.lineJoin = "round";
-                for (let i = 0; i < 2; i++) {
-                    const relative = i === 0 ? 1 : -1;
-                    ctx.save();
-                    // Maybe relative * 10 better
-                    ctx.translate(34, relative * 12);
-                    ctx.rotate(Math.sin(this.moveCounter * 1.24) * 0.1 * relative);
-                    ctx.beginPath();
-                    ctx.moveTo(0, relative * 7);
-                    ctx.quadraticCurveTo(25, relative * 16, 40, 0);
-                    ctx.quadraticCurveTo(20, relative * 6, 0, 0);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.stroke();
-                    ctx.restore();
+                // Draw horn
+                {
+                    ctx.fillStyle = ctx.strokeStyle = this.getSkinColor("#333333");
+                    ctx.lineCap = ctx.lineJoin = "round";
+                    for (let i = 0; i < 2; i++) {
+                        const relative = i === 0 ? 1 : -1;
+                        ctx.save();
+                        // Maybe relative * 10 better
+                        ctx.translate(34, relative * 12);
+                        ctx.rotate(Math.sin(this.moveCounter * 1.24) * 0.1 * relative);
+                        ctx.beginPath();
+                        ctx.moveTo(0, relative * 7);
+                        ctx.quadraticCurveTo(25, relative * 16, 40, 0);
+                        ctx.quadraticCurveTo(20, relative * 6, 0, 0);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.stroke();
+                        ctx.restore();
+                    }
                 }
 
-                const skinColor = this.isPet ? "#ffe667" : "#8f5db0";
-                ctx.fillStyle = this.getSkinColor(skinColor);
-                ctx.fill(beetleBodyPath);
-                ctx.lineWidth = 6;
-                ctx.fillStyle = ctx.strokeStyle = this.getSkinColor(darkend(skinColor, DARKEND_BASE));
-                ctx.stroke(beetleBodyPath);
+                {
+                    const skinColor = this.isPet ? "#ffe667" : "#8f5db0";
+                    ctx.fillStyle = this.getSkinColor(skinColor);
+                    ctx.fill(beetleBodyPath);
+                    ctx.lineWidth = 7;
+                    // Arc points are same color with this
+                    ctx.fillStyle = ctx.strokeStyle = this.getSkinColor(darkend(skinColor, DARKEND_BASE));
+                    ctx.stroke(beetleBodyPath);
+                }
 
+                // Draw center line
                 ctx.beginPath();
                 ctx.moveTo(-21, 0);
                 ctx.quadraticCurveTo(0, -3, 21, 0);
                 ctx.lineCap = "round";
-                ctx.lineWidth = 7;
+                ctx.lineWidth = 6;
                 ctx.stroke();
 
-                const arcPoints = [[-17, -13], [17, -13], [0, -17]];
+                const arcPoints = [[-17, -12], [17, -12], [0, -15]];
+
                 ctx.beginPath();
+                ctx.lineWidth = 6;
                 for (let i = 0; i < 2; i++) {
                     const relative = i === 1 ? 1 : -1;
                     for (let j = 0; j < arcPoints.length; j++) {

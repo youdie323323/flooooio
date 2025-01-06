@@ -45,6 +45,12 @@ export function getRandomHexString(length: number) {
     .join("");
 }
 
+export function getRandomLowercaseAlphabet(length: number) {
+  return [...Array(length)]
+    .map(() => String.fromCharCode(97 + Math.floor(26 * Math.random())))
+    .join("");
+}
+
 /**
  * Returns a random string.
  */
@@ -161,6 +167,6 @@ export function generateRandomId<T extends MobId | PlayerId | WaveRoomPlayerId>(
 
 export function generateRandomWaveRoomCode(): string {
   // XXX-XXXXXX
-  // Although first three character is uid of server, but idc
-  return getRandomHexString(3) + "-" + getRandomHexString(6);
+  // First three character is uid of server
+  return getRandomHexString(3) + "-" + getRandomLowercaseAlphabet(6);
 }

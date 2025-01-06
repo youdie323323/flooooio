@@ -63,6 +63,8 @@ export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(
                                         e.rarity,
 
                                         // Make it player coordinate so its looks like spawning from player body
+                                        // TODO: It may not appear to be coming from the player, because the setInterval for sending update packets and 
+                                        // the setInterval for update are different. To solve this, delay PlayerPetalOrbit
                                         this.x,
                                         this.y,
 

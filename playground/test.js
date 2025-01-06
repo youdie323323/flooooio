@@ -1,84 +1,48 @@
-(() => {
-    const secretProperty = Symbol("listeners");
+const canvas = document.getElementById("canvas");
 
-    EventTarget.prototype.addEventListener = new Proxy(
-        EventTarget.prototype.addEventListener,
-        {
-            apply(_target, thisArg, [eventName, callbackFunction, _options]) {
-                thisArg = thisArg ?? window;
-                if (secretProperty in thisArg) {
-                    if (eventName in thisArg[secretProperty]) {
-                        thisArg[secretProperty][eventName].add(callbackFunction);
-                    } else {
-                        thisArg[secretProperty][eventName] = new Set([callbackFunction]);
-                    }
-                } else {
-                    thisArg[secretProperty] = {
-                        [eventName]: new Set([callbackFunction]),
-                    };
-                }
-                return Reflect.apply(...arguments);
-            },
-        }
-    );
+const ctx = canvas.getContext("2d");
 
-    EventTarget.prototype.removeEventListener = new Proxy(
-        EventTarget.prototype.removeEventListener,
-        {
-            apply(_target, thisArg, [eventName, callbackFunction]) {
-                thisArg = thisArg ?? window;
-                if (!(secretProperty in thisArg)) {
-                    return;
-                }
-                if (!(eventName in thisArg[secretProperty])) {
-                    return;
-                }
-                if (!thisArg[secretProperty][eventName].has(callbackFunction)) {
-                    return;
-                }
+// #00000030
+const DARKEND_BASE = 0.1875;
+/**
+ * Darkens colour.
+ * @param color - Color code.
+ * @param strength - Strenth.
+ */
+const darkend = (color, strength) => {
+    let r = parseInt(color.slice(1, 3), 16);
+    let g = parseInt(color.slice(3, 5), 16);
+    let b = parseInt(color.slice(5, 7), 16);
+    r = Math.floor(r * (1 - strength));
+    g = Math.floor(g * (1 - strength));
+    b = Math.floor(b * (1 - strength));
+    const result = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    return result;
+};
 
-                thisArg[secretProperty][eventName].delete(callbackFunction);
-                if (thisArg[secretProperty][eventName].size !== 0) {
-                    return;
-                }
+ctx.scale(5, 5);
 
-                delete thisArg[secretProperty][eventName];
-                if (Object.keys(thisArg[secretProperty]).length === 0) {
-                    delete thisArg[secretProperty];
-                }
+ctx.translate(50, 50);
 
-                return Reflect.apply(...arguments);
-            },
-        }
-    );
+[-10, -12, 5, -12, 15, 0];
+[5, 12, -10, 12, -15, 0];
+[-10, -12, 5, -12, 15, 0];
+[5, 12, -10, 12, -15, 0];
+[-10, -12, 5, -12, 15, 0];
+[5, 12, -10, 12, -15, 0];
+[-10, -12, 5, -12, 15, 0];
+[5, 12, -10, 12, -15, 0];
 
-    EventTarget.prototype.dispatchEvent = new Proxy(
-        EventTarget.prototype.dispatchEvent,
-        {
-            apply(_target, thisArg, [event]) {
-                thisArg = thisArg ?? window;
-                if (!(secretProperty in thisArg)) {
-                    return Reflect.apply(...arguments);
-                }
-                if (!(event.type in thisArg[secretProperty])) {
-                    return;
-                }
-                for (const callbackFunction of [
-                    ...thisArg[secretProperty][event.type],
-                ]) {
-                    callbackFunction(
-                        new Proxy(event, {
-                            get(target, prop) {
-                                if (prop === "isTrusted") {
-                                    return true;
-                                }
-                                
-                                return target[prop];
-                            },
-                        })
-                    );
-                }
-            },
-        }
-    );
-})();
+{
+    ctx.lineCap = ctx.lineJoin = "round";
+
+    ctx.beginPath();
+
+    ctx.fillStyle = "#ffe763";
+
+    ctx.bezierCurveTo(5, 12, -10, 12, -15, 0);
+    ctx.bezierCurveTo(-10, -12, 5, -12, 15, 0);
+
+    ctx.lineWidth = 3;
+    ctx.stroke();
+}

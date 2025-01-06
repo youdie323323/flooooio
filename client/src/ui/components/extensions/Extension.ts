@@ -38,7 +38,7 @@ export type ExtensionConstructor = abstract new (...args: ReadonlyArray<any>) =>
  * Without mix this class on component, compiler gets error, impossible to mix any extension,
  * so, dont forgot to mixed this extension always when make new component.
  */
-export default function PlaceholderExtension<T extends ExtensionConstructor>(Base: T) {
+export default function ExtensionBase<T extends ExtensionConstructor>(Base: T) {
     abstract class MixedBase extends Base implements ComponentExtensionTemplate {
         public update: UpdateFunction = () => {
             // Call parent extension update(), so its possible to nest the extension

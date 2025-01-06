@@ -6,6 +6,7 @@ import { SHARED_SINE_WAVE } from "../../utils/sinWave";
 import { getRandomAngle } from "../../utils/random";
 import { MOB_BEHAVIORS, MobBehaviors, turnAngleToTarget } from "./MobAggressivePursuit";
 import { MobType } from "../../../../shared/EntityType";
+import { EGG_TYPE_MAPPING } from "../player/PlayerPetalReload";
 
 const MOVEMENT_DURATION = 1 / 150;
 
@@ -24,7 +25,14 @@ export function MobDynamicMovement<T extends EntityMixinConstructor<BaseMob>>(Ba
             }
 
             // Dont dynamic move when petal
-            if (isPetal(this.type)) return;
+            if (isPetal(this.type)) {
+                // Egg petals always up direction
+                if (EGG_TYPE_MAPPING[this.type]) {
+                    this.angle = 0;
+                }
+
+                return
+            };
 
             // Dont dynamic move when passive
             if (MOB_BEHAVIORS[this.type] === MobBehaviors.PASSIVE) return;
@@ -46,7 +54,7 @@ export function MobDynamicMovement<T extends EntityMixinConstructor<BaseMob>>(Ba
                         dy,
                     );
 
-                    this.magnitude = 255 * Mob.BASE_SPEED;
+                    this.magnitude = 255 * this.speed;
 
                     this.petGoingToMaster = true;
                 } else {

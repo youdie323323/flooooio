@@ -1,5 +1,5 @@
 import { EntityCollisionResponse } from "../EntityCollisionResponse";
-import { BrandedId, Entity, ConstructorParameterObject, PartialUnion, onUpdateTick } from "../Entity";
+import { BrandedId, Entity, ConstructorParameterObject, PartialUnion, onUpdateTick, UnderlyingMixinUnion } from "../Entity";
 import { EntityLinearMovement } from "../EntityLinearMovement";
 import uWS from 'uWebSockets.js';
 import { UserData, WavePool } from "../../wave/WavePool";
@@ -92,8 +92,7 @@ class BasePlayer implements Entity {
     constructor(
         source: PartialUnion<
             BasePlayer,
-            // No need to implement underlying methods
-            typeof onUpdateTick | "dispose"
+            UnderlyingMixinUnion
             | "isCollidable"
         >
     ) {
