@@ -139,11 +139,11 @@ export default class UserInterfaceTitle extends UserInterface {
 
     // Wave informations
 
-    waveRoomPlayers: WaveRoomPlayerInformation[];
-    waveRoomCode: string;
-    waveRoomState: WaveRoomState;
-    waveRoomVisible: WaveRoomVisibleState;
-    prevWaveRoomVisible: WaveRoomVisibleState;
+    public waveRoomPlayers: WaveRoomPlayerInformation[];
+    public waveRoomCode: string;
+    public waveRoomState: WaveRoomState;
+    public waveRoomVisible: WaveRoomVisibleState;
+    public prevWaveRoomVisible: WaveRoomVisibleState;
 
     private oceanBackgroundX: number;
     private oceanBackgroundY: number;

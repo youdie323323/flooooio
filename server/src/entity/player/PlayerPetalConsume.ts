@@ -14,7 +14,7 @@ const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, i: number
     if (Date.now() >= player.slots.cooldownsUsage[i][j]) {
         const cluster = player.slots.surface[i];
         if (!isLivingSlot(cluster)) {
-            return;
+            return null;
         }
 
         const petal = cluster[j];
