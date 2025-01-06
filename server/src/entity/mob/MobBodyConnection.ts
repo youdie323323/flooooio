@@ -47,7 +47,7 @@ export function MobBodyConnection<T extends EntityMixinConstructor<BaseMob>>(Bas
             }
         }
 
-        dispose = () => {
+        dispose(): void {
             if (super.dispose) {
                 super.dispose();
             }

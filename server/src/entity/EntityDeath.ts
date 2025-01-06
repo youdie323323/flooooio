@@ -38,7 +38,7 @@ export function EntityDeath<T extends EntityMixinConstructor<Entity>>(Base: T) {
             }
         }
 
-        dispose = () => {
+        dispose(): void {
             if (super.dispose) {
                 super.dispose();
             }

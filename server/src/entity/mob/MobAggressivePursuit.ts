@@ -90,11 +90,12 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                 distanceToTarget = Math.hypot(dx, dy);
             }
 
-            // Loss entity
-            if (distanceToTarget > (MOB_DETECTION_RANGE + 25) * this.size) this.targetEntity = null;
+            // Lose entity
+            if (distanceToTarget > this.loseRange) this.targetEntity = null;
 
             // Select target
             let targets: Entity[];
+
             if (this.petMaster) {
                 // Mob which summoned by player will attack other mobs expect petals, pets
                 targets = poolThis.getAllMobs().filter(p =>
@@ -208,7 +209,14 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
             return MOB_DETECTION_RANGE * this.size;
         }
 
-        dispose = () => {
+        /**
+         * Get lose range within mob.
+         */
+        get loseRange(): number {
+            return (MOB_DETECTION_RANGE * 2) * this.size;
+        }
+
+        dispose(): void {
             if (super.dispose) {
                 super.dispose();
             }

@@ -21,16 +21,19 @@ interface PetalI18n {
     description: string;
 }
 
-export type PetalData = Readonly<BaseEntityData<PetalI18n> & {
-    [Rarities.COMMON]: PetalStat;
-    [Rarities.UNUSUAL]: PetalStat;
-    [Rarities.RARE]: PetalStat;
-    [Rarities.EPIC]: PetalStat;
-    [Rarities.LEGENDARY]: PetalStat;
-    [Rarities.MYTHIC]: PetalStat;
-    [Rarities.ULTRA]: PetalStat;
-    [Rarities.SUPER]: PetalStat;
-}>;
+export type PetalData = Readonly<
+    BaseEntityData<PetalI18n>
+    & {
+        [Rarities.COMMON]: PetalStat;
+        [Rarities.UNUSUAL]: PetalStat;
+        [Rarities.RARE]: PetalStat;
+        [Rarities.EPIC]: PetalStat;
+        [Rarities.LEGENDARY]: PetalStat;
+        [Rarities.MYTHIC]: PetalStat;
+        [Rarities.ULTRA]: PetalStat;
+        [Rarities.SUPER]: PetalStat;
+    }
+>;
 
 /**
  * Mock data of {@link Mob}.
@@ -45,10 +48,12 @@ export type MockPetalData = Readonly<{
     rarity: Rarities;
 }>;
 
+export type PetalClusterLike = MobInstance[];
+
 /**
  * Slot placeholder.
  */
-export type Slot = MockPetalData | MobInstance[] | null | undefined;
+export type Slot = MockPetalData | PetalClusterLike | null;
 
 export interface PetalSlots {
     surface: Slot[];
@@ -58,6 +63,6 @@ export interface PetalSlots {
 /**
  * Type guard for slot.
  */
-export function isLivingSlot(slot: Slot): slot is MobInstance[] {
+export function isLivingSlot(slot: Slot): slot is PetalClusterLike {
     return Array.isArray(slot);
 }

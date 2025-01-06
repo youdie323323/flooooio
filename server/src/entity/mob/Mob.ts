@@ -1,5 +1,5 @@
 import { EntityCollisionResponse } from "../EntityCollisionResponse";
-import { BaseEntityData, BrandedId, ConstructorParameterObject, Entity, PartialUnion } from "../Entity";
+import { BaseEntityData, BrandedId, ConstructorParameterObject, Entity, onUpdateTick, PartialUnion } from "../Entity";
 import { MobDynamicMovement } from "./MobDynamicMovement";
 import { MobAggressivePursuit } from "./MobAggressivePursuit";
 import { EntityLinearMovement } from "../EntityLinearMovement";
@@ -10,6 +10,7 @@ import { EntityDeath } from "../EntityDeath";
 import { MobBodyConnection } from "./MobBodyConnection";
 import { MobType, PetalType } from "../../../../shared/EntityType";
 import { Rarities } from "../../../../shared/rarity";
+import { WavePool } from "../../wave/WavePool";
 
 export type MobId = BrandedId<"Mob">;
 
@@ -101,10 +102,18 @@ class BaseMob implements Entity {
     readonly isFirstSegment: boolean;
 
     constructor(source: PartialUnion<
-        BaseMob
+        BaseMob,
+        // No need to implement underlying methods
+        typeof onUpdateTick | "dispose"
     >) {
         Object.assign(this, source);
     }
+
+    // Underlying EntityMixinTemplate to prevent error
+
+    [onUpdateTick](poolThis: WavePool): void { }
+
+    dispose(): void { }
 }
 
 let Mob = BaseMob;
@@ -133,20 +142,23 @@ interface MobI18n {
     description: string;
 }
 
-type MobData = Readonly<BaseEntityData<MobI18n> & {
-    baseSize: number;
+type MobData = Readonly<
+    | BaseEntityData<MobI18n>
+    & {
+        baseSize: number;
 
-    // TODO: replace these with MOB_HEALTH_FACTOR, MOB_DAMAGE_FACTOR
+        // TODO: replace these with MOB_HEALTH_FACTOR, MOB_DAMAGE_FACTOR
 
-    [Rarities.COMMON]: MobStat;
-    [Rarities.UNUSUAL]: MobStat;
-    [Rarities.RARE]: MobStat;
-    [Rarities.EPIC]: MobStat;
-    [Rarities.LEGENDARY]: MobStat;
-    [Rarities.MYTHIC]: MobStat;
-    [Rarities.ULTRA]: MobStat;
-    [Rarities.SUPER]: MobStat;
-}>;
+        [Rarities.COMMON]: MobStat;
+        [Rarities.UNUSUAL]: MobStat;
+        [Rarities.RARE]: MobStat;
+        [Rarities.EPIC]: MobStat;
+        [Rarities.LEGENDARY]: MobStat;
+        [Rarities.MYTHIC]: MobStat;
+        [Rarities.ULTRA]: MobStat;
+        [Rarities.SUPER]: MobStat;
+    }
+>;
 
 const MOB_SIZE_FACTOR = {
     [Rarities.COMMON]: 1.0,

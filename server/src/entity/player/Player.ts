@@ -1,8 +1,8 @@
 import { EntityCollisionResponse } from "../EntityCollisionResponse";
-import { BrandedId, Entity, ConstructorParameterObject, PartialUnion } from "../Entity";
+import { BrandedId, Entity, ConstructorParameterObject, PartialUnion, onUpdateTick } from "../Entity";
 import { EntityLinearMovement } from "../EntityLinearMovement";
 import uWS from 'uWebSockets.js';
-import { UserData } from "../../wave/WavePool";
+import { UserData, WavePool } from "../../wave/WavePool";
 import { MobInstance } from "../mob/Mob";
 import { PlayerPetalOrbit } from "./PlayerPetalOrbit";
 import { PlayerPetalReload } from "./PlayerPetalReload";
@@ -92,12 +92,19 @@ class BasePlayer implements Entity {
     constructor(
         source: PartialUnion<
             BasePlayer,
-            // Partial getters
-            "isCollidable"
+            // No need to implement underlying methods
+            typeof onUpdateTick | "dispose"
+            | "isCollidable"
         >
     ) {
         Object.assign(this, source);
     }
+
+    // Underlying EntityMixinTemplate to prevent error
+
+    [onUpdateTick](poolThis: WavePool): void { }
+
+    dispose(): void { }
 
     /**
      * Determine if player is collidable to any collidables.

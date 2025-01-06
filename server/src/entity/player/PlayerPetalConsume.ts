@@ -27,7 +27,7 @@ const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, i: number
 
         switch (petal.type) {
             case PetalType.BEETLE_EGG: {
-                petal.petalSummonedPet = poolThis.addPetalOrMob(
+                petal.petalSummonedPet = poolThis.generateMob(
                     EGG_TYPE_MAPPING[petal.type],
                     Math.max(Rarities.COMMON, Math.min(Rarities.MYTHIC, petal.rarity - 1)),
                     petal.x,
@@ -96,7 +96,7 @@ export function PlayerPetalConsume<T extends EntityMixinConstructor<BasePlayer>>
             this.y += this.bubbleVelocityY * MixedBase.BUBBLE_BOUNCE_FORCE;
         }
 
-        dispose = () => {
+        dispose(): void {
             if (super.dispose) {
                 super.dispose();
             }

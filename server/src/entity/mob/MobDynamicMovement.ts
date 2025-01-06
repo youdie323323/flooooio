@@ -99,7 +99,7 @@ export function MobDynamicMovement<T extends EntityMixinConstructor<BaseMob>>(Ba
             return this.type === MobType.BEE;
         }
 
-        dispose = () => {
+        dispose(): void {
             if (super.dispose) {
                 super.dispose();
             }

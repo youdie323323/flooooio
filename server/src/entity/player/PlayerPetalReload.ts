@@ -7,6 +7,8 @@ import { PetalType, MobType } from "../../../../shared/EntityType";
 import { PETAL_PROFILES } from "../../../../shared/entity/mob/petal/petalProfiles";
 import { isPetal } from "../../utils/common";
 
+export const PETAL_INITIAL_COOLDOWN = 0;
+
 export const USAGE_RELOAD_PETALS: Set<PetalType> = new Set([
     PetalType.BEETLE_EGG,
     PetalType.BUBBLE,
@@ -50,13 +52,13 @@ export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(
 
                                 const cooldownsPetal = this.slots.cooldownsPetal[i];
 
-                                if (cooldownsPetal[j] === 0) {
+                                if (cooldownsPetal[j] === PETAL_INITIAL_COOLDOWN) {
                                     const profile = PETAL_PROFILES[e.type];
                                     cooldownsPetal[j] = Date.now() + (profile[e.rarity].petalReload * 1000);
                                 }
                                 // If cooldown elapsed
                                 else if (Date.now() >= cooldownsPetal[j]) {
-                                    petals[j] = poolThis.addPetalOrMob(
+                                    petals[j] = poolThis.generateMob(
                                         e.type,
                                         e.rarity,
 
@@ -68,7 +70,7 @@ export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(
                                         null,
                                     );
 
-                                    cooldownsPetal[j] = 0;
+                                    cooldownsPetal[j] = PETAL_INITIAL_COOLDOWN;
                                 }
                             }
                         })
@@ -83,13 +85,13 @@ export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(
 
                                 if (poolThis.getMob(e.id)) {
                                     // Petal respawned, start consume timer
-                                    if (cooldownsUsage[j] === 0) {
+                                    if (cooldownsUsage[j] === PETAL_INITIAL_COOLDOWN) {
                                         const profile = PETAL_PROFILES[e.type];
                                         cooldownsUsage[j] = Date.now() + (profile[e.rarity].usageReload * 1000);
                                     }
                                 } else {
                                     // Reset cooldown because its breaked
-                                    cooldownsUsage[j] = 0;
+                                    cooldownsUsage[j] = PETAL_INITIAL_COOLDOWN;
                                 }
                             }
                         });
@@ -98,7 +100,7 @@ export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(
             }
         }
 
-        dispose = () => {
+        dispose(): void {
             if (super.dispose) {
                 super.dispose();
             }

@@ -57,7 +57,7 @@ export function MobHealthRegen<T extends EntityMixinConstructor<BaseMob>>(Base: 
             }
         }
 
-        dispose = () => {
+        dispose(): void {
             if (super.dispose) {
                 super.dispose();
             }

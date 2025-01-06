@@ -1,4 +1,4 @@
-import { EntityMixinConstructor, EntityMixinTemplate, MaybeDisposable, onUpdateTick } from "../Entity";
+import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
 import { WavePool } from "../../wave/WavePool";
 import { BasePlayer } from "./Player";
 import { findNearestEntity } from "../mob/MobAggressivePursuit";
@@ -54,7 +54,7 @@ export function PlayerDeadCamera<T extends EntityMixinConstructor<BasePlayer>>(B
             }
         }
 
-        dispose = () => {
+        dispose(): void {
             if (super.dispose) {
                 super.dispose();
             }

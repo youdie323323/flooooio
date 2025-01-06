@@ -9,14 +9,15 @@ import { MobType } from "../../../shared/EntityType";
 import { PETAL_PROFILES } from "../../../shared/entity/mob/petal/petalProfiles";
 import { MOB_PROFILES } from "../../../shared/entity/mob/mobProfiles";
 
-export const FLOWER_ARC_RADIUS = 25;
-
 export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>>(Base: T) {
   return class MixedBase extends Base implements EntityMixinTemplate {
+    private static readonly FLOWER_ARC_RADIUS = 25;
+    private static readonly FLOWER_FRACTION = 25;
+
     private static readonly FLOWER_DEFAULT_SEARCH_DATA = {
-      fraction: 25,
-      rx: 25,
-      ry: 25,
+      fraction: MixedBase.FLOWER_FRACTION,
+      rx: MixedBase.FLOWER_ARC_RADIUS,
+      ry: MixedBase.FLOWER_ARC_RADIUS,
     } satisfies Partial<EntityCollision>;
 
     private static readonly BUBBLE_PUSH_FACTOR = 3;
@@ -47,7 +48,7 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
         super[onUpdateTick](poolThis);
       }
 
-      const thisMaxHealth = calculateMaxHealth(this as unknown as BaseMob | BasePlayer);
+      const thisMaxHealth = calculateMaxHealth(this);
 
       if (this instanceof Mob) {
         // Basically mob is bigger than the player, so the mob-to-player collision are done on mob side
@@ -71,7 +72,7 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
 
         const searchRadius = MixedBase.calculateSearchRadius(collision1, this.size);
 
-        const nearby = poolThis.sharedSpatialHash.search(this.x, this.y, searchRadius);
+        const nearby = poolThis.sharedSpatialHash.search(searchRadius, this.x, this.y);
 
         nearby.forEach(_otherEntity => {
           const otherEntity = <MobInstance | PlayerInstance>_otherEntity;
@@ -244,7 +245,7 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
 
         const searchRadius = MixedBase.calculateSearchRadius(MixedBase.FLOWER_DEFAULT_SEARCH_DATA, this.size);
 
-        const nearby = poolThis.sharedSpatialHash.search(this.x, this.y, searchRadius);
+        const nearby = poolThis.sharedSpatialHash.search(searchRadius, this.x, this.y);
 
         nearby.forEach(otherEntity => {
           if (!(otherEntity instanceof Player)) return;
@@ -284,7 +285,7 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
       }
     }
 
-    dispose = () => {
+    dispose(): void {
       if (super.dispose) {
         super.dispose();
       }

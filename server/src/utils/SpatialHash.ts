@@ -55,9 +55,9 @@ export default class SpatialHash<Node extends PointLike & object> {
     }
 
     /**
-     * Searches for all the display-objects that intersect with the given parameter NodeLike.
+     * Searches for all the display-objects that intersect.
      */
-    public search(x: number, y: number, radius: number): Set<Node> {
+    public search(radius: number, x: number, y: number): Set<Node> {
         const result = new Set<Node>();
 
         const radiusCells = Math.ceil(radius / this.cellSize);

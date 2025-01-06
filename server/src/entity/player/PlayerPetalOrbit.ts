@@ -6,7 +6,6 @@ import { isPetal } from "../../utils/common";
 import { PetalType } from "../../../../shared/EntityType";
 import { PETAL_PROFILES } from "../../../../shared/entity/mob/petal/petalProfiles";
 import { decodeMood, Mood } from "../../../../shared/mood";
-import { FLOWER_ARC_RADIUS } from "../EntityCollisionResponse";
 
 const TAU = Math.PI * 2;
 
@@ -155,7 +154,8 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                         isPetal(firstPetal.type) && UNMOODABLE_PETALS.has(firstPetal.type) ? 40 : 80 :
                         isSad ? 25 : 40;
 
-                baseRadius += ((this.size / Player.BASE_SIZE) - 1) * FLOWER_ARC_RADIUS;
+                // 25 is FLOWER_ARC_RADIUS
+                baseRadius += ((this.size / Player.BASE_SIZE) - 1) * 25;
 
                 const bounce = this.petalBounces[i];
                 this.petalRadii[i] += bounce;
@@ -211,7 +211,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
             }
         }
 
-        dispose = () => {
+        dispose(): void {
             if (super.dispose) {
                 super.dispose();
             }

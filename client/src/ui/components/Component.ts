@@ -57,15 +57,15 @@ export abstract class Component {
     protected readonly ANIMATION_SLIDE_DURATION: number = 100;
 
     public isAnimating: boolean = false;
+    public animationType: AnimationType;
     public animationProgress: number = 1;
     public animationStartTime: number | null = null;
     public animationDirection: 'in' | 'out' = 'in';
     public animationSlideDirection: "v" | "h";
-    public animationType: AnimationType;
 
     private static readonly DEFAULT_EASING_FUNCTIONS = {
-        in: ((_) => 0),
-        out: ((_) => 0),
+        in: (_) => 0,
+        out: (_) => 0,
     } satisfies InOutEasingFunction;
 
     private static readonly ANIMATION_EASING_FUNCTIONS = {
@@ -216,9 +216,9 @@ export abstract class Component {
                         const inOutProgress = 1 - Component.ZOOM_IN_OUT_EASING_FUNCTION(this.animationProgress);
 
                         if (this.animationDirection === 'out') {
-                            this.y = this.realY - (20 * inOutProgress);
+                            this.y = this.realY - (25 * inOutProgress);
                         } else {
-                            this.y = this.realY + (20 * inOutProgress);
+                            this.y = this.realY + (25 * inOutProgress);
                         }
 
                         break;
@@ -268,11 +268,11 @@ export abstract class Component {
 
         if (shouldAnimate) {
             this.isAnimating = true;
+            this.animationType = animationType;
             this.animationProgress = toggle ? 0 : 1;
             this.animationStartTime = null;
             this.animationDirection = toggle ? 'in' : 'out';
             this.animationSlideDirection = slideDirection;
-            this.animationType = animationType;
 
             this.realX = this.x;
             this.realY = this.y;

@@ -41,24 +41,17 @@ export interface Entity {
 }
 
 /**
- * Symbols to call in the update method of WavePool
+ * Symbols to call in the update method of WavePool.
  * 
  * @remarks
  * 
  * This is not only used for mixin.
  */
-export const onUpdateTick: unique symbol = Symbol.for("onUpdateTick");
+export const onUpdateTick: unique symbol = Symbol("onUpdateTick");
 
-export type MaybeDisposable = Partial<{
-    /**
-     * Dispose up own mixin values.
-     */
-    dispose(): void;
-}>
+export type EntityMixinConstructor<T extends object> = new (...args: any[]) => T & EntityMixinTemplate;
 
-export type EntityMixinConstructor<T extends object> = new (...args: any[]) => T & MaybeDisposable;
-
-export interface EntityMixinTemplate extends MaybeDisposable {
+export interface EntityMixinTemplate {
     /**
      * Method call upon every UPDATE_FPS interval.
      * 
@@ -66,9 +59,14 @@ export interface EntityMixinTemplate extends MaybeDisposable {
      * 
      * Call this method of parent if exists so can propagate mixin.
      */
-    [onUpdateTick]: (poolThis: WavePool) => void;
+    [onUpdateTick](poolThis: WavePool): void;
 
-    [key: string | number | symbol]: any;
+    /**
+     * Dispose up own mixin values.
+     */
+    dispose(): void;
+
+    [key: PropertyKey]: any;
 }
 
 export interface EntityCollision {
@@ -87,11 +85,11 @@ export interface EntityCollision {
 /**
  * Minimum required data that all mobs/petals data must meet.
  */
-export interface BaseEntityData<V extends object> {
+export interface BaseEntityData<I18n extends object> {
     /**
      * Internationalization of entity data.
      */
-    i18n: Required<V>;
+    i18n: Required<I18n>;
 
     /**
      * Collision data needed for collide.

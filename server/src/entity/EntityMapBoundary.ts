@@ -53,7 +53,7 @@ export function EntityMapBoundary<T extends EntityMixinConstructor<Entity>>(Base
                 return 0;
             };
 
-            const waveMapRadius = poolThis.waveData.waveMapRadius;
+            const { waveMapRadius } = poolThis.waveData;
 
             const worldRadius = waveMapRadius - getRadius();
 
@@ -69,7 +69,7 @@ export function EntityMapBoundary<T extends EntityMixinConstructor<Entity>>(Base
             }
         }
 
-        dispose = () => {
+        dispose(): void {
             if (super.dispose) {
                 super.dispose();
             }

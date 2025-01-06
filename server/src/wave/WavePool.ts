@@ -7,9 +7,9 @@ import { logger } from "../../main";
 import { Entity, onUpdateTick } from "../entity/Entity";
 import { SAFETY_DISTANCE } from "../entity/EntityMapBoundary";
 import { MobInstance, MobData, Mob, MobId } from "../entity/mob/Mob";
-import { isLivingSlot, PetalData, MockPetalData } from "../entity/mob/petal/Petal";
-import { MockPlayerData, PlayerInstance, Player, PlayerId } from "../entity/player/Player";
-import { USAGE_RELOAD_PETALS } from "../entity/player/PlayerPetalReload";
+import { isLivingSlot, PetalData, MockPetalData, Slot, PetalClusterLike } from "../entity/mob/petal/Petal";
+import { MockPlayerData as MockClientData, PlayerInstance, Player, PlayerId } from "../entity/player/Player";
+import { PETAL_INITIAL_COOLDOWN, USAGE_RELOAD_PETALS } from "../entity/player/PlayerPetalReload";
 import { isPetal, calculateMobSize, revivePlayer, calculateMaxHealth } from "../utils/common";
 import { getRandomPosition, generateRandomId, getRandomAngle, getRandomSafePosition } from "../utils/random";
 import WaveProbabilityPredictor, { LINKABLE_MOBS } from "./WaveProbabilityPredictor";
@@ -33,7 +33,7 @@ export interface UserData {
      * 
      * This data is used to squad ui to display petals and names and to convert them when wave starting.
      */
-    wavePlayerData: MockPlayerData;
+    wavePlayerData: MockClientData;
 }
 
 export const UPDATE_WAVE_FPS = 30;
@@ -175,7 +175,7 @@ export class WavePool {
         roomCandidates.forEach(player => {
             const randPos = getRandomPosition(this.waveData.waveMapRadius, this.waveData.waveMapRadius, this.waveData.waveMapRadius);
 
-            const client = this.addClient(player, randPos[0], randPos[1]);
+            const client = this.generateClient(player, randPos[0], randPos[1]);
 
             player.ws.send(waveStartBuffer, true);
 
@@ -199,17 +199,33 @@ export class WavePool {
     public endWave() {
     }
 
-    public addClient(
-        playerData: MockPlayerData,
+    /**
+     * Generates a player.
+     * 
+     * @remarks
+     * 
+     * Although no need to implement isLiving parameter because theres no dummy players.
+     * 
+     * @param clientData - Mock data of player.
+     * 
+     * @param x - X coordinate of mob.
+     * @param y - Y coordinate of mob.
+     * 
+     * @returns Instance of player.
+     */
+    public generateClient(
+        clientData: MockClientData,
+
         x: number,
         y: number
-    ): PlayerInstance | null {
+    ): PlayerInstance {
         const clientId = generateRandomId<PlayerId>();
 
         // Ensure unique clientId
         if (this.clientPool.has(clientId)) {
-            return this.addClient(
-                playerData,
+            return this.generateClient(
+                clientData,
+                
                 x,
                 y
             );
@@ -236,40 +252,65 @@ export class WavePool {
 
             noclip: false,
 
-            nickname: playerData.name,
+            nickname: clientData.name,
 
             slots: {
                 surface: null,
                 bottom: null,
 
-                cooldownsPetal: Array.from({ length: playerData.slots.surface.length }, e => new Array(5).fill(0)),
-                cooldownsUsage: Array.from({ length: playerData.slots.surface.length }, e => new Array(5).fill(0)),
+                cooldownsPetal: Array.from({ length: clientData.slots.surface.length }, e => new Array(5).fill(PETAL_INITIAL_COOLDOWN)),
+                cooldownsUsage: Array.from({ length: clientData.slots.surface.length }, e => new Array(5).fill(PETAL_INITIAL_COOLDOWN)),
             },
 
-            ws: playerData.ws,
+            ws: clientData.ws,
         });
 
         // Reload all
-        playerInstance.slots.surface = playerData.slots.surface.map(c =>
+        playerInstance.slots.surface = clientData.slots.surface.map(c =>
             // Ensure c is MockPetalData
             c &&
             !isLivingSlot(c) &&
             this.mockPetalDataToReal(c, playerInstance, true)
         );
-        playerInstance.slots.bottom = playerData.slots.bottom.map(c =>
+        playerInstance.slots.bottom = clientData.slots.bottom.map(c =>
             c &&
             !isLivingSlot(c) &&
             this.mockPetalDataToReal(c, playerInstance, false)
         );
 
+        // Add client to pool
         this.clientPool.set(clientId, playerInstance);
 
+        // Add to spatial hash
         this.sharedSpatialHash.put(playerInstance);
 
         return playerInstance;
     }
 
-    public addPetalOrMob(
+    /**
+     * Generates a mob.
+     * 
+     * @remarks
+     * 
+     * This is also used to generate petals.
+     * 
+     * @param type - Type of mob.
+     * @param rarity - Rarity of mob.
+     * 
+     * @param x - X coordinate of mob.
+     * @param y - Y coordinate of mob.
+     * 
+     * @param petalMaster - Master of petal.
+     * @param petMaster - Master of pet.
+     * 
+     * @param connectingSegment - Connecting mob segment.
+     * @param isFirstSegment - Mob to generate is first segment (like centi head).
+     * 
+     * @param isLiving - Should add to pool (living) or not. This will used for just creating dummy instance.
+     * 
+     * @returns Instance of mob.
+     */
+    public generateMob(
         type: MobType | PetalType,
         rarity: Rarities,
 
@@ -281,10 +322,12 @@ export class WavePool {
 
         connectingSegment: MobInstance = null,
         isFirstSegment: boolean = false,
-    ): MobInstance | null {
+
+        isLiving: boolean = true,
+    ): MobInstance {
         const mobId = generateRandomId<MobId>();
         if (this.mobPool.has(mobId)) {
-            return this.addPetalOrMob(
+            return this.generateMob(
                 type,
                 rarity,
 
@@ -331,10 +374,13 @@ export class WavePool {
             isFirstSegment,
         });
 
-        // Add mob to pool
-        this.mobPool.set(mobId, mobInstance);
+        if (isLiving) {
+            // Add mob to pool
+            this.mobPool.set(mobId, mobInstance);
 
-        this.sharedSpatialHash.put(mobInstance);
+            // Add to spatial hash
+            this.sharedSpatialHash.put(mobInstance);
+        }
 
         return mobInstance;
     }
@@ -344,18 +390,32 @@ export class WavePool {
         parent: PlayerInstance,
 
         isSurface: boolean,
-    ): MobInstance[] | null {
+    ): Slot {
         if (!sp) {
             return null;
         }
 
-        const count: number = PETAL_PROFILES[sp.type][sp.rarity].count;
+        const { count } = PETAL_PROFILES[sp.type][sp.rarity];
 
-        const slotPetals: MobInstance[] = new Array(count);
+        const slotPetals: PetalClusterLike = new Array(count);
 
         for (let i = 0; i < count; i++) {
-            slotPetals[i] = this.addPetalOrMob(sp.type, sp.rarity, parent.x, parent.y, parent);
-            if (!isSurface) this.removeMob(slotPetals[i].id);
+            slotPetals[i] = this.generateMob(
+                sp.type,
+                sp.rarity,
+
+                // Make it player coordinate so its looks like spawning from player body
+                parent.x,
+                parent.y,
+
+                parent,
+                null,
+
+                null,
+                false,
+
+                isSurface,
+            );
         }
 
         return slotPetals;
@@ -391,7 +451,7 @@ export class WavePool {
                     if (LINKABLE_MOBS.has(type)) {
                         this.linkedMobSegmentation(type, rarity, randPos[0], randPos[1], 10);
                     } else {
-                        this.addPetalOrMob(type, rarity, randPos[0], randPos[1]);
+                        this.generateMob(type, rarity, randPos[0], randPos[1]);
                     }
                 }
             }
@@ -452,7 +512,7 @@ export class WavePool {
         for (let i = 0; i < bodyCount + 1; i++) {
             const radius = i * distanceBetween;
 
-            prevSegment = this.addPetalOrMob(
+            prevSegment = this.generateMob(
                 type,
                 rarity,
 
@@ -509,8 +569,8 @@ export class WavePool {
             const temp = client.slots.surface[at];
 
             // Reset cooldown
-            client.slots.cooldownsPetal[at] = new Array(5).fill(0);
-            client.slots.cooldownsUsage[at] = new Array(5).fill(0);
+            client.slots.cooldownsPetal[at] = new Array(5).fill(PETAL_INITIAL_COOLDOWN);
+            client.slots.cooldownsUsage[at] = new Array(5).fill(PETAL_INITIAL_COOLDOWN);
 
             // Remove all petal-binded mob
             // TODO: remove summoned mob

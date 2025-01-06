@@ -191,16 +191,12 @@ export const isEntityDead = (poolThis: WavePool, entity: Entity): boolean => {
 /**
  * Calculate maxHealth by entity instance.
  */
-export function calculateMaxHealth(entity: BaseMob | BasePlayer): number {
+export function calculateMaxHealth(entity: Entity): number {
     if (entity instanceof BaseMob) {
         const profile: MobData | PetalData = MOB_PROFILES[entity.type] || PETAL_PROFILES[entity.type];
 
-        const maxHealth = profile[entity.rarity].health;
-
-        return maxHealth;
+        return profile[entity.rarity].health;
     } else {
-        const maxHealth = calculateHp(100);
-
-        return maxHealth;
+        return calculateHp(100);
     }
 }

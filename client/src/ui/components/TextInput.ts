@@ -922,14 +922,42 @@ export default class TextInput extends PlaceholderExtension(Component) implement
     }
 
     private _clipText(value: string = undefined) {
-        let self = this;
+        const self = this;
         value = (typeof value === 'undefined') ? self._value : value;
+    
+        const padding = self._padding + self._borderWidth;
+        const availableWidth = self.w - (padding * 2);
+        const textWidth = self._textWidth(value);
+        
+        if (textWidth <= availableWidth) {
+            return value;
+        }
 
-        let textWidth = self._textWidth(value),
-            fillPer = textWidth / self.w,
-            text = fillPer > 1 ? value.substr(-1 * Math.floor(value.length / fillPer)) : value;
+        let startPos = 0;
+        let endPos = value.length;
+        let currentWidth = 0;
+        let cursorOffset = self._textWidth(value.substring(0, self._cursorPos));
 
-        return text;
+        if (cursorOffset > availableWidth) {
+            for (let i = 0; i < value.length; i++) {
+                currentWidth += self._textWidth(value[i]);
+                if (currentWidth + padding > cursorOffset - availableWidth + padding * 2) {
+                    startPos = i;
+                    break;
+                }
+            }
+        }
+
+        currentWidth = 0;
+        for (let i = startPos; i < value.length; i++) {
+            currentWidth += self._textWidth(value[i]);
+            if (currentWidth > availableWidth) {
+                endPos = i;
+                break;
+            }
+        }
+    
+        return value.substring(startPos, endPos);
     }
 
     private _textWidth(text: string) {
