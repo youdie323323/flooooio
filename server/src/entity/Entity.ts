@@ -120,6 +120,6 @@ type WritableKeysOf<T> = NonNullable<{
  * 
  * @deprecated Use {@link PartialUnion} now.
  */
-export type ConstructorParameterObject<T> = Required<Pick<T, WritableKeysOf<T>>> & Partial<Exclude<T, WritableKeysOf<T>>>;
+export type ConstructorParameterObject<T, P extends WritableKeysOf<T>, U extends P = P> = Required<Pick<T, U>> & Partial<Exclude<T, U>>;
 
 export type PartialUnion<T, U extends keyof T = never> = Omit<T, U> & Partial<Pick<T, U>>;

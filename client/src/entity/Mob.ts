@@ -270,27 +270,28 @@ export default class Mob extends Entity {
                 }
 
                 {
+                    ctx.lineWidth = 7;
+
                     const skinColor = this.isPet ? "#ffe667" : "#8f5db0";
                     ctx.fillStyle = this.getSkinColor(skinColor);
                     ctx.fill(beetleBodyPath);
-                    ctx.lineWidth = 7;
                     // Arc points are same color with this
                     ctx.fillStyle = ctx.strokeStyle = this.getSkinColor(darkend(skinColor, DARKEND_BASE));
                     ctx.stroke(beetleBodyPath);
                 }
+
+                ctx.lineWidth = 6;
 
                 // Draw center line
                 ctx.beginPath();
                 ctx.moveTo(-21, 0);
                 ctx.quadraticCurveTo(0, -3, 21, 0);
                 ctx.lineCap = "round";
-                ctx.lineWidth = 6;
                 ctx.stroke();
 
                 const arcPoints = [[-17, -12], [17, -12], [0, -15]];
 
                 ctx.beginPath();
-                ctx.lineWidth = 6;
                 for (let i = 0; i < 2; i++) {
                     const relative = i === 1 ? 1 : -1;
                     for (let j = 0; j < arcPoints.length; j++) {

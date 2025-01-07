@@ -43,9 +43,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
         private historyIndex = 0;
 
         [onUpdateTick](poolThis: WavePool): void {
-            if (super[onUpdateTick]) {
-                super[onUpdateTick](poolThis);
-            }
+            super[onUpdateTick](poolThis);
 
             this.historyX[this.historyIndex] = this.x;
             this.historyY[this.historyIndex] = this.y;

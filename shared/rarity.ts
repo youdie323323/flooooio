@@ -11,7 +11,9 @@ export enum Rarities {
     SUPER
 }
 
-export const RARITY_NAME = {
+export const MAX_RARITY = Rarities.SUPER;
+
+export const RARITY_DISPLAY_NAME = {
     [Rarities.COMMON]: "Common",
     [Rarities.UNUSUAL]: "Unusual",
     [Rarities.RARE]: "Rare",

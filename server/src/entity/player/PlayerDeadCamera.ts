@@ -12,9 +12,7 @@ export function PlayerDeadCamera<T extends EntityMixinConstructor<BasePlayer>>(B
         private executionTimeout: NodeJS.Timeout;
 
         [onUpdateTick](poolThis: WavePool): void {
-            if (super[onUpdateTick]) {
-                super[onUpdateTick](poolThis);
-            }
+            super[onUpdateTick](poolThis);
 
             if (this.isDead) {
                 // Determine if should find dead camera entity

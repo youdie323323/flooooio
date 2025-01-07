@@ -18,11 +18,7 @@ export function MobDynamicMovement<T extends EntityMixinConstructor<BaseMob>>(Ba
         private isMoving: boolean = false;
 
         [onUpdateTick](poolThis: WavePool): void {
-            // Call parent onUpdateTick
-            // to use multiple mixin functions
-            if (super[onUpdateTick]) {
-                super[onUpdateTick](poolThis);
-            }
+            super[onUpdateTick](poolThis);
 
             // Dont dynamic move when petal
             if (isPetal(this.type)) {

@@ -7,11 +7,7 @@ import { Player } from "./player/Player";
 export function EntityDeath<T extends EntityMixinConstructor<Entity>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
         [onUpdateTick](poolThis: WavePool): void {
-            // Call parent onUpdateTick
-            // to use multiple mixin functions
-            if (super[onUpdateTick]) {
-                super[onUpdateTick](poolThis);
-            }
+            super[onUpdateTick](poolThis);
 
             if (
                 !isEntityDead(poolThis, this) &&

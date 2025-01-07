@@ -10,11 +10,7 @@ import { MOB_PROFILES } from "../../../../shared/entity/mob/mobProfiles";
 export function MobHealthRegen<T extends EntityMixinConstructor<BaseMob>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
         [onUpdateTick](poolThis: WavePool): void {
-            // Call parent onUpdateTick
-            // to use multiple mixin functions
-            if (super[onUpdateTick]) {
-                super[onUpdateTick](poolThis);
-            }
+            super[onUpdateTick](poolThis);
 
             // Dont check when this is petal
             if (isPetal(this.type)) return;

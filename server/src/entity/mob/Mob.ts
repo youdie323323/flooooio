@@ -206,7 +206,7 @@ const MOB_SPEED = {
     [MobType.BEETLE]: 3.5,
     [MobType.CENTIPEDE_DESERT]: 8,
 
-    [MobType.BUBBLE]: 3.5,
+    [MobType.BUBBLE]: 0,
     [MobType.JELLYFISH]: 3.5,
     [MobType.STARFISH]: 3.5,
 } satisfies Record<MobType, number>;

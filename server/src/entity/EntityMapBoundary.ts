@@ -14,11 +14,7 @@ export const PROJECTILE_TYPES: Set<MobType | PetalType> = new Set([]);
 export function EntityMapBoundary<T extends EntityMixinConstructor<Entity>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
         [onUpdateTick](poolThis: WavePool): void {
-            // Call parent onUpdateTick
-            // to use multiple mixin functions
-            if (super[onUpdateTick]) {
-                super[onUpdateTick](poolThis);
-            }
+            super[onUpdateTick](poolThis);
 
             if (this instanceof Mob) {
                 // Dont if petal

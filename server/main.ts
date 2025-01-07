@@ -23,36 +23,12 @@ export const isDebug = process.argv.includes("-d");
 const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
     name: 'A-NNCYANCHI-N',
     slots: {
-        surface: [
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } satisfies MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } satisfies MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } satisfies MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } satisfies MockPetalData,
-            {
-                type: PetalType.BASIC,
-                rarity: Rarities.SUPER,
-            } satisfies MockPetalData,
+        surface: Array(50).fill(
             {
                 type: PetalType.BEETLE_EGG,
                 rarity: Rarities.ULTRA,
             } satisfies MockPetalData,
-            {
-                type: PetalType.BEETLE_EGG,
-                rarity: Rarities.ULTRA,
-            } satisfies MockPetalData,
-        ],
+        ),
         bottom: [
             {
                 type: PetalType.YIN_YANG,

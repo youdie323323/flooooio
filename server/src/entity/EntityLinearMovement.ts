@@ -5,11 +5,7 @@ import { WavePool } from "../wave/WavePool";
 export function EntityLinearMovement<T extends EntityMixinConstructor<Entity>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
         [onUpdateTick](poolThis: WavePool): void {
-            // Call parent onUpdateTick
-            // to use multiple mixin functions
-            if (super[onUpdateTick]) {
-                super[onUpdateTick](poolThis);
-            }
+            super[onUpdateTick](poolThis);
 
             if (this.magnitude > 0) {
                 const rad = angleToRad(this.angle);

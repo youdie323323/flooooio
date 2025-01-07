@@ -10,7 +10,6 @@ import { PetalSlots, MockPetalData } from "../mob/petal/Petal";
 import { PlayerDeadCamera } from "./PlayerDeadCamera";
 import { EntityMapBoundary } from "../EntityMapBoundary";
 import { EntityDeath } from "../EntityDeath";
-import { PlayerPetalConsume } from "./PlayerPetalConsume";
 
 export type PlayerId = BrandedId<"Player">;
 
@@ -119,8 +118,6 @@ class BasePlayer implements Entity {
 
 let Player = BasePlayer;
 
-// Do PlayerPetalConsume before PlayerReload to avoid server crash
-Player = PlayerPetalConsume(Player);
 // Do PlayerPetalOrbit before PlayerReload so petal reloads like original game (can interpolate movement)
 Player = PlayerPetalOrbit(Player);
 Player = PlayerPetalReload(Player);

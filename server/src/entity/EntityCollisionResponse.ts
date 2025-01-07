@@ -42,11 +42,7 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
     private static calculateSearchRadius = ({ rx, ry, fraction }: Partial<EntityCollision>, size: number): number => (rx + ry) * (size / fraction);
 
     [onUpdateTick](poolThis: WavePool): void {
-      // Call parent onUpdateTick
-      // to use multiple mixin functions
-      if (super[onUpdateTick]) {
-        super[onUpdateTick](poolThis);
-      }
+      super[onUpdateTick](poolThis);
 
       const thisMaxHealth = calculateMaxHealth(this);
 

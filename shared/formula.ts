@@ -1,3 +1,4 @@
+import { MAX_RARITY, Rarities } from "./rarity";
 import { memo } from "./utils/memoize";
 
 /**
@@ -49,11 +50,15 @@ const mobS = [
 /**
  * Calculates petal drop rate chance.
  * 
+ * @remarks
+ * 
+ * Completely same as florrio.utils.calculateDropChance.
+ * 
  * @param baseDropChance - Chance of drop, range to 0~1.
  */
 export const calculateDropChance = (baseDropChance: number, mobRarity: number, dropRarity: number): number => {
     const cap = Math.max(1, mobRarity);
-    if (dropRarity > cap || dropRarity > 6) return 0;
+    if (dropRarity > cap || dropRarity > MAX_DROPPABLE_RARITY) return 0;
 
     const start = dropS[dropRarity],
         end = dropRarity === cap ? 1 : dropS[dropRarity + 1];
@@ -62,4 +67,18 @@ export const calculateDropChance = (baseDropChance: number, mobRarity: number, d
         powTerm2 = Math.pow(baseDropChance * end + (1 - baseDropChance), 300000 / mobS[mobRarity]);
 
     return powTerm2 - powTerm1;
+}
+
+const MAX_DROPPABLE_RARITY = Rarities.MYTHIC;
+
+export const calculateDropTable = (baseDropChance: number): number[][] => {
+    const table = Array.from({ length: MAX_RARITY }, () => new Array(MAX_DROPPABLE_RARITY).fill(0));
+    
+    for (let mob = 0; mob < MAX_RARITY; ++mob) {
+        for (let drop = 0; drop <= MAX_DROPPABLE_RARITY; ++drop) {
+            table[mob][drop] = calculateDropChance(baseDropChance, mob, drop);
+        }
+    }
+    
+    return table;
 }
