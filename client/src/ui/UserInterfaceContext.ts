@@ -24,7 +24,10 @@ export default class UserInterfaceContext {
     public cleanup(): void {
         // Cleanup mode-specific values & components
         this.previousCtx?.dispose();
-        this.previousCtx?.cleanupRenders();
+        this.previousCtx?.disposeRenderComponents();
+
+        // Set cursor to default
+        this.canvas.style.cursor = "default";
 
         this.isTransitioning = false;
     }
@@ -41,6 +44,9 @@ export default class UserInterfaceContext {
 
         // Cleanup listeners so cant touch before ui buttons
         this.previousCtx?.removeEventListeners();
+
+        // Set cursor to default
+        this.canvas.style.cursor = "default";
 
         this.currentCtx = this.createUI(mode);
 

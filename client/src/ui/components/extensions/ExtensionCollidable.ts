@@ -7,7 +7,7 @@ export default function CollidableExtension<T extends ExtensionConstructor>(Base
         private static readonly COLLISION_SPEED: number = 0.4;
         private static readonly RETURN_SPEED: number = 0.2;
         private static readonly GAP: number = 4;
-        private static readonly DEAD_ZONE: number = 6;
+        private static readonly DEAD_ZONE: number = 20;
 
         private collidableComponents: Component[];
         private targetYPos: number | null;

@@ -395,7 +395,7 @@ export default class UserInterfaceTitle extends UserInterface {
                 alignFromCenterX: true,
                 alignFromCenterY: true,
             },
-            "florr.io",
+            "floooo.io",
             54,
         );
 
@@ -924,14 +924,10 @@ export default class UserInterfaceTitle extends UserInterface {
 
     public dispose(): void {
         this.terrainGenerator = undefined;
-
-        this.canvas.style.cursor = "default";
     }
 
     public onContextChanged(): void {
         cameraController.zoom = 1;
-
-        this.canvas.style.cursor = "default";
     }
 
     set biome(biome: Biomes) {

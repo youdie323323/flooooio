@@ -15,11 +15,15 @@ export default abstract class UserInterface {
 
     private components: AllComponents[] = [];
 
-    // Store children component to not render from UserInterface, flattend
+    /**
+     * Flattend children components store.
+     */
     private childrenComponents: Set<Component> = new Set();
 
     private hoveredComponent: Interactive | null = null;
     private clickedComponent: Clickable | null = null;
+
+    private shouldUpdateFocus: boolean;
 
     private _mousedown: (event: MouseEvent) => void;
     private _mouseup: (event: MouseEvent) => void;
@@ -45,12 +49,10 @@ export default abstract class UserInterface {
         this._touchmove = (event: TouchEvent) => {
             event.preventDefault();
 
-            if (!event.isTrusted) return;
-
             const touch = event.touches[0];
 
             this.handleMouseMove({
-                isTrusted: true,
+                isTrusted: event.isTrusted,
                 clientX: touch.clientX,
                 clientY: touch.clientY,
             } as MouseEvent);
@@ -58,16 +60,12 @@ export default abstract class UserInterface {
         this._touchstart = (event: TouchEvent) => {
             event.preventDefault();
 
-            if (!event.isTrusted) return;
-
-            this.handleMouseDown({ isTrusted: true } as MouseEvent);
+            this.handleMouseDown({ isTrusted: event.isTrusted } as MouseEvent);
         };
         this._touchend = (event: TouchEvent) => {
             event.preventDefault();
 
-            if (!event.isTrusted) return;
-
-            this.handleMouseUp({ isTrusted: true } as MouseEvent);
+            this.handleMouseUp({ isTrusted: event.isTrusted } as MouseEvent);
         };
 
         this._keydown = this.handleKeyDown.bind(this);
@@ -110,9 +108,11 @@ export default abstract class UserInterface {
         // Call twice to render container properly
         this._onresize();
         this._onresize();
+
+        this.shouldUpdateFocus = true;
     }
 
-    public removeEventListeners(): void {
+    public removeEventListeners(): void {        
         {
             this.canvas.removeEventListener('mousedown', this._mousedown);
             this.canvas.removeEventListener('mouseup', this._mouseup);
@@ -137,6 +137,14 @@ export default abstract class UserInterface {
         this._mousemove = null;
         this._keydown = null;
         this._keyup = null;
+
+        // Set cursor style to default if context changed
+        if (this.hoveredComponent) {
+            this.hoveredComponent.onBlur();
+            this.hoveredComponent = null;
+        }
+
+        this.shouldUpdateFocus = false;
     }
 
     protected addComponent(component: AllComponents): AllComponents {
@@ -299,14 +307,20 @@ export default abstract class UserInterface {
         this.mouseX = ((event.clientX - rect.left) * (this.canvas.width / rect.width)) / uiScaleFactor;
         this.mouseY = ((event.clientY - rect.top) * (this.canvas.height / rect.height)) / uiScaleFactor;
 
+        // Maybe too performance-impact?
+        // this.invalidateDynamicLayoutables();
+    }
+
+    private updateComponentFocusStates(): void {
         // TODO: priority is given to components before and after
 
         this.components.forEach(component => {
-            if (!this.isClickableChildren(component)) {
-                return;
-            }
+            if (!this.isClickableChildren(component)) return;
 
-            if (component.visible && this.isInteractive(component)) {
+            if (
+                component.visible &&
+                this.isInteractive(component)
+            ) {
                 const isHovering = this.overlapsComponent(component, this.mouseX, this.mouseY);
 
                 if (isHovering) {
@@ -322,12 +336,9 @@ export default abstract class UserInterface {
                 }
             }
         });
-
-        // Maybe too performance-impact?
-        // this.invalidateDynamicLayoutables();
     }
 
-    public cleanupRenders(): void {
+    public disposeRenderComponents(): void {
         this.getTopLevelComponents().forEach(c => c.destroy());
 
         this.components = [];
@@ -350,6 +361,8 @@ export default abstract class UserInterface {
 
         const scaledWidth = this.canvas.width / uiScaleFactor;
         const scaledHeight = this.canvas.height / uiScaleFactor;
+
+        if (this.shouldUpdateFocus) this.updateComponentFocusStates();
 
         this.getTopLevelComponents().filter(c => this.isDynamicLayoutable(c)).forEach(component => {
             const layout = component._calculateLayout(scaledWidth, scaledHeight, 0, 0);
@@ -374,7 +387,10 @@ export default abstract class UserInterface {
 
     // Component helpers
 
-    protected createAddableContainer(container: ComponentContainer, children: AllComponents[]): AddableContainer {
+    protected createAddableContainer(
+        container: ComponentContainer, 
+        children: AllComponents[]
+    ): AddableContainer {
         children.forEach(child => {
             this.addChildrenComponent(container, child);
 
@@ -382,6 +398,7 @@ export default abstract class UserInterface {
         });
 
         const addable = <AddableContainer>container;
+        // Mark component as addable
         addable.__addable = true;
         return addable;
     }

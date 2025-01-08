@@ -1,4 +1,4 @@
-const LOCAL_STORAGE_HEAD_ID = "floooio_"
+const LOCAL_STORAGE_HEAD_ID = "flooooio_"
 
 export function isSettingTrue(key: string): boolean {
     const item = localStorage.getItem(LOCAL_STORAGE_HEAD_ID + key);

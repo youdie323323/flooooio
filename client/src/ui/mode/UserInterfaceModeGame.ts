@@ -776,8 +776,6 @@ export default class UserInterfaceGame extends UserInterface {
     public dispose(): void {
         this.terrainGenerator = undefined;
 
-        this.canvas.style.cursor = "default";
-
         players.clear();
         mobs.clear();
     }
@@ -789,8 +787,6 @@ export default class UserInterfaceGame extends UserInterface {
             player.isDead = true;
             player.deadT = 0;
         }
-
-        this.canvas.style.cursor = "default";
     }
 
     /**
