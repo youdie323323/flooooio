@@ -200,6 +200,8 @@ const MOB_DAMAGE_FACTOR = {
  */
 const MOB_SPEED = {
     [MobType.BEE]: 3.5,
+    [MobType.SPIDER]: 5,
+    
     [MobType.CENTIPEDE]: 3.5,
     [MobType.CENTIPEDE_EVIL]: 3.5,
 

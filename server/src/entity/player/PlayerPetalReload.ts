@@ -75,8 +75,8 @@ export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(
             }
 
             if (this.slots.cooldownsPetal.length !== surface.length) {
-                this.slots.cooldownsPetal = Array.from({ length: surface.length }, e => new Array(5).fill(0));
-                this.slots.cooldownsUsage = Array.from({ length: surface.length }, e => new Array(5).fill(0));
+                this.slots.cooldownsPetal = Array.from({ length: surface.length }, e => new Array(5).fill(PETAL_INITIAL_COOLDOWN));
+                this.slots.cooldownsUsage = Array.from({ length: surface.length }, e => new Array(5).fill(PETAL_INITIAL_COOLDOWN));
             }
 
             // Dont reload if player is dead
@@ -84,7 +84,7 @@ export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(
                 // Reload logic
                 {
                     surface.forEach((petals, i) => {
-                        if (petals != null && isLivingSlot(petals)) {
+                        if (petals !== null && isLivingSlot(petals)) {
                             petals.forEach((e, j) => {
                                 if (
                                     // Petal breaked, start reloading

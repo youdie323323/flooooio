@@ -343,7 +343,7 @@ export default class Networking {
         };
     }
 
-    public sendChangeMove(angle: number, magnitude = 1) {
+    public sendChangeMove(angle: number, magnitude: number) {
         const normalizedAngle = getNormalizedAngle(angle);
         const data = new Uint8Array([ServerBound.WAVE_CHANGE_MOVE, normalizedAngle, Math.round(magnitude * 255)]);
         this.ws.send(data);

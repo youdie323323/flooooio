@@ -16,26 +16,29 @@ import uWS from 'uWebSockets.js';
 import { calculateHp } from "./formula";
 import { type } from "os";
 import { MOB_PROFILES } from "../../../shared/entity/mob/mobProfiles";
+import { PETAL_INITIAL_COOLDOWN } from "../entity/player/PlayerPetalReload";
 
 const TAU = Math.PI * 2;
 
 /**
  * Convert angle to radian.
  */
-export const angleToRad = memo((angle: number): number => (angle / 255) * TAU);
+export const angleToRad = (angle: number): number => (angle / 255) * TAU;
 
 export const isPetal = <(type: MobType | PetalType) => type is PetalType>memo((type: MobType | PetalType): type is PetalType => type in PETAL_PROFILES);
 
 export const bodyDamageOrDamage = (stat: PetalStat | MobStat): number => "bodyDamage" in stat ? stat.bodyDamage : stat.damage;
 
 export function clientRemove(waveRoom: WaveRoom, waveClientId: PlayerId) {
-    removeAllBindings(waveRoom.wavePool, waveClientId);
+    const { wavePool } = waveRoom;
 
-    waveRoom.wavePool.removeClient(waveClientId);
+    removeAllBindings(wavePool, waveClientId);
+
+    wavePool.removeClient(waveClientId);
 
     // Check size, if all players leaved, remove wave room
     // Maybe should do this in WavePool.removeClient?
-    if (waveRoom.wavePool.clientPool.size === 0) {
+    if (wavePool.clientPool.size === 0) {
         // This is not mistake, removeWaveRoom release wavePool memory too
         waveRoomService.removeWaveRoom(waveRoom);
     }
@@ -92,8 +95,8 @@ export function removeAllBindings(wavePool: WavePool, clientId: PlayerInstance["
         });
 
         // Reset all reloads
-        player.slots.cooldownsPetal = Array.from({ length: player.slots.surface.length }, e => new Array(5).fill(0));
-        player.slots.cooldownsUsage = Array.from({ length: player.slots.surface.length }, e => new Array(5).fill(0));
+        player.slots.cooldownsPetal = Array.from({ length: player.slots.surface.length }, e => new Array(5).fill(PETAL_INITIAL_COOLDOWN));
+        player.slots.cooldownsUsage = Array.from({ length: player.slots.surface.length }, e => new Array(5).fill(PETAL_INITIAL_COOLDOWN));
     }
 }
 

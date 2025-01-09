@@ -94,12 +94,12 @@ export class WavePool {
      * Current wave data.
      */
     public waveData: WaveData = {
-        waveProgress: 52,
+        waveProgress: 36,
         waveProgressTimer: 0,
         waveProgressRedTimer: 0,
         waveProgressIsRed: false,
 
-        waveMapRadius: 5000,
+        waveMapRadius: 3000,
     } satisfies WaveData;
 
     /**
@@ -574,7 +574,7 @@ export class WavePool {
 
             // Remove all petal-binded mob
             // TODO: remove summoned mob
-            if (isLivingSlot(temp)) {
+            if (temp !== null && isLivingSlot(temp)) {
                 temp.forEach(e => {
                     if (this.getMob(e.id)) {
                         this.removeMob(e.id);
@@ -827,7 +827,7 @@ export class WavePool {
         const client = this.getClient(clientId);
         if (client) {
             // Free memory
-            client["dispose"]();
+            client.dispose();
 
             this.sharedSpatialHash.remove(client);
 
@@ -854,7 +854,7 @@ export class WavePool {
         const mob = this.getMob(mobId);
         if (mob) {
             // Free memory
-            mob["dispose"]();
+            mob.dispose();
 
             this.sharedSpatialHash.remove(mob);
 

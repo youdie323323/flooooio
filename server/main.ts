@@ -23,7 +23,7 @@ export const isDebug = process.argv.includes("-d");
 const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
     name: 'A-NNCYANCHI-N',
     slots: {
-        surface: Array(100).fill(
+        surface: Array(10).fill(
             {
                 type: PetalType.BEETLE_EGG,
                 rarity: Rarities.SUPER,

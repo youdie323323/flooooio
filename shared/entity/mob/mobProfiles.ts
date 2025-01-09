@@ -53,6 +53,54 @@ export const MOB_PROFILES = {
         },
     },
 
+    [MobType.SPIDER]: {
+        baseSize: 20,
+
+        i18n: {
+            name: "Spider",
+            description: "Spooky.",
+        },
+
+        collision: {
+            fraction: 40,
+            rx: 40,
+            ry: 40,
+        },
+
+        [Rarities.COMMON]: {
+            health: 62.5,
+            bodyDamage: 15,
+        },
+        [Rarities.UNUSUAL]: {
+            health: 234.5,
+            bodyDamage: 45,
+        },
+        [Rarities.RARE]: {
+            health: 843.75,
+            bodyDamage: 135,
+        },
+        [Rarities.EPIC]: {
+            health: 3375,
+            bodyDamage: 405,
+        },
+        [Rarities.LEGENDARY]: {
+            health: 25312.5,
+            bodyDamage: 1215,
+        },
+        [Rarities.MYTHIC]: {
+            health: 151875,
+            bodyDamage: 3645,
+        },
+        [Rarities.ULTRA]: {
+            health: 4562500,
+            bodyDamage: 10935,
+        },
+        [Rarities.SUPER]: {
+            health: 82000000,
+            bodyDamage: 32805,
+        },
+    },
+
     [MobType.STARFISH]: {
         baseSize: 20,
 

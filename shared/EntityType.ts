@@ -8,6 +8,7 @@ function getNextEntityType(): number {
 
 export enum MobType {
     BEE = getNextEntityType(),
+    SPIDER = getNextEntityType(),
     STARFISH = getNextEntityType(),
     JELLYFISH = getNextEntityType(),
     BEETLE = getNextEntityType(),

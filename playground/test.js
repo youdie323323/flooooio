@@ -20,29 +20,51 @@ const darkend = (color, strength) => {
     return result;
 };
 
+const curves = []
+
+function createCurve(angle, direction, offset = 8) {
+  direction *= -1
+  const cosAngle = Math.cos(angle)
+  const sinAngle = Math.sin(angle)
+  const startX = cosAngle * 40
+  const startY = sinAngle * 40
+
+  curves.push({
+    dir: direction,
+    start: [startX, startY],
+    curve: [
+      startX + cosAngle * 23 + -sinAngle * direction * offset,
+      startY + sinAngle * 23 + cosAngle * direction * offset,
+      startX + cosAngle * 46,
+      startY + sinAngle * 46
+    ],
+    side: Math.sign(angle)
+  })
+}
+
+createCurve((Math.PI / 180) * 40, 1)
+createCurve((Math.PI / 180) * 70, 1, 6)
+createCurve((Math.PI / 180) * 100, -1, 6)
+createCurve((Math.PI / 180) * 130, -1)
+createCurve((-Math.PI / 180) * 40, -1)
+createCurve((-Math.PI / 180) * 70, -1, 6)
+createCurve((-Math.PI / 180) * 100, 1, 6)
+createCurve((-Math.PI / 180) * 130, 1)
+
 ctx.scale(5, 5);
 
-ctx.translate(50, 50);
+ctx.translate(100, 100);
 
-[-10, -12, 5, -12, 15, 0];
-[5, 12, -10, 12, -15, 0];
-[-10, -12, 5, -12, 15, 0];
-[5, 12, -10, 12, -15, 0];
-[-10, -12, 5, -12, 15, 0];
-[5, 12, -10, 12, -15, 0];
-[-10, -12, 5, -12, 15, 0];
-[5, 12, -10, 12, -15, 0];
-
-{
-    ctx.lineCap = ctx.lineJoin = "round";
-
+for (let i = 0; i < curves.length; i++) {
+    const curve = curves[i];
+    ctx.save();
+    ctx.rotate(curve.dir * 1.5);
     ctx.beginPath();
-
-    ctx.fillStyle = "#ffe763";
-
-    ctx.bezierCurveTo(5, 12, -10, 12, -15, 0);
-    ctx.bezierCurveTo(-10, -12, 5, -12, 15, 0);
-
-    ctx.lineWidth = 3;
+    ctx.moveTo(...curve.start);
+    ctx.quadraticCurveTo(...curve.curve);
+    ctx.strokeStyle = "#323032";
+    ctx.lineWidth = 10;
+    ctx.lineCap = "round";
     ctx.stroke();
+    ctx.restore();
 }

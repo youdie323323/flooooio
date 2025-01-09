@@ -47,6 +47,11 @@ const MOB_WEIGHTS = {
             weight: 30,
         },
 
+        [MobType.SPIDER]: {
+            spawnAfter: 3,
+            weight: 30,
+        },
+
         [MobType.CENTIPEDE]: {
             spawnAfter: 2,
             weight: 1,

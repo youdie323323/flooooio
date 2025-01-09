@@ -51,6 +51,7 @@ export const MOB_BEHAVIORS = {
     [MobType.BUBBLE]: MobBehaviors.PASSIVE,
     [MobType.JELLYFISH]: MobBehaviors.CAUTIONS,
     [MobType.BEE]: MobBehaviors.NEUTRAL,
+    [MobType.SPIDER]: MobBehaviors.AGGRESSIVE,
 
     [MobType.CENTIPEDE]: MobBehaviors.NONE,
     // TODO: elucidate desert centipede move
