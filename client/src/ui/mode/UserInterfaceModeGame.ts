@@ -790,7 +790,7 @@ export default class UserInterfaceGame extends UserInterface {
     }
 
     /**
-     * Helper for draw mutable functions. (e.g. mouse movement helper)
+     * Helper for draw mutable functions (e.g. mouse movement helper).
      */
     private drawMutableFunctions(canvas: HTMLCanvasElement) {
         const ARROW_START_DISTANCE = 30;

@@ -965,7 +965,7 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
 
         ctx.font = self._fontStyle + ' ' + self._fontWeight + ' ' + self._fontSize + 'px ' + self._fontFamily;
         ctx.textAlign = 'left';
-        // Disable font kerning so multiple length doesnt have wrong precision
+        // Disable font kerning so 1++ length doesnt have wrong precision
         ctx.fontKerning = 'none';
 
         return ctx.measureText(text).width;
@@ -1030,7 +1030,6 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
     private _mousePos(e: MouseEvent) {
         let self = this;
         const rect = self._canvas.getBoundingClientRect();
-        // TODO: add the fucking interface that only for generic events, not now im fucking serious sleepy
         return {
             x: ((e.clientX - rect.left) * (self._canvas.width / rect.width)) / uiScaleFactor,
             y: ((e.clientY - rect.top) * (self._canvas.height / rect.height)) / uiScaleFactor

@@ -307,13 +307,11 @@ export default abstract class UserInterface {
         this.mouseX = ((event.clientX - rect.left) * (this.canvas.width / rect.width)) / uiScaleFactor;
         this.mouseY = ((event.clientY - rect.top) * (this.canvas.height / rect.height)) / uiScaleFactor;
 
-        // Maybe too performance-impact?
+        // Maybe too performance impact?
         // this.invalidateDynamicLayoutables();
     }
 
     private updateComponentFocusStates(): void {
-        // TODO: priority is given to components before and after
-
         this.components.forEach(component => {
             if (!this.isClickableChildren(component)) return;
 
@@ -398,7 +396,6 @@ export default abstract class UserInterface {
         });
 
         const addable = <AddableContainer>container;
-        // Mark component as addable
         addable.__addable = true;
         return addable;
     }

@@ -10,10 +10,10 @@ import ExtensionBase from "./extensions/Extension";
 import { calculateStrokeWidth } from "./Text";
 
 export default class PlayerProfile extends ExtensionBase(Component) {
-    private entityPlayer: Player = new Player(
+    private dummyPlayerEntity: Player = new Player(
         -1,
 
-        // The coordinate will transform, so we can just send transform value here
+        // The coordinate will transform, so we can send transform value here
         0,
         -28,
 
@@ -162,13 +162,13 @@ export default class PlayerProfile extends ExtensionBase(Component) {
                 ctx.restore();
             }
 
-            this.entityPlayer.draw(ctx);
+            this.dummyPlayerEntity.draw(ctx);
         }
     }
 
     public destroy(): void {
         super.destroy();
 
-        this.entityPlayer = null;
+        this.dummyPlayerEntity = null;
     }
 }

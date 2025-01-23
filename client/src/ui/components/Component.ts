@@ -56,6 +56,8 @@ export abstract class Component {
     protected readonly ANIMATION_ZOOM_DURATION: number = 100;
     protected readonly ANIMATION_SLIDE_DURATION: number = 100;
 
+    protected readonly SLIDE_BASE_DEPTH: number = 20;
+
     public isAnimating: boolean = false;
     public animationType: AnimationType;
     public animationProgress: number = 1;
@@ -241,12 +243,13 @@ export abstract class Component {
             }
 
             case AnimationType.SLIDE: {
+                // TODO: option for offset are singed or not
                 if (this.animationSlideDirection === "v") {
-                    const slideOffset = -(this.h + 20) * (1 - progress);
+                    const slideOffset = -(this.h + this.SLIDE_BASE_DEPTH) * (1 - progress);
 
                     ctx.translate(this.x + this.w / 2, this.realY - slideOffset + this.h / 2);
                 } else {
-                    const slideOffset = (this.w + 20) * (1 - progress);
+                    const slideOffset = (this.w + this.SLIDE_BASE_DEPTH) * (1 - progress);
 
                     ctx.translate(this.realX - slideOffset + this.w / 2, this.y + this.h / 2);
                 }
