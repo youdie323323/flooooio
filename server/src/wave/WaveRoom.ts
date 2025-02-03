@@ -5,7 +5,7 @@ import { logger } from "../../main";
 import { BrandedId } from "../entity/Entity";
 import { MockPlayerData, Player } from "../entity/player/Player";
 import { generateRandomId } from "../utils/random";
-import { WavePool, UserData } from "./WavePool";
+import { WavePool, UserData, WaveData } from "./WavePool";
 
 export type WaveRoomPlayerId = BrandedId<"WaveRoomPlayer">;
 
@@ -16,21 +16,6 @@ export type WaveRoomPlayer = MockPlayerData & {
     isOwner: boolean;
 };
 
-/**
- * Wave data.
- */
-export interface WaveData {
-    /**
-     * Wave progress (gage).
-     */
-    waveProgress: number;
-    waveProgressTimer: number;
-    waveProgressRedGageTimer: number;
-    waveProgressIsRedGage: boolean;
-
-    waveMapRadius: number;
-}
-
 export const WAVE_ROOM_UPDATE_SEND_FPS = 30;
 
 export const WAVE_ROOM_UPDATE_FPS = 60;
@@ -40,7 +25,7 @@ export const WAVE_ROOM_UPDATE_FPS = 60;
  */
 export default class WaveRoom {
     /**
-     * Max player amount.
+     * A number represents maxium player that how many joinable.
      */
     private static readonly MAX_PLAYER_AMOUNT = 4;
 
@@ -49,10 +34,11 @@ export default class WaveRoom {
     public wavePool: WavePool;
 
     constructor(
-        // Biome and code are readonly
+        // In-game related
         public readonly biome: Biomes,
         public readonly code: string,
 
+        // Wave room related
         public visible: WaveRoomVisibleState = WaveRoomVisibleState.PUBLIC,
         public state: WaveRoomState = WaveRoomState.WAITING,
         public roomCandidates: WaveRoomPlayer[] = new Array<WaveRoomPlayer>(),
@@ -60,6 +46,8 @@ export default class WaveRoom {
         this.waveRoomPacketSendInterval = setInterval(this.broadcastWaveRoomPacket.bind(this), 1000 / WAVE_ROOM_UPDATE_SEND_FPS);
 
         this.wavePool = new WavePool(
+            this.constructWaveData(),
+            
             () => this.state,
             this.onChangeAnything,
         );
@@ -80,6 +68,19 @@ export default class WaveRoom {
         this.roomCandidates = null;
 
         logger.info("Released wave room memory");
+    }
+
+    private constructWaveData(): WaveData {
+        return {
+            progress: 36,
+            progressTimer: 0,
+            progressRedTimer: 0,
+            progressIsRed: false,
+
+            mapRadius: 3000,
+
+            biome: this.biome,
+        } satisfies WaveData;
     }
 
     /**
@@ -269,7 +270,7 @@ export default class WaveRoom {
         // Stop update packet send
         clearInterval(this.waveRoomPacketSendInterval);
 
-        this.wavePool.startWave(this.biome, this.roomCandidates);
+        this.wavePool.startWave(this.roomCandidates);
 
         logger.region(() => {
             using _guard = logger.metadata({
@@ -304,7 +305,11 @@ export default class WaveRoom {
      */
     public _roomChecksum() {
         // this.roomCandidates.length !== 0 to prevent multiple wave start, before wave room deletion
-        if (this.state === WaveRoomState.WAITING && this.roomCandidates.length !== 0 && this.roomCandidates.every(p => p.readyState === WaveRoomPlayerReadyState.READY)) {
+        if (
+            this.state === WaveRoomState.WAITING && 
+            this.roomCandidates.length !== 0 && 
+            this.roomCandidates.every(p => p.readyState === WaveRoomPlayerReadyState.READY)
+        ) {
             this.startWave();
         }
 

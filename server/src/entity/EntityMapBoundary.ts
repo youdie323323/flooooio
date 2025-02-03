@@ -49,19 +49,19 @@ export function EntityMapBoundary<T extends EntityMixinConstructor<Entity>>(Base
                 return 0;
             };
 
-            const { waveMapRadius } = poolThis.waveData;
+            const { mapRadius } = poolThis.waveData;
 
-            const worldRadius = waveMapRadius - getRadius();
+            const worldRadius = mapRadius - getRadius();
 
-            const dx = this.x - waveMapRadius;
-            const dy = this.y - waveMapRadius;
+            const dx = this.x - mapRadius;
+            const dy = this.y - mapRadius;
 
             if (Math.sqrt(dx * dx + dy * dy) > worldRadius) {
                 const collisionAngle = Math.atan2(dy, dx);
                 const knockback = this instanceof Mob ? 0 : 15;
 
-                this.x = waveMapRadius + Math.cos(collisionAngle) * (worldRadius - knockback);
-                this.y = waveMapRadius + Math.sin(collisionAngle) * (worldRadius - knockback);
+                this.x = mapRadius + Math.cos(collisionAngle) * (worldRadius - knockback);
+                this.y = mapRadius + Math.sin(collisionAngle) * (worldRadius - knockback);
             }
         }
 

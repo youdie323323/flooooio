@@ -8,10 +8,9 @@ export enum Rarities {
     LEGENDARY,
     MYTHIC,
     ULTRA,
-    SUPER
 }
 
-export const MAX_RARITY = Rarities.SUPER;
+export const MAX_RARITY = Rarities.ULTRA;
 
 export const RARITY_DISPLAY_NAME = {
     [Rarities.COMMON]: "Common",
@@ -21,7 +20,6 @@ export const RARITY_DISPLAY_NAME = {
     [Rarities.LEGENDARY]: "Legendary",
     [Rarities.MYTHIC]: "Mythic",
     [Rarities.ULTRA]: "Ultra",
-    [Rarities.SUPER]: "Super"
 } satisfies Record<Rarities, string>;
 
 export const RARITY_COLOR = {
@@ -31,6 +29,5 @@ export const RARITY_COLOR = {
     [Rarities.EPIC]: "#8620BE",    
     [Rarities.LEGENDARY]: "#DE071F",
     [Rarities.MYTHIC]: "#1FDE4E",  
-    [Rarities.ULTRA]: "#FF2525",   
-    [Rarities.SUPER]: "#2C0523"    
+    [Rarities.ULTRA]: "#FF2525", 
 } satisfies Record<Rarities, ColorCode>;

@@ -22,20 +22,10 @@ export const levelPerXp = memo((xp: number) => {
  */
 export const calculateWaveLength = (x: number) => Math.max(60, x ** 0.2 * 18.9287 + 30);
 
-// Lazy constants for computeLootChance
+// Lazy constant for computeLootChance
 
-const dropS = [
-    0,
-    0.8589559816476924,
-    0.9963889387113232,
-    0.9998247626379139,
-    0.9999965538342435,
-    0.9999999896581699,
-    0.9999999999656417,
-    1,
-];
-
-const mobS = [
+/*
+[
     60000,
     15000,
     1500,
@@ -45,7 +35,31 @@ const mobS = [
     0.005,
     0.00001,
     0.000001
+]
+TODO: determine which relativeRarity to use
+I think table above is good for petal
+*/
+export const relativeRarity = [
+    60000, // Common
+    15000, // Unusual
+    2500,  // Rare
+    100,   // Epic
+    5,     // Legendary
+    0.1,   // Mythic
+    0.001, // Ultra
 ];
+
+export const rarityTable = (() => {
+    const table = new Array<number>(relativeRarity.length).fill(0);
+    const totalWeight = relativeRarity.reduce((a, b) => a + b, 0);
+
+    let acc = 0;
+    for (let i = 0; i < table.length; i++) {
+        table[i] = acc / totalWeight;
+        acc += relativeRarity[i];
+    }
+    return table;
+})();
 
 /**
  * Calculates petal drop rate chance.
@@ -60,11 +74,11 @@ export const calculateDropChance = (baseDropChance: number, mobRarity: number, d
     const cap = Math.max(1, mobRarity);
     if (dropRarity > cap || dropRarity > MAX_DROPPABLE_RARITY) return 0;
 
-    const start = dropS[dropRarity],
-        end = dropRarity === cap ? 1 : dropS[dropRarity + 1];
+    const start = rarityTable[dropRarity],
+        end = dropRarity === cap ? 1 : rarityTable[dropRarity + 1];
 
-    const powTerm1 = Math.pow(baseDropChance * start + (1 - baseDropChance), 300000 / mobS[mobRarity]),
-        powTerm2 = Math.pow(baseDropChance * end + (1 - baseDropChance), 300000 / mobS[mobRarity]);
+    const powTerm1 = Math.pow(baseDropChance * start + (1 - baseDropChance), 300000 / relativeRarity[mobRarity]),
+        powTerm2 = Math.pow(baseDropChance * end + (1 - baseDropChance), 300000 / relativeRarity[mobRarity]);
 
     return powTerm2 - powTerm1;
 }
@@ -73,12 +87,12 @@ const MAX_DROPPABLE_RARITY = Rarities.MYTHIC;
 
 export const calculateDropTable = (baseDropChance: number): number[][] => {
     const table = Array.from({ length: MAX_RARITY }, () => new Array(MAX_DROPPABLE_RARITY).fill(0));
-    
-    for (let mob = 0; mob < MAX_RARITY; ++mob) {
-        for (let drop = 0; drop <= MAX_DROPPABLE_RARITY; ++drop) {
+
+    for (let mob = 0; mob < MAX_RARITY; mob++) {
+        for (let drop = 0; drop <= MAX_DROPPABLE_RARITY; drop++) {
             table[mob][drop] = calculateDropChance(baseDropChance, mob, drop);
         }
     }
-    
+
     return table;
 }

@@ -31,7 +31,6 @@ export type PetalData = Readonly<
         [Rarities.LEGENDARY]: PetalStat;
         [Rarities.MYTHIC]: PetalStat;
         [Rarities.ULTRA]: PetalStat;
-        [Rarities.SUPER]: PetalStat;
     }
 >;
 

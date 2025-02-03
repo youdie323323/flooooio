@@ -155,7 +155,6 @@ type MobData = Readonly<
         [Rarities.LEGENDARY]: MobStat;
         [Rarities.MYTHIC]: MobStat;
         [Rarities.ULTRA]: MobStat;
-        [Rarities.SUPER]: MobStat;
     }
 >;
 
@@ -168,7 +167,6 @@ const MOB_SIZE_FACTOR = {
     [Rarities.MYTHIC]: 5.0,
 
     [Rarities.ULTRA]: 50,
-    [Rarities.SUPER]: 100,
 } satisfies Record<Rarities, number>;
 
 const MOB_HEALTH_FACTOR = {
@@ -180,7 +178,6 @@ const MOB_HEALTH_FACTOR = {
     [Rarities.MYTHIC]: 100.0,
 
     [Rarities.ULTRA]: 50,
-    [Rarities.SUPER]: 100,
 } satisfies Record<Rarities, number>;
 
 const MOB_DAMAGE_FACTOR = {
@@ -192,7 +189,6 @@ const MOB_DAMAGE_FACTOR = {
     [Rarities.MYTHIC]: 32.0,
 
     [Rarities.ULTRA]: 64.0,
-    [Rarities.SUPER]: 128.0,
 } satisfies Record<Rarities, number>;
 
 /**

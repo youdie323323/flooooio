@@ -1,5 +1,6 @@
 /**
- * WinterCG's AsyncLocalStorage interface
+ * WinterCG's AsyncLocalStorage interface.
+ * 
  * @see {@link https://github.com/wintercg/proposal-minimum-common-api/blob/main/asynclocalstorage.md}
  */
 export interface AsyncLocalStorage<T> {

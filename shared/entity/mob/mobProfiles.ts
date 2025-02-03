@@ -47,10 +47,6 @@ export const MOB_PROFILES = {
             health: 2737500,
             bodyDamage: 36450,
         },
-        [Rarities.SUPER]: {
-            health: 49200000,
-            bodyDamage: 109350,
-        },
     },
 
     [MobType.SPIDER]: {
@@ -95,10 +91,6 @@ export const MOB_PROFILES = {
             health: 4562500,
             bodyDamage: 10935,
         },
-        [Rarities.SUPER]: {
-            health: 82000000,
-            bodyDamage: 32805,
-        },
     },
 
     [MobType.STARFISH]: {
@@ -142,10 +134,6 @@ export const MOB_PROFILES = {
         [Rarities.ULTRA]: {
             health: 10950000,
             bodyDamage: 14580,
-        },
-        [Rarities.SUPER]: {
-            health: 196800000,
-            bodyDamage: 43740,
         },
     },
 
@@ -212,13 +200,6 @@ export const MOB_PROFILES = {
             lightning: 5103,
             bounces: 8,
         },
-        [Rarities.SUPER]: {
-            health: 164000000,
-            bodyDamage: 54675,
-
-            lightning: 15309,
-            bounces: 9,
-        },
     },
 
     [MobType.BEETLE]: {
@@ -262,10 +243,6 @@ export const MOB_PROFILES = {
         [Rarities.ULTRA]: {
             health: 7300000,
             bodyDamage: 21870,
-        },
-        [Rarities.SUPER]: {
-            health: 131200000,
-            bodyDamage: 65610,
         },
     },
 
@@ -311,10 +288,6 @@ export const MOB_PROFILES = {
             health: 36500,
             bodyDamage: 3645,
         },
-        [Rarities.SUPER]: {
-            health: 656000,
-            bodyDamage: 10935,
-        },
     },
 
     [MobType.CENTIPEDE]: {
@@ -358,10 +331,6 @@ export const MOB_PROFILES = {
         [Rarities.ULTRA]: {
             health: 1825000,
             bodyDamage: 7290,
-        },
-        [Rarities.SUPER]: {
-            health: 32800000,
-            bodyDamage: 21870,
         },
     },
 
@@ -407,10 +376,6 @@ export const MOB_PROFILES = {
             health: 1825000,
             bodyDamage: 7290,
         },
-        [Rarities.SUPER]: {
-            health: 32800000,
-            bodyDamage: 21870,
-        },
     },
     
     [MobType.CENTIPEDE_DESERT]: {
@@ -454,10 +419,6 @@ export const MOB_PROFILES = {
         [Rarities.ULTRA]: {
             health: 1825000,
             bodyDamage: 7290,
-        },
-        [Rarities.SUPER]: {
-            health: 32800000,
-            bodyDamage: 21870,
         },
     },
 } satisfies Required<Record<MobType, MobData>>;

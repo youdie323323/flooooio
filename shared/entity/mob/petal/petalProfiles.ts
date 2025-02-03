@@ -72,14 +72,6 @@ export const PETAL_PROFILES = {
 
             isCluster: false,
         },
-        [Rarities.SUPER]: {
-            damage: 21870,
-            health: 21870,
-            petalReload: 2.5,
-            count: 1,
-
-            isCluster: false,
-        },
     },
 
     [PetalType.FASTER]: {
@@ -159,15 +151,6 @@ export const PETAL_PROFILES = {
 
             isCluster: true,
         },
-        [Rarities.SUPER]: {
-            damage: 17496,
-            health: 10935,
-            petalReload: 2.5,
-            count: 3,
-            rad: 1.9,
-
-            isCluster: true,
-        },
     },
 
     [PetalType.BEETLE_EGG]: {
@@ -242,15 +225,6 @@ export const PETAL_PROFILES = {
             health: 18225,
             petalReload: 1,
             usageReload: 16.9,
-            count: 1,
-
-            isCluster: false,
-        },
-        [Rarities.SUPER]: {
-            damage: 0,
-            health: 54675,
-            petalReload: 1,
-            usageReload: 0.1,
             count: 1,
 
             isCluster: false,
@@ -333,15 +307,6 @@ export const PETAL_PROFILES = {
 
             isCluster: false,
         },
-        [Rarities.SUPER]: {
-            damage: 0,
-            health: 1,
-            petalReload: 0.2,
-            usageReload: 0.1,
-            count: 1,
-
-            isCluster: false,
-        },
     },
 
     [PetalType.YIN_YANG]: {
@@ -406,14 +371,6 @@ export const PETAL_PROFILES = {
             isCluster: false,
         },
         [Rarities.ULTRA]: {
-            damage: 90,
-            health: 90,
-            petalReload: 2,
-            count: 1,
-
-            isCluster: false,
-        },
-        [Rarities.SUPER]: {
             damage: 90,
             health: 90,
             petalReload: 2,

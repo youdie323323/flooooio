@@ -26,49 +26,49 @@ const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
         surface: Array(10).fill(
             {
                 type: PetalType.BEETLE_EGG,
-                rarity: Rarities.SUPER,
+                rarity: Rarities.ULTRA,
             } satisfies MockPetalData,
         ),
         bottom: [
             {
                 type: PetalType.YIN_YANG,
-                rarity: Rarities.SUPER,
+                rarity: Rarities.ULTRA,
             } as MockPetalData,
             {
                 type: PetalType.YIN_YANG,
-                rarity: Rarities.SUPER,
+                rarity: Rarities.ULTRA,
             } as MockPetalData,
             {
                 type: PetalType.YIN_YANG,
-                rarity: Rarities.SUPER,
+                rarity: Rarities.ULTRA,
             } as MockPetalData,
             {
                 type: PetalType.YIN_YANG,
-                rarity: Rarities.SUPER,
+                rarity: Rarities.ULTRA,
             } as MockPetalData,
             {
                 type: PetalType.YIN_YANG,
-                rarity: Rarities.SUPER,
+                rarity: Rarities.ULTRA,
             } as MockPetalData,
             {
                 type: PetalType.YIN_YANG,
-                rarity: Rarities.SUPER,
+                rarity: Rarities.ULTRA,
             } as MockPetalData,
             {
                 type: PetalType.YIN_YANG,
-                rarity: Rarities.SUPER,
+                rarity: Rarities.ULTRA,
             } as MockPetalData,
             {
                 type: PetalType.YIN_YANG,
-                rarity: Rarities.SUPER,
+                rarity: Rarities.ULTRA,
             } as MockPetalData,
             {
                 type: PetalType.YIN_YANG,
-                rarity: Rarities.SUPER,
+                rarity: Rarities.ULTRA,
             } as MockPetalData,
             {
                 type: PetalType.YIN_YANG,
-                rarity: Rarities.SUPER,
+                rarity: Rarities.ULTRA,
             } as MockPetalData,
         ],
     },
@@ -414,8 +414,8 @@ if (isDebug) {
                 if (wr.state !== WaveRoomState.WAITING) {
                     logger.info(`  Mobs: ${wr.wavePool.mobPool.size}`);
                     logger.info(`  Players: ${wr.wavePool.clientPool.size}`);
-                    logger.info(`  Wave progress: ${wr.wavePool.waveData.waveProgress}`);
-                    logger.info(`  Map radius: ${wr.wavePool.waveData.waveMapRadius}`);
+                    logger.info(`  Wave progress: ${wr.wavePool.waveData.progress}`);
+                    logger.info(`  Map radius: ${wr.wavePool.waveData.mapRadius}`);
                 }
             });
         }
