@@ -1,0 +1,33 @@
+import { ColorCode } from "../Client/Source/Utils/common";
+
+export enum Rarities {
+    COMMON,
+    UNUSUAL,
+    RARE,
+    EPIC,
+    LEGENDARY,
+    MYTHIC,
+    ULTRA,
+}
+
+export const MAX_RARITY = Rarities.ULTRA;
+
+export const RARITY_DISPLAY_NAME = {
+    [Rarities.COMMON]: "Common",
+    [Rarities.UNUSUAL]: "Unusual",
+    [Rarities.RARE]: "Rare",
+    [Rarities.EPIC]: "Epic",
+    [Rarities.LEGENDARY]: "Legendary",
+    [Rarities.MYTHIC]: "Mythic",
+    [Rarities.ULTRA]: "Ultra",
+} satisfies Record<Rarities, string>;
+
+export const RARITY_COLOR = {
+    [Rarities.COMMON]: "#7F0D7D",  
+    [Rarities.UNUSUAL]: "#FFE30D", 
+    [Rarities.RARE]: "#4D5563",    
+    [Rarities.EPIC]: "#8620BE",    
+    [Rarities.LEGENDARY]: "#DE071F",
+    [Rarities.MYTHIC]: "#1FDE4E",  
+    [Rarities.ULTRA]: "#FF2525", 
+} satisfies Record<Rarities, ColorCode>;

@@ -3,11 +3,9 @@
   "version": "1.0.0",
   "description": "Florr.io-like game.",
   "scripts": {
-    "build:client": "node esbuild.mjs",
+    "build:client": "tsc --noEmit & node esbuild.mjs",
     "build": "npm run build:client",
-    "start:server": "cd server && tsx main.ts",
-    "start:server:debug": "cd server && tsx main.ts -d",
-    "start": "concurrently \"npm run build\" \"npm run start:server\""
+    "start:server": "tsc --noEmit & cd Sources/Server && tsx main.ts"
   },
   "dependencies": {
     "express": "^4.21.2",
@@ -25,7 +23,6 @@
     "@types/node-schedule": "^2.1.7",
     "@typescript-eslint/eslint-plugin": "^8.18.0",
     "@typescript-eslint/parser": "^8.18.0",
-    "concurrently": "^9.1.0",
     "esbuild": "0.24.0",
     "eslint": "^9.16.0",
     "eslint-import-resolver-typescript": "^3.7.0",

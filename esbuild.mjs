@@ -13,10 +13,10 @@ async function watch() {
   const obfuscateEnabled = !!answers;
 
   await esbuild.build({
-    entryPoints: ['./client/main.ts'],
+    entryPoints: ['./Sources/Client/main.ts'],
     bundle: true,
     minify: true,
-    outfile: obfuscateEnabled ? prebuildedFileName : "./server/public/client.js",
+    outfile: obfuscateEnabled ? prebuildedFileName : "./build/statics/client.js",
     legalComments: "none",
     plugins: [
       {
@@ -50,7 +50,7 @@ async function watch() {
                 hexadecimalNumbers: false,
                 deadCode: false,
               }).then(result => {
-                writeFileSync("./server/public/client.js", result.code);
+                writeFileSync("./build/statics/client.js", result.code);
                 rm(prebuildedFileName, () => { });
 
                 console.log('Ofsucated');
