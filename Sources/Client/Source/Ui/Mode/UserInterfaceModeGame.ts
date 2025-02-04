@@ -3,6 +3,8 @@ import { calculateWaveLength } from "../../../../Shared/formula";
 import { Mood } from "../../../../Shared/mood";
 import { networking, players, uiCtx, deltaTime, antennaScaleFactor, mobs } from "../../../main";
 import Entity from "../../Entity/Entity";
+import Mob from "../../Entity/Mob";
+import { isPetal } from "../../Utils/common";
 import { interpolate } from "../../Utils/Interpolator";
 import { waveSelfId } from "../../Utils/Networking";
 import { isSettingTrue } from "../../Utils/settingStorage";
@@ -223,14 +225,14 @@ export default class UserInterfaceGame extends UserInterface {
         mouseYOffset = event.clientY - document.documentElement.clientHeight / 2;
 
         if (
-            !isSettingTrue("keyboard_control") && 
+            !isSettingTrue("keyboard_control") &&
             networking
         ) {
             const distance = Math.hypot(mouseXOffset, mouseYOffset);
             const angle = Math.atan2(mouseYOffset, mouseXOffset);
             networking.sendChangeMove(angle, distance < 100 ? distance / 100 : 1);
         }
-    }   
+    }
 
     private leaveGame() {
         this.isGameOverContinued = true;
@@ -431,6 +433,9 @@ export default class UserInterfaceGame extends UserInterface {
             };
 
             mobs.forEach(filterFunc);
+
+            entitiesToDraw.sort((a, b) => Number(a instanceof Mob && isPetal(a.type)) - Number(b instanceof Mob && isPetal(b.type)));
+
             players.forEach(filterFunc);
 
             ctx.save();

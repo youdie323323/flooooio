@@ -77,6 +77,16 @@ class BaseMob implements Entity {
     petalSummonedPet: MobInstance | null;
 
     /**
+     * Petal is spinning on mob or not.
+     */
+    petalSpinningMob: boolean;
+
+    /**
+     * Velocity for friction of petal.
+     */
+    petalVelocity: [number, number] | null;
+
+    /**
      * Determines if starfish is running for regen.
      */
     starfishRegeningHealth: boolean;
@@ -105,7 +115,9 @@ class BaseMob implements Entity {
 
     [onUpdateTick](poolThis: WavePool): void { }
 
-    dispose(): void { }
+    dispose(): void {
+        this.petalVelocity = null;
+    }
 
     /**
      * Returns speed within mob.
@@ -197,7 +209,7 @@ const MOB_DAMAGE_FACTOR = {
 const MOB_SPEED = {
     [MobType.BEE]: 3.5,
     [MobType.SPIDER]: 5,
-    
+
     [MobType.CENTIPEDE]: 3.5,
     [MobType.CENTIPEDE_EVIL]: 3.5,
 

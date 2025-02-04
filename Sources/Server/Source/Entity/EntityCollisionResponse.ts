@@ -105,21 +105,26 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
             if (isColliding(delta)) {
               const push = MixedBase.calculatePush(this, otherEntity, delta);
               if (push) {
-                // Pop knockback to summoned mob (enemy), not including petal
-                const bubbleMultiplierThis = otherEntity.type === MobType.BUBBLE && this.petMaster ? MixedBase.BUBBLE_PUSH_FACTOR : 1;
-                const bubbleMultiplierOther = this.type === MobType.BUBBLE && otherEntity.petMaster ? MixedBase.BUBBLE_PUSH_FACTOR : 1;
+                if (
+                  !this.petalSpinningMob &&
+                  !otherEntity.petalSpinningMob
+                ) {
+                  // Pop knockback to summoned mob (enemy), not including petal
+                  const bubbleMultiplierThis = otherEntity.type === MobType.BUBBLE && this.petMaster ? MixedBase.BUBBLE_PUSH_FACTOR : 1;
+                  const bubbleMultiplierOther = this.type === MobType.BUBBLE && otherEntity.petMaster ? MixedBase.BUBBLE_PUSH_FACTOR : 1;
 
-                const petalMultiplierThis = isPetalThis ? 10 : 1;
-                const petalMultiplierOther = isPetalOther ? 10 : 1;
+                  const petalMultiplierThis = isPetalThis ? 10 : 1;
+                  const petalMultiplierOther = isPetalOther ? 10 : 1;
 
-                // Little knockback to mob if petal
-                const baseMultiplierThis = isPetalOther ? 0.1 : 0.3;
-                const baseMultiplierOther = isPetalThis ? 0.1 : 0.3;
+                  // Little knockback to mob if petal
+                  const baseMultiplierThis = isPetalOther ? 0.1 : 0.3;
+                  const baseMultiplierOther = isPetalThis ? 0.1 : 0.3;
 
-                this.x -= push[0] * baseMultiplierThis * petalMultiplierThis * bubbleMultiplierThis;
-                this.y -= push[1] * baseMultiplierThis * petalMultiplierThis * bubbleMultiplierThis;
-                otherEntity.x += push[0] * baseMultiplierOther * petalMultiplierOther * bubbleMultiplierOther;
-                otherEntity.y += push[1] * baseMultiplierOther * petalMultiplierOther * bubbleMultiplierOther;
+                  this.x -= push[0] * baseMultiplierThis * petalMultiplierThis * bubbleMultiplierThis;
+                  this.y -= push[1] * baseMultiplierThis * petalMultiplierThis * bubbleMultiplierThis;
+                  otherEntity.x += push[0] * baseMultiplierOther * petalMultiplierOther * bubbleMultiplierOther;
+                  otherEntity.y += push[1] * baseMultiplierOther * petalMultiplierOther * bubbleMultiplierOther;
+                }
 
                 // Pet doesnt damaged to other pet
                 if (this.petMaster && otherEntity.petMaster) return;

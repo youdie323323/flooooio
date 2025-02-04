@@ -216,9 +216,9 @@ export abstract class Component {
                         const inOutProgress = 1 - Component.ZOOM_IN_OUT_EASING_FUNCTION(this.animationProgress);
 
                         if (this.animationDirection === 'out') {
-                            this.y = this.realY - (25 * inOutProgress);
+                            this.y = this.realY - (30 * inOutProgress);
                         } else {
-                            this.y = this.realY + (25 * inOutProgress);
+                            this.y = this.realY + (30 * inOutProgress);
                         }
 
                         break;

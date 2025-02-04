@@ -212,7 +212,7 @@ export class WavePool {
         if (this.clientPool.has(clientId)) {
             return this.generateClient(
                 clientData,
-                
+
                 x,
                 y
             );
@@ -354,6 +354,10 @@ export class WavePool {
 
             petalMaster,
             petalSummonedPet: null,
+
+            petalSpinningMob: false,
+
+            petalVelocity: isPetal(type) ? [0, 0] : null,
 
             starfishRegeningHealth: false,
 

@@ -24,7 +24,7 @@ const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
     slots: {
         surface: Array(10).fill(
             {
-                type: PetalType.BEETLE_EGG,
+                type: PetalType.BASIC,
                 rarity: Rarities.ULTRA,
             } satisfies MockPetalData,
         ),

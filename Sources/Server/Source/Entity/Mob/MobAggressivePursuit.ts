@@ -92,7 +92,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
             let targets: Entity[];
 
             if (this.petMaster) {
-                // Mob which summoned by player will attack other mobs expect petals, pets
+                // Mob which summoned by player will attack other mobs expect me, petals and pets
                 targets = poolThis.getAllMobs().filter(p =>
                     !(
                         p.id === this.id ||
