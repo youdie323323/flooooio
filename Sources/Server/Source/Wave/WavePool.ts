@@ -356,7 +356,7 @@ export class WavePool {
             petalMaster,
             petalSummonedPet: null,
 
-            petalSpinningMob: false,
+            petalIsSpinningMob: false,
 
             petalVelocity: isPetal(type) ? [0, 0] : null,
 

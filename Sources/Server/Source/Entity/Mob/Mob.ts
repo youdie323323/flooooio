@@ -79,7 +79,7 @@ class BaseMob implements Entity {
     /**
      * Petal is spinning on mob or not.
      */
-    petalSpinningMob: boolean;
+    petalIsSpinningMob: boolean;
 
     /**
      * Velocity for friction of petal.

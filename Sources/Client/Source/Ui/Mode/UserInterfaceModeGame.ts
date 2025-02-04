@@ -411,8 +411,6 @@ export default class UserInterfaceGame extends UserInterface {
 
         // Render players & mobs
         {
-            const entitiesToDraw: Entity[] = [];
-
             const viewportWidth = canvas.width / antennaScaleFactor;
             const viewportHeight = canvas.height / antennaScaleFactor;
             const halfWidth = viewportWidth / 2;
@@ -423,13 +421,16 @@ export default class UserInterfaceGame extends UserInterface {
             const b1 = selfPlayer.y - halfHeight;
             const b2 = selfPlayer.y + halfHeight;
 
+            const entitiesToDraw: Entity[] = new Array(mobs.size + players.size);
+
+            let i = 0;
             const filterFunc = (v: Entity) => {
                 if (
                     v.x >= a1 &&
                     v.x <= a2 &&
                     v.y >= b1 &&
                     v.y <= b2
-                ) entitiesToDraw.push(v);
+                ) entitiesToDraw[i++] = v;
             };
 
             mobs.forEach(filterFunc);

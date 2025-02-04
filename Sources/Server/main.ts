@@ -27,12 +27,7 @@ const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
                 type: PetalType.BASIC,
                 rarity: Rarities.ULTRA,
             } satisfies MockPetalData,
-        ).concat(Array(2).fill(
-            {
-                type: PetalType.FASTER,
-                rarity: Rarities.ULTRA,
-            } satisfies MockPetalData,
-        )),
+        ),
         bottom: [
             {
                 type: PetalType.YIN_YANG,

@@ -106,8 +106,8 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
               const push = MixedBase.calculatePush(this, otherEntity, delta);
               if (push) {
                 if (
-                  !this.petalSpinningMob &&
-                  !otherEntity.petalSpinningMob
+                  !this.petalIsSpinningMob &&
+                  !otherEntity.petalIsSpinningMob
                 ) {
                   // Pop knockback to summoned mob (enemy), not including petal
                   const bubbleMultiplierThis = otherEntity.type === MobType.BUBBLE && this.petMaster ? MixedBase.BUBBLE_PUSH_FACTOR : 1;
