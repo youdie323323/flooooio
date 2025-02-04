@@ -19,6 +19,7 @@ import { Mood } from "../../../Shared/mood";
 import { Biomes } from "../../../Shared/biome";
 import { MobType, PetalType } from "../../../Shared/EntityType";
 import SpatialHash from "../Utils/SpatialHash";
+import { MAX_CLUSTER_AMOUNT } from "../Entity/Player/PlayerPetalOrbit";
 
 // Define UserData for WebSocket connections
 export interface UserData {
@@ -245,8 +246,8 @@ export class WavePool {
                 surface: null,
                 bottom: null,
 
-                cooldownsPetal: Array.from({ length: clientData.slots.surface.length }, e => new Array(5).fill(PETAL_INITIAL_COOLDOWN)),
-                cooldownsUsage: Array.from({ length: clientData.slots.surface.length }, e => new Array(5).fill(PETAL_INITIAL_COOLDOWN)),
+                cooldownsPetal: Array.from({ length: clientData.slots.surface.length }, e => new Array(MAX_CLUSTER_AMOUNT).fill(PETAL_INITIAL_COOLDOWN)),
+                cooldownsUsage: Array.from({ length: clientData.slots.surface.length }, e => new Array(MAX_CLUSTER_AMOUNT).fill(PETAL_INITIAL_COOLDOWN)),
             },
 
             ws: clientData.ws,
@@ -565,8 +566,8 @@ export class WavePool {
             const temp = client.slots.surface[at];
 
             // Reset cooldown
-            client.slots.cooldownsPetal[at] = new Array(5).fill(PETAL_INITIAL_COOLDOWN);
-            client.slots.cooldownsUsage[at] = new Array(5).fill(PETAL_INITIAL_COOLDOWN);
+            client.slots.cooldownsPetal[at] = new Array(MAX_CLUSTER_AMOUNT).fill(PETAL_INITIAL_COOLDOWN);
+            client.slots.cooldownsUsage[at] = new Array(MAX_CLUSTER_AMOUNT).fill(PETAL_INITIAL_COOLDOWN);
 
             // Remove all petal-binded mob
             // TODO: remove summoned mob

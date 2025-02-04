@@ -9,6 +9,8 @@ import { decodeMood, Mood } from "../../../../Shared/mood";
 import { findNearestEntity } from "../Mob/MobAggressivePursuit";
 import { MobInstance } from "../Mob/Mob";
 
+export const MAX_CLUSTER_AMOUNT = 5;
+
 const TAU = Math.PI * 2;
 
 const HISTORY_SIZE = 10;
@@ -33,7 +35,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
         private static readonly DEFAULT_ROTATE_SPEED = 2.5;
 
         private static readonly FRICTION_COEFFICIENT = 0.75;
-        
+
         private static readonly SPRING_STRENGTH = 0.15;
 
         private static readonly PETAL_CLUSTER_RADIUS = 8;
@@ -43,11 +45,12 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
         private static readonly SPIN_SIN_LOWER = 0.75;
 
         private rotation = 0;
+        private historyIndex = 0;
         private historyX: Float32Array = new Float32Array(HISTORY_SIZE);
         private historyY: Float32Array = new Float32Array(HISTORY_SIZE);
         private petalRadii: Float32Array;
         private petalVelocities: Float32Array;
-        private historyIndex = 0;
+        private petalSpins: Float32Array[];
 
         [onUpdateTick](poolThis: WavePool): void {
             super[onUpdateTick](poolThis);
@@ -63,6 +66,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
             if (!this.petalRadii || this.petalRadii.length !== totalPetals) {
                 this.petalRadii = new Float32Array(totalPetals).fill(40);
                 this.petalVelocities = new Float32Array(totalPetals).fill(0);
+                this.petalSpins = new Array(totalPetals).fill(null).map(() => new Float32Array(MAX_CLUSTER_AMOUNT).fill(0));
             }
 
             const { 0: isAngry, 1: isSad } = decodeMood(this.mood);
@@ -100,6 +104,10 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
 
             let totalSpeed = MixedBase.DEFAULT_ROTATE_SPEED;
 
+            const spinRotationDelta =
+                this.calculateRotationDelta(MixedBase.DEFAULT_ROTATE_SPEED, clockwise) *
+                MixedBase.SPIN_ANGLE_COEFFICIENT;
+
             for (let i = 0; i < totalPetals; i++) {
                 const petals = surface[i];
                 if (!petals || !isLivingSlot(petals)) continue;
@@ -132,13 +140,13 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
 
                 const multipliedRotation = this.rotation * (1 + ((ringIndex - (numRings - 1)) * 0.1));
 
+                const baseAngle = TAU * (currentAngleIndex % realLength) / realLength + multipliedRotation;
+                currentAngleIndex++;
+
                 if (
                     rarityProfile.isCluster &&
                     petals.length > 1
                 ) {
-                    const baseAngle = TAU * (currentAngleIndex % realLength) / realLength + multipliedRotation;
-                    currentAngleIndex++;
-
                     const angleIndex = calcTableIndex(baseAngle);
                     const slotBaseX = targetX + lazyCosTable[angleIndex] * rad;
                     const slotBaseY = targetY + lazySinTable[angleIndex] * rad;
@@ -147,49 +155,66 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                         const petal = petals[j];
 
                         // Bit faster than orbit
-                        const petalAngle = TAU * j / petals.length + 1.1 * multipliedRotation;
-                        const petalAngleIndex = calcTableIndex(petalAngle);
-
-                        petal.x = slotBaseX + lazyCosTable[petalAngleIndex] * MixedBase.PETAL_CLUSTER_RADIUS;
-                        petal.y = slotBaseY + lazySinTable[petalAngleIndex] * MixedBase.PETAL_CLUSTER_RADIUS;
-
-                        this.doPetalSpin(
-                            poolThis,
-                            petal,
-                            multipliedRotation * MixedBase.SPIN_ANGLE_COEFFICIENT,
-                        );
-                    }
-                } else {
-                    for (let j = 0; j < petals.length; j++) {
-                        const petal = petals[j];
-
-                        const baseAngle = TAU * (currentAngleIndex % realLength) / realLength + multipliedRotation;
-                        currentAngleIndex++;
+                        const petalAngle = TAU * j / petals.length + multipliedRotation * 1.1;
 
                         this.doPetalOrbit(
                             petal,
-                            targetX,
-                            targetY,
-                            rad,
-                            baseAngle
+                            slotBaseX,
+                            slotBaseY,
+                            MixedBase.PETAL_CLUSTER_RADIUS,
+                            petalAngle,
                         );
 
+                        const petalSpin = this.petalSpins[i];
+
+                        if (
+                            this.doPetalSpin(
+                                poolThis,
+                                petal,
+                                petalSpin[j],
+                            )
+                        ) {
+                            petalSpin[j] += spinRotationDelta;
+                        };
+                    }
+                } else {
+                    const petal = petals[0];
+
+                    this.doPetalOrbit(
+                        petal,
+                        targetX,
+                        targetY,
+                        rad,
+                        baseAngle
+                    );
+
+                    const petalSpin = this.petalSpins[i];
+
+                    if (
                         this.doPetalSpin(
                             poolThis,
                             petal,
-                            multipliedRotation * MixedBase.SPIN_ANGLE_COEFFICIENT,
-                        );
-                    }
+                            petalSpin[0],
+                        )
+                    ) {
+                        petalSpin[0] += spinRotationDelta;
+                    };
                 }
             }
 
-            const rotationDelta = (totalSpeed * (clockwise ? -1 : 1)) / UPDATE_ENTITIES_FPS;
-
+            const rotationDelta = this.calculateRotationDelta(totalSpeed, clockwise);
             this.rotation += rotationDelta;
 
             if (Math.abs(this.rotation) > Number.MAX_SAFE_INTEGER) {
                 this.rotation = this.rotation % TAU;
             }
+        }
+
+        private calculateRotationDelta(
+            totalSpeed: number,
+            clockwise: number,
+        ): number {
+            return (totalSpeed * (clockwise ? -1 : 1)) / UPDATE_ENTITIES_FPS
         }
 
         private doPetalOrbit(
@@ -223,11 +248,16 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
             petal.y += velocity[1];
         }
 
+        /**
+         * Do petal spin within petal.
+         * 
+         * @returns - Is petal spinned or not.
+         */
         private doPetalSpin(
             poolThis: WavePool,
             petal: MobInstance,
             rotation: number,
-        ) {
+        ): boolean {
             const mobToSpin = findNearestEntity(
                 petal,
                 poolThis.getAllMobs()
@@ -260,6 +290,8 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 petal.x = mobToSpin.x + lazyCosTable[spinAngleIndex] * spiralRadius;
                 petal.y = mobToSpin.y + lazySinTable[spinAngleIndex] * spiralRadius;
             }
+
+            return petal.petalSpinningMob;
         }
 
         dispose(): void {
@@ -271,6 +303,12 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
             this.historyY = null;
             this.petalRadii = null;
             this.petalVelocities = null;
+
+            for (let i = 0; i < this.petalSpins.length; i++) {
+                // Dont forgot to release object items too
+                this.petalSpins[i] = null;
+            }
+            this.petalSpins = null;
         }
     };
 }

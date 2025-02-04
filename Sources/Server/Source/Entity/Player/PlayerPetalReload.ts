@@ -7,6 +7,7 @@ import { PETAL_PROFILES } from "../../../../Shared/Entity/Mob/Petal/petalProfile
 import { isPetal } from "../../Utils/common";
 import { decodeMood } from "../../../../Shared/mood";
 import { Rarities } from "../../../../Shared/rarity";
+import { MAX_CLUSTER_AMOUNT } from "./PlayerPetalOrbit";
 
 export const PETAL_INITIAL_COOLDOWN = 0;
 
@@ -74,8 +75,8 @@ export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(
             }
 
             if (this.slots.cooldownsPetal.length !== surface.length) {
-                this.slots.cooldownsPetal = Array.from({ length: surface.length }, e => new Array(5).fill(PETAL_INITIAL_COOLDOWN));
-                this.slots.cooldownsUsage = Array.from({ length: surface.length }, e => new Array(5).fill(PETAL_INITIAL_COOLDOWN));
+                this.slots.cooldownsPetal = Array.from({ length: surface.length }, e => new Array(MAX_CLUSTER_AMOUNT).fill(PETAL_INITIAL_COOLDOWN));
+                this.slots.cooldownsUsage = Array.from({ length: surface.length }, e => new Array(MAX_CLUSTER_AMOUNT).fill(PETAL_INITIAL_COOLDOWN));
             }
 
             // Dont reload if player is dead

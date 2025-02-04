@@ -16,6 +16,7 @@ import uWS from 'uWebSockets.js';
 import { calculateHp } from "./formula";
 import { MOB_PROFILES } from "../../../Shared/Entity/Mob/mobProfiles";
 import { PETAL_INITIAL_COOLDOWN } from "../Entity/Player/PlayerPetalReload";
+import { MAX_CLUSTER_AMOUNT } from "../Entity/Player/PlayerPetalOrbit";
 
 const TAU = Math.PI * 2;
 
@@ -94,8 +95,8 @@ export function removeAllBindings(wavePool: WavePool, clientId: PlayerInstance["
         });
 
         // Reset all reloads
-        player.slots.cooldownsPetal = Array.from({ length: player.slots.surface.length }, e => new Array(5).fill(PETAL_INITIAL_COOLDOWN));
-        player.slots.cooldownsUsage = Array.from({ length: player.slots.surface.length }, e => new Array(5).fill(PETAL_INITIAL_COOLDOWN));
+        player.slots.cooldownsPetal = Array.from({ length: player.slots.surface.length }, e => new Array(MAX_CLUSTER_AMOUNT).fill(PETAL_INITIAL_COOLDOWN));
+        player.slots.cooldownsUsage = Array.from({ length: player.slots.surface.length }, e => new Array(MAX_CLUSTER_AMOUNT).fill(PETAL_INITIAL_COOLDOWN));
     }
 }
 
