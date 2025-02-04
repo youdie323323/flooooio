@@ -279,7 +279,7 @@ const MIME_TYPES = {
 app
     .get('/*', (res, req) => {
         const url = req.getUrl();
-        const filePath = path.join(__dirname, "../", 'build', "statics", url === '/' ? 'index.html' : url);
+        const filePath = path.join(__dirname, "..", "..", 'build', "statics", url === '/' ? 'index.html' : url);
         const ext = path.extname(filePath);
 
         res.onAborted(() => { });
