@@ -116,7 +116,17 @@ class BaseMob implements Entity {
     [onUpdateTick](poolThis: WavePool): void { }
 
     dispose(): void {
+        this.targetEntity = null;
+        this.lastAttackedEntity = null;
+
+        this.petMaster = null;
+
+        this.petalMaster = null;
+        this.petalSummonedPet = null;
+
         this.petalVelocity = null;
+
+        this.connectingSegment = null;
     }
 
     /**

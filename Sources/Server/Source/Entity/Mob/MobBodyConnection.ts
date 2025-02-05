@@ -47,8 +47,6 @@ export function MobBodyConnection<T extends EntityMixinConstructor<BaseMob>>(Bas
             if (super.dispose) {
                 super.dispose();
             }
-
-            this.connectingSegment = null;
         }
     };
 }

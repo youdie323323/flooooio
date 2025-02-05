@@ -241,7 +241,9 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
           y: this.y,
           a: this.size,
           b: this.size,
-          theta: angleToRad(this.angle),
+          // Angle are no-effective on circle
+          theta: 0,
+          // theta: angleToRad(this.angle),
         };
 
         const searchRadius = MixedBase.calculateSearchRadius(MixedBase.FLOWER_DEFAULT_SEARCH_DATA, this.size);
@@ -266,7 +268,9 @@ export function EntityCollisionResponse<T extends EntityMixinConstructor<Entity>
             y: otherEntity.y,
             a: otherEntity.size,
             b: otherEntity.size,
-            theta: angleToRad(otherEntity.angle),
+            // Angle are no-effective on circle
+            theta: 0,
+            // theta: angleToRad(otherEntity.angle),
           };
 
           const delta = computeDelta(ellipse1, ellipse2);

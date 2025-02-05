@@ -43,7 +43,7 @@ export default class Player extends Entity {
 
         this.isRemoved = false;
 
-        this.isDev = true;
+        this.isDev = false;
     }
 
     update() {

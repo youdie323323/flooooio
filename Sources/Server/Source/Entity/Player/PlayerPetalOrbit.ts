@@ -42,7 +42,6 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
 
         private static readonly PETAL_CLUSTER_RADIUS = 8;
 
-        private static readonly SPIN_SIZE_COEFFICIENT = 0;
         private static readonly SPIN_NEAREST_SIZE_COEFFICIENT = 0.2;
         private static readonly SPIN_ANGLE_COEFFICIENT = 10;
 
@@ -68,7 +67,10 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
             if (!this.petalRadii || this.petalRadii.length !== totalPetals) {
                 this.petalRadii = new Float32Array(totalPetals).fill(40);
                 this.petalRadiusVelocities = new Float32Array(totalPetals).fill(0);
-                this.petalSpins = new Array(totalPetals).fill(null).map(() => new Float32Array(MAX_CLUSTER_AMOUNT).fill(0));
+
+                this.petalSpins = new Array(totalPetals).fill(null).map(() =>
+                    new Float32Array(MAX_CLUSTER_AMOUNT).fill(0)
+                );
             }
 
             const { 0: isAngry, 1: isSad } = decodeMood(this.mood);
@@ -213,10 +215,8 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
 
             const rotationDelta = this.calculateRotationDelta(totalSpeed, clockwise);
             this.rotation += rotationDelta;
-
-            if (Math.abs(this.rotation) > Number.MAX_SAFE_INTEGER) {
-                this.rotation = this.rotation % TAU;
-            }
+            // Limit in the tau
+            this.rotation %= TAU;
         }
 
         private calculateRotationDelta(
@@ -289,24 +289,20 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
             const wasSpinning = petal.petalIsSpinningMob;
             petal.petalIsSpinningMob = !!mobToSpin;
 
-            if (
-                !wasSpinning &&
-                petal.petalIsSpinningMob
-            ) {
-                this.petalSpins[i][j] = Math.atan2(
-                    petal.y - mobToSpin.y,
-                    petal.x - mobToSpin.x
-                );
-            }
-
             if (petal.petalIsSpinningMob) {
-                const spiralRadius =
-                    mobToSpin.size * (1 - MixedBase.SPIN_SIZE_COEFFICIENT);
+                if (!wasSpinning) {
+                    const targetAngle = Math.atan2(
+                        petal.y - mobToSpin.y,
+                        petal.x - mobToSpin.x
+                    );
+                    
+                    this.petalSpins[i][j] = targetAngle;
+                }
 
                 const spinAngleIndex = calcTableIndex(rotation);
 
-                petal.x = mobToSpin.x + lazyCosTable[spinAngleIndex] * spiralRadius;
-                petal.y = mobToSpin.y + lazySinTable[spinAngleIndex] * spiralRadius;
+                petal.x = mobToSpin.x + lazyCosTable[spinAngleIndex] * mobToSpin.size;
+                petal.y = mobToSpin.y + lazySinTable[spinAngleIndex] * mobToSpin.size;
             }
         }
 

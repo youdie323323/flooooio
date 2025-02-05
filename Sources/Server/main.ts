@@ -14,62 +14,44 @@ import { VALID_MOOD_FLAGS } from "../Shared/mood";
 import { BIOME_VALUES, Biomes } from "../Shared/biome";
 import { PetalType } from "../Shared/EntityType";
 
+require('dotenv').config({
+    path: path.resolve(__dirname, '../../.env'),
+});
+
 export const isDebug = process.argv.includes("-d");
 
 /**
  * Temp player data.
  */
-const DEFAULT_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
+const MOCK_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
     name: 'A-NNCYANCHI-N',
     slots: {
-        surface: Array(10).fill(
+        surface: Array(9).fill(
             {
                 type: PetalType.BASIC,
                 rarity: Rarities.ULTRA,
             } satisfies MockPetalData,
+        ).concat(
+            Array(1).fill(
+                {
+                    type: PetalType.FASTER,
+                    rarity: Rarities.ULTRA,
+                } satisfies MockPetalData,
+            )
         ),
-        bottom: [
+        bottom: Array(5).fill(
             {
-                type: PetalType.YIN_YANG,
+                type: PetalType.BEETLE_EGG,
                 rarity: Rarities.ULTRA,
-            } as MockPetalData,
-            {
-                type: PetalType.YIN_YANG,
-                rarity: Rarities.ULTRA,
-            } as MockPetalData,
-            {
-                type: PetalType.YIN_YANG,
-                rarity: Rarities.ULTRA,
-            } as MockPetalData,
-            {
-                type: PetalType.YIN_YANG,
-                rarity: Rarities.ULTRA,
-            } as MockPetalData,
-            {
-                type: PetalType.YIN_YANG,
-                rarity: Rarities.ULTRA,
-            } as MockPetalData,
-            {
-                type: PetalType.YIN_YANG,
-                rarity: Rarities.ULTRA,
-            } as MockPetalData,
-            {
-                type: PetalType.YIN_YANG,
-                rarity: Rarities.ULTRA,
-            } as MockPetalData,
-            {
-                type: PetalType.YIN_YANG,
-                rarity: Rarities.ULTRA,
-            } as MockPetalData,
-            {
-                type: PetalType.YIN_YANG,
-                rarity: Rarities.ULTRA,
-            } as MockPetalData,
-            {
-                type: PetalType.YIN_YANG,
-                rarity: Rarities.ULTRA,
-            } as MockPetalData,
-        ],
+            } satisfies MockPetalData,
+        ).concat(
+            Array(5).fill(
+                {
+                    type: PetalType.YIN_YANG,
+                    rarity: Rarities.ULTRA,
+                } satisfies MockPetalData,
+            )
+        ),
     },
 };
 
@@ -324,7 +306,7 @@ app
             const userData = ws.getUserData();
             userData.waveRoomClientId = null;
             userData.waveClientId = null;
-            userData.wavePlayerData = { ...DEFAULT_PLAYER_DATA, ws };
+            userData.wavePlayerData = { ...MOCK_PLAYER_DATA, ws };
 
             // Lag simulator
             // const originalSend = ws.send;
@@ -418,5 +400,5 @@ if (isDebug) {
                 }
             });
         }
-    }, 5000);
+    }, 1000);
 }

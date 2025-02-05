@@ -87,6 +87,11 @@ class BasePlayer implements Entity {
      */
     ws: uWS.WebSocket<UserData>;
 
+    /**
+     * Player is developer flower or not.
+     */
+    isDev: boolean;
+
     constructor(
         source: PartialUnion<
             BasePlayer,

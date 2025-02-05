@@ -126,6 +126,7 @@ export default class Networking {
                             // Decode boolean flags
                             const bFlags = data.getUint8(offset++);
                             const clientIsDead = !!(bFlags & 1);
+                            const clientIsDev = !!(bFlags & 2);
 
                             const client = players.get(clientId);
                             if (client) {
@@ -135,6 +136,7 @@ export default class Networking {
                                 client.nSize = clientSize;
                                 client.mood = clientMood;
                                 client.isDead = clientIsDead;
+                                client.isDev = clientIsDev;
 
                                 if (clientHealth < client.nHealth) {
                                     client.redHealthTimer = 1;

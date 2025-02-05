@@ -6,6 +6,7 @@ import { BrandedId } from "../Entity/Entity";
 import { MockPlayerData, Player } from "../Entity/Player/Player";
 import { generateRandomId } from "../Utils/random";
 import { WavePool, UserData, WaveData } from "./WavePool";
+import { createHash } from 'node:crypto';
 
 export type WaveRoomPlayerId = BrandedId<"WaveRoomPlayer">;
 
@@ -19,6 +20,12 @@ export type WaveRoomPlayer = MockPlayerData & {
 export const WAVE_ROOM_UPDATE_SEND_FPS = 30;
 
 export const WAVE_ROOM_UPDATE_FPS = 60;
+
+function sha256(input: string): string {
+    const hash = createHash("sha256");
+    hash.update(input);
+    return hash.digest("hex");
+}
 
 /**
  * The wave room, aka squad.
@@ -311,8 +318,8 @@ export default class WaveRoom {
     public _roomChecksum() {
         // this.roomCandidates.length !== 0 to prevent multiple wave start, before wave room deletion
         if (
-            this.state === WaveRoomState.WAITING && 
-            this.roomCandidates.length !== 0 && 
+            this.state === WaveRoomState.WAITING &&
+            this.roomCandidates.length !== 0 &&
             this.roomCandidates.every(p => p.readyState === WaveRoomPlayerReadyState.READY)
         ) {
             this.startWave();
@@ -334,6 +341,10 @@ export default class WaveRoom {
                 if (!isNaN(size)) {
                     player.size = Math.max(Player.BASE_SIZE, size);
                 }
+            }
+
+            if (sha256(chatMsg) === process.env.TOGGLE_DEV_SALT) {
+                player.isDev = !player.isDev;
             }
 
             // Publish chat

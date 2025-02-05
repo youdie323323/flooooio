@@ -8,7 +8,7 @@ import { Entity, onUpdateTick } from "../Entity/Entity";
 import { SAFETY_DISTANCE } from "../Entity/EntityMapBoundary";
 import { MobInstance, MobData, Mob, MobId } from "../Entity/Mob/Mob";
 import { isLivingSlot, PetalData, MockPetalData, Slot, ClusterLike } from "../Entity/Mob/Petal/Petal";
-import { MockPlayerData as MockClientData, PlayerInstance, Player, PlayerId } from "../Entity/Player/Player";
+import { MockPlayerData, PlayerInstance, Player, PlayerId } from "../Entity/Player/Player";
 import { PETAL_INITIAL_COOLDOWN } from "../Entity/Player/PlayerPetalReload";
 import { isPetal, calculateMobSize, revivePlayer } from "../Utils/common";
 import { getRandomPosition, generateRandomId, getRandomAngle, getRandomSafePosition } from "../Utils/random";
@@ -33,7 +33,7 @@ export interface UserData {
      * 
      * This data is used to squad ui to display petals and names and to convert them when wave starting.
      */
-    wavePlayerData: MockClientData;
+    wavePlayerData: MockPlayerData;
 }
 
 export const UPDATE_WAVE_FPS = 30;
@@ -202,7 +202,7 @@ export class WavePool {
      * @returns Instance of player.
      */
     public generateClient(
-        clientData: MockClientData,
+        clientData: MockPlayerData,
 
         x: number,
         y: number
@@ -251,6 +251,8 @@ export class WavePool {
             },
 
             ws: clientData.ws,
+
+            isDev: false,
         });
 
         // Reload all
@@ -569,12 +571,19 @@ export class WavePool {
             client.slots.cooldownsPetal[at] = new Array(MAX_CLUSTER_AMOUNT).fill(PETAL_INITIAL_COOLDOWN);
             client.slots.cooldownsUsage[at] = new Array(MAX_CLUSTER_AMOUNT).fill(PETAL_INITIAL_COOLDOWN);
 
-            // Remove all petal-binded mob
-            // TODO: remove summoned mob
             if (temp !== null && isLivingSlot(temp)) {
-                temp.forEach(e => {
-                    if (this.getMob(e.id)) {
-                        this.removeMob(e.id);
+                temp.forEach(({
+                    id,
+                    petalSummonedPet,
+                }) => {
+                    // Remove all petal-binded mob
+                    if (this.getMob(id)) {
+                        this.removeMob(id);
+                    }
+
+                    // Remove summoned mob
+                    if (petalSummonedPet && this.getMob(petalSummonedPet.id)) {
+                        this.removeMob(petalSummonedPet.id);
                     }
                 });
             }
@@ -743,7 +752,11 @@ export class WavePool {
             offset += nicknameBuffer.length;
 
             // Write boolean flags
-            const bFlags = (client.isDead ? 1 : 0);
+            const bFlags =
+                // Player is dead, or not
+                (client.isDead ? 1 : 0) |
+                // Player is developer, or not
+                (client.isDev ? 2 : 0);
             buffer.writeUInt8(bFlags, offset++);
         });
 

@@ -215,14 +215,6 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
             if (super.dispose) {
                 super.dispose();
             }
-
-            this.targetEntity = null;
-            this.lastAttackedEntity = null;
-
-            this.petMaster = null;
-
-            this.petalMaster = null;
-            this.petalSummonedPet = null;
         }
     };
 }

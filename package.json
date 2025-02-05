@@ -5,7 +5,8 @@
   "scripts": {
     "build:client": "tsc --noEmit & node esbuild.mjs",
     "build": "npm run build:client",
-    "start:server": "tsc --noEmit & cd Sources/Server && tsx main.ts"
+    "start:server": "tsc --noEmit & cd Sources/Server && tsx main.ts",
+    "start:server:debug": "tsc --noEmit & cd Sources/Server && tsx main.ts -d"
   },
   "dependencies": {
     "express": "^4.21.2",
