@@ -1,9 +1,9 @@
-import { ColorCode } from "../Client/Source/Utils/common";
+import { ColorCode } from "../Client/Sources/Utils/common";
 
 export enum Biomes {
-    GARDEN,
-    DESERT,
-    OCEAN,
+    Garden,
+    Desert,
+    Ocean,
 }
 
 export const BIOME_VALUES = Object.values(Biomes);
@@ -14,7 +14,7 @@ export function biomeToCapitalizedBiomeString(biome: Biomes): string {
 }
 
 export const WAVE_BIOME_GAUGE_COLORS = {
-    [Biomes.GARDEN]: "#1ea761",
-    [Biomes.DESERT]: "#ecdcb8",
-    [Biomes.OCEAN]: "#4e77a7",
+    [Biomes.Garden]: "#1ea761",
+    [Biomes.Desert]: "#ecdcb8",
+    [Biomes.Ocean]: "#4e77a7",
 } satisfies Record<Biomes, ColorCode>;

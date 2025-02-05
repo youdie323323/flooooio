@@ -3,12 +3,12 @@ import uWS, { App, SHARED_COMPRESSOR } from 'uWebSockets.js';
 import { ServerBound, ClientboundConnectionKickReason } from "../Shared/packet";
 import { Rarities } from "../Shared/rarity";
 import { PLAYER_STATE_VALUES, VISIBLE_STATE_VALUES, WaveRoomState, WaveRoomVisibleState } from "../Shared/wave";
-import { MockPetalData } from "./Source/Entity/Mob/Petal/Petal";
-import { MockPlayerData } from "./Source/Entity/Player/Player";
-import { Logger } from "./Source/Logger/Logger";
-import { kickClient, clientRemove, processJoin } from "./Source/Utils/common";
-import { UserData } from "./Source/Wave/WavePool";
-import WaveRoomService from "./Source/Wave/WaveRoomService";
+import { MockPetalData } from "./Sources/Entity/Mob/Petal/Petal";
+import { MockPlayerData } from "./Sources/Entity/Player/Player";
+import { Logger } from "./Sources/Utils/Logger/Logger";
+import { kickClient, clientRemove, processJoin } from "./Sources/Utils/common";
+import { UserData } from "./Sources/Wave/WavePool";
+import WaveRoomService from "./Sources/Wave/WaveRoomService";
 import fs from "fs";
 import { VALID_MOOD_FLAGS } from "../Shared/mood";
 import { BIOME_VALUES, Biomes } from "../Shared/biome";
@@ -26,29 +26,22 @@ export const isDebug = process.argv.includes("-d");
 const MOCK_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
     name: 'A-NNCYANCHI-N',
     slots: {
-        surface: Array(9).fill(
+        surface: Array(10).fill(
             {
-                type: PetalType.BASIC,
-                rarity: Rarities.ULTRA,
+                type: PetalType.Basic,
+                rarity: Rarities.Ultra,
             } satisfies MockPetalData,
-        ).concat(
-            Array(1).fill(
-                {
-                    type: PetalType.FASTER,
-                    rarity: Rarities.ULTRA,
-                } satisfies MockPetalData,
-            )
         ),
         bottom: Array(5).fill(
             {
-                type: PetalType.BEETLE_EGG,
-                rarity: Rarities.ULTRA,
+                type: PetalType.YinYang,
+                rarity: Rarities.Ultra,
             } satisfies MockPetalData,
         ).concat(
             Array(5).fill(
                 {
-                    type: PetalType.YIN_YANG,
-                    rarity: Rarities.ULTRA,
+                    type: PetalType.BeetleEgg,
+                    rarity: Rarities.Ultra,
                 } satisfies MockPetalData,
             )
         ),
@@ -87,9 +80,9 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
     // Log packet type
     if (
-        packetType !== ServerBound.WAVE_CHANGE_MOVE &&
-        packetType !== ServerBound.WAVE_CHANGE_MOOD &&
-        packetType !== ServerBound.WAVE_SWAP_PETAL
+        packetType !== ServerBound.WaveChangeMove &&
+        packetType !== ServerBound.WaveChangeMood &&
+        packetType !== ServerBound.WaveSwapPetal
     ) {
         packetHistory.push(ServerBound[packetType]);
         if (packetHistory.length > 10) {
@@ -101,7 +94,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
     switch (packetType) {
         // Wave
-        case ServerBound.WAVE_CHANGE_MOVE: {
+        case ServerBound.WaveChangeMove: {
             if (buffer.length !== 3) return;
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
@@ -114,9 +107,9 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             break;
         }
-        case ServerBound.WAVE_CHANGE_MOOD: {
+        case ServerBound.WaveChangeMood: {
             if (buffer.length !== 2 || !VALID_MOOD_FLAGS.includes(buffer[1])) {
-                kickClient(ws, ClientboundConnectionKickReason.ANTICHEAT_DETECTED);
+                kickClient(ws, ClientboundConnectionKickReason.AnticheatDetected);
                 return;
             };
 
@@ -130,7 +123,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             break;
         }
-        case ServerBound.WAVE_SWAP_PETAL: {
+        case ServerBound.WaveSwapPetal: {
             if (buffer.length !== 2) return;
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
@@ -140,7 +133,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             break;
         }
-        case ServerBound.WAVE_CHAT: {
+        case ServerBound.WaveChat: {
             if (buffer.length < 2) return;
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
@@ -155,7 +148,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             break;
         }
-        case ServerBound.WAVE_LEAVE: {
+        case ServerBound.WaveLeave: {
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
             if (!waveRoom) return;
 
@@ -170,7 +163,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
         }
 
         // Wave room
-        case ServerBound.WAVE_ROOM_CREATE: {
+        case ServerBound.WaveRoomCreate: {
             if (buffer.length !== 2 || !BIOME_VALUES.includes(buffer[1])) return;
 
             const id = waveRoomService.createWaveRoom(userData, buffer[1]);
@@ -179,7 +172,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             break;
         }
-        case ServerBound.WAVE_ROOM_JOIN: {
+        case ServerBound.WaveRoomJoin: {
             if (buffer.length < 2) return;
 
             const length = buffer[1];
@@ -193,7 +186,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             break;
         }
-        case ServerBound.WAVE_ROOM_FIND_PUBLIC: {
+        case ServerBound.WaveRoomFindPublic: {
             if (buffer.length !== 2 || !BIOME_VALUES.includes(buffer[1])) return;
 
             const id = waveRoomService.joinPublicWaveRoom(userData, buffer[1]);
@@ -202,7 +195,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             break;
         }
-        case ServerBound.WAVE_ROOM_CHANGE_READY: {
+        case ServerBound.WaveRoomChangeReady: {
             if (buffer.length !== 2 || !PLAYER_STATE_VALUES.includes(buffer[1])) return;
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
@@ -212,7 +205,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             break;
         }
-        case ServerBound.WAVE_ROOM_CHANGE_VISIBLE: {
+        case ServerBound.WaveRoomChangeVisible: {
             if (buffer.length !== 2 || !VISIBLE_STATE_VALUES.includes(buffer[1])) return;
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
@@ -222,7 +215,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             break;
         }
-        case ServerBound.WAVE_ROOM_CHANGE_NAME: {
+        case ServerBound.WaveRoomChangeName: {
             if (buffer.length < 2) return;
 
             const length = buffer[1];
@@ -238,7 +231,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             break;
         }
-        case ServerBound.WAVE_ROOM_LEAVE: {
+        case ServerBound.WaveRoomLeave: {
             const ok = waveRoomService.leaveWaveRoom(waveRoomClientId);
             if (!ok) return;
 
@@ -392,7 +385,7 @@ if (isDebug) {
                 logger.info(`  State: ${WaveRoomState[wr.state]}`);
                 logger.info(`  Visible state: ${WaveRoomVisibleState[wr.visible]}`);
                 logger.info(`  Candidates: ${wr.roomCandidates.map(c => c.name).join(",")}`);
-                if (wr.state !== WaveRoomState.WAITING) {
+                if (wr.state !== WaveRoomState.Waiting) {
                     logger.info(`  Mobs: ${wr.wavePool.mobPool.size}`);
                     logger.info(`  Players: ${wr.wavePool.clientPool.size}`);
                     logger.info(`  Wave progress: ${wr.wavePool.waveData.progress}`);

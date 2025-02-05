@@ -1,11 +1,11 @@
 import { Biomes } from "../Shared/biome";
-import Mob from "./Source/Entity/Mob";
-import Player from "./Source/Entity/Player";
-import { uiScaleFactor } from "./Source/Ui/UserInterface";
-import UserInterfaceContext from "./Source/Ui/UserInterfaceContext";
-import CameraController from "./Source/Utils/CameraController";
-import Networking from "./Source/Utils/Networking";
-import TerrainGenerator, { BIOME_SVG_TILESETS, BIOME_TILESETS } from "./Source/Utils/TerrainGenerator";
+import Mob from "./Sources/Entity/Mob";
+import Player from "./Sources/Entity/Player";
+import { uiScaleFactor } from "./Sources/Ui/UserInterface";
+import UserInterfaceContext from "./Sources/Ui/UserInterfaceContext";
+import CameraController from "./Sources/Utils/CameraController";
+import Networking from "./Sources/Utils/Networking";
+import TerrainGenerator, { BIOME_SVG_TILESETS, BIOME_TILESETS } from "./Sources/Utils/TerrainGenerator";
 
 const canvas: HTMLCanvasElement = document.querySelector('#canvas');
 

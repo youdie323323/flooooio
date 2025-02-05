@@ -42,14 +42,3 @@ export function memo<A extends unknown[], R extends unknown, T extends unknown, 
         return result;
     };
 }
-
-export function memoize<A extends unknown[], R>(memoizeOptions: MemoizeOptions<A, R> = {}) {
-    return (
-        target: object, 
-        propertyKey: PropertyKey, 
-        descriptor: TypedPropertyDescriptor<MemoizableFunction<A, R, typeof target>>
-    ): void => {
-        descriptor.value = memo(descriptor.value, memoizeOptions);
-        Object.defineProperty(target, propertyKey, descriptor);
-    }
-}

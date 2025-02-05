@@ -1,40 +1,40 @@
 export enum ServerBound {
-    WAVE_CHANGE_MOVE,
-    WAVE_CHANGE_MOOD,
-    WAVE_SWAP_PETAL,
-    WAVE_CHAT,
+    WaveChangeMove,
+    WaveChangeMood,
+    WaveSwapPetal,
+    WaveChat,
 
-    WAVE_ROOM_CREATE,
+    WaveRoomCreate,
     
-    WAVE_ROOM_JOIN,
+    WaveRoomJoin,
 
-    WAVE_ROOM_FIND_PUBLIC,
+    WaveRoomFindPublic,
 
-    WAVE_ROOM_CHANGE_READY,
-    WAVE_ROOM_CHANGE_VISIBLE,
-    WAVE_ROOM_CHANGE_NAME,
+    WaveRoomChangeReady,
+    WaveRoomChangeVisible,
+    WaveRoomChangeName,
 
-    WAVE_ROOM_LEAVE,
-    WAVE_LEAVE,
+    WaveRoomLeave,
+    WaveLeave,
 }
 
 export enum ClientBound {
-    WAVE_SELF_ID,
-    WAVE_ROOM_SELF_ID,
+    WaveSelfId,
+    WaveRoomSelfId,
 
-    WAVE_UPDATE,
-    WAVE_ROOM_UPDATE,
+    WaveUpdate,
+    WaveRoomUpdate,
 
-    WAVE_ROOM_JOIN_FAILED,
+    WaveRoomJoinFailed,
 
-    WAVE_STARTING,
+    WaveStarting,
 
-    WAVE_CHAT_RECV,
+    WaveChatRecv,
 
-    CONNECTION_KICKED,
+    ConnectionKicked,
 }
 
 export enum ClientboundConnectionKickReason {
-    OUTDATED_CLIENT,
-    ANTICHEAT_DETECTED,
+    OutdatedClient,
+    AnticheatDetected,
 }

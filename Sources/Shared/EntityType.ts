@@ -7,22 +7,22 @@ function getNextEntityType(): number {
 }
 
 export enum MobType {
-    BEE = getNextEntityType(),
-    SPIDER = getNextEntityType(),
-    STARFISH = getNextEntityType(),
-    JELLYFISH = getNextEntityType(),
-    BEETLE = getNextEntityType(),
-    BUBBLE = getNextEntityType(),
+    Bee = getNextEntityType(),
+    Spider = getNextEntityType(),
+    Starfish = getNextEntityType(),
+    Jellyfish = getNextEntityType(),
+    Beetle = getNextEntityType(),
+    Bubble = getNextEntityType(),
 
-    CENTIPEDE = getNextEntityType(),
-    CENTIPEDE_EVIL = getNextEntityType(),
-    CENTIPEDE_DESERT = getNextEntityType(),
+    Centipede = getNextEntityType(),
+    CentipedeEvil = getNextEntityType(),
+    CentipedeDesert = getNextEntityType(),
 }
 
 export enum PetalType {
-    BASIC = getNextEntityType(),
-    FASTER = getNextEntityType(),
-    BEETLE_EGG = getNextEntityType(),
-    BUBBLE = getNextEntityType(),
-    YIN_YANG = getNextEntityType(),
+    Basic = getNextEntityType(),
+    Faster = getNextEntityType(),
+    BeetleEgg = getNextEntityType(),
+    Bubble = getNextEntityType(),
+    YinYang = getNextEntityType(),
 }
