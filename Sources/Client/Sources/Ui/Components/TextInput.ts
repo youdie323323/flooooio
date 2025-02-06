@@ -1,5 +1,4 @@
 import Layout, { LayoutOptions, LayoutResult } from "../Layout/Layout";
-import { uiScaleFactor } from "../UserInterface";
 import { Component, Interactive, MaybeDynamicLayoutablePointer } from "./Component";
 import ExtensionBase from "./Extensions/Extension";
 import { calculateStrokeWidth } from "./Text";
@@ -37,17 +36,6 @@ const inputs: TextInput[] = [];
 export default class TextInput extends ExtensionBase(Component) implements Interactive {
     // Core properties
     private _value: string;
-
-    // Define getter/setter for _value
-    public get value() { return this._value }
-    public set value(value: string) {
-        if (this.hiddenInput) {
-            this.hiddenInput.value = value;
-        }
-
-        this._value = value;
-    }
-
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D | null;
     private hiddenInput: HTMLInputElement;
@@ -149,29 +137,29 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
         this.onblur = o.onblur || function () { };
 
         if (this.canvas) {
-            this.canvas.addEventListener('mousemove', this.onmousemoveListen = (e: any) => {
+            this.canvas.addEventListener('mousemove', this.onmousemoveListen = (e: MouseEvent) => {
                 if (!this.visible) {
                     return;
                 }
 
                 this.mousemove(e, this);
-            }, false);
+            });
 
-            this.canvas.addEventListener('mousedown', this.onmousedownListen = (e: any) => {
+            this.canvas.addEventListener('mousedown', this.onmousedownListen = (e: MouseEvent) => {
                 if (!this.visible) {
                     return;
                 }
 
                 this.mousedown(e, this);
-            }, false);
+            });
 
-            this.canvas.addEventListener('mouseup', this.onmouseupListen = (e: any) => {
+            this.canvas.addEventListener('mouseup', this.onmouseupListen = (e: MouseEvent) => {
                 if (!this.visible) {
                     return;
                 }
 
                 this.mouseup(e, this);
-            }, false);
+            });
         }
 
         this.hiddenInput = document.createElement('input');
@@ -191,7 +179,7 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
 
         this.hiddenInput.value = this.value;
 
-        this.hiddenInput.addEventListener('keydown', (e: any) => {
+        this.hiddenInput.addEventListener('keydown', (e: KeyboardEvent) => {
             if (!this.visible) {
                 return;
             }
@@ -203,7 +191,7 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
             }
         });
 
-        this.hiddenInput.addEventListener('keyup', (e: any) => {
+        this.hiddenInput.addEventListener('keyup', (e: KeyboardEvent) => {
             if (!this.visible) {
                 return;
             }
@@ -223,6 +211,24 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
 
         inputs.push(this);
         this.inputsIndex = inputs.length - 1;
+    }
+
+    // Define getter/setter for _value
+    public get value() { return this._value }
+    public set value(value: string) {
+        if (this.hiddenInput) {
+            this.hiddenInput.value = value;
+        }
+
+        this._value = value;
+    }
+
+    // Override them to calc wh
+    public override setW(w: number) {
+        this.w = w + this.padding * 2 + this.borderWidth * 2;
+    }
+    public override setH(h: number) {
+        this.h = h + this.padding * 2 + this.borderWidth * 2;
     }
 
     public calculateLayout(
@@ -412,7 +418,7 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
     public override destroy() {
         super.destroy();
 
-        let index = inputs.indexOf(this);
+        const index = inputs.indexOf(this);
         if (index != -1) {
             inputs.splice(index, 1);
         }
@@ -489,7 +495,7 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
             }, 22.5);
         }
 
-        let hasSelection = (this.selection[0] > 0 || this.selection[1] > 0);
+        const hasSelection = (this.selection[0] > 0 || this.selection[1] > 0);
         this.hiddenInput.focus();
         this.hiddenInput.selectionStart = hasSelection ? this.selection[0] : this.cursorPos;
         this.hiddenInput.selectionEnd = hasSelection ? this.selection[1] : this.cursorPos;
@@ -513,7 +519,7 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
     }
 
     private keydown(e: KeyboardEvent, self: this) {
-        let keyCode = e.which;
+        const keyCode = e.which;
 
         if (this.readonly || !this.hasFocus) {
             e.preventDefault();
@@ -562,7 +568,7 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
     }
 
     private mousemove(e: MouseEvent, self: this) {
-        let x = this.context.mouseX, y = this.context.mouseY, isOver = this.overInput(x, y);
+        const x = this.context.mouseX, y = this.context.mouseY, isOver = this.overInput(x, y);
 
         this.updateCursorStyle(isOver);
 
@@ -577,7 +583,7 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
                 }
             }
 
-            let start = Math.min(this.selectionStart, curPos),
+            const start = Math.min(this.selectionStart, curPos),
                 end = Math.max(this.selectionStart, curPos);
 
             if (this.selection[0] !== start || this.selection[1] !== end) {
@@ -587,7 +593,7 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
     }
 
     private mousedown(e: MouseEvent, self: this) {
-        let x = this.context.mouseX, y = this.context.mouseY, isOver = this.overInput(x, y);
+        const x = this.context.mouseX, y = this.context.mouseY, isOver = this.overInput(x, y);
 
         this.mouseDown = isOver;
 
@@ -608,11 +614,11 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
     }
 
     private mouseup(e: MouseEvent, self: this) {
-        let x = this.context.mouseX, y = this.context.mouseY, isOver = this.overInput(x, y);
+        const x = this.context.mouseX, y = this.context.mouseY, isOver = this.overInput(x, y);
 
         this.updateCursorStyle(isOver);
 
-        let isSelection = this.clickPos(x, y) !== this.selectionStart;
+        const isSelection = this.clickPos(x, y) !== this.selectionStart;
         if (this.hasFocus && this.selectionStart >= 0 && isSelection) {
             this.selectionUpdated = true;
         }
@@ -624,7 +630,7 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
     }
 
     private drawTextBox(fn: () => void) {
-        let ctx = this.ctx, w = this.w, h = this.h, br = this.borderRadius, bw = this.borderWidth;
+        const ctx = this.ctx, w = this.w, h = this.h, br = this.borderRadius, bw = this.borderWidth;
 
         ctx.fillStyle = this.backgroundColor;
         ctx.beginPath();
@@ -648,7 +654,7 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
         let startPos = 0;
         let endPos = value.length;
         let currentWidth = 0;
-        let cursorOffset = this.textWidth(value.substring(0, this.cursorPos));
+        const cursorOffset = this.textWidth(value.substring(0, this.cursorPos));
 
         if (cursorOffset > availableWidth) {
             for (let i = 0; i < value.length; i++) {
@@ -673,7 +679,7 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
     }
 
     private textWidth(text: string) {
-        let ctx = this.ctx;
+        const ctx = this.ctx;
 
         ctx.font = this.fontStyle + ' ' + this.fontWeight + ' ' + this.fontSize + 'px ' + this.fontFamily;
         ctx.textAlign = 'left';
@@ -686,19 +692,9 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
     private selectText(range: [number, number] = undefined) {
         range = range || [0, this.value.length];
 
-        this.selection = [range[0], range[1]];
+        this.selection = <[number, number]>range.slice();
         this.hiddenInput.selectionStart = range[0];
         this.hiddenInput.selectionEnd = range[1];
-    }
-
-    // Override them to calc wh
-
-    public override setW(w: number) {
-        this.w = w + this.padding * 2 + this.borderWidth * 2;
-    }
-
-    public override setH(h: number) {
-        this.h = h + this.padding * 2 + this.borderWidth * 2;
     }
 
     private overInput(x: number, y: number) {
@@ -711,13 +707,12 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
     }
 
     private clickPos(x: number, y: number) {
-        let text = this.clipText();
-        let totalWidth = 0;
-        let pos = text.length;
+        const text = this.clipText();
+        const pos = text.length;
 
-        let relativeX = x - (this.x + this.padding + this.borderWidth);
+        const relativeX = x - (this.x + this.padding + this.borderWidth);
 
-        let allTextWidth = this.textWidth(text);
+        const allTextWidth = this.textWidth(text);
 
         if (relativeX <= 0) {
             return 0;
@@ -727,9 +722,11 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
             return text.length;
         }
 
+        let totalWidth = 0;
+
         for (let i = 0; i < text.length; i++) {
-            let charWidth = this.textWidth(text[i]);
-            let nextTotalWidth = totalWidth + charWidth;
+            const charWidth = this.textWidth(text[i]);
+            const nextTotalWidth = totalWidth + charWidth;
 
             if (relativeX <= totalWidth + (charWidth / 2)) {
                 return i;

@@ -32,15 +32,22 @@ const MOCK_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
                 rarity: Rarities.Ultra,
             } satisfies MockPetalData,
         ),
-        bottom: Array(5).fill(
+        bottom: Array(3).fill(
             {
-                type: PetalType.YinYang,
+                type: PetalType.Bubble,
                 rarity: Rarities.Ultra,
             } satisfies MockPetalData,
         ).concat(
-            Array(5).fill(
+            Array(3).fill(
                 {
                     type: PetalType.BeetleEgg,
+                    rarity: Rarities.Ultra,
+                } satisfies MockPetalData,
+            )
+        ).concat(
+            Array(4).fill(
+                {
+                    type: PetalType.YinYang,
                     rarity: Rarities.Ultra,
                 } satisfies MockPetalData,
             )
