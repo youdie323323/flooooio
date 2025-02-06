@@ -138,7 +138,7 @@ export default class UserInterfaceGame extends UserInterface {
             }
 
             case "Enter": {
-                if (this.chatInput.hasFocus()) {
+                if (this.chatInput.hasFocus) {
                     this.chatInput.blur();
                 } else {
                     const selfPlayer = players.get(waveSelfId);
@@ -312,27 +312,27 @@ export default class UserInterfaceGame extends UserInterface {
             },
             {
                 canvas: this.canvas,
+
                 value: "",
 
                 fontSize: 11,
                 fontFamily: 'Ubuntu',
                 fontColor: '#212121',
                 fontWeight: 'bold',
+                
                 placeHolder: '',
                 placeHolderUnfocused: "Press [ENTER] or click here to chat",
+                placeHolderDisplayUnfocusedState: true,
 
                 borderColor: "#000000",
                 borderRadius: 4,
                 borderWidth: 2.2,
                 maxlength: 80,
 
-                showUnfocusedState: true,
-
                 onsubmit: (e, self) => {
-                    const chatMessage = self.value();
-                    networking.sendChat(chatMessage);
+                    networking.sendChat(self.value);
 
-                    self.value("");
+                    self.value = "";
                 },
             },
         );
@@ -675,10 +675,10 @@ export default class UserInterfaceGame extends UserInterface {
 
                         this.gameOverOpacity = Math.max(Math.min(this.gameOverOpacity, 1), 0);
 
+                        this.gameOverContinueButton.globalAlpha = this.gameOverOpacity;
                         this.gameOverContinueButton.setX(centerWidth - (this.gameOverContinueButton.w / 2));
                         this.gameOverContinueButton.setY(centerHeight + 35);
                         this.gameOverContinueButton.setVisible(true);
-                        this.gameOverContinueButton.setGlobalAlpha(this.gameOverOpacity);
 
                         ctx.save();
 

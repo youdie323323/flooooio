@@ -430,13 +430,16 @@ export default class UserInterfaceTitle extends UserInterface {
                 },
                 {
                     canvas: this.canvas,
+
                     value: "",
 
                     fontSize: 15,
                     fontFamily: 'Ubuntu',
                     fontColor: '#212121',
                     fontWeight: 'bold',
+
                     placeHolder: '',
+                    placeHolderDisplayUnfocusedState: false,
 
                     borderColor: "#000000",
                     borderRadius: 2,
@@ -445,10 +448,8 @@ export default class UserInterfaceTitle extends UserInterface {
 
                     padding: 1,
 
-                    showUnfocusedState: false,
-
                     onkeyup(e, self) {
-                        const name = self.value();
+                        const name = self.value;
 
                         networking.sendRoomChangeName(name);
                     },
@@ -711,13 +712,16 @@ export default class UserInterfaceTitle extends UserInterface {
                         },
                         {
                             canvas: this.canvas,
+
                             value: "",
 
                             fontSize: 10,
                             fontFamily: 'Ubuntu',
                             fontColor: '#212121',
                             fontWeight: 'bold',
+
                             placeHolder: '',
+                            placeHolderDisplayUnfocusedState: false,
 
                             borderColor: "#000000",
                             borderRadius: 2,
@@ -725,8 +729,6 @@ export default class UserInterfaceTitle extends UserInterface {
                             maxlength: 20,
 
                             padding: 1,
-
-                            showUnfocusedState: false,
                         },
                     )),
                     new TextButton(
@@ -737,11 +739,8 @@ export default class UserInterfaceTitle extends UserInterface {
                             h: 18,
                         },
                         "#1dd129",
-                        () => {
-                            const code = codeInput.value();
-                            networking.sendRoomJoin(code);
-                        },
-                        () => codeInput.value().length > 0,
+                        () => networking.sendRoomJoin(codeInput.value),
+                        () => codeInput.value.length > 0,
                         "Join",
                     ),
 

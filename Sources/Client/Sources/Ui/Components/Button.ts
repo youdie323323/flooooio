@@ -67,7 +67,7 @@ export class Button extends ExtensionBase(Component) implements Interactive, Cli
             return;
         }
 
-        this.canvas.style.cursor = "pointer";
+        this.context.canvas.style.cursor = "pointer";
 
         this.isHovered = true;
     }
@@ -77,7 +77,7 @@ export class Button extends ExtensionBase(Component) implements Interactive, Cli
             return;
         }
 
-        this.canvas.style.cursor = "default";
+        this.context.canvas.style.cursor = "default";
 
         this.isHovered = false;
         this.isPressed = false;

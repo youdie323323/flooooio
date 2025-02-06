@@ -82,11 +82,11 @@ export default class Toggle extends ExtensionBase(Component) implements Interact
     }
 
     public onFocus(): void {
-        this.canvas.style.cursor = "pointer";
+        this.context.canvas.style.cursor = "pointer";
     }
 
     public onBlur(): void {
-        this.canvas.style.cursor = "default";
+        this.context.canvas.style.cursor = "default";
     }
 
     public onClick(): void {

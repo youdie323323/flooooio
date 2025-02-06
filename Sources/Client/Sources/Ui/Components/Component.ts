@@ -1,5 +1,6 @@
 import { LayoutResult } from "../Layout/Layout";
 import LayoutCache from "../Layout/LayoutCache";
+import UserInterface from "../UserInterface";
 import { SVGButton, TextButton } from "./Button";
 import { AddableContainer, CoordinatedStaticSpace, StaticSpace } from "./Container";
 import PlayerProfile from "./PlayerProfile";
@@ -91,13 +92,15 @@ export abstract class Component {
         return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
     }
 
+    protected layoutCache: LayoutCache = new LayoutCache();
+
+    public context: UserInterface;
+
     /**
      * Real position to store original position to animations.
      */
     private realX: number = 0;
     private realY: number = 0;
-
-    protected layoutCache: LayoutCache = new LayoutCache();
 
     /**
      * Component is visible, or not.
@@ -112,17 +115,23 @@ export abstract class Component {
     /**
      * Canvas configs.
      */
-    protected globalAlpha: number = 1;
-
-    /**
-     * Canvas element.
-     */
-    public canvas: HTMLCanvasElement;
+    public globalAlpha: number = 1;
 
     public x: number = 0;
     public y: number = 0;
     public w: number = 0;
     public h: number = 0;
+
+    protected computeDynamicLayoutable<T>(m: MaybeDynamicLayoutablePointer<T>): T {
+        return m instanceof Function ? m() : m;
+    }
+
+    // Wrap these prop so components can update realX, realY dynamically
+    // Although component can override method and can use it
+    public setX(x: number) { this.realX = x; this.x = x }
+    public setY(y: number) { this.realY = y; this.y = y }
+    public setW(w: number) { this.w = w }
+    public setH(h: number) { this.h = h }
 
     /**
      * This method calculate layout by layout options, and parent container/screen.
@@ -259,6 +268,10 @@ export abstract class Component {
         }
     }
 
+    public destroy(): void {
+        this.context = null;
+    };
+
     public setVisible(
         toggle: boolean,
         shouldAnimate: boolean = false,
@@ -285,23 +298,6 @@ export abstract class Component {
             this.visible = toggle;
         }
     }
-
-    public setGlobalAlpha(globalAlpha: number) { this.globalAlpha = globalAlpha }
-
-    public destroy(): void {
-        this.canvas = null;
-    };
-
-    protected computeDynamicLayoutable<T>(m: MaybeDynamicLayoutablePointer<T>): T {
-        return m instanceof Function ? m() : m;
-    }
-
-    // Wrap these prop so components can update realX, realY dynamically
-    // Although component can override method and can use it
-    public setX(x: number) { this.realX = x; this.x = x }
-    public setY(y: number) { this.realY = y; this.y = y }
-    public setW(w: number) { this.w = w }
-    public setH(h: number) { this.h = h }
 }
 
 // Interface for interactive components

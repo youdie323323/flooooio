@@ -9,8 +9,8 @@ export const UI_BASE_WIDTH = 1300;
 export const UI_BASE_HEIGHT = 650;
 
 export default abstract class UserInterface {
-    private mouseX: number = 0;
-    private mouseY: number = 0;
+    public mouseX: number = 0;
+    public mouseY: number = 0;
 
     private components: AllComponents[] = [];
 
@@ -37,7 +37,7 @@ export default abstract class UserInterface {
 
     private _onresize: () => void;
 
-    constructor(protected canvas: HTMLCanvasElement) {
+    constructor(public canvas: HTMLCanvasElement) {
         // Initialize components
         this.initializeComponents();
 
@@ -148,7 +148,7 @@ export default abstract class UserInterface {
 
     protected addComponent(component: AllComponents): AllComponents {
         // Set properties to component (take as constructor arg too bored)
-        component.canvas = this.canvas;
+        component.context = this;
 
         // Remove component if exists
         this.removeComponent(component);
