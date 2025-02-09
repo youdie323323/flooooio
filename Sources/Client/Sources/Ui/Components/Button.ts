@@ -38,7 +38,7 @@ export class Button extends ExtensionBase(Component) implements Interactive, Cli
         );
     }
 
-    public render(ctx: CanvasRenderingContext2D): void {
+    public override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
         // Update per rAF frame
@@ -56,10 +56,6 @@ export class Button extends ExtensionBase(Component) implements Interactive, Cli
 
     public invalidateLayoutCache(): void {
         this.layoutCache.invalidate();
-    }
-
-    public destroy(): void {
-        super.destroy();
     }
 
     public onFocus(): void {
@@ -174,7 +170,7 @@ export class TextButton extends Button {
         return Math.max(2, minDimension * 0.07);
     }
 
-    public render(ctx: CanvasRenderingContext2D): void {
+    public override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
         this.update();
@@ -262,7 +258,7 @@ export class SVGButton extends Button {
         return Math.max(2, minDimension * 0.07);
     }
 
-    public render(ctx: CanvasRenderingContext2D): void {
+    public override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
         this.update();

@@ -44,7 +44,7 @@ export default class StaticText extends ExtensionBase(Component) {
         this.layoutCache.invalidate();
     }
 
-    public render(ctx: CanvasRenderingContext2D): void {
+    public override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
         this.update();

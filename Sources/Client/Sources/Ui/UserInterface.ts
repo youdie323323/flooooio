@@ -1,7 +1,7 @@
 import { ADDED, AllComponents, Clickable, Component, ComponentContainer, ComponentSymbol, Interactive } from "./Components/Component";
 import { DYNAMIC_LAYOUTED } from "./Components/Extensions/ExtensionDynamicLayoutable";
 import { AddableContainer } from "./Components/Container";
-import { Biomes } from "../../../Shared/biome";
+import { Biome } from "../../../Shared/biome";
 
 export let uiScaleFactor: number = 1;
 
@@ -407,8 +407,8 @@ export default abstract class UserInterface {
 
     // Biome atomic store
 
-    abstract set biome(biome: Biomes);
-    abstract get biome(): Biomes;
+    abstract set biome(biome: Biome);
+    abstract get biome(): Biome;
 
     /**
      * Method for initialize components, only called for once.

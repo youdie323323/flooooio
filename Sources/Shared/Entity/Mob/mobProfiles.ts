@@ -2,7 +2,7 @@
 
 import { MobData } from "../../../Server/Sources/Entity/Mob/Mob";
 import { MobType } from "../../EntityType";
-import { Rarities } from "../../rarity";
+import { Rarity } from "../../rarity";
 
 export const MOB_PROFILES = {
     [MobType.Bee]: {
@@ -19,31 +19,31 @@ export const MOB_PROFILES = {
             ry: 20,
         },
 
-        [Rarities.Common]: {
+        [Rarity.Common]: {
             health: 37.5,
             bodyDamage: 50,
         },
-        [Rarities.Unusual]: {
+        [Rarity.Unusual]: {
             health: 140.7,
             bodyDamage: 150,
         },
-        [Rarities.Rare]: {
+        [Rarity.Rare]: {
             health: 506.25,
             bodyDamage: 450,
         },
-        [Rarities.Epic]: {
+        [Rarity.Epic]: {
             health: 2025,
             bodyDamage: 1350,
         },
-        [Rarities.Legendary]: {
+        [Rarity.Legendary]: {
             health: 15187.5,
             bodyDamage: 4050,
         },
-        [Rarities.Mythic]: {
+        [Rarity.Mythic]: {
             health: 91125,
             bodyDamage: 12150,
         },
-        [Rarities.Ultra]: {
+        [Rarity.Ultra]: {
             health: 2737500,
             bodyDamage: 36450,
         },
@@ -63,31 +63,31 @@ export const MOB_PROFILES = {
             ry: 40,
         },
 
-        [Rarities.Common]: {
+        [Rarity.Common]: {
             health: 62.5,
             bodyDamage: 15,
         },
-        [Rarities.Unusual]: {
+        [Rarity.Unusual]: {
             health: 234.5,
             bodyDamage: 45,
         },
-        [Rarities.Rare]: {
+        [Rarity.Rare]: {
             health: 843.75,
             bodyDamage: 135,
         },
-        [Rarities.Epic]: {
+        [Rarity.Epic]: {
             health: 3375,
             bodyDamage: 405,
         },
-        [Rarities.Legendary]: {
+        [Rarity.Legendary]: {
             health: 25312.5,
             bodyDamage: 1215,
         },
-        [Rarities.Mythic]: {
+        [Rarity.Mythic]: {
             health: 151875,
             bodyDamage: 3645,
         },
-        [Rarities.Ultra]: {
+        [Rarity.Ultra]: {
             health: 4562500,
             bodyDamage: 10935,
         },
@@ -107,31 +107,31 @@ export const MOB_PROFILES = {
             ry: 100,
         },
 
-        [Rarities.Common]: {
+        [Rarity.Common]: {
             health: 150,
             bodyDamage: 20,
         },
-        [Rarities.Unusual]: {
+        [Rarity.Unusual]: {
             health: 562.8,
             bodyDamage: 60,
         },
-        [Rarities.Rare]: {
+        [Rarity.Rare]: {
             health: 2025,
             bodyDamage: 180,
         },
-        [Rarities.Epic]: {
+        [Rarity.Epic]: {
             health: 8100,
             bodyDamage: 540,
         },
-        [Rarities.Legendary]: {
+        [Rarity.Legendary]: {
             health: 60750,
             bodyDamage: 1620,
         },
-        [Rarities.Mythic]: {
+        [Rarity.Mythic]: {
             health: 364500,
             bodyDamage: 4860,
         },
-        [Rarities.Ultra]: {
+        [Rarity.Ultra]: {
             health: 10950000,
             bodyDamage: 14580,
         },
@@ -151,49 +151,49 @@ export const MOB_PROFILES = {
             ry: 20,
         },
 
-        [Rarities.Common]: {
+        [Rarity.Common]: {
             health: 125,
             bodyDamage: 25,
 
             lightning: 7,
             bounces: 2,
         },
-        [Rarities.Unusual]: {
+        [Rarity.Unusual]: {
             health: 469,
             bodyDamage: 75,
 
             lightning: 21,
             bounces: 3,
         },
-        [Rarities.Rare]: {
+        [Rarity.Rare]: {
             health: 1687.5,
             bodyDamage: 225,
 
             lightning: 63,
             bounces: 4,
         },
-        [Rarities.Epic]: {
+        [Rarity.Epic]: {
             health: 6750,
             bodyDamage: 675,
 
             lightning: 189,
             bounces: 5,
         },
-        [Rarities.Legendary]: {
+        [Rarity.Legendary]: {
             health: 50625,
             bodyDamage: 2025,
 
             lightning: 567,
             bounces: 6,
         },
-        [Rarities.Mythic]: {
+        [Rarity.Mythic]: {
             health: 303750,
             bodyDamage: 6075,
 
             lightning: 1701,
             bounces: 7,
         },
-        [Rarities.Ultra]: {
+        [Rarity.Ultra]: {
             health: 9125000,
             bodyDamage: 18225,
 
@@ -216,31 +216,31 @@ export const MOB_PROFILES = {
             ry: 34,
         },
 
-        [Rarities.Common]: {
+        [Rarity.Common]: {
             health: 100,
             bodyDamage: 30,
         },
-        [Rarities.Unusual]: {
+        [Rarity.Unusual]: {
             health: 375.2,
             bodyDamage: 90,
         },
-        [Rarities.Rare]: {
+        [Rarity.Rare]: {
             health: 1350,
             bodyDamage: 270,
         },
-        [Rarities.Epic]: {
+        [Rarity.Epic]: {
             health: 5400,
             bodyDamage: 810,
         },
-        [Rarities.Legendary]: {
+        [Rarity.Legendary]: {
             health: 40500,
             bodyDamage: 2430,
         },
-        [Rarities.Mythic]: {
+        [Rarity.Mythic]: {
             health: 243000,
             bodyDamage: 7290,
         },
-        [Rarities.Ultra]: {
+        [Rarity.Ultra]: {
             health: 7300000,
             bodyDamage: 21870,
         },
@@ -260,31 +260,31 @@ export const MOB_PROFILES = {
             ry: 20,
         },
 
-        [Rarities.Common]: {
+        [Rarity.Common]: {
             health: 0.5,
             bodyDamage: 5,
         },
-        [Rarities.Unusual]: {
+        [Rarity.Unusual]: {
             health: 1.876,
             bodyDamage: 15,
         },
-        [Rarities.Rare]: {
+        [Rarity.Rare]: {
             health: 6.75,
             bodyDamage: 45,
         },
-        [Rarities.Epic]: {
+        [Rarity.Epic]: {
             health: 27,
             bodyDamage: 135,
         },
-        [Rarities.Legendary]: {
+        [Rarity.Legendary]: {
             health: 202.5,
             bodyDamage: 405,
         },
-        [Rarities.Mythic]: {
+        [Rarity.Mythic]: {
             health: 1215,
             bodyDamage: 1215,
         },
-        [Rarities.Ultra]: {
+        [Rarity.Ultra]: {
             health: 36500,
             bodyDamage: 3645,
         },
@@ -304,31 +304,31 @@ export const MOB_PROFILES = {
             ry: 40,
         },
 
-        [Rarities.Common]: {
+        [Rarity.Common]: {
             health: 25,
             bodyDamage: 10,
         },
-        [Rarities.Unusual]: {
+        [Rarity.Unusual]: {
             health: 93.8,
             bodyDamage: 30,
         },
-        [Rarities.Rare]: {
+        [Rarity.Rare]: {
             health: 337.5,
             bodyDamage: 90,
         },
-        [Rarities.Epic]: {
+        [Rarity.Epic]: {
             health: 1350,
             bodyDamage: 270,
         },
-        [Rarities.Legendary]: {
+        [Rarity.Legendary]: {
             health: 10125,
             bodyDamage: 810,
         },
-        [Rarities.Mythic]: {
+        [Rarity.Mythic]: {
             health: 60750,
             bodyDamage: 2430,
         },
-        [Rarities.Ultra]: {
+        [Rarity.Ultra]: {
             health: 1825000,
             bodyDamage: 7290,
         },
@@ -348,31 +348,31 @@ export const MOB_PROFILES = {
             ry: 40,
         },
 
-        [Rarities.Common]: {
+        [Rarity.Common]: {
             health: 25,
             bodyDamage: 10,
         },
-        [Rarities.Unusual]: {
+        [Rarity.Unusual]: {
             health: 93.8,
             bodyDamage: 30,
         },
-        [Rarities.Rare]: {
+        [Rarity.Rare]: {
             health: 337.5,
             bodyDamage: 90,
         },
-        [Rarities.Epic]: {
+        [Rarity.Epic]: {
             health: 1350,
             bodyDamage: 270,
         },
-        [Rarities.Legendary]: {
+        [Rarity.Legendary]: {
             health: 10125,
             bodyDamage: 810,
         },
-        [Rarities.Mythic]: {
+        [Rarity.Mythic]: {
             health: 60750,
             bodyDamage: 2430,
         },
-        [Rarities.Ultra]: {
+        [Rarity.Ultra]: {
             health: 1825000,
             bodyDamage: 7290,
         },
@@ -392,31 +392,31 @@ export const MOB_PROFILES = {
             ry: 40,
         },
 
-        [Rarities.Common]: {
+        [Rarity.Common]: {
             health: 25,
             bodyDamage: 10,
         },
-        [Rarities.Unusual]: {
+        [Rarity.Unusual]: {
             health: 93.8,
             bodyDamage: 30,
         },
-        [Rarities.Rare]: {
+        [Rarity.Rare]: {
             health: 337.5,
             bodyDamage: 90,
         },
-        [Rarities.Epic]: {
+        [Rarity.Epic]: {
             health: 1350,
             bodyDamage: 270,
         },
-        [Rarities.Legendary]: {
+        [Rarity.Legendary]: {
             health: 10125,
             bodyDamage: 810,
         },
-        [Rarities.Mythic]: {
+        [Rarity.Mythic]: {
             health: 60750,
             bodyDamage: 2430,
         },
-        [Rarities.Ultra]: {
+        [Rarity.Ultra]: {
             health: 1825000,
             bodyDamage: 7290,
         },

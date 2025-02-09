@@ -1,7 +1,7 @@
 import path from "path";
 import uWS, { App, SHARED_COMPRESSOR } from 'uWebSockets.js';
 import { ServerBound, ClientboundConnectionKickReason } from "../Shared/packet";
-import { Rarities } from "../Shared/rarity";
+import { Rarity } from "../Shared/rarity";
 import { PLAYER_STATE_VALUES, VISIBLE_STATE_VALUES, WaveRoomState, WaveRoomVisibleState } from "../Shared/wave";
 import { MockPetalData } from "./Sources/Entity/Mob/Petal/Petal";
 import { MockPlayerData } from "./Sources/Entity/Player/Player";
@@ -11,7 +11,7 @@ import { UserData } from "./Sources/Wave/WavePool";
 import WaveRoomService from "./Sources/Wave/WaveRoomService";
 import fs from "fs";
 import { VALID_MOOD_FLAGS } from "../Shared/mood";
-import { BIOME_VALUES, Biomes } from "../Shared/biome";
+import { BIOME_VALUES, Biome } from "../Shared/biome";
 import { PetalType } from "../Shared/EntityType";
 
 require('dotenv').config({
@@ -26,29 +26,29 @@ export const isDebug = process.argv.includes("-d");
 const MOCK_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
     name: 'A-NNCYANCHI-N',
     slots: {
-        surface: Array(10).fill(
+        surface: Array(50).fill(
             {
-                type: PetalType.Basic,
-                rarity: Rarities.Ultra,
+                type: PetalType.BeetleEgg,
+                rarity: Rarity.Ultra,
             } satisfies MockPetalData,
         ),
         bottom: Array(3).fill(
             {
                 type: PetalType.Bubble,
-                rarity: Rarities.Ultra,
+                rarity: Rarity.Ultra,
             } satisfies MockPetalData,
         ).concat(
             Array(3).fill(
                 {
                     type: PetalType.BeetleEgg,
-                    rarity: Rarities.Ultra,
+                    rarity: Rarity.Ultra,
                 } satisfies MockPetalData,
             )
         ).concat(
             Array(4).fill(
                 {
                     type: PetalType.YinYang,
-                    rarity: Rarities.Ultra,
+                    rarity: Rarity.Ultra,
                 } satisfies MockPetalData,
             )
         ),
@@ -388,7 +388,7 @@ if (isDebug) {
             logger.info("Wave rooms");
             waveRoomService.allWaveRoom.forEach(wr => {
                 logger.info(`-- ${wr.code} --`);
-                logger.info(`  Biome: ${Biomes[wr.biome]}`);
+                logger.info(`  Biome: ${Biome[wr.biome]}`);
                 logger.info(`  State: ${WaveRoomState[wr.state]}`);
                 logger.info(`  Visible state: ${WaveRoomVisibleState[wr.visible]}`);
                 logger.info(`  Candidates: ${wr.roomCandidates.map(c => c.name).join(",")}`);

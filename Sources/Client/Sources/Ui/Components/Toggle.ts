@@ -41,7 +41,7 @@ export default class Toggle extends ExtensionBase(Component) implements Interact
         this.layoutCache.invalidate();
     }
 
-    public render(ctx: CanvasRenderingContext2D): void {
+    public override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
         this.update();

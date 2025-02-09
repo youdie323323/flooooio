@@ -1,7 +1,7 @@
-import { Biomes } from "../../../../Shared/biome";
+import { Biome } from "../../../../Shared/biome";
 import { PetalType } from "../../../../Shared/EntityType";
 import { ServerBound } from "../../../../Shared/packet";
-import { Rarities } from "../../../../Shared/rarity";
+import { Rarity } from "../../../../Shared/rarity";
 import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../../Shared/wave";
 import { networking, ws, cameraController } from "../../../main";
 import Mob from "../../Entity/Mob";
@@ -54,7 +54,7 @@ let backgroundEntities: Set<
  * 
  * To store biome when ui switched.
  */
-let menuUiCurrentBiome: Biomes = Biomes.Garden;
+let menuUiCurrentBiome: Biome = Biome.Garden;
 
 function drawRoundedPolygon(
     ctx: CanvasRenderingContext2D,
@@ -550,7 +550,7 @@ export default class UserInterfaceTitle extends UserInterface {
                         },
                         "#2ba35b",
                         () => {
-                            this.biome = Biomes.Garden;
+                            this.biome = Biome.Garden;
                         },
                         true,
                         "Garden",
@@ -563,7 +563,7 @@ export default class UserInterfaceTitle extends UserInterface {
                         },
                         "#ccba73",
                         () => {
-                            this.biome = Biomes.Desert;
+                            this.biome = Biome.Desert;
                         },
                         true,
                         "Desert",
@@ -576,7 +576,7 @@ export default class UserInterfaceTitle extends UserInterface {
                         },
                         "#6089b6",
                         () => {
-                            this.biome = Biomes.Ocean;
+                            this.biome = Biome.Ocean;
                         },
                         true,
                         "Ocean",
@@ -869,7 +869,7 @@ export default class UserInterfaceTitle extends UserInterface {
 
             backgroundEntities.add({
                 waveStep: Math.random() + 360,
-                entity: new Mob(-1, param.x, param.y, 1, param.z * 5, 1, PetalType.Basic, Rarities.Common, false, false)
+                entity: new Mob(-1, param.x, param.y, 1, param.z * 5, 1, PetalType.Basic, Rarity.Common, false, false)
             });
 
             this.lastBackgroundEntitySpawn = Date.now();
@@ -885,7 +885,7 @@ export default class UserInterfaceTitle extends UserInterface {
         });
 
         // Ocean pattern background
-        if (this.biome === Biomes.Ocean) {
+        if (this.biome === Biome.Ocean) {
             this.oceanBackgroundX += 0.4;
             this.oceanBackgroundY += Math.sin(this.oceanBackgroundWaveStep / 20) * 0.4;
             this.oceanBackgroundWaveStep += 0.07;
@@ -929,11 +929,11 @@ export default class UserInterfaceTitle extends UserInterface {
         cameraController.zoom = 1;
     }
 
-    set biome(biome: Biomes) {
+    set biome(biome: Biome) {
         menuUiCurrentBiome = biome;
     }
 
-    get biome(): Biomes {
+    get biome(): Biome {
         return menuUiCurrentBiome;
     }
 }

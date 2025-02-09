@@ -1,5 +1,5 @@
 import { PetalType } from "../../../../../Shared/EntityType";
-import { Rarities } from "../../../../../Shared/rarity";
+import { Rarity } from "../../../../../Shared/rarity";
 import { BaseEntityData } from "../../Entity";
 import { MobInstance } from "../Mob";
 
@@ -24,13 +24,13 @@ interface PetalI18n {
 export type PetalData = Readonly<
     BaseEntityData<PetalI18n>
     & {
-        [Rarities.Common]: PetalStat;
-        [Rarities.Unusual]: PetalStat;
-        [Rarities.Rare]: PetalStat;
-        [Rarities.Epic]: PetalStat;
-        [Rarities.Legendary]: PetalStat;
-        [Rarities.Mythic]: PetalStat;
-        [Rarities.Ultra]: PetalStat;
+        [Rarity.Common]: PetalStat;
+        [Rarity.Unusual]: PetalStat;
+        [Rarity.Rare]: PetalStat;
+        [Rarity.Epic]: PetalStat;
+        [Rarity.Legendary]: PetalStat;
+        [Rarity.Mythic]: PetalStat;
+        [Rarity.Ultra]: PetalStat;
     }
 >;
 
@@ -44,7 +44,7 @@ export type PetalData = Readonly<
  */
 export type MockPetalData = Readonly<{
     type: PetalType;
-    rarity: Rarities;
+    rarity: Rarity;
 }>;
 
 export type ClusterLike = MobInstance[];

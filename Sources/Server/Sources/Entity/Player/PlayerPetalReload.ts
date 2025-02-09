@@ -6,7 +6,7 @@ import { PetalType, MobType } from "../../../../Shared/EntityType";
 import { PETAL_PROFILES } from "../../../../Shared/Entity/Mob/Petal/petalProfiles";
 import { isPetal } from "../../Utils/common";
 import { decodeMood } from "../../../../Shared/mood";
-import { Rarities } from "../../../../Shared/rarity";
+import { Rarity } from "../../../../Shared/rarity";
 import { MAX_CLUSTER_AMOUNT } from "./PlayerPetalOrbit";
 
 export const PETAL_INITIAL_COOLDOWN = 0;
@@ -36,7 +36,7 @@ const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, i: number
         case PetalType.BeetleEgg: {
             petal.petalSummonedPet = poolThis.generateMob(
                 EGG_TYPE_MAPPING[petal.type],
-                Math.max(Rarities.Common, Math.min(Rarities.Mythic, petal.rarity - 1)),
+                Math.max(Rarity.Common, Math.min(Rarity.Mythic, petal.rarity - 1)),
 
                 // Summon on breaked petal
                 petal.x,

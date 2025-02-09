@@ -1,4 +1,4 @@
-import { Biomes } from "../Shared/biome";
+import { Biome } from "../Shared/biome";
 import Mob from "./Sources/Entity/Mob";
 import Player from "./Sources/Entity/Player";
 import { uiScaleFactor } from "./Sources/Ui/UserInterface";
@@ -31,7 +31,7 @@ export const uiCtx = new UserInterfaceContext(canvas);
 const init = async function () {
     // Generate tilesets beforehand so no need to generate them multiple times
     for (const biome in BIOME_SVG_TILESETS) {
-        const parsedBiome = parseInt(biome) as Biomes;
+        const parsedBiome = parseInt(biome) as Biome;
         BIOME_TILESETS.set(parsedBiome, await TerrainGenerator.generateTilesets(parsedBiome));
     }
 

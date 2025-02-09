@@ -1,4 +1,4 @@
-import { Mood } from "../../../../Shared/mood";
+import { MoodFlags } from "../../../../Shared/mood";
 import { WaveRoomPlayerReadyState } from "../../../../Shared/wave";
 import Player from "../../Entity/Player";
 import { DARKEND_BASE } from "../../Utils/common";
@@ -20,7 +20,7 @@ export default class PlayerProfile extends ExtensionBase(Component) {
         10,
         15,
         0,
-        Mood.Normal,
+        MoodFlags.Normal,
         "",
         true,
     );
@@ -60,7 +60,7 @@ export default class PlayerProfile extends ExtensionBase(Component) {
         this.layoutCache.invalidate();
     }
 
-    public render(ctx: CanvasRenderingContext2D): void {
+    public override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
         this.update();
@@ -166,7 +166,7 @@ export default class PlayerProfile extends ExtensionBase(Component) {
         }
     }
 
-    public destroy(): void {
+    public override destroy(): void {
         super.destroy();
 
         this.dummyPlayerEntity = null;

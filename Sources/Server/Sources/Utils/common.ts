@@ -1,7 +1,7 @@
 import { MobType, PetalType } from "../../../Shared/EntityType";
 import { ClientboundConnectionKickReason, ClientBound } from "../../../Shared/packet";
 import { PETAL_PROFILES } from "../../../Shared/Entity/Mob/Petal/petalProfiles";
-import { Rarities } from "../../../Shared/rarity";
+import { Rarity } from "../../../Shared/rarity";
 import { memo } from "../../../Shared/Utils/memoize";
 import { WaveRoomState } from "../../../Shared/wave";
 import { waveRoomService } from "../../main";
@@ -121,7 +121,7 @@ export const processJoin = (ws: uWS.WebSocket<UserData>, id: false | WaveRoomPla
     ws.send(response, true);
 }
 
-export const calculateMobSize = (profile: MobData, rarity: Rarities): number => profile.baseSize * MOB_SIZE_FACTOR[rarity];
+export const calculateMobSize = (profile: MobData, rarity: Rarity): number => profile.baseSize * MOB_SIZE_FACTOR[rarity];
 
 /**
  * Get first segment (head) of mob.

@@ -1,4 +1,4 @@
-import { NUM_RARITIES, Rarities } from "./rarity";
+import { NUM_RARITIES, Rarity } from "./rarity";
 import { memo } from "./Utils/memoize";
 
 /**
@@ -83,7 +83,7 @@ export const calculateDropChance = (baseDropChance: number, mobRarity: number, d
     return powTerm2 - powTerm1;
 }
 
-const MAX_DROPPABLE_RARITY = Rarities.Mythic;
+const MAX_DROPPABLE_RARITY = Rarity.Mythic;
 
 export const calculateDropTable = (baseDropChance: number): number[][] => {
     const table = Array.from({ length: NUM_RARITIES }, () => new Array(MAX_DROPPABLE_RARITY).fill(0));

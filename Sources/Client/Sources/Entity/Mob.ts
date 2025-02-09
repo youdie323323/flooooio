@@ -2,7 +2,7 @@ import Entity from "./Entity";
 import { ColorCode, darkend, DARKEND_BASE } from "../Utils/common";
 import drawEntityDetail from "./drawEntityDetail";
 import { MobType, PetalType } from "../../../Shared/EntityType";
-import { Rarities } from "../../../Shared/rarity";
+import { Rarity } from "../../../Shared/rarity";
 
 const TAU = Math.PI * 2;
 
@@ -74,7 +74,7 @@ export default class Mob extends Entity {
         health: number,
 
         readonly type: MobType | PetalType,
-        readonly rarity: Rarities,
+        readonly rarity: Rarity,
 
         readonly isPet: boolean,
 

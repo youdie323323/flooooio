@@ -1,6 +1,6 @@
-import { Biomes } from "../../../Shared/biome";
+import { Biome } from "../../../Shared/biome";
 import { ClientBound, ServerBound } from "../../../Shared/packet";
-import { Rarities } from "../../../Shared/rarity";
+import { Rarity } from "../../../Shared/rarity";
 import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../Shared/wave";
 import { uiCtx, players, mobs } from "../../main";
 import Mob from "../Entity/Mob";
@@ -184,7 +184,7 @@ export default class Networking {
 
                             const mobType = data.getUint8(offset++);
 
-                            const mobRarity = data.getUint8(offset++) as Rarities;
+                            const mobRarity = data.getUint8(offset++) as Rarity;
 
                             // Decode boolean flags
                             const bFlags = data.getUint8(offset++);
@@ -281,7 +281,7 @@ export default class Networking {
 
                         const waveCode = readString();
 
-                        const waveBiome = data.getUint8(offset++) as Biomes;
+                        const waveBiome = data.getUint8(offset++) as Biome;
 
                         const waveState = data.getUint8(offset++) as WaveRoomState;
 
@@ -304,7 +304,7 @@ export default class Networking {
 
                     uiCtx.switchUI("game");
 
-                    const waveBiome = data.getUint8(offset++) as Biomes;
+                    const waveBiome = data.getUint8(offset++) as Biome;
 
                     if (uiCtx.previousCtx) {
                         uiCtx.previousCtx.biome = waveBiome;
@@ -373,7 +373,7 @@ export default class Networking {
 
     // Wave rooms
 
-    public sendRoomCreate(biome: Biomes) {
+    public sendRoomCreate(biome: Biome) {
         const data = new Uint8Array([ServerBound.WaveRoomCreate, biome]);
         this.ws.send(data);
     }
@@ -383,7 +383,7 @@ export default class Networking {
         this.ws.send(data);
     }
 
-    public sendRoomFindPublic(biome: Biomes) {
+    public sendRoomFindPublic(biome: Biome) {
         const data = new Uint8Array([ServerBound.WaveRoomFindPublic, biome]);
         this.ws.send(data);
     }

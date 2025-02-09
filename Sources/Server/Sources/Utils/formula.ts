@@ -1,4 +1,4 @@
-import { Rarities } from "../../../Shared/rarity";
+import { Rarity } from "../../../Shared/rarity";
 import { MOB_DAMAGE_FACTOR } from "../Entity/Mob/Mob";
 
 /**
@@ -12,7 +12,7 @@ import { MOB_DAMAGE_FACTOR } from "../Entity/Mob/Mob";
  */
 export function _calculateHp(level: number) {
     let hp: number = 100;
-    const ff = Math.pow(MOB_DAMAGE_FACTOR[Rarities.Mythic], 1 / 200);
+    const ff = Math.pow(MOB_DAMAGE_FACTOR[Rarity.Mythic], 1 / 200);
     return 2.0 * hp * Math.pow(ff, Math.min(level, 150) - 1);
 }
 

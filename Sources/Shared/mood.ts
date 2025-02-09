@@ -1,24 +1,28 @@
 /**
  * Mood bit flag.
+ * 
+ * @privateremarks
+ * 
+ * According to microsoft, enum name should be plural :).
  */
-export enum Mood {
+export enum MoodFlags {
     Normal = 0,
     Angry = 1 << 0,  // 1
     Sad = 1 << 1,    // 2
 }
 
-export const MOOD_VALUES = Object.values(Mood);
+export const MOOD_VALUES = Object.values(MoodFlags);
 
 export const VALID_MOOD_FLAGS = [
-    Mood.Normal,
-    Mood.Angry,
-    Mood.Sad,
-    Mood.Angry | Mood.Sad
+    MoodFlags.Normal,
+    MoodFlags.Angry,
+    MoodFlags.Sad,
+    MoodFlags.Angry | MoodFlags.Sad
 ];
 
 export function decodeMood(flags: number): [boolean, boolean] {
     return [
-        (flags & Mood.Angry) !== 0,
-        (flags & Mood.Sad) !== 0
+        (flags & MoodFlags.Angry) !== 0,
+        (flags & MoodFlags.Sad) !== 0
     ];
 }

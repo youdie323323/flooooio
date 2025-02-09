@@ -4,7 +4,7 @@ import { WavePool } from "../../Wave/WavePool";
 import { BaseMob, Mob } from "./Mob";
 import SinusodialWave from "../../Utils/SinusodialWave";
 import { getRandomAngle } from "../../Utils/random";
-import { MOB_BEHAVIORS, MobBehaviors, turnAngleToTarget } from "./MobAggressivePursuit";
+import { MOB_BEHAVIORS, MobBehavior, turnAngleToTarget } from "./MobAggressivePursuit";
 import { MobType } from "../../../../Shared/EntityType";
 import { EGG_TYPE_MAPPING } from "../Player/PlayerPetalReload";
 
@@ -31,7 +31,7 @@ export function MobDynamicMovement<T extends EntityMixinConstructor<BaseMob>>(Ba
             };
 
             // Dont dynamic move when passive
-            if (MOB_BEHAVIORS[this.type] === MobBehaviors.Passive) return;
+            if (MOB_BEHAVIORS[this.type] === MobBehavior.Passive) return;
 
             // If body, dont do anything
             if (isBody(poolThis, this)) return;

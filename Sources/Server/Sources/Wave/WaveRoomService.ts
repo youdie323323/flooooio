@@ -1,4 +1,4 @@
-import { Biomes } from "../../../Shared/biome";
+import { Biome } from "../../../Shared/biome";
 import { WaveRoomVisibleState } from "../../../Shared/wave";
 import { logger } from "../../main";
 import { generateRandomWaveRoomCode } from "../Utils/random";
@@ -11,7 +11,7 @@ export default class WaveRoomService {
     /**
      * Adds a player to an existing public wave room or creates a new one if none exists.
      */
-    public joinPublicWaveRoom(userData: UserData, biome: Biomes): WaveRoomPlayer["id"] | false {
+    public joinPublicWaveRoom(userData: UserData, biome: Biome): WaveRoomPlayer["id"] | false {
         if (!this.canUserDataAdded(userData)) {
             return false;
         }
@@ -83,7 +83,7 @@ export default class WaveRoomService {
     /**
      * Creates a new wave room with initial player.
      */
-    public createWaveRoom(userData: UserData, biome: Biomes): WaveRoomPlayer["id"] | false {
+    public createWaveRoom(userData: UserData, biome: Biome): WaveRoomPlayer["id"] | false {
         if (!this.canUserDataAdded(userData)) {
             return false;
         }
@@ -104,7 +104,7 @@ export default class WaveRoomService {
     /**
      * Finds a public room with available slots for the specified biome.
      */
-    private findPublicRoom(biome: Biomes): WaveRoom | undefined {
+    private findPublicRoom(biome: Biome): WaveRoom | undefined {
         // Trying to find biome-specific room, if not found, try other biome
         const isPublic = (room: WaveRoom) => room.visible === WaveRoomVisibleState.Public && room.isCandidateJoinable;
 

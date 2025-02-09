@@ -1,7 +1,7 @@
 import { calculateWaveLength } from "../../../Shared/formula";
 import { ClientBound } from "../../../Shared/packet";
 import { PETAL_PROFILES } from "../../../Shared/Entity/Mob/Petal/petalProfiles";
-import { Rarities } from "../../../Shared/rarity";
+import { Rarity } from "../../../Shared/rarity";
 import { WaveRoomState } from "../../../Shared/wave";
 import { logger } from "../../main";
 import { Entity, onUpdateTick } from "../Entity/Entity";
@@ -15,8 +15,8 @@ import { getRandomPosition, generateRandomId, getRandomAngle, getRandomSafePosit
 import WaveProbabilityDeterminer, { LINKABLE_MOBS } from "./WaveProbabilityDeterminer";
 import { WaveRoomPlayerId, WaveRoomPlayer } from "./WaveRoom";
 import { MOB_PROFILES } from "../../../Shared/Entity/Mob/mobProfiles";
-import { Mood } from "../../../Shared/mood";
-import { Biomes } from "../../../Shared/biome";
+import { MoodFlags } from "../../../Shared/mood";
+import { Biome } from "../../../Shared/biome";
 import { MobType, PetalType } from "../../../Shared/EntityType";
 import SpatialHash from "../Utils/SpatialHash";
 import { MAX_CLUSTER_AMOUNT } from "../Entity/Player/PlayerPetalOrbit";
@@ -70,7 +70,7 @@ export interface WaveData {
     /**
      * Biome of wave.
      */
-    biome: Biomes;
+    biome: Biome;
 }
 
 /**
@@ -225,7 +225,7 @@ export class WavePool {
             y,
             angle: 0,
             magnitude: 0,
-            mood: Mood.Normal,
+            mood: MoodFlags.Normal,
             size: Player.BASE_SIZE,
 
             id: clientId,
@@ -303,7 +303,7 @@ export class WavePool {
      */
     public generateMob(
         type: MobType | PetalType,
-        rarity: Rarities,
+        rarity: Rarity,
 
         x: number,
         y: number,
@@ -495,7 +495,7 @@ export class WavePool {
      */
     public linkedMobSegmentation(
         type: MobType,
-        rarity: Rarities,
+        rarity: Rarity,
         x: number,
         y: number,
 

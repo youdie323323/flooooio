@@ -9,7 +9,7 @@ import { EntityMapBoundary } from "../EntityMapBoundary";
 import { EntityDeath } from "../EntityDeath";
 import { MobBodyConnection } from "./MobBodyConnection";
 import { MobType, PetalType } from "../../../../Shared/EntityType";
-import { Rarities } from "../../../../Shared/rarity";
+import { Rarity } from "../../../../Shared/rarity";
 import { WavePool } from "../../Wave/WavePool";
 
 export type MobId = BrandedId<"Mob">;
@@ -41,7 +41,7 @@ class BaseMob implements Entity {
      * 
      * @readonly
      */
-    readonly rarity: Rarities;
+    readonly rarity: Rarity;
 
     /**
      * Current target entity.
@@ -170,48 +170,48 @@ type MobData = Readonly<
 
         // TODO: replace these with MOB_HEALTH_FACTOR, MOB_DAMAGE_FACTOR
 
-        [Rarities.Common]: MobStat;
-        [Rarities.Unusual]: MobStat;
-        [Rarities.Rare]: MobStat;
-        [Rarities.Epic]: MobStat;
-        [Rarities.Legendary]: MobStat;
-        [Rarities.Mythic]: MobStat;
-        [Rarities.Ultra]: MobStat;
+        [Rarity.Common]: MobStat;
+        [Rarity.Unusual]: MobStat;
+        [Rarity.Rare]: MobStat;
+        [Rarity.Epic]: MobStat;
+        [Rarity.Legendary]: MobStat;
+        [Rarity.Mythic]: MobStat;
+        [Rarity.Ultra]: MobStat;
     }
 >;
 
 const MOB_SIZE_FACTOR = {
-    [Rarities.Common]: 1.0,
-    [Rarities.Unusual]: 1.2,
-    [Rarities.Rare]: 1.5,
-    [Rarities.Epic]: 1.9,
-    [Rarities.Legendary]: 3.0,
-    [Rarities.Mythic]: 5.0,
+    [Rarity.Common]: 1.0,
+    [Rarity.Unusual]: 1.2,
+    [Rarity.Rare]: 1.5,
+    [Rarity.Epic]: 1.9,
+    [Rarity.Legendary]: 3.0,
+    [Rarity.Mythic]: 5.0,
 
-    [Rarities.Ultra]: 50,
-} satisfies Record<Rarities, number>;
+    [Rarity.Ultra]: 50,
+} satisfies Record<Rarity, number>;
 
 const MOB_HEALTH_FACTOR = {
-    [Rarities.Common]: 1.0,
-    [Rarities.Unusual]: 2.5,
-    [Rarities.Rare]: 6.3,
-    [Rarities.Epic]: 15.6,
-    [Rarities.Legendary]: 39.0,
-    [Rarities.Mythic]: 100.0,
+    [Rarity.Common]: 1.0,
+    [Rarity.Unusual]: 2.5,
+    [Rarity.Rare]: 6.3,
+    [Rarity.Epic]: 15.6,
+    [Rarity.Legendary]: 39.0,
+    [Rarity.Mythic]: 100.0,
 
-    [Rarities.Ultra]: 50,
-} satisfies Record<Rarities, number>;
+    [Rarity.Ultra]: 50,
+} satisfies Record<Rarity, number>;
 
 const MOB_DAMAGE_FACTOR = {
-    [Rarities.Common]: 1.0,
-    [Rarities.Unusual]: 2.0,
-    [Rarities.Rare]: 4.0,
-    [Rarities.Epic]: 8.0,
-    [Rarities.Legendary]: 16.0,
-    [Rarities.Mythic]: 32.0,
+    [Rarity.Common]: 1.0,
+    [Rarity.Unusual]: 2.0,
+    [Rarity.Rare]: 4.0,
+    [Rarity.Epic]: 8.0,
+    [Rarity.Legendary]: 16.0,
+    [Rarity.Mythic]: 32.0,
 
-    [Rarities.Ultra]: 64.0,
-} satisfies Record<Rarities, number>;
+    [Rarity.Ultra]: 64.0,
+} satisfies Record<Rarity, number>;
 
 /**
  * Define speed for each mob.

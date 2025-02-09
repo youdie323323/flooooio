@@ -1,4 +1,4 @@
-import { Biomes } from "../../../Shared/biome";
+import { Biome } from "../../../Shared/biome";
 import { ClientBound } from "../../../Shared/packet";
 import { WaveRoomPlayerReadyState, WaveRoomVisibleState, WaveRoomState } from "../../../Shared/wave";
 import { logger } from "../../main";
@@ -42,7 +42,7 @@ export default class WaveRoom {
 
     constructor(
         // In-game related
-        public readonly biome: Biomes,
+        public readonly biome: Biome,
         public readonly code: string,
 
         // Wave room related

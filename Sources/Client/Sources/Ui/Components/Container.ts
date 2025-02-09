@@ -69,7 +69,7 @@ export class StaticContainer extends ExtensionBase(Component) implements Compone
         }
     }
 
-    public destroy(): void {
+    public override destroy(): void {
         super.destroy();
 
         this.children.forEach(c => {
@@ -152,7 +152,7 @@ export class StaticPanelContainer extends StaticContainer {
         return Math.max(2, minDimension * 0.02);
     }
 
-    public render(ctx: CanvasRenderingContext2D): void {
+    public override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
         this.update();
@@ -378,7 +378,7 @@ export class StaticSpace extends ExtensionBase(Component) {
         this.layoutCache.invalidate();
     }
 
-    public render(ctx: CanvasRenderingContext2D): void { }
+    public override render(ctx: CanvasRenderingContext2D): void { }
 }
 
 /**
@@ -417,5 +417,5 @@ export class CoordinatedStaticSpace extends ExtensionBase(Component) {
         this.layoutCache.invalidate();
     }
 
-    public render(ctx: CanvasRenderingContext2D): void { }
+    public override render(ctx: CanvasRenderingContext2D): void { }
 }

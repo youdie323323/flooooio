@@ -35,7 +35,7 @@ export function turnAngleToTarget(thisAngle: number, dx: number, dy: number): nu
 
 const MOB_DETECTION_RANGE = 25;
 
-export enum MobBehaviors {
+export enum MobBehavior {
     Aggressive,
     Passive,
     Cautions,
@@ -44,18 +44,18 @@ export enum MobBehaviors {
 }
 
 export const MOB_BEHAVIORS = {
-    [MobType.Starfish]: MobBehaviors.Aggressive,
-    [MobType.Beetle]: MobBehaviors.Aggressive,
-    [MobType.Bubble]: MobBehaviors.Passive,
-    [MobType.Jellyfish]: MobBehaviors.Cautions,
-    [MobType.Bee]: MobBehaviors.Neutral,
-    [MobType.Spider]: MobBehaviors.Aggressive,
+    [MobType.Starfish]: MobBehavior.Aggressive,
+    [MobType.Beetle]: MobBehavior.Aggressive,
+    [MobType.Bubble]: MobBehavior.Passive,
+    [MobType.Jellyfish]: MobBehavior.Cautions,
+    [MobType.Bee]: MobBehavior.Neutral,
+    [MobType.Spider]: MobBehavior.Aggressive,
 
-    [MobType.Centipede]: MobBehaviors.None,
+    [MobType.Centipede]: MobBehavior.None,
     // TODO: elucidate desert centipede move
-    [MobType.CentipedeDesert]: MobBehaviors.Neutral,
-    [MobType.CentipedeEvil]: MobBehaviors.Aggressive,
-} satisfies Record<MobType, MobBehaviors>;
+    [MobType.CentipedeDesert]: MobBehavior.Neutral,
+    [MobType.CentipedeEvil]: MobBehavior.Aggressive,
+} satisfies Record<MobType, MobBehavior>;
 
 export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
@@ -108,7 +108,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
 
             switch (MOB_BEHAVIORS[this.type]) {
                 // Aggressive
-                case MobBehaviors.Aggressive: {
+                case MobBehavior.Aggressive: {
                     const targetableEntity = this.targetEntity || findNearestEntity(this, targets);
                     if (targetableEntity) {
                         const dx = targetableEntity.x - this.x;
@@ -136,7 +136,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                 }
 
                 // Cautious (jellyfish)
-                case MobBehaviors.Cautions: {
+                case MobBehavior.Cautions: {
                     const targetableEntity = this.targetEntity || findNearestEntity(this, targets);
                     if (targetableEntity) {
                         const dx = targetableEntity.x - this.x;
@@ -150,7 +150,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                                 dy,
                             );
 
-                            this.magnitude = 255 * (this.targetEntity && distanceToTarget < (2 * this.size) ? 0 : 2);
+                            this.magnitude = 255 * (this.targetEntity && distanceToTarget < (3 * this.size) ? 0 : 2);
 
                             this.targetEntity = targetableEntity;
                         } else {
@@ -164,14 +164,14 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                 }
 
                 // Passive (bubble, stone)
-                case MobBehaviors.Passive: {
+                case MobBehavior.Passive: {
                     this.magnitude = 0;
 
                     break;
                 }
 
                 // Neutral (bee)
-                case MobBehaviors.Neutral: {
+                case MobBehavior.Neutral: {
                     if (this.lastAttackedEntity) {
                         const dx = this.lastAttackedEntity.x - this.x;
                         const dy = this.lastAttackedEntity.y - this.y;
@@ -193,7 +193,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                 }
 
                 // Do nothing
-                case MobBehaviors.None: break;
+                case MobBehavior.None: break;
             }
         }
 

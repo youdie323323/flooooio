@@ -1,6 +1,6 @@
-import { Biomes, biomeToCapitalizedBiomeString, WAVE_BIOME_GAUGE_COLORS } from "../../../../Shared/biome";
+import { Biome, biomeToCapitalizedBiomeString, WAVE_BIOME_GAUGE_COLORS } from "../../../../Shared/biome";
 import { calculateWaveLength } from "../../../../Shared/formula";
-import { Mood } from "../../../../Shared/mood";
+import { MoodFlags } from "../../../../Shared/mood";
 import { networking, players, uiCtx, deltaTime, antennaScaleFactor, mobs } from "../../../main";
 import Entity from "../../Entity/Entity";
 import Mob from "../../Entity/Mob";
@@ -36,7 +36,7 @@ function easeOutCubic(t: number): number {
 /**
  * Current ui of menu
  */
-let gameUiCurrentBiome: Biomes = Biomes.Garden;
+let gameUiCurrentBiome: Biome = Biome.Garden;
 
 export default class UserInterfaceGame extends UserInterface {
     private readonly DEAD_BACKGROUND_TARGET_OPACITY: number = 0.3;
@@ -114,7 +114,7 @@ export default class UserInterfaceGame extends UserInterface {
 
         this.chats = [];
 
-        this.currentMoodFlags = Mood.Normal;
+        this.currentMoodFlags = MoodFlags.Normal;
 
         this.oceanBackgroundX = 0;
         this.oceanBackgroundY = 0;
@@ -125,13 +125,13 @@ export default class UserInterfaceGame extends UserInterface {
         switch (event.key) {
             // Space means space
             case " ": {
-                this.currentMoodFlags |= Mood.Angry;
+                this.currentMoodFlags |= MoodFlags.Angry;
                 networking.sendChangeMood(this.currentMoodFlags);
 
                 break;
             }
             case "Shift": {
-                this.currentMoodFlags |= Mood.Sad;
+                this.currentMoodFlags |= MoodFlags.Sad;
                 networking.sendChangeMood(this.currentMoodFlags);
 
                 break;
@@ -162,7 +162,11 @@ export default class UserInterfaceGame extends UserInterface {
 
             default: {
                 // Slot swapping
-                if (networking) {
+                if (
+                    networking &&
+                    // Dont swap while chatting
+                    !this.chatInput.hasFocus
+                ) {
                     if (event.code.startsWith("Digit")) {
                         let index = parseInt(event.code.slice(5));
                         if (index === 0) {
@@ -182,12 +186,12 @@ export default class UserInterfaceGame extends UserInterface {
         switch (event.key) {
             // Space means space
             case " ": {
-                this.currentMoodFlags &= ~Mood.Angry;
+                this.currentMoodFlags &= ~MoodFlags.Angry;
                 networking.sendChangeMood(this.currentMoodFlags);
                 break;
             }
             case "Shift": {
-                this.currentMoodFlags &= ~Mood.Sad;
+                this.currentMoodFlags &= ~MoodFlags.Sad;
                 networking.sendChangeMood(this.currentMoodFlags);
                 break;
             }
@@ -197,12 +201,12 @@ export default class UserInterfaceGame extends UserInterface {
     public onMouseDown(event: MouseEvent): void {
         if (networking) {
             if (event.button === 0) {
-                this.currentMoodFlags |= Mood.Angry;
+                this.currentMoodFlags |= MoodFlags.Angry;
                 networking.sendChangeMood(this.currentMoodFlags);
             }
 
             if (event.button === 2) {
-                this.currentMoodFlags |= Mood.Sad;
+                this.currentMoodFlags |= MoodFlags.Sad;
                 networking.sendChangeMood(this.currentMoodFlags);
             }
         }
@@ -210,12 +214,12 @@ export default class UserInterfaceGame extends UserInterface {
     public onMouseUp(event: MouseEvent): void {
         if (networking) {
             if (event.button === 0) {
-                this.currentMoodFlags &= ~Mood.Angry;
+                this.currentMoodFlags &= ~MoodFlags.Angry;
                 networking.sendChangeMood(this.currentMoodFlags);
             }
 
             if (event.button === 2) {
-                this.currentMoodFlags &= ~Mood.Sad;
+                this.currentMoodFlags &= ~MoodFlags.Sad;
                 networking.sendChangeMood(this.currentMoodFlags);
             }
         }
@@ -451,7 +455,7 @@ export default class UserInterfaceGame extends UserInterface {
         }
 
         // Ocean pattern background
-        if (this.biome === Biomes.Ocean) {
+        if (this.biome === Biome.Ocean) {
             this.oceanBackgroundX += 0.4;
             this.oceanBackgroundY += Math.sin(this.oceanBackgroundWaveStep / 20) * 0.4;
             this.oceanBackgroundWaveStep += 0.07;
@@ -834,11 +838,11 @@ export default class UserInterfaceGame extends UserInterface {
         }
     }
 
-    set biome(biome: Biomes) {
+    set biome(biome: Biome) {
         gameUiCurrentBiome = biome;
     }
 
-    get biome(): Biomes {
+    get biome(): Biome {
         return gameUiCurrentBiome;
     }
 }

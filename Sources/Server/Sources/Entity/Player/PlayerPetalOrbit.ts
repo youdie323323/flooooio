@@ -5,7 +5,7 @@ import { isLivingSlot, PetalData, PetalStat } from "../Mob/Petal/Petal";
 import { isPetal } from "../../Utils/common";
 import { PetalType } from "../../../../Shared/EntityType";
 import { PETAL_PROFILES } from "../../../../Shared/Entity/Mob/Petal/petalProfiles";
-import { decodeMood, Mood } from "../../../../Shared/mood";
+import { decodeMood, MoodFlags } from "../../../../Shared/mood";
 import { findNearestEntity } from "../Mob/MobAggressivePursuit";
 import { MobInstance } from "../Mob/Mob";
 
@@ -213,8 +213,11 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
 
             const rotationDelta = this.calculateRotationDelta(totalSpeed, clockwise);
             this.rotation += rotationDelta;
+
             // Limit in the tau
-            this.rotation %= TAU;
+            if (Math.abs(this.rotation) > Number.MAX_SAFE_INTEGER) {
+                this.rotation %= TAU;
+            }
         }
 
         private calculateRotationDelta(
