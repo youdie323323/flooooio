@@ -33,25 +33,6 @@ export function shuffle<T>(array: T[]): T[] {
 }
 
 /**
- * Returns a random hexadecimal string.
- *
- * @example getRandomHexString(6) "ca96bf"
- * @param length - Length of random hex string.
- * @returns Random hex string.
- */
-export function getRandomHexString(length: number) {
-  return [...Array(length)]
-    .map(() => Math.floor(Math.random() * 16).toString(16))
-    .join("");
-}
-
-export function getRandomLowercaseAlphabet(length: number) {
-  return [...Array(length)]
-    .map(() => String.fromCharCode(97 + Math.floor(26 * Math.random())))
-    .join("");
-}
-
-/**
  * Returns a random string.
  */
 export function getRandomString(length: number) {
@@ -163,10 +144,4 @@ function randomUint32(): number {
 
 export function generateRandomId<T extends MobId | PlayerId | WaveRoomPlayerId>(): T {
   return randomUint32() as T;
-}
-
-export function generateRandomWaveRoomCode(): string {
-  // XXX-XXXXXX
-  // First three character is uid of server
-  return getRandomHexString(3) + "-" + getRandomLowercaseAlphabet(6);
 }

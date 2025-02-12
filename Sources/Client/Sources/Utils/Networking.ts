@@ -1,7 +1,7 @@
 import { Biome } from "../../../Shared/biome";
 import { ClientBound, ServerBound } from "../../../Shared/packet";
 import { Rarity } from "../../../Shared/rarity";
-import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../Shared/wave";
+import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../Shared/WaveRoom";
 import { uiCtx, players, mobs } from "../../main";
 import Mob from "../Entity/Mob";
 import Player from "../Entity/Player";

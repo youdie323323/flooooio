@@ -2,7 +2,7 @@ import { Biome } from "../../../../Shared/biome";
 import { PetalType } from "../../../../Shared/EntityType";
 import { ServerBound } from "../../../../Shared/packet";
 import { Rarity } from "../../../../Shared/rarity";
-import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../../Shared/wave";
+import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../../Shared/WaveRoom";
 import { networking, ws, cameraController } from "../../../main";
 import Mob from "../../Entity/Mob";
 import { renderEntity } from "../../Entity/Renderers/RendererEntityRenderingLink";
@@ -21,6 +21,7 @@ import Toggle from "../Components/WellKnown/Toggle";
 import UserInterface, { uiScaleFactor } from "../UserInterface";
 import { CROSS_ICON_SVG } from "./UserInterfaceModeGame";
 import TilesetWavedRenderer from "../Tiled/TilesetWavedRenderer";
+import { isWaveRoomCode } from "../../../../Shared/WaveRoomCode";
 
 const TAU = Math.PI * 2;
 
@@ -711,7 +712,7 @@ export default class UserInterfaceTitle extends UserInterface {
                         },
                         "#1dd129",
                         () => networking.sendRoomJoin(codeInput.value),
-                        () => codeInput.value.length > 0,
+                        () => isWaveRoomCode(codeInput.value),
                         "Join",
                     ),
 

@@ -1,12 +1,13 @@
 import { Biome } from "../../../Shared/biome";
 import { ClientBound } from "../../../Shared/packet";
-import { WaveRoomPlayerReadyState, WaveRoomVisibleState, WaveRoomState } from "../../../Shared/wave";
+import { WaveRoomPlayerReadyState, WaveRoomVisibleState, WaveRoomState } from "../../../Shared/WaveRoom";
 import { logger } from "../../main";
 import { BrandedId } from "../Entity/Entity";
 import { MockPlayerData, Player } from "../Entity/Player/Player";
 import { generateRandomId } from "../Utils/random";
 import { WavePool, UserData, WaveData } from "./WavePool";
 import { createHash } from 'node:crypto';
+import { WaveRoomCode } from "../../../Shared/WaveRoomCode";
 
 export type WaveRoomPlayerId = BrandedId<"WaveRoomPlayer">;
 
@@ -36,14 +37,20 @@ export default class WaveRoom {
      */
     private static readonly MAX_PLAYER_AMOUNT = 4;
 
+    /**
+     * Wave room update packet send interval, used for like players update
+     */
     private waveRoomPacketSendInterval: NodeJS.Timeout;
 
+    /**
+     * Stores pool for this wave room.
+     */
     public wavePool: WavePool;
 
     constructor(
         // In-game related
         public readonly biome: Biome,
-        public readonly code: string,
+        public readonly code: WaveRoomCode,
 
         // Wave room related
         public visible: WaveRoomVisibleState = WaveRoomVisibleState.Public,

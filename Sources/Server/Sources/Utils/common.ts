@@ -3,7 +3,7 @@ import { ClientboundConnectionKickReason, ClientBound } from "../../../Shared/pa
 import { PETAL_PROFILES } from "../../../Shared/Entity/Mob/Petal/petalProfiles";
 import { Rarity } from "../../../Shared/rarity";
 import { memo } from "../../../Shared/Utils/memoize";
-import { WaveRoomState } from "../../../Shared/wave";
+import { WaveRoomState } from "../../../Shared/WaveRoom";
 import { waveRoomService } from "../../main";
 import { Entity } from "../Entity/Entity";
 import { MobStat, MobData, MOB_SIZE_FACTOR, MobInstance, Mob, BaseMob } from "../Entity/Mob/Mob";

@@ -60,11 +60,14 @@ const init = async function () {
 
     try {
         ws = await asyncWebsocket("ws://" + location.host);
+
+        // Websocket connection succeed
         const statusContainer = document.getElementById("status-container");
         if (statusContainer) {
-            document.body.style.backgroundColor = 'rgba(24, 24, 24, 0)';
-            statusContainer.remove();
-            showElement("canvas");
+            document.body.style.opacity = '1';
+                statusContainer.remove();
+
+                showElement("canvas");
         }
     } catch (e) {
         hideElement("loading");

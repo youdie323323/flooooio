@@ -1,9 +1,9 @@
 import { Biome } from "../../../Shared/biome";
-import { WaveRoomVisibleState } from "../../../Shared/wave";
+import { WaveRoomVisibleState } from "../../../Shared/WaveRoom";
 import { logger } from "../../main";
-import { generateRandomWaveRoomCode } from "../Utils/random";
 import { UserData } from "./WavePool";
 import WaveRoom, { WaveRoomPlayer } from "./WaveRoom";
+import { generateRandomWaveRoomCode, WaveRoomCode } from "../../../Shared/WaveRoomCode";
 
 export default class WaveRoomService {
     private waveRooms: WaveRoom[] = [];
@@ -139,11 +139,12 @@ export default class WaveRoomService {
     /**
      * Generates a unique room code.
      */
-    private generateCode(): string {
+    private generateCode(): WaveRoomCode {
         const randomId = generateRandomWaveRoomCode();
         if (!this.waveRooms.every((room) => room.code !== randomId)) {
             return this.generateCode();
         }
+        
         return randomId;
     }
 

@@ -2,7 +2,7 @@ import path from "path";
 import uWS, { App, SHARED_COMPRESSOR } from 'uWebSockets.js';
 import { ServerBound, ClientboundConnectionKickReason } from "../Shared/packet";
 import { Rarity } from "../Shared/rarity";
-import { PLAYER_STATE_VALUES, VISIBLE_STATE_VALUES, WaveRoomState, WaveRoomVisibleState } from "../Shared/wave";
+import { PLAYER_STATE_VALUES, VISIBLE_STATE_VALUES, WaveRoomState, WaveRoomVisibleState } from "../Shared/WaveRoom";
 import { MockPetalData } from "./Sources/Entity/Mob/Petal/Petal";
 import { MockPlayerData } from "./Sources/Entity/Player/Player";
 import { Logger } from "./Sources/Utils/Logger/Logger";

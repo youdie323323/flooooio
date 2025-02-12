@@ -2,7 +2,7 @@ import { calculateWaveLength } from "../../../Shared/formula";
 import { ClientBound } from "../../../Shared/packet";
 import { PETAL_PROFILES } from "../../../Shared/Entity/Mob/Petal/petalProfiles";
 import { Rarity } from "../../../Shared/rarity";
-import { WaveRoomState } from "../../../Shared/wave";
+import { WaveRoomState } from "../../../Shared/WaveRoom";
 import { logger } from "../../main";
 import { Entity, onUpdateTick } from "../Entity/Entity";
 import { SAFETY_DISTANCE } from "../Entity/EntityMapBoundary";
