@@ -59,10 +59,6 @@ class BaseMob implements Entity {
     petMaster: PlayerInstance | null;
     /**
      * Whether the pet is moving to tracking the player.
-     * 
-     * @remarks
-     * 
-     * To prevent move from MobOscillatingMovement.ts.
      */
     petGoingToMaster: boolean;
 

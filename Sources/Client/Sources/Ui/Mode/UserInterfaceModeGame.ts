@@ -9,11 +9,12 @@ import { isPetal } from "../../Utils/common";
 import { interpolate } from "../../Utils/Interpolator";
 import { waveSelfId } from "../../Utils/Networking";
 import { isSettingTrue } from "../../Utils/settingStorage";
-import TerrainGenerator, { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../../Utils/TerrainGenerator";
+import TilesetRenderer, { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../Tiled/TilesetRenderer";
 import { TextButton, SVGButton } from "../Components/WellKnown/Button";
 import { calculateStrokeWidth } from "../Components/WellKnown/Text";
 import TextInput from "../Components/WellKnown/TextInput";
 import UserInterface, { uiScaleFactor } from "../UserInterface";
+import TilesetWavedRenderer from "../Tiled/TilesetWavedRenderer";
 
 let interpolatedMouseX = 0;
 let interpolatedMouseY = 0;
@@ -43,6 +44,9 @@ export default class UserInterfaceGame extends UserInterface {
     private readonly DEAD_BACKGROUND_TARGET_OPACITY: number = 0.3;
     private readonly DEAD_BACKGROUND_FADE_DURATION: number = 0.3;
     private readonly DEAD_MENU_ANIMATION_DURATION: number = 2;
+
+    private tilesetWavedRendererOceanPattern: TilesetWavedRenderer = new TilesetWavedRenderer();
+    private tilesetRenderer: TilesetRenderer = new TilesetRenderer();
 
     public updateT: number;
     public t: number;
@@ -79,18 +83,10 @@ export default class UserInterfaceGame extends UserInterface {
     public chats: string[];
     private chatInput: TextInput;
 
-    private terrainGenerator: TerrainGenerator;
-
     private currentMoodFlags: number;
-
-    private oceanBackgroundX: number;
-    private oceanBackgroundY: number;
-    private oceanBackgroundWaveStep: number;
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
-
-        this.terrainGenerator = new TerrainGenerator();
 
         this.waveProgress = 0;
 
@@ -116,13 +112,9 @@ export default class UserInterfaceGame extends UserInterface {
         this.chats = [];
 
         this.currentMoodFlags = MoodFlags.Normal;
-
-        this.oceanBackgroundX = 0;
-        this.oceanBackgroundY = 0;
-        this.oceanBackgroundWaveStep = 0;
     }
 
-    public onKeyDown(event: KeyboardEvent): void {
+    override onKeyDown(event: KeyboardEvent): void {
         switch (event.key) {
             // Space means space
             case " ": {
@@ -183,7 +175,7 @@ export default class UserInterfaceGame extends UserInterface {
             }
         }
     }
-    public onKeyUp(event: KeyboardEvent): void {
+    override onKeyUp(event: KeyboardEvent): void {
         switch (event.key) {
             // Space means space
             case " ": {
@@ -199,7 +191,7 @@ export default class UserInterfaceGame extends UserInterface {
         }
     }
 
-    public onMouseDown(event: MouseEvent): void {
+    override onMouseDown(event: MouseEvent): void {
         if (networking) {
             if (event.button === 0) {
                 this.currentMoodFlags |= MoodFlags.Angry;
@@ -212,7 +204,7 @@ export default class UserInterfaceGame extends UserInterface {
             }
         }
     }
-    public onMouseUp(event: MouseEvent): void {
+    override onMouseUp(event: MouseEvent): void {
         if (networking) {
             if (event.button === 0) {
                 this.currentMoodFlags &= ~MoodFlags.Angry;
@@ -225,7 +217,7 @@ export default class UserInterfaceGame extends UserInterface {
             }
         }
     }
-    public onMouseMove(event: MouseEvent): void {
+    override onMouseMove(event: MouseEvent): void {
         mouseXOffset = event.clientX - document.documentElement.clientWidth / 2;
         mouseYOffset = event.clientY - document.documentElement.clientHeight / 2;
 
@@ -239,15 +231,7 @@ export default class UserInterfaceGame extends UserInterface {
         }
     }
 
-    private leaveGame() {
-        this.isGameOverContinued = true;
-
-        networking.sendLeave();
-
-        uiCtx.switchUI("title");
-    }
-
-    protected initializeComponents(): void {
+    protected override initializeComponents(): void {
         const exitButton = new SVGButton(
             {
                 x: 6,
@@ -324,7 +308,7 @@ export default class UserInterfaceGame extends UserInterface {
                 fontFamily: 'Ubuntu',
                 fontColor: '#212121',
                 fontWeight: 'bold',
-                
+
                 placeHolder: '',
                 placeHolderUnfocused: "Press [ENTER] or click here to chat",
                 placeHolderDisplayUnfocusedState: true,
@@ -345,7 +329,7 @@ export default class UserInterfaceGame extends UserInterface {
         this.addComponent(this.chatInput);
     }
 
-    public animationFrame() {
+    override animationFrame() {
         // Interpolate
         {
             this.updateT += deltaTime / 100;
@@ -379,9 +363,9 @@ export default class UserInterfaceGame extends UserInterface {
         }
 
         // Render map
-        this.terrainGenerator.renderMap({
+        this.tilesetRenderer.renderMap({
             canvas,
-            tilesets: BIOME_TILESETS.get(this.biome),
+            tileset: BIOME_TILESETS.get(this.biome),
             tilesetSize: 300,
             radius: this.mapRadius,
             playerX: selfPlayer.x,
@@ -456,26 +440,18 @@ export default class UserInterfaceGame extends UserInterface {
         }
 
         // Ocean pattern background
-        if (this.biome === Biome.Ocean) {
-            this.oceanBackgroundX += 0.4;
-            this.oceanBackgroundY += Math.sin(this.oceanBackgroundWaveStep / 20) * 0.4;
-            this.oceanBackgroundWaveStep += 0.07;
+        if (this.biome === Biome.Ocean && oceanBackgroundPatternTileset) {
+            ctx.save();
 
-            if (oceanBackgroundPatternTileset) {
-                ctx.save();
+            ctx.globalAlpha = 0.3;
 
-                ctx.globalAlpha = 0.3;
+            this.tilesetWavedRendererOceanPattern.render({
+                canvas,
+                tileset: [oceanBackgroundPatternTileset],
+                tilesetSize: 350,
+            });
 
-                this.terrainGenerator.renderMapMenu({
-                    canvas,
-                    tilesets: [oceanBackgroundPatternTileset],
-                    tilesetSize: 350,
-                    translateX: this.oceanBackgroundX,
-                    translateY: this.oceanBackgroundY,
-                });
-
-                ctx.restore();
-            }
+            ctx.restore();
         }
 
         // Wave bar
@@ -781,14 +757,14 @@ export default class UserInterfaceGame extends UserInterface {
         this.render();
     }
 
-    public dispose(): void {
-        this.terrainGenerator = undefined;
+    override dispose(): void {
+        this.tilesetRenderer = this.tilesetWavedRendererOceanPattern = null;
 
         players.clear();
         mobs.clear();
     }
 
-    public onContextChanged(): void {
+    override onContextChanged(): void {
         // Fake dead animation
         const player = players.get(waveSelfId);
         if (player && !player.isDead) {
@@ -837,6 +813,14 @@ export default class UserInterfaceGame extends UserInterface {
 
             ctx.restore();
         }
+    }
+
+    private leaveGame() {
+        this.isGameOverContinued = true;
+
+        networking.sendLeave();
+
+        uiCtx.switchUI("title");
     }
 
     set biome(biome: Biome) {

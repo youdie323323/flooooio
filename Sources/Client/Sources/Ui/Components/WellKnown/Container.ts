@@ -23,7 +23,7 @@ export class StaticContainer extends ExtensionBase(Component) implements Compone
     public children: AllComponents[] = [];
 
     // Disable zoom animation slide for container
-    override animationZoomShouldSlidePosition: boolean = false;
+    protected override animationZoomShouldSlidePosition: boolean = false;
 
     constructor(
         public layout: MaybeDynamicLayoutablePointer<AutomaticallyWHLayoutOptions>,

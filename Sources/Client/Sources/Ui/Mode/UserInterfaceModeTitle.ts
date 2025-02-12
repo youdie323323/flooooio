@@ -8,7 +8,7 @@ import Mob from "../../Entity/Mob";
 import { renderEntity } from "../../Entity/Renderers/RendererEntityRenderingLink";
 import { DARKEND_BASE } from "../../Utils/common";
 import { isSettingTrue, setSetting } from "../../Utils/settingStorage";
-import TerrainGenerator, { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../../Utils/TerrainGenerator";
+import { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../Tiled/TilesetRenderer";
 import { SVGButton, TextButton } from "../Components/WellKnown/Button";
 import { AllComponents, AnimationType } from "../Components/Component";
 import { AddableContainer, StaticPanelContainer, CoordinatedStaticSpace, StaticHContainer, StaticSpace } from "../Components/WellKnown/Container";
@@ -20,6 +20,7 @@ import TextInput from "../Components/WellKnown/TextInput";
 import Toggle from "../Components/WellKnown/Toggle";
 import UserInterface, { uiScaleFactor } from "../UserInterface";
 import { CROSS_ICON_SVG } from "./UserInterfaceModeGame";
+import TilesetWavedRenderer from "../Tiled/TilesetWavedRenderer";
 
 const TAU = Math.PI * 2;
 
@@ -114,11 +115,8 @@ export enum StatusText {
 }
 
 export default class UserInterfaceTitle extends UserInterface {
-    private terrainGenerator: TerrainGenerator;
-
-    private backgroundX: number;
-    private backgroundY: number;
-    private backgroundWaveStep: number;
+    private wavedBackgroundRendererBiome: TilesetWavedRenderer = new TilesetWavedRenderer();
+    private wavedBackgroundRendererOceanPattern: TilesetWavedRenderer = new TilesetWavedRenderer();
 
     private lastBackgroundEntitySpawn: number;
 
@@ -146,26 +144,12 @@ export default class UserInterfaceTitle extends UserInterface {
     public waveRoomVisible: WaveRoomVisibleState;
     public prevWaveRoomVisible: WaveRoomVisibleState;
 
-    private oceanBackgroundX: number;
-    private oceanBackgroundY: number;
-    private oceanBackgroundWaveStep: number;
-
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
 
         this.lastBackgroundEntitySpawn = Date.now();
 
-        this.terrainGenerator = new TerrainGenerator();
-
-        this.backgroundX = 0;
-        this.backgroundY = 0;
-        this.backgroundWaveStep = 0;
-
         this.statusTextRef = StatusText.Loading;
-
-        this.oceanBackgroundX = 0;
-        this.oceanBackgroundY = 0;
-        this.oceanBackgroundWaveStep = 0;
 
         setTimeout(() => {
             this.connectingText.setVisible(true, false);
@@ -179,35 +163,21 @@ export default class UserInterfaceTitle extends UserInterface {
                             this.onLoadedComponents.forEach(c => {
                                 c.setVisible(true, true);
                             });
-                        }, 200)
+                        }, 150)
                     }, 2000);
                 }, 150);
             }, 2000);
         }, 1);
     }
 
-    onKeyDown(event: KeyboardEvent): void { }
-    onKeyUp(event: KeyboardEvent): void { }
+    override onKeyDown(event: KeyboardEvent): void { }
+    override onKeyUp(event: KeyboardEvent): void { }
 
-    onMouseDown(event: MouseEvent): void { }
-    onMouseUp(event: MouseEvent): void { }
-    onMouseMove(event: MouseEvent): void { }
+    override onMouseDown(event: MouseEvent): void { }
+    override onMouseUp(event: MouseEvent): void { }
+    override onMouseMove(event: MouseEvent): void { }
 
-    public resetWaveState() {
-        this.waveRoomPlayers = [];
-        this.waveRoomCode = null;
-        this.waveRoomVisible = WaveRoomVisibleState.Private;
-        this.waveRoomState = WaveRoomState.Waiting;
-    }
-
-    public toggleShowStatusText(t: boolean): void {
-        this.statusText.setVisible(t, false);
-
-        this.playerProfileContainer.setVisible(!t, false);
-        this.codeText.setVisible(!t, false);
-    }
-
-    protected initializeComponents(): void {
+    protected override initializeComponents(): void {
         this.resetWaveState();
 
         const craftButton = new SVGButton(
@@ -829,15 +799,7 @@ export default class UserInterfaceTitle extends UserInterface {
         this.addComponent(gameNameText);
     }
 
-    private generateRandomBgVector(): Vector3 {
-        return {
-            x: 0,
-            y: randomFloat(-100, (this.canvas.height / uiScaleFactor) + 100),
-            z: randomFloat(0.7, 1.8),
-        }
-    }
-
-    public animationFrame() {
+    override animationFrame() {
         const canvas = this.canvas;
         const ctx = canvas.getContext("2d");
 
@@ -845,22 +807,14 @@ export default class UserInterfaceTitle extends UserInterface {
         const heightRelative = this.canvas.height / uiScaleFactor;
 
         // Render background tilesets
-        {
-            this.backgroundX += 0.4;
-            this.backgroundY += Math.sin(this.backgroundWaveStep / 20) * 0.4;
-            this.backgroundWaveStep += 0.07;
-
-            this.terrainGenerator.renderMapMenu({
-                canvas,
-                tilesets: BIOME_TILESETS.get(this.biome),
-                tilesetSize: 350,
-                translateX: this.backgroundX,
-                translateY: this.backgroundY,
-            });
-        }
+        this.wavedBackgroundRendererBiome.render({
+            canvas,
+            tileset: BIOME_TILESETS.get(this.biome),
+            tilesetSize: 350,
+        });
 
         backgroundEntities.forEach((v) => {
-            if (v.entity.x > widthRelative + (v.entity.size / uiScaleFactor)) {
+            if (v.entity.x > widthRelative + 10) {
                 backgroundEntities.delete(v);
             }
         });
@@ -886,26 +840,18 @@ export default class UserInterfaceTitle extends UserInterface {
         });
 
         // Ocean pattern background
-        if (this.biome === Biome.Ocean) {
-            this.oceanBackgroundX += 0.4;
-            this.oceanBackgroundY += Math.sin(this.oceanBackgroundWaveStep / 20) * 0.4;
-            this.oceanBackgroundWaveStep += 0.07;
+        if (this.biome === Biome.Ocean && oceanBackgroundPatternTileset) {
+            ctx.save();
 
-            if (oceanBackgroundPatternTileset) {
-                ctx.save();
+            ctx.globalAlpha = 0.3;
 
-                ctx.globalAlpha = 0.3;
+            this.wavedBackgroundRendererOceanPattern.render({
+                canvas,
+                tileset: [oceanBackgroundPatternTileset],
+                tilesetSize: 350,
+            });
 
-                this.terrainGenerator.renderMapMenu({
-                    canvas,
-                    tilesets: [oceanBackgroundPatternTileset],
-                    tilesetSize: 350,
-                    translateX: this.oceanBackgroundX,
-                    translateY: this.oceanBackgroundY,
-                });
-
-                ctx.restore();
-            }
+            ctx.restore();
         }
 
         if (this.waveRoomVisible !== this.prevWaveRoomVisible) {
@@ -922,12 +868,34 @@ export default class UserInterfaceTitle extends UserInterface {
         this.render();
     }
 
-    public dispose(): void {
-        this.terrainGenerator = undefined;
+    override dispose(): void {
+        this.wavedBackgroundRendererBiome = this.wavedBackgroundRendererOceanPattern = null;
     }
 
-    public onContextChanged(): void {
+    override onContextChanged(): void {
         cameraController.zoom = 1;
+    }
+
+    public resetWaveState() {
+        this.waveRoomPlayers = [];
+        this.waveRoomCode = null;
+        this.waveRoomVisible = WaveRoomVisibleState.Private;
+        this.waveRoomState = WaveRoomState.Waiting;
+    }
+
+    public toggleShowStatusText(t: boolean): void {
+        this.statusText.setVisible(t, false);
+
+        this.playerProfileContainer.setVisible(!t, false);
+        this.codeText.setVisible(!t, false);
+    }
+
+    private generateRandomBgVector(): Vector3 {
+        return {
+            x: -10,
+            y: randomFloat(-100, (this.canvas.height / uiScaleFactor) + 100),
+            z: randomFloat(0.7, 1.8),
+        }
     }
 
     set biome(biome: Biome) {

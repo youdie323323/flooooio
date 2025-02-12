@@ -80,8 +80,9 @@ const WAVE_SPAWN_END_AT = {
     [Rarity.Mythic]: Infinity,
 } satisfies Partial<Record<Rarity, number>>;
 
+const u32Source = new Uint32Array(1);
 function secureRandom() {
-    return crypto.getRandomValues(new Uint32Array(1))[0] / 4294967295;
+    return crypto.getRandomValues(u32Source)[0] / 4294967295;
 }
 
 function getRandomRarity(v: number): Rarity {

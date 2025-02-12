@@ -20,6 +20,7 @@ export type ComponentExtensionTemplate = Updatable & Record<PropertyKey, any>;
  */
 export type ExtensionConstructor = abstract new (...args: ReadonlyArray<any>) =>
     Component &
+    // Maybe component is updatable
     Partial<Updatable> &
     {
         calculateLayout(

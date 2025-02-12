@@ -5,7 +5,7 @@ import { uiScaleFactor } from "./Sources/Ui/UserInterface";
 import UserInterfaceContext from "./Sources/Ui/UserInterfaceContext";
 import CameraController from "./Sources/Utils/CameraController";
 import Networking from "./Sources/Utils/Networking";
-import TerrainGenerator, { BIOME_SVG_TILESETS, BIOME_TILESETS } from "./Sources/Utils/TerrainGenerator";
+import TilesetRenderer, { BIOME_SVG_TILESET, BIOME_TILESETS } from "./Sources/Ui/Tiled/TilesetRenderer";
 
 const canvas: HTMLCanvasElement = document.querySelector('#canvas');
 
@@ -30,9 +30,9 @@ export const uiCtx = new UserInterfaceContext(canvas);
 
 const init = async function () {
     // Generate tilesets beforehand so no need to generate them multiple times
-    for (const biome in BIOME_SVG_TILESETS) {
+    for (const biome in BIOME_SVG_TILESET) {
         const parsedBiome = parseInt(biome) as Biome;
-        BIOME_TILESETS.set(parsedBiome, await TerrainGenerator.generateTilesets(parsedBiome));
+        BIOME_TILESETS.set(parsedBiome, await TilesetRenderer.prepareTileset(parsedBiome));
     }
 
     function showElement(id: string) {
