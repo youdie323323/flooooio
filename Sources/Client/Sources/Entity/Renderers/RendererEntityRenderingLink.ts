@@ -6,18 +6,26 @@ import RendererFlower from "./RendererFlower/RendererFlower";
 import RendererMob from "./RendererMob/RendererMob";
 import { RendererRenderingContext } from "./RendererRenderingContext";
 
-const rendererMap = new Map<typeof Player | typeof Mob, Renderer<Entity>>();
+const rendererRegistry = new Map<Function, Renderer<Entity>>();
 
-// TODO: use decorator to dynamically determine which renderer to use on entity class
-rendererMap.set(Player, new RendererFlower());
-rendererMap.set(Mob, new RendererMob());
+rendererRegistry.set(Player, new RendererFlower());
+rendererRegistry.set(Mob, new RendererMob());
 
-export function rendererOf<T extends Mob | Player>(entity: T) {
-    return rendererMap.get(entity.constructor as typeof Player | typeof Mob);
+/**
+ * @deprecated Impossible to use because of circular deps.
+ */
+export function UseRenderer(renderer: typeof Renderer<Entity>) {
+    return function (target: Function) {
+        rendererRegistry.set(target, new renderer());
+    };
+}
+
+export function getRenderer(entityClass: Function): Renderer<Entity> | undefined {
+    return rendererRegistry.get(entityClass);
 }
 
 export function renderEntity<T extends Mob | Player>(ctx: CanvasRenderingContext2D, entity: T): void {
-    const renderer = rendererOf(entity);
+    const renderer = getRenderer(entity.constructor);
     if (!renderer) return;
 
     const renderingContext = {

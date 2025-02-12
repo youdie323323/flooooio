@@ -6,13 +6,6 @@ import RendererMobBase from "./RendererMobBase";
 const TAU = Math.PI * 2;
 
 export default class RendererMobStarfish extends RendererMobBase {
-    private static readonly STARFISH_LEG_AMOUNT = 5;
-
-    /**
-     * Current starfish leg distance.
-     */
-    private legD: number[] = Array(RendererMobStarfish.STARFISH_LEG_AMOUNT).fill(150);
-
     override render(context: RendererRenderingContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);
@@ -24,9 +17,9 @@ export default class RendererMobStarfish extends RendererMobBase {
 
         ctx.rotate(Date.now() / 2000 % TAU + entity.moveCounter * 0.4);
 
-        const { STARFISH_LEG_AMOUNT } = RendererMobStarfish;
+        const { STARFISH_LEG_AMOUNT } = Mob;
 
-        const legDistance = this.legD;
+        const legDistance = entity.legD;
         const remainingLegsCount = entity.isDead ? 0 : Math.floor(entity.nHealth * STARFISH_LEG_AMOUNT);
 
         ctx.beginPath();

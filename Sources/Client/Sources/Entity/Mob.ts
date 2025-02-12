@@ -2,7 +2,15 @@ import Entity from "./Entity";
 import { MobType, PetalType } from "../../../Shared/EntityType";
 import { Rarity } from "../../../Shared/rarity";
 
+// @UseRenderer(RendererMob)
 export default class Mob extends Entity {
+    public static readonly STARFISH_LEG_AMOUNT = 5;
+
+    /**
+     * Current starfish leg distance.
+     */
+    public legD: number[] = Array(Mob.STARFISH_LEG_AMOUNT).fill(150);
+
     constructor(
         onlyDrawGeneralPart: boolean = false,
 

@@ -25,7 +25,7 @@ export function MobHealthRegen<T extends EntityMixinConstructor<BaseMob>>(Base: 
 
                 const maxHealth = calculateMaxHealth(this);
 
-                // Hmm maybe i shouldnt use size here
+                // TODO: dont use size to regen (maybe, rarity?)
                 const healHp = (5 * this.size) / maxHealth;
 
                 this.health = Math.min(1, this.health + healHp);

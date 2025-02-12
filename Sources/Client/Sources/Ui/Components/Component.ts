@@ -2,7 +2,7 @@ import { LayoutResult } from "../Layout/Layout";
 import LayoutCache from "../Layout/LayoutCache";
 import UserInterface from "../UserInterface";
 import { SVGButton, TextButton } from "./Button";
-import { AddableContainer, CoordinatedStaticSpace, StaticSpace } from "./Container";
+import { AddableContainer, CoordinatedStaticSpace, StaticContainer, StaticSpace } from "./Container";
 import PlayerProfile from "./PlayerProfile";
 import StaticText from "./Text";
 import TextInput from "./TextInput";
@@ -45,25 +45,18 @@ export abstract class Component {
 
     protected readonly SLIDE_BASE_DEPTH: number = 20;
 
-    public isAnimating: boolean = false;
-    public animationType: AnimationType;
-    public animationProgress: number = 1;
-    public animationStartTime: number | null = null;
-    public animationDirection: 'in' | 'out' = 'in';
-    public animationSlideDirection: "v" | "h";
-
     private static readonly DEFAULT_EASING_FUNCTIONS = {
-        in: (_) => 0,
-        out: (_) => 0,
+        in: () => 0,
+        out: () => 0,
     } satisfies InOutEasingFunction;
 
     private static readonly ANIMATION_EASING_FUNCTIONS = {
         [AnimationType.Zoom]: {
-            in: function easeInQuint(x: number): number {
-                return x * x * x * x * x;
+            in: function easeOutExpo(x: number): number {
+                return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
             },
-            out: function easeInQuint(x: number): number {
-                return x * x * x * x * x;
+            out: function easeInExpo(x: number): number {
+                return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
             },
         },
         [AnimationType.Slide]: {
@@ -79,6 +72,18 @@ export abstract class Component {
     private static readonly ZOOM_IN_OUT_EASING_FUNCTION = function easeInExpo(x: number): number {
         return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
     }
+
+    public isAnimating: boolean = false;
+    public animationType: AnimationType;
+    public animationProgress: number = 1;
+    public animationStartTime: number | null = null;
+    public animationDirection: 'in' | 'out' = 'in';
+    public animationSlideDirection: "v" | "h";
+
+    /**
+     * Should move position while animating zoom animation.
+     */
+    protected animationZoomShouldMovePosition: boolean = true;
 
     protected layoutCache: LayoutCache = new LayoutCache();
 
@@ -210,12 +215,14 @@ export abstract class Component {
             } else {
                 switch (this.animationType) {
                     case AnimationType.Zoom: {
-                        const inOutProgress = 1 - Component.ZOOM_IN_OUT_EASING_FUNCTION(this.animationProgress);
+                        if (this.animationZoomShouldMovePosition) {
+                            const inOutProgress = 1 - Component.ZOOM_IN_OUT_EASING_FUNCTION(this.animationProgress);
 
-                        if (this.animationDirection === 'out') {
-                            this.y = this.realY - (30 * inOutProgress);
-                        } else {
-                            this.y = this.realY + (30 * inOutProgress);
+                            if (this.animationDirection === 'out') {
+                                this.y = this.realY - (50 * inOutProgress);
+                            } else {
+                                this.y = this.realY + (30 * inOutProgress);
+                            }
                         }
 
                         break;

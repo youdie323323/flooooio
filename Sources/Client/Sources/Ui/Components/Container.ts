@@ -23,6 +23,8 @@ export type AddableContainer = (StaticPanelContainer | StaticHContainer | Static
 export class StaticContainer extends ExtensionBase(Component) implements ComponentContainer {
     public children: AllComponents[] = [];
 
+    override animationZoomShouldMovePosition: boolean = false;
+
     constructor(
         public layout: MaybeDynamicLayoutablePointer<AutomaticallyWHLayoutOptions>,
     ) {

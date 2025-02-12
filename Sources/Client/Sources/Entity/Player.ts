@@ -2,6 +2,7 @@ import { decodeMood } from "../../../Shared/mood";
 import { deltaTime } from "../../main";
 import Entity from "./Entity";
 
+// @UseRenderer(RendererFlower)
 export default class Player extends Entity {
     angryT: number;
     sadT: number;
