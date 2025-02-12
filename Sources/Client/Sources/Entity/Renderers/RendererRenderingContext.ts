@@ -3,7 +3,7 @@ import Entity from "../Entity";
 /**
  * Render context per rAF.
  */
-export type RendererRenderingContext<T extends Entity> = Readonly<{
+export type RenderContext<T extends Entity> = Readonly<{
     /**
      * Context to render.
      */

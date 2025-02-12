@@ -5,7 +5,7 @@ import { waveSelfId } from "../../Utils/Networking";
 import Entity from "../Entity";
 import Mob from "../Mob";
 import Player from "../Player";
-import type { RendererRenderingContext } from "./RendererRenderingContext";
+import type { RenderContext } from "./RendererRenderingContext";
 
 const interpolateColor = memo((sourceColor: number[], targetColor: number[], progress: number): number[] => {
     const inverseProgress = 1 - progress;
@@ -34,7 +34,7 @@ export default class Renderer<T extends Entity> {
     /**
      * Render the entity.
      */
-    public render(context: RendererRenderingContext<T>): void {
+    public render(context: RenderContext<T>): void {
         const { ctx, entity } = context;
 
         ctx.translate(entity.x, entity.y);
@@ -49,7 +49,7 @@ export default class Renderer<T extends Entity> {
     /**
      * Determine if entity should render.
      */
-    public isRenderCandidate({ entity }: RendererRenderingContext<T>): boolean {
+    public isRenderCandidate({ entity }: RenderContext<T>): boolean {
         return !(
             !entity.onlyDrawGeneralPart &&
             entity.isDead &&
@@ -60,7 +60,7 @@ export default class Renderer<T extends Entity> {
     /**
      * Change the color based on hit effect.
      */
-    protected getSkinColor({ entity }: RendererRenderingContext<T>, color: ColorCode): string {
+    protected getSkinColor({ entity }: RenderContext<T>, color: ColorCode): string {
         const invertedHurtT = 1 - entity.hurtT;
         if (invertedHurtT >= 1) {
             return color;
@@ -78,7 +78,7 @@ export default class Renderer<T extends Entity> {
     /**
      * Change scale and alpha if entity is dead.
      */
-    protected drawDead({ ctx, entity }: RendererRenderingContext<T>) {
+    protected drawDead({ ctx, entity }: RenderContext<T>) {
         if (entity.isDead) {
             const sinWavedDeadT = Math.sin(entity.deadT * Math.PI / 2);
             const scale = 1 + sinWavedDeadT;
@@ -87,7 +87,7 @@ export default class Renderer<T extends Entity> {
         }
     }
 
-    protected drawEntityDetail({ ctx, entity }: RendererRenderingContext<T>) {
+    protected drawEntityDetail({ ctx, entity }: RenderContext<T>) {
         if (
             entity.hpAlpha <= 0 ||
             entity instanceof Mob && isPetal(entity.type)

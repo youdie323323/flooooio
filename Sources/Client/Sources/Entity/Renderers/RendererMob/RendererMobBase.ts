@@ -1,16 +1,16 @@
 import Mob from "../../Mob";
 import Renderer from "../Renderer";
-import type { RendererRenderingContext } from "../RendererRenderingContext";
+import type { RenderContext } from "../RendererRenderingContext";
 
 const TAU = Math.PI * 2;
 
 export default class RendererMobBase extends Renderer<Mob> {
-    override render(context: RendererRenderingContext<Mob>): void {
+    override render(context: RenderContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);
     }
 
-    protected drawBubble(context: RendererRenderingContext<Mob>, isPetal: boolean) {
+    protected drawBubble(context: RenderContext<Mob>, isPetal: boolean) {
         const { ctx, entity } = context;
 
         const scale = entity.size / 15;

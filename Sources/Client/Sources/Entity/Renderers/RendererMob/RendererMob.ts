@@ -1,7 +1,7 @@
 import { MobType, PetalType } from "../../../../../Shared/EntityType";
 import Mob from "../../Mob";
 import Renderer from "../Renderer";
-import type { RendererRenderingContext } from "../RendererRenderingContext";
+import type { RenderContext } from "../RendererRenderingContext";
 import RendererMobBee from "./RendererMobBee";
 import RendererMobBeetle from "./RendererMobBeetle";
 import RendererMobBubble from "./RendererMobBubble";
@@ -40,7 +40,7 @@ const typeToRendererMapping: Record<MobType | PetalType, Renderer<Mob>> = {
 } as const;
 
 export default class RendererMob extends Renderer<Mob> {
-    override render(context: RendererRenderingContext<Mob>): void {
+    override render(context: RenderContext<Mob>): void {
         super.render(context);
 
         const { ctx, entity } = context;
