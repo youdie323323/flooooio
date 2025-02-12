@@ -1,4 +1,4 @@
-import { ADDED, AllComponents, Clickable, Component, ComponentContainer, ComponentSymbol, Interactive } from "./Components/Component";
+import { AllComponents, Clickable, Component, ComponentContainer, Interactive } from "./Components/Component";
 import { DYNAMIC_LAYOUTED } from "./Components/Extensions/ExtensionDynamicLayoutable";
 import { AddableContainer } from "./Components/Container";
 import { Biome } from "../../../Shared/biome";
@@ -154,8 +154,6 @@ export default abstract class UserInterface {
         this.removeComponent(component);
 
         this.components.push(component);
-
-        (component as ComponentSymbol)[ADDED] = true;
 
         return component;
     }

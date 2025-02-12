@@ -1,0 +1,13 @@
+import { ColorCode } from "../../../../Utils/common";
+import Mob from "../../../Mob";
+import type { RendererRenderingContext } from "../../RendererRenderingContext";
+import RendererPetalBase from "./RendererPetalBase";
+
+export default class RendererPetalBasic extends RendererPetalBase {
+    override render(context: RendererRenderingContext<Mob>): void {
+        // Non-recursive renderer
+        // super.render(context);
+
+        this.drawBasicLike(context, "#ffffff", "#cfcfcf");
+    }
+}

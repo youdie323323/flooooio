@@ -2,8 +2,9 @@ import { Biome, biomeToCapitalizedBiomeString, WAVE_BIOME_GAUGE_COLORS } from ".
 import { calculateWaveLength } from "../../../../Shared/formula";
 import { MoodFlags } from "../../../../Shared/mood";
 import { networking, players, uiCtx, deltaTime, antennaScaleFactor, mobs } from "../../../main";
-import Entity from "../../Entity/Entity";
 import Mob from "../../Entity/Mob";
+import Player from "../../Entity/Player";
+import { renderEntity } from "../../Entity/Renderers/RendererEntityRenderingLink";
 import { isPetal } from "../../Utils/common";
 import { interpolate } from "../../Utils/Interpolator";
 import { waveSelfId } from "../../Utils/Networking";
@@ -425,10 +426,10 @@ export default class UserInterfaceGame extends UserInterface {
             const b1 = selfPlayer.y - halfHeight;
             const b2 = selfPlayer.y + halfHeight;
 
-            const entitiesToDraw: Entity[] = new Array(mobs.size + players.size);
+            const entitiesToDraw: (Mob | Player)[] = new Array(mobs.size + players.size);
 
             let i = 0;
-            const filterFunc = (v: Entity) => {
+            const filterFunc = (v: Mob | Player) => {
                 if (
                     v.x >= a1 &&
                     v.x <= a2 &&
@@ -449,7 +450,7 @@ export default class UserInterfaceGame extends UserInterface {
             ctx.scale(antennaScaleFactor, antennaScaleFactor);
             ctx.translate(-selfPlayer.x, -selfPlayer.y);
 
-            entitiesToDraw.forEach((v, k) => v.draw(ctx));
+            entitiesToDraw.forEach((v, k) => renderEntity(ctx, v));
 
             ctx.restore();
         }

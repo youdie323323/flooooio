@@ -1,6 +1,7 @@
 import { MoodFlags } from "../../../../Shared/mood";
 import { WaveRoomPlayerReadyState } from "../../../../Shared/wave";
 import Player from "../../Entity/Player";
+import { renderEntity } from "../../Entity/Renderers/RendererEntityRenderingLink";
 import { DARKEND_BASE } from "../../Utils/common";
 import { waveRoomSelfId } from "../../Utils/Networking";
 import Layout, { LayoutOptions, LayoutResult } from "../Layout/Layout";
@@ -11,6 +12,8 @@ import { calculateStrokeWidth } from "./Text";
 
 export default class PlayerProfile extends ExtensionBase(Component) {
     private dummyPlayerEntity: Player = new Player(
+        true,
+
         -1,
 
         // The coordinate will transform, so we can send transform value here
@@ -22,7 +25,6 @@ export default class PlayerProfile extends ExtensionBase(Component) {
         0,
         MoodFlags.Normal,
         "",
-        true,
     );
 
     constructor(
@@ -162,7 +164,7 @@ export default class PlayerProfile extends ExtensionBase(Component) {
                 ctx.restore();
             }
 
-            this.dummyPlayerEntity.draw(ctx);
+            renderEntity(ctx, this.dummyPlayerEntity);
         }
     }
 

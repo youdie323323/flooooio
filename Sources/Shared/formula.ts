@@ -22,6 +22,15 @@ export const levelPerXp = memo((xp: number) => {
  */
 export const calculateWaveLength = (x: number) => Math.max(60, x ** 0.2 * 18.9287 + 30);
 
+type Tuple<T, N extends number, R extends T[] = []> =
+    R['length'] extends N ? R : Tuple<T, N, [...R, T]>;
+
+type Length<T extends any[]> =
+    T extends { length: infer L } ? L : never;
+
+type Add<A extends number, B extends number> =
+    Length<[...Tuple<any, A>, ...Tuple<any, B>]>;
+
 // Lazy constant for computeLootChance
 
 /*
@@ -39,7 +48,7 @@ export const calculateWaveLength = (x: number) => Math.max(60, x ** 0.2 * 18.928
 TODO: determine which relativeRarity to use
 I think table above is good for petal
 */
-export const relativeRarity = [
+export const relativeRarity: Tuple<number, Add<typeof NUM_RARITIES, 1>> = [
     60000, // Common
     15000, // Unusual
     2500,  // Rare
@@ -66,7 +75,7 @@ export const rarityTable = (() => {
  * 
  * @remarks
  * 
- * Completely same as florrio.utils.calculateDropChance.
+ * Completely same as florrio.utils.calculateDropChance (not same relativeRarity).
  * 
  * @param baseDropChance - Chance of drop, range to 0~1.
  */

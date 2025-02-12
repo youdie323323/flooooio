@@ -157,7 +157,7 @@ export default class Networking {
                                 client.oSize = client.size;
                                 client.updateT = 0;
                             } else {
-                                players.set(clientId, new Player(clientId, clientX, clientY, clientAngle, clientSize, clientHealth, clientMood, clientNickname));
+                                players.set(clientId, new Player(false, clientId, clientX, clientY, clientAngle, clientSize, clientHealth, clientMood, clientNickname));
                             }
                         }
 
@@ -217,7 +217,7 @@ export default class Networking {
                                 mob.oSize = mob.size;
                                 mob.updateT = 0;
                             } else {
-                                mobs.set(mobId, new Mob(mobId, mobX, mobY, mobAngle, mobSize, mobHealth, mobType, mobRarity, mobIsPet, mobIsFirstSegment));
+                                mobs.set(mobId, new Mob(false, mobId, mobX, mobY, mobAngle, mobSize, mobHealth, mobType, mobRarity, mobIsPet, mobIsFirstSegment));
                             }
                         }
 

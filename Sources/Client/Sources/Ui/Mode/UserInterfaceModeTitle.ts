@@ -5,6 +5,7 @@ import { Rarity } from "../../../../Shared/rarity";
 import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../../Shared/wave";
 import { networking, ws, cameraController } from "../../../main";
 import Mob from "../../Entity/Mob";
+import { renderEntity } from "../../Entity/Renderers/RendererEntityRenderingLink";
 import { DARKEND_BASE } from "../../Utils/common";
 import { isSettingTrue, setSetting } from "../../Utils/settingStorage";
 import TerrainGenerator, { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../../Utils/TerrainGenerator";
@@ -869,14 +870,14 @@ export default class UserInterfaceTitle extends UserInterface {
 
             backgroundEntities.add({
                 waveStep: Math.random() + 360,
-                entity: new Mob(-1, param.x, param.y, 1, param.z * 5, 1, PetalType.Basic, Rarity.Common, false, false)
+                entity: new Mob(true, -1, param.x, param.y, 1, param.z * 5, 1, PetalType.Basic, Rarity.Common, false, false)
             });
 
             this.lastBackgroundEntitySpawn = Date.now();
         }
 
         Array.from(backgroundEntities.values()).toSorted((a, b) => a.entity.size + b.entity.size).forEach(e => {
-            e.entity.draw(ctx);
+            renderEntity(ctx, e.entity);
 
             e.entity.x += e.entity.size * 0.06;
             e.entity.y += Math.sin(e.waveStep / 20) * 0.1;

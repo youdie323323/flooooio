@@ -29,18 +29,6 @@ export type AllComponents =
     | Toggle
     | PlayerProfile;
 
-/**
- * A component is added to components, or not.
- */
-export const ADDED = Symbol("added");
-
-/**
- * Symbols describe precomputed semantics of a component, allowing the component to make the base choices for the component.
- */
-export interface ComponentSymbol {
-    [ADDED]?: boolean;
-}
-
 export enum AnimationType {
     Zoom,
     Slide,

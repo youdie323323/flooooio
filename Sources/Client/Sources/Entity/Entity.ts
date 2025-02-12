@@ -1,6 +1,5 @@
 import { memo } from "../../../Shared/Utils/memoize";
 import { deltaTime } from "../../main";
-import { ColorCode } from "../Utils/common";
 
 const TAU = Math.PI * 2;
 
@@ -14,32 +13,9 @@ const interpolateAngle = memo(
         startAngle + calculateAngleDistance(startAngle, endAngle) * progress
 );
 
-const interpolateColor = memo((sourceColor: number[], targetColor: number[], progress: number): number[] => {
-    const inverseProgress = 1 - progress;
-    return [
-        sourceColor[0] * progress + targetColor[0] * inverseProgress,
-        sourceColor[1] * progress + targetColor[1] * inverseProgress,
-        sourceColor[2] * progress + targetColor[2] * inverseProgress
-    ];
-});
-
-const hexToRgb = memo((hexColor: ColorCode) => {
-    return [
-        parseInt(hexColor.slice(1, 3), 16),
-        parseInt(hexColor.slice(3, 5), 16),
-        parseInt(hexColor.slice(5, 7), 16)
-    ];
-});
-
-const rgbArrayToString = memo((rgbArray: number[]): string => {
-    return "rgb(" + rgbArray.join(",") + ")";
-});
-
 const smoothInterpolate = memo((current: number, target: number, duration: number): number => {
     return current + (target - current) * Math.min(1, deltaTime / duration);
 });
-
-const TARGET_COLOR = [255, 0, 0];
 
 export default abstract class Entity {
     x: number;
@@ -70,6 +46,11 @@ export default abstract class Entity {
     hpAlpha: number;
 
     constructor(
+        /**
+         * Depicts the broad outlines of the entity and does not depict any other dynamic information.
+         */
+        public readonly onlyDrawGeneralPart: boolean = false,
+
         readonly id: number,
         x: number,
         y: number,
@@ -93,7 +74,7 @@ export default abstract class Entity {
         this.hpAlpha = 1;
     }
 
-    update() {
+    public update() {
         if (this.isDead) {
             this.deadT += deltaTime / 200;
         }
@@ -134,26 +115,4 @@ export default abstract class Entity {
             this.redHealth += (this.health - this.redHealth) * Math.min(1, deltaTime / 200);
         }
     }
-
-    getSkinColor(color: any) {
-        const invertedHurtT = 1 - this.hurtT;
-        if (invertedHurtT >= 1) {
-            return color;
-        }
-
-        color = hexToRgb(color);
-        color = interpolateColor(color, TARGET_COLOR, invertedHurtT * 0.25 + 0.75);
-        return rgbArrayToString(color);
-    }
-
-    deadPreDraw(ctx: CanvasRenderingContext2D) {
-        if (this.isDead) {
-            const sinWavedDeadT = Math.sin(this.deadT * Math.PI / 2);
-            const rK = 1 + sinWavedDeadT;
-            ctx.scale(rK, rK);
-            ctx.globalAlpha *= 1 - sinWavedDeadT;
-        }
-    }
-
-    public abstract draw(ctx: CanvasRenderingContext2D): void;
 }
