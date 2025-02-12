@@ -1,8 +1,7 @@
-import { ColorCode, darkend, DARKEND_BASE } from "../../Utils/common";
-import Layout, { LayoutOptions, LayoutResult } from "../Layout/Layout";
-import { uiScaleFactor } from "../UserInterface";
-import { AllComponents, AnimationType, Component, ComponentContainer, MaybeDynamicLayoutablePointer } from "./Component";
-import ExtensionBase from "./Extensions/Extension";
+import { ColorCode, darkend, DARKEND_BASE } from "../../../Utils/common";
+import Layout, { LayoutOptions, LayoutResult } from "../../Layout/Layout";
+import { AllComponents, AnimationType, Component, ComponentContainer, MaybeDynamicLayoutablePointer } from "../Component";
+import ExtensionBase from "../Extensions/Extension";
 
 export type AutomaticallyWHLayoutOptions = Omit<LayoutOptions, "w" | "h">;
 
@@ -23,7 +22,8 @@ export type AddableContainer = (StaticPanelContainer | StaticHContainer | Static
 export class StaticContainer extends ExtensionBase(Component) implements ComponentContainer {
     public children: AllComponents[] = [];
 
-    override animationZoomShouldMovePosition: boolean = false;
+    // Disable zoom animation slide for container
+    override animationZoomShouldSlidePosition: boolean = false;
 
     constructor(
         public layout: MaybeDynamicLayoutablePointer<AutomaticallyWHLayoutOptions>,
@@ -49,7 +49,7 @@ export class StaticContainer extends ExtensionBase(Component) implements Compone
         return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}` + this.children.map(c => c.getCacheKey()).join("");
     }
 
-    public invalidateLayoutCache(): void {
+    public override invalidateLayoutCache(): void {
         this.layoutCache.invalidate();
 
         // Invalidate child layout cache too
@@ -358,7 +358,7 @@ export class StaticSpace extends ExtensionBase(Component) {
         super();
     }
 
-    public calculateLayout(
+    public override calculateLayout(
         width: number,
         height: number,
         originX: number,
@@ -376,7 +376,7 @@ export class StaticSpace extends ExtensionBase(Component) {
         return super.getCacheKey() + `${this.computeDynamicLayoutable(this._w) + this.computeDynamicLayoutable(this._h)}`
     }
 
-    public invalidateLayoutCache(): void {
+    public override invalidateLayoutCache(): void {
         this.layoutCache.invalidate();
     }
 
@@ -396,7 +396,7 @@ export class CoordinatedStaticSpace extends ExtensionBase(Component) {
         super();
     }
 
-    public calculateLayout(
+    public override calculateLayout(
         width: number,
         height: number,
         originX: number,
@@ -415,7 +415,7 @@ export class CoordinatedStaticSpace extends ExtensionBase(Component) {
             `${this.computeDynamicLayoutable(this._x) + this.computeDynamicLayoutable(this._y) + this.computeDynamicLayoutable(this._w) + this.computeDynamicLayoutable(this._h)}`
     }
 
-    public invalidateLayoutCache(): void {
+    public override invalidateLayoutCache(): void {
         this.layoutCache.invalidate();
     }
 

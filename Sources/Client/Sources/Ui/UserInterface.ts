@@ -1,6 +1,6 @@
 import { AllComponents, Clickable, Component, ComponentContainer, Interactive } from "./Components/Component";
 import { DYNAMIC_LAYOUTED } from "./Components/Extensions/ExtensionDynamicLayoutable";
-import { AddableContainer } from "./Components/Container";
+import { AddableContainer } from "./Components/WellKnown/Container";
 import { Biome } from "../../../Shared/biome";
 
 export let uiScaleFactor: number = 1;

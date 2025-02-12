@@ -1,14 +1,14 @@
-import { MoodFlags } from "../../../../Shared/mood";
-import { WaveRoomPlayerReadyState } from "../../../../Shared/wave";
-import Player from "../../Entity/Player";
-import { renderEntity } from "../../Entity/Renderers/RendererEntityRenderingLink";
-import { DARKEND_BASE } from "../../Utils/common";
-import { waveRoomSelfId } from "../../Utils/Networking";
-import Layout, { LayoutOptions, LayoutResult } from "../Layout/Layout";
-import { WaveRoomPlayerInformation } from "../Mode/UserInterfaceModeTitle";
-import { Component, MaybeDynamicLayoutablePointer } from "./Component";
-import ExtensionBase from "./Extensions/Extension";
-import { calculateStrokeWidth } from "./Text";
+import { MoodFlags } from "../../../../../Shared/mood";
+import { WaveRoomPlayerReadyState } from "../../../../../Shared/wave";
+import Player from "../../../Entity/Player";
+import { renderEntity } from "../../../Entity/Renderers/RendererEntityRenderingLink";
+import { DARKEND_BASE } from "../../../Utils/common";
+import { waveRoomSelfId } from "../../../Utils/Networking";
+import Layout, { LayoutOptions, LayoutResult } from "../../Layout/Layout";
+import { WaveRoomPlayerInformation } from "../../Mode/UserInterfaceModeTitle";
+import { Component, MaybeDynamicLayoutablePointer } from "../Component";
+import ExtensionBase from "../Extensions/Extension";
+import { calculateStrokeWidth } from "../WellKnown/Text";
 
 export default class PlayerProfile extends ExtensionBase(Component) {
     private dummyPlayerEntity: Player = new Player(
@@ -39,7 +39,7 @@ export default class PlayerProfile extends ExtensionBase(Component) {
         super();
     }
 
-    public calculateLayout(
+    public override calculateLayout(
         width: number,
         height: number,
         originX: number,
@@ -58,7 +58,7 @@ export default class PlayerProfile extends ExtensionBase(Component) {
         return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`
     }
 
-    public invalidateLayoutCache(): void {
+    public override invalidateLayoutCache(): void {
         this.layoutCache.invalidate();
     }
 

@@ -1,12 +1,12 @@
 import { LayoutResult } from "../Layout/Layout";
 import LayoutCache from "../Layout/LayoutCache";
 import UserInterface from "../UserInterface";
-import { SVGButton, TextButton } from "./Button";
-import { AddableContainer, CoordinatedStaticSpace, StaticContainer, StaticSpace } from "./Container";
-import PlayerProfile from "./PlayerProfile";
-import StaticText from "./Text";
-import TextInput from "./TextInput";
-import Toggle from "./Toggle";
+import { SVGButton, TextButton } from "./WellKnown/Button";
+import { AddableContainer, CoordinatedStaticSpace, StaticSpace } from "./WellKnown/Container";
+import PlayerProfile from "./Original/PlayerProfile";
+import StaticText from "./WellKnown/Text";
+import TextInput from "./WellKnown/TextInput";
+import Toggle from "./WellKnown/Toggle";
 
 /**
  * Convert type into dynamically type, but its possible to use raw value.
@@ -17,16 +17,17 @@ export type MaybeDynamicLayoutablePointer<T> = T | (() => T);
  * Union type that including all components.
  * 
  * @remarks
- * 
  * Base components like "Button" is cant addable, not including ("Button" is satisfy Component, its should not work).
  */
 export type AllComponents =
+    // Well-known components
     | AddableContainer
     | StaticSpace | CoordinatedStaticSpace
     | TextButton | SVGButton
     | StaticText
     | TextInput
     | Toggle
+    // Original components
     | PlayerProfile;
 
 export enum AnimationType {
@@ -44,11 +45,6 @@ export abstract class Component {
     protected readonly ANIMATION_SLIDE_DURATION: number = 100;
 
     protected readonly SLIDE_BASE_DEPTH: number = 20;
-
-    private static readonly DEFAULT_EASING_FUNCTIONS = {
-        in: () => 0,
-        out: () => 0,
-    } satisfies InOutEasingFunction;
 
     private static readonly ANIMATION_EASING_FUNCTIONS = {
         [AnimationType.Zoom]: {
@@ -81,12 +77,18 @@ export abstract class Component {
     public animationSlideDirection: "v" | "h";
 
     /**
-     * Should move position while animating zoom animation.
+     * Determine if should move position while animating zoom animation.
      */
-    protected animationZoomShouldMovePosition: boolean = true;
+    protected animationZoomShouldSlidePosition: boolean = true;
 
+    /**
+     * Layout cacher.
+     */
     protected layoutCache: LayoutCache = new LayoutCache();
 
+    /**
+     * Current user-interface mode.
+     */
     public context: UserInterface;
 
     /**
@@ -106,7 +108,7 @@ export abstract class Component {
     public parentContainer: ComponentContainer;
 
     /**
-     * Canvas configs.
+     * Set global alpha of component.
      */
     public globalAlpha: number = 1;
 
@@ -114,10 +116,6 @@ export abstract class Component {
     public y: number = 0;
     public w: number = 0;
     public h: number = 0;
-
-    protected computeDynamicLayoutable<T>(m: MaybeDynamicLayoutablePointer<T>): T {
-        return m instanceof Function ? m() : m;
-    }
 
     // Wrap these prop so components can update realX, realY dynamically
     // Although component can override method and can use it
@@ -215,13 +213,13 @@ export abstract class Component {
             } else {
                 switch (this.animationType) {
                     case AnimationType.Zoom: {
-                        if (this.animationZoomShouldMovePosition) {
+                        if (this.animationZoomShouldSlidePosition) {
                             const inOutProgress = 1 - Component.ZOOM_IN_OUT_EASING_FUNCTION(this.animationProgress);
 
                             if (this.animationDirection === 'out') {
                                 this.y = this.realY - (50 * inOutProgress);
                             } else {
-                                this.y = this.realY + (30 * inOutProgress);
+                                this.y = this.realY + (20 * inOutProgress);
                             }
                         }
 
@@ -231,34 +229,36 @@ export abstract class Component {
             }
         }
 
-        const easingFunction = (Component.ANIMATION_EASING_FUNCTIONS[this.animationType] ?? Component.DEFAULT_EASING_FUNCTIONS)[this.animationDirection];
+        if (AnimationType[this.animationType]) {
+            const easingFunction = Component.ANIMATION_EASING_FUNCTIONS[this.animationType][this.animationDirection];
 
-        const progress = easingFunction(this.animationProgress);
-
-        switch (this.animationType) {
-            case AnimationType.Zoom: {
-                ctx.translate(this.x + this.w / 2, this.y + this.h / 2);
-                ctx.scale(progress, progress);
-                ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
-
-                break;
-            }
-
-            case AnimationType.Slide: {
-                // TODO: option for offset are singed or not
-                if (this.animationSlideDirection === "v") {
-                    const slideOffset = -(this.h + this.SLIDE_BASE_DEPTH) * (1 - progress);
-
-                    ctx.translate(this.x + this.w / 2, this.realY - slideOffset + this.h / 2);
-                } else {
-                    const slideOffset = (this.w + this.SLIDE_BASE_DEPTH) * (1 - progress);
-
-                    ctx.translate(this.realX - slideOffset + this.w / 2, this.y + this.h / 2);
+            const progress = easingFunction(this.animationProgress);
+    
+            switch (this.animationType) {
+                case AnimationType.Zoom: {
+                    ctx.translate(this.x + this.w / 2, this.y + this.h / 2);
+                    ctx.scale(progress, progress);
+                    ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
+    
+                    break;
                 }
-
-                ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
-
-                break;
+    
+                case AnimationType.Slide: {
+                    // TODO: option for offset are singed or not
+                    if (this.animationSlideDirection === "v") {
+                        const slideOffset = -(this.h + this.SLIDE_BASE_DEPTH) * (1 - progress);
+    
+                        ctx.translate(this.x + this.w / 2, this.realY - slideOffset + this.h / 2);
+                    } else {
+                        const slideOffset = (this.w + this.SLIDE_BASE_DEPTH) * (1 - progress);
+    
+                        ctx.translate(this.realX - slideOffset + this.w / 2, this.y + this.h / 2);
+                    }
+    
+                    ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
+    
+                    break;
+                }
             }
         }
     }
@@ -292,6 +292,10 @@ export abstract class Component {
         } else {
             this.visible = toggle;
         }
+    }
+
+    protected computeDynamicLayoutable<T>(dl: MaybeDynamicLayoutablePointer<T>): T {
+        return dl instanceof Function ? dl() : dl;
     }
 }
 

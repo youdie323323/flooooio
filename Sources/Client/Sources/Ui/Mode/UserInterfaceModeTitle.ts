@@ -9,15 +9,15 @@ import { renderEntity } from "../../Entity/Renderers/RendererEntityRenderingLink
 import { DARKEND_BASE } from "../../Utils/common";
 import { isSettingTrue, setSetting } from "../../Utils/settingStorage";
 import TerrainGenerator, { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../../Utils/TerrainGenerator";
-import { SVGButton, TextButton } from "../Components/Button";
+import { SVGButton, TextButton } from "../Components/WellKnown/Button";
 import { AllComponents, AnimationType } from "../Components/Component";
-import { AddableContainer, StaticPanelContainer, CoordinatedStaticSpace, StaticHContainer, StaticSpace } from "../Components/Container";
-import CollidableExtension from "../Components/Extensions/ExtensionCollidable";
-import { DynamicLayoutableExtension } from "../Components/Extensions/ExtensionDynamicLayoutable";
-import PlayerProfile from "../Components/PlayerProfile";
-import StaticText from "../Components/Text";
-import TextInput from "../Components/TextInput";
-import Toggle from "../Components/Toggle";
+import { AddableContainer, StaticPanelContainer, CoordinatedStaticSpace, StaticHContainer, StaticSpace } from "../Components/WellKnown/Container";
+import Collidable from "../Components/Extensions/ExtensionCollidable";
+import { DynamicLayoutable } from "../Components/Extensions/ExtensionDynamicLayoutable";
+import PlayerProfile from "../Components/Original/PlayerProfile";
+import StaticText from "../Components/WellKnown/Text";
+import TextInput from "../Components/WellKnown/TextInput";
+import Toggle from "../Components/WellKnown/Toggle";
 import UserInterface, { uiScaleFactor } from "../UserInterface";
 import { CROSS_ICON_SVG } from "./UserInterfaceModeGame";
 
@@ -179,7 +179,7 @@ export default class UserInterfaceTitle extends UserInterface {
                             this.onLoadedComponents.forEach(c => {
                                 c.setVisible(true, true);
                             });
-                        }, 150)
+                        }, 200)
                     }, 2000);
                 }, 150);
             }, 2000);
@@ -386,7 +386,7 @@ export default class UserInterfaceTitle extends UserInterface {
 
         this.addComponent(this.loggingInText);
 
-        const gameNameText = new (CollidableExtension(StaticText))(
+        const gameNameText = new (Collidable(StaticText))(
             {
                 x: -(250 / 2),
                 y: (-(80 / 2)) - 40,
@@ -405,7 +405,7 @@ export default class UserInterfaceTitle extends UserInterface {
         {
             this.onLoadedComponents = [];
 
-            const nameInputDescription = new (CollidableExtension(StaticText))(
+            const nameInputDescription = new (Collidable(StaticText))(
                 {
                     x: -(100 / 2),
                     y: (-(50 / 2)) - 10,
@@ -419,7 +419,7 @@ export default class UserInterfaceTitle extends UserInterface {
                 13,
             );
 
-            const nameInput = new (CollidableExtension(TextInput))(
+            const nameInput = new (Collidable(TextInput))(
                 {
                     x: (-(100 / 2)) - 95,
                     y: (-(50 / 2)) + 3,
@@ -459,7 +459,7 @@ export default class UserInterfaceTitle extends UserInterface {
 
             let readyToggle = false;
 
-            const readyButton = new (CollidableExtension(TextButton))(
+            const readyButton = new (Collidable(TextButton))(
                 {
                     x: (-(100 / 2)) + 140,
                     y: (-(50 / 2)) + 5,
@@ -603,7 +603,7 @@ export default class UserInterfaceTitle extends UserInterface {
             let codeInput: TextInput;
 
             this.squadMenuContainer = this.createAddableContainer(
-                new (DynamicLayoutableExtension(StaticPanelContainer))(
+                new (DynamicLayoutable(StaticPanelContainer))(
                     {
                         x: -175,
                         y: -100,

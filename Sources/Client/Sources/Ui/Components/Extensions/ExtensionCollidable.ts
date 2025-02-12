@@ -2,7 +2,7 @@ import { LayoutResult } from "../../Layout/Layout";
 import { AllComponents, Component } from "../Component";
 import { ComponentExtensionTemplate, ExtensionConstructor, Updatable, UpdateFunction } from "./Extension";
 
-export default function CollidableExtension<T extends ExtensionConstructor>(Base: T) {
+export default function Collidable<T extends ExtensionConstructor>(Base: T) {
     abstract class MixedBase extends Base implements ComponentExtensionTemplate {
         private static readonly COLLISION_SPEED: number = 0.4;
         private static readonly RETURN_SPEED: number = 0.2;

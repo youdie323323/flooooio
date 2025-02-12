@@ -10,9 +10,9 @@ import { interpolate } from "../../Utils/Interpolator";
 import { waveSelfId } from "../../Utils/Networking";
 import { isSettingTrue } from "../../Utils/settingStorage";
 import TerrainGenerator, { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../../Utils/TerrainGenerator";
-import { TextButton, SVGButton } from "../Components/Button";
-import { calculateStrokeWidth } from "../Components/Text";
-import TextInput from "../Components/TextInput";
+import { TextButton, SVGButton } from "../Components/WellKnown/Button";
+import { calculateStrokeWidth } from "../Components/WellKnown/Text";
+import TextInput from "../Components/WellKnown/TextInput";
 import UserInterface, { uiScaleFactor } from "../UserInterface";
 
 let interpolatedMouseX = 0;

@@ -1,6 +1,6 @@
-import Layout, { LayoutOptions, LayoutResult } from "../Layout/Layout";
-import { Component, Interactive, MaybeDynamicLayoutablePointer } from "./Component";
-import ExtensionBase from "./Extensions/Extension";
+import Layout, { LayoutOptions, LayoutResult } from "../../Layout/Layout";
+import { Component, Interactive, MaybeDynamicLayoutablePointer } from "../Component";
+import ExtensionBase from "../Extensions/Extension";
 import { calculateStrokeWidth } from "./Text";
 
 interface TextInputOptions {
@@ -231,7 +231,7 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
         this.h = h + this.padding * 2 + this.borderWidth * 2;
     }
 
-    public calculateLayout(
+    public override calculateLayout(
         width: number,
         height: number,
         originX: number = 0,
@@ -250,7 +250,7 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
         return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`
     }
 
-    public invalidateLayoutCache(): void {
+    public override invalidateLayoutCache(): void {
         this.layoutCache.invalidate();
     }
 

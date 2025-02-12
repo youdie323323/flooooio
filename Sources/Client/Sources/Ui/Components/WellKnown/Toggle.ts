@@ -1,6 +1,6 @@
-import Layout, { LayoutOptions, LayoutResult } from "../Layout/Layout";
-import { Component, Interactive, Clickable, MaybeDynamicLayoutablePointer } from "./Component";
-import ExtensionBase from "./Extensions/Extension";
+import Layout, { LayoutOptions, LayoutResult } from "../../Layout/Layout";
+import { Component, Interactive, Clickable, MaybeDynamicLayoutablePointer } from "../Component";
+import ExtensionBase from "../Extensions/Extension";
 
 export default class Toggle extends ExtensionBase(Component) implements Interactive, Clickable {
     private static readonly SCALING_DURATION: number = 50;
@@ -18,7 +18,7 @@ export default class Toggle extends ExtensionBase(Component) implements Interact
         super();
     }
 
-    public calculateLayout(
+    public override calculateLayout(
         width: number,
         height: number,
         originX: number,
@@ -37,7 +37,7 @@ export default class Toggle extends ExtensionBase(Component) implements Interact
         return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`
     }
 
-    public invalidateLayoutCache(): void {
+    public override invalidateLayoutCache(): void {
         this.layoutCache.invalidate();
     }
 

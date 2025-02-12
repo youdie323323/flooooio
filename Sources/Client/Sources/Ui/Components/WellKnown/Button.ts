@@ -1,8 +1,8 @@
 import { Canvg, presets } from "canvg";
-import { ColorCode, darkend, DARKEND_BASE } from "../../Utils/common";
-import { Clickable, Component, MaybeDynamicLayoutablePointer, Interactive } from "./Component";
-import Layout, { LayoutOptions, LayoutResult } from "../Layout/Layout";
-import ExtensionBase from "./Extensions/Extension";
+import { ColorCode, darkend, DARKEND_BASE } from "../../../Utils/common";
+import { Clickable, Component, MaybeDynamicLayoutablePointer, Interactive } from "../Component";
+import Layout, { LayoutOptions, LayoutResult } from "../../Layout/Layout";
+import ExtensionBase from "../Extensions/Extension";
 import * as StackBlur from
     'stackblur-canvas/dist/stackblur-es.min.js';
 import { calculateStrokeWidth } from "./Text";
@@ -23,7 +23,7 @@ export class Button extends ExtensionBase(Component) implements Interactive, Cli
         super();
     }
 
-    public calculateLayout(
+    public override calculateLayout(
         width: number,
         height: number,
         originX: number,
@@ -54,7 +54,7 @@ export class Button extends ExtensionBase(Component) implements Interactive, Cli
         return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`
     }
 
-    public invalidateLayoutCache(): void {
+    public override invalidateLayoutCache(): void {
         this.layoutCache.invalidate();
     }
 

@@ -8,25 +8,25 @@ export default class LayoutCache {
         this.clear();
     }
 
-    clear() {
+    public clear() {
         this.cache.clear();
         this.isDirty.clear();
     }
 
-    get(key: string): LayoutResult | undefined {
+    public get(key: string): LayoutResult | undefined {
         return this.cache.get(key);
     }
 
-    set(key: string, value: LayoutResult) {
+    public set(key: string, value: LayoutResult) {
         this.cache.set(key, value);
         this.isDirty.set(key, false);
     }
 
-    invalidate() {
+    public invalidate() {
         this.isDirty.clear();
     }
 
-    isDirtyCache(key: string): boolean {
+    public isDirtyCache(key: string): boolean {
         if (!this.isDirty.has(key)) {
             this.isDirty.set(key, true);
             return true;

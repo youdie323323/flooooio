@@ -1,8 +1,8 @@
-import { memo } from "../../../../Shared/Utils/memoize";
-import { ColorCode } from "../../Utils/common";
-import Layout, { LayoutOptions, LayoutResult } from "../Layout/Layout";
-import { Component, MaybeDynamicLayoutablePointer, Interactive } from "./Component";
-import ExtensionBase from "./Extensions/Extension";
+import { memo } from "../../../../../Shared/Utils/memoize";
+import { ColorCode } from "../../../Utils/common";
+import Layout, { LayoutOptions, LayoutResult } from "../../Layout/Layout";
+import { Component, MaybeDynamicLayoutablePointer, Interactive } from "../Component";
+import ExtensionBase from "../Extensions/Extension";
 
 export const calculateStrokeWidth = memo((fontSize: number): number => {
     // 80 / 8.333333830038736 (actually this is 8+1/3 but floating point exception) = 9.59999942779541
@@ -21,7 +21,7 @@ export default class StaticText extends ExtensionBase(Component) {
         super();
     }
 
-    public calculateLayout(
+    public override calculateLayout(
         width: number,
         height: number,
         originX: number,
@@ -40,7 +40,7 @@ export default class StaticText extends ExtensionBase(Component) {
         return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`
     }
 
-    public invalidateLayoutCache(): void {
+    public override invalidateLayoutCache(): void {
         this.layoutCache.invalidate();
     }
 
