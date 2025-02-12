@@ -23,7 +23,7 @@ export class Button extends ExtensionBase(Component) implements Interactive, Cli
         super();
     }
 
-    public override calculateLayout(
+    override calculateLayout(
         width: number,
         height: number,
         originX: number,
@@ -38,7 +38,7 @@ export class Button extends ExtensionBase(Component) implements Interactive, Cli
         );
     }
 
-    public override render(ctx: CanvasRenderingContext2D): void {
+    override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
         // Update per rAF frame
@@ -50,11 +50,11 @@ export class Button extends ExtensionBase(Component) implements Interactive, Cli
         }
     }
 
-    public override getCacheKey(): string {
+    override getCacheKey(): string {
         return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`
     }
 
-    public override invalidateLayoutCache(): void {
+    override invalidateLayoutCache(): void {
         this.layoutCache.invalidate();
     }
 
@@ -170,7 +170,7 @@ export class TextButton extends Button {
         return Math.max(2, minDimension * 0.07);
     }
 
-    public override render(ctx: CanvasRenderingContext2D): void {
+    override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
         this.update();
@@ -258,7 +258,7 @@ export class SVGButton extends Button {
         return Math.max(2, minDimension * 0.07);
     }
 
-    public override render(ctx: CanvasRenderingContext2D): void {
+    override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
         this.update();

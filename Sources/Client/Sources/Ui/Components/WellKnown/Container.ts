@@ -31,7 +31,7 @@ export class StaticContainer extends ExtensionBase(Component) implements Compone
         super();
     }
 
-    public override setVisible(
+    override setVisible(
         toggle: boolean,
         shouldAnimate: boolean = false,
         animationType: AnimationType = AnimationType.Zoom,
@@ -45,11 +45,11 @@ export class StaticContainer extends ExtensionBase(Component) implements Compone
         });
     }
 
-    public override getCacheKey(): string {
+    override getCacheKey(): string {
         return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}` + this.children.map(c => c.getCacheKey()).join("");
     }
 
-    public override invalidateLayoutCache(): void {
+    override invalidateLayoutCache(): void {
         this.layoutCache.invalidate();
 
         // Invalidate child layout cache too
@@ -71,7 +71,7 @@ export class StaticContainer extends ExtensionBase(Component) implements Compone
         }
     }
 
-    public override destroy(): void {
+    override destroy(): void {
         super.destroy();
 
         this.children.forEach(c => {
@@ -97,7 +97,7 @@ export class StaticPanelContainer extends StaticContainer {
         super(layout);
     }
 
-    public override calculateLayout(
+    override calculateLayout(
         width: number,
         height: number,
         originX: number,
@@ -154,7 +154,7 @@ export class StaticPanelContainer extends StaticContainer {
         return Math.max(2, minDimension * 0.02);
     }
 
-    public override render(ctx: CanvasRenderingContext2D): void {
+    override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
         this.update();
@@ -191,7 +191,7 @@ export class StaticPanelContainer extends StaticContainer {
  * Container component that can add/render childrens, horizontally arranged.
  */
 export class StaticHContainer extends StaticContainer {
-    public override calculateLayout(
+    override calculateLayout(
         width: number,
         height: number,
         originX: number,
@@ -247,7 +247,7 @@ export class StaticHContainer extends StaticContainer {
         return layout;
     }
 
-    public override render(ctx: CanvasRenderingContext2D): void {
+    override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
         this.update();
@@ -268,7 +268,7 @@ export class StaticHContainer extends StaticContainer {
  * Container component that can add/render childrens, vertically arranged.
  */
 export class StaticVContainer extends StaticContainer {
-    public override calculateLayout(
+    override calculateLayout(
         width: number,
         height: number,
         originX: number,
@@ -324,7 +324,7 @@ export class StaticVContainer extends StaticContainer {
         return layout;
     }
 
-    public override render(ctx: CanvasRenderingContext2D): void {
+    override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
         this.update();
@@ -358,7 +358,7 @@ export class StaticSpace extends ExtensionBase(Component) {
         super();
     }
 
-    public override calculateLayout(
+    override calculateLayout(
         width: number,
         height: number,
         originX: number,
@@ -372,15 +372,15 @@ export class StaticSpace extends ExtensionBase(Component) {
         } as LayoutResult;
     }
 
-    public override getCacheKey(): string {
+    override getCacheKey(): string {
         return super.getCacheKey() + `${this.computeDynamicLayoutable(this._w) + this.computeDynamicLayoutable(this._h)}`
     }
 
-    public override invalidateLayoutCache(): void {
+    override invalidateLayoutCache(): void {
         this.layoutCache.invalidate();
     }
 
-    public override render(ctx: CanvasRenderingContext2D): void { }
+    override render(ctx: CanvasRenderingContext2D): void { }
 }
 
 /**
@@ -396,7 +396,7 @@ export class CoordinatedStaticSpace extends ExtensionBase(Component) {
         super();
     }
 
-    public override calculateLayout(
+    override calculateLayout(
         width: number,
         height: number,
         originX: number,
@@ -410,14 +410,14 @@ export class CoordinatedStaticSpace extends ExtensionBase(Component) {
         } as LayoutResult;
     }
 
-    public override getCacheKey(): string {
+    override getCacheKey(): string {
         return super.getCacheKey() +
             `${this.computeDynamicLayoutable(this._x) + this.computeDynamicLayoutable(this._y) + this.computeDynamicLayoutable(this._w) + this.computeDynamicLayoutable(this._h)}`
     }
 
-    public override invalidateLayoutCache(): void {
+    override invalidateLayoutCache(): void {
         this.layoutCache.invalidate();
     }
 
-    public override render(ctx: CanvasRenderingContext2D): void { }
+    override render(ctx: CanvasRenderingContext2D): void { }
 }

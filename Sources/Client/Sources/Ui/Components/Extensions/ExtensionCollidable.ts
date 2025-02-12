@@ -24,7 +24,7 @@ export default function Collidable<T extends ExtensionConstructor>(Base: T) {
         }
 
         // Override layout calculate to reset initial pos
-        public override calculateLayout(
+        override calculateLayout(
             width: number,
             height: number,
             originX: number,

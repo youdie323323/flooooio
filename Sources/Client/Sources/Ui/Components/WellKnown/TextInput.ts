@@ -224,14 +224,14 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
     }
 
     // Override them to calc wh
-    public override setW(w: number) {
+    override setW(w: number) {
         this.w = w + this.padding * 2 + this.borderWidth * 2;
     }
-    public override setH(h: number) {
+    override setH(h: number) {
         this.h = h + this.padding * 2 + this.borderWidth * 2;
     }
 
-    public override calculateLayout(
+    override calculateLayout(
         width: number,
         height: number,
         originX: number = 0,
@@ -246,17 +246,16 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
         );
     }
 
-    public override getCacheKey(): string {
+    override getCacheKey(): string {
         return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`
     }
 
-    public override invalidateLayoutCache(): void {
+    override invalidateLayoutCache(): void {
         this.layoutCache.invalidate();
     }
 
-    public override render() {
-        const ctx = this.ctx, w = this.w, h = this.h, br = this.borderRadius;
-
+    override render() {
+        const { ctx, w, h, borderRadius: br } = this;
         if (!ctx) {
             return;
         }
@@ -267,7 +266,9 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
 
         ctx.translate(this.x, this.y);
 
-        const drawFocusing = (): void => {
+        let text = this.clipText();
+
+        const drawTextInput = (): void => {
             if (this.borderWidth > 0) {
                 ctx.fillStyle = this.borderColor;
                 ctx.beginPath();
@@ -287,6 +288,8 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
                 const paddingBorder = this.padding + this.borderWidth,
                     selectWidth = this.textWidth(text.substring(this.selection[0], this.selection[1]));
 
+                ctx.save();
+
                 if (selectWidth !== 0) {
                     const selectOffset = this.textWidth(text.substring(0, this.selection[0]));
 
@@ -301,8 +304,6 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
                         heightResized,
                     );
                 } else {
-                    ctx.save();
-
                     ctx.globalAlpha = this.cursorGlobalAlpha;
 
                     const CURSOR_SIZE_WIDTH = 2.2;
@@ -315,9 +316,9 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
                     const whiteWidth = CURSOR_SIZE_WIDTH * 0.65;
                     ctx.fillStyle = "#ffffff";
                     ctx.fillRect((paddingBorder + cursorOffset + ((CURSOR_SIZE_WIDTH - whiteWidth) / 2)) - 1, 10 / 2, whiteWidth, h - 10);
-
-                    ctx.restore();
                 }
+
+                ctx.restore();
 
                 let textX = this.padding + this.borderWidth, textY = Math.round(h / 2);
 
@@ -354,11 +355,9 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
             });
         };
 
-        let text = this.clipText();
-
         if (this.placeHolderDisplayUnfocusedState) {
             if (this.hasFocus) {
-                drawFocusing();
+                drawTextInput();
             } else if (this.value.length > 0) {
                 ctx.lineJoin = 'round';
                 ctx.lineCap = 'round';
@@ -411,11 +410,11 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
                 ctx.fillText(this.placeHolderUnfocused, 0, 0);
             }
         } else {
-            drawFocusing();
+            drawTextInput();
         }
     }
 
-    public override destroy() {
+    override destroy() {
         super.destroy();
 
         const index = inputs.indexOf(this);

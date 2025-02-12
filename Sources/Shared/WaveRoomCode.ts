@@ -1,28 +1,25 @@
-export type WaveRoomCode = string & { __brand: "WaveRoomCode" };
+type ServerIdentifier = string & { length: 3 };
+type MeaninglessIdentifier = string & { length: 6 };
 
-/**
- * Returns a random hexadecimal string.
- *
- * @example getRandomHexString(6) "ca96bf"
- * @param length - Length of random hex string.
- * @returns Random hex string.
- */
-function getRandomHexString(length: number) {
-    return [...Array(length)]
+// XXX-XXXXXX
+export type WaveRoomCode = `${ServerIdentifier}-${MeaninglessIdentifier}`;
+
+function generateRandomServerIdentifier(): ServerIdentifier {
+    return [...Array(3)]
         .map(() => Math.floor(Math.random() * 16).toString(16))
-        .join("");
+        .join("") as ServerIdentifier;
 }
 
-function getRandomLowercaseAlphabet(length: number) {
-    return [...Array(length)]
+function generateRandomMeaninglessIdentifier(): MeaninglessIdentifier {
+    return [...Array(6)]
         .map(() => String.fromCharCode(97 + Math.floor(26 * Math.random())))
-        .join("");
+        .join("") as MeaninglessIdentifier;
 }
 
 export function generateRandomWaveRoomCode(): WaveRoomCode {
-    // XXX-XXXXXX
-    // First three character is uid of server
-    return (getRandomHexString(3) + "-" + getRandomLowercaseAlphabet(6)) as WaveRoomCode;
+    const serverPart = generateRandomServerIdentifier();
+    const meaninglessPart = generateRandomMeaninglessIdentifier();
+    return `${serverPart}-${meaninglessPart}` satisfies WaveRoomCode;
 }
 
 export function isWaveRoomCode(maybeCode: string): maybeCode is WaveRoomCode {
@@ -30,12 +27,12 @@ export function isWaveRoomCode(maybeCode: string): maybeCode is WaveRoomCode {
     if (maybeCode[3] !== '-') return false;
 
     const [prefix, suffix] = maybeCode.split('-');
-    
+
     // Check if prefix is valid hex (3 characters)
     if (prefix.length !== 3 || !/^[0-9a-f]{3}$/.test(prefix)) return false;
-    
+
     // Check if suffix is valid lowercase letters (6 characters)
     if (suffix.length !== 6 || !/^[a-z]{6}$/.test(suffix)) return false;
-    
+
     return true;
 }

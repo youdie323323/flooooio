@@ -18,7 +18,7 @@ export default class Toggle extends ExtensionBase(Component) implements Interact
         super();
     }
 
-    public override calculateLayout(
+    override calculateLayout(
         width: number,
         height: number,
         originX: number,
@@ -33,15 +33,15 @@ export default class Toggle extends ExtensionBase(Component) implements Interact
         );
     }
 
-    public override getCacheKey(): string {
+    override getCacheKey(): string {
         return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`
     }
 
-    public override invalidateLayoutCache(): void {
+    override invalidateLayoutCache(): void {
         this.layoutCache.invalidate();
     }
 
-    public override render(ctx: CanvasRenderingContext2D): void {
+    override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
         this.update();
