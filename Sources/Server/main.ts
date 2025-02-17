@@ -26,7 +26,7 @@ export const isDebug = process.argv.includes("-d");
 const MOCK_PLAYER_DATA: Omit<MockPlayerData, "ws"> = {
     name: 'A-NNCYANCHI-N',
     slots: {
-        surface: Array(50).fill(
+        surface: Array(5).fill(
             {
                 type: PetalType.BeetleEgg,
                 rarity: Rarity.Ultra,

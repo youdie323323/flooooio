@@ -13,6 +13,7 @@ import RendererPetalBasic from "./RendererPetal/RendererPetalBasic";
 import RendererPetalBubble from "./RendererPetal/RendererPetalBubble";
 import RendererPetalEgg from "./RendererPetal/RendererPetalEgg";
 import RendererPetalFaster from "./RendererPetal/RendererPetalFaster";
+import RendererPetalYggdrasil from "./RendererPetal/RendererPetalYggdrasil";
 import RendererPetalYinYang from "./RendererPetal/RendererPetalYinYang";
 
 const centipedeRenderer = new RendererMobCentipede();
@@ -37,6 +38,7 @@ const typeToRendererMapping: Record<MobType | PetalType, Renderer<Mob>> = {
     [PetalType.Bubble]: new RendererPetalBubble,
     [PetalType.BeetleEgg]: new RendererPetalEgg,
     [PetalType.YinYang]: new RendererPetalYinYang,
+    [PetalType.Yggdrasil]: new RendererPetalYggdrasil,
 } as const;
 
 export default class RendererMob extends Renderer<Mob> {

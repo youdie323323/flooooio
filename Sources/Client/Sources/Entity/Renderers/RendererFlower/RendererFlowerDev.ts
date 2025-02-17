@@ -49,9 +49,9 @@ export default class RendererFlowerDev extends RendererFlowerBase {
             ctx.save();
 
             ctx.beginPath();
-
-            this.drawEyeOutline(ctx, 0.7);
-            this.drawEyeOutline(ctx, 0);
+            
+            this.drawEyeOutline(context, 0.7);
+            this.drawEyeOutline(context, 0);
             ctx.clip();
 
             ctx.beginPath();
@@ -77,7 +77,7 @@ export default class RendererFlowerDev extends RendererFlowerBase {
         ctx.stroke();
     }
 
-    private drawEyeOutline(ctx: CanvasRenderingContext2D, flag = 0) {
+    private drawEyeOutline({ ctx }: RenderContext<Player>, flag = 0) {
         ctx.beginPath();
 
         ctx.ellipse(11, 8, 2.5 + flag, 6 + flag, -0.15, 0, TAU);

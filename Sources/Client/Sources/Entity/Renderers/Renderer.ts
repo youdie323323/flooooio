@@ -49,7 +49,7 @@ export default class Renderer<T extends Entity> {
     /**
      * Determine if entity should render.
      */
-    public isRenderCandidate({ entity }: RenderContext<T>): boolean {
+    public isEntityRenderCandidate(entity: RenderContext<T>["entity"]): boolean {
         return !(
             !entity.onlyDrawGeneralPart &&
             entity.isDead &&

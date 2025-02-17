@@ -379,4 +379,4 @@ export const PETAL_PROFILES = {
             isCluster: false,
         },
     },
-} satisfies Required<Record<PetalType, PetalData>>;
+} satisfies Record<PetalType, PetalData>;

@@ -902,7 +902,6 @@ export default class UserInterfaceTitle extends UserInterface {
     set biome(biome: Biome) {
         menuUiCurrentBiome = biome;
     }
-
     get biome(): Biome {
         return menuUiCurrentBiome;
     }
