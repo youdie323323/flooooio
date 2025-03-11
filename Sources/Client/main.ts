@@ -1,11 +1,11 @@
-import { Biome } from "../Shared/biome";
-import Mob from "./Sources/Entity/Mob";
-import Player from "./Sources/Entity/Player";
-import { uiScaleFactor } from "./Sources/Ui/UserInterface";
-import UserInterfaceContext from "./Sources/Ui/UserInterfaceContext";
-import CameraController from "./Sources/Utils/CameraController";
-import Networking from "./Sources/Utils/Networking";
-import TilesetRenderer, { BIOME_SVG_TILESET, BIOME_TILESETS } from "./Sources/Ui/Tiled/TilesetRenderer";
+import { Biome } from "../Shared/Biome";
+import Mob from "./Sources/Game/Entity/Mob";
+import Player from "./Sources/Game/Entity/Player";
+import TilesetRenderer, { BIOME_SVG_TILESET, BIOME_TILESETS } from "./Sources/Game/Ui/Tiled/TilesetRenderer";
+import { uiScaleFactor } from "./Sources/Game/Ui/UserInterface";
+import UserInterfaceContext from "./Sources/Game/Ui/UserInterfaceContext";
+import CameraController from "./Sources/Game/Utils/CameraController";
+import Networking from "./Sources/Game/Utils/Networking";
 
 const canvas: HTMLCanvasElement = document.querySelector('#canvas');
 
@@ -65,9 +65,9 @@ const init = async function () {
         const statusContainer = document.getElementById("status-container");
         if (statusContainer) {
             document.body.style.opacity = '1';
-                statusContainer.remove();
+            statusContainer.remove();
 
-                showElement("canvas");
+            showElement("canvas");
         }
     } catch (e) {
         hideElement("loading");
@@ -102,7 +102,7 @@ const init = async function () {
             e.preventDefault();
         }
     }, {
-        passive: false
+        passive: false,
     });
 
     function limitDelta(dy: number) {
@@ -112,6 +112,7 @@ const init = async function () {
         if (dy > 1) {
             dy = 1;
         }
+
         return dy;
     }
 

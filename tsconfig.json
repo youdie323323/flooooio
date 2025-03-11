@@ -1,12 +1,24 @@
 {
   "compilerOptions": {
-    "lib": ["esnext"],
-    "module": "esnext",
-    "target": "es6",
+    "lib": [
+      "ESNext",
+      "DOM",
+      "DOM.Iterable",
+    ],
+    "module": "NodeNext",
+    "target": "ESNext",
     "strict": true,
     "esModuleInterop": true,
-    "moduleResolution": "node10",
+    "moduleResolution": "NodeNext",
+    "skipLibCheck": true,
     "noImplicitAny": false,
-    "strictNullChecks": false
-  }
+    "strictNullChecks": false,
+    "useDefineForClassFields": false,
+  },
+  "include": [
+    "Sources/**/*",
+    "Playground/**/*",
+    "eslint.config.mjs",
+    "esbuild.mjs",
+  ]
 }

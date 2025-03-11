@@ -19,6 +19,7 @@ function generateRandomMeaninglessIdentifier(): MeaninglessIdentifier {
 export function generateRandomWaveRoomCode(): WaveRoomCode {
     const serverPart = generateRandomServerIdentifier();
     const meaninglessPart = generateRandomMeaninglessIdentifier();
+
     return `${serverPart}-${meaninglessPart}` satisfies WaveRoomCode;
 }
 

@@ -1,20 +1,27 @@
-import { ColorCode } from "../Client/Sources/Utils/common";
+import { ColorCode } from "./Utils/Color";
 
-export enum Biome {
+export const enum Biome {
     Garden,
     Desert,
     Ocean,
 }
 
-export const BIOME_VALUES = Object.values(Biome);
+export const BIOME_VALUES = new Set([
+    Biome.Garden,
+    Biome.Desert,
+    Biome.Ocean,
+]);
 
-export function biomeToCapitalizedBiomeString(biome: Biome): string {
-    const biomeText = Biome[biome];
-    return biomeText[0].toUpperCase() + biomeText.slice(1).toLowerCase();
-}
+type BiomeDisplayName = Capitalize<string>;
 
-export const WAVE_BIOME_GAUGE_COLORS = {
+export const BIOME_DISPLAY_NAME = {
+    [Biome.Garden]: "Garden",
+    [Biome.Desert]: "Desert",
+    [Biome.Ocean]: "Ocean",
+} as const satisfies Record<Biome, BiomeDisplayName>;
+
+export const BIOME_GAUGE_COLORS = {
     [Biome.Garden]: "#1ea761",
     [Biome.Desert]: "#ecdcb8",
     [Biome.Ocean]: "#4e77a7",
-} satisfies Record<Biome, ColorCode>;
+} as const satisfies Record<Biome, ColorCode>;

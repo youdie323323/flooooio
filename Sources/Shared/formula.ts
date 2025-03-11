@@ -1,5 +1,6 @@
-import { NUM_RARITIES, Rarity } from "./rarity";
-import { memo } from "./Utils/memoize";
+
+import { NUM_RARITIES, Rarity } from "./Entity/Statics/EntityRarity";
+import { memo } from "./Utils/Memoize";
 
 /**
  * Memoized xp calculation by level.
@@ -12,6 +13,7 @@ export const xpPerLevel = memo((level: number) => 25 * (Math.floor(level * Math.
 export const levelPerXp = memo((xp: number) => {
     let level = 1;
     while (xpPerLevel(level) <= xp) level++;
+
     return level - 1;
 });
 
@@ -67,6 +69,7 @@ export const rarityTable = (() => {
         table[i] = acc / totalWeight;
         acc += relativeRarity[i];
     }
+
     return table;
 })();
 
@@ -90,7 +93,7 @@ export const calculateDropChance = (baseDropChance: number, mobRarity: number, d
         powTerm2 = Math.pow(baseDropChance * end + (1 - baseDropChance), 300000 / relativeRarity[mobRarity]);
 
     return powTerm2 - powTerm1;
-}
+};
 
 const MAX_DROPPABLE_RARITY = Rarity.Mythic;
 
@@ -104,4 +107,4 @@ export const calculateDropTable = (baseDropChance: number): number[][] => {
     }
 
     return table;
-}
+};
