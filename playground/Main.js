@@ -1,30 +1,23 @@
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+const canvas = document.createElement("canvas");
+const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+function fitTextToWidth(text, maxWidth, fontSize = 40, fontFamily = "Arial") {
+    ctx.font = `${fontSize}px ${fontFamily}`;
 
-(async function () {
-    const size = 1024;
+    const textWidth = ctx.measureText(text).width;
 
-    const offscreenCanvas = new OffscreenCanvas(size, size);
-    const offscreenCtx = offscreenCanvas.getContext("2d");
+    const scaleRatio = maxWidth / textWidth;
 
-    offscreenCtx.direction = "ltr";
-    offscreenCtx.globalAlpha = 1;
-    offscreenCtx.lineWidth = 1;
-    offscreenCtx.miterLimit = 10;
-    offscreenCtx.font = "700 10px Game, Microsoft YaHei, sans-serif";
-    offscreenCtx.imageSmoothingEnabled = true;
-    offscreenCtx.clearRect(0, 0, size, size);
-    offscreenCtx.globalCompositeOperation = "source-over";
-    offscreenCtx.lineJoin = "round";
+    if (scaleRatio < 1) {
+        ctx.scale(scaleRatio, 1);
+    }
 
-    // new PetalRendererId1().render(offscreenCtx);
+    return { scaledText: text, scaleRatio };
+}
 
-    ctx.drawImage(
-        offscreenCanvas,
-        20, 20,
-        size, size,
-    );
-})();
+const text = "これはとても長いテキストです";
+const maxWidth = 200;
+
+const { scaledText, scaleRatio } = fitTextToWidth(text, maxWidth);
+
+console.log(`調整後のテキスト: ${scaledText}, 縮小率: ${scaleRatio}`);

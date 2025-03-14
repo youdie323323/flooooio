@@ -1,9 +1,11 @@
-import { Biome } from "../../../../../Shared/Biome";
+import type { Biome } from "../../../../../Shared/Biome";
 import { WaveRoomVisibleState } from "../../../../../Shared/WaveRoom";
-import { WaveRoomCode, generateRandomWaveRoomCode } from "../../../../../Shared/WaveRoomCode";
+import type { WaveRoomCode} from "../../../../../Shared/WaveRoomCode";
+import { generateRandomWaveRoomCode } from "../../../../../Shared/WaveRoomCode";
 import { logger } from "../../../../Main";
-import { UserData } from "./WavePool";
-import WaveRoom, { WaveRoomPlayer } from "./WaveRoom";
+import type { UserData } from "./WavePool";
+import type { WaveRoomPlayerId } from "./WaveRoom";
+import WaveRoom from "./WaveRoom";
 
 export default class WaveRoomService {
     private waveRooms: WaveRoom[] = [];
@@ -11,7 +13,7 @@ export default class WaveRoomService {
     /**
      * Adds a player to an existing public wave room or creates a new one if none exists.
      */
-    public joinPublicWaveRoom(userData: UserData, biome: Biome): WaveRoomPlayer["id"] | false {
+    public joinPublicWaveRoom(userData: UserData, biome: Biome): WaveRoomPlayerId | false {
         if (!this.canUserDataAdded(userData)) {
             return false;
         }
@@ -30,7 +32,7 @@ export default class WaveRoomService {
     /**
      * Adds a player to a private wave room using a room code.
      */
-    public joinWaveRoom(userData: UserData, code: string): WaveRoomPlayer["id"] | false {
+    public joinWaveRoom(userData: UserData, code: WaveRoomCode): WaveRoomPlayerId | false {
         if (!this.canUserDataAdded(userData)) {
             return false;
         }
@@ -48,7 +50,7 @@ export default class WaveRoomService {
     /**
      * Removes a player from their wave room, delete empty rooms if wave room is empty.
      */
-    public leaveWaveRoom(id: WaveRoomPlayer["id"]): boolean {
+    public leaveWaveRoom(id: WaveRoomPlayerId): boolean {
         for (const waveRoom of this.waveRooms) {
             if (waveRoom.removePlayer(id)) {
                 if (waveRoom.roomCandidates.length === 0) {
@@ -83,7 +85,7 @@ export default class WaveRoomService {
     /**
      * Creates a new wave room with initial player.
      */
-    public createWaveRoom(userData: UserData, biome: Biome): WaveRoomPlayer["id"] | false {
+    public createWaveRoom(userData: UserData, biome: Biome): WaveRoomPlayerId | false {
         if (!this.canUserDataAdded(userData)) {
             return false;
         }
@@ -117,14 +119,14 @@ export default class WaveRoomService {
      * @remarks
      * This don't actually find a private room, just find a room with the same code.
      */
-    private findPrivateRoom(code: string): WaveRoom | undefined {
+    private findPrivateRoom(code: WaveRoomCode): WaveRoom | undefined {
         return this.waveRooms.find(room => room.code === code && room.isCandidateJoinable);
     }
 
     /**
      * Finds the wave room that contains a specific player.
      */
-    public findPlayerRoom(id: WaveRoomPlayer["id"]): WaveRoom | null {
+    public findPlayerRoom(id: WaveRoomPlayerId): WaveRoom | null {
         for (const waveRoom of this.waveRooms) {
             const findedPlayer = waveRoom.roomCandidates.find(p => p.id === id);
             if (findedPlayer) {

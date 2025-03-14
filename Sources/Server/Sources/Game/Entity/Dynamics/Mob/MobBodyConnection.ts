@@ -1,10 +1,32 @@
+import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
 import { MOB_PROFILES } from "../../../../../../Shared/Entity/Statics/Mob/MobProfiles";
-import { WavePool } from "../../../Genres/Wave/WavePool";
-import { isPetal } from "../../../Utils/common";
-import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
-import { BaseMob } from "./Mob";
+import type { WavePool } from "../../../Genres/Wave/WavePool";
+import type { EntityMixinConstructor, EntityMixinTemplate} from "../Entity";
+import { onUpdateTick } from "../Entity";
+import type { BaseMob, MobInstance } from "./Mob";
 
 const TAU = Math.PI * 2;
+
+/**
+ * Get first segment (head) of mob.
+ * 
+ * @privateremarks
+ * You may should care about maxium call stack size error.
+ */
+export const traverseMobSegments = (poolThis: WavePool, mob: MobInstance): MobInstance => {
+    // Walk through segments
+    const segment = mob.connectingSegment;
+    if (segment && poolThis.getMob(segment.id)) {
+        return traverseMobSegments(poolThis, segment);
+    }
+
+    return mob;
+};
+
+/**
+ * Determine if mob is segment of body.
+ */
+export const isBody = (poolThis: WavePool, mob: MobInstance): boolean => traverseMobSegments(poolThis, mob) !== mob;
 
 export function MobBodyConnection<T extends EntityMixinConstructor<BaseMob>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {

@@ -1,5 +1,5 @@
-import { Rarity } from "../../../../Shared/Entity/Statics/EntityRarity";
-import { MobType, PetalType } from "../../../../Shared/Entity/Statics/EntityType";
+import type { Rarity } from "../../../../Shared/Entity/Statics/EntityRarity";
+import type { MobType, PetalType } from "../../../../Shared/Entity/Statics/EntityType";
 import Entity from "./Entity";
 
 // @UseRenderer(RendererMob)

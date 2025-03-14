@@ -1,8 +1,9 @@
-import { WavePool } from "../../../Genres/Wave/WavePool";
-import { isDeadEntity } from "../../../Utils/common";
-import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
+import type { WavePool } from "../../../Genres/Wave/WavePool";
+import type { EntityMixinConstructor, EntityMixinTemplate} from "../Entity";
+import { onUpdateTick } from "../Entity";
+import { isDeadEntity } from "../EntityElimination";
 import { findNearestEntity } from "../Mob/MobAggressivePursuit";
-import { BasePlayer } from "./Player";
+import type { BasePlayer } from "./Player";
 
 export function PlayerDeadCamera<T extends EntityMixinConstructor<BasePlayer>>(Base: T) {
     return class MixedBase extends Base implements EntityMixinTemplate {

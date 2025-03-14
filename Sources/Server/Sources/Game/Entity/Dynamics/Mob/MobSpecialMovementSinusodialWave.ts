@@ -13,10 +13,7 @@ function generateSinWaveTable(sampleRate: number) {
 }
 
 export default class SinusodialWave {
-    private static table: Array<number>;
-    static {
-        this.table = generateSinWaveTable(100);
-    }
+    private static table: Array<number> = generateSinWaveTable(100);
 
     public static at(t: number): number {
         return this.table[t % this.table.length];

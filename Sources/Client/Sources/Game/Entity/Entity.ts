@@ -14,9 +14,11 @@ const interpolateAngle = memo(
         startAngle + calculateAngleDistance(startAngle, endAngle) * progress,
 );
 
-const smoothInterpolate = memo((current: number, target: number, duration: number): number => {
-    return current + (target - current) * Math.min(1, deltaTime / duration);
-});
+const smoothInterpolate = memo(
+    (current: number, target: number, duration: number): number => {
+        return current + (target - current) * Math.min(1, deltaTime / duration);
+    },
+);
 
 export default abstract class Entity {
     x: number;

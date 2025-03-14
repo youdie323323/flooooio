@@ -1,4 +1,4 @@
-import { LayoutResult } from "./Layout";
+import type { LayoutResult } from "./Layout";
 
 export default class LayoutCache {
     private cache: Map<string, LayoutResult> = new Map();
@@ -13,7 +13,7 @@ export default class LayoutCache {
         this.isDirty.clear();
     }
 
-    public get(key: string): LayoutResult | undefined {
+    public get(key: string): LayoutResult {
         return this.cache.get(key);
     }
 

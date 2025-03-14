@@ -1,6 +1,6 @@
 import { Rarity } from "../EntityRarity";
 import { MobType } from "../EntityType";
-import { MobData } from "./MobData";
+import type { MobData } from "./MobData";
 
 export const MOB_PROFILES = {
     [MobType.Bee]: {

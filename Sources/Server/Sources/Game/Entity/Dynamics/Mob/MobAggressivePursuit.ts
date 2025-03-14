@@ -1,8 +1,11 @@
+import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
 import { MobType } from "../../../../../../Shared/Entity/Statics/EntityType";
-import { WavePool } from "../../../Genres/Wave/WavePool";
-import { isPetal, isBody, isDeadEntity } from "../../../Utils/common";
-import { Entity, EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
-import { BaseMob } from "./Mob";
+import type { WavePool } from "../../../Genres/Wave/WavePool";
+import type { Entity, EntityMixinConstructor, EntityMixinTemplate} from "../Entity";
+import { onUpdateTick } from "../Entity";
+import { isDeadEntity } from "../EntityElimination";
+import type { BaseMob } from "./Mob";
+import { isBody } from "./MobBodyConnection";
 
 export function findNearestEntity<T extends Entity>(me: T, entities: T[]): T | null {
     if (!entities.length) return null;
@@ -35,7 +38,7 @@ export function turnAngleToTarget(thisAngle: number, dx: number, dy: number): nu
 
 const MOB_DETECTION_RANGE = 25;
 
-export enum MobBehavior {
+export const enum MobBehavior {
     Aggressive,
     Passive,
     Cautions,
@@ -55,7 +58,7 @@ export const MOB_BEHAVIORS = {
     // TODO: elucidate desert centipede move
     [MobType.CentipedeDesert]: MobBehavior.Neutral,
     [MobType.CentipedeEvil]: MobBehavior.Aggressive,
-} satisfies Record<MobType, MobBehavior>;
+} as const satisfies Record<MobType, MobBehavior>;
 
 export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {

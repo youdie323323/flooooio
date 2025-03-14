@@ -1,13 +1,13 @@
-import { Rarity } from "../../../../../../Shared/Entity/Statics/EntityRarity";
-import { MobType, PetalType } from "../../../../../../Shared/Entity/Statics/EntityType";
-import { PetalData } from "../../../../../../Shared/Entity/Statics/Mob/Petal/PetalData";
+import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
+import type { MobType } from "../../../../../../Shared/Entity/Statics/EntityType";
+import { PetalType } from "../../../../../../Shared/Entity/Statics/EntityType";
+import type { PetalData } from "../../../../../../Shared/Entity/Statics/Mob/Petal/PetalData";
 import { PETAL_PROFILES } from "../../../../../../Shared/Entity/Statics/Mob/Petal/PetalProfiles";
-import { decodeMood } from "../../../../../../Shared/Mood";
-import { WavePool } from "../../../Genres/Wave/WavePool";
-import { isPetal } from "../../../Utils/common";
-import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
+import type { WavePool } from "../../../Genres/Wave/WavePool";
+import type { EntityMixinConstructor, EntityMixinTemplate } from "../Entity";
+import { onUpdateTick } from "../Entity";
 import { isDynamicPetal, MAX_CLUSTER_AMOUNT } from "../Mob/Petal/Petal";
-import { PlayerInstance, BasePlayer } from "./Player";
+import type { BasePlayer } from "./Player";
 
 export const PETAL_INITIAL_COOLDOWN = 0;
 
@@ -16,55 +16,8 @@ export const USAGE_RELOAD_PETALS: Set<MobType | PetalType> = new Set([
     PetalType.Bubble,
 ]);
 
-export const EGG_TYPE_MAPPING = {
-    [PetalType.BeetleEgg]: MobType.Beetle,
-} satisfies Partial<Record<PetalType, MobType>>;
-
-const consumeConsumable = (poolThis: WavePool, player: PlayerInstance, i: number, j: number):
-    // Dx, dy
-    [number, number]
-    | null => {
-    const clusterLike = player.slots.surface[i];
-    if (!isDynamicPetal(clusterLike)) return null;
-
-    const petal = clusterLike[j];
-
-    // Remove mob as it consumed
-    poolThis.removeMob(petal.id);
-
-    switch (petal.type) {
-        case PetalType.BeetleEgg: {
-            petal.petalSummonedPet = poolThis.generateMob(
-                EGG_TYPE_MAPPING[petal.type],
-                Math.max(Rarity.Common, Math.min(Rarity.Mythic, petal.rarity - 1)),
-
-                // Summon on breaked petal
-                petal.x,
-                petal.y,
-
-                null,
-                player,
-            );
-
-            break;
-        }
-
-        case PetalType.Bubble: {
-            return [player.x - petal.x, player.y - petal.y];
-        }
-    }
-
-    return null;
-};
-
 export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(Base: T) {
     return class MixedBase extends Base implements EntityMixinTemplate {
-        private static readonly BUBBLE_BOUNCE_FORCE = 30;
-        private static readonly BUBBLE_ATTENUATION_COEFFICIENT = 0.7;
-
-        private bubbleVelocityX: number = 0;
-        private bubbleVelocityY: number = 0;
-
         [onUpdateTick](poolThis: WavePool): void {
             super[onUpdateTick](poolThis);
 
@@ -81,118 +34,71 @@ export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(
 
             // Dont reload if player is dead
             if (!this.isDead) {
-                // Reload logic
-                {
-                    surface.forEach((petals, i) => {
-                        if (petals !== null && isDynamicPetal(petals)) {
-                            petals.forEach((e, j) => {
-                                if (
-                                    // Petal breaked, start reloading
-                                    !poolThis.getMob(e.id)
-                                ) {
-                                    // If summoned mob is not dead, not reloading
-                                    if (e.petalSummonedPet && poolThis.getMob(e.petalSummonedPet.id)) return;
+                surface.forEach((petals, i) => {
+                    if (petals !== null && isDynamicPetal(petals)) {
+                        petals.forEach((e, j) => {
+                            if (
+                                // Petal breaked, start reloading
+                                !poolThis.getMob(e.id)
+                            ) {
+                                // If summoned mob is not dead, not reloading
+                                if (e.petalSummonedPet && poolThis.getMob(e.petalSummonedPet.id)) return;
 
-                                    const cooldownPetal = this.slots.cooldownsPetal[i];
+                                const cooldownPetal = this.slots.cooldownsPetal[i];
 
-                                    if (cooldownPetal[j] === PETAL_INITIAL_COOLDOWN) {
-                                        const profile = PETAL_PROFILES[e.type];
-                                        cooldownPetal[j] = Date.now() + (profile[e.rarity].petalReload * 1000);
-                                    } else if (Date.now() >= cooldownPetal[j]) {
-                                        // If cooldown elapsed
+                                if (cooldownPetal[j] === PETAL_INITIAL_COOLDOWN) {
+                                    const profile = PETAL_PROFILES[e.type];
+                                    cooldownPetal[j] = Date.now() + (profile[e.rarity].petalReload * 1000);
+                                } else if (Date.now() >= cooldownPetal[j]) {
+                                    // If cooldown elapsed
 
-                                        petals[j] = poolThis.generateMob(
-                                            e.type,
-                                            e.rarity,
+                                    petals[j] = poolThis.generateMob(
+                                        e.type,
+                                        e.rarity,
 
-                                            // Make it player coordinate so its looks like spawning from player body
-                                            // TODO: It may not appear to be coming from the player, because the setInterval for sending update packets and 
-                                            // the setInterval for update are different. To solve this, delay PlayerPetalOrbit
-                                            this.x,
-                                            this.y,
+                                        // Make it player coordinate so its looks like spawning from player body
+                                        // TODO: It may not appear to be coming from the player, because the setInterval for sending update packets and 
+                                        // the setInterval for update are different. To solve this, delay PlayerPetalOrbit
+                                        this.x,
+                                        this.y,
 
-                                            this,
-                                            null,
-                                        );
+                                        this,
+                                        null,
+                                    );
 
-                                        cooldownPetal[j] = PETAL_INITIAL_COOLDOWN;
-                                    }
+                                    cooldownPetal[j] = PETAL_INITIAL_COOLDOWN;
                                 }
-                            });
-                        }
-                    });
+                            }
+                        });
+                    }
+                });
 
-                    surface.forEach((petals, i) => {
-                        if (petals != null && isDynamicPetal(petals)) {
-                            petals.forEach((e, j) => {
+                surface.forEach((petals, i) => {
+                    if (petals != null && isDynamicPetal(petals)) {
+                        petals.forEach((e, j) => {
+                            if (
+                                isPetal(e.type) &&
+                                USAGE_RELOAD_PETALS.has(e.type)
+                            ) {
+                                const cooldownUsage = this.slots.cooldownsUsage[i];
+
                                 if (
-                                    isPetal(e.type) &&
-                                    USAGE_RELOAD_PETALS.has(e.type)
+                                    // Can use petal
+                                    poolThis.getMob(e.id)
                                 ) {
-                                    const cooldownUsage = this.slots.cooldownsUsage[i];
-
-                                    if (
-                                        // Can use petal
-                                        poolThis.getMob(e.id)
-                                    ) {
-                                        // Petal respawned, start consume timer
-                                        if (cooldownUsage[j] === PETAL_INITIAL_COOLDOWN) {
-                                            const profile: PetalData = PETAL_PROFILES[e.type];
-                                            cooldownUsage[j] = Date.now() + (profile[e.rarity].usageReload * 1000);
-                                        }
-                                    } else {
-                                        // Reset cooldown because its breaked
-                                        cooldownUsage[j] = PETAL_INITIAL_COOLDOWN;
+                                    // Petal respawned, start consume timer
+                                    if (cooldownUsage[j] === PETAL_INITIAL_COOLDOWN) {
+                                        const profile: PetalData = PETAL_PROFILES[e.type];
+                                        cooldownUsage[j] = Date.now() + (profile[e.rarity].usageReload * 1000);
                                     }
+                                } else {
+                                    // Reset cooldown because its breaked
+                                    cooldownUsage[j] = PETAL_INITIAL_COOLDOWN;
                                 }
-                            });
-                        }
-                    });
-                }
-
-                // Consume logic
-                {
-                    const { 1: isConsumeMood } = decodeMood(this.mood);
-
-                    this.bubbleVelocityX *= MixedBase.BUBBLE_ATTENUATION_COEFFICIENT;
-                    this.bubbleVelocityY *= MixedBase.BUBBLE_ATTENUATION_COEFFICIENT;
-
-                    this.slots.surface.forEach((petals, i) => {
-                        if (petals != null && isDynamicPetal(petals)) {
-                            petals.forEach((e, j) => {
-                                if (
-                                    // Check if petal is living
-                                    poolThis.getMob(e.id) &&
-                                    Date.now() >= this.slots.cooldownsUsage[i][j]
-                                ) {
-                                    // Automatically (e.g. egg)
-                                    if (e.type === PetalType.BeetleEgg) {
-                                        consumeConsumable(poolThis, this, i, j);
-
-                                        return;
-                                    }
-
-                                    // Bubble
-                                    if (isConsumeMood && e.type === PetalType.Bubble) {
-                                        const result = consumeConsumable(poolThis, this, i, j);
-                                        if (result) {
-                                            const distance = Math.sqrt(result[0] * result[0] + result[1] * result[1]);
-                                            if (distance > 0) {
-                                                this.bubbleVelocityX += result[0] / distance;
-                                                this.bubbleVelocityY += result[1] / distance;
-                                            }
-                                        }
-
-                                        return;
-                                    }
-                                }
-                            });
-                        }
-                    });
-
-                    this.x += this.bubbleVelocityX * MixedBase.BUBBLE_BOUNCE_FORCE;
-                    this.y += this.bubbleVelocityY * MixedBase.BUBBLE_BOUNCE_FORCE;
-                }
+                            }
+                        });
+                    }
+                });
             }
         }
 

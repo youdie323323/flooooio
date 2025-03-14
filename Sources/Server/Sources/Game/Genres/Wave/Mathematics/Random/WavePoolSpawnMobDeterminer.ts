@@ -1,11 +1,9 @@
-
 import { calculateWaveLuck } from "../WaveFormula";
-import { WaveData } from "../../WavePool";
+import type { WaveData } from "../../WavePool";
 import { Biome } from "../../../../../../../Shared/Biome";
 import { Rarity } from "../../../../../../../Shared/Entity/Statics/EntityRarity";
 import { MobType, MOB_TYPES } from "../../../../../../../Shared/Entity/Statics/EntityType";
 import { rarityTable } from "../../../../../../../Shared/Formula";
-import { choice } from "../../../../Utils/random";
 
 /**
  * Set of linkable mobs.
@@ -45,7 +43,7 @@ function getRandomMobType(difficulty: number, biome: Biome): MobType {
         .filter(([_, rule]) => rule.spawnAfter <= difficulty);
 
     if (availableMobs.length === 0) {
-        return choice(MOB_TYPES);
+        return MOB_TYPES[Math.floor(Math.random() * MOB_TYPES.length)];
     }
 
     const totalWeight = availableMobs.reduce((sum, [_, data]) => sum + data.weight, 0);
@@ -132,7 +130,7 @@ export default class SpawnMobDeterminer {
         this.points += 1500;
     }
 
-    public predictStaticMobData({
+    public determineStaticMobData({
         progress,
         biome,
     }: WaveData): StaticMobData | null {

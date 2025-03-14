@@ -1,32 +1,31 @@
-import { Biome } from "../Shared/Biome";
-import Mob from "./Sources/Game/Entity/Mob";
-import Player from "./Sources/Game/Entity/Player";
-import TilesetRenderer, { BIOME_SVG_TILESET, BIOME_TILESETS } from "./Sources/Game/Ui/Tiled/TilesetRenderer";
-import { uiScaleFactor } from "./Sources/Game/Ui/UserInterface";
-import UserInterfaceContext from "./Sources/Game/Ui/UserInterfaceContext";
+import type { Biome } from "../Shared/Biome";
+import type Mob from "./Sources/Game/Entity/Mob";
+import type Player from "./Sources/Game/Entity/Player";
+import TilesetRenderer, { BIOME_SVG_TILESET, BIOME_TILESETS } from "./Sources/Game/UI/Tiled/TilesetRenderer";
+import { uiScaleFactor } from "./Sources/Game/UI/UI";
+import UIContext from "./Sources/Game/UI/UIContext";
 import CameraController from "./Sources/Game/Utils/CameraController";
-import Networking from "./Sources/Game/Utils/Networking";
+import ClientWebsocket from "./Sources/Game/Websocket/ClientWebsocket";
 
 const canvas: HTMLCanvasElement = document.querySelector('#canvas');
-
-export let ws: WebSocket;
-export let networking: Networking;
 
 export let lastTimestamp = Date.now();
 export let deltaTime = 0;
 export let prevTimestamp = lastTimestamp;
 
-export const players: Map<number, Player> = new Map();
-export const mobs: Map<number, Mob> = new Map();
-
 export const cameraController = new CameraController(canvas);
+
+export const clientWebsocket = new ClientWebsocket(
+    // Change listen for each UI
+    () => uiCtx.currentCtx.additionalClientboundListen,
+);
 
 export let antennaScaleFactor = 1;
 
 /**
  * Global instanceof ui context.
  */
-export const uiCtx = new UserInterfaceContext(canvas);
+export const uiCtx = new UIContext(canvas);
 
 const init = async function () {
     // Generate tilesets beforehand so no need to generate them multiple times
@@ -35,49 +34,7 @@ const init = async function () {
         BIOME_TILESETS.set(parsedBiome, await TilesetRenderer.prepareTileset(parsedBiome));
     }
 
-    function showElement(id: string) {
-        const element = document.getElementById(id);
-        if (element) element.style.display = "block";
-    }
-
-    function hideElement(id: string) {
-        const element = document.getElementById(id);
-        if (element) element.style.display = "none";
-    }
-
-    function asyncWebsocket(address: string | URL): Promise<WebSocket> {
-        return new Promise(function (resolve, reject) {
-            const ws = new WebSocket(address);
-            ws.binaryType = "arraybuffer";
-            ws.onopen = function () {
-                resolve(ws);
-            };
-            ws.onerror = function (err) {
-                reject(err);
-            };
-        });
-    }
-
-    try {
-        ws = await asyncWebsocket("ws://" + location.host);
-
-        // Websocket connection succeed
-        const statusContainer = document.getElementById("status-container");
-        if (statusContainer) {
-            document.body.style.opacity = '1';
-            statusContainer.remove();
-
-            showElement("canvas");
-        }
-    } catch (e) {
-        hideElement("loading");
-        showElement("errorDialog");
-
-        return;
-    }
-
-    // Reassign them, to access networking from anywhere
-    networking = new Networking(ws);
+    clientWebsocket.connect();
 
     const ctx: CanvasRenderingContext2D = canvas.getContext("2d");
 

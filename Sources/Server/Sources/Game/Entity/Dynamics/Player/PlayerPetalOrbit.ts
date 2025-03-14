@@ -1,14 +1,18 @@
-import { MobType, PetalType } from "../../../../../../Shared/Entity/Statics/EntityType";
-import { PetalData } from "../../../../../../Shared/Entity/Statics/Mob/Petal/PetalData";
+import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
+import type { MobType} from "../../../../../../Shared/Entity/Statics/EntityType";
+import { PetalType } from "../../../../../../Shared/Entity/Statics/EntityType";
+import type { PetalData } from "../../../../../../Shared/Entity/Statics/Mob/Petal/PetalData";
 import { PETAL_PROFILES } from "../../../../../../Shared/Entity/Statics/Mob/Petal/PetalProfiles";
 import { decodeMood } from "../../../../../../Shared/Mood";
-import { WavePool, UPDATE_ENTITIES_FPS } from "../../../Genres/Wave/WavePool";
-import { isPetal } from "../../../Utils/common";
-import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
-import { MobInstance } from "../Mob/Mob";
+import type { WavePool} from "../../../Genres/Wave/WavePool";
+import { UPDATE_ENTITIES_FPS } from "../../../Genres/Wave/WavePool";
+import type { EntityMixinConstructor, EntityMixinTemplate} from "../Entity";
+import { onUpdateTick } from "../Entity";
+import type { MobInstance } from "../Mob/Mob";
 import { findNearestEntity } from "../Mob/MobAggressivePursuit";
 import { MAX_CLUSTER_AMOUNT, isClusterPetal, isDynamicPetal } from "../Mob/Petal/Petal";
-import { BasePlayer, Player } from "./Player";
+import type { BasePlayer} from "./Player";
+import { Player } from "./Player";
 
 const TAU = Math.PI * 2;
 
@@ -73,7 +77,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 );
             }
 
-            const { 0: isAngry, 1: isSad } = decodeMood(this.mood);
+            const [isAngry, isSad] = decodeMood(this.mood);
 
             const numYinYang = surface.reduce(
                 (acc, curr) => acc + (

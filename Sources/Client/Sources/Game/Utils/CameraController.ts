@@ -1,7 +1,7 @@
 import Interpolator from "./Interpolator";
 
 export default class CameraController {
-    _zoom: Interpolator;
+    private _zoom: Interpolator;
 
     constructor(public canvas: HTMLCanvasElement) {
         this._zoom = new Interpolator({
@@ -11,11 +11,11 @@ export default class CameraController {
         });
     }
 
-    set zoom(o) {
+    public set zoom(o) {
         this._zoom.setValue(o);
     }
 
-    get zoom() {
+    public get zoom() {
         return this._zoom.getInterpolatedValue();
     }
 }

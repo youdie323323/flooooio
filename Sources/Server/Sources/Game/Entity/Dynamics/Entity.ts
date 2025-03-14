@@ -1,9 +1,13 @@
-import { WavePool } from "../../Genres/Wave/WavePool";
+import type { WavePool } from "../../Genres/Wave/WavePool";
+import type { MobInstance } from "./Mob/Mob";
+import type { PlayerInstance } from "./Player/Player";
 
 /**
  * Create branded type.
  */
 export type BrandedId<T extends string> = number & { readonly __brand: T };
+
+export type RealEntity = MobInstance | PlayerInstance;
 
 export interface Entity {
     /**
@@ -33,7 +37,6 @@ export interface Entity {
      * Current health of entity.
      * 
      * @remarks
-     * 
      * The health range will be [0, 1] float range.
      */
     health: number;
@@ -41,10 +44,6 @@ export interface Entity {
 
 /**
  * Symbols to call in the update method of WavePool.
- * 
- * @remarks
- * 
- * This is not only used for mixin.
  */
 export const onUpdateTick: unique symbol = Symbol("onUpdateTick");
 
@@ -55,7 +54,6 @@ export interface EntityMixinTemplate {
      * Method call upon every UPDATE_FPS interval.
      * 
      * @remarks
-     * 
      * Call this method of parent if exists so can propagate mixin.
      */
     [onUpdateTick](poolThis: WavePool): void;
@@ -85,7 +83,6 @@ type WritableKeysOf<T> = NonNullable<{
  * This determines the type of object passed when newing an entity.
  * 
  * @remarks
- * 
  * This type alias is used to filter out keys that are not needed when creating them, such as method/getters.
  * But readonly value are partial'ed too, you may careful with that.
  * 

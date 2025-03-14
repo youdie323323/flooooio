@@ -1,4 +1,4 @@
-import { ColorCode } from "../../Utils/Color";
+import type { ColorCode } from "../../Utils/Color";
 
 export const enum Rarity {
     Common,

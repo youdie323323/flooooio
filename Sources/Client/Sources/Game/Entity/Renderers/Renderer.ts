@@ -1,9 +1,10 @@
+import { isPetal } from "../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
 import { MOB_PROFILES } from "../../../../../Shared/Entity/Statics/Mob/MobProfiles";
-import { ColorCode } from "../../../../../Shared/Utils/Color";
+import type { ColorCode } from "../../../../../Shared/Utils/Color";
 import { memo } from "../../../../../Shared/Utils/Memoize";
-import { isPetal } from "../../Utils/common";
-import { waveSelfId } from "../../Utils/Networking";
-import Entity from "../Entity";
+import { uiCtx } from "../../../../Main";
+import UIGame from "../../UI/Game/UIGame";
+import type Entity from "../Entity";
 import Mob from "../Mob";
 import Player from "../Player";
 import type { RenderContext } from "./RendererRenderingContext";
@@ -99,8 +100,9 @@ export default class Renderer<T extends Entity> {
 
         if (
             entity instanceof Player &&
+            uiCtx.currentCtx instanceof UIGame &&
             // Draw nickname if not self
-            entity.id !== waveSelfId
+            entity.id !== uiCtx.currentCtx.waveSelfId
         ) {
             ctx.save();
 

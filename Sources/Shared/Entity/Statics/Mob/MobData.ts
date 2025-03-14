@@ -1,5 +1,5 @@
-import { Rarity } from "../EntityRarity";
-import { EntityData } from "../EntityData";
+import type { Rarity } from "../EntityRarity";
+import type { EntityData } from "../EntityData";
 
 export interface MobI18n {
     name: string;

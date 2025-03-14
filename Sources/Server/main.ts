@@ -1,19 +1,22 @@
 import path from "path";
-import uWS, { App, SHARED_COMPRESSOR } from 'uWebSockets.js';
+import type uWS from 'uWebSockets.js';
+import { App, SHARED_COMPRESSOR } from 'uWebSockets.js';
 import { PLAYER_STATE_VALUES, VISIBLE_STATE_VALUES } from "../Shared/WaveRoom";
 import fs from "fs";
 import { VALID_MOOD_FLAGS } from "../Shared/Mood";
 import { BIOME_VALUES } from "../Shared/Biome";
-import { kickClient, clientRemove, processJoin } from "./Sources/Game/Utils/common";
 import { Logger } from "./Sources/Logger/Logger";
 import { Rarity } from "../Shared/Entity/Statics/EntityRarity";
 import { PetalType } from "../Shared/Entity/Statics/EntityType";
-import { StaticPetalData } from "./Sources/Game/Entity/Dynamics/Mob/Petal/Petal";
-import { StaticPlayerData } from "./Sources/Game/Entity/Dynamics/Player/Player";
-import { UserData } from "./Sources/Game/Genres/Wave/WavePool";
+import type { StaticPetalData } from "./Sources/Game/Entity/Dynamics/Mob/Petal/Petal";
+import type { StaticPlayerData } from "./Sources/Game/Entity/Dynamics/Player/Player";
+import type { UserData } from "./Sources/Game/Genres/Wave/WavePool";
 import WaveRoomService from "./Sources/Game/Genres/Wave/WaveRoomService";
-import { ClientboundConnectionKickReason } from "../Shared/Packet/Bound/Client/ClientboundConnectionKickReason";
-import { ServerBound } from "../Shared/Packet/Bound/Server/ServerBound";
+import { removeClientFromAllService } from "./Sources/Game/Entity/Dynamics/EntityElimination";
+import { joinWaveRoom } from "./Sources/Game/Genres/Wave/WaveRoom";
+import { PacketServerboundOpcode } from "../Shared/Websocket/Packet/Bound/Server/PacketServerboundOpcode";
+import BinaryReader from "../Shared/Websocket/Binary/ReadWriter/Reader/BinaryReader";
+import { isWaveRoomCode } from "../Shared/WaveRoomCode";
 
 require('dotenv').config({
     path: path.resolve(__dirname, '../../.env'),
@@ -68,27 +71,26 @@ export const logger = new Logger();
 
 logger.info("App started");
 
-/**
- * Global instance for decoding string section of buffer.
- */
-const textDecoder = new TextDecoder('utf-8');
-
 function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBinary: boolean) {
-    const buffer = new Uint8Array(message);
-    if (buffer.length < 1 || !isBinary) return;
+    if (!isBinary) return;
+
+    const reader = new BinaryReader(message);
+
+    const { buffer } = reader;
+
+    if (1 > buffer.length) return;
 
     const userData = ws.getUserData();
     if (!userData) return;
 
     const { waveRoomClientId, waveClientId } = userData;
 
-    const packetType = buffer[0];
+    const opcode = reader.readUInt8() satisfies PacketServerboundOpcode;
 
-    // Hmm, maybe should i kick client if their packet is incorrect?
-
-    switch (packetType) {
+    switch (opcode) {
         // Wave
-        case ServerBound.WaveChangeMove: {
+
+        case PacketServerboundOpcode.WaveChangeMove: {
             if (buffer.length !== 3) return;
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
@@ -97,16 +99,20 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             const client = waveRoom.wavePool.getClient(waveClientId);
             if (!client) return;
 
-            waveRoom.wavePool.updateMovement(waveClientId, buffer[1], buffer[2]);
+            const angle = reader.readUInt8();
+
+            const magnitude = reader.readUInt8();
+
+            waveRoom.wavePool.updateMovement(waveClientId, angle, magnitude);
 
             break;
         }
-        case ServerBound.WaveChangeMood: {
-            if (buffer.length !== 2 || !VALID_MOOD_FLAGS.includes(buffer[1])) {
-                kickClient(ws, ClientboundConnectionKickReason.CheatDetected);
 
-                return;
-            }
+        case PacketServerboundOpcode.WaveChangeMood: {
+            if (buffer.length !== 2) return;
+
+            const flag = reader.readUInt8();
+            if (!VALID_MOOD_FLAGS.includes(flag)) return;
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
             if (!waveRoom) return;
@@ -114,43 +120,45 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             const client = waveRoom.wavePool.getClient(waveClientId);
             if (!client) return;
 
-            waveRoom.wavePool.changeMood(waveClientId, buffer[1]);
+            waveRoom.wavePool.changeMood(waveClientId, flag);
 
             break;
         }
-        case ServerBound.WaveSwapPetal: {
+
+        case PacketServerboundOpcode.WaveSwapPetal: {
             if (buffer.length !== 2) return;
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
             if (!waveRoom) return;
 
-            waveRoom.wavePool.swapPetal(waveClientId, buffer[1]);
+            const at = reader.readUInt8();
+
+            waveRoom.wavePool.swapPetal(waveClientId, at);
 
             break;
         }
-        case ServerBound.WaveChat: {
+
+        case PacketServerboundOpcode.WaveChat: {
             if (buffer.length < 2) return;
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
             if (!waveRoom) return;
 
-            const length = buffer[1];
-            if (buffer.length !== 2 + length) return;
+            const chatMsg = reader.readString();
 
-            const chat = textDecoder.decode(buffer.slice(2, 2 + length));
-
-            waveRoom.processChatMessage(userData, chat);
+            waveRoom.processChatMessage(userData, chatMsg);
 
             break;
         }
-        case ServerBound.WaveLeave: {
+
+        case PacketServerboundOpcode.WaveLeave: {
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
             if (!waveRoom) return;
 
             const client = waveRoom.wavePool.getClient(waveClientId);
             if (!client) return;
 
-            clientRemove(waveRoom, client.id);
+            removeClientFromAllService(waveRoom, client.id);
 
             userData.waveClientId = null;
 
@@ -158,75 +166,91 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
         }
 
         // Wave room
-        case ServerBound.WaveRoomCreate: {
-            if (buffer.length !== 2 || !BIOME_VALUES.has(buffer[1])) return;
+        
+        case PacketServerboundOpcode.WaveRoomCreate: {
+            if (buffer.length !== 2) return;
 
-            const id = waveRoomService.createWaveRoom(userData, buffer[1]);
+            const biome = reader.readUInt8();
+            if (!BIOME_VALUES.has(biome)) return;
 
-            processJoin(ws, id);
+            const id = waveRoomService.createWaveRoom(userData, biome);
+
+            joinWaveRoom(ws, id);
 
             break;
         }
-        case ServerBound.WaveRoomJoin: {
+
+        case PacketServerboundOpcode.WaveRoomJoin: {
             if (buffer.length < 2) return;
 
-            const length = buffer[1];
-            if (buffer.length !== 2 + length) return;
+            const code = reader.readString();
+            if (!isWaveRoomCode(code)) return;
 
-            const roomCode = textDecoder.decode(buffer.slice(2, 2 + length));
+            const id = waveRoomService.joinWaveRoom(userData, code);
 
-            const id = waveRoomService.joinWaveRoom(userData, roomCode);
-
-            processJoin(ws, id);
+            joinWaveRoom(ws, id);
 
             break;
         }
-        case ServerBound.WaveRoomFindPublic: {
-            if (buffer.length !== 2 || !BIOME_VALUES.has(buffer[1])) return;
 
-            const id = waveRoomService.joinPublicWaveRoom(userData, buffer[1]);
+        case PacketServerboundOpcode.WaveRoomFindPublic: {
+            if (buffer.length !== 2) return;
 
-            processJoin(ws, id);
+            const biome = reader.readUInt8();
+            if (!BIOME_VALUES.has(biome)) return;
+
+            const id = waveRoomService.joinPublicWaveRoom(userData, biome);
+
+            joinWaveRoom(ws, id);
 
             break;
         }
-        case ServerBound.WaveRoomChangeReady: {
-            if (buffer.length !== 2 || !PLAYER_STATE_VALUES.includes(buffer[1])) return;
+
+        case PacketServerboundOpcode.WaveRoomChangeReady: {
+            if (buffer.length !== 2) return;
+
+            const state = reader.readUInt8();
+            if (!PLAYER_STATE_VALUES.includes(state)) return;
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
             if (!waveRoom) return;
 
-            waveRoom.setPlayerReadyState(waveRoomClientId, buffer[1]);
+            waveRoom.setPlayerReadyState(waveRoomClientId, state);
 
             break;
         }
-        case ServerBound.WaveRoomChangeVisible: {
-            if (buffer.length !== 2 || !VISIBLE_STATE_VALUES.includes(buffer[1])) return;
+
+        case PacketServerboundOpcode.WaveRoomChangeVisible: {
+            if (buffer.length !== 2) return;
+
+            const state = reader.readUInt8();
+            if (!VISIBLE_STATE_VALUES.includes(state)) return;
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
             if (!waveRoom) return;
 
-            waveRoom.setPublicState(waveRoomClientId, buffer[1]);
+            waveRoom.setPublicState(waveRoomClientId, state);
 
             break;
         }
-        case ServerBound.WaveRoomChangeName: {
+
+        case PacketServerboundOpcode.WaveRoomChangeName: {
             if (buffer.length < 2) return;
 
-            const length = buffer[1];
-            if (buffer.length !== 2 + length) return;
-
-            const newName = textDecoder.decode(buffer.slice(2, 2 + length));
+            const name = reader.readString();
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
             if (!waveRoom) return;
 
-            const ok = waveRoom.setPlayerName(waveRoomClientId, newName);
+            console.log(name);
+
+            const ok = waveRoom.setPlayerName(waveRoomClientId, name);
             if (!ok) return;
 
             break;
         }
-        case ServerBound.WaveRoomLeave: {
+
+        case PacketServerboundOpcode.WaveRoomLeave: {
             const ok = waveRoomService.leaveWaveRoom(waveRoomClientId);
             if (!ok) return;
 
@@ -329,7 +353,7 @@ app
 
                 if (waveRoom?.wavePool) {
                     const waveClient = waveRoom.wavePool.getClient(waveClientId);
-                    if (waveClient) clientRemove(waveRoom, waveClient.id);
+                    if (waveClient) removeClientFromAllService(waveRoom, waveClient.id);
                 }
             }
         },

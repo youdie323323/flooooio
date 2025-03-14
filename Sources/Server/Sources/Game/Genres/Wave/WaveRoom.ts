@@ -1,13 +1,17 @@
-import { Biome } from "../../../../../Shared/Biome";
-import { ClientBound } from "../../../../../Shared/Packet/Bound/Client/ClientBound";
+import type { Biome } from "../../../../../Shared/Biome";
 import { WaveRoomPlayerReadyState, WaveRoomVisibleState, WaveRoomState } from "../../../../../Shared/WaveRoom";
-import { WaveRoomCode } from "../../../../../Shared/WaveRoomCode";
+import type { WaveRoomCode } from "../../../../../Shared/WaveRoomCode";
+import BinarySizedWriter from "../../../../../Shared/Websocket/Binary/ReadWriter/Writer/BinarySizedWriter";
+import { PacketClientboundOpcode } from "../../../../../Shared/Websocket/Packet/Bound/Client/PacketClientboundOpcode";
 import { logger } from "../../../../Main";
-import { BrandedId } from "../../Entity/Dynamics/Entity";
-import { StaticPlayerData, Player } from "../../Entity/Dynamics/Player/Player";
-import { generateRandomId } from "../../Utils/random";
-import { WavePool, UserData, WaveData } from "./WavePool";
+import type { BrandedId } from "../../Entity/Dynamics/Entity";
+import type { MobId } from "../../Entity/Dynamics/Mob/Mob";
+import type { StaticPlayerData, PlayerId } from "../../Entity/Dynamics/Player/Player";
+import { Player } from "../../Entity/Dynamics/Player/Player";
+import type { UserData, WaveData } from "./WavePool";
+import { WavePool } from "./WavePool";
 import { createHash } from 'node:crypto';
+import type uWS from 'uWebSockets.js';
 
 export type WaveRoomPlayerId = BrandedId<"WaveRoomPlayer">;
 
@@ -20,14 +24,47 @@ export type WaveRoomPlayer = StaticPlayerData & {
 
 export const WAVE_ROOM_UPDATE_SEND_FPS = 30;
 
-export const WAVE_ROOM_UPDATE_FPS = 60;
-
 function sha256(input: string): string {
     const hash = createHash("sha256");
     hash.update(input);
 
     return hash.digest("hex");
 }
+
+export const joinWaveRoom = (ws: uWS.WebSocket<UserData>, id: false | WaveRoomPlayerId): void => {
+    const userData = ws.getUserData();
+    if (!userData) return;
+
+    const waveRoomJoinWriter = new BinarySizedWriter(
+        id
+            ? 5
+            : 1,
+    );
+
+    waveRoomJoinWriter.writeUInt8(
+        id
+            ? PacketClientboundOpcode.WaveRoomSelfId
+            : PacketClientboundOpcode.WaveRoomJoinFailed,
+    );
+
+    if (id) {
+        waveRoomJoinWriter.writeUInt32(id);
+
+        userData.waveRoomClientId = id;
+    }
+
+    ws.send(waveRoomJoinWriter.buffer, true);
+};
+
+function randomUint32(): number {
+    return Math.random() * 2 ** 32 >>> 0;
+}
+
+export function generateRandomId<T extends MobId | PlayerId | WaveRoomPlayerId>(): T {
+    return randomUint32() as T;
+}
+
+const textEncoder = new TextEncoder();
 
 /**
  * The wave room, aka squad.
@@ -118,47 +155,39 @@ export default class WaveRoom {
         let size = 1 + 1 + (this.code.length + 1) + 1 + 1 + 1;
 
         this.roomCandidates.forEach(client => {
-            size += 4 + 1 + 1 + client.name.length;
+            size += 4 + (client.name.length + 1) + 1;
         });
 
         return size;
     }
 
-    private createWaveRoomUpdatePacket() {
-        const buffer = Buffer.alloc(this.calculateWaveRoomUpdatePacketSize());
-        let offset = 0;
+    private createWaveRoomUpdatePacket(): Uint8Array {
+        const waveRoomUpdateWriter = new BinarySizedWriter(this.calculateWaveRoomUpdatePacketSize());
 
-        buffer.writeUInt8(ClientBound.WaveRoomUpdate, offset++);
+        waveRoomUpdateWriter.writeUInt8(PacketClientboundOpcode.WaveRoomUpdate);
 
         // Client count
-        buffer.writeUInt8(this.roomCandidates.length, offset++);
+        waveRoomUpdateWriter.writeUInt8(this.roomCandidates.length);
 
-        this.roomCandidates.forEach(client => {
-            buffer.writeUInt32BE(client.id, offset);
-            offset += 4;
+        this.roomCandidates.forEach(({ id, name, readyState }) => {
+            waveRoomUpdateWriter.writeUInt32(id);
 
             // TODO: send static petal data too
 
-            const nicknameBuffer = Buffer.from(client.name, 'utf-8');
-            buffer.writeUInt8(nicknameBuffer.length, offset++);
-            nicknameBuffer.copy(buffer, offset);
-            offset += nicknameBuffer.length;
+            waveRoomUpdateWriter.writeString(name);
 
-            buffer.writeUInt8(client.readyState, offset++);
+            waveRoomUpdateWriter.writeUInt8(readyState);
         });
 
-        const codeBuffer = Buffer.from(this.code, 'utf-8');
-        buffer.writeUInt8(codeBuffer.length, offset++);
-        codeBuffer.copy(buffer, offset);
-        offset += codeBuffer.length;
+        waveRoomUpdateWriter.writeString(this.code);
 
-        buffer.writeUInt8(this.biome, offset++);
+        waveRoomUpdateWriter.writeUInt8(this.biome);
 
-        buffer.writeUInt8(this.state, offset++);
+        waveRoomUpdateWriter.writeUInt8(this.state);
 
-        buffer.writeUInt8(this.visible, offset++);
+        waveRoomUpdateWriter.writeUInt8(this.visible);
 
-        return buffer;
+        return waveRoomUpdateWriter.buffer;
     }
 
     public addPlayer(player: StaticPlayerData): WaveRoomPlayerId | false {
@@ -195,7 +224,7 @@ export default class WaveRoom {
         return id;
     }
 
-    public removePlayer(id: WaveRoomPlayer["id"]): boolean {
+    public removePlayer(id: WaveRoomPlayerId): boolean {
         if (this.state !== WaveRoomState.Waiting) {
             return false;
         }
@@ -223,7 +252,7 @@ export default class WaveRoom {
         }
     }
 
-    public setPlayerReadyState(id: WaveRoomPlayer["id"], state: WaveRoomPlayerReadyState): boolean {
+    public setPlayerReadyState(id: WaveRoomPlayerId, state: WaveRoomPlayerReadyState): boolean {
         if (this.state !== WaveRoomState.Waiting) {
             return false;
         }
@@ -245,7 +274,7 @@ export default class WaveRoom {
         }
     }
 
-    public setPublicState(id: WaveRoomPlayer["id"], state: WaveRoomVisibleState): boolean {
+    public setPublicState(id: WaveRoomPlayerId, state: WaveRoomVisibleState): boolean {
         if (this.state !== WaveRoomState.Waiting) {
             return false;
         }
@@ -267,7 +296,7 @@ export default class WaveRoom {
         return true;
     }
 
-    public setPlayerName(id: WaveRoomPlayer["id"], name: string): boolean {
+    public setPlayerName(id: WaveRoomPlayerId, name: string): boolean {
         if (this.state !== WaveRoomState.Waiting) {
             return false;
         }
@@ -317,13 +346,13 @@ export default class WaveRoom {
      * Disposable checksum.
      */
     public onChangeAnything = (): Disposable => {
-        return { [Symbol.dispose]: () => this._roomChecksum() };
+        return { [Symbol.dispose]: () => this.changeStateIfShould() };
     };
 
     /**
      * Checksum room values.
      */
-    public _roomChecksum() {
+    public changeStateIfShould() {
         // this.roomCandidates.length !== 0 to prevent multiple wave start, before wave room deletion
         if (
             this.state === WaveRoomState.Waiting &&
@@ -333,7 +362,10 @@ export default class WaveRoom {
             this.startWave();
         }
 
-        if (this.state === WaveRoomState.Started && this.wavePool.getAllClients().every(p => p.isDead)) {
+        if (
+            this.state === WaveRoomState.Started &&
+            this.wavePool.getAllClients().every(p => p.isDead)
+        ) {
             this.endWave();
         }
     }

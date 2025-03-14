@@ -50,7 +50,7 @@ export default class Player extends Entity {
         } else {
             const interpolationRate = deltaTime / 100;
 
-            const { 0: isAngry, 1: isSad } = decodeMood(this.mood);
+            const [isAngry, isSad] = decodeMood(this.mood);
 
             this.angryT = Math.min(1, Math.max(0, this.angryT + (isAngry ? interpolationRate : -interpolationRate)));
             this.sadT = Math.min(1, Math.max(0, this.sadT + (!isAngry && isSad ? interpolationRate : -interpolationRate)));

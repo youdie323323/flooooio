@@ -1,5 +1,5 @@
-import { EntityData } from "../../EntityData";
-import { Rarity } from "../../EntityRarity";
+import type { EntityData } from "../../EntityData";
+import type { Rarity } from "../../EntityRarity";
 
 export interface PetalI18n {
     name: string;

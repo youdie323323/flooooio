@@ -1,8 +1,10 @@
+import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
 import { MobType } from "../../../../../../Shared/Entity/Statics/EntityType";
-import { WavePool } from "../../../Genres/Wave/WavePool";
-import { isPetal, calculateMaxHealth } from "../../../Utils/common";
-import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
-import { BaseMob } from "./Mob";
+import type { WavePool } from "../../../Genres/Wave/WavePool";
+import type { EntityMixinConstructor, EntityMixinTemplate} from "../Entity";
+import { onUpdateTick } from "../Entity";
+import { calculateMaxHealth } from "../EntityElimination";
+import type { BaseMob } from "./Mob";
 import { turnAngleToTarget } from "./MobAggressivePursuit";
 
 export function MobHealthRegen<T extends EntityMixinConstructor<BaseMob>>(Base: T) {
@@ -10,7 +12,7 @@ export function MobHealthRegen<T extends EntityMixinConstructor<BaseMob>>(Base: 
         [onUpdateTick](poolThis: WavePool): void {
             super[onUpdateTick](poolThis);
 
-            // Dont check when this is petal
+            // Dont check if this is petal
             if (isPetal(this.type)) return;
 
             if (
@@ -26,9 +28,9 @@ export function MobHealthRegen<T extends EntityMixinConstructor<BaseMob>>(Base: 
                 const maxHealth = calculateMaxHealth(this);
 
                 // TODO: dont use size to regen (maybe, rarity?)
-                const healHp = (5 * this.size) / maxHealth;
+                const healAmount = (3 * this.size) / maxHealth;
 
-                this.health = Math.min(1, this.health + healHp);
+                this.health = Math.min(1, this.health + healAmount);
                 if (this.health >= 1) {
                     this.starfishRegeningHealth = false;
 

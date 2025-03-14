@@ -1,12 +1,68 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
 </head>
 <body>
-    <canvas id="canvas"></canvas>
-    <script src="./Main.js"></script>
+    <canvas id="myCanvas" width="600" height="500"></canvas>
+    <script>
+        function drawScaledText(ctx, text, x, y, maxWidth) {
+            const metrics = ctx.measureText(text);
+            const actualWidth = metrics.width;
+
+            ctx.save();
+            
+            if (actualWidth > maxWidth) {
+                const scale = maxWidth / actualWidth;
+
+                ctx.translate(x, y);
+                ctx.scale(scale, 1);
+                ctx.translate(-x, -y);
+
+                ctx.fillText(text, x, y);
+            } else {
+                ctx.fillText(text, x, y);
+            }
+
+            ctx.restore();
+        }
+
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+
+        ctx.font = '20px Arial';
+        
+        const testStrings = [
+            'Normal Name',
+            '非常に長い名前です1234567890',
+            '🌟🎮Gaming Master Super Long Name🎮🌟',
+            'अतिलंबा नाव', 
+            '超長い名前😊😊😊😊😊😊😊'
+        ];
+
+        let y = 30;
+        const maxWidth = 140;
+
+        testStrings.forEach(text => {
+            ctx.fillStyle = '#999';
+            ctx.fillText(text, 10, y);
+
+            ctx.strokeStyle = '#ddd';
+            ctx.beginPath();
+            ctx.moveTo(10, y + 5);
+            ctx.lineTo(10 + maxWidth, y + 5);
+            ctx.stroke();
+
+            ctx.fillStyle = '#000';
+
+            drawScaledText(ctx, text, 10, y + 25, maxWidth);
+            
+            y += 60;
+        });
+    </script>
 </body>
 </html>

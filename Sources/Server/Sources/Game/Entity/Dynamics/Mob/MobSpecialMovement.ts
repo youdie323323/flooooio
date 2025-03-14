@@ -1,12 +1,13 @@
-import { isPetal, isBody } from "../../../Utils/common";
-import { getRandomAngle } from "../../../Utils/random";
 import SinusodialWave from "./MobSpecialMovementSinusodialWave";
-import { EntityMixinConstructor, EntityMixinTemplate, onUpdateTick } from "../Entity";
-import { EGG_TYPE_MAPPING } from "../Player/PlayerPetalReload";
-import { BaseMob } from "./Mob";
+import type { EntityMixinConstructor, EntityMixinTemplate} from "../Entity";
+import { onUpdateTick } from "../Entity";
+import type { BaseMob } from "./Mob";
 import { MOB_BEHAVIORS, MobBehavior, turnAngleToTarget } from "./MobAggressivePursuit";
 import { MobType } from "../../../../../../Shared/Entity/Statics/EntityType";
-import { WavePool } from "../../../Genres/Wave/WavePool";
+import type { WavePool } from "../../../Genres/Wave/WavePool";
+import { isBody } from "./MobBodyConnection";
+import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
+import { EGG_TYPE_MAPPING } from "../Player/PlayerPetalConsume";
 
 const MOVEMENT_DURATION = 1 / 150;
 
@@ -70,7 +71,7 @@ export function MobSpecialMovement<T extends EntityMixinConstructor<BaseMob>>(Ba
                 // Do dynamic move if not targetting player
                 if (!this.targetEntity) {
                     if (this.rotationCounter++ >= 200) {
-                        this.angle = getRandomAngle();
+                        this.angle = Math.random() * 256;
                         this.rotationCounter = 0;
                     }
 

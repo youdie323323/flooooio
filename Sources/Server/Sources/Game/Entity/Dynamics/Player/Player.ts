@@ -1,14 +1,16 @@
-import { EntityCollisionResponse } from "../EntityCollisionResponse";
-import { BrandedId, Entity, PartialUnion, onUpdateTick, UnderlyingMixinUnion } from "../Entity";
-import { EntityLinearMovement } from "../EntityLinearMovement";
-import uWS from 'uWebSockets.js';
+import { EntityCollision } from "../EntityCollision";
+import type { BrandedId, Entity, PartialUnion, UnderlyingMixinUnion } from "../Entity";
+import { onUpdateTick } from "../Entity";
+import { EntityCoordinateMovement } from "../EntityCoordinateMovement";
+import type uWS from 'uWebSockets.js';
 import { PlayerPetalOrbit } from "./PlayerPetalOrbit";
 import { PlayerPetalReload } from "./PlayerPetalReload";
-import { PetalSlots } from "../Mob/Petal/Petal";
+import type { PetalSlots } from "../Mob/Petal/Petal";
 import { PlayerDeadCamera } from "./PlayerDeadCamera";
-import { EntityMapBoundary } from "../EntityMapBoundary";
-import { EntityDeath } from "../EntityDeath";
-import { UserData, WavePool } from "../../../Genres/Wave/WavePool";
+import { EntityCoordinateBoundary } from "../EntityCoordinateBoundary";
+import { EntityElimination } from "../EntityElimination";
+import type { UserData, WavePool } from "../../../Genres/Wave/WavePool";
+import { PlayerPetalConsume } from "./PlayerPetalConsume";
 
 export type PlayerId = BrandedId<"Player">;
 
@@ -125,12 +127,13 @@ let Player = BasePlayer;
 // Do PlayerPetalOrbit before PlayerReload so petal reloads like original game (can interpolate movement)
 Player = PlayerPetalOrbit(Player);
 Player = PlayerPetalReload(Player);
+Player = PlayerPetalConsume(Player);
 Player = PlayerDeadCamera(Player);
 
-Player = EntityCollisionResponse(Player);
-Player = EntityDeath(Player);
-Player = EntityMapBoundary(Player);
-Player = EntityLinearMovement(Player);
+Player = EntityCollision(Player);
+Player = EntityElimination(Player);
+Player = EntityCoordinateBoundary(Player);
+Player = EntityCoordinateMovement(Player);
 
 type PlayerInstance = InstanceType<typeof Player>;
 
@@ -138,7 +141,6 @@ type PlayerInstance = InstanceType<typeof Player>;
  * Dummy data of {@link Player}.
  * 
  * @remarks
- * 
  * This data for visualize player in wave room.
  */
 interface StaticPlayerData {
@@ -151,4 +153,5 @@ interface StaticPlayerData {
     ws: uWS.WebSocket<UserData>;
 }
 
-export { Player, PlayerInstance, BasePlayer, StaticPlayerData };
+export type { PlayerInstance, StaticPlayerData };
+export { Player, BasePlayer };

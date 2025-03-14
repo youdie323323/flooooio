@@ -1,10 +1,10 @@
-import Entity from "../Entity";
+import type Entity from "../Entity";
 import Mob from "../Mob";
 import Player from "../Player";
-import Renderer from "./Renderer";
-import RendererFlower from "./RendererFlower/RendererFlower";
-import RendererMob from "./RendererMob/RendererMob";
-import { RenderContext } from "./RendererRenderingContext";
+import RendererFlower from "./Flower/RendererFlower";
+import RendererMob from "./Mob/RendererMob";
+import type Renderer from "./Renderer";
+import type { RenderContext } from "./RendererRenderingContext";
 
 const rendererRegistry = new Map<Function, Renderer<Entity>>();
 

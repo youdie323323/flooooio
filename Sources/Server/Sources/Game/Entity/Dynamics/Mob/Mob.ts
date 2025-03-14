@@ -1,16 +1,18 @@
-import { BrandedId, Entity, PartialUnion, UnderlyingMixinUnion, onUpdateTick } from "../Entity";
-import { EntityCollisionResponse } from "../EntityCollisionResponse";
-import { EntityDeath } from "../EntityDeath";
-import { EntityLinearMovement } from "../EntityLinearMovement";
-import { EntityMapBoundary } from "../EntityMapBoundary";
-import { PlayerInstance } from "../Player/Player";
+import type { BrandedId, Entity, PartialUnion, UnderlyingMixinUnion} from "../Entity";
+import { onUpdateTick } from "../Entity";
+import { EntityCollision } from "../EntityCollision";
+import { EntityElimination } from "../EntityElimination";
+import { EntityCoordinateMovement } from "../EntityCoordinateMovement";
+import { EntityCoordinateBoundary } from "../EntityCoordinateBoundary";
+import type { PlayerInstance } from "../Player/Player";
 import { MobAggressivePursuit } from "./MobAggressivePursuit";
 import { MobBodyConnection } from "./MobBodyConnection";
 import { MobSpecialMovement } from "./MobSpecialMovement";
 import { MobHealthRegen } from "./MobHealthRegen";
 import { Rarity } from "../../../../../../Shared/Entity/Statics/EntityRarity";
-import { MobType, PetalType } from "../../../../../../Shared/Entity/Statics/EntityType";
-import { WavePool } from "../../../Genres/Wave/WavePool";
+import type { PetalType } from "../../../../../../Shared/Entity/Statics/EntityType";
+import { MobType } from "../../../../../../Shared/Entity/Statics/EntityType";
+import type { WavePool } from "../../../Genres/Wave/WavePool";
 
 export type MobId = BrandedId<"Mob">;
 
@@ -140,10 +142,10 @@ Mob = MobAggressivePursuit(Mob);
 Mob = MobHealthRegen(Mob);
 Mob = MobBodyConnection(Mob);
 
-Mob = EntityCollisionResponse(Mob);
-Mob = EntityDeath(Mob);
-Mob = EntityMapBoundary(Mob);
-Mob = EntityLinearMovement(Mob);
+Mob = EntityCollision(Mob);
+Mob = EntityElimination(Mob);
+Mob = EntityCoordinateBoundary(Mob);
+Mob = EntityCoordinateMovement(Mob);
 
 type MobInstance = InstanceType<typeof Mob>;
 
@@ -198,4 +200,5 @@ const MOB_SPEED = {
     [MobType.Starfish]: 3.5,
 } satisfies Record<MobType, number>;
 
-export { BaseMob, Mob, MobInstance, MOB_SIZE_FACTOR, MOB_HEALTH_FACTOR, MOB_DAMAGE_FACTOR, MOB_SPEED };
+export type { MobInstance };
+export { BaseMob, Mob, MOB_SIZE_FACTOR, MOB_HEALTH_FACTOR, MOB_DAMAGE_FACTOR, MOB_SPEED };

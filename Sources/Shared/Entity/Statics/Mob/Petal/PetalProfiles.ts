@@ -1,6 +1,6 @@
 import { Rarity } from "../../EntityRarity";
 import { PetalType } from "../../EntityType";
-import { PetalData } from "./PetalData";
+import type { PetalData } from "./PetalData";
 
 export const PETAL_PROFILES = {
     [PetalType.Basic]: {

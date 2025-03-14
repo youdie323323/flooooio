@@ -1,27 +1,35 @@
-import { Biome } from "../../../../../Shared/Biome";
-import { Rarity } from "../../../../../Shared/Entity/Statics/EntityRarity";
-import { MobType, PetalType } from "../../../../../Shared/Entity/Statics/EntityType";
-import { MobData } from "../../../../../Shared/Entity/Statics/Mob/MobData";
+import type { Biome } from "../../../../../Shared/Biome";
+import type { Rarity } from "../../../../../Shared/Entity/Statics/EntityRarity";
+import type { MobType, PetalType } from "../../../../../Shared/Entity/Statics/EntityType";
+import type { MobData } from "../../../../../Shared/Entity/Statics/Mob/MobData";
 import { MOB_PROFILES } from "../../../../../Shared/Entity/Statics/Mob/MobProfiles";
-import { PetalData } from "../../../../../Shared/Entity/Statics/Mob/Petal/PetalData";
+import type { PetalData } from "../../../../../Shared/Entity/Statics/Mob/Petal/PetalData";
 import { PETAL_PROFILES } from "../../../../../Shared/Entity/Statics/Mob/Petal/PetalProfiles";
 import { calculateWaveLength } from "../../../../../Shared/Formula";
 import { MoodFlags } from "../../../../../Shared/Mood";
-import { ClientBound } from "../../../../../Shared/Packet/Bound/Client/ClientBound";
 import { WaveRoomState } from "../../../../../Shared/WaveRoom";
 import { logger } from "../../../../Main";
-import { Entity, onUpdateTick } from "../../Entity/Dynamics/Entity";
-import { SAFETY_DISTANCE } from "../../Entity/Dynamics/EntityMapBoundary";
-import { MobInstance, MobId, Mob } from "../../Entity/Dynamics/Mob/Mob";
-import { MAX_CLUSTER_AMOUNT, isDynamicPetal, StaticPetalData, MaybeClusterPetal } from "../../Entity/Dynamics/Mob/Petal/Petal";
-import { PlayerId, StaticPlayerData, PlayerInstance, Player } from "../../Entity/Dynamics/Player/Player";
+import type { Entity } from "../../Entity/Dynamics/Entity";
+import { onUpdateTick } from "../../Entity/Dynamics/Entity";
+import { calculateMobSize } from "../../Entity/Dynamics/EntityCollision";
+import { revivePlayer } from "../../Entity/Dynamics/EntityElimination";
+import { SAFETY_DISTANCE } from "../../Entity/Dynamics/EntityCoordinateBoundary";
+import type { MobInstance, MobId } from "../../Entity/Dynamics/Mob/Mob";
+import { Mob } from "../../Entity/Dynamics/Mob/Mob";
+import type { StaticPetalData, DynamicPetal } from "../../Entity/Dynamics/Mob/Petal/Petal";
+import { MAX_CLUSTER_AMOUNT, isDynamicPetal } from "../../Entity/Dynamics/Mob/Petal/Petal";
+import type { PlayerId, StaticPlayerData, PlayerInstance } from "../../Entity/Dynamics/Player/Player";
+import { Player } from "../../Entity/Dynamics/Player/Player";
 import { PETAL_INITIAL_COOLDOWN } from "../../Entity/Dynamics/Player/PlayerPetalReload";
-import SpatialHash from "../../Entity/Statics/EntityCollision/CollisionSpatialHash";
-import { isPetal, calculateMobSize, revivePlayer } from "../../Utils/common";
-import { getRandomPosition, generateRandomId, getRandomAngle, getRandomSafePosition } from "../../Utils/random";
+import SpatialHash from "../../Entity/Statics/Collision/CollisionSpatialHash";
 import AbstractPool from "../GenrePool";
 import SpawnMobDeterminer, { LINKABLE_MOBS } from "./Mathematics/Random/WavePoolSpawnMobDeterminer";
-import { WaveRoomPlayerId, WaveRoomPlayer } from "./WaveRoom";
+import type { WaveRoomPlayerId, WaveRoomPlayer } from "./WaveRoom";
+import { generateRandomId } from "./WaveRoom";
+import { getRandomCoordinate, getRandomSafeCoordinate } from "../../Entity/Dynamics/EntityCoordinateMovement";
+import { isPetal } from "../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
+import { PacketClientboundOpcode } from "../../../../../Shared/Websocket/Packet/Bound/Client/PacketClientboundOpcode";
+import BinarySizedWriter from "../../../../../Shared/Websocket/Binary/ReadWriter/Writer/BinarySizedWriter";
 
 // Define UserData for WebSocket connections
 export interface UserData {
@@ -75,11 +83,13 @@ export interface WaveData {
     biome: Biome;
 }
 
-export class WavePool extends AbstractPool {
-    public clientPool: Map<PlayerInstance["id"], PlayerInstance>;
-    public mobPool: Map<MobInstance["id"], MobInstance>;
+const textEncoder = new TextEncoder();
 
-    private eliminatedEntities: Set<MobInstance["id"] | PlayerInstance["id"]>;
+export class WavePool extends AbstractPool {
+    public clientPool: Map<PlayerId, PlayerInstance>;
+    public mobPool: Map<MobId, MobInstance>;
+
+    private eliminatedEntities: Set<PlayerId | MobId>;
 
     private spawnMobDeterminer: SpawnMobDeterminer;
 
@@ -157,18 +167,19 @@ export class WavePool extends AbstractPool {
      * @param roomCandidates - List of players
      */
     public startWave(roomCandidates: WaveRoomPlayer[]) {
-        const waveStartBuffer = Buffer.alloc(2);
+        const waveStartedWriter = new BinarySizedWriter(2);
 
-        waveStartBuffer.writeUInt8(ClientBound.WaveStarting, 0);
-        waveStartBuffer.writeUInt8(this.waveData.biome, 1);
+        waveStartedWriter.writeUInt8(PacketClientboundOpcode.WaveStarted);
+
+        waveStartedWriter.writeUInt8(this.waveData.biome);
 
         // Spawn all candidates at random position
         roomCandidates.forEach(player => {
-            const randPos = getRandomPosition(this.waveData.mapRadius, this.waveData.mapRadius, this.waveData.mapRadius);
+            const randPos = getRandomCoordinate(this.waveData.mapRadius, this.waveData.mapRadius, this.waveData.mapRadius);
 
             const client = this.generateClient(player, randPos[0], randPos[1]);
 
-            player.ws.send(waveStartBuffer, true);
+            player.ws.send(waveStartedWriter.buffer, true);
 
             player.ws.getUserData().waveClientId = client.id;
 
@@ -336,7 +347,7 @@ export class WavePool extends AbstractPool {
             type,
             x,
             y,
-            angle: getRandomAngle(),
+            angle: Math.random() * 256,
             magnitude: 0,
             rarity,
             size: isPetal(type)
@@ -385,7 +396,7 @@ export class WavePool extends AbstractPool {
         staticPetalData: StaticPetalData,
         parent: PlayerInstance,
         isSurface: boolean,
-    ): MaybeClusterPetal {
+    ): DynamicPetal {
         const { count } = PETAL_PROFILES[staticPetalData.type][staticPetalData.rarity];
 
         const slotPetals = new Array<MobInstance>(count);
@@ -410,18 +421,26 @@ export class WavePool extends AbstractPool {
         }
 
         // Not typesafe but ok
-        return slotPetals as MaybeClusterPetal;
+        return slotPetals as DynamicPetal;
     }
 
     /**
      * Update all entities.
      */
     private updateEntities() {
-        this.clientPool.forEach(client => client[onUpdateTick](this));
-        this.mobPool.forEach(mob => mob[onUpdateTick](this));
+        for (const client of this.clientPool.values()) {
+            client[onUpdateTick](this);
+        }
+        for (const mob of this.mobPool.values()) {
+            mob[onUpdateTick](this);
+        }
 
-        this.clientPool.forEach(client => this.sharedSpatialHash.update(client));
-        this.mobPool.forEach(mob => this.sharedSpatialHash.update(mob));
+        for (const client of this.clientPool.values()) {
+            this.sharedSpatialHash.update(client);
+        }
+        for (const mob of this.mobPool.values()) {
+            this.sharedSpatialHash.update(mob);
+        }
     }
 
     /**
@@ -436,11 +455,11 @@ export class WavePool extends AbstractPool {
             using _disposable = this._onChangeAnything();
 
             if (!this.waveData.progressIsRed) {
-                const staticMobData = this.spawnMobDeterminer.predictStaticMobData(this.waveData);
+                const staticMobData = this.spawnMobDeterminer.determineStaticMobData(this.waveData);
                 if (staticMobData) {
                     const [type, rarity] = staticMobData;
 
-                    const randPos = getRandomSafePosition(this.waveData.mapRadius, SAFETY_DISTANCE, this.getAllClients().filter(p => !p.isDead));
+                    const randPos = getRandomSafeCoordinate(this.waveData.mapRadius, SAFETY_DISTANCE, this.getAllClients().filter(p => !p.isDead));
                     if (!randPos) {
                         return null;
                     }
@@ -531,7 +550,7 @@ export class WavePool extends AbstractPool {
     /**
      * Updates the movement of a client
      */
-    public updateMovement(clientId: PlayerInstance["id"], angle: number, magnitude: number) {
+    public updateMovement(clientId: PlayerId, angle: number, magnitude: number) {
         // Uint8 always range to 0 ~ 255, so no need to sanitize angle & magnitude
 
         const client = this.clientPool.get(clientId);
@@ -544,7 +563,7 @@ export class WavePool extends AbstractPool {
     /**
      * Updates the mood of a client.
      */
-    public changeMood(clientId: PlayerInstance["id"], flag: number) {
+    public changeMood(clientId: PlayerId, flag: number) {
         const client = this.clientPool.get(clientId);
         if (client && !client.isDead) {
             client.mood = flag;
@@ -554,7 +573,7 @@ export class WavePool extends AbstractPool {
     /**
      * Swaps a petal between surface and bottom slots for a client.
      */
-    public swapPetal(clientId: PlayerInstance["id"], at: number) {
+    public swapPetal(clientId: PlayerId, at: number) {
         const client = this.clientPool.get(clientId);
         // TODO: server broken when client switched petal ffs, fix
         if (
@@ -594,15 +613,26 @@ export class WavePool extends AbstractPool {
     /**
      * Broadcast chat to all clients.
      */
-    public broadcastChat(callee: PlayerInstance["id"], msg: string) {
-        const buffer = Buffer.alloc(1 + 4 + (1 + msg.length));
-        buffer.writeUInt8(ClientBound.WaveChatRecv, 0);
+    public broadcastChat(callee: PlayerId, message: string) {
+        const waveChatReceivWriter = new BinarySizedWriter(
+            // Opcode size
+            1 +
+            // Player id size
+            4 +
+            // Length + null terminator
+            (
+                message.length + 
+                1
+            ),
+        );
 
-        buffer.writeUInt32BE(callee, 1);
+        waveChatReceivWriter.writeUInt8(PacketClientboundOpcode.WaveChatReceiv);
 
-        const msgBuffer = Buffer.from(msg, 'utf-8');
-        buffer.writeUInt8(msgBuffer.length, 5);
-        msgBuffer.copy(buffer, 6);
+        waveChatReceivWriter.writeUInt32(callee);
+
+        waveChatReceivWriter.writeString(message);
+
+        const { buffer } = waveChatReceivWriter;
 
         this.clientPool.forEach((player) => {
             player.ws.send(buffer, true);
@@ -610,15 +640,16 @@ export class WavePool extends AbstractPool {
     }
 
     private broadcastSeldIdPacket() {
-        // Reuse buffer
-        const buffer = Buffer.alloc(5);
-        buffer.writeUInt8(ClientBound.WaveSelfId, 0);
+        const waveSelfIdWriter = new BinarySizedWriter(5);
+
+        waveSelfIdWriter.writeUInt8(PacketClientboundOpcode.WaveSelfId);
 
         // Loop through all WebSocket connections
         this.clientPool.forEach((player, clientId) => {
-            buffer.writeUInt32BE(clientId, 1);
+            waveSelfIdWriter.setOffset(1);
+            waveSelfIdWriter.writeUInt32(clientId);
 
-            player.ws.send(buffer, true);
+            player.ws.send(waveSelfIdWriter.buffer, true);
         });
     }
 
@@ -696,58 +727,49 @@ export class WavePool extends AbstractPool {
         return size;
     }
 
-    private createUpdatePacket(): Buffer {
-        const buffer = Buffer.alloc(this.calculateTotalUpdatePacketSize());
-        let offset = 0;
+    private createUpdatePacket(): Uint8Array {
+        const waveUpdateWriter = new BinarySizedWriter(this.calculateTotalUpdatePacketSize());
 
-        // Packet kind
-        buffer.writeUInt8(ClientBound.WaveUpdate, offset++);
+        // Opcode
+        waveUpdateWriter.writeUInt8(PacketClientboundOpcode.WaveUpdate);
 
-        // Wave information
-        buffer.writeUInt16BE(this.waveData.progress, offset);
-        offset += 2;
+        // Wave informations
 
-        buffer.writeDoubleBE(this.waveData.progressTimer, offset);
-        offset += 8;
+        waveUpdateWriter.writeUInt16(this.waveData.progress);
 
-        buffer.writeDoubleBE(this.waveData.progressRedTimer, offset);
-        offset += 8;
+        waveUpdateWriter.writeFloat64(this.waveData.progressTimer);
+
+        waveUpdateWriter.writeFloat64(this.waveData.progressRedTimer);
 
         const waveRoomState = this._state();
         // Wave is game over or not
-        buffer.writeUInt8(waveRoomState === WaveRoomState.Ended ? 1 : 0, offset++);
+        waveUpdateWriter.writeUInt8(
+            waveRoomState === WaveRoomState.Ended
+                ? 1
+                : 0,
+        );
 
         // Radius of map
-        buffer.writeUInt16BE(this.waveData.mapRadius, offset);
-        offset += 2;
+        waveUpdateWriter.writeUInt16(this.waveData.mapRadius);
 
-        // Write clients
-        buffer.writeUInt16BE(this.clientPool.size, offset);
-        offset += 2;
+        // Write client size
+        waveUpdateWriter.writeUInt16(this.clientPool.size);
 
         this.clientPool.forEach(client => {
-            buffer.writeUInt32BE(client.id, offset);
-            offset += 4;
+            waveUpdateWriter.writeUInt32(client.id);
 
-            buffer.writeDoubleBE(client.x, offset);
-            offset += 8;
-            buffer.writeDoubleBE(client.y, offset);
-            offset += 8;
+            waveUpdateWriter.writeFloat64(client.x);
+            waveUpdateWriter.writeFloat64(client.y);
 
-            buffer.writeUInt8(client.angle, offset++);
+            waveUpdateWriter.writeUInt8(client.angle);
 
-            buffer.writeDoubleBE(client.health, offset);
-            offset += 8;
+            waveUpdateWriter.writeFloat64(client.health);
 
-            buffer.writeUInt32BE(client.size, offset);
-            offset += 4;
+            waveUpdateWriter.writeUInt32(client.size);
 
-            buffer.writeUInt8(client.mood, offset++);
+            waveUpdateWriter.writeUInt8(client.mood);
 
-            const nicknameBuffer = Buffer.from(client.nickname, 'utf-8');
-            buffer.writeUInt8(nicknameBuffer.length, offset++);
-            nicknameBuffer.copy(buffer, offset);
-            offset += nicknameBuffer.length;
+            waveUpdateWriter.writeString(client.nickname);
 
             // Write boolean flags
             const bFlags =
@@ -755,41 +777,34 @@ export class WavePool extends AbstractPool {
                 (client.isDead ? 1 : 0) |
                 // Player is developer, or not
                 (client.isDev ? 2 : 0);
-            buffer.writeUInt8(bFlags, offset++);
+            waveUpdateWriter.writeUInt8(bFlags);
         });
 
         // Write mobs
-        buffer.writeUInt16BE(this.mobPool.size, offset);
-        offset += 2;
+        waveUpdateWriter.writeUInt16(this.mobPool.size);
 
         this.mobPool.forEach(mob => {
             // Id of mob
-            buffer.writeUInt32BE(mob.id, offset);
-            offset += 4;
+            waveUpdateWriter.writeUInt32(mob.id);
 
             // Coordinate of mob
-            buffer.writeDoubleBE(mob.x, offset);
-            offset += 8;
-            buffer.writeDoubleBE(mob.y, offset);
-            offset += 8;
+            waveUpdateWriter.writeFloat64(mob.x);
+            waveUpdateWriter.writeFloat64(mob.y);
 
             // Angle of mob
-            buffer.writeDoubleBE(mob.angle, offset);
-            offset += 8;
+            waveUpdateWriter.writeFloat64(mob.angle);
 
             // Health of mob
-            buffer.writeDoubleBE(mob.health, offset);
-            offset += 8;
+            waveUpdateWriter.writeFloat64(mob.health);
 
             // Size of mob
-            buffer.writeUInt32BE(mob.size, offset);
-            offset += 4;
+            waveUpdateWriter.writeUInt32(mob.size);
 
             // Type of mob
-            buffer.writeUInt8(mob.type, offset++);
+            waveUpdateWriter.writeUInt8(mob.type);
 
             // Rarity of mob
-            buffer.writeUInt8(mob.rarity, offset++);
+            waveUpdateWriter.writeUInt8(mob.rarity);
 
             // Write boolean flags
             const bFlags =
@@ -797,25 +812,23 @@ export class WavePool extends AbstractPool {
                 (mob.petMaster ? 1 : 0) |
                 // Mob is first segment, or not
                 (mob.isFirstSegment ? 2 : 0);
-            buffer.writeUInt8(bFlags, offset++);
+            waveUpdateWriter.writeUInt8(bFlags);
         });
 
         // Write eliminated entities
-        buffer.writeUInt16BE(this.eliminatedEntities.size, offset);
-        offset += 2;
+        waveUpdateWriter.writeUInt16(this.eliminatedEntities.size);
 
         if (this.eliminatedEntities.size) {
             this.eliminatedEntities.forEach((id) => {
                 // Id of entity
-                buffer.writeUInt32BE(id, offset);
-                offset += 4;
+                waveUpdateWriter.writeUInt32(id);
             });
 
             // Clear eliminated entities ids per packet send
             this.eliminatedEntities.clear();
         }
 
-        return buffer;
+        return waveUpdateWriter.buffer;
     }
 
     private broadcastUpdatePacket() {
@@ -827,11 +840,11 @@ export class WavePool extends AbstractPool {
         });
     }
 
-    getClient(clientId: PlayerInstance["id"]): PlayerInstance | undefined {
+    getClient(clientId: PlayerId): PlayerInstance | undefined {
         return this.clientPool.get(clientId);
     }
 
-    removeClient(clientId: PlayerInstance["id"]) {
+    removeClient(clientId: PlayerId) {
         const client = this.getClient(clientId);
         if (client) {
             // Free memory
@@ -854,11 +867,11 @@ export class WavePool extends AbstractPool {
         return Array.from(this.clientPool.values());
     }
 
-    getMob(mobId: MobInstance["id"]): MobInstance | undefined {
+    getMob(mobId: MobId): MobInstance | undefined {
         return this.mobPool.get(mobId);
     }
 
-    removeMob(mobId: MobInstance["id"]) {
+    removeMob(mobId: MobId) {
         const mob = this.getMob(mobId);
         if (mob) {
             // Free memory

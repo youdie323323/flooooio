@@ -26,6 +26,7 @@ export default tseslint.config(
         plugins: {
             // Lints
             tsdoc,
+            '@typescript-eslint': tseslint.plugin,
 
             // Formats
             "@stylistic": stylistic,
@@ -33,7 +34,11 @@ export default tseslint.config(
         rules: {
             // Lints
             "no-unused-vars": "off",
+            
             "tsdoc/syntax": ALERT_STYLE,
+            
+            '@typescript-eslint/consistent-type-exports': 'error',
+            '@typescript-eslint/consistent-type-imports': 'error',
 
             // Formats
             "@stylistic/indent": [ALERT_STYLE, 4],

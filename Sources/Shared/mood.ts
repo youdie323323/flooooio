@@ -2,7 +2,6 @@
  * Mood bit flag.
  * 
  * @privateremarks
- * 
  * According to microsoft, enum name should be plural :).
  */
 export const enum MoodFlags {
