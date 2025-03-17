@@ -1,7 +1,7 @@
 import type { Biome } from "../../../../Shared/Biome";
 import type { StaticAdditionalClientboundListen } from "../Websocket/Packet/Bound/Client/PacketClientbound";
 import { type Components, type Component, type Interactive, type Clickable, renderPossibleComponents } from "./Layout/Components/Component";
-import type { AbstractStaticContainer, AddableStaticContainer } from "./Layout/Components/WellKnown/Container";
+import type { AbstractStaticContainer, AnyAddableStaticContainer, AnyStaticContainer } from "./Layout/Components/WellKnown/Container";
 import { DYNAMIC_LAYOUTED } from "./Layout/Extensions/ExtensionDynamicLayoutable";
 import { BLACKLISTED } from "./Layout/Extensions/ExtensionInlineRenderingCall";
 
@@ -15,12 +15,12 @@ export default abstract class AbstractUI {
     public mouseY: number = 0;
 
     /**
-     * All components store.
+     * Flatten components store.
      */
     private components: Set<Components> = new Set();
 
     /**
-     * Flattend children components store.
+     * Flatten children components store.
      */
     private childrenComponents: Set<Component> = new Set();
 
@@ -175,7 +175,7 @@ export default abstract class AbstractUI {
         }
     }
 
-    public addChildrenComponent(targetContainer: AbstractStaticContainer, component: Components): void {
+    public addChildrenComponent(targetContainer: AnyStaticContainer, component: Components): void {
         targetContainer.addChildren(component);
 
         this.addComponent(component);
@@ -183,7 +183,7 @@ export default abstract class AbstractUI {
         this.childrenComponents.add(component);
     }
 
-    public removeChildrenComponent(targetContainer: AbstractStaticContainer, component: Components): void {
+    public removeChildrenComponent(targetContainer: AnyStaticContainer, component: Components): void {
         targetContainer.removeChildren(component);
 
         this.removeComponent(component);
@@ -400,17 +400,17 @@ export default abstract class AbstractUI {
     }
 
     public createAddableContainer(
-        container: AbstractStaticContainer,
+        container: AnyStaticContainer,
         children: Array<Components>,
-    ): AddableStaticContainer {
+    ): AnyAddableStaticContainer {
+        const addable = <AnyAddableStaticContainer>container;
+        addable.__addable = true;
+
         children.forEach(child => {
             this.addChildrenComponent(container, child);
 
             child.parentContainer = container;
         });
-
-        const addable = <AddableStaticContainer>container;
-        addable.__addable = true;
 
         return addable;
     }

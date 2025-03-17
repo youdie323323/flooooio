@@ -5,7 +5,7 @@ import type { ColorCode } from "../../../../../../../Shared/Utils/Color";
 import { darkend } from "../../../../../../../Shared/Utils/Color";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
-import type { AddableStaticContainer } from "./Container";
+import type { AnyAddableStaticContainer } from "./Container";
 import { StaticHContainer, StaticPanelContainer } from "./Container";
 
 /**
@@ -20,7 +20,7 @@ export class Button extends ExtensionBase(Component) implements Interactive, Cli
 
     private isValid: boolean = true;
 
-    private bindedButtonContainer: AddableStaticContainer;
+    private bindedButtonContainer: AnyAddableStaticContainer;
 
     /**
      * @param layout - Layout options for just like collision
@@ -42,8 +42,11 @@ export class Button extends ExtensionBase(Component) implements Interactive, Cli
             this.context.addComponent(this.bindedButtonContainer = this.context.createAddableContainer(
                 new StaticPanelContainer(
                     () => ({
+                        // Completely same look as this component
                         x: this.x,
                         y: this.y,
+                        w: this.w,
+                        h: this.h,
                     }),
                     () => this.getButtonColor(),
                 ),
@@ -109,7 +112,7 @@ export class Button extends ExtensionBase(Component) implements Interactive, Cli
 
         // Post-process for component-binded component
 
-        // this?.bindedButtonContainer.setVisible?.(toggle, false);
+        // this.bindedButtonContainer?.setVisible?.(toggle, false);
     }
 
     override getCacheKey(): string {

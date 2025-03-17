@@ -1,31 +1,24 @@
 import type { Biome } from "../Shared/Biome";
-import type Mob from "./Sources/Game/Entity/Mob";
-import type Player from "./Sources/Game/Entity/Player";
 import TilesetRenderer, { BIOME_SVG_TILESET, BIOME_TILESETS } from "./Sources/Game/UI/Tiled/TilesetRenderer";
 import { uiScaleFactor } from "./Sources/Game/UI/UI";
 import UIContext from "./Sources/Game/UI/UIContext";
 import CameraController from "./Sources/Game/Utils/CameraController";
 import ClientWebsocket from "./Sources/Game/Websocket/ClientWebsocket";
 
-const canvas: HTMLCanvasElement = document.querySelector('#canvas');
-
 export let lastTimestamp = Date.now();
 export let deltaTime = 0;
 export let prevTimestamp = lastTimestamp;
 
-export const cameraController = new CameraController(canvas);
-
-export const clientWebsocket = new ClientWebsocket(
-    // Change listen for each UI
-    () => uiCtx.currentCtx.additionalClientboundListen,
-);
-
-export let antennaScaleFactor = 1;
-
 /**
  * Global instanceof ui context.
  */
-export const uiCtx = new UIContext(canvas);
+export let uiCtx: UIContext;
+
+export let clientWebsocket: ClientWebsocket;
+
+export let antennaScaleFactor = 1;
+
+export let cameraController: CameraController;
 
 const init = async function () {
     // Generate tilesets beforehand so no need to generate them multiple times
@@ -34,9 +27,20 @@ const init = async function () {
         BIOME_TILESETS.set(parsedBiome, await TilesetRenderer.prepareTileset(parsedBiome));
     }
 
-    clientWebsocket.connect();
+    const canvas = document.querySelector<HTMLCanvasElement>('#canvas');
 
     const ctx: CanvasRenderingContext2D = canvas.getContext("2d");
+
+    uiCtx = new UIContext(canvas);
+
+    clientWebsocket = new ClientWebsocket(
+        // Change listen for each UI
+        () => uiCtx.currentCtx.additionalClientboundListen,
+    );
+
+    cameraController = new CameraController(canvas);
+
+    clientWebsocket.connect();
 
     // Disable reload
     canvas.addEventListener("contextmenu", e => {

@@ -3,7 +3,7 @@ import type { LayoutContext, LayoutResult } from "../Layout";
 import LayoutCache from "../LayoutCache";
 import type PlayerProfile from "./Native/PlayerProfile";
 import type { Button } from "./WellKnown/Button";
-import type { AbstractStaticContainer, AddableStaticContainer, CoordinatedStaticSpace, StaticSpace } from "./WellKnown/Container";
+import type { AbstractStaticContainer, AnyAddableStaticContainer, AnyStaticContainer, CoordinatedStaticSpace, StaticSpace } from "./WellKnown/Container";
 import type { CanvasLogo, SVGLogo } from "./WellKnown/Logo";
 import type Text from "./WellKnown/Text";
 import type TextInput from "./WellKnown/TextInput";
@@ -23,7 +23,7 @@ export type DynamicLayoutablePointer<T> = T | (() => T);
  */
 export type Components =
     // Well-known components
-    | AddableStaticContainer
+    | AnyAddableStaticContainer
     | StaticSpace | CoordinatedStaticSpace
     | Button
     | Text
@@ -77,14 +77,14 @@ export type OverloadReturnType<T extends (...args: any[]) => any> = UnionToTuple
 
 export type SetVisibleParameters = OverloadParameters<Component["setVisible"]>;
 
-export enum AnimationType {
+export const enum AnimationType {
     Zoom,
     Slide,
 }
 
-export type AnimationEasingFunction = { [K in "in" | "out"]: (x: number) => number; };
-
 export type AnimationDirection = "in" | "out";
+
+export type AnimationDirectionEasingFunction = Record<AnimationDirection, (x: number) => number>;
 
 export type AnimationSlideDirection = "v" | "h";
 
@@ -105,6 +105,7 @@ export function renderPossibleComponents(ctx: CanvasRenderingContext2D, componen
 
 // Typing for EventEmitter
 export type ComponentEvents = {
+    // Notify if this component is added using addComponent
     "onInitialized": [];
 };
 
@@ -134,7 +135,7 @@ export abstract class Component extends Emitter<ComponentEvents> {
                 return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
             },
         },
-    } satisfies Record<AnimationType, AnimationEasingFunction>;
+    } as const satisfies Record<AnimationType, AnimationDirectionEasingFunction>;
 
     private static readonly ZOOM_IN_OUT_EASING_FUNCTION = function easeInExpo(x: number): number {
         return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
@@ -142,11 +143,16 @@ export abstract class Component extends Emitter<ComponentEvents> {
 
     public isAnimating: boolean = false;
 
-    public animationType: AnimationType;
-    public animationProgress: number;
-    public animationStartTime: number;
-    public animationDirection: AnimationDirection;
-    public animationSlideDirection: AnimationSlideDirection;
+    public animationType: AnimationType | null = null;
+    public animationDirection: AnimationDirection | null = null;
+    public animationSlideDirection: AnimationSlideDirection | null = null;
+    public animationStartTime: number | null = null;
+    public animationProgress: number = 1;
+
+    /**
+     * Component is visible, or not.
+     */
+    public visible: boolean = true;
 
     /**
      * Determine if should move position while animating zoom animation.
@@ -170,14 +176,9 @@ export abstract class Component extends Emitter<ComponentEvents> {
     private realY: number = 0;
 
     /**
-     * Component is visible, or not.
-     */
-    public visible: boolean = true;
-
-    /**
      * Parent container of component.
      */
-    public parentContainer: AbstractStaticContainer;
+    public parentContainer: AnyStaticContainer;
 
     /**
      * Set global alpha of component.
@@ -254,7 +255,7 @@ export abstract class Component extends Emitter<ComponentEvents> {
 
         if (this.isAnimating) {
             const currentTime = performance.now();
-            if (this.animationStartTime === -1) {
+            if (this.animationStartTime === null) {
                 this.animationStartTime = currentTime;
             }
 
@@ -265,19 +266,22 @@ export abstract class Component extends Emitter<ComponentEvents> {
 
             const deltaAT = currentTime - this.animationStartTime;
             const progress = Math.max(0, Math.min(deltaAT / duration, 1));
-            this.animationProgress = this.animationDirection === 'in'
+            
+            this.animationProgress = this.animationDirection === "in"
                 ? progress
                 : 1 - progress;
 
             if (deltaAT >= duration) {
-                if (this.animationDirection === 'out') {
+                if (this.animationDirection === "out") {
                     this.visible = false;
                 }
 
+                // Fallback to original position
                 this.x = this.realX;
                 this.y = this.realY;
 
                 this.isAnimating = false;
+
                 this.animationStartTime = null;
             } else {
                 switch (this.animationType) {
@@ -298,16 +302,22 @@ export abstract class Component extends Emitter<ComponentEvents> {
             }
         }
 
-        if (AnimationType[this.animationType]) {
+        if (
+            Component.ANIMATION_EASING_FUNCTIONS.hasOwnProperty(this.animationType) &&
+            Component.ANIMATION_EASING_FUNCTIONS[this.animationType].hasOwnProperty(this.animationDirection)
+        ) {
             const easingFunction = Component.ANIMATION_EASING_FUNCTIONS[this.animationType][this.animationDirection];
 
             const progress = easingFunction(this.animationProgress);
 
             switch (this.animationType) {
                 case AnimationType.Zoom: {
-                    ctx.translate(this.x + this.w / 2, this.y + this.h / 2);
+                    const cx = this.x + this.w / 2,
+                        cy = this.y + this.h / 2;
+
+                    ctx.translate(cx, cy);
                     ctx.scale(progress, progress);
-                    ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
+                    ctx.translate(-cx, -cy);
 
                     break;
                 }
@@ -333,9 +343,9 @@ export abstract class Component extends Emitter<ComponentEvents> {
 
         ctx.save();
 
-        ctx.strokeStyle = "blue";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(this.x, this.y, this.w, this.h);
+        // ctx.strokeStyle = "blue";
+        // ctx.lineWidth = 1;
+        // ctx.strokeRect(this.x, this.y, this.w, this.h);
 
         ctx.restore();
     }
@@ -345,7 +355,7 @@ export abstract class Component extends Emitter<ComponentEvents> {
     }
 
     public setVisible(
-        toggle: boolean, 
+        toggle: boolean,
         shouldAnimate: false,
     ): void;
     public setVisible(
@@ -370,11 +380,11 @@ export abstract class Component extends Emitter<ComponentEvents> {
         if (shouldAnimate) {
             this.isAnimating = true;
 
-            this.animationType = animationType;
+            this.animationType = animationType ?? null;
+            this.animationDirection = toggle ? "in" : "out";
+            this.animationSlideDirection = animationSlideDirection ?? null;
+            this.animationStartTime = null;
             this.animationProgress = toggle ? 0 : 1;
-            this.animationStartTime = -1;
-            this.animationDirection = toggle ? 'in' : 'out';
-            this.animationSlideDirection = animationSlideDirection;
 
             this.realX = this.x;
             this.realY = this.y;

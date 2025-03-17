@@ -13,7 +13,7 @@ import SettingStorage from "../../Utils/SettingStorage";
 import type { Components } from "../Layout/Components/Component";
 import { AnimationType } from "../Layout/Components/Component";
 import PlayerProfile from "../Layout/Components/Native/PlayerProfile";
-import type { AddableStaticContainer } from "../Layout/Components/WellKnown/Container";
+import type { AnyAddableStaticContainer } from "../Layout/Components/WellKnown/Container";
 import { StaticPanelContainer, CoordinatedStaticSpace, StaticHContainer, StaticSpace } from "../Layout/Components/WellKnown/Container";
 import Text from "../Layout/Components/WellKnown/Text";
 import TextInput from "../Layout/Components/WellKnown/TextInput";
@@ -119,14 +119,14 @@ export default class UITitle extends AbstractUI {
     private onLoadedComponents: Components[];
 
     // Make this public to close this from networking
-    private squadMenuContainer: AddableStaticContainer;
+    private squadMenuContainer: AnyAddableStaticContainer;
 
     private publicToggle: Toggle;
 
     private statusText: Text;
     private statusTextRef: StatusText;
 
-    private playerProfileContainer: AddableStaticContainer;
+    private playerProfileContainer: AnyAddableStaticContainer;
 
     private codeText: Text;
 

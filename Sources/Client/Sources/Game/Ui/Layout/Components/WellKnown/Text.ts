@@ -5,7 +5,7 @@ import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
 import type { DynamicLayoutablePointer } from "../Component";
 import { Component } from "../Component";
-import type { AutomaticallySizableLayoutOptions } from "./Container";
+import type { AutomaticallySizedLayoutOptions } from "./Container";
 
 export const calculateStrokeWidth = memo((fontSize: number): number => {
     // 80 / 8.333333830038736 (actually this is 8+1/3 but floating point exception) = 9.59999942779541
@@ -14,7 +14,7 @@ export const calculateStrokeWidth = memo((fontSize: number): number => {
 
 export default class Text extends ExtensionBase(Component) {
     constructor(
-        private layout: DynamicLayoutablePointer<AutomaticallySizableLayoutOptions>,
+        private layout: DynamicLayoutablePointer<AutomaticallySizedLayoutOptions>,
 
         private text: DynamicLayoutablePointer<string>,
         private fontSize: DynamicLayoutablePointer<number>,

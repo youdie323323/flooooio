@@ -180,9 +180,16 @@ export default class PlayerProfile extends ExtensionBase(Component) {
     }
 
     override destroy(): void {
-        super.destroy();
+        // Remove binded name text component
+        {
+            this.nameText.destroy();
 
-        this.nameText.destroy();
+            this.context.removeComponent(this.nameText);
+        }
+
+        // To remove binded component completely, we need to access current context
+        // But super.destory remove reference to context, so post-processing
+        super.destroy();
 
         this.dummyPlayerEntity = null;
     }
