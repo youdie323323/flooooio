@@ -403,14 +403,14 @@ export default abstract class AbstractUI {
         container: AnyStaticContainer,
         children: Array<Components>,
     ): AnyAddableStaticContainer {
-        const addable = <AnyAddableStaticContainer>container;
-        addable.__addable = true;
-
         children.forEach(child => {
             this.addChildrenComponent(container, child);
 
             child.parentContainer = container;
         });
+
+        const addable = <AnyAddableStaticContainer>container;
+        addable.__addable = true;
 
         return addable;
     }
