@@ -11,23 +11,21 @@ import { calculateWaveLength } from "../../../../../Shared/Formula";
 import { MoodFlags } from "../../../../../Shared/Mood";
 import { clientWebsocket, uiCtx, deltaTime, antennaScaleFactor } from "../../../../Main";
 import { isPetal } from "../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
-import { TextButton, SVGButton } from "../Layout/Components/WellKnown/Button";
-import { calculateStrokeWidth } from "../Layout/Components/WellKnown/Text";
+import Text, { calculateStrokeWidth } from "../Layout/Components/WellKnown/Text";
 import TextInput from "../Layout/Components/WellKnown/TextInput";
 import { PacketClientboundOpcode } from "../../../../../Shared/Websocket/Packet/Bound/Client/PacketClientboundOpcode";
 import type { StaticAdditionalClientboundListen } from "../../Websocket/Packet/Bound/Client/PacketClientbound";
 import type { Rarity } from "../../../../../Shared/Entity/Statics/EntityRarity";
 import type BinaryReader from "../../../../../Shared/Websocket/Binary/ReadWriter/Reader/BinaryReader";
+import { Button } from "../Layout/Components/WellKnown/Button";
+import { SVGLogo } from "../Layout/Components/WellKnown/Logo";
+import CROSS_ICON_SVG from "../Assets/cross_icon.svg";
 
 let interpolatedMouseX = 0;
 let interpolatedMouseY = 0;
 
 let mouseXOffset = 0;
 let mouseYOffset = 0;
-
-// Ui svg icons
-
-export const CROSS_ICON_SVG: string = `<?xml version="1.0" encoding="iso-8859-1"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg fill="#cccccc" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="800px" height="800px" viewBox="0 0 41.756 41.756" xml:space="preserve"><g><path d="M27.948,20.878L40.291,8.536c1.953-1.953,1.953-5.119,0-7.071c-1.951-1.952-5.119-1.952-7.07,0L20.878,13.809L8.535,1.465c-1.951-1.952-5.119-1.952-7.07,0c-1.953,1.953-1.953,5.119,0,7.071l12.342,12.342L1.465,33.22c-1.953,1.953-1.953,5.119,0,7.071C2.44,41.268,3.721,41.755,5,41.755c1.278,0,2.56-0.487,3.535-1.464l12.343-12.342l12.343,12.343c0.976,0.977,2.256,1.464,3.535,1.464s2.56-0.487,3.535-1.464c1.953-1.953,1.953-5.119,0-7.071L27.948,20.878z"/></g></svg>`;
 
 /**
  * Ease out cubic function for smooth animation.
@@ -82,16 +80,18 @@ export default class UIGame extends AbstractUI {
     private wasDeadMenuContinued: boolean;
     private wasGameOverContinued: boolean;
 
-    private deadMenuContinueButton: TextButton;
-    private gameOverContinueButton: TextButton;
+    private deadMenuBackgroundOpacity: number;
 
-    private deadBackgroundOpacity: number;
+    private deadMenuContinueButton: Button;
+
+    private gameOverMenuContinueButton: Button;
+    private gameOverMenuContinueButtonOpacity: number;
+
     private youWillRespawnNextWaveOpacity: number;
-    private gameOverOpacity: number;
 
-    private isDeadAnimationActive: boolean;
-    private deadContinueButtonY: number;
-    private deadAnimationTimer: number;
+    private deadMenuContinueButtonY: number;
+    private deadMenuAnimationActive: boolean;
+    private deadMenuAnimationTimer: number;
 
     private chats: string[];
     private chatInput: TextInput;
@@ -326,13 +326,13 @@ export default class UIGame extends AbstractUI {
         this.wasDeadMenuContinued = false;
         this.wasGameOverContinued = false;
 
-        this.deadContinueButtonY = -50;
-        this.deadAnimationTimer = 0;
-        this.isDeadAnimationActive = false;
+        this.deadMenuContinueButtonY = -50;
+        this.deadMenuAnimationTimer = 0;
+        this.deadMenuAnimationActive = false;
 
-        this.deadBackgroundOpacity = 0;
+        this.deadMenuBackgroundOpacity = 0;
         this.youWillRespawnNextWaveOpacity = 0;
-        this.gameOverOpacity = 0;
+        this.gameOverMenuContinueButtonOpacity = 0;
 
         this.waveEnded = false;
 
@@ -470,62 +470,90 @@ export default class UIGame extends AbstractUI {
     }
 
     protected override initializeComponents(): void {
-        const exitButton = new SVGButton(
+        const exitButton = new Button(
             {
                 x: 6,
                 y: 6,
                 w: 17.5,
                 h: 17.5,
             },
-            "#b04c5e",
+            [
+                new SVGLogo(
+                    {
+                        x: 0,
+                        y: 0,
+                        w: 15,
+                        h: 15,
+                    },
+                    CROSS_ICON_SVG,
+                ),
+            ],
             () => {
                 clientWebsocket.packetServerbound.sendWaveLeave();
 
                 uiCtx.switchUI("title");
             },
-            () => true,
-            CROSS_ICON_SVG,
+            "#b04c5e",
+            true,
         );
 
         this.addComponent(exitButton);
 
         // Order is important!
 
-        this.gameOverContinueButton = new TextButton(
+        this.gameOverMenuContinueButton = new Button(
             {
                 x: 0,
                 y: 0,
                 w: 95,
                 h: 27,
             },
-            "#c62327",
+            [
+                new Text(
+                    {
+                        x: 0,
+                        y: 0,
+                    },
+                    "Continue",
+                    50,
+                ),
+            ],
             () => this.leaveGame(),
-            () => true,
-            "Continue",
+            "#c62327",
+            true,
         );
 
         // Dont show every frame
-        this.gameOverContinueButton.setVisible(false);
+        this.gameOverMenuContinueButton.setVisible(false, false);
 
-        this.addComponent(this.gameOverContinueButton);
+        this.addComponent(this.gameOverMenuContinueButton);
 
-        this.deadMenuContinueButton = new TextButton(
+        this.deadMenuContinueButton = new Button(
             {
                 x: 0,
                 y: 0,
                 w: 95,
                 h: 27,
             },
-            "#1dd129",
+            [
+                new Text(
+                    {
+                        x: 0,
+                        y: 0,
+                    },
+                    "Continue",
+                    50,
+                ),
+            ],
             () => {
                 this.wasDeadMenuContinued = true;
             },
-            () => true,
-            "Continue",
+            "#1dd129",
+            true,
         );
 
         // Dont show every frame
-        this.deadMenuContinueButton.setVisible(false);
+        this.deadMenuContinueButton.setVisible(false, false);
 
         this.addComponent(this.deadMenuContinueButton);
 
@@ -799,7 +827,7 @@ export default class UIGame extends AbstractUI {
             {
                 ctx.save();
 
-                ctx.globalAlpha = this.deadBackgroundOpacity;
+                ctx.globalAlpha = this.deadMenuBackgroundOpacity;
                 ctx.fillStyle = 'black';
                 ctx.fillRect(0, 0, widthRelative, heightRelative);
 
@@ -864,12 +892,12 @@ export default class UIGame extends AbstractUI {
 
             if (selfPlayer.isDead) {
                 if (
-                    this.deadBackgroundOpacity < this.DEAD_BACKGROUND_TARGET_OPACITY &&
+                    this.deadMenuBackgroundOpacity < this.DEAD_BACKGROUND_TARGET_OPACITY &&
                     // Stop fade-out blocking
                     !(this.wasDeadMenuContinued && !this.waveEnded)
                 ) {
-                    this.deadBackgroundOpacity = Math.min(
-                        this.deadBackgroundOpacity + (deltaTime / 1000 / this.DEAD_BACKGROUND_FADE_DURATION) * this.DEAD_BACKGROUND_TARGET_OPACITY,
+                    this.deadMenuBackgroundOpacity = Math.min(
+                        this.deadMenuBackgroundOpacity + (deltaTime / 1000 / this.DEAD_BACKGROUND_FADE_DURATION) * this.DEAD_BACKGROUND_TARGET_OPACITY,
                         this.DEAD_BACKGROUND_TARGET_OPACITY,
                     );
                 }
@@ -877,32 +905,32 @@ export default class UIGame extends AbstractUI {
                 if (this.wasDeadMenuContinued) {
                     if (!this.waveEnded) {
                         // Only fade-out when not game over
-                        this.deadBackgroundOpacity = Math.max(
+                        this.deadMenuBackgroundOpacity = Math.max(
                             0,
-                            this.deadBackgroundOpacity - (deltaTime / 1000 / this.DEAD_BACKGROUND_FADE_DURATION) * this.DEAD_BACKGROUND_TARGET_OPACITY,
+                            this.deadMenuBackgroundOpacity - (deltaTime / 1000 / this.DEAD_BACKGROUND_FADE_DURATION) * this.DEAD_BACKGROUND_TARGET_OPACITY,
                         );
                     } else {
                         if (!this.wasGameOverContinued) {
-                            if (this.gameOverOpacity <= 1) {
-                                this.gameOverOpacity += 0.005;
+                            if (this.gameOverMenuContinueButtonOpacity <= 1) {
+                                this.gameOverMenuContinueButtonOpacity += 0.005;
                             }
                         } else {
-                            if (this.gameOverOpacity >= 0) {
+                            if (this.gameOverMenuContinueButtonOpacity >= 0) {
                                 // Bit faster than uncontinued i guess
-                                this.gameOverOpacity -= 0.01;
+                                this.gameOverMenuContinueButtonOpacity -= 0.01;
                             }
                         }
 
-                        this.gameOverOpacity = Math.max(Math.min(this.gameOverOpacity, 1), 0);
+                        this.gameOverMenuContinueButtonOpacity = Math.max(Math.min(this.gameOverMenuContinueButtonOpacity, 1), 0);
 
-                        this.gameOverContinueButton.globalAlpha = this.gameOverOpacity;
-                        this.gameOverContinueButton.setX(centerWidth - (this.gameOverContinueButton.w / 2));
-                        this.gameOverContinueButton.setY(centerHeight + 35);
-                        this.gameOverContinueButton.setVisible(true);
+                        this.gameOverMenuContinueButton.globalAlpha = this.gameOverMenuContinueButtonOpacity;
+                        this.gameOverMenuContinueButton.setX(centerWidth - (this.gameOverMenuContinueButton.w / 2));
+                        this.gameOverMenuContinueButton.setY(centerHeight + 35);
+                        this.gameOverMenuContinueButton.setVisible(true, false);
 
                         ctx.save();
 
-                        ctx.globalAlpha = this.gameOverOpacity;
+                        ctx.globalAlpha = this.gameOverMenuContinueButtonOpacity;
 
                         ctx.lineJoin = 'round';
                         ctx.lineCap = 'round';
@@ -927,20 +955,20 @@ export default class UIGame extends AbstractUI {
                         ctx.restore();
                     }
 
-                    if (this.deadContinueButtonY >= -100) {
-                        this.deadAnimationTimer -= deltaTime / 300;
-                        this.deadContinueButtonY = -100 + easeOutCubic(Math.max(this.deadAnimationTimer / this.DEAD_MENU_ANIMATION_DURATION, 0)) * (centerHeight - (-100));
+                    if (this.deadMenuContinueButtonY >= -100) {
+                        this.deadMenuAnimationTimer -= deltaTime / 300;
+                        this.deadMenuContinueButtonY = -100 + easeOutCubic(Math.max(this.deadMenuAnimationTimer / this.DEAD_MENU_ANIMATION_DURATION, 0)) * (centerHeight - (-100));
                     }
                 } else {
-                    if (!this.isDeadAnimationActive) {
-                        this.deadContinueButtonY = -50;
-                        this.deadAnimationTimer = 0;
-                        this.isDeadAnimationActive = true;
+                    if (!this.deadMenuAnimationActive) {
+                        this.deadMenuContinueButtonY = -50;
+                        this.deadMenuAnimationTimer = 0;
+                        this.deadMenuAnimationActive = true;
                     }
 
-                    if (this.deadAnimationTimer < this.DEAD_MENU_ANIMATION_DURATION && this.deadContinueButtonY <= centerHeight + 50) {
-                        this.deadAnimationTimer += deltaTime / 1000;
-                        this.deadContinueButtonY = -50 + easeOutCubic(Math.min(this.deadAnimationTimer / this.DEAD_MENU_ANIMATION_DURATION, 1)) * (centerHeight + 50);
+                    if (this.deadMenuAnimationTimer < this.DEAD_MENU_ANIMATION_DURATION && this.deadMenuContinueButtonY <= centerHeight + 50) {
+                        this.deadMenuAnimationTimer += deltaTime / 1000;
+                        this.deadMenuContinueButtonY = -50 + easeOutCubic(Math.min(this.deadMenuAnimationTimer / this.DEAD_MENU_ANIMATION_DURATION, 1)) * (centerHeight + 50);
                     }
                 }
 
@@ -948,10 +976,10 @@ export default class UIGame extends AbstractUI {
                     ctx.save();
 
                     this.deadMenuContinueButton.setX(centerWidth - (this.deadMenuContinueButton.w / 2));
-                    this.deadMenuContinueButton.setY(this.deadContinueButtonY + 50);
-                    this.deadMenuContinueButton.setVisible(true);
+                    this.deadMenuContinueButton.setY(this.deadMenuContinueButtonY + 50);
+                    this.deadMenuContinueButton.setVisible(true, false);
 
-                    ctx.translate(centerWidth, this.deadContinueButtonY);
+                    ctx.translate(centerWidth, this.deadMenuContinueButtonY);
 
                     ctx.lineJoin = 'round';
                     ctx.lineCap = 'round';
@@ -981,15 +1009,15 @@ export default class UIGame extends AbstractUI {
                     ctx.restore();
                 }
             } else {
-                this.deadMenuContinueButton.setVisible(false);
+                this.deadMenuContinueButton.setVisible(false, false);
 
-                this.isDeadAnimationActive = false;
-                this.deadContinueButtonY = -50;
-                this.deadAnimationTimer = 0;
+                this.deadMenuAnimationActive = false;
+                this.deadMenuContinueButtonY = -50;
+                this.deadMenuAnimationTimer = 0;
 
-                this.deadBackgroundOpacity = 0;
+                this.deadMenuBackgroundOpacity = 0;
                 this.youWillRespawnNextWaveOpacity = 0;
-                this.gameOverOpacity = 0;
+                this.gameOverMenuContinueButtonOpacity = 0;
             }
         }
 

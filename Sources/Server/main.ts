@@ -30,7 +30,7 @@ export const isDebug = process.argv.includes("-d");
 const MOCK_PLAYER_DATA: Omit<StaticPlayerData, "ws"> = {
     name: 'A-NNCYANCHI-N',
     slots: {
-        surface: Array(5).fill(
+        surface: Array(50).fill(
             {
                 type: PetalType.BeetleEgg,
                 rarity: Rarity.Ultra,
@@ -241,8 +241,6 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
             if (!waveRoom) return;
-
-            console.log(name);
 
             const ok = waveRoom.setPlayerName(waveRoomClientId, name);
             if (!ok) return;

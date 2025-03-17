@@ -1,7 +1,7 @@
 import ExtensionBase from "../../Extensions/Extension";
-import type { LayoutOptions, LayoutResult } from "../../Layout";
+import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
-import type { Interactive, Clickable, MaybeDynamicLayoutablePointer } from "../Component";
+import type { Interactive, Clickable, DynamicLayoutablePointer } from "../Component";
 import { Component } from "../Component";
 
 export default class Toggle extends ExtensionBase(Component) implements Interactive, Clickable {
@@ -13,30 +13,20 @@ export default class Toggle extends ExtensionBase(Component) implements Interact
     private toggle: boolean = false;
 
     constructor(
-        protected layout: MaybeDynamicLayoutablePointer<LayoutOptions>,
+        protected layout: DynamicLayoutablePointer<LayoutOptions>,
 
         private onToggle: (t: boolean) => void,
     ) {
         super();
     }
 
-    override calculateLayout(
-        width: number,
-        height: number,
-        originX: number,
-        originY: number,
-    ): LayoutResult {
-        return Layout.layout(
-            this.computeDynamicLayoutable(this.layout),
-            width,
-            height,
-            originX,
-            originY,
-        );
+    override calculateLayout(lc: LayoutContext): LayoutResult {
+        return Layout.layout(this.computeDynamicLayoutable(this.layout), lc);
     }
 
     override getCacheKey(): string {
-        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`;
+        return super.getCacheKey() +
+            Object.values(this.computeDynamicLayoutable(this.layout)).join("");
     }
 
     override invalidateLayoutCache(): void {

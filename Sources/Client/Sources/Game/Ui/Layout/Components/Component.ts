@@ -1,18 +1,19 @@
 import type AbstractUI from "../../UI";
-import { BLACKLISTED } from "../Extensions/ExtensionBlacklist";
-import type { LayoutResult } from "../Layout";
+import type { LayoutContext, LayoutResult } from "../Layout";
 import LayoutCache from "../LayoutCache";
 import type PlayerProfile from "./Native/PlayerProfile";
-import type { SVGButton, TextButton } from "./WellKnown/Button";
-import type { AddableContainer, CoordinatedStaticSpace, StaticSpace } from "./WellKnown/Container";
+import type { Button } from "./WellKnown/Button";
+import type { AbstractStaticContainer, AddableStaticContainer, CoordinatedStaticSpace, StaticSpace } from "./WellKnown/Container";
+import type { CanvasLogo, SVGLogo } from "./WellKnown/Logo";
 import type Text from "./WellKnown/Text";
 import type TextInput from "./WellKnown/TextInput";
 import type Toggle from "./WellKnown/Toggle";
+import { Emitter } from 'strict-event-emitter';
 
 /**
- * Convert type into dynamically type, but its possible to use raw value.
+ * Convert value to dynamic-layoutable value.
  */
-export type MaybeDynamicLayoutablePointer<T> = T | (() => T);
+export type DynamicLayoutablePointer<T> = T | (() => T);
 
 /**
  * Union type that including all components.
@@ -20,43 +21,97 @@ export type MaybeDynamicLayoutablePointer<T> = T | (() => T);
  * @remarks
  * Base components like "Button" is cant addable, not including ("Button" is satisfy Component, its should not work).
  */
-export type AllComponents =
+export type Components =
     // Well-known components
-    | AddableContainer
+    | AddableStaticContainer
     | StaticSpace | CoordinatedStaticSpace
-    | TextButton | SVGButton
+    | Button
     | Text
     | TextInput
     | Toggle
+    | CanvasLogo | SVGLogo
     // Original components
     | PlayerProfile;
+
+type OverloadProps<TOverload> = Pick<TOverload, keyof TOverload>;
+
+type OverloadUnionRecursive<TOverload, TPartialOverload = unknown> = TOverload extends (
+    ...args: infer TArgs
+) => infer TReturn
+    ?
+    // Prevent infinite recursion by stopping recursion when TPartialOverload
+    // has accumulated all of the TOverload signatures
+    TPartialOverload extends TOverload ? never :
+    | OverloadUnionRecursive<
+        TPartialOverload & TOverload,
+        TPartialOverload & ((...args: TArgs) => TReturn) & OverloadProps<TOverload>
+    >
+    | ((...args: TArgs) => TReturn)
+    : never;
+
+type OverloadUnion<TOverload extends (...args: any[]) => any> = Exclude<
+    OverloadUnionRecursive<
+        // The "() => never" signature must be hoisted to the "front" of the
+        // intersection, for two reasons: a) because recursion stops when it is
+        // encountered, and b) it seems to prevent the collapse of subsequent
+        // "compatible" signatures (eg. "() => void" into "(a?: 1) => void"),
+        // which gives a direct conversion to a union
+        (() => never) & TOverload
+    >,
+    TOverload extends () => never ? never : () => never
+>;
+
+type UnionToIntersection<U> = (
+    U extends any ? (arg: U) => any : never
+) extends (arg: infer I) => void
+    ? I
+    : never;
+
+type UnionToTuple<T> = UnionToIntersection<(T extends any ? (t: T) => T : never)> extends (_: any) => infer W
+    ? [...UnionToTuple<Exclude<T, W>>, W]
+    : [];
+
+export type OverloadParameters<T extends (...args: any[]) => any> = UnionToTuple<Parameters<OverloadUnion<T>>>;
+
+export type OverloadReturnType<T extends (...args: any[]) => any> = UnionToTuple<ReturnType<OverloadUnion<T>>>;
+
+export type SetVisibleParameters = OverloadParameters<Component["setVisible"]>;
 
 export enum AnimationType {
     Zoom,
     Slide,
 }
 
-type InOutEasingFunction = { in(x: number): number; out(x: number): number };
+export type AnimationEasingFunction = { [K in "in" | "out"]: (x: number) => number; };
+
+export type AnimationDirection = "in" | "out";
+
+export type AnimationSlideDirection = "v" | "h";
 
 /**
  * Render all visible components.
  * 
  * @param components - Components to render
  */
-export function renderAllPossibleComponents(ctx: CanvasRenderingContext2D, components: Array<AllComponents>): void {
-    components.forEach(component => {
+export function renderPossibleComponents(ctx: CanvasRenderingContext2D, components: Iterable<Components>): void {
+    for (const component of components) {
         ctx.save();
 
         component.render(ctx);
 
         ctx.restore();
-    });
+    }
 }
+
+// Typing for EventEmitter
+export type ComponentEvents = {
+    "onInitialized": [];
+};
 
 /**
  * Base interface for all GUI components.
  */
-export abstract class Component {
+export abstract class Component extends Emitter<ComponentEvents> {
     protected readonly ANIMATION_ZOOM_DURATION: number = 100;
     protected readonly ANIMATION_SLIDE_DURATION: number = 100;
 
@@ -79,18 +134,19 @@ export abstract class Component {
                 return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
             },
         },
-    } satisfies Record<AnimationType, InOutEasingFunction>;
+    } satisfies Record<AnimationType, AnimationEasingFunction>;
 
     private static readonly ZOOM_IN_OUT_EASING_FUNCTION = function easeInExpo(x: number): number {
         return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
     };
 
     public isAnimating: boolean = false;
+
     public animationType: AnimationType;
-    public animationProgress: number = 1;
-    public animationStartTime: number | null = null;
-    public animationDirection: 'in' | 'out' = 'in';
-    public animationSlideDirection: "v" | "h";
+    public animationProgress: number;
+    public animationStartTime: number;
+    public animationDirection: AnimationDirection;
+    public animationSlideDirection: AnimationSlideDirection;
 
     /**
      * Determine if should move position while animating zoom animation.
@@ -121,7 +177,7 @@ export abstract class Component {
     /**
      * Parent container of component.
      */
-    public parentContainer: ComponentContainer;
+    public parentContainer: AbstractStaticContainer;
 
     /**
      * Set global alpha of component.
@@ -144,40 +200,24 @@ export abstract class Component {
     public setH(h: number) { this.h = h; }
 
     /**
-     * The method call upon user interface initialized this component.
-     */
-    public onInitialized?(): void;
-
-    /**
      * Determine if component will render.
      */
     public get isRenderable(): boolean {
-        return !this[BLACKLISTED] && (
-            this.visible || 
-            this.isAnimating
-        );
+        return this.visible || this.isAnimating;
     }
 
     /**
      * This method calculate layout by layout options, and parent container/screen.
      */
-    public abstract calculateLayout(
-        width: number,
-        height: number,
-        originX: number,
-        originY: number
-    ): LayoutResult;
+    public abstract calculateLayout(lc: LayoutContext): LayoutResult;
 
     /**
      * Cache layout to reduce lags.
      */
-    public cachedCalculateLayout(
-        width: number,
-        height: number,
-        originX: number,
-        originY: number,
-    ): LayoutResult {
-        const cacheKey = `${width}${height}${originX}${originY}` + this.getCacheKey();
+    public cachedCalculateLayout(lc: LayoutContext): LayoutResult {
+        const { containerWidth, containerHeight, originX, originY } = lc;
+
+        const cacheKey = `${containerWidth}${containerHeight}${originX}${originY}` + this.getCacheKey();
         if (!this.layoutCache.isDirtyCache(cacheKey)) {
             const cached = this.layoutCache.get(cacheKey);
             if (cached) {
@@ -185,7 +225,7 @@ export abstract class Component {
             }
         }
 
-        const result = this.calculateLayout(width, height, originX, originY);
+        const result = this.calculateLayout(lc);
 
         this.layoutCache.set(cacheKey, result);
 
@@ -214,7 +254,7 @@ export abstract class Component {
 
         if (this.isAnimating) {
             const currentTime = performance.now();
-            if (this.animationStartTime === null) {
+            if (this.animationStartTime === -1) {
                 this.animationStartTime = currentTime;
             }
 
@@ -223,11 +263,13 @@ export abstract class Component {
                     this.animationType === AnimationType.Slide ? this.ANIMATION_SLIDE_DURATION :
                         1000;
 
-            const elapsed = currentTime - this.animationStartTime;
-            const progress = Math.max(0, Math.min(elapsed / duration, 1));
-            this.animationProgress = this.animationDirection === 'in' ? progress : 1 - progress;
+            const deltaAT = currentTime - this.animationStartTime;
+            const progress = Math.max(0, Math.min(deltaAT / duration, 1));
+            this.animationProgress = this.animationDirection === 'in'
+                ? progress
+                : 1 - progress;
 
-            if (elapsed >= duration) {
+            if (deltaAT >= duration) {
                 if (this.animationDirection === 'out') {
                     this.visible = false;
                 }
@@ -288,6 +330,14 @@ export abstract class Component {
                 }
             }
         }
+
+        ctx.save();
+
+        ctx.strokeStyle = "blue";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(this.x, this.y, this.w, this.h);
+
+        ctx.restore();
     }
 
     public destroy(): void {
@@ -295,20 +345,36 @@ export abstract class Component {
     }
 
     public setVisible(
+        toggle: boolean, 
+        shouldAnimate: false,
+    ): void;
+    public setVisible(
         toggle: boolean,
-        shouldAnimate: boolean = false,
-        animationType: AnimationType = AnimationType.Zoom,
-        slideDirection?: "v" | "h",
+        shouldAnimate: true,
+        animationType: AnimationType.Zoom,
+    ): void;
+    public setVisible(
+        toggle: boolean,
+        shouldAnimate: true,
+        animationType: AnimationType.Slide,
+        animationSlideDirection: AnimationSlideDirection,
+    ): void;
+    public setVisible(
+        toggle: boolean,
+        shouldAnimate: boolean,
+        animationType?: AnimationType,
+        animationSlideDirection?: AnimationSlideDirection,
     ) {
         if (toggle === this.visible) return;
 
         if (shouldAnimate) {
             this.isAnimating = true;
+
             this.animationType = animationType;
             this.animationProgress = toggle ? 0 : 1;
-            this.animationStartTime = null;
+            this.animationStartTime = -1;
             this.animationDirection = toggle ? 'in' : 'out';
-            this.animationSlideDirection = slideDirection;
+            this.animationSlideDirection = animationSlideDirection;
 
             this.realX = this.x;
             this.realY = this.y;
@@ -321,7 +387,7 @@ export abstract class Component {
         }
     }
 
-    protected computeDynamicLayoutable<T>(dl: MaybeDynamicLayoutablePointer<T>): T {
+    protected computeDynamicLayoutable<T>(dl: DynamicLayoutablePointer<T>): T {
         return dl instanceof Function ? dl() : dl;
     }
 }
@@ -338,12 +404,4 @@ export interface Clickable extends Component {
 
     onMouseDown?(): void;
     onMouseUp?(): void;
-}
-
-// Interface for container components
-export interface ComponentContainer extends Component {
-    children: AllComponents[];
-
-    addChildren(child: AllComponents): void;
-    removeChildren(child: AllComponents): void;
 }

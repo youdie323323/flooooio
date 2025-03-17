@@ -3,9 +3,9 @@ import type { ComponentExtensionTemplate, ExtensionConstructor, UpdateFunction }
 export const BLACKLISTED: unique symbol = Symbol("blacklisted");
 
 /**
- * Mark component as blacklist, mean not renderer automatically.
+ * Mark component as blacklist, mean not rendered automatically.
  */
-export function Blacklist<T extends ExtensionConstructor>(Base: T) {
+export function InlineRenderingCall<T extends ExtensionConstructor>(Base: T) {
     abstract class MixedBase extends Base implements ComponentExtensionTemplate {
         // Make sure its public and readable from outside
         public static readonly [BLACKLISTED] = BLACKLISTED;

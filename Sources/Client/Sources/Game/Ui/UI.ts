@@ -1,8 +1,9 @@
 import type { Biome } from "../../../../Shared/Biome";
 import type { StaticAdditionalClientboundListen } from "../Websocket/Packet/Bound/Client/PacketClientbound";
-import { type AllComponents, type Component, type Interactive, type Clickable, type ComponentContainer, renderAllPossibleComponents } from "./Layout/Components/Component";
-import type { AddableContainer } from "./Layout/Components/WellKnown/Container";
+import { type Components, type Component, type Interactive, type Clickable, renderPossibleComponents } from "./Layout/Components/Component";
+import type { AbstractStaticContainer, AddableStaticContainer } from "./Layout/Components/WellKnown/Container";
 import { DYNAMIC_LAYOUTED } from "./Layout/Extensions/ExtensionDynamicLayoutable";
+import { BLACKLISTED } from "./Layout/Extensions/ExtensionInlineRenderingCall";
 
 export let uiScaleFactor: number = 1;
 
@@ -13,7 +14,10 @@ export default abstract class AbstractUI {
     public mouseX: number = 0;
     public mouseY: number = 0;
 
-    private components: AllComponents[] = [];
+    /**
+     * All components store.
+     */
+    private components: Set<Components> = new Set();
 
     /**
      * Flattend children components store.
@@ -22,8 +26,6 @@ export default abstract class AbstractUI {
 
     private hoveredComponent: Interactive | null = null;
     private clickedComponent: Clickable | null = null;
-
-    private shouldUpdateFocus: boolean;
 
     private mousedown: (event: MouseEvent) => void;
     private mouseup: (event: MouseEvent) => void;
@@ -77,8 +79,10 @@ export default abstract class AbstractUI {
         this.keyup = this.handleKeyUp.bind(this);
 
         this.onresize = () => {
-            this.canvas.width = this.canvas.clientWidth * this.scale;
-            this.canvas.height = this.canvas.clientHeight * this.scale;
+            const scale = devicePixelRatio || 1;
+
+            this.canvas.width = this.canvas.clientWidth * scale;
+            this.canvas.height = this.canvas.clientHeight * scale;
 
             uiScaleFactor = Math.max(
                 this.canvas.width / UI_BASE_WIDTH,
@@ -114,11 +118,9 @@ export default abstract class AbstractUI {
         // Why? :(
         this.onresize();
         this.onresize();
-
-        this.shouldUpdateFocus = true;
     }
 
-    public removeEventListeners(): void {        
+    public removeEventListeners(): void {
         {
             this.canvas.removeEventListener('mousedown', this.mousedown);
             this.canvas.removeEventListener('mouseup', this.mouseup);
@@ -149,46 +151,39 @@ export default abstract class AbstractUI {
             this.hoveredComponent.onBlur();
             this.hoveredComponent = null;
         }
-
-        this.shouldUpdateFocus = false;
     }
 
-    public addComponent(component: AllComponents): AllComponents {
+    public addComponent(component: Components): Components {
         // Link dynamic values to component
 
         component.context = this;
 
-        // Remove component if exists
-        this.removeComponent(component);
-
-        this.components.push(component);
+        if (!component[BLACKLISTED]) this.components.add(component);
 
         // Emit initialized
-        component.onInitialized?.();
+        component.emit("onInitialized");
 
         return component;
     }
 
-    public removeComponent(component: AllComponents): void {
-        const index = this.components.indexOf(component);
-        if (index > -1) {
-            this.components[index].destroy();
+    public removeComponent(component: Components): void {
+        const exists = this.components.has(component);
+        if (exists) {
+            component.destroy();
 
-            this.components.splice(index, 1);
+            this.components.delete(component);
         }
     }
 
-    public addChildrenComponent(targetContainer: ComponentContainer, component: AllComponents): void {
+    public addChildrenComponent(targetContainer: AbstractStaticContainer, component: Components): void {
         targetContainer.addChildren(component);
 
         this.addComponent(component);
 
-        if (!this.childrenComponents.has(component)) {
-            this.childrenComponents.add(component);
-        }
+        this.childrenComponents.add(component);
     }
 
-    public removeChildrenComponent(targetContainer: ComponentContainer, component: AllComponents): void {
+    public removeChildrenComponent(targetContainer: AbstractStaticContainer, component: Components): void {
         targetContainer.removeChildren(component);
 
         this.removeComponent(component);
@@ -197,7 +192,10 @@ export default abstract class AbstractUI {
     }
 
     public overlapsComponent(component: Component, x: number, y: number): boolean {
-        return x >= component.x && x <= component.x + component.w && y >= component.y && y <= component.y + component.h;
+        return x >= component.x &&
+            x <= component.x + component.w &&
+            y >= component.y &&
+            y <= component.y + component.h;
     }
 
     private isInteractive(component: Component): component is Interactive {
@@ -212,12 +210,16 @@ export default abstract class AbstractUI {
         return DYNAMIC_LAYOUTED in component;
     }
 
-    private getTopLevelComponents(): AllComponents[] {
+    private getTopLevelComponents() {
         return this.components
+            .values()
             .filter(c => !this.childrenComponents.has(c));
     }
 
     private updateComponentsLayout() {
+        const ctx = this.canvas.getContext("2d");
+        if (!ctx) return;
+
         const scaledWidth = this.canvas.width / uiScaleFactor;
         const scaledHeight = this.canvas.height / uiScaleFactor;
 
@@ -226,7 +228,15 @@ export default abstract class AbstractUI {
             // container invalidateLayoutCache will invalidate child layout too
             component.invalidateLayoutCache();
 
-            const layout = component.cachedCalculateLayout(scaledWidth, scaledHeight, 0, 0);
+            const layout = component.cachedCalculateLayout({
+                ctx,
+
+                containerWidth: scaledWidth,
+                containerHeight: scaledHeight,
+
+                originX: 0,
+                originY: 0,
+            });
 
             component.setX(layout.x);
             component.setY(layout.y);
@@ -236,9 +246,7 @@ export default abstract class AbstractUI {
     }
 
     private handleKeyDown(event: KeyboardEvent): void {
-        if (!event.isTrusted) {
-            return;
-        }
+        if (!event.isTrusted) return;
 
         this.onKeyDown(event);
 
@@ -246,33 +254,28 @@ export default abstract class AbstractUI {
     }
 
     private handleKeyUp(event: KeyboardEvent): void {
-        if (!event.isTrusted) {
-            return;
-        }
+        if (!event.isTrusted) return;
 
         this.onKeyUp(event);
 
         this.invalidateDynamicLayoutables();
     }
 
-    private isClickableChildren = (component: Component): boolean => !(this.childrenComponents.has(component) && component.parentContainer.isAnimating);
+    private isClickableChildren = (component: Component): boolean =>
+        !(this.childrenComponents.has(component) && component.parentContainer.isAnimating);
 
     private handleMouseDown(event: MouseEvent): void {
-        if (!event.isTrusted) {
-            return;
-        }
+        if (!event.isTrusted) return;
 
         this.onMouseDown(event);
 
         // Click handling
         for (const component of this.components) {
-            if (!this.isClickableChildren(component)) {
-                continue;
-            }
+            if (!this.isClickableChildren(component)) continue;
 
             if (
-                component.visible && 
-                this.isClickable(component) && 
+                component.visible &&
+                this.isClickable(component) &&
                 this.overlapsComponent(component, this.mouseX, this.mouseY)
             ) {
                 this.clickedComponent = component;
@@ -286,21 +289,18 @@ export default abstract class AbstractUI {
     }
 
     private handleMouseUp(event: MouseEvent): void {
-        if (!event.isTrusted) {
-            return;
-        }
+        if (!event.isTrusted) return;
 
         this.onMouseUp(event);
 
         if (this.clickedComponent) {
-            if (!this.isClickableChildren(this.clickedComponent)) {
-                return;
-            }
+            if (!this.isClickableChildren(this.clickedComponent)) return;
 
             if (this.overlapsComponent(this.clickedComponent, this.mouseX, this.mouseY)) {
                 this.clickedComponent.onClick?.();
                 this.clickedComponent.onMouseUp?.();
             }
+
             this.clickedComponent = null;
         }
 
@@ -308,9 +308,7 @@ export default abstract class AbstractUI {
     }
 
     private handleMouseMove(event: MouseEvent): void {
-        if (!event.isTrusted) {
-            return;
-        }
+        if (!event.isTrusted) return;
 
         this.onMouseMove(event);
 
@@ -348,10 +346,10 @@ export default abstract class AbstractUI {
         });
     }
 
-    public disposeRenderComponents(): void {
+    public destroyRenderComponents(): void {
         this.getTopLevelComponents().forEach(c => c.destroy());
 
-        this.components = [];
+        this.components.clear();
         this.components = null;
 
         this.childrenComponents.clear();
@@ -361,8 +359,13 @@ export default abstract class AbstractUI {
         this.clickedComponent = null;
     }
 
+    private getDynamicLayoutables() {
+        return this.getTopLevelComponents()
+            .filter(c => this.isDynamicLayoutable(c));
+    }
+
     private invalidateDynamicLayoutables(): void {
-        this.getTopLevelComponents().filter(c => this.isDynamicLayoutable(c)).forEach(component => component.invalidateLayoutCache());
+        this.getDynamicLayoutables().forEach(component => component.invalidateLayoutCache());
     }
 
     protected render(): void {
@@ -372,10 +375,20 @@ export default abstract class AbstractUI {
         const scaledWidth = this.canvas.width / uiScaleFactor;
         const scaledHeight = this.canvas.height / uiScaleFactor;
 
-        if (this.shouldUpdateFocus) this.updateComponentFocusStates();
+        this.updateComponentFocusStates();
 
-        this.getTopLevelComponents().filter(c => this.isDynamicLayoutable(c)).forEach(component => {
-            const layout = component.cachedCalculateLayout(scaledWidth, scaledHeight, 0, 0);
+        this.getDynamicLayoutables().forEach(component => {
+            const layout = component.cachedCalculateLayout(
+                {
+                    ctx,
+
+                    containerWidth: scaledWidth,
+                    containerHeight: scaledHeight,
+
+                    originX: 0,
+                    originY: 0,
+                },
+            );
 
             component.setX(layout.x);
             component.setY(layout.y);
@@ -383,31 +396,23 @@ export default abstract class AbstractUI {
             component.setH(layout.h);
         });
 
-        renderAllPossibleComponents(ctx, this.getTopLevelComponents());
+        renderPossibleComponents(ctx, this.getTopLevelComponents());
     }
 
-    // Component helpers
-
-    protected createAddableContainer(
-        container: ComponentContainer, 
-        children: AllComponents[],
-    ): AddableContainer {
+    public createAddableContainer(
+        container: AbstractStaticContainer,
+        children: Array<Components>,
+    ): AddableStaticContainer {
         children.forEach(child => {
             this.addChildrenComponent(container, child);
 
             child.parentContainer = container;
         });
 
-        const addable = <AddableContainer>container;
+        const addable = <AddableStaticContainer>container;
         addable.__addable = true;
 
         return addable;
-    }
-
-    // Getter / setters
-
-    protected get scale() {
-        return devicePixelRatio || 1;
     }
 
     // Biome atomic store
@@ -425,7 +430,7 @@ export default abstract class AbstractUI {
     public abstract animationFrame(): void;
 
     /**
-     * Dispose ui-specific values.
+     * Destory ui-depending values.
      */
     public abstract destroy(): void;
 

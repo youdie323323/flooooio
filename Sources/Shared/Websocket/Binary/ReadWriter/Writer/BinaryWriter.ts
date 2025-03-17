@@ -165,9 +165,9 @@ export default class BinaryWriter {
         return this;
     }
 
-    public writeString(t: string): this {
-        if (t.length > 0) {
-            const encoded = textEncoder.encode(t);
+    public writeString(str: string): this {
+        if (str.length > 0) {
+            const encoded = textEncoder.encode(str);
 
             this.writeBytes(encoded);
         }

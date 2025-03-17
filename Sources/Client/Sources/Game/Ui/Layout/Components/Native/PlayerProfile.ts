@@ -6,10 +6,10 @@ import { renderEntity } from "../../../../Entity/Renderers/RendererEntityRenderi
 import type { WaveRoomPlayerInformation } from "../../../Title/UITitle";
 import UITitle from "../../../Title/UITitle";
 import ExtensionBase from "../../Extensions/Extension";
-import { Blacklist } from "../../Extensions/ExtensionBlacklist";
-import type { LayoutOptions, LayoutResult } from "../../Layout";
+import { InlineRenderingCall } from "../../Extensions/ExtensionInlineRenderingCall";
+import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
-import type { MaybeDynamicLayoutablePointer } from "../Component";
+import type { DynamicLayoutablePointer } from "../Component";
 import { Component } from "../Component";
 import Text, { calculateStrokeWidth } from "../WellKnown/Text";
 
@@ -35,50 +35,40 @@ export default class PlayerProfile extends ExtensionBase(Component) {
     private nameText: Text;
 
     constructor(
-        private layout: MaybeDynamicLayoutablePointer<LayoutOptions>,
+        private layout: DynamicLayoutablePointer<LayoutOptions>,
 
-        private id: MaybeDynamicLayoutablePointer<WaveRoomPlayerInformation["id"]>,
-        private name: MaybeDynamicLayoutablePointer<WaveRoomPlayerInformation["name"]>,
-        private readyState: MaybeDynamicLayoutablePointer<WaveRoomPlayerInformation["readyState"]>,
+        private id: DynamicLayoutablePointer<WaveRoomPlayerInformation["id"]>,
+        private name: DynamicLayoutablePointer<WaveRoomPlayerInformation["name"]>,
+        private readyState: DynamicLayoutablePointer<WaveRoomPlayerInformation["readyState"]>,
 
-        private isEmpty: MaybeDynamicLayoutablePointer<boolean>,
+        private isEmpty: DynamicLayoutablePointer<boolean>,
     ) {
         super();
+
+        this.once("onInitialized", () => {
+            this.context.addComponent(
+                this.nameText = new (InlineRenderingCall(Text))(
+                    {
+                        x: 0,
+                        y: 0,
+                    },
+                    this.name,
+                    10,
+                    "#ffffff",
+                    "center",
+                    () => this.w * 0.9,
+                ),
+            );
+        });
     }
 
-    override onInitialized(): void {
-        this.context.addComponent(this.nameText = new (Blacklist(Text))(
-            {
-                x: 0,
-                y: 0,
-                w: 0,
-                h: 0,
-            },
-            this.name,
-            10,
-            "#ffffff",
-            "center",
-            () => this.w * 0.9,
-        ));
-    }
-
-    override calculateLayout(
-        width: number,
-        height: number,
-        originX: number,
-        originY: number,
-    ): LayoutResult {
-        return Layout.layout(
-            this.computeDynamicLayoutable(this.layout),
-            width,
-            height,
-            originX,
-            originY,
-        );
+    override calculateLayout(lc: LayoutContext): LayoutResult {
+        return Layout.layout(this.computeDynamicLayoutable(this.layout), lc);
     }
 
     override getCacheKey(): string {
-        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`;
+        return super.getCacheKey() +
+            Object.values(this.computeDynamicLayoutable(this.layout)).join("");
     }
 
     override invalidateLayoutCache(): void {

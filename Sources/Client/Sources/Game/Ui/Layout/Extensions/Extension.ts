@@ -1,5 +1,5 @@
 import type { Component } from "../Components/Component";
-import type { LayoutResult } from "../Layout";
+import type { LayoutContext, LayoutResult } from "../Layout";
 
 export type UpdateFunction = () => void;
 
@@ -23,12 +23,7 @@ export type ExtensionConstructor = abstract new (...args: ReadonlyArray<any>) =>
     // Maybe component is updatable
     Partial<Updatable> &
     {
-        calculateLayout(
-            width: number,
-            height: number,
-            originX: number,
-            originY: number
-        ): LayoutResult;
+        calculateLayout(lc: LayoutContext): LayoutResult;
     };
 
 /**

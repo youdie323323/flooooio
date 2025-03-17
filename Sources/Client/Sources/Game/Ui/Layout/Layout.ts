@@ -14,6 +14,16 @@ export interface LayoutOptions {
     alignFromCenterY?: boolean;
 }
 
+export type LayoutContext = Readonly<{
+    ctx: CanvasRenderingContext2D;
+
+    containerWidth: number;
+    containerHeight: number;
+
+    originX: number;
+    originY: number;
+}>;
+
 export interface LayoutResult {
     x: number;
     y: number;
@@ -30,10 +40,12 @@ export default class Layout {
 
     static layout(
         options: LayoutOptions,
-        containerWidth: number,
-        containerHeight: number,
-        originX: number,
-        originY: number,
+        {
+            containerWidth = 0,
+            containerHeight = 0,
+            originX = 0,
+            originY = 0,
+        }: LayoutContext,
     ): LayoutResult {
         const w = this.parseSize(options.w, containerWidth);
         const h = this.parseSize(options.h, containerHeight);

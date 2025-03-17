@@ -23,9 +23,9 @@ export default class UIContext {
     }
 
     public cleanup(): void {
-        // Cleanup mode-specific values & components
+        // Cleanup ui-depending values & components
         this.previousCtx?.destroy();
-        this.previousCtx?.disposeRenderComponents();
+        this.previousCtx?.destroyRenderComponents();
 
         // Set cursor to default
         this.canvas.style.cursor = "default";

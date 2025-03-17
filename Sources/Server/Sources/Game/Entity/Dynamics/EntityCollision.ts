@@ -7,7 +7,7 @@ import { MOB_PROFILES } from "../../../../../Shared/Entity/Statics/Mob/MobProfil
 import type { PetalData, PetalStat } from "../../../../../Shared/Entity/Statics/Mob/Petal/PetalData";
 import { PETAL_PROFILES } from "../../../../../Shared/Entity/Statics/Mob/Petal/PetalProfiles";
 import type { WavePool } from "../../Genres/Wave/WavePool";
-import { returnGoodShape, accordinglyComputeDelta, isColliding } from "../Statics/Collision/CollisionCollide";
+import { returnGoodShape, accordinglyComputeDelta, isColliding, PLAYER_MAX_COLLISION_DELTA } from "../Statics/Collision/CollisionCollide";
 import type { EntityMixinConstructor, Entity, EntityMixinTemplate, RealEntity } from "./Entity";
 import { onUpdateTick } from "./Entity";
 import { calculateMaxHealth, isDeadEntity } from "./EntityElimination";
@@ -200,7 +200,14 @@ export function EntityCollision<T extends EntityMixinConstructor<Entity>>(Base: 
                         const delta = accordinglyComputeDelta(shape1, shape2);
 
                         if (isColliding(delta)) {
-                            const push = MixedBase.calculatePush(this, otherEntity, delta);
+                            const push = MixedBase.calculatePush(
+                                this, 
+                                otherEntity, 
+                                Math.min(
+                                    delta, 
+                                    PLAYER_MAX_COLLISION_DELTA,
+                                ),
+                            );
                             if (push) {
                                 // If this is bubble, give player more knockback
                                 const bubbleMultiplier = this.type === MobType.Bubble ? MixedBase.BUBBLE_PUSH_FACTOR : 1;

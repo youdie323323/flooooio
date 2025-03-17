@@ -1,44 +1,69 @@
-import { Canvg, presets } from "canvg";
-import type { Clickable, MaybeDynamicLayoutablePointer, Interactive } from "../Component";
-import { Component } from "../Component";
-import * as StackBlur from
-    'stackblur-canvas/dist/stackblur-es.min.js';
-import { calculateStrokeWidth } from "./Text";
+import type { Components, Clickable, DynamicLayoutablePointer, Interactive, SetVisibleParameters, AnimationSlideDirection } from "../Component";
+import { AnimationType , Component } from "../Component";
 import ExtensionBase from "../../Extensions/Extension";
-import type { ColorCode} from "../../../../../../../Shared/Utils/Color";
-import { darkend, DARKEND_BASE } from "../../../../../../../Shared/Utils/Color";
-import type { LayoutOptions, LayoutResult } from "../../Layout";
+import type { ColorCode } from "../../../../../../../Shared/Utils/Color";
+import { darkend } from "../../../../../../../Shared/Utils/Color";
+import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
+import type { AddableStaticContainer } from "./Container";
+import { StaticHContainer, StaticPanelContainer } from "./Container";
 
+/**
+ * Abstract button class.
+ * 
+ * @remarks
+ * When think of a normal button, can think of it as a combination of a StaticPanelContainer and a Text component.
+ */
 export class Button extends ExtensionBase(Component) implements Interactive, Clickable {
     private isPressed: boolean = false;
     private isHovered: boolean = false;
 
     private isValid: boolean = true;
 
+    private bindedButtonContainer: AddableStaticContainer;
+
+    /**
+     * @param layout - Layout options for just like collision
+     * @param buttonComponents - Components to be added to button visibility, which are not "added"
+     */
     constructor(
         private layout: LayoutOptions,
 
-        private color: MaybeDynamicLayoutablePointer<ColorCode>,
+        private buttonComponents: Array<Components>,
+
         private callback: () => void,
-        private validate: MaybeDynamicLayoutablePointer<boolean>,
+
+        private color: DynamicLayoutablePointer<ColorCode>,
+        private validate: DynamicLayoutablePointer<boolean>,
     ) {
         super();
+
+        this.once("onInitialized", () => {
+            this.context.addComponent(this.bindedButtonContainer = this.context.createAddableContainer(
+                new StaticPanelContainer(
+                    () => ({
+                        x: this.x,
+                        y: this.y,
+                    }),
+                    () => this.getButtonColor(),
+                ),
+                [
+                    this.context.createAddableContainer(
+                        new StaticHContainer(
+                            {
+                                x: 0,
+                                y: 0,
+                            },
+                        ),
+                        this.buttonComponents,
+                    ),
+                ],
+            ));
+        });
     }
 
-    override calculateLayout(
-        width: number,
-        height: number,
-        originX: number,
-        originY: number,
-    ): LayoutResult {
-        return Layout.layout(
-            this.layout,
-            width,
-            height,
-            originX,
-            originY,
-        );
+    override calculateLayout(lc: LayoutContext): LayoutResult {
+        return Layout.layout(this.layout, lc);
     }
 
     override render(ctx: CanvasRenderingContext2D): void {
@@ -46,17 +71,50 @@ export class Button extends ExtensionBase(Component) implements Interactive, Cli
 
         super.render(ctx);
 
-        // Update per rAF frame
+        this.update();
 
-        this.isValid = !!this.computeDynamicLayoutable(this.validate);
+        this.isValid = this.computeDynamicLayoutable(this.validate);
         if (!this.isValid) {
             this.isHovered = false;
             this.isPressed = false;
         }
     }
 
+    override setVisible(...args: SetVisibleParameters[0]): void;
+    override setVisible(...args: SetVisibleParameters[1]): void;
+    override setVisible(...args: SetVisibleParameters[2]): void;
+    override setVisible(
+        toggle: boolean,
+        shouldAnimate: boolean,
+        animationType?: AnimationType,
+        animationSlideDirection?: AnimationSlideDirection,
+    ): void {
+        if (shouldAnimate === true) {
+            switch (animationType) {
+                case AnimationType.Zoom: {
+                    super.setVisible(toggle, shouldAnimate, animationType);
+
+                    break;
+                }
+
+                case AnimationType.Slide: {
+                    super.setVisible(toggle, shouldAnimate, animationType, animationSlideDirection);
+
+                    break;
+                }
+            }
+        } else {
+            super.setVisible(toggle, shouldAnimate);
+        }
+
+        // Post-process for component-binded component
+
+        // this?.bindedButtonContainer.setVisible?.(toggle, false);
+    }
+
     override getCacheKey(): string {
-        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`;
+        return super.getCacheKey() +
+            Object.values(this.computeDynamicLayoutable(this.layout)).join("");
     }
 
     override invalidateLayoutCache(): void {
@@ -122,197 +180,5 @@ export class Button extends ExtensionBase(Component) implements Interactive, Cli
         }
 
         return computedColor;
-    }
-
-    protected getButtonColorStroke(): ColorCode {
-        if (!this.isValid) {
-            return darkend("#aaaaa9", DARKEND_BASE);
-        }
-
-        const computedColor = this.computeDynamicLayoutable(this.color);
-
-        return darkend(computedColor, DARKEND_BASE);
-    }
-}
-
-export class TextButton extends Button {
-    constructor(
-        layout: LayoutOptions,
-
-        color: MaybeDynamicLayoutablePointer<ColorCode>,
-        callback: () => void,
-        validate: MaybeDynamicLayoutablePointer<boolean>,
-
-        private text: MaybeDynamicLayoutablePointer<string>,
-
-        private iconFunc?: (ctx: CanvasRenderingContext2D, textWidth: number) => void,
-    ) {
-        super(layout, color, callback, validate);
-    }
-
-    private setFontState(ctx: CanvasRenderingContext2D): void {
-        let fontSize = this.h * 0.54;
-        ctx.font = `${fontSize}px Ubuntu`;
-
-        const computedText = this.computeDynamicLayoutable(this.text);
-
-        while (ctx.measureText(computedText).width > this.w * 0.9 && fontSize > 10) {
-            fontSize -= 1;
-            ctx.font = `${fontSize}px Ubuntu`;
-        }
-
-        ctx.lineWidth = calculateStrokeWidth(fontSize);
-    }
-
-    // Override for text
-
-    protected getStrokeWidth(): number {
-        const minDimension = Math.min(this.w, this.h);
-
-        return Math.max(2, minDimension * 0.14);
-    }
-
-    protected getCornerRadius(): number {
-        const minDimension = Math.min(this.w, this.h);
-
-        return Math.max(2, minDimension * 0.07);
-    }
-
-    override render(ctx: CanvasRenderingContext2D): void {
-        if (!this.isRenderable) return;
-
-        super.render(ctx);
-
-        this.update();
-
-        ctx.save();
-
-        // Button background
-        const strokeWidth = this.getStrokeWidth();
-        const cornerRadius = this.getCornerRadius();
-
-        const color = this.getButtonColor();
-        const strokeColor = this.getButtonColorStroke();
-
-        ctx.lineWidth = strokeWidth;
-        ctx.strokeStyle = strokeColor;
-        ctx.fillStyle = color;
-
-        ctx.beginPath();
-        ctx.roundRect(this.x, this.y, this.w, this.h, cornerRadius);
-        ctx.fill();
-        ctx.stroke();
-        ctx.closePath();
-
-        // Button text
-        this.setFontState(ctx);
-
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        ctx.textBaseline = 'middle';
-        ctx.textAlign = this.iconFunc ? 'left' : "center";
-        ctx.strokeStyle = '#000000';
-        ctx.fillStyle = '#ffffff';
-
-        const computedText = this.computeDynamicLayoutable(this.text);
-
-        const textX = this.x + (this.iconFunc ? 8 : this.w / 2);
-        const textY = this.y + this.h / 2;
-
-        ctx.translate(textX, textY);
-
-        ctx.strokeText(computedText, 0, 0);
-        ctx.fillText(computedText, 0, 0);
-
-        if (this.iconFunc) this.iconFunc(ctx, ctx.measureText(computedText).width);
-
-        ctx.restore();
-    }
-}
-
-export class SVGButton extends Button {
-    private static readonly SVG_SIZE: number = 0.7;
-    private svgCanvas: OffscreenCanvas | null = null;
-
-    constructor(
-        layout: LayoutOptions,
-
-        color: MaybeDynamicLayoutablePointer<ColorCode>,
-        callback: () => void,
-        validate: MaybeDynamicLayoutablePointer<boolean>,
-
-        private readonly svg: string,
-    ) {
-        super(layout, color, callback, validate);
-
-        (async () => {
-            const canvas = new OffscreenCanvas(512, 512);
-            const ctx = canvas.getContext("2d", {
-                antialias: true,
-                alpha: true,
-            });
-
-            if (ctx) {
-                await Canvg.fromString(ctx, this.svg, presets.offscreen()).render();
-                // Use stackblur to relief jaggy
-                StackBlur.canvasRGBA(canvas, 0, 0, canvas.width, canvas.height, 8);
-
-                this.svgCanvas = canvas;
-            }
-        })();
-    }
-
-    protected getStrokeWidth(): number {
-        const minDimension = Math.min(this.w, this.h);
-
-        return Math.max(2, minDimension * 0.07);
-    }
-
-    protected getCornerRadius(): number {
-        const minDimension = Math.min(this.w, this.h);
-
-        return Math.max(2, minDimension * 0.07);
-    }
-
-    override render(ctx: CanvasRenderingContext2D): void {
-        if (!this.isRenderable) return;
-
-        super.render(ctx);
-
-        this.update();
-
-        ctx.save();
-
-        const strokeWidth = this.getStrokeWidth();
-        const cornerRadius = this.getCornerRadius();
-
-        const color = this.getButtonColor();
-        const strokeColor = this.getButtonColorStroke();
-
-        ctx.lineWidth = strokeWidth;
-        ctx.strokeStyle = strokeColor;
-        ctx.fillStyle = color;
-
-        ctx.beginPath();
-        ctx.roundRect(this.x, this.y, this.w, this.h, cornerRadius);
-        ctx.fill();
-        ctx.stroke();
-        ctx.closePath();
-
-        // SVG rendering
-        if (this.svgCanvas) {
-            const drawWidth = this.w * SVGButton.SVG_SIZE;
-            const drawHeight = this.h * SVGButton.SVG_SIZE;
-
-            ctx.drawImage(
-                this.svgCanvas,
-                this.x + (this.w - drawWidth) / 2,
-                this.y + (this.h - drawHeight) / 2,
-                drawWidth,
-                drawHeight,
-            );
-        }
-
-        ctx.restore();
     }
 }

@@ -88,21 +88,25 @@ export function returnGoodShape(entity: RealEntity): CollidableShapes {
     } satisfies Ellipse;
 }
 
+export const PLAYER_MAX_COLLISION_DELTA = 15;
+
 export function accordinglyComputeDelta<T extends CollidableShapes>(s0: T, s1: T): number {
+    let delta: number;
+
     if (
         isCircle(s0) &&
         // Yea typescript type system is shit and cant know s1 is circle
         isCircle(s1)
     ) {
-        return colliderCircle.computeDelta(s0, s1);
+        delta = colliderCircle.computeDelta(s0, s1);
     } else if (
         isEllipse(s0) &&
         isEllipse(s1)
     ) {
-        return colliderEllipse.computeDelta(s0, s1);
+        delta = colliderEllipse.computeDelta(s0, s1);
     }
 
-    throw new Error("Unreachable");
+    return delta;
 }
 
 export function isColliding(delta: number): boolean {

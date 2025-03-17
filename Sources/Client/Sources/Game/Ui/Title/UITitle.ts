@@ -10,12 +10,10 @@ import { PETAL_TYPES } from "../../../../../Shared/Entity/Statics/EntityType";
 import { isPetal } from "../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
 import { renderEntity } from "../../Entity/Renderers/RendererEntityRenderingLink";
 import SettingStorage from "../../Utils/SettingStorage";
-import { CROSS_ICON_SVG } from "../Game/UIGame";
-import type { AllComponents } from "../Layout/Components/Component";
+import type { Components } from "../Layout/Components/Component";
 import { AnimationType } from "../Layout/Components/Component";
 import PlayerProfile from "../Layout/Components/Native/PlayerProfile";
-import { SVGButton, TextButton } from "../Layout/Components/WellKnown/Button";
-import type { AddableContainer } from "../Layout/Components/WellKnown/Container";
+import type { AddableStaticContainer } from "../Layout/Components/WellKnown/Container";
 import { StaticPanelContainer, CoordinatedStaticSpace, StaticHContainer, StaticSpace } from "../Layout/Components/WellKnown/Container";
 import Text from "../Layout/Components/WellKnown/Text";
 import TextInput from "../Layout/Components/WellKnown/TextInput";
@@ -28,6 +26,9 @@ import AbstractUI, { uiScaleFactor } from "../UI";
 import { PacketClientboundOpcode } from "../../../../../Shared/Websocket/Packet/Bound/Client/PacketClientboundOpcode";
 import type { StaticAdditionalClientboundListen } from "../../Websocket/Packet/Bound/Client/PacketClientbound";
 import type BinaryReader from "../../../../../Shared/Websocket/Binary/ReadWriter/Reader/BinaryReader";
+import { Button } from "../Layout/Components/WellKnown/Button";
+import { CanvasLogo, SVGLogo } from "../Layout/Components/WellKnown/Logo";
+import CROSS_ICON_SVG from "../Assets/cross_icon.svg";
 
 const TAU = Math.PI * 2;
 
@@ -115,17 +116,17 @@ export default class UITitle extends AbstractUI {
 
     private connectingText: Text;
     private loggingInText: Text;
-    private onLoadedComponents: AllComponents[];
+    private onLoadedComponents: Components[];
 
     // Make this public to close this from networking
-    private squadMenuContainer: AddableContainer;
+    private squadMenuContainer: AddableStaticContainer;
 
     private publicToggle: Toggle;
 
     private statusText: Text;
     private statusTextRef: StatusText;
 
-    private playerProfileContainer: AddableContainer;
+    private playerProfileContainer: AddableStaticContainer;
 
     private codeText: Text;
 
@@ -184,7 +185,7 @@ export default class UITitle extends AbstractUI {
             this.biome = waveBiome;
         },
         [PacketClientboundOpcode.WaveStarted]: (reader: BinaryReader): void => {
-            this.squadMenuContainer.setVisible(false, true);
+            this.squadMenuContainer.setVisible(false, true, AnimationType.Zoom);
 
             uiCtx.switchUI("game");
 
@@ -216,14 +217,14 @@ export default class UITitle extends AbstractUI {
         setTimeout(() => {
             this.connectingText.setVisible(true, false);
             setTimeout(() => {
-                this.connectingText.setVisible(false, true);
+                this.connectingText.setVisible(false, true, AnimationType.Zoom);
                 setTimeout(() => {
-                    this.loggingInText.setVisible(true, true);
+                    this.loggingInText.setVisible(true, true, AnimationType.Zoom);
                     setTimeout(() => {
-                        this.loggingInText.setVisible(false, true);
+                        this.loggingInText.setVisible(false, true, AnimationType.Zoom);
                         setTimeout(() => {
                             this.onLoadedComponents.forEach(c => {
-                                c.setVisible(true, true);
+                                c.setVisible(true, true, AnimationType.Zoom);
                             });
                         }, 150);
                     }, 2000);
@@ -245,40 +246,60 @@ export default class UITitle extends AbstractUI {
     protected override initializeComponents(): void {
         this.resetWaveState();
 
-        const craftButton = new SVGButton(
+        const craftButton = new Button(
             {
                 x: 15,
                 y: 173,
-                w: 45,
-                h: 45,
+                w: 40,
+                h: 40,
 
                 invertYCoordinate: true,
             },
-            "#db9d5a",
+            [
+                new SVGLogo(
+                    {
+                        x: 0,
+                        y: 0,
+                        w: 40,
+                        h: 40,
+                    },
+                    MOLECULE_SVG,
+                ),
+            ],
             () => {
                 console.log("called");
             },
+            "#db9d5a",
             true,
-            MOLECULE_SVG,
         );
 
         this.addComponent(craftButton);
 
-        const changelogButton = new SVGButton(
+        const changelogButton = new Button(
             {
                 x: 15,
                 y: 116,
-                w: 45,
-                h: 45,
+                w: 40,
+                h: 40,
 
                 invertYCoordinate: true,
             },
-            "#9bb56b",
+            [
+                new SVGLogo(
+                    {
+                        x: 0,
+                        y: 0,
+                        w: 40,
+                        h: 40,
+                    },
+                    SCROLL_UNFURLED_SVG,
+                ),
+            ],
             () => {
                 console.log("called");
             },
+            "#9bb56b",
             true,
-            SCROLL_UNFURLED_SVG,
         );
 
         this.addComponent(changelogButton);
@@ -297,29 +318,37 @@ export default class UITitle extends AbstractUI {
                     "#aaaaaa",
                 ),
                 [
-                    new SVGButton(
+                    new Button(
                         {
                             x: 150 - 4,
                             y: 2,
                             w: 17,
                             h: 17,
                         },
-                        "#bb5555",
+                        [
+                            new SVGLogo(
+                                {
+                                    x: 0,
+                                    y: 0,
+                                    w: 17,
+                                    h: 17,
+                                },
+                                CROSS_ICON_SVG,
+                            ),
+                        ],
                         () => {
                             settingIsOpen = false;
 
                             settingContainer.setVisible(settingIsOpen, true, AnimationType.Slide, "v");
                         },
+                        "#bb5555",
                         true,
-                        CROSS_ICON_SVG,
                     ),
 
                     new Text(
                         {
-                            x: 82,
-                            y: 14,
-                            w: 0,
-                            h: 0,
+                            x: 50,
+                            y: 5,
                         },
                         "Settings",
                         16,
@@ -341,16 +370,14 @@ export default class UITitle extends AbstractUI {
                     )),
                     new Text(
                         {
-                            x: 85,
-                            y: 48,
-                            w: 0,
-                            h: 0,
+                            x: 32,
+                            y: 42 + 1,
                         },
                         "Keyboard movement",
                         11,
                     ),
 
-                    new CoordinatedStaticSpace(150, 190, 15, 15),
+                    new CoordinatedStaticSpace(15, 15, 150, 190),
                 ],
             );
 
@@ -358,26 +385,36 @@ export default class UITitle extends AbstractUI {
 
             let settingIsOpen = false;
 
-            const settingButton = new SVGButton(
+            const settingButton = new Button(
                 {
                     x: 15,
                     y: 229,
-                    w: 45,
-                    h: 45,
+                    w: 40,
+                    h: 40,
 
                     invertYCoordinate: true,
                 },
-                "#599dd8",
+                [
+                    new SVGLogo(
+                        {
+                            x: 0,
+                            y: 0,
+                            w: 40,
+                            h: 40,
+                        },
+                        SWAP_BAG_SVG,
+                    ),
+                ],
                 () => {
                     settingIsOpen = !settingIsOpen;
 
                     settingContainer.setVisible(settingIsOpen, true, AnimationType.Slide, "v");
                 },
+                "#599dd8",
                 true,
-                SWAP_BAG_SVG,
             );
 
-            settingContainer.setVisible(false);
+            settingContainer.setVisible(false, false);
 
             this.addComponent(settingButton);
 
@@ -389,8 +426,6 @@ export default class UITitle extends AbstractUI {
             {
                 x: -(200 / 2),
                 y: (-(40 / 2)) - 5,
-                w: 200,
-                h: 32,
 
                 alignFromCenterX: true,
                 alignFromCenterY: true,
@@ -399,16 +434,10 @@ export default class UITitle extends AbstractUI {
             32,
         );
 
-        this.connectingText.setVisible(false);
-
-        this.addComponent(this.connectingText);
-
         this.loggingInText = new Text(
             {
                 x: -(200 / 2),
                 y: (-(40 / 2)) - 5,
-                w: 200,
-                h: 32,
 
                 alignFromCenterX: true,
                 alignFromCenterY: true,
@@ -417,16 +446,16 @@ export default class UITitle extends AbstractUI {
             32,
         );
 
-        this.loggingInText.setVisible(false);
+        this.connectingText.setVisible(false, false);
+        this.loggingInText.setVisible(false, false);
 
+        this.addComponent(this.connectingText);
         this.addComponent(this.loggingInText);
 
         const gameNameText = new (Collidable(Text))(
             {
                 x: -(250 / 2),
                 y: (-(80 / 2)) - 40,
-                w: 250,
-                h: 80,
 
                 alignFromCenterX: true,
                 alignFromCenterY: true,
@@ -444,8 +473,6 @@ export default class UITitle extends AbstractUI {
                 {
                     x: -(100 / 2),
                     y: (-(50 / 2)) - 10,
-                    w: 100,
-                    h: 10,
 
                     alignFromCenterX: true,
                     alignFromCenterY: true,
@@ -494,7 +521,7 @@ export default class UITitle extends AbstractUI {
 
             let readyToggle = false;
 
-            const readyButton = new (Collidable(TextButton))(
+            const readyButton = new (Collidable(Button))(
                 {
                     x: (-(100 / 2)) + 140,
                     y: (-(50 / 2)) + 5,
@@ -504,14 +531,39 @@ export default class UITitle extends AbstractUI {
                     alignFromCenterX: true,
                     alignFromCenterY: true,
                 },
-                "#1dd129",
+                [
+                    new Text(
+                        {
+                            x: 0,
+                            y: 0,
+                        },
+                        "Ready",
+                        50,
+                    ),
+                    new CanvasLogo(
+                        {
+                            x: 0,
+                            y: 0,
+                            w: 40,
+                            h: 40,
+                        },
+                        (ctx: CanvasRenderingContext2D) => {
+                            ctx.fillStyle = "black";
+                            ctx.globalAlpha = DARKEND_BASE;
+
+                            drawRoundedPolygon(ctx, 0, 0, 10, 90, 40, 3);
+
+                            ctx.fill();
+                        },
+                    ),
+                ],
                 () => {
                     readyToggle = !readyToggle;
 
                     if (this.squadMenuContainer.visible === false) {
                         clientWebsocket.packetServerbound.sendWaveRoomFindPublic(this.biome);
 
-                        this.squadMenuContainer.setVisible(true, true);
+                        this.squadMenuContainer.setVisible(true, true, AnimationType.Zoom);
 
                         this.statusTextRef = StatusText.SquadCreating;
 
@@ -524,21 +576,11 @@ export default class UITitle extends AbstractUI {
                         );
                     }
                 },
+                "#1dd129",
                 true,
-                "Ready",
-                (ctx: CanvasRenderingContext2D, textWidth: number) => {
-                    ctx.translate(textWidth + 12, 0);
-
-                    ctx.fillStyle = "black";
-                    ctx.globalAlpha = DARKEND_BASE;
-
-                    drawRoundedPolygon(ctx, 0, 0, 10, 90, 40, 3);
-
-                    ctx.fill();
-                },
             );
 
-            const squadButton = new TextButton(
+            const squadButton = new Button(
                 {
                     x: (-(100 / 2)) + 140 + 13,
                     y: (-(50 / 2)) + 20 + 16,
@@ -548,31 +590,31 @@ export default class UITitle extends AbstractUI {
                     alignFromCenterX: true,
                     alignFromCenterY: true,
                 },
-                "#5a9fdb",
+                [
+                    new Text(
+                        {
+                            x: 0,
+                            y: 0,
+                        },
+                        "Squad",
+                        14,
+                    ),
+
+                ],
                 () => {
                     clientWebsocket.packetServerbound.sendWaveRoomCreate(this.biome);
 
-                    this.squadMenuContainer.setVisible(true, true);
+                    this.squadMenuContainer.setVisible(true, true, AnimationType.Zoom);
 
                     this.statusTextRef = StatusText.SquadCreating;
 
                     clientWebsocket.packetServerbound.sendWaveRoomChangeVisible(WaveRoomVisibleState.Private);
                 },
+                "#5a9fdb",
                 true,
-                "Squad",
-                (ctx: CanvasRenderingContext2D, textWidth: number) => {
-                    ctx.translate(textWidth + 9, 0);
-
-                    ctx.fillStyle = "black";
-                    ctx.globalAlpha = DARKEND_BASE;
-
-                    drawRoundedPolygon(ctx, 0, 0, 8, 90, 40, 4);
-
-                    ctx.fill();
-                },
             );
 
-            const biomeSwitchers = this.createAddableContainer(
+            const biomeSwitcher = this.createAddableContainer(
                 new StaticHContainer(
                     {
                         x: -144,
@@ -583,43 +625,70 @@ export default class UITitle extends AbstractUI {
                     },
                 ),
                 [
-                    new TextButton(
+                    new Button(
                         {
                             w: 42,
                             h: 14,
                         },
-                        "#2ba35b",
+                        [
+                            new Text(
+                                {
+                                    x: 0,
+                                    y: 0,
+                                },
+                                "Garden",
+                                50,
+                            ),
+                        ],
                         () => {
                             this.biome = Biome.Garden;
                         },
+                        "#2ba35b",
                         true,
-                        "Garden",
                     ),
                     new StaticSpace(5, 0),
-                    new TextButton(
+                    new Button(
                         {
                             w: 42,
                             h: 14,
                         },
-                        "#ccba73",
+                        [
+                            new Text(
+                                {
+                                    x: 0,
+                                    y: 0,
+                                },
+                                "Desert",
+                                50,
+                            ),
+                        ],
                         () => {
                             this.biome = Biome.Desert;
                         },
+                        "#ccba73",
                         true,
-                        "Desert",
                     ),
                     new StaticSpace(5, 0),
-                    new TextButton(
+                    new Button(
                         {
                             w: 42,
                             h: 14,
                         },
-                        "#6089b6",
+                        [
+                            new Text(
+                                {
+                                    x: 0,
+                                    y: 0,
+                                },
+                                "Ocean",
+                                50,
+                            ),
+                        ],
                         () => {
                             this.biome = Biome.Ocean;
                         },
+                        "#6089b6",
                         true,
-                        "Ocean",
                     ),
                 ],
             );
@@ -657,8 +726,6 @@ export default class UITitle extends AbstractUI {
                         {
                             x: 162,
                             y: 110,
-                            w: 0,
-                            h: 0,
                         },
                         () => this.statusTextRef,
                         14,
@@ -682,16 +749,26 @@ export default class UITitle extends AbstractUI {
                         ],
                     )),
 
-                    new SVGButton(
+                    new Button(
                         {
                             x: 316 - 0.5,
                             y: 1 + 0.5,
                             w: 15,
                             h: 15,
                         },
-                        "#bb5555",
+                        [
+                            new SVGLogo(
+                                {
+                                    x: 0,
+                                    y: 0,
+                                    w: 10,
+                                    h: 10,
+                                },
+                                CROSS_ICON_SVG,
+                            ),
+                        ],
                         () => {
-                            this.squadMenuContainer.setVisible(false, true);
+                            this.squadMenuContainer.setVisible(false, true, AnimationType.Zoom);
 
                             readyToggle = false;
 
@@ -701,10 +778,10 @@ export default class UITitle extends AbstractUI {
 
                             clientWebsocket.packetServerbound.sendWaveRoomLeave();
                         },
+                        "#bb5555",
                         true,
-                        CROSS_ICON_SVG,
                     ),
-                    new CoordinatedStaticSpace(317, 196, 15, 15),
+                    new CoordinatedStaticSpace(15, 15, 317, 196),
 
                     (this.publicToggle = new Toggle(
                         {
@@ -723,8 +800,6 @@ export default class UITitle extends AbstractUI {
                         {
                             x: 46,
                             y: 24 + 8,
-                            w: 0,
-                            h: 0,
                         },
                         "Public",
                         10,
@@ -782,50 +857,75 @@ export default class UITitle extends AbstractUI {
                             padding: 1,
                         },
                     )),
-                    new TextButton(
+                    new Button(
                         {
                             x: 274,
                             y: 183 + 1,
                             w: 50,
                             h: 18,
                         },
-                        "#1dd129",
+                        [
+                            new Text(
+                                {
+                                    x: 0,
+                                    y: 0,
+                                },
+                                "Join",
+                                10,
+                            ),
+                        ],
                         () => clientWebsocket.packetServerbound.sendWaveRoomJoin(codeInput.value),
+                        "#1dd129",
                         () => isWaveRoomCode(codeInput.value),
-                        "Join",
                     ),
 
-                    new TextButton(
+                    new Button(
                         {
                             x: 195,
                             y: 24,
                             w: 72,
                             h: 18,
                         },
-                        "#5aa0db",
+                        [
+                            new Text(
+                                {
+                                    x: 0,
+                                    y: 0,
+                                },
+                                "Find public",
+                                10,
+                            ),
+                        ],
                         () => clientWebsocket.packetServerbound.sendWaveRoomFindPublic(this.biome),
+                        "#5aa0db",
                         true,
-                        "Find public",
                     ),
-                    new TextButton(
+                    new Button(
                         {
                             x: 274,
                             y: 24,
                             w: 50,
                             h: 18,
                         },
-                        "#5aa0db",
+                        [
+                            new Text(
+                                {
+                                    x: 0,
+                                    y: 0,
+                                },
+                                "New",
+                                10,
+                            ),
+                        ],
                         () => clientWebsocket.packetServerbound.sendWaveRoomCreate(this.biome),
-                        () => true,
-                        "New",
+                        "#5aa0db",
+                        true,
                     ),
 
                     (this.codeText = new Text(
                         {
                             x: 10,
                             y: 193,
-                            w: 0,
-                            h: 0,
                         },
                         () => "Code: " + (this.waveRoomCode || ""),
                         9,
@@ -837,8 +937,6 @@ export default class UITitle extends AbstractUI {
                         {
                             x: 162,
                             y: 10,
-                            w: 0,
-                            h: 0,
                         },
                         "Squad",
                         14,
@@ -850,21 +948,20 @@ export default class UITitle extends AbstractUI {
             this.onLoadedComponents.push(nameInput);
             this.onLoadedComponents.push(readyButton);
             this.onLoadedComponents.push(squadButton);
-            this.onLoadedComponents.push(biomeSwitchers);
+            this.onLoadedComponents.push(biomeSwitcher);
 
-            nameInputDescription.setVisible(false);
-            nameInput.setVisible(false);
-            readyButton.setVisible(false);
-            squadButton.setVisible(false);
-            biomeSwitchers.setVisible(false);
+            nameInputDescription.setVisible(false, false);
+            nameInput.setVisible(false, false);
+            readyButton.setVisible(false, false);
+            squadButton.setVisible(false, false);
+            biomeSwitcher.setVisible(false, false);
+            this.squadMenuContainer.setVisible(false, false);
 
             this.addComponent(nameInputDescription);
             this.addComponent(nameInput);
             this.addComponent(readyButton);
             this.addComponent(squadButton);
-            this.addComponent(biomeSwitchers);
-
-            this.squadMenuContainer.setVisible(false);
+            this.addComponent(biomeSwitcher);
             this.addComponent(this.squadMenuContainer);
 
             nameInputDescription.addCollidableComponents([this.squadMenuContainer, nameInput]);

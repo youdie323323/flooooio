@@ -9,13 +9,11 @@
     "start:server:debug": "tsc --noEmit & cd Sources/Server && tsx Main.ts -d"
   },
   "devDependencies": {
-    "stackblur-canvas": "^2.7.0",
-    "ws": "^8.18.0",
-    "dotenv": "^16.4.7",
-    "@types/node-schedule": "^2.1.7",
     "@stylistic/eslint-plugin": "^4.1.0",
     "@types/express": "^5.0.0",
+    "@types/node-schedule": "^2.1.7",
     "canvg": "^4.0.2",
+    "dotenv": "^16.4.7",
     "esbuild": "0.24.0",
     "eslint-import-resolver-typescript": "^3.7.0",
     "eslint-plugin-import": "^2.31.0",
@@ -25,7 +23,10 @@
     "inquirer": "^12.2.0",
     "js-confuser": "^2.0.0",
     "node-schedule": "^2.1.1",
+    "stackblur-canvas": "^2.7.0",
+    "strict-event-emitter": "^0.5.1",
     "typescript-eslint": "^8.18.0",
-    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.51.0"
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.51.0",
+    "ws": "^8.18.0"
   }
 }

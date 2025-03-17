@@ -1,10 +1,11 @@
 import type { ColorCode } from "../../../../../../../Shared/Utils/Color";
 import { memo } from "../../../../../../../Shared/Utils/Memoize";
 import ExtensionBase from "../../Extensions/Extension";
-import type { LayoutOptions, LayoutResult } from "../../Layout";
+import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
-import type { MaybeDynamicLayoutablePointer } from "../Component";
+import type { DynamicLayoutablePointer } from "../Component";
 import { Component } from "../Component";
+import type { AutomaticallySizableLayoutOptions } from "./Container";
 
 export const calculateStrokeWidth = memo((fontSize: number): number => {
     // 80 / 8.333333830038736 (actually this is 8+1/3 but floating point exception) = 9.59999942779541
@@ -13,34 +14,58 @@ export const calculateStrokeWidth = memo((fontSize: number): number => {
 
 export default class Text extends ExtensionBase(Component) {
     constructor(
-        private layout: MaybeDynamicLayoutablePointer<LayoutOptions>,
+        private layout: DynamicLayoutablePointer<AutomaticallySizableLayoutOptions>,
 
-        private text: MaybeDynamicLayoutablePointer<string>,
-        private fontSize: MaybeDynamicLayoutablePointer<number>,
-        private fillStyle: MaybeDynamicLayoutablePointer<ColorCode> = "#ffffff",
-        private textAlign: MaybeDynamicLayoutablePointer<CanvasTextAlign> = "center",
-        private maxRenderingWidth: MaybeDynamicLayoutablePointer<number> = null,
+        private text: DynamicLayoutablePointer<string>,
+        private fontSize: DynamicLayoutablePointer<number>,
+        private fillStyle: DynamicLayoutablePointer<ColorCode> = "#ffffff",
+        private textAlign: DynamicLayoutablePointer<CanvasTextAlign> = "center",
+        private textWidthLimit: DynamicLayoutablePointer<number> = null,
     ) {
         super();
     }
 
-    override calculateLayout(
-        width: number,
-        height: number,
-        originX: number,
-        originY: number,
-    ): LayoutResult {
+    private calculateSize(ctx: CanvasRenderingContext2D): [number, number] {
+        const computedFontSize = this.computeDynamicLayoutable(this.fontSize);
+        const computedText = this.computeDynamicLayoutable(this.text);
+
+        ctx.save();
+
+        ctx.font = `${computedFontSize}px Ubuntu`;
+        const metrics = ctx.measureText(computedText);
+
+        ctx.restore();
+
+        return [
+            metrics.width,
+            (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent) * 1.1,
+        ];
+    }
+
+    override calculateLayout(lc: LayoutContext): LayoutResult {
+        const { ctx } = lc;
+
+        const [w, h] = this.calculateSize(ctx);
+
         return Layout.layout(
-            this.computeDynamicLayoutable(this.layout),
-            width,
-            height,
-            originX,
-            originY,
+            {
+                ...this.computeDynamicLayoutable(this.layout),
+
+                w,
+                h,
+            },
+            lc,
         );
     }
 
     override getCacheKey(): string {
-        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`;
+        return super.getCacheKey() +
+            Object.values(this.computeDynamicLayoutable(this.layout)).join("");
+        // this.computeDynamicLayoutable(this.text) +
+        // this.computeDynamicLayoutable(this.fontSize) + 
+        // this.computeDynamicLayoutable(this.fillStyle) + 
+        // this.computeDynamicLayoutable(this.textAlign) + 
+        // this.computeDynamicLayoutable(this.textWidthLimit);
     }
 
     override invalidateLayoutCache(): void {
@@ -74,13 +99,11 @@ export default class Text extends ExtensionBase(Component) {
         const x = this.x + this.w / 2,
             y = this.y + this.h / 2;
 
-        if (this.maxRenderingWidth) {
-            this.drawScaledText(ctx, computedText, x, y, this.computeDynamicLayoutable(this.maxRenderingWidth));
+        if (this.textWidthLimit) {
+            this.drawScaledText(ctx, computedText, x, y, this.computeDynamicLayoutable(this.textWidthLimit));
         } else {
-            ctx.translate(x, y);
-
-            ctx.strokeText(computedText, 0, 0);
-            ctx.fillText(computedText, 0, 0);
+            ctx.strokeText(computedText, x, y);
+            ctx.fillText(computedText, x, y);
         }
 
         ctx.restore();

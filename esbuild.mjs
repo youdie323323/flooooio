@@ -17,6 +17,7 @@ async function watch() {
         outfile: obfuscateEnabled ? prebuildedFileName : "./build/statics/client.js",
         legalComments: "none",
         tsconfig: "./tsconfig.json",
+        loader: { ".svg": "text" },
         plugins: [
             {
                 name: 'watch-client-only',

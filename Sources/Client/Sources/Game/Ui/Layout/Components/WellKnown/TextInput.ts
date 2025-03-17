@@ -1,7 +1,7 @@
 import ExtensionBase from "../../Extensions/Extension";
-import type { LayoutOptions, LayoutResult } from "../../Layout";
+import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
-import type { Interactive, MaybeDynamicLayoutablePointer } from "../Component";
+import type { Interactive, DynamicLayoutablePointer } from "../Component";
 import { Component } from "../Component";
 import { calculateStrokeWidth } from "./Text";
 
@@ -61,7 +61,6 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
     public hasFocus: boolean;
     public readonly: boolean;
     public maxlength: number | null;
-    public mouseDown: boolean;
     public selectionStart?: number;
     public selectionUpdated?: boolean;
 
@@ -90,7 +89,7 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
     private onmouseupListen: (e: any) => void;
 
     constructor(
-        protected layout: MaybeDynamicLayoutablePointer<LayoutOptions>,
+        protected layout: DynamicLayoutablePointer<LayoutOptions>,
         o: TextInputOptions,
     ) {
         super();
@@ -118,7 +117,6 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
         this.readonly = o.readonly || false;
         this.maxlength = o.maxlength || null;
         this.hasFocus = false;
-        this.mouseDown = false;
 
         // Initialize cursor & selection
         this.cursorGlobalAlpha = 0;
@@ -235,23 +233,13 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
         this.h = h + this.padding * 2 + this.borderWidth * 2;
     }
 
-    override calculateLayout(
-        width: number,
-        height: number,
-        originX: number = 0,
-        originY: number = 0,
-    ): LayoutResult {
-        return Layout.layout(
-            this.computeDynamicLayoutable(this.layout),
-            width,
-            height,
-            originX,
-            originY,
-        );
+    override calculateLayout(lc: LayoutContext): LayoutResult {
+        return Layout.layout(this.computeDynamicLayoutable(this.layout), lc);
     }
 
     override getCacheKey(): string {
-        return super.getCacheKey() + `${Object.values(this.computeDynamicLayoutable(this.layout)).join("")}`;
+        return super.getCacheKey() +
+            Object.values(this.computeDynamicLayoutable(this.layout)).join("");
     }
 
     override invalidateLayoutCache(): void {
@@ -263,7 +251,7 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
 
         const { ctx } = this;
         if (!ctx) return;
-    
+
         super.render(ctx);
 
         this.update();
@@ -271,9 +259,9 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
         ctx.save();
 
         ctx.translate(this.x, this.y);
-    
+
         const text = this.clipText();
-        
+
         if (this.placeHolderDisplayUnfocusedState) {
             this.renderPlaceholderState(text);
         } else {
@@ -282,57 +270,57 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
 
         ctx.restore();
     }
-    
+
     private renderPlaceholderState(text: string) {
         if (this.hasFocus) {
             this.renderTextInput(text);
 
             return;
         }
-        
+
         this.setupTextContext();
-        
+
         if (this.value.length > 0) {
             this.renderFilledUnfocusedState(text);
         } else {
             this.renderEmptyUnfocusedState();
         }
     }
-    
+
     private renderFilledUnfocusedState(text: string) {
         const { ctx, h } = this;
-        
+
         this.drawBackgroundOverlay();
-        
+
         ctx.fillStyle = "#000000";
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = calculateStrokeWidth(this.fontSize);
-        
+
         ctx.translate(this.padding + this.borderWidth, h / 2);
-        
+
         ctx.strokeText(text, 0, 0);
         ctx.fillText(text, 0, 0);
     }
-    
+
     private renderEmptyUnfocusedState() {
         const { ctx, h } = this;
-        
+
         this.setupTextContext(true);
         this.drawBackgroundOverlay();
-        
+
         ctx.fillStyle = "#ffffff";
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = calculateStrokeWidth(this.fontSize);
-        
+
         ctx.translate(this.padding + this.borderWidth, h / 2);
-        
+
         ctx.strokeText(this.placeHolderUnfocused, 0, 0);
         ctx.fillText(this.placeHolderUnfocused, 0, 0);
     }
-    
+
     private drawBackgroundOverlay() {
         const { ctx, w, h, borderRadius: br } = this;
-        
+
         ctx.save();
         ctx.globalAlpha = 0.4;
         ctx.fillStyle = "#000000";
@@ -341,50 +329,50 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
         ctx.fill();
         ctx.restore();
     }
-    
+
     private setupTextContext(reduced = false) {
         const { ctx } = this;
-        
+
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
         ctx.font = `${this.fontStyle} ${this.fontWeight} ${this.fontSize - (reduced ? 1 : 0)}px ${this.fontFamily}`;
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
     }
-    
+
     private renderTextInput(text: string) {
         this.drawBorder();
         this.drawTextBox(() => this.renderTextContent(text));
     }
-    
+
     private drawBorder() {
         const { ctx, w, h, borderRadius: br } = this;
-        
+
         if (this.borderWidth <= 0) return;
-        
+
         ctx.fillStyle = this.borderColor;
         ctx.beginPath();
         ctx.roundRect(0, 0, w, h, br);
         ctx.fill();
-        
+
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
         ctx.shadowBlur = 0;
     }
-    
+
     private renderTextContent(text: string) {
         this.clearShadow();
-        
+
         const hasSelection = this.selection[1] - this.selection[0] > 0;
         if (hasSelection) {
             this.renderSelection(text);
         } else {
             this.renderCursor(text);
         }
-        
+
         this.renderText(text);
     }
-    
+
     private clearShadow() {
         const { ctx } = this;
 
@@ -392,18 +380,18 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
         ctx.shadowOffsetY = 0;
         ctx.shadowBlur = 0;
     }
-    
+
     private renderSelection(text: string) {
         const { ctx, h } = this;
 
         const paddingBorder = this.padding + this.borderWidth;
         const selectWidth = this.textWidth(text.substring(this.selection[0], this.selection[1]));
-        
+
         ctx.save();
-        
+
         const selectOffset = this.textWidth(text.substring(0, this.selection[0]));
         ctx.fillStyle = this.selectionColor;
-        
+
         const heightResized = h * 0.64;
         const WIDTH_OFFSET = 4;
         ctx.fillRect(
@@ -412,88 +400,89 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
             selectWidth + WIDTH_OFFSET,
             heightResized,
         );
-        
+
         ctx.restore();
     }
-    
+
     private renderCursor(text: string) {
         const { ctx, h } = this;
-        
+
         const paddingBorder = this.padding + this.borderWidth;
-        
+
         ctx.save();
 
         ctx.globalAlpha = this.cursorGlobalAlpha;
-        
-        const CURSOR_SIZE_WIDTH = 2.2;
+
+        const CURSOR_WIDTH = 1.8;
+        const CURSOR_RELATIVE_HEIGHT = 12;
 
         const cursorOffset = this.textWidth(text.slice(0, this.cursorPos));
-        
+
         // Draw black cursor background
         ctx.fillStyle = "#000000";
         ctx.fillRect(
             (paddingBorder + cursorOffset) - 1,
-            10 / 2,
-            CURSOR_SIZE_WIDTH,
-            h - 10,
+            CURSOR_RELATIVE_HEIGHT / 2,
+            CURSOR_WIDTH,
+            h - CURSOR_RELATIVE_HEIGHT,
         );
-        
+
         // Draw white cursor center
-        const whiteWidth = CURSOR_SIZE_WIDTH * 0.65;
+        const whiteWidth = CURSOR_WIDTH * 0.65;
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(
-            (paddingBorder + cursorOffset + ((CURSOR_SIZE_WIDTH - whiteWidth) / 2)) - 1,
-            10 / 2,
+            (paddingBorder + cursorOffset + ((CURSOR_WIDTH - whiteWidth) / 2)) - 1,
+            CURSOR_RELATIVE_HEIGHT / 2,
             whiteWidth,
-            h - 10,
+            h - CURSOR_RELATIVE_HEIGHT,
         );
-        
+
         ctx.restore();
     }
-    
+
     private renderText(text: string) {
         const { ctx, h } = this;
-        
+
         this.setupTextContext();
-        
+
         const displayText = text || this.placeHolder;
         const normalFillStyle = (this.value && this.value !== this.placeHolder)
             ? this.fontColor
             : this.placeHolderColor;
-        
+
         let textX = this.padding + this.borderWidth;
         const textY = Math.round(h / 2);
-        
+
         ctx.translate(0, textY);
-        
+
         for (let i = 0; i < displayText.length; i++) {
             const char = displayText[i];
             const isSelected = i >= this.selection[0] && i < this.selection[1];
-            
+
             if (isSelected) {
                 this.renderSelectedChar(char, textX);
             } else {
                 this.renderNormalChar(char, textX, normalFillStyle);
             }
-            
+
             textX += this.textWidth(char);
         }
     }
-    
+
     private renderSelectedChar(char: string, x: number) {
         const { ctx } = this;
-        
+
         ctx.strokeStyle = '#000000';
         ctx.fillStyle = "#ffffff";
         ctx.lineWidth = calculateStrokeWidth(this.fontSize);
-        
+
         ctx.strokeText(char, x, 0);
         ctx.fillText(char, x, 0);
     }
-    
+
     private renderNormalChar(char: string, x: number, fillStyle: string) {
         const { ctx } = this;
-        
+
         ctx.fillStyle = fillStyle;
         ctx.fillText(char, x, 0);
     }
@@ -525,7 +514,9 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
 
     private updateCursorStyle(e: boolean): void {
         if (e) {
-            this.canvas.style.cursor = this.hasFocus ? "text" : "pointer";
+            this.canvas.style.cursor = this.hasFocus
+                ? "text"
+                : "pointer";
         }
     }
 
@@ -679,8 +670,6 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
     private mousedown(e: MouseEvent, self: this) {
         const x = this.context.mouseX, y = this.context.mouseY, isOver = this.overInput(x, y);
 
-        this.mouseDown = isOver;
-
         if (this.hasFocus && !isOver) {
             self.blur();
 
@@ -688,20 +677,18 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
         }
 
         // Focus if over
-        if (this.mouseDown) {
+        if (isOver) {
             this.hasFocus = true;
-            self.focus(this.clickPos(x, y));
-        }
 
-        if (this.hasFocus && this.mouseDown) {
+            self.focus(this.clickPos(x, y));
             this.selectionStart = this.clickPos(x, y);
         }
+
+        this.updateCursorStyle(isOver);
     }
 
     private mouseup(e: MouseEvent, self: this) {
-        const x = this.context.mouseX, y = this.context.mouseY, isOver = this.overInput(x, y);
-
-        this.updateCursorStyle(isOver);
+        const x = this.context.mouseX, y = this.context.mouseY;
 
         const isSelection = this.clickPos(x, y) !== this.selectionStart;
         if (this.hasFocus && this.selectionStart >= 0 && isSelection) {

@@ -15,4 +15,4 @@ export const calculateWaveLuck = (waveProgress: number): number => 1.3 ** wavePr
  * @remarks
  * 100 * x, x is upgrade.
  */
-export const calculateHp = (level: number): number => (100 * 10000) * 1.02 ** (Math.max(level, 75) - 1);
+export const calculateHp = (level: number): number => (100 * 1) * 1.02 ** (Math.max(level, 75) - 1);
