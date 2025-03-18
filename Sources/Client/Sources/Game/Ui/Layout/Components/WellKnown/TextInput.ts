@@ -1,7 +1,7 @@
 import ExtensionBase from "../../Extensions/Extension";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
-import type { Interactive, DynamicLayoutablePointer } from "../Component";
+import type { MaybePointerLike } from "../Component";
 import { Component } from "../Component";
 import { calculateStrokeWidth } from "./Text";
 
@@ -33,9 +33,9 @@ interface TextInputOptions {
     onblur?: (self: TextInput) => void;
 }
 
-const inputs: TextInput[] = [];
+const inputs: Array<TextInput> = new Array();
 
-export default class TextInput extends ExtensionBase(Component) implements Interactive {
+export default class TextInput extends ExtensionBase(Component) {
     // Core properties
     private _value: string;
     private canvas: HTMLCanvasElement;
@@ -89,7 +89,7 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
     private onmouseupListen: (e: any) => void;
 
     constructor(
-        protected layout: DynamicLayoutablePointer<LayoutOptions>,
+        protected readonly layoutOptions: MaybePointerLike<LayoutOptions>,
         o: TextInputOptions,
     ) {
         super();
@@ -209,6 +209,10 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
             }
         });
 
+        this.on("onBlur", () => {
+            this.canvas.style.cursor = "default";
+        });
+
         inputs.push(this);
         this.inputsIndex = inputs.length - 1;
     }
@@ -233,13 +237,13 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
         this.h = h + this.padding * 2 + this.borderWidth * 2;
     }
 
-    override calculateLayout(lc: LayoutContext): LayoutResult {
-        return Layout.layout(this.computeDynamicLayoutable(this.layout), lc);
+    override layout(lc: LayoutContext): LayoutResult {
+        return Layout.layout(Component.computePointerLike(this.layoutOptions), lc);
     }
 
     override getCacheKey(): string {
         return super.getCacheKey() +
-            Object.values(this.computeDynamicLayoutable(this.layout)).join("");
+            Object.values(Component.computePointerLike(this.layoutOptions)).join("");
     }
 
     override invalidateLayoutCache(): void {
@@ -488,8 +492,6 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
     }
 
     override destroy() {
-        super.destroy();
-
         const index = inputs.indexOf(this);
         if (index != -1) {
             inputs.splice(index, 1);
@@ -504,12 +506,8 @@ export default class TextInput extends ExtensionBase(Component) implements Inter
         this.canvas.removeEventListener('mouseup', this.onmouseupListen);
 
         document.body.removeChild(this.hiddenInput);
-    }
 
-    public onFocus(): void { }
-
-    public onBlur(): void {
-        this.canvas.style.cursor = "default";
+        super.destroy();
     }
 
     private updateCursorStyle(e: boolean): void {

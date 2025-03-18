@@ -1,5 +1,5 @@
 import type { Biome } from "../Shared/Biome";
-import TilesetRenderer, { BIOME_SVG_TILESET, BIOME_TILESETS } from "./Sources/Game/UI/Tiled/TilesetRenderer";
+import TilesetRenderer, { BIOME_SVG_TILESET, BIOME_TILESETS } from "./Sources/Game/UI/Shared/Tiled/TilesetRenderer";
 import { uiScaleFactor } from "./Sources/Game/UI/UI";
 import UIContext from "./Sources/Game/UI/UIContext";
 import CameraController from "./Sources/Game/Utils/CameraController";

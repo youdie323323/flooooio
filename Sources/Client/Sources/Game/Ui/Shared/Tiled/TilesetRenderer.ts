@@ -1,7 +1,7 @@
 import { Canvg, presets } from "canvg";
-import { uiScaleFactor } from "../UI";
-import { Biome } from "../../../../../Shared/Biome";
-import { antennaScaleFactor } from "../../../../Main";
+import { Biome } from "../../../../../../Shared/Biome";
+import { antennaScaleFactor } from "../../../../../Main";
+import { uiScaleFactor } from "../../UI";
 
 const TAU = Math.PI * 2;
 
@@ -339,7 +339,7 @@ export default class TilesetRenderer {
         size: number,
         // I found the way to fix the weird seam between drawImage
         // https://stackoverflow.com/questions/9942209/unwanted-lines-appearing-in-html5-canvas-using-tiles
-        // But couldnt fix it
+        // but couldnt fix it
         padding: number = 1 / 3,
     ) {
         ctx.drawImage(

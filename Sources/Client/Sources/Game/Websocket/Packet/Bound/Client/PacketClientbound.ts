@@ -12,11 +12,11 @@ export type AdditionalClientboundListen = StaticAdditionalClientboundListen | Dy
 
 export default class PacketClientbound {
     /**
-     * @param _additionalClientboundListen - Additional listener function to custom game
+     * @param additionalClientboundListen - Additional listener function to custom game
      */
     constructor(
-        public clientWebSocket: ClientWebsocket,
-        private _additionalClientboundListen: AdditionalClientboundListen = {},
+        private clientWebSocket: ClientWebsocket,
+        private additionalClientboundListen: AdditionalClientboundListen = {},
     ) { }
 
     public read(data: ReadableDataType) {
@@ -24,7 +24,7 @@ export default class PacketClientbound {
 
         const opcode = reader.readUInt8() satisfies PacketClientboundOpcode;
 
-        const listen = this.computeAdditionalClientboundListen(this._additionalClientboundListen);
+        const listen = this.computeAdditionalClientboundListen(this.additionalClientboundListen);
         if (listen.hasOwnProperty(opcode)) {
             listen[opcode](reader);
 
@@ -41,11 +41,7 @@ export default class PacketClientbound {
     }
 
     private computeAdditionalClientboundListen(listen: AdditionalClientboundListen): StaticAdditionalClientboundListen {
-        if (listen instanceof Function) {
-            return listen();
-        } else {
-            return listen;
-        }
+        return listen instanceof Function ? listen() : listen;
     }
 
     public readPacketConnectionKick(reader: BinaryReader) {

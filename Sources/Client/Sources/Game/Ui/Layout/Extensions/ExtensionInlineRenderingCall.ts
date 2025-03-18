@@ -1,4 +1,4 @@
-import type { ComponentExtensionTemplate, ExtensionConstructor, UpdateFunction } from "./Extension";
+import type { ComponentExtensionTemplate, ExtensionConstructor } from "./Extension";
 
 export const BLACKLISTED: unique symbol = Symbol("blacklisted");
 
@@ -16,9 +16,12 @@ export function InlineRenderingCall<T extends ExtensionConstructor>(Base: T) {
             this[BLACKLISTED] = true;
         }
 
-        public update: UpdateFunction = () => {
-            super.update?.();
-        };
+        override get update(): ComponentExtensionTemplate["update"] {
+            return (): void => {
+                // Call parent extension update(), so its possible to nest the extension
+                super.update?.();
+            };
+        }
     }
 
     return MixedBase;

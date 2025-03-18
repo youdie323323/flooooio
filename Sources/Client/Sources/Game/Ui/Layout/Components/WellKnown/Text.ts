@@ -1,9 +1,9 @@
 import type { ColorCode } from "../../../../../../../Shared/Utils/Color";
 import { memo } from "../../../../../../../Shared/Utils/Memoize";
 import ExtensionBase from "../../Extensions/Extension";
-import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
+import type { LayoutContext, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
-import type { DynamicLayoutablePointer } from "../Component";
+import type { MaybePointerLike } from "../Component";
 import { Component } from "../Component";
 import type { AutomaticallySizedLayoutOptions } from "./Container";
 
@@ -14,20 +14,20 @@ export const calculateStrokeWidth = memo((fontSize: number): number => {
 
 export default class Text extends ExtensionBase(Component) {
     constructor(
-        private layout: DynamicLayoutablePointer<AutomaticallySizedLayoutOptions>,
+        protected readonly layoutOptions: MaybePointerLike<AutomaticallySizedLayoutOptions>,
 
-        private text: DynamicLayoutablePointer<string>,
-        private fontSize: DynamicLayoutablePointer<number>,
-        private fillStyle: DynamicLayoutablePointer<ColorCode> = "#ffffff",
-        private textAlign: DynamicLayoutablePointer<CanvasTextAlign> = "center",
-        private textWidthLimit: DynamicLayoutablePointer<number> = null,
+        protected readonly text: MaybePointerLike<string>,
+        protected readonly fontSize: MaybePointerLike<number>,
+        protected readonly fillStyle: MaybePointerLike<ColorCode> = "#ffffff",
+        protected readonly textAlign: MaybePointerLike<CanvasTextAlign> = "center",
+        protected readonly textLimitWidth: MaybePointerLike<number> = null,
     ) {
         super();
     }
 
     private calculateSize(ctx: CanvasRenderingContext2D): [number, number] {
-        const computedFontSize = this.computeDynamicLayoutable(this.fontSize);
-        const computedText = this.computeDynamicLayoutable(this.text);
+        const computedFontSize = Component.computePointerLike(this.fontSize);
+        const computedText = Component.computePointerLike(this.text);
 
         ctx.save();
 
@@ -37,19 +37,19 @@ export default class Text extends ExtensionBase(Component) {
         ctx.restore();
 
         return [
-            metrics.width,
-            (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent) * 1.1,
+            metrics.width + 10,
+            (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent) * 1.25,
         ];
     }
 
-    override calculateLayout(lc: LayoutContext): LayoutResult {
+    override layout(lc: LayoutContext): LayoutResult {
         const { ctx } = lc;
 
         const [w, h] = this.calculateSize(ctx);
 
         return Layout.layout(
             {
-                ...this.computeDynamicLayoutable(this.layout),
+                ...Component.computePointerLike(this.layoutOptions),
 
                 w,
                 h,
@@ -60,12 +60,12 @@ export default class Text extends ExtensionBase(Component) {
 
     override getCacheKey(): string {
         return super.getCacheKey() +
-            Object.values(this.computeDynamicLayoutable(this.layout)).join("");
-        // this.computeDynamicLayoutable(this.text) +
-        // this.computeDynamicLayoutable(this.fontSize) + 
-        // this.computeDynamicLayoutable(this.fillStyle) + 
-        // this.computeDynamicLayoutable(this.textAlign) + 
-        // this.computeDynamicLayoutable(this.textWidthLimit);
+            Object.values(Component.computePointerLike(this.layoutOptions)).join("");
+        // Component.computeDynamicLayoutable(this.text) +
+        // Component.computeDynamicLayoutable(this.fontSize) + 
+        // Component.computeDynamicLayoutable(this.fillStyle) + 
+        // Component.computeDynamicLayoutable(this.textAlign) + 
+        // Component.computeDynamicLayoutable(this.textWidthLimit);
     }
 
     override invalidateLayoutCache(): void {
@@ -81,10 +81,10 @@ export default class Text extends ExtensionBase(Component) {
 
         ctx.save();
 
-        const computedFillStyle = this.computeDynamicLayoutable(this.fillStyle);
-        const computedFontSize = this.computeDynamicLayoutable(this.fontSize);
-        const computedText = this.computeDynamicLayoutable(this.text);
-        const computedTextAlign = this.computeDynamicLayoutable(this.textAlign);
+        const computedFillStyle = Component.computePointerLike(this.fillStyle);
+        const computedFontSize = Component.computePointerLike(this.fontSize);
+        const computedText = Component.computePointerLike(this.text);
+        const computedTextAlign = Component.computePointerLike(this.textAlign);
 
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
@@ -99,8 +99,10 @@ export default class Text extends ExtensionBase(Component) {
         const x = this.x + this.w / 2,
             y = this.y + this.h / 2;
 
-        if (this.textWidthLimit) {
-            this.drawScaledText(ctx, computedText, x, y, this.computeDynamicLayoutable(this.textWidthLimit));
+        if (this.textLimitWidth) {
+            const computedTextWidthLimit = Component.computePointerLike(this.textLimitWidth);
+            
+            this.drawScaledText(ctx, computedText, x, y, computedTextWidthLimit);
         } else {
             ctx.strokeText(computedText, x, y);
             ctx.fillText(computedText, x, y);

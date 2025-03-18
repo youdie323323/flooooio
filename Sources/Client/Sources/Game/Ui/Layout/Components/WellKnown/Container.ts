@@ -3,7 +3,7 @@ import { darkend, DARKEND_BASE } from "../../../../../../../Shared/Utils/Color";
 import ExtensionBase from "../../Extensions/Extension";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
-import type { Components, DynamicLayoutablePointer, SetVisibleParameters, AnimationSlideDirection } from "../Component";
+import type { Components, MaybePointerLike, SetVisibleParameters, AnimationSlideDirection, SetVisibleImplementationParameters } from "../Component";
 import { AnimationType, Component, renderPossibleComponents } from "../Component";
 
 type Optional<T, K extends keyof T> = Partial<Pick<T, K>> & Omit<T, K>;
@@ -12,44 +12,69 @@ type SizeKeys = "w" | "h";
 
 export type AutomaticallySizedLayoutOptions = Omit<LayoutOptions, SizeKeys>;
 
-export type UnRequiredSizeLayoutOptions = Optional<LayoutOptions, SizeKeys>;
+export type PartialSizeLayoutOptions = Optional<LayoutOptions, SizeKeys>;
 
-export type PartialSizeLayoutOptions = AutomaticallySizedLayoutOptions | UnRequiredSizeLayoutOptions;
+export type SelectableStaticContainerLayoutOptions = AutomaticallySizedLayoutOptions | PartialSizeLayoutOptions;
 
-export type AnyStaticContainer = AbstractStaticContainer<PartialSizeLayoutOptions>;
-
-/**
- * Addable type of container.
- * 
- * @remarks
- * Container component cant work properly if addChildrenComponent not called / not setting parentContainer,
- * so create new type that ensure container is addable, now we can determine if container is addable container.
- * __addable mark this is "Addable".
- */
-export type AnyAddableStaticContainer = AnyStaticContainer & { __addable: boolean };
+export type AnyStaticContainer = AbstractStaticContainer<SelectableStaticContainerLayoutOptions>;
 
 /**
  * Container component that can add/render childrens.
  */
-export abstract class AbstractStaticContainer<T extends PartialSizeLayoutOptions>
-    extends ExtensionBase(Component) {
+export abstract class AbstractStaticContainer<T extends SelectableStaticContainerLayoutOptions> extends ExtensionBase(Component) {
     protected children: Set<Components> = new Set();
+    private wasInitialized: boolean = false;
+    private afterInitializedOperationQueue: Set<() => void> = new Set();
 
     // Disable zoom animation slide for container
     protected override animationZoomShouldSlidePosition: boolean = false;
 
-    constructor(protected layout: DynamicLayoutablePointer<T>) {
+    constructor(protected readonly layoutOptions: MaybePointerLike<T>) {
         super();
+
+        this.once("onInitialized", () => {
+            this.wasInitialized = true;
+
+            this.afterInitializedOperationQueue.forEach(op => op());
+
+            this.afterInitializedOperationQueue.clear();
+            this.afterInitializedOperationQueue = null;
+        });
+    }
+
+    override getCacheKey(): string {
+        return super.getCacheKey() +
+            Object.values(Component.computePointerLike(this.layoutOptions)).join("") +
+            Array.from(this.children).map(c => c.getCacheKey()).join("");
+    }
+
+    override invalidateLayoutCache(): void {
+        this.layoutCache.invalidate();
+
+        // Invalidate children layout cache too
+        this.children.forEach(child => child.invalidateLayoutCache());
+    }
+
+    override destroy(): void {
+        this.children.forEach(c => {
+            // Remove instance
+            this.context.removeChildrenComponent(this, c);
+        });
+
+        // Then finnally, remove the children from this
+        this.children.clear();
+        this.children = null;
+
+        // To remove child completely, we need to access current context
+        // But super.destory remove reference to context, so post-processing
+        super.destroy();
     }
 
     override setVisible(...args: SetVisibleParameters[0]): void;
     override setVisible(...args: SetVisibleParameters[1]): void;
     override setVisible(...args: SetVisibleParameters[2]): void;
     override setVisible(
-        toggle: boolean,
-        shouldAnimate: boolean,
-        animationType?: AnimationType,
-        animationSlideDirection?: AnimationSlideDirection,
+        ...[toggle, shouldAnimate, animationType, animationSlideDirection]: SetVisibleImplementationParameters
     ): void {
         if (shouldAnimate === true) {
             switch (animationType) {
@@ -72,78 +97,88 @@ export abstract class AbstractStaticContainer<T extends PartialSizeLayoutOptions
         // Post-process for component-binded component
 
         this.children.forEach(c => {
-            // Dont animate it, container animation can affected to childrens
+            // Dont animate it, container animation can affected to children
             c.setVisible(toggle, false);
         });
     }
 
-    override getCacheKey(): string {
-        return super.getCacheKey() +
-            Object.values(this.computeDynamicLayoutable(this.layout)).join("") +
-            Array.from(this.children).map(c => c.getCacheKey()).join("");
+    /**
+     * Add chilren to this container.
+     */
+    public addChildren(...children: Array<Components>): this {
+        children.forEach(child => this.addChild(child));
+
+        return this;
     }
 
-    override invalidateLayoutCache(): void {
-        this.layoutCache.invalidate();
-
-        // Invalidate child layout cache too
-        this.children.forEach(child => child.invalidateLayoutCache());
-    }
-
-    // Dont call this method! call with UserInterface.addChildrenComponent
-    public addChildren(child: Components) {
+    /**
+     * Add child to this container.
+     */
+    public addChild(child: Components): this {
         this.children.add(child);
+
+        if (!this.wasInitialized) {
+            this.afterInitializedOperationQueue.add(() => { this.context.addChildrenComponent(this, child); });
+        }
+
+        return this;
     }
 
-    // Dont call this method! call with UserInterface.removeChildrenComponent
-    public removeChildren(child: Components) {
+    /**
+     * Remove child from this container.
+     */
+    public removeChild(child: Components): this {
         // No need to call destroy method, can done by removeComponent
         this.children.delete(child);
+
+        if (!this.wasInitialized) {
+            this.afterInitializedOperationQueue.add(() => { this.context.removeChildrenComponent(this, child); });
+        }
+
+        return this;
     }
 
-    override destroy(): void {
-        this.children.forEach(c => {
-            // Remove reference to this
-            c.parentContainer = null;
-
-            // Then, remove completely instance
-            this.context.removeChildrenComponent(this, c);
-        });
-
-        // Then finnally, remove the child from this
-        this.children.clear();
-        this.children = null;
-
-        // To remove child completely, we need to access current context
-        // But super.destory remove reference to context, so post-processing
-        super.destroy();
+    /**
+     * Check if the component is child of this container.
+     */
+    public hasChild(child: Components): boolean {
+        return this.children.has(child);
     }
 }
 
 /**
  * Panel-like view static container.
  */
-export class StaticPanelContainer extends AbstractStaticContainer<UnRequiredSizeLayoutOptions> {
+export class StaticPanelContainer extends AbstractStaticContainer<PartialSizeLayoutOptions> {
     constructor(
-        layout: DynamicLayoutablePointer<UnRequiredSizeLayoutOptions>,
+        layout: MaybePointerLike<PartialSizeLayoutOptions>,
 
-        private color: DynamicLayoutablePointer<ColorCode>,
+        protected readonly color: MaybePointerLike<ColorCode>,
+
+        protected readonly rectRadii: MaybePointerLike<number> = 1,
+
+        protected readonly strokeWidthLimit: MaybePointerLike<number> = 5,
+        protected readonly strokeWidthCoef: MaybePointerLike<number> = 0.07,
     ) {
         super(layout);
     }
 
     private getStrokeWidth(): number {
-        return Math.min(5, Math.min(this.w, this.h) * 0.07);
+        return Math.min(
+            Component.computePointerLike(this.strokeWidthLimit),
+            Math.min(this.w, this.h) *
+            Component.computePointerLike(this.strokeWidthCoef),
+        );
     }
 
-    override calculateLayout(lc: LayoutContext): LayoutResult {
+    override layout(lc: LayoutContext): LayoutResult {
         const { ctx, containerWidth, containerHeight } = lc;
 
         let maxW: number = 0, maxH: number = 0;
 
         if (this.children.size > 0) {
             this.children.forEach(child => {
-                const childLayout = child.cachedCalculateLayout(
+                const { x: childX, y: childY, w: childW, h: childH } = child.cachedLayout(
                     {
                         ctx,
 
@@ -156,33 +191,30 @@ export class StaticPanelContainer extends AbstractStaticContainer<UnRequiredSize
                     },
                 );
 
-                maxW = Math.max(maxW, childLayout.x + childLayout.w);
-                maxH = Math.max(maxH, childLayout.y + childLayout.h);
+                maxW = Math.max(maxW, childX + childW);
+                maxH = Math.max(maxH, childY + childH);
             });
         }
 
         const strokeWidth = this.getStrokeWidth();
 
-        const computedLayout = this.computeDynamicLayoutable(this.layout);
-
-        if (typeof computedLayout.w === "number") computedLayout.w += strokeWidth * 2;
-
-        if (typeof computedLayout.h === "number") computedLayout.h += strokeWidth * 2;
-
-        const layout = Layout.layout(
-            Object.assign(
-                {
-                    w: maxW + (strokeWidth * 2),
-                    h: maxH + (strokeWidth * 2),
-                },
-                computedLayout,
-            ),
-            lc,
+        const options = Object.assign(
+            {
+                w: maxW,
+                h: maxH,
+            },
+            Component.computePointerLike(this.layoutOptions),
         );
+
+        if (typeof options.w === "number") options.w += strokeWidth * 2;
+
+        if (typeof options.h === "number") options.h += strokeWidth * 2;
+
+        const layout = Layout.layout(options, lc);
 
         if (this.children.size > 0) {
             this.children.forEach(child => {
-                const childLayout = child.cachedCalculateLayout(
+                const childLayout = child.cachedLayout(
                     {
                         ctx,
 
@@ -214,14 +246,15 @@ export class StaticPanelContainer extends AbstractStaticContainer<UnRequiredSize
         {
             ctx.save();
 
-            const computedColor = this.computeDynamicLayoutable(this.color);
+            const computedColor = Component.computePointerLike(this.color);
+            const computedRadii = Component.computePointerLike(this.rectRadii);
 
             ctx.lineWidth = this.getStrokeWidth();
             ctx.fillStyle = computedColor;
             ctx.strokeStyle = darkend(computedColor, DARKEND_BASE);
 
             ctx.beginPath();
-            ctx.roundRect(this.x, this.y, this.w, this.h, 1);
+            ctx.roundRect(this.x, this.y, this.w, this.h, computedRadii);
             ctx.fill();
             ctx.stroke();
             ctx.closePath();
@@ -229,9 +262,7 @@ export class StaticPanelContainer extends AbstractStaticContainer<UnRequiredSize
             ctx.restore();
         }
 
-        if (this.children.size > 0) {
-            renderPossibleComponents(ctx, this.children);
-        }
+        if (this.children.size > 0) renderPossibleComponents(ctx, this.children);
     }
 }
 
@@ -239,7 +270,7 @@ export class StaticPanelContainer extends AbstractStaticContainer<UnRequiredSize
  * Horizontally arranged invisible container.
  */
 export class StaticHContainer extends AbstractStaticContainer<AutomaticallySizedLayoutOptions> {
-    override calculateLayout(lc: LayoutContext): LayoutResult {
+    override layout(lc: LayoutContext): LayoutResult {
         const { ctx, containerWidth, containerHeight } = lc;
 
         let totalWidth = 0;
@@ -247,7 +278,7 @@ export class StaticHContainer extends AbstractStaticContainer<AutomaticallySized
 
         if (this.children.size > 0) {
             this.children.forEach(child => {
-                const { w: childW, h: childH } = child.cachedCalculateLayout(
+                const { w: childW, h: childH } = child.cachedLayout(
                     {
                         ctx,
 
@@ -267,7 +298,7 @@ export class StaticHContainer extends AbstractStaticContainer<AutomaticallySized
 
         const layout = Layout.layout(
             {
-                ...this.computeDynamicLayoutable(this.layout),
+                ...Component.computePointerLike(this.layoutOptions),
 
                 w: totalWidth,
                 h: maxHeight,
@@ -279,7 +310,7 @@ export class StaticHContainer extends AbstractStaticContainer<AutomaticallySized
             let currentX = 0;
 
             this.children.forEach((child) => {
-                const childLayout = child.cachedCalculateLayout(
+                const childLayout = child.cachedLayout(
                     {
                         ctx,
 
@@ -318,7 +349,7 @@ export class StaticHContainer extends AbstractStaticContainer<AutomaticallySized
  * Vertically arranged invisible container.
  */
 export class StaticVContainer extends AbstractStaticContainer<AutomaticallySizedLayoutOptions> {
-    override calculateLayout(lc: LayoutContext): LayoutResult {
+    override layout(lc: LayoutContext): LayoutResult {
         const { ctx, containerWidth, containerHeight } = lc;
 
         let totalHeight = 0;
@@ -326,7 +357,7 @@ export class StaticVContainer extends AbstractStaticContainer<AutomaticallySized
 
         if (this.children.size > 0) {
             this.children.forEach(child => {
-                const childLayout = child.cachedCalculateLayout(
+                const { w: childW, h: childH } = child.cachedLayout(
                     {
                         ctx,
 
@@ -338,14 +369,15 @@ export class StaticVContainer extends AbstractStaticContainer<AutomaticallySized
                         originY: 0,
                     },
                 );
-                totalHeight += childLayout.h;
-                maxWidth = Math.max(maxWidth, childLayout.w);
+
+                totalHeight += childH;
+                maxWidth = Math.max(maxWidth, childW);
             });
         }
 
         const layout = Layout.layout(
             {
-                ...this.computeDynamicLayoutable(this.layout),
+                ...Component.computePointerLike(this.layoutOptions),
                 w: maxWidth,
                 h: totalHeight,
             },
@@ -356,7 +388,7 @@ export class StaticVContainer extends AbstractStaticContainer<AutomaticallySized
             let currentY = 0;
 
             this.children.forEach((child) => {
-                const childLayout = child.cachedCalculateLayout(
+                const childLayout = child.cachedLayout(
                     {
                         ctx,
 
@@ -391,7 +423,7 @@ export class StaticVContainer extends AbstractStaticContainer<AutomaticallySized
     }
 }
 
-type DynamicLayoutableNumber = DynamicLayoutablePointer<number>;
+type MaybePointerLikeNumber = MaybePointerLike<number>;
 
 /**
  * Component that just consume space.
@@ -401,25 +433,25 @@ type DynamicLayoutableNumber = DynamicLayoutablePointer<number>;
  */
 export class StaticSpace extends ExtensionBase(Component) {
     constructor(
-        protected sw: DynamicLayoutableNumber,
-        protected sh: DynamicLayoutableNumber,
+        protected readonly sw: MaybePointerLikeNumber,
+        protected readonly sh: MaybePointerLikeNumber,
     ) {
         super();
     }
 
-    override calculateLayout({ originX, originY }: LayoutContext): LayoutResult {
+    override layout({ originX, originY }: LayoutContext): LayoutResult {
         return {
             x: originX,
             y: originY,
-            w: this.computeDynamicLayoutable(this.sw),
-            h: this.computeDynamicLayoutable(this.sh),
+            w: Component.computePointerLike(this.sw),
+            h: Component.computePointerLike(this.sh),
         };
     }
 
     override getCacheKey(): string {
         return super.getCacheKey() +
-            this.computeDynamicLayoutable(this.sw) +
-            this.computeDynamicLayoutable(this.sh);
+            Component.computePointerLike(this.sw) +
+            Component.computePointerLike(this.sh);
     }
 
     override invalidateLayoutCache(): void {
@@ -434,27 +466,27 @@ export class StaticSpace extends ExtensionBase(Component) {
  */
 export class CoordinatedStaticSpace extends StaticSpace {
     constructor(
-        sw: DynamicLayoutableNumber,
-        sh: DynamicLayoutableNumber,
+        sw: MaybePointerLikeNumber,
+        sh: MaybePointerLikeNumber,
 
-        private sx: DynamicLayoutableNumber,
-        private sy: DynamicLayoutableNumber,
+        protected readonly sx: MaybePointerLikeNumber,
+        protected readonly sy: MaybePointerLikeNumber,
     ) {
         super(sw, sh);
     }
 
-    override calculateLayout({ originX, originY }: LayoutContext): LayoutResult {
+    override layout({ originX, originY }: LayoutContext): LayoutResult {
         return {
-            x: originX + this.computeDynamicLayoutable(this.sx),
-            y: originY + this.computeDynamicLayoutable(this.sy),
-            w: this.computeDynamicLayoutable(this.sw),
-            h: this.computeDynamicLayoutable(this.sh),
+            x: originX + Component.computePointerLike(this.sx),
+            y: originY + Component.computePointerLike(this.sy),
+            w: Component.computePointerLike(this.sw),
+            h: Component.computePointerLike(this.sh),
         };
     }
 
     override getCacheKey(): string {
         return super.getCacheKey() +
-            this.computeDynamicLayoutable(this.sx) +
-            this.computeDynamicLayoutable(this.sy);
+            Component.computePointerLike(this.sx) +
+            Component.computePointerLike(this.sy);
     }
 }

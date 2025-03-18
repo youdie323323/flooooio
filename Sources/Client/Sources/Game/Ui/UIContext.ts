@@ -77,7 +77,11 @@ export default class UIContext {
 
         this.transition.draw(this.currentCtx, this.previousCtx);
 
-        const type: UIType = this.currentCtx instanceof UITitle ? 'title' : 'game';
+        const type = (
+            this.currentCtx instanceof UITitle
+                ? "title"
+                : "game"
+        ) satisfies UIType;
 
         if (this.transition.update(type)) {
             this.cleanup();

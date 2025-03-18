@@ -2,9 +2,7 @@ import Mob from "../../Entity/Mob";
 import Player from "../../Entity/Player";
 import { renderEntity } from "../../Entity/Renderers/RendererEntityRenderingLink";
 import { interpolate } from "../../Utils/Interpolator";
-import TilesetRenderer, { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../Tiled/TilesetRenderer";
 import AbstractUI, { uiScaleFactor } from "../UI";
-import TilesetWavedRenderer from "../Tiled/TilesetWavedRenderer";
 import SettingStorage from "../../Utils/SettingStorage";
 import { Biome, BIOME_GAUGE_COLORS, BIOME_DISPLAY_NAME } from "../../../../../Shared/Biome";
 import { calculateWaveLength } from "../../../../../Shared/Formula";
@@ -20,6 +18,8 @@ import type BinaryReader from "../../../../../Shared/Websocket/Binary/ReadWriter
 import { Button } from "../Layout/Components/WellKnown/Button";
 import { SVGLogo } from "../Layout/Components/WellKnown/Logo";
 import CROSS_ICON_SVG from "../Assets/cross_icon.svg";
+import TilesetRenderer, { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../Shared/Tiled/TilesetRenderer";
+import TilesetWavedRenderer from "../Shared/Tiled/TilesetWavedRenderer";
 
 let interpolatedMouseX = 0;
 let interpolatedMouseY = 0;
@@ -459,8 +459,8 @@ export default class UIGame extends AbstractUI {
             !SettingStorage.get("keyboard_control") &&
             clientWebsocket
         ) {
-            const distance = Math.hypot(mouseXOffset, mouseYOffset);
             const angle = Math.atan2(mouseYOffset, mouseXOffset);
+            const distance = Math.hypot(mouseXOffset, mouseYOffset) / uiScaleFactor;
 
             clientWebsocket.packetServerbound.sendWaveChangeMove(
                 angle,
@@ -477,6 +477,12 @@ export default class UIGame extends AbstractUI {
                 w: 17.5,
                 h: 17.5,
             },
+
+            2,
+
+            10,
+            0.05,
+
             [
                 new SVGLogo(
                     {
@@ -488,16 +494,18 @@ export default class UIGame extends AbstractUI {
                     CROSS_ICON_SVG,
                 ),
             ],
+
             () => {
                 clientWebsocket.packetServerbound.sendWaveLeave();
 
                 uiCtx.switchUI("title");
             },
+
             "#b04c5e",
             true,
         );
 
-        this.addComponent(exitButton);
+        this.addComponents(exitButton);
 
         // Order is important!
 
@@ -508,6 +516,12 @@ export default class UIGame extends AbstractUI {
                 w: 95,
                 h: 27,
             },
+
+            2,
+
+            10,
+            0.05,
+
             [
                 new Text(
                     {
@@ -518,7 +532,9 @@ export default class UIGame extends AbstractUI {
                     50,
                 ),
             ],
+
             () => this.leaveGame(),
+
             "#c62327",
             true,
         );
@@ -526,7 +542,7 @@ export default class UIGame extends AbstractUI {
         // Dont show every frame
         this.gameOverMenuContinueButton.setVisible(false, false);
 
-        this.addComponent(this.gameOverMenuContinueButton);
+        this.addComponents(this.gameOverMenuContinueButton);
 
         this.deadMenuContinueButton = new Button(
             {
@@ -535,6 +551,12 @@ export default class UIGame extends AbstractUI {
                 w: 95,
                 h: 27,
             },
+
+            2,
+
+            10,
+            0.05,
+
             [
                 new Text(
                     {
@@ -545,9 +567,11 @@ export default class UIGame extends AbstractUI {
                     50,
                 ),
             ],
+
             () => {
                 this.wasDeadMenuContinued = true;
             },
+
             "#1dd129",
             true,
         );
@@ -555,7 +579,7 @@ export default class UIGame extends AbstractUI {
         // Dont show every frame
         this.deadMenuContinueButton.setVisible(false, false);
 
-        this.addComponent(this.deadMenuContinueButton);
+        this.addComponents(this.deadMenuContinueButton);
 
         this.chatInput = new TextInput(
             {
@@ -593,7 +617,7 @@ export default class UIGame extends AbstractUI {
             },
         );
 
-        this.addComponent(this.chatInput);
+        this.addComponents(this.chatInput);
     }
 
     override animationFrame() {
@@ -1053,8 +1077,12 @@ export default class UIGame extends AbstractUI {
         const heightRelative = canvas.height / uiScaleFactor;
 
         if (
-            !SettingStorage.get("keyboard_control") &&
-            selfPlayer && !selfPlayer.isDead
+            !(
+                SettingStorage.get("keyboard_control") ||
+                SettingStorage.get("movement_helper")
+            ) &&
+            selfPlayer &&
+            !selfPlayer.isDead
         ) {
             ctx.save();
 
@@ -1074,7 +1102,9 @@ export default class UIGame extends AbstractUI {
             ctx.lineWidth = 12;
             ctx.lineCap = "round";
             ctx.lineJoin = "round";
-            ctx.globalAlpha = distance < 110 ? Math.max(distance - 60, 0) / 50 : 1;
+            ctx.globalAlpha = distance < 100
+                ? Math.max(distance - 50, 0) / (100 - 50)
+                : 1;
             ctx.strokeStyle = "rgba(0,0,0,0.2)";
             ctx.stroke();
 

@@ -1,13 +1,11 @@
 import type { Component } from "../Components/Component";
 import type { LayoutContext, LayoutResult } from "../Layout";
 
-export type UpdateFunction = () => void;
-
 export interface Updatable {
     /**
      * Update method call on rAF frame.
      */
-    update: UpdateFunction;
+    update(): void;
 }
 
 /**
@@ -15,16 +13,27 @@ export interface Updatable {
  */
 export type ComponentExtensionTemplate = Updatable & Record<PropertyKey, any>;
 
+export interface Layoutable {
+    /**
+     * Calculate layout result from layout context.
+     */
+    layout(lc: LayoutContext): LayoutResult;
+
+    /**
+     * Method for invalidate cache, this method should invalidate children cache too.
+     */
+    invalidateLayoutCache(): void;
+}
+
 /**
  * Type alias that represent component class, with maybe update method included.
  */
 export type ExtensionConstructor = abstract new (...args: ReadonlyArray<any>) =>
     Component &
+    // Compiler treat super.layout as abstract method and cant call them
+    Layoutable &
     // Maybe component is updatable
-    Partial<Updatable> &
-    {
-        calculateLayout(lc: LayoutContext): LayoutResult;
-    };
+    Partial<Updatable>;
 
 /**
  * Extension that atleast ensure class has one extension.
@@ -35,10 +44,12 @@ export type ExtensionConstructor = abstract new (...args: ReadonlyArray<any>) =>
  */
 export default function ExtensionBase<T extends ExtensionConstructor>(Base: T) {
     abstract class MixedBase extends Base implements ComponentExtensionTemplate {
-        public update: UpdateFunction = () => {
-            // Call parent extension update(), so its possible to nest the extension
-            super.update?.();
-        };
+        public get update(): ComponentExtensionTemplate["update"] {
+            return (): void => {
+                // Call parent extension update(), so its possible to nest the extension
+                super.update?.();
+            };
+        }
     }
 
     return MixedBase;

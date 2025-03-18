@@ -16,7 +16,7 @@ function getNormalizedAngle(angle: number): number {
 }
 
 export default class PacketServerbound {
-    constructor(public clientWebSocket: ClientWebsocket) { }
+    constructor(private clientWebSocket: ClientWebsocket) { }
 
     private send(data: Parameters<WebSocket["send"]>[0]) {
         if (this.clientWebSocket.socket?.readyState !== WebSocket.OPEN) {

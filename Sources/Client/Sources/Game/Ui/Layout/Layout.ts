@@ -1,6 +1,6 @@
 export type NumberOrPercentage = number | `${number}%`;
 
-export interface LayoutOptions {
+export type LayoutOptions = Readonly<{
     x?: NumberOrPercentage;
     y?: NumberOrPercentage;
 
@@ -12,7 +12,7 @@ export interface LayoutOptions {
 
     alignFromCenterX?: boolean;
     alignFromCenterY?: boolean;
-}
+}>;
 
 export type LayoutContext = Readonly<{
     ctx: CanvasRenderingContext2D;

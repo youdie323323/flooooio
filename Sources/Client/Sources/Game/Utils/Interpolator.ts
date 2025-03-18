@@ -125,12 +125,12 @@ export default class Interpolator {
             return this.currentValue;
         }
 
-        let elapsedTime = Date.now() - this.interpolation.startTime;
-        elapsedTime = Math.max(0, Math.min(elapsedTime, this.options.duration));
+        let deltaT = Date.now() - this.interpolation.startTime;
+        deltaT = Math.max(0, Math.min(deltaT, this.options.duration));
 
         const valueChange = this.interpolation.endValue - this.interpolation.startValue;
         let interpolatedValue = EASING_FUNCTIONS[this.options.easingType](
-            elapsedTime,
+            deltaT,
             this.interpolation.startValue,
             valueChange,
             this.options.duration,

@@ -1,7 +1,7 @@
 import ExtensionBase from "../../Extensions/Extension";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
-import type { DynamicLayoutablePointer } from "../Component";
+import type { MaybePointerLike } from "../Component";
 import { Component } from "../Component";
 import { Canvg, presets } from "canvg";
 import * as StackBlur from
@@ -12,23 +12,23 @@ export class CanvasLogo extends ExtensionBase(Component) {
      * @param drawer - Draw icon at traslated x, y
      */
     constructor(
-        private layout: DynamicLayoutablePointer<LayoutOptions>,
+        protected layoutOptions: MaybePointerLike<LayoutOptions>,
 
-        private drawer: (ctx: CanvasRenderingContext2D) => void,
+        protected drawer: (ctx: CanvasRenderingContext2D) => void,
     ) {
         super();
     }
 
-    override calculateLayout(lc: LayoutContext): LayoutResult {
+    override layout(lc: LayoutContext): LayoutResult {
         return Layout.layout(
-            this.computeDynamicLayoutable(this.layout),
+            Component.computePointerLike(this.layoutOptions),
             lc,
         );
     }
 
     override getCacheKey(): string {
         return super.getCacheKey() +
-            Object.values(this.computeDynamicLayoutable(this.layout)).join("");
+            Object.values(Component.computePointerLike(this.layoutOptions)).join("");
     }
 
     override invalidateLayoutCache(): void {
@@ -55,13 +55,12 @@ export class CanvasLogo extends ExtensionBase(Component) {
 
 export class SVGLogo extends ExtensionBase(Component) {
     private static readonly SVG_SIZE: number = 0.8;
-
     private svgCanvas: OffscreenCanvas | null = null;
 
     constructor(
-        private layout: DynamicLayoutablePointer<LayoutOptions>,
+        protected readonly layoutOptions: MaybePointerLike<LayoutOptions>,
 
-        private readonly svg: string,
+        protected readonly svg: string,
     ) {
         super();
 
@@ -82,13 +81,13 @@ export class SVGLogo extends ExtensionBase(Component) {
         })();
     }
 
-    override calculateLayout(lc: LayoutContext): LayoutResult {
-        return Layout.layout(this.computeDynamicLayoutable(this.layout), lc);
+    override layout(lc: LayoutContext): LayoutResult {
+        return Layout.layout(Component.computePointerLike(this.layoutOptions), lc);
     }
 
     override getCacheKey(): string {
         return super.getCacheKey() +
-            Object.values(this.computeDynamicLayoutable(this.layout)).join("");
+            Object.values(Component.computePointerLike(this.layoutOptions)).join("");
     }
 
     override invalidateLayoutCache(): void {

@@ -1,19 +1,20 @@
+import type UITitlePlayerProfile from "../../Title/UITitlePlayerProfile";
 import type AbstractUI from "../../UI";
 import type { LayoutContext, LayoutResult } from "../Layout";
 import LayoutCache from "../LayoutCache";
-import type PlayerProfile from "./Native/PlayerProfile";
 import type { Button } from "./WellKnown/Button";
-import type { AbstractStaticContainer, AnyAddableStaticContainer, AnyStaticContainer, CoordinatedStaticSpace, StaticSpace } from "./WellKnown/Container";
+import type { AnyStaticContainer, CoordinatedStaticSpace, StaticSpace } from "./WellKnown/Container";
 import type { CanvasLogo, SVGLogo } from "./WellKnown/Logo";
 import type Text from "./WellKnown/Text";
 import type TextInput from "./WellKnown/TextInput";
 import type Toggle from "./WellKnown/Toggle";
+import type { EventMap } from 'strict-event-emitter';
 import { Emitter } from 'strict-event-emitter';
 
 /**
- * Convert value to dynamic-layoutable value.
+ * Dynamic computable pointer like of T.
  */
-export type DynamicLayoutablePointer<T> = T | (() => T);
+export type MaybePointerLike<T> = T | (() => T);
 
 /**
  * Union type that including all components.
@@ -23,15 +24,15 @@ export type DynamicLayoutablePointer<T> = T | (() => T);
  */
 export type Components =
     // Well-known components
-    | AnyAddableStaticContainer
+    | AnyStaticContainer
     | StaticSpace | CoordinatedStaticSpace
     | Button
     | Text
     | TextInput
     | Toggle
     | CanvasLogo | SVGLogo
-    // Original components
-    | PlayerProfile;
+    // Native components
+    | UITitlePlayerProfile;
 
 type OverloadProps<TOverload> = Pick<TOverload, keyof TOverload>;
 
@@ -71,11 +72,20 @@ type UnionToTuple<T> = UnionToIntersection<(T extends any ? (t: T) => T : never)
     ? [...UnionToTuple<Exclude<T, W>>, W]
     : [];
 
-export type OverloadParameters<T extends (...args: any[]) => any> = UnionToTuple<Parameters<OverloadUnion<T>>>;
+export type OverloadParameters<T extends (...args: any[]) => any> = Parameters<OverloadUnion<T>>;
 
-export type OverloadReturnType<T extends (...args: any[]) => any> = UnionToTuple<ReturnType<OverloadUnion<T>>>;
+export type OverloadReturnType<T extends (...args: any[]) => any> = ReturnType<OverloadUnion<T>>;
 
-export type SetVisibleParameters = OverloadParameters<Component["setVisible"]>;
+export type SetVisibleParameters = UnionToTuple<OverloadParameters<Component["setVisible"]>>;
+
+export type SetVisibleReturnType = UnionToTuple<OverloadReturnType<Component["setVisible"]>>;
+
+export type SetVisibleImplementationParameters = [
+    toggle: boolean,
+    shouldAnimate: boolean,
+    animationType?: AnimationType,
+    animationSlideDirection?: AnimationSlideDirection,
+];
 
 export const enum AnimationType {
     Zoom,
@@ -103,18 +113,59 @@ export function renderPossibleComponents(ctx: CanvasRenderingContext2D, componen
     }
 }
 
-// Typing for EventEmitter
-export type ComponentEvents = {
-    // Notify if this component is added using addComponent
-    "onInitialized": [];
+const getKeys = <T extends { [key: string]: unknown }>(obj: T): Array<keyof T> => {
+    return Object.keys(obj);
 };
+
+// Mouse events
+
+const INTERACTIVE_EVENTS = {
+    "onFocus": [],
+    "onBlur": [],
+} as const satisfies EventMap;
+
+const INTERACTIVE_EVENT_NAMES = getKeys(INTERACTIVE_EVENTS);
+
+const CLICKABLE_EVENTS = {
+    "onClick": [],
+
+    "onMouseDown": [],
+    "onMouseUp": [],
+} as const satisfies EventMap;
+
+const CLICKABLE_EVENT_NAMES = getKeys(CLICKABLE_EVENTS);
+
+export function hasInteractiveListeners(component: Components): boolean {
+    for (const eventName of INTERACTIVE_EVENT_NAMES) {
+        if (component.listeners(eventName).length > 0) return true;
+    }
+
+    return false;
+}
+
+export function hasClickableListeners(component: Components): boolean {
+    for (const eventName of CLICKABLE_EVENT_NAMES) {
+        if (component.listeners(eventName).length > 0) return true;
+    }
+
+    return false;
+}
+
+// Typing for EventEmitter
+export type ComponentEvents =
+    Readonly<{
+        // Notify if this component is added using addComponent
+        "onInitialized": [];
+    }>
+    & typeof INTERACTIVE_EVENTS
+    & typeof CLICKABLE_EVENTS;
 
 /**
  * Base interface for all GUI components.
  */
 export abstract class Component extends Emitter<ComponentEvents> {
     protected readonly ANIMATION_ZOOM_DURATION: number = 100;
-    protected readonly ANIMATION_SLIDE_DURATION: number = 100;
+    protected readonly ANIMATION_SLIDE_DURATION: number = 350;
 
     protected readonly SLIDE_BASE_DEPTH: number = 20;
 
@@ -176,11 +227,6 @@ export abstract class Component extends Emitter<ComponentEvents> {
     private realY: number = 0;
 
     /**
-     * Parent container of component.
-     */
-    public parentContainer: AnyStaticContainer;
-
-    /**
      * Set global alpha of component.
      */
     public globalAlpha: number = 1;
@@ -210,12 +256,12 @@ export abstract class Component extends Emitter<ComponentEvents> {
     /**
      * This method calculate layout by layout options, and parent container/screen.
      */
-    public abstract calculateLayout(lc: LayoutContext): LayoutResult;
+    public abstract layout(lc: LayoutContext): LayoutResult;
 
     /**
      * Cache layout to reduce lags.
      */
-    public cachedCalculateLayout(lc: LayoutContext): LayoutResult {
+    public cachedLayout(lc: LayoutContext): LayoutResult {
         const { containerWidth, containerHeight, originX, originY } = lc;
 
         const cacheKey = `${containerWidth}${containerHeight}${originX}${originY}` + this.getCacheKey();
@@ -226,7 +272,7 @@ export abstract class Component extends Emitter<ComponentEvents> {
             }
         }
 
-        const result = this.calculateLayout(lc);
+        const result = this.layout(lc);
 
         this.layoutCache.set(cacheKey, result);
 
@@ -247,6 +293,9 @@ export abstract class Component extends Emitter<ComponentEvents> {
      */
     public abstract invalidateLayoutCache(): void;
 
+    /**
+     * Render the component.
+     */
     public render(ctx: CanvasRenderingContext2D): void {
         // Apply canvas configs
         ctx.globalAlpha = this.globalAlpha;
@@ -266,7 +315,7 @@ export abstract class Component extends Emitter<ComponentEvents> {
 
             const deltaAT = currentTime - this.animationStartTime;
             const progress = Math.max(0, Math.min(deltaAT / duration, 1));
-            
+
             this.animationProgress = this.animationDirection === "in"
                 ? progress
                 : 1 - progress;
@@ -323,6 +372,9 @@ export abstract class Component extends Emitter<ComponentEvents> {
                 }
 
                 case AnimationType.Slide: {
+                    // In-out opacity
+                    this.globalAlpha = progress;
+
                     // TODO: option for offset are singed or not
                     if (this.animationSlideDirection === "v") {
                         const slideOffset = -(this.h + this.SLIDE_BASE_DEPTH) * (1 - progress);
@@ -347,11 +399,16 @@ export abstract class Component extends Emitter<ComponentEvents> {
         // ctx.lineWidth = 1;
         // ctx.strokeRect(this.x, this.y, this.w, this.h);
 
+        // ctx.font = "12px Arial";
+        // ctx.fillStyle = "black";
+        // ctx.textBaseline = "bottom";
+        // ctx.fillText(this.constructor.name, this.x, this.y);
+
         ctx.restore();
     }
 
-    public destroy(): void {
-        this.context = null;
+    protected static computePointerLike<T>(p: MaybePointerLike<T>): T {
+        return p instanceof Function ? p() : p;
     }
 
     public setVisible(
@@ -374,21 +431,25 @@ export abstract class Component extends Emitter<ComponentEvents> {
         shouldAnimate: boolean,
         animationType?: AnimationType,
         animationSlideDirection?: AnimationSlideDirection,
-    ) {
-        if (toggle === this.visible) return;
+    ): void {
+        if (toggle === this.visible && !this.isAnimating) return;
 
+        if (this.isAnimating) {
+            this.isAnimating = false;
+            this.visible = !toggle;
+        }
+    
         if (shouldAnimate) {
             this.isAnimating = true;
-
             this.animationType = animationType ?? null;
             this.animationDirection = toggle ? "in" : "out";
             this.animationSlideDirection = animationSlideDirection ?? null;
             this.animationStartTime = null;
             this.animationProgress = toggle ? 0 : 1;
-
+    
             this.realX = this.x;
             this.realY = this.y;
-
+    
             if (toggle) {
                 this.visible = true;
             }
@@ -397,21 +458,10 @@ export abstract class Component extends Emitter<ComponentEvents> {
         }
     }
 
-    protected computeDynamicLayoutable<T>(dl: DynamicLayoutablePointer<T>): T {
-        return dl instanceof Function ? dl() : dl;
+    public destroy(): void {
+        // Remove all event listeners from component
+        this.removeAllListeners();
+
+        this.context = null;
     }
-}
-
-// Interface for interactive components
-export interface Interactive extends Component {
-    onFocus?(): void;
-    onBlur?(): void;
-}
-
-// Interface for clickable components
-export interface Clickable extends Component {
-    onClick?(): void;
-
-    onMouseDown?(): void;
-    onMouseUp?(): void;
 }

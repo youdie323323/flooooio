@@ -1,21 +1,19 @@
-import { MoodFlags } from "../../../../../../../Shared/Mood";
-import { DARKEND_BASE } from "../../../../../../../Shared/Utils/Color";
-import { WaveRoomPlayerReadyState } from "../../../../../../../Shared/WaveRoom";
-import Player from "../../../../Entity/Player";
-import { renderEntity } from "../../../../Entity/Renderers/RendererEntityRenderingLink";
-import type { WaveRoomPlayerInformation } from "../../../Title/UITitle";
-import UITitle from "../../../Title/UITitle";
-import ExtensionBase from "../../Extensions/Extension";
-import { InlineRenderingCall } from "../../Extensions/ExtensionInlineRenderingCall";
-import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
-import Layout from "../../Layout";
-import type { DynamicLayoutablePointer } from "../Component";
-import { Component } from "../Component";
-import Text, { calculateStrokeWidth } from "../WellKnown/Text";
+import { MoodFlags } from "../../../../../Shared/Mood";
+import { DARKEND_BASE } from "../../../../../Shared/Utils/Color";
+import { WaveRoomPlayerReadyState } from "../../../../../Shared/WaveRoom";
+import Player from "../../Entity/Player";
+import { renderEntity } from "../../Entity/Renderers/RendererEntityRenderingLink";
+import type { MaybePointerLike } from "../Layout/Components/Component";
+import { Component } from "../Layout/Components/Component";
+import Text, { calculateStrokeWidth } from "../Layout/Components/WellKnown/Text";
+import ExtensionBase from "../Layout/Extensions/Extension";
+import { InlineRenderingCall } from "../Layout/Extensions/ExtensionInlineRenderingCall";
+import type { LayoutContext, LayoutOptions, LayoutResult } from "../Layout/Layout";
+import Layout from "../Layout/Layout";
+import type { WaveRoomPlayerInformation } from "./UITitle";
+import UITitle from "./UITitle";
 
-// TODO: implement these native components in each UI scene folder
-
-export default class PlayerProfile extends ExtensionBase(Component) {
+export default class UITitlePlayerProfile extends ExtensionBase(Component) {
     private dummyPlayerEntity: Player = new Player(
         true,
 
@@ -35,18 +33,18 @@ export default class PlayerProfile extends ExtensionBase(Component) {
     private nameText: Text;
 
     constructor(
-        private layout: DynamicLayoutablePointer<LayoutOptions>,
+        protected readonly layoutOptions: MaybePointerLike<LayoutOptions>,
 
-        private id: DynamicLayoutablePointer<WaveRoomPlayerInformation["id"]>,
-        private name: DynamicLayoutablePointer<WaveRoomPlayerInformation["name"]>,
-        private readyState: DynamicLayoutablePointer<WaveRoomPlayerInformation["readyState"]>,
+        protected readonly id: MaybePointerLike<WaveRoomPlayerInformation["id"]>,
+        protected readonly name: MaybePointerLike<WaveRoomPlayerInformation["name"]>,
+        protected readonly readyState: MaybePointerLike<WaveRoomPlayerInformation["readyState"]>,
 
-        private isEmpty: DynamicLayoutablePointer<boolean>,
+        protected readonly isEmpty: MaybePointerLike<boolean>,
     ) {
         super();
 
         this.once("onInitialized", () => {
-            this.context.addComponent(
+            this.context.addComponents(
                 this.nameText = new (InlineRenderingCall(Text))(
                     {
                         x: 0,
@@ -62,13 +60,13 @@ export default class PlayerProfile extends ExtensionBase(Component) {
         });
     }
 
-    override calculateLayout(lc: LayoutContext): LayoutResult {
-        return Layout.layout(this.computeDynamicLayoutable(this.layout), lc);
+    override layout(lc: LayoutContext): LayoutResult {
+        return Layout.layout(Component.computePointerLike(this.layoutOptions), lc);
     }
 
     override getCacheKey(): string {
         return super.getCacheKey() +
-            Object.values(this.computeDynamicLayoutable(this.layout)).join("");
+            Object.values(Component.computePointerLike(this.layoutOptions)).join("");
     }
 
     override invalidateLayoutCache(): void {
@@ -104,7 +102,7 @@ export default class PlayerProfile extends ExtensionBase(Component) {
 
         ctx.translate(this.w / 2, this.h / 2);
 
-        if (this.computeDynamicLayoutable(this.isEmpty)) {
+        if (Component.computePointerLike(this.isEmpty)) {
             ctx.lineJoin = 'round';
             ctx.lineCap = 'round';
             ctx.textBaseline = 'middle';
@@ -124,7 +122,7 @@ export default class PlayerProfile extends ExtensionBase(Component) {
 
             ctx.restore();
 
-            const computedId = this.computeDynamicLayoutable(this.id);
+            const computedId = Component.computePointerLike(this.id);
 
             if (
                 this.context instanceof UITitle &&
@@ -150,7 +148,7 @@ export default class PlayerProfile extends ExtensionBase(Component) {
                 ctx.restore();
             }
 
-            const computedReadyState = this.computeDynamicLayoutable(this.readyState);
+            const computedReadyState = Component.computePointerLike(this.readyState);
 
             if (computedReadyState === WaveRoomPlayerReadyState.Ready) {
                 ctx.save();

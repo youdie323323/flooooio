@@ -1,10 +1,10 @@
 import ExtensionBase from "../../Extensions/Extension";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
-import type { Interactive, Clickable, DynamicLayoutablePointer } from "../Component";
+import type { MaybePointerLike } from "../Component";
 import { Component } from "../Component";
 
-export default class Toggle extends ExtensionBase(Component) implements Interactive, Clickable {
+export default class Toggle extends ExtensionBase(Component) {
     private static readonly SCALING_DURATION: number = 50;
 
     private scalingProgress: number = 0;
@@ -13,24 +13,40 @@ export default class Toggle extends ExtensionBase(Component) implements Interact
     private toggle: boolean = false;
 
     constructor(
-        protected layout: DynamicLayoutablePointer<LayoutOptions>,
+        protected readonly layoutOptions: MaybePointerLike<LayoutOptions>,
 
-        private onToggle: (t: boolean) => void,
+        protected readonly onToggle: (t: boolean) => void,
     ) {
         super();
+
+        this.on("onFocus", () => {
+            this.context.canvas.style.cursor = "pointer";
+        });
+
+        this.on("onBlur", () => {
+            this.context.canvas.style.cursor = "default";
+        });
+
+        this.on("onClick", () => {
+            this.onToggle(!this.toggle);
+        });
     }
 
-    override calculateLayout(lc: LayoutContext): LayoutResult {
-        return Layout.layout(this.computeDynamicLayoutable(this.layout), lc);
+    override layout(lc: LayoutContext): LayoutResult {
+        return Layout.layout(Component.computePointerLike(this.layoutOptions), lc);
     }
 
     override getCacheKey(): string {
         return super.getCacheKey() +
-            Object.values(this.computeDynamicLayoutable(this.layout)).join("");
+            Object.values(Component.computePointerLike(this.layoutOptions)).join("");
     }
 
     override invalidateLayoutCache(): void {
         this.layoutCache.invalidate();
+    }
+
+    private getStrokeWidth(): number {
+        return Math.max(2, Math.min(this.w, this.h) * 0.17);
     }
 
     override render(ctx: CanvasRenderingContext2D): void {
@@ -79,29 +95,13 @@ export default class Toggle extends ExtensionBase(Component) implements Interact
         ctx.restore();
     }
 
-    public onFocus(): void {
-        this.context.canvas.style.cursor = "pointer";
-    }
-
-    public onBlur(): void {
-        this.context.canvas.style.cursor = "default";
-    }
-
-    public onClick(): void {
-        this.onToggle(!this.toggle);
-    }
-
-    protected getStrokeWidth(): number {
-        const minDimension = Math.min(this.w, this.h);
-
-        return Math.max(2, minDimension * 0.17);
-    }
-
-    public setToggle(toggle: boolean): void {
+    public setToggle(toggle: boolean): this {
         this.toggle = toggle;
 
         this.scalingStartTime = performance.now();
         this.scalingProgress = toggle ? 0 : 1;
+
+        return this;
     }
 
     private updateScale(): void {

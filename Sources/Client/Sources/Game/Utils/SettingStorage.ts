@@ -1,8 +1,16 @@
-export default class SettingStorage {
-    private static readonly prefix: string = "flooooio_";
+export type FlooooIoDefaultSettingKeys =
+    | "keyboard_control"
+    | "movement_helper";
 
-    private static getFullKey(key: string): string {
-        return this.prefix + key;
+export default class SettingStorage {
+    private static readonly PREFIX: string = "flooooio_";
+    private static readonly DEFAULT_SETTINGS = {
+        keyboard_control: false,
+        movement_helper: false,
+    } as const satisfies Record<FlooooIoDefaultSettingKeys, boolean>;
+
+    private static getFullKey(key: FlooooIoDefaultSettingKeys): string {
+        return this.PREFIX + key;
     }
 
     private static boolToSettingValue(value: boolean): string {
@@ -13,41 +21,41 @@ export default class SettingStorage {
         return value === "Y";
     }
 
-    public static get(key: string): boolean {
+    public static get(key: FlooooIoDefaultSettingKeys): boolean {
         const fullKey = this.getFullKey(key);
         const value = localStorage.getItem(fullKey);
-        
+
         if (value === null) {
             this.set(key, false);
 
             return false;
         }
-        
+
         return this.settingValueToBool(value);
     }
 
-    public static set(key: string, value: boolean): void {
+    public static set(key: FlooooIoDefaultSettingKeys, value: boolean): void {
         const fullKey = this.getFullKey(key);
         localStorage.setItem(fullKey, this.boolToSettingValue(value));
     }
 
-    public static remove(key: string): void {
+    public static remove(key: FlooooIoDefaultSettingKeys): void {
         const fullKey = this.getFullKey(key);
         localStorage.removeItem(fullKey);
     }
 
     public static clear(): void {
         Object.keys(localStorage)
-            .filter(key => key.startsWith(this.prefix))
+            .filter(key => key.startsWith(this.PREFIX))
             .forEach(key => localStorage.removeItem(key));
     }
 
-    public static getAllSettings(): Record<string, boolean> {
+    public static getAllSettings(): Record<FlooooIoDefaultSettingKeys, boolean> {
         return Object.keys(localStorage)
-            .filter(key => key.startsWith(this.prefix))
+            .filter(key => key.startsWith(this.PREFIX))
             .reduce((acc, key) => ({
                 ...acc,
-                [key.replace(this.prefix, "")]: this.settingValueToBool(localStorage.getItem(key)),
-            }), {});
+                [key.replace(this.PREFIX, "")]: this.settingValueToBool(localStorage.getItem(key)),
+            }), SettingStorage.DEFAULT_SETTINGS);
     }
 }

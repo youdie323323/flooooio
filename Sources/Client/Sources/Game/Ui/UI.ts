@@ -1,8 +1,7 @@
 import type { Biome } from "../../../../Shared/Biome";
 import type { StaticAdditionalClientboundListen } from "../Websocket/Packet/Bound/Client/PacketClientbound";
-import { type Components, type Component, type Interactive, type Clickable, renderPossibleComponents } from "./Layout/Components/Component";
-import type { AbstractStaticContainer, AnyAddableStaticContainer, AnyStaticContainer } from "./Layout/Components/WellKnown/Container";
-import { DYNAMIC_LAYOUTED } from "./Layout/Extensions/ExtensionDynamicLayoutable";
+import { type Components, type Component, renderPossibleComponents, hasClickableListeners, hasInteractiveListeners } from "./Layout/Components/Component";
+import { type AnyStaticContainer } from "./Layout/Components/WellKnown/Container";
 import { BLACKLISTED } from "./Layout/Extensions/ExtensionInlineRenderingCall";
 
 export let uiScaleFactor: number = 1;
@@ -22,10 +21,10 @@ export default abstract class AbstractUI {
     /**
      * Flatten children components store.
      */
-    private childrenComponents: Set<Component> = new Set();
+    private childrenComponents: Set<Components> = new Set();
 
-    private hoveredComponent: Interactive | null = null;
-    private clickedComponent: Clickable | null = null;
+    private hoveredComponent: Components = null;
+    private clickedComponent: Components = null;
 
     private mousedown: (event: MouseEvent) => void;
     private mouseup: (event: MouseEvent) => void;
@@ -148,12 +147,16 @@ export default abstract class AbstractUI {
 
         // Set cursor style to default if context changed
         if (this.hoveredComponent) {
-            this.hoveredComponent.onBlur();
+            this.hoveredComponent.emit("onBlur");
             this.hoveredComponent = null;
         }
     }
 
-    public addComponent(component: Components): Components {
+    public addComponents(...components: Array<Components>): void {
+        components.forEach(component => this.addComponent(component));
+    }
+
+    public addComponent(component: Components): void {
         // Link dynamic values to component
 
         component.context = this;
@@ -162,8 +165,6 @@ export default abstract class AbstractUI {
 
         // Emit initialized
         component.emit("onInitialized");
-
-        return component;
     }
 
     public removeComponent(component: Components): void {
@@ -178,36 +179,24 @@ export default abstract class AbstractUI {
     public addChildrenComponent(targetContainer: AnyStaticContainer, component: Components): void {
         targetContainer.addChildren(component);
 
-        this.addComponent(component);
+        this.addComponents(component);
 
         this.childrenComponents.add(component);
     }
 
     public removeChildrenComponent(targetContainer: AnyStaticContainer, component: Components): void {
-        targetContainer.removeChildren(component);
+        targetContainer.removeChild(component);
 
         this.removeComponent(component);
 
         this.childrenComponents.delete(component);
     }
 
-    public overlapsComponent(component: Component, x: number, y: number): boolean {
+    public overlapsComponent(component: Components, x: number, y: number): boolean {
         return x >= component.x &&
             x <= component.x + component.w &&
             y >= component.y &&
             y <= component.y + component.h;
-    }
-
-    private isInteractive(component: Component): component is Interactive {
-        return "onFocus" in component;
-    }
-
-    private isClickable(component: Component): component is Clickable {
-        return "onClick" in component;
-    }
-
-    private isDynamicLayoutable(component: Component): boolean {
-        return DYNAMIC_LAYOUTED in component;
     }
 
     private getTopLevelComponents() {
@@ -228,7 +217,7 @@ export default abstract class AbstractUI {
             // container invalidateLayoutCache will invalidate child layout too
             component.invalidateLayoutCache();
 
-            const layout = component.cachedCalculateLayout({
+            const layout = component.cachedLayout({
                 ctx,
 
                 containerWidth: scaledWidth,
@@ -249,20 +238,13 @@ export default abstract class AbstractUI {
         if (!event.isTrusted) return;
 
         this.onKeyDown(event);
-
-        this.invalidateDynamicLayoutables();
     }
 
     private handleKeyUp(event: KeyboardEvent): void {
         if (!event.isTrusted) return;
 
         this.onKeyUp(event);
-
-        this.invalidateDynamicLayoutables();
     }
-
-    private isClickableChildren = (component: Component): boolean =>
-        !(this.childrenComponents.has(component) && component.parentContainer.isAnimating);
 
     private handleMouseDown(event: MouseEvent): void {
         if (!event.isTrusted) return;
@@ -271,21 +253,17 @@ export default abstract class AbstractUI {
 
         // Click handling
         for (const component of this.components) {
-            if (!this.isClickableChildren(component)) continue;
-
             if (
-                component.visible &&
-                this.isClickable(component) &&
+                component.isRenderable &&
+                hasClickableListeners(component) &&
                 this.overlapsComponent(component, this.mouseX, this.mouseY)
             ) {
                 this.clickedComponent = component;
-                component.onMouseDown?.();
+                this.clickedComponent.emit("onMouseDown");
 
                 break;
             }
         }
-
-        this.invalidateDynamicLayoutables();
     }
 
     private handleMouseUp(event: MouseEvent): void {
@@ -294,17 +272,13 @@ export default abstract class AbstractUI {
         this.onMouseUp(event);
 
         if (this.clickedComponent) {
-            if (!this.isClickableChildren(this.clickedComponent)) return;
-
             if (this.overlapsComponent(this.clickedComponent, this.mouseX, this.mouseY)) {
-                this.clickedComponent.onClick?.();
-                this.clickedComponent.onMouseUp?.();
+                this.clickedComponent.emit("onMouseUp");
+                this.clickedComponent.emit("onClick");
             }
 
             this.clickedComponent = null;
         }
-
-        this.invalidateDynamicLayoutables();
     }
 
     private handleMouseMove(event: MouseEvent): void {
@@ -321,24 +295,23 @@ export default abstract class AbstractUI {
         // this.invalidateDynamicLayoutables();
     }
 
-    private updateComponentFocusStates(): void {
+    private emitInteractiveEvents(): void {
         this.components.forEach(component => {
-            if (!this.isClickableChildren(component)) return;
-
-            if (
-                component.visible &&
-                this.isInteractive(component)
-            ) {
+            if (hasInteractiveListeners(component)) {
                 const isHovering = this.overlapsComponent(component, this.mouseX, this.mouseY);
 
-                if (isHovering) {
+                if (component.isRenderable && isHovering) {
                     if (this.hoveredComponent !== component) {
-                        this.hoveredComponent?.onBlur?.();
+                        this.hoveredComponent?.emit?.("onBlur");
                         this.hoveredComponent = component;
-                        component.onFocus?.();
+                        component.emit("onFocus");
                     }
-                } else if (this.hoveredComponent === component) {
-                    component.onBlur?.();
+                } else if (
+                    // Also !(component.isRenderable || isHovering), previous hoveredComponent is this component and 
+                    // if was not hovered, emit onBlur event
+                    this.hoveredComponent === component
+                ) {
+                    component.emit("onBlur");
 
                     this.hoveredComponent = null;
                 }
@@ -359,60 +332,13 @@ export default abstract class AbstractUI {
         this.clickedComponent = null;
     }
 
-    private getDynamicLayoutables() {
-        return this.getTopLevelComponents()
-            .filter(c => this.isDynamicLayoutable(c));
-    }
-
-    private invalidateDynamicLayoutables(): void {
-        this.getDynamicLayoutables().forEach(component => component.invalidateLayoutCache());
-    }
-
     protected render(): void {
         const ctx = this.canvas.getContext("2d");
         if (!ctx) return;
 
-        const scaledWidth = this.canvas.width / uiScaleFactor;
-        const scaledHeight = this.canvas.height / uiScaleFactor;
-
-        this.updateComponentFocusStates();
-
-        this.getDynamicLayoutables().forEach(component => {
-            const layout = component.cachedCalculateLayout(
-                {
-                    ctx,
-
-                    containerWidth: scaledWidth,
-                    containerHeight: scaledHeight,
-
-                    originX: 0,
-                    originY: 0,
-                },
-            );
-
-            component.setX(layout.x);
-            component.setY(layout.y);
-            component.setW(layout.w);
-            component.setH(layout.h);
-        });
+        this.emitInteractiveEvents();
 
         renderPossibleComponents(ctx, this.getTopLevelComponents());
-    }
-
-    public createAddableContainer(
-        container: AnyStaticContainer,
-        children: Array<Components>,
-    ): AnyAddableStaticContainer {
-        children.forEach(child => {
-            this.addChildrenComponent(container, child);
-
-            child.parentContainer = container;
-        });
-
-        const addable = <AnyAddableStaticContainer>container;
-        addable.__addable = true;
-
-        return addable;
     }
 
     // Biome atomic store

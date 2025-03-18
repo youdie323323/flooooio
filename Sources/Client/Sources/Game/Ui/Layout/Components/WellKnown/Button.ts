@@ -1,11 +1,8 @@
-import type { Components, Clickable, DynamicLayoutablePointer, Interactive, SetVisibleParameters, AnimationSlideDirection } from "../Component";
-import { AnimationType , Component } from "../Component";
-import ExtensionBase from "../../Extensions/Extension";
+import type { Components, MaybePointerLike } from "../Component";
+import { Component } from "../Component";
 import type { ColorCode } from "../../../../../../../Shared/Utils/Color";
 import { darkend } from "../../../../../../../Shared/Utils/Color";
-import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
-import Layout from "../../Layout";
-import type { AnyAddableStaticContainer } from "./Container";
+import type { PartialSizeLayoutOptions } from "./Container";
 import { StaticHContainer, StaticPanelContainer } from "./Container";
 
 /**
@@ -14,59 +11,98 @@ import { StaticHContainer, StaticPanelContainer } from "./Container";
  * @remarks
  * When think of a normal button, can think of it as a combination of a StaticPanelContainer and a Text component.
  */
-export class Button extends ExtensionBase(Component) implements Interactive, Clickable {
+export class Button extends StaticPanelContainer {
     private isPressed: boolean = false;
     private isHovered: boolean = false;
 
     private isValid: boolean = true;
 
-    private bindedButtonContainer: AnyAddableStaticContainer;
-
     /**
-     * @param layout - Layout options for just like collision
      * @param buttonComponents - Components to be added to button visibility, which are not "added"
      */
     constructor(
-        private layout: LayoutOptions,
+        layoutOptions: MaybePointerLike<PartialSizeLayoutOptions>,
 
-        private buttonComponents: Array<Components>,
+        rectRadii: MaybePointerLike<number> = 1,
 
-        private callback: () => void,
+        strokeWidthLimit: MaybePointerLike<number> = 2,
+        strokeWidthCoef: MaybePointerLike<number> = 1,
 
-        private color: DynamicLayoutablePointer<ColorCode>,
-        private validate: DynamicLayoutablePointer<boolean>,
+        protected readonly buttonComponents: Array<Components>,
+
+        protected readonly callback: () => void,
+
+        protected readonly buttonColor: MaybePointerLike<ColorCode>,
+        protected readonly validate: MaybePointerLike<boolean>,
     ) {
-        super();
+        super(
+            layoutOptions,
+
+            () => this.getButtonColor(),
+
+            rectRadii,
+
+            strokeWidthLimit,
+            strokeWidthCoef,
+        );
 
         this.once("onInitialized", () => {
-            this.context.addComponent(this.bindedButtonContainer = this.context.createAddableContainer(
-                new StaticPanelContainer(
-                    () => ({
-                        // Completely same look as this component
-                        x: this.x,
-                        y: this.y,
-                        w: this.w,
-                        h: this.h,
-                    }),
-                    () => this.getButtonColor(),
+            this.context.addComponent(
+                this.addChild(
+                    new StaticHContainer(
+                        {
+                            x: 0,
+                            y: 0,
+                        },
+                    ).addChildren(...this.buttonComponents),
                 ),
-                [
-                    this.context.createAddableContainer(
-                        new StaticHContainer(
-                            {
-                                x: 0,
-                                y: 0,
-                            },
-                        ),
-                        this.buttonComponents,
-                    ),
-                ],
-            ));
+            );
         });
-    }
 
-    override calculateLayout(lc: LayoutContext): LayoutResult {
-        return Layout.layout(this.layout, lc);
+        this.on("onFocus", () => {
+            if (!this.isValid) {
+                return;
+            }
+
+            this.context.canvas.style.cursor = "pointer";
+
+            this.isHovered = true;
+        });
+
+        this.on("onBlur", () => {
+            if (!this.isValid) {
+                return;
+            }
+
+            this.context.canvas.style.cursor = "default";
+
+            this.isHovered = false;
+            this.isPressed = false;
+        });
+
+        this.on("onClick", () => {
+            if (!this.isValid) {
+                return;
+            }
+
+            this.callback();
+        });
+
+        this.on("onMouseDown", () => {
+            if (!this.isValid) {
+                return;
+            }
+
+            this.isPressed = true;
+        });
+
+        this.on("onMouseUp", () => {
+            if (!this.isValid) {
+                return;
+            }
+
+            this.isPressed = false;
+        });
     }
 
     override render(ctx: CanvasRenderingContext2D): void {
@@ -74,107 +110,19 @@ export class Button extends ExtensionBase(Component) implements Interactive, Cli
 
         super.render(ctx);
 
-        this.update();
-
-        this.isValid = this.computeDynamicLayoutable(this.validate);
+        this.isValid = Component.computePointerLike(this.validate);
         if (!this.isValid) {
             this.isHovered = false;
             this.isPressed = false;
         }
     }
 
-    override setVisible(...args: SetVisibleParameters[0]): void;
-    override setVisible(...args: SetVisibleParameters[1]): void;
-    override setVisible(...args: SetVisibleParameters[2]): void;
-    override setVisible(
-        toggle: boolean,
-        shouldAnimate: boolean,
-        animationType?: AnimationType,
-        animationSlideDirection?: AnimationSlideDirection,
-    ): void {
-        if (shouldAnimate === true) {
-            switch (animationType) {
-                case AnimationType.Zoom: {
-                    super.setVisible(toggle, shouldAnimate, animationType);
-
-                    break;
-                }
-
-                case AnimationType.Slide: {
-                    super.setVisible(toggle, shouldAnimate, animationType, animationSlideDirection);
-
-                    break;
-                }
-            }
-        } else {
-            super.setVisible(toggle, shouldAnimate);
-        }
-
-        // Post-process for component-binded component
-
-        // this.bindedButtonContainer?.setVisible?.(toggle, false);
-    }
-
-    override getCacheKey(): string {
-        return super.getCacheKey() +
-            Object.values(this.computeDynamicLayoutable(this.layout)).join("");
-    }
-
-    override invalidateLayoutCache(): void {
-        this.layoutCache.invalidate();
-    }
-
-    public onFocus(): void {
-        if (!this.isValid) {
-            return;
-        }
-
-        this.context.canvas.style.cursor = "pointer";
-
-        this.isHovered = true;
-    }
-
-    public onBlur(): void {
-        if (!this.isValid) {
-            return;
-        }
-
-        this.context.canvas.style.cursor = "default";
-
-        this.isHovered = false;
-        this.isPressed = false;
-    }
-
-    public onMouseDown(): void {
-        if (!this.isValid) {
-            return;
-        }
-
-        this.isPressed = true;
-    }
-
-    public onMouseUp(): void {
-        if (!this.isValid) {
-            return;
-        }
-
-        this.isPressed = false;
-    }
-
-    public onClick(): void {
-        if (!this.isValid) {
-            return;
-        }
-
-        this.callback();
-    }
-
-    protected getButtonColor(): ColorCode {
+    private getButtonColor(): ColorCode {
         if (!this.isValid) {
             return "#aaaaa9";
         }
 
-        const computedColor = this.computeDynamicLayoutable(this.color);
+        const computedColor = Component.computePointerLike(this.buttonColor);
 
         if (this.isPressed) {
             return darkend(computedColor, 0.1);

@@ -9,19 +9,16 @@ import { Rarity } from "../../../../../Shared/Entity/Statics/EntityRarity";
 import { PETAL_TYPES } from "../../../../../Shared/Entity/Statics/EntityType";
 import { isPetal } from "../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
 import { renderEntity } from "../../Entity/Renderers/RendererEntityRenderingLink";
+import type { FlooooIoDefaultSettingKeys } from "../../Utils/SettingStorage";
 import SettingStorage from "../../Utils/SettingStorage";
 import type { Components } from "../Layout/Components/Component";
 import { AnimationType } from "../Layout/Components/Component";
-import PlayerProfile from "../Layout/Components/Native/PlayerProfile";
-import type { AnyAddableStaticContainer } from "../Layout/Components/WellKnown/Container";
+import type { AnyStaticContainer } from "../Layout/Components/WellKnown/Container";
 import { StaticPanelContainer, CoordinatedStaticSpace, StaticHContainer, StaticSpace } from "../Layout/Components/WellKnown/Container";
 import Text from "../Layout/Components/WellKnown/Text";
 import TextInput from "../Layout/Components/WellKnown/TextInput";
 import Toggle from "../Layout/Components/WellKnown/Toggle";
 import Collidable from "../Layout/Extensions/ExtensionCollidable";
-import { DynamicLayoutable } from "../Layout/Extensions/ExtensionDynamicLayoutable";
-import { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../Tiled/TilesetRenderer";
-import TilesetWavedRenderer from "../Tiled/TilesetWavedRenderer";
 import AbstractUI, { uiScaleFactor } from "../UI";
 import { PacketClientboundOpcode } from "../../../../../Shared/Websocket/Packet/Bound/Client/PacketClientboundOpcode";
 import type { StaticAdditionalClientboundListen } from "../../Websocket/Packet/Bound/Client/PacketClientbound";
@@ -29,6 +26,9 @@ import type BinaryReader from "../../../../../Shared/Websocket/Binary/ReadWriter
 import { Button } from "../Layout/Components/WellKnown/Button";
 import { CanvasLogo, SVGLogo } from "../Layout/Components/WellKnown/Logo";
 import CROSS_ICON_SVG from "../Assets/cross_icon.svg";
+import { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../Shared/Tiled/TilesetRenderer";
+import TilesetWavedRenderer from "../Shared/Tiled/TilesetWavedRenderer";
+import UITitlePlayerProfile from "./UITitlePlayerProfile";
 
 const TAU = Math.PI * 2;
 
@@ -119,20 +119,20 @@ export default class UITitle extends AbstractUI {
     private onLoadedComponents: Components[];
 
     // Make this public to close this from networking
-    private squadMenuContainer: AnyAddableStaticContainer;
+    private squadMenuContainer: AnyStaticContainer;
 
     private publicToggle: Toggle;
 
     private statusText: Text;
     private statusTextRef: StatusText;
 
-    private playerProfileContainer: AnyAddableStaticContainer;
+    private playerProfileContainer: AnyStaticContainer;
 
     private codeText: Text;
 
     // Wave informations
 
-    private waveRoomPlayers: Array<WaveRoomPlayerInformation>;
+    private waveRoomPlayerInformations: Array<WaveRoomPlayerInformation>;
     private waveRoomCode: WaveRoomCode | null;
     private waveRoomState: WaveRoomState;
     private waveRoomVisible: WaveRoomVisibleState;
@@ -149,40 +149,36 @@ export default class UITitle extends AbstractUI {
         [PacketClientboundOpcode.WaveRoomUpdate]: (reader: BinaryReader): void => {
             const waveClientCount = reader.readUInt8();
 
-            const playerInformations: Array<WaveRoomPlayerInformation> = new Array(waveClientCount);
+            const waveRoomPlayerInformations: Array<WaveRoomPlayerInformation> = new Array(waveClientCount);
 
             for (let i = 0; i < waveClientCount; i++) {
-                const waveClientId = reader.readUInt32();
+                const id = reader.readUInt32();
 
-                let waveClientName = reader.readString();
-                // This operation should be server side?
-                if (waveClientName === "") {
-                    waveClientName = "Unnamed";
-                }
+                const name = reader.readString() || "Unnamed";
 
-                const waveClientReadyState = reader.readUInt8() satisfies WaveRoomPlayerReadyState;
+                const readyState = reader.readUInt8() satisfies WaveRoomPlayerReadyState;
 
-                playerInformations[i] = {
-                    id: waveClientId,
-                    name: waveClientName,
-                    readyState: waveClientReadyState,
+                waveRoomPlayerInformations[i] = {
+                    id,
+                    name,
+                    readyState,
                 } satisfies WaveRoomPlayerInformation;
             }
 
-            const waveCode = reader.readString() as WaveRoomCode;
+            const waveRoomCode = reader.readString() as WaveRoomCode;
 
-            const waveBiome = reader.readUInt8() satisfies Biome;
+            const waveRoomBiome = reader.readUInt8() satisfies Biome;
 
-            const waveState = reader.readUInt8() satisfies WaveRoomState;
+            const waveRoomState = reader.readUInt8() satisfies WaveRoomState;
 
-            const waveVisible = reader.readUInt8() satisfies WaveRoomVisibleState;
+            const waveRoomVisibleState = reader.readUInt8() satisfies WaveRoomVisibleState;
 
-            this.waveRoomPlayers = playerInformations;
-            this.waveRoomCode = waveCode;
-            this.waveRoomState = waveState;
-            this.waveRoomVisible = waveVisible;
+            this.waveRoomPlayerInformations = waveRoomPlayerInformations;
+            this.waveRoomCode = waveRoomCode;
+            this.waveRoomState = waveRoomState;
+            this.waveRoomVisible = waveRoomVisibleState;
 
-            this.biome = waveBiome;
+            this.biome = waveRoomBiome;
         },
         [PacketClientboundOpcode.WaveStarted]: (reader: BinaryReader): void => {
             this.squadMenuContainer.setVisible(false, true, AnimationType.Zoom);
@@ -255,6 +251,12 @@ export default class UITitle extends AbstractUI {
 
                 invertYCoordinate: true,
             },
+
+            3,
+
+            3,
+            1,
+
             [
                 new SVGLogo(
                     {
@@ -266,14 +268,16 @@ export default class UITitle extends AbstractUI {
                     MOLECULE_SVG,
                 ),
             ],
+
             () => {
                 console.log("called");
             },
+
             "#db9d5a",
             true,
         );
 
-        this.addComponent(craftButton);
+        this.addComponents(craftButton);
 
         const changelogButton = new Button(
             {
@@ -284,6 +288,12 @@ export default class UITitle extends AbstractUI {
 
                 invertYCoordinate: true,
             },
+
+            3,
+
+            3,
+            1,
+
             [
                 new SVGLogo(
                     {
@@ -295,93 +305,113 @@ export default class UITitle extends AbstractUI {
                     SCROLL_UNFURLED_SVG,
                 ),
             ],
+
             () => {
                 console.log("called");
             },
+
             "#9bb56b",
             true,
         );
 
-        this.addComponent(changelogButton);
+        this.addComponents(changelogButton);
 
         {
-            let keyboardMovementToggle: Toggle;
-
-            const settingContainer = this.createAddableContainer(
-                new StaticPanelContainer(
+            const makeSettingComponents = (y: number, storageKey: FlooooIoDefaultSettingKeys, description: string): [
+                Toggle,
+                Text,
+            ] => {
+                const settingToggle = new Toggle(
                     {
-                        x: 75,
-                        y: 225,
-
-                        invertYCoordinate: true,
+                        x: 5,
+                        y: y - 1,
+                        w: 17,
+                        h: 17,
                     },
-                    "#aaaaaa",
-                ),
-                [
-                    new Button(
-                        {
-                            x: 150 - 4,
-                            y: 2,
-                            w: 17,
-                            h: 17,
-                        },
-                        [
-                            new SVGLogo(
-                                {
-                                    x: 0,
-                                    y: 0,
-                                    w: 17,
-                                    h: 17,
-                                },
-                                CROSS_ICON_SVG,
-                            ),
-                        ],
-                        () => {
-                            settingIsOpen = false;
+                    (t: boolean): void => {
+                        settingToggle.setToggle(t);
 
-                            settingContainer.setVisible(settingIsOpen, true, AnimationType.Slide, "v");
-                        },
-                        "#bb5555",
-                        true,
-                    ),
+                        SettingStorage.set(storageKey, t);
+                    },
+                )
+                    // Load existed setting
+                    .setToggle(SettingStorage.get(storageKey));
 
+                return [
+                    settingToggle,
                     new Text(
                         {
-                            x: 50,
-                            y: 5,
+                            x: 26,
+                            y,
                         },
-                        "Settings",
-                        16,
-                    ),
-
-                    // Keyboard movement
-                    (keyboardMovementToggle = new Toggle(
-                        {
-                            x: 5,
-                            y: 40,
-                            w: 17,
-                            h: 17,
-                        },
-                        (t: boolean): void => {
-                            keyboardMovementToggle.setToggle(t);
-
-                            SettingStorage.set("keyboard_control", t);
-                        },
-                    )),
-                    new Text(
-                        {
-                            x: 32,
-                            y: 42 + 1,
-                        },
-                        "Keyboard movement",
+                        description,
                         11,
                     ),
+                ];
+            };
 
-                    new CoordinatedStaticSpace(15, 15, 150, 190),
-                ],
+            const settingContainer = new StaticPanelContainer(
+                {
+                    x: 72,
+                    y: 225,
+
+                    invertYCoordinate: true,
+                },
+                "#aaaaaa",
+                0.1,
+            ).addChildren(
+                new Button(
+                    {
+                        x: 150 - 5,
+                        y: 2,
+                        w: 13,
+                        h: 13,
+                    },
+
+                    3,
+
+                    2.5,
+                    1,
+
+                    [
+                        new SVGLogo(
+                            {
+                                x: 0,
+                                y: 0,
+                                w: 13,
+                                h: 13,
+                            },
+                            CROSS_ICON_SVG,
+                        ),
+                    ],
+
+                    () => {
+                        settingIsOpen = false;
+
+                        settingContainer.setVisible(settingIsOpen, true, AnimationType.Slide, "v");
+                    },
+
+                    "#bb5555",
+                    true,
+                ),
+
+                new Text(
+                    {
+                        x: 44,
+                        y: 4,
+                    },
+                    "Settings",
+                    16,
+                ),
+
+                // Keyboard movement
+                ...makeSettingComponents(40, "keyboard_control", "Keyboard movement"),
+
+                // Movement helper
+                ...makeSettingComponents(40 + 30, "movement_helper", "Movement helper"),
+
+                new CoordinatedStaticSpace(15, 15, 150, 190 - 4),
             );
-
-            keyboardMovementToggle.setToggle(SettingStorage.get("keyboard_control"));
 
             let settingIsOpen = false;
 
@@ -394,6 +424,12 @@ export default class UITitle extends AbstractUI {
 
                     invertYCoordinate: true,
                 },
+
+                3,
+
+                3,
+                1,
+
                 [
                     new SVGLogo(
                         {
@@ -405,20 +441,22 @@ export default class UITitle extends AbstractUI {
                         SWAP_BAG_SVG,
                     ),
                 ],
+
                 () => {
                     settingIsOpen = !settingIsOpen;
 
                     settingContainer.setVisible(settingIsOpen, true, AnimationType.Slide, "v");
                 },
+
                 "#599dd8",
                 true,
             );
 
             settingContainer.setVisible(false, false);
 
-            this.addComponent(settingButton);
+            this.addComponents(settingButton);
 
-            this.addComponent(settingContainer);
+            this.addComponents(settingContainer);
         }
 
         // Text
@@ -449,8 +487,8 @@ export default class UITitle extends AbstractUI {
         this.connectingText.setVisible(false, false);
         this.loggingInText.setVisible(false, false);
 
-        this.addComponent(this.connectingText);
-        this.addComponent(this.loggingInText);
+        this.addComponents(this.connectingText);
+        this.addComponents(this.loggingInText);
 
         const gameNameText = new (Collidable(Text))(
             {
@@ -524,21 +562,27 @@ export default class UITitle extends AbstractUI {
             const readyButton = new (Collidable(Button))(
                 {
                     x: (-(100 / 2)) + 140,
-                    y: (-(50 / 2)) + 5,
+                    y: (-(50 / 2)) + 4,
                     w: 76,
-                    h: 26,
+                    h: 21,
 
                     alignFromCenterX: true,
                     alignFromCenterY: true,
                 },
+
+                4,
+
+                3,
+                1,
+
                 [
                     new Text(
                         {
                             x: 0,
-                            y: 0,
+                            y: 1,
                         },
                         "Ready",
-                        50,
+                        16,
                     ),
                     new CanvasLogo(
                         {
@@ -551,12 +595,13 @@ export default class UITitle extends AbstractUI {
                             ctx.fillStyle = "black";
                             ctx.globalAlpha = DARKEND_BASE;
 
-                            drawRoundedPolygon(ctx, 0, 0, 10, 90, 40, 3);
+                            drawRoundedPolygon(ctx, 7, (readyButton.h / 2) - 3, 10, 90, 40, 3);
 
                             ctx.fill();
                         },
                     ),
                 ],
+
                 () => {
                     readyToggle = !readyToggle;
 
@@ -576,6 +621,7 @@ export default class UITitle extends AbstractUI {
                         );
                     }
                 },
+
                 "#1dd129",
                 true,
             );
@@ -583,24 +629,46 @@ export default class UITitle extends AbstractUI {
             const squadButton = new Button(
                 {
                     x: (-(100 / 2)) + 140 + 13,
-                    y: (-(50 / 2)) + 20 + 16,
+                    y: (-(50 / 2)) + 20 + 17,
                     w: 63,
-                    h: 22,
+                    h: 18,
 
                     alignFromCenterX: true,
                     alignFromCenterY: true,
                 },
+
+                4,
+
+                3,
+                1,
+
                 [
                     new Text(
                         {
                             x: 0,
-                            y: 0,
+                            y: 1,
                         },
                         "Squad",
-                        14,
+                        13,
                     ),
+                    new CanvasLogo(
+                        {
+                            x: 0,
+                            y: 0,
+                            w: 40,
+                            h: 40,
+                        },
+                        (ctx: CanvasRenderingContext2D) => {
+                            ctx.fillStyle = "black";
+                            ctx.globalAlpha = DARKEND_BASE;
 
+                            drawRoundedPolygon(ctx, 5, (squadButton.h / 2) - 3, 10 - 1, 90, 40, 4);
+
+                            ctx.fill();
+                        },
+                    ),
                 ],
+
                 () => {
                     clientWebsocket.packetServerbound.sendWaveRoomCreate(this.biome);
 
@@ -610,338 +678,388 @@ export default class UITitle extends AbstractUI {
 
                     clientWebsocket.packetServerbound.sendWaveRoomChangeVisible(WaveRoomVisibleState.Private);
                 },
+
                 "#5a9fdb",
                 true,
             );
 
-            const biomeSwitcher = this.createAddableContainer(
-                new StaticHContainer(
-                    {
-                        x: -144,
-                        y: (-(50 / 2)) + 20 + 15,
+            const biomeSwitcher = new StaticHContainer(
+                {
+                    x: -144,
+                    y: (-(50 / 2)) + 20 + 15,
 
-                        alignFromCenterX: true,
-                        alignFromCenterY: true,
+                    alignFromCenterX: true,
+                    alignFromCenterY: true,
+                },
+            ).addChildren(
+                new Button(
+                    {
+                        w: 42,
+                        h: 14,
                     },
+
+                    2,
+
+                    10,
+                    0.05,
+
+                    [
+                        new Text(
+                            {
+                                x: 0,
+                                y: 0,
+                            },
+                            "Garden",
+                            50,
+                        ),
+                    ],
+
+                    () => {
+                        this.biome = Biome.Garden;
+                    },
+
+                    "#2ba35b",
+                    true,
                 ),
-                [
-                    new Button(
-                        {
-                            w: 42,
-                            h: 14,
-                        },
-                        [
-                            new Text(
-                                {
-                                    x: 0,
-                                    y: 0,
-                                },
-                                "Garden",
-                                50,
-                            ),
-                        ],
-                        () => {
-                            this.biome = Biome.Garden;
-                        },
-                        "#2ba35b",
-                        true,
-                    ),
-                    new StaticSpace(5, 0),
-                    new Button(
-                        {
-                            w: 42,
-                            h: 14,
-                        },
-                        [
-                            new Text(
-                                {
-                                    x: 0,
-                                    y: 0,
-                                },
-                                "Desert",
-                                50,
-                            ),
-                        ],
-                        () => {
-                            this.biome = Biome.Desert;
-                        },
-                        "#ccba73",
-                        true,
-                    ),
-                    new StaticSpace(5, 0),
-                    new Button(
-                        {
-                            w: 42,
-                            h: 14,
-                        },
-                        [
-                            new Text(
-                                {
-                                    x: 0,
-                                    y: 0,
-                                },
-                                "Ocean",
-                                50,
-                            ),
-                        ],
-                        () => {
-                            this.biome = Biome.Ocean;
-                        },
-                        "#6089b6",
-                        true,
-                    ),
-                ],
+                new StaticSpace(5, 0),
+                new Button(
+                    {
+                        w: 42,
+                        h: 14,
+                    },
+
+                    2,
+
+                    10,
+                    0.05,
+
+                    [
+                        new Text(
+                            {
+                                x: 0,
+                                y: 0,
+                            },
+                            "Desert",
+                            50,
+                        ),
+                    ],
+
+                    () => {
+                        this.biome = Biome.Desert;
+                    },
+
+                    "#ccba73",
+                    true,
+                ),
+                new StaticSpace(5, 0),
+                new Button(
+                    {
+                        w: 42,
+                        h: 14,
+                    },
+
+                    2,
+
+                    10,
+                    0.05,
+
+                    [
+                        new Text(
+                            {
+                                x: 0,
+                                y: 0,
+                            },
+                            "Ocean",
+                            50,
+                        ),
+                    ],
+
+                    () => {
+                        this.biome = Biome.Ocean;
+                    },
+
+                    "#6089b6",
+                    true,
+                ),
             );
 
             // TODO: move biomeSwitchers, readyButton too
 
-            const makePlayerProfileColumn = (i: number): PlayerProfile => {
-                return new PlayerProfile(
+            const makePlayerProfileColumn = (i: number): UITitlePlayerProfile => {
+                return new UITitlePlayerProfile(
                     {
                         w: 74.45,
                         h: 120,
                     },
-                    () => this.waveRoomPlayers[i]?.id,
-                    () => this.waveRoomPlayers[i]?.name,
-                    () => this.waveRoomPlayers[i]?.readyState,
-                    () => this.waveRoomPlayers[i] == undefined,
+                    () => this.waveRoomPlayerInformations[i]?.id,
+                    () => this.waveRoomPlayerInformations[i]?.name,
+                    () => this.waveRoomPlayerInformations[i]?.readyState,
+                    () => this.waveRoomPlayerInformations[i] == undefined,
                 );
             };
 
             let codeInput: TextInput;
 
-            this.squadMenuContainer = this.createAddableContainer(
-                new (DynamicLayoutable(StaticPanelContainer))(
+            this.squadMenuContainer = new StaticPanelContainer(
+                {
+                    x: -172,
+                    y: -100,
+
+                    alignFromCenterX: true,
+                    alignFromCenterY: true,
+                },
+                "#5aa0db",
+            ).addChildren(
+                (this.statusText = new Text(
                     {
-                        x: -175,
-                        y: -100,
-
-                        alignFromCenterX: true,
-                        alignFromCenterY: true,
+                        x: 162,
+                        y: 110,
                     },
-                    "#5aa0db",
+                    () => this.statusTextRef,
+                    14,
+                )),
+
+                (
+                    this.playerProfileContainer = new StaticHContainer(
+                        {
+                            x: 9,
+                            y: 50,
+                        },
+                    ).addChildren(
+                        makePlayerProfileColumn(0),
+                        new StaticSpace(5.5, 0),
+                        makePlayerProfileColumn(1),
+                        new StaticSpace(5.5, 0),
+                        makePlayerProfileColumn(2),
+                        new StaticSpace(5.5, 0),
+                        makePlayerProfileColumn(3),
+                    )
                 ),
-                [
-                    (this.statusText = new Text(
-                        {
-                            x: 162,
-                            y: 110,
-                        },
-                        () => this.statusTextRef,
-                        14,
-                    )),
 
-                    (this.playerProfileContainer = this.createAddableContainer(
-                        new StaticHContainer(
+                new Button(
+                    {
+                        x: 316 - 0.5,
+                        y: 1 + 0.5,
+                        w: 15,
+                        h: 15,
+                    },
+
+                    2,
+
+                    10,
+                    0.05,
+
+                    [
+                        new SVGLogo(
                             {
-                                x: 9,
-                                y: 50,
+                                x: 0,
+                                y: 0,
+                                w: 10,
+                                h: 10,
                             },
+                            CROSS_ICON_SVG,
                         ),
-                        [
-                            makePlayerProfileColumn(0),
-                            new StaticSpace(5.5, 0),
-                            makePlayerProfileColumn(1),
-                            new StaticSpace(5.5, 0),
-                            makePlayerProfileColumn(2),
-                            new StaticSpace(5.5, 0),
-                            makePlayerProfileColumn(3),
-                        ],
-                    )),
+                    ],
 
-                    new Button(
-                        {
-                            x: 316 - 0.5,
-                            y: 1 + 0.5,
-                            w: 15,
-                            h: 15,
-                        },
-                        [
-                            new SVGLogo(
-                                {
-                                    x: 0,
-                                    y: 0,
-                                    w: 10,
-                                    h: 10,
-                                },
-                                CROSS_ICON_SVG,
-                            ),
-                        ],
-                        () => {
-                            this.squadMenuContainer.setVisible(false, true, AnimationType.Zoom);
+                    () => {
+                        this.squadMenuContainer.setVisible(false, true, AnimationType.Zoom);
 
-                            readyToggle = false;
+                        readyToggle = false;
 
-                            this.resetWaveState();
+                        this.resetWaveState();
 
-                            this.statusTextRef = StatusText.Loading;
+                        this.statusTextRef = StatusText.Loading;
 
-                            clientWebsocket.packetServerbound.sendWaveRoomLeave();
-                        },
-                        "#bb5555",
-                        true,
+                        clientWebsocket.packetServerbound.sendWaveRoomLeave();
+                    },
+
+                    "#bb5555",
+                    true,
+                ),
+                new CoordinatedStaticSpace(15, 15, 317, 196),
+
+                (this.publicToggle = new Toggle(
+                    {
+                        x: 11,
+                        y: 24,
+                        w: 15,
+                        h: 15,
+                    },
+                    (t: boolean): void => clientWebsocket.packetServerbound.sendWaveRoomChangeVisible(
+                        t
+                            ? WaveRoomVisibleState.Public
+                            : WaveRoomVisibleState.Private,
                     ),
-                    new CoordinatedStaticSpace(15, 15, 317, 196),
+                )),
+                new Text(
+                    {
+                        x: 46,
+                        y: 24 + 8,
+                    },
+                    "Public",
+                    10,
+                ),
 
-                    (this.publicToggle = new Toggle(
-                        {
-                            x: 11,
-                            y: 24,
-                            w: 15,
-                            h: 15,
-                        },
-                        (t: boolean): void => clientWebsocket.packetServerbound.sendWaveRoomChangeVisible(
-                            t
-                                ? WaveRoomVisibleState.Public
-                                : WaveRoomVisibleState.Private,
+                new Text(
+                    () => ({
+                        x:
+                            this.waveRoomVisible === WaveRoomVisibleState.Private
+                                ? 103
+                                : 117,
+                        y: 24 + 8,
+                        w: 0,
+                        h: 0,
+                    }),
+                    () =>
+                        this.waveRoomVisible === WaveRoomVisibleState.Private
+                            ? "Private squad"
+                            : this.waveRoomVisible === WaveRoomVisibleState.Public
+                                ? "Waiting for players..."
+                                : "",
+                    8,
+                    () =>
+                        this.waveRoomVisible === WaveRoomVisibleState.Private
+                            ? "#f0666b"
+                            : "#ffffff",
+                ),
+
+                // Code inputer
+                (codeInput = new TextInput(
+                    {
+                        x: 187,
+                        y: 183,
+                        w: 75,
+                        h: 14,
+                    },
+                    {
+                        canvas: this.canvas,
+
+                        value: "",
+
+                        fontSize: 10,
+                        fontFamily: 'Ubuntu',
+                        fontColor: '#212121',
+                        fontWeight: 'bold',
+
+                        placeHolder: '',
+                        placeHolderDisplayUnfocusedState: false,
+
+                        borderColor: "#000000",
+                        borderRadius: 2,
+                        borderWidth: 2,
+                        maxlength: 20,
+
+                        padding: 1,
+                    },
+                )),
+                new Button(
+                    {
+                        x: 274,
+                        y: 183 + 1,
+                        w: 50,
+                        h: 18,
+                    },
+
+                    2,
+
+                    10,
+                    0.05,
+
+                    [
+                        new Text(
+                            {
+                                x: 0,
+                                y: 0,
+                            },
+                            "Join",
+                            10,
                         ),
-                    )),
-                    new Text(
-                        {
-                            x: 46,
-                            y: 24 + 8,
-                        },
-                        "Public",
-                        10,
-                    ),
+                    ],
 
-                    new Text(
-                        () => ({
-                            x:
-                                this.waveRoomVisible === WaveRoomVisibleState.Private
-                                    ? 103
-                                    : 117,
-                            y: 24 + 8,
-                            w: 0,
-                            h: 0,
-                        }),
-                        () =>
-                            this.waveRoomVisible === WaveRoomVisibleState.Private
-                                ? "Private squad"
-                                : this.waveRoomVisible === WaveRoomVisibleState.Public
-                                    ? "Waiting for players..."
-                                    : "",
-                        8,
-                        () =>
-                            this.waveRoomVisible === WaveRoomVisibleState.Private
-                                ? "#f0666b"
-                                : "#ffffff",
-                    ),
+                    () => clientWebsocket.packetServerbound.sendWaveRoomJoin(codeInput.value),
 
-                    // Code inputer
-                    (codeInput = new TextInput(
-                        {
-                            x: 187,
-                            y: 183,
-                            w: 75,
-                            h: 14,
-                        },
-                        {
-                            canvas: this.canvas,
+                    "#1dd129",
+                    () => isWaveRoomCode(codeInput.value),
+                ),
 
-                            value: "",
+                new Button(
+                    {
+                        x: 195,
+                        y: 24,
+                        w: 72,
+                        h: 18,
+                    },
 
-                            fontSize: 10,
-                            fontFamily: 'Ubuntu',
-                            fontColor: '#212121',
-                            fontWeight: 'bold',
+                    2,
 
-                            placeHolder: '',
-                            placeHolderDisplayUnfocusedState: false,
+                    10,
+                    0.05,
 
-                            borderColor: "#000000",
-                            borderRadius: 2,
-                            borderWidth: 2,
-                            maxlength: 20,
+                    [
+                        new Text(
+                            {
+                                x: 0,
+                                y: 0,
+                            },
+                            "Find public",
+                            10,
+                        ),
+                    ],
 
-                            padding: 1,
-                        },
-                    )),
-                    new Button(
-                        {
-                            x: 274,
-                            y: 183 + 1,
-                            w: 50,
-                            h: 18,
-                        },
-                        [
-                            new Text(
-                                {
-                                    x: 0,
-                                    y: 0,
-                                },
-                                "Join",
-                                10,
-                            ),
-                        ],
-                        () => clientWebsocket.packetServerbound.sendWaveRoomJoin(codeInput.value),
-                        "#1dd129",
-                        () => isWaveRoomCode(codeInput.value),
-                    ),
+                    () => clientWebsocket.packetServerbound.sendWaveRoomFindPublic(this.biome),
 
-                    new Button(
-                        {
-                            x: 195,
-                            y: 24,
-                            w: 72,
-                            h: 18,
-                        },
-                        [
-                            new Text(
-                                {
-                                    x: 0,
-                                    y: 0,
-                                },
-                                "Find public",
-                                10,
-                            ),
-                        ],
-                        () => clientWebsocket.packetServerbound.sendWaveRoomFindPublic(this.biome),
-                        "#5aa0db",
-                        true,
-                    ),
-                    new Button(
-                        {
-                            x: 274,
-                            y: 24,
-                            w: 50,
-                            h: 18,
-                        },
-                        [
-                            new Text(
-                                {
-                                    x: 0,
-                                    y: 0,
-                                },
-                                "New",
-                                10,
-                            ),
-                        ],
-                        () => clientWebsocket.packetServerbound.sendWaveRoomCreate(this.biome),
-                        "#5aa0db",
-                        true,
-                    ),
+                    "#5aa0db",
+                    true,
+                ),
+                new Button(
+                    {
+                        x: 274,
+                        y: 24,
+                        w: 50,
+                        h: 18,
+                    },
 
-                    (this.codeText = new Text(
-                        {
-                            x: 10,
-                            y: 193,
-                        },
-                        () => "Code: " + (this.waveRoomCode || ""),
-                        9,
-                        "#ffffff",
-                        "left",
-                    )),
+                    2,
 
-                    new Text(
-                        {
-                            x: 162,
-                            y: 10,
-                        },
-                        "Squad",
-                        14,
-                    ),
-                ],
+                    10,
+                    0.05,
+
+                    [
+                        new Text(
+                            {
+                                x: 0,
+                                y: 0,
+                            },
+                            "New",
+                            10,
+                        ),
+                    ],
+
+                    () => clientWebsocket.packetServerbound.sendWaveRoomCreate(this.biome),
+
+                    "#5aa0db",
+                    true,
+                ),
+
+                (this.codeText = new Text(
+                    {
+                        x: 10,
+                        y: 193,
+                    },
+                    () => "Code: " + (this.waveRoomCode || ""),
+                    9,
+                    "#ffffff",
+                    "left",
+                )),
+
+                new Text(
+                    {
+                        x: 162,
+                        y: 10,
+                    },
+                    "Squad",
+                    14,
+                ),
             );
 
             this.onLoadedComponents.push(nameInputDescription);
@@ -957,12 +1075,12 @@ export default class UITitle extends AbstractUI {
             biomeSwitcher.setVisible(false, false);
             this.squadMenuContainer.setVisible(false, false);
 
-            this.addComponent(nameInputDescription);
-            this.addComponent(nameInput);
-            this.addComponent(readyButton);
-            this.addComponent(squadButton);
-            this.addComponent(biomeSwitcher);
-            this.addComponent(this.squadMenuContainer);
+            this.addComponents(nameInputDescription);
+            this.addComponents(nameInput);
+            this.addComponents(readyButton);
+            this.addComponents(squadButton);
+            this.addComponents(biomeSwitcher);
+            this.addComponents(this.squadMenuContainer);
 
             nameInputDescription.addCollidableComponents([this.squadMenuContainer, nameInput]);
             gameNameText.addCollidableComponents([this.squadMenuContainer, nameInputDescription]);
@@ -973,7 +1091,7 @@ export default class UITitle extends AbstractUI {
             this.toggleShowStatusText(true);
         }
 
-        this.addComponent(gameNameText);
+        this.addComponents(gameNameText);
     }
 
     override animationFrame() {
@@ -1065,7 +1183,7 @@ export default class UITitle extends AbstractUI {
         }
         this.prevWaveRoomVisible = this.waveRoomVisible;
 
-        if (this.waveRoomPlayers.length) {
+        if (this.waveRoomPlayerInformations.length) {
             this.toggleShowStatusText(false);
         } else {
             this.toggleShowStatusText(true);
@@ -1083,7 +1201,7 @@ export default class UITitle extends AbstractUI {
     }
 
     public resetWaveState() {
-        this.waveRoomPlayers = [];
+        this.waveRoomPlayerInformations = [];
         this.waveRoomCode = null;
         this.waveRoomVisible = WaveRoomVisibleState.Private;
         this.waveRoomState = WaveRoomState.Waiting;
