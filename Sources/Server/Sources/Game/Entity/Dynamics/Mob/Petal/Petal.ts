@@ -17,7 +17,7 @@ export type StaticPetalData = Readonly<{
 // Unclustered (single)
 export type SinglePetal = [MobInstance];
 
-export const MAX_CLUSTER_AMOUNT = 5;
+export const MAX_CLUSTER_AMOUNT = 5 as const;
 
 // Clustered (multiple)
 export type ClusterPetal =

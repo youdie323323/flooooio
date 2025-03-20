@@ -9,9 +9,9 @@ import { rarityTable } from "../../../../../../../Shared/Formula";
  * Set of linkable mobs.
  */
 export const LINKABLE_MOBS: Set<MobType> = new Set([
-    MobType.Centipede,
-    MobType.CentipedeDesert,
-    MobType.CentipedeEvil,
+    MobType.CENTIPEDE,
+    MobType.CENTIPEDE_DESERT,
+    MobType.CENTIPEDE_EVIL,
 ]);
 
 type MobSpawnRule = Readonly<{
@@ -21,20 +21,20 @@ type MobSpawnRule = Readonly<{
 
 // https://official-florrio.fandom.com/wiki/Waves
 const MOB_SPAWN_RULES = {
-    [Biome.Garden]: {
-        [MobType.Bee]: { spawnAfter: 1, weight: 30 },
-        [MobType.Spider]: { spawnAfter: 3, weight: 30 },
-        [MobType.Centipede]: { spawnAfter: 2, weight: 1 },
-        [MobType.CentipedeEvil]: { spawnAfter: 3, weight: 1 },
+    [Biome.GARDEN]: {
+        [MobType.BEE]: { spawnAfter: 1, weight: 30 },
+        [MobType.SPIDER]: { spawnAfter: 3, weight: 30 },
+        [MobType.CENTIPEDE]: { spawnAfter: 2, weight: 1 },
+        [MobType.CENTIPEDE_EVIL]: { spawnAfter: 3, weight: 1 },
     },
-    [Biome.Desert]: {
-        [MobType.CentipedeDesert]: { spawnAfter: 1, weight: 1 },
-        [MobType.Beetle]: { spawnAfter: 2, weight: 30 },
+    [Biome.DESERT]: {
+        [MobType.CENTIPEDE_DESERT]: { spawnAfter: 1, weight: 1 },
+        [MobType.BEETLE]: { spawnAfter: 2, weight: 30 },
     },
-    [Biome.Ocean]: {
-        [MobType.Bubble]: { spawnAfter: 1, weight: 1 },
-        [MobType.Starfish]: { spawnAfter: 3, weight: 1 },
-        [MobType.Jellyfish]: { spawnAfter: 3, weight: 1 },
+    [Biome.OCEAN]: {
+        [MobType.BUBBLE]: { spawnAfter: 1, weight: 1 },
+        [MobType.STARFISH]: { spawnAfter: 3, weight: 1 },
+        [MobType.JELLYFISH]: { spawnAfter: 3, weight: 1 },
     },
 } as const satisfies Record<Biome, Partial<Record<MobType, MobSpawnRule>>>;
 
@@ -71,12 +71,12 @@ Wave 61+: Legendaries stop spawning
 */
 
 const WAVE_SPAWN_END_AT = {
-    [Rarity.Common]: 20,
-    [Rarity.Unusual]: 30,
-    [Rarity.Rare]: 40,
-    [Rarity.Epic]: 50,
-    [Rarity.Legendary]: 60,
-    [Rarity.Mythic]: Infinity,
+    [Rarity.COMMON]: 20,
+    [Rarity.UNUSUAL]: 30,
+    [Rarity.RARE]: 40,
+    [Rarity.EPIC]: 50,
+    [Rarity.LEGENDARY]: 60,
+    [Rarity.MYTHIC]: Infinity,
 } satisfies Partial<Record<Rarity, number>>;
 
 const u32Source = new Uint32Array(1);
@@ -92,7 +92,7 @@ function getRandomRarity(v: number): Rarity {
         }
     }
 
-    return Rarity.Common;
+    return Rarity.COMMON;
 }
 
 function getRandomRarityWithRolls(n: number): Rarity {
@@ -104,7 +104,7 @@ function getRandomRarityWithRolls(n: number): Rarity {
 
 function pickRandomRarity(difficulty: number, luck: number): Rarity {
     let r = getRandomRarityWithRolls(Math.pow(1.3, difficulty) * luck);
-    if (r >= Rarity.Ultra) r = Rarity.Mythic;
+    if (r >= Rarity.ULTRA) r = Rarity.MYTHIC;
 
     return r;
 }
@@ -142,7 +142,7 @@ export default class SpawnMobDeterminer {
             let spawnRarity = pickRandomRarity(progress, 1 + 0);
             for (const [rarity, maxWave] of Object.entries(WAVE_SPAWN_END_AT)) {
                 if (progress > maxWave && spawnRarity === parseInt(rarity)) {
-                    spawnRarity = Math.min(spawnRarity + 1, Rarity.Mythic) as Rarity;
+                    spawnRarity = Math.min(spawnRarity + 1, Rarity.MYTHIC) as Rarity;
                 }
             }
 

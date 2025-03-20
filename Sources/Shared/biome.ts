@@ -1,27 +1,27 @@
 import type { ColorCode } from "./Utils/Color";
 
 export const enum Biome {
-    Garden,
-    Desert,
-    Ocean,
+    GARDEN,
+    DESERT,
+    OCEAN,
 }
 
 export const BIOME_VALUES = new Set([
-    Biome.Garden,
-    Biome.Desert,
-    Biome.Ocean,
+    Biome.GARDEN,
+    Biome.DESERT,
+    Biome.OCEAN,
 ]);
 
 type BiomeDisplayName = Capitalize<string>;
 
 export const BIOME_DISPLAY_NAME = {
-    [Biome.Garden]: "Garden",
-    [Biome.Desert]: "Desert",
-    [Biome.Ocean]: "Ocean",
+    [Biome.GARDEN]: "Garden",
+    [Biome.DESERT]: "Desert",
+    [Biome.OCEAN]: "Ocean",
 } as const satisfies Record<Biome, BiomeDisplayName>;
 
 export const BIOME_GAUGE_COLORS = {
-    [Biome.Garden]: "#1ea761",
-    [Biome.Desert]: "#ecdcb8",
-    [Biome.Ocean]: "#4e77a7",
+    [Biome.GARDEN]: "#1ea761",
+    [Biome.DESERT]: "#ecdcb8",
+    [Biome.OCEAN]: "#4e77a7",
 } as const satisfies Record<Biome, ColorCode>;

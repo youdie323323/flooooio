@@ -1,17 +1,14 @@
-import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
 import { Rarity } from "../../../../../../Shared/Entity/Statics/EntityRarity";
 import { MobType, PetalType } from "../../../../../../Shared/Entity/Statics/EntityType";
-import type { PetalData } from "../../../../../../Shared/Entity/Statics/Mob/Petal/PetalData";
-import { PETAL_PROFILES } from "../../../../../../Shared/Entity/Statics/Mob/Petal/PetalProfiles";
 import { decodeMood } from "../../../../../../Shared/Mood";
 import type { WavePool } from "../../../Genres/Wave/WavePool";
 import type { EntityMixinConstructor, EntityMixinTemplate } from "../Entity";
 import { onUpdateTick } from "../Entity";
-import { isDynamicPetal, MAX_CLUSTER_AMOUNT } from "../Mob/Petal/Petal";
+import { isDynamicPetal } from "../Mob/Petal/Petal";
 import type { PlayerInstance, BasePlayer } from "./Player";
 
 export const EGG_TYPE_MAPPING = {
-    [PetalType.BeetleEgg]: MobType.Beetle,
+    [PetalType.EGG_BEETLE]: MobType.BEETLE,
 } as const satisfies Partial<Record<PetalType, MobType>>;
 
 const consumeConsumablePetal = (poolThis: WavePool, player: PlayerInstance, i: number, j: number): [number, number] | null => {
@@ -24,10 +21,10 @@ const consumeConsumablePetal = (poolThis: WavePool, player: PlayerInstance, i: n
     poolThis.removeMob(petal.id);
 
     switch (petal.type) {
-        case PetalType.BeetleEgg: {
+        case PetalType.EGG_BEETLE: {
             petal.petalSummonedPet = poolThis.generateMob(
                 EGG_TYPE_MAPPING[petal.type],
-                Math.max(Rarity.Common, Math.min(Rarity.Mythic, petal.rarity - 1)),
+                Math.max(Rarity.COMMON, Math.min(Rarity.MYTHIC, petal.rarity - 1)),
 
                 // Summon on breaked petal
                 petal.x,
@@ -40,7 +37,7 @@ const consumeConsumablePetal = (poolThis: WavePool, player: PlayerInstance, i: n
             break;
         }
 
-        case PetalType.Bubble: {
+        case PetalType.BUBBLE: {
             return [player.x - petal.x, player.y - petal.y];
         }
     }
@@ -77,14 +74,14 @@ export function PlayerPetalConsume<T extends EntityMixinConstructor<BasePlayer>>
                             Date.now() >= this.slots.cooldownsUsage[i][j]
                         ) {
                             // Automatically (e.g. egg)
-                            if (e.type === PetalType.BeetleEgg) {
+                            if (e.type === PetalType.EGG_BEETLE) {
                                 consumeConsumablePetal(poolThis, this, i, j);
 
                                 return;
                             }
 
                             // Bubble
-                            if (isConsumeMood && e.type === PetalType.Bubble) {
+                            if (isConsumeMood && e.type === PetalType.BUBBLE) {
                                 const result = consumeConsumablePetal(poolThis, this, i, j);
                                 if (result) {
                                     const distance = Math.sqrt(result[0] * result[0] + result[1] * result[1]);

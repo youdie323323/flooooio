@@ -1,7 +1,9 @@
 import * as esbuild from 'esbuild';
 import { readFileSync, rm, writeFileSync } from 'fs';
+import { readFile } from 'fs/promises';
 import JsConfuser from 'js-confuser';
 import { confirm } from '@inquirer/prompts';
+import { optimize } from "svgo";
 
 const prebuildedFileName = './prebuilded-' + Date.now() + '.js';
 
@@ -20,11 +22,22 @@ async function watch() {
         loader: { ".svg": "text" },
         plugins: [
             {
+                name: "svgo",
+                setup({ onLoad }) {
+                    onLoad({ filter: /\.svg$/ }, async args => {
+                        const raw = await readFile(args.path, "utf-8");
+                        const { data: contents } = optimize(raw);
+
+                        return { contents, loader: "default" };
+                    });
+                },
+            },
+            {
                 name: 'watch-client-only',
                 setup(build) {
-                    build.onEnd(async (result) => {
+                    build.onEnd(async result => {
                         if (obfuscateEnabled) {
-                            console.log('Builded, start obfuscate with js-confuser');
+                            console.log('Builded, starts obfuscate with js-confuser...');
 
                             JsConfuser.obfuscate(readFileSync(prebuildedFileName, "utf-8"), {
                                 target: 'browser',

@@ -97,7 +97,7 @@ class BasePlayer implements Entity {
     constructor(
         source: PartialUnion<
             BasePlayer,
-            UnderlyingMixinUnion
+            | UnderlyingMixinUnion
             | "isCollidable"
         >,
     ) {
@@ -114,7 +114,6 @@ class BasePlayer implements Entity {
      * Determine if player is collidable to any collidables.
      * 
      * @remarks
-     * 
      * Using isDead here could allow users to cross the boundary.
      */
     get isCollidable(): boolean {

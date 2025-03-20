@@ -4,8 +4,7 @@ import type { PetalData } from "../../../../../Shared/Entity/Statics/Mob/Petal/P
 import { PETAL_PROFILES } from "../../../../../Shared/Entity/Statics/Mob/Petal/PetalProfiles";
 import { WaveRoomState } from "../../../../../Shared/WaveRoom";
 import BinarySizedWriter from "../../../../../Shared/Websocket/Binary/ReadWriter/Writer/BinarySizedWriter";
-import type { PacketClientboundConnectionKickReason } from "../../../../../Shared/Websocket/Packet/Bound/Client/PacketClientboundConnectionKickReason";
-import { PacketClientboundOpcode } from "../../../../../Shared/Websocket/Packet/Bound/Client/PacketClientboundOpcode";
+import { Clientbound, type ClientboundConnectionKickReason } from "../../../../../Shared/Websocket/Packet/PacketDirection";
 import { waveRoomService } from "../../../../Main";
 import { calculateHp } from "../../Genres/Wave/Mathematics/WaveFormula";
 import type { UserData, WavePool } from "../../Genres/Wave/WavePool";
@@ -128,7 +127,7 @@ export function removeClientFromAllService(waveRoom: WaveRoom, waveClientId: Pla
     }
 }
 
-export function kickClient(ws: uWS.WebSocket<UserData>, reason: PacketClientboundConnectionKickReason) {
+export function kickClient(ws: uWS.WebSocket<UserData>, reason: ClientboundConnectionKickReason) {
     const userData = ws.getUserData();
     if (userData) {
         const waveRoom = waveRoomService.findPlayerRoom(userData?.waveRoomClientId);
@@ -148,7 +147,7 @@ export function kickClient(ws: uWS.WebSocket<UserData>, reason: PacketClientboun
 
     const connectionKickedWriter = new BinarySizedWriter(2);
 
-    connectionKickedWriter.writeUInt8(PacketClientboundOpcode.ConnectionKicked);
+    connectionKickedWriter.writeUInt8(Clientbound.CONNECTION_KICKED);
 
     connectionKickedWriter.writeUInt8(reason);
 

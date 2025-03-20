@@ -12,8 +12,8 @@ import type { BasePlayer } from "./Player";
 export const PETAL_INITIAL_COOLDOWN = 0;
 
 export const USAGE_RELOAD_PETALS: Set<MobType | PetalType> = new Set([
-    PetalType.BeetleEgg,
-    PetalType.Bubble,
+    PetalType.EGG_BEETLE,
+    PetalType.BUBBLE,
 ]);
 
 export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(Base: T) {

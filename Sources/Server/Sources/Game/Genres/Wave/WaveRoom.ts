@@ -2,7 +2,7 @@ import type { Biome } from "../../../../../Shared/Biome";
 import { WaveRoomPlayerReadyState, WaveRoomVisibleState, WaveRoomState } from "../../../../../Shared/WaveRoom";
 import type { WaveRoomCode } from "../../../../../Shared/WaveRoomCode";
 import BinarySizedWriter from "../../../../../Shared/Websocket/Binary/ReadWriter/Writer/BinarySizedWriter";
-import { PacketClientboundOpcode } from "../../../../../Shared/Websocket/Packet/Bound/Client/PacketClientboundOpcode";
+import { Clientbound } from "../../../../../Shared/Websocket/Packet/PacketDirection";
 import { logger } from "../../../../Main";
 import type { BrandedId } from "../../Entity/Dynamics/Entity";
 import type { MobId } from "../../Entity/Dynamics/Mob/Mob";
@@ -43,8 +43,8 @@ export const joinWaveRoom = (ws: uWS.WebSocket<UserData>, id: false | WaveRoomPl
 
     waveRoomJoinWriter.writeUInt8(
         id
-            ? PacketClientboundOpcode.WaveRoomSelfId
-            : PacketClientboundOpcode.WaveRoomJoinFailed,
+            ? Clientbound.WAVE_ROOM_SELF_ID
+            : Clientbound.WAVE_ROOM_JOIN_FAILED,
     );
 
     if (id) {
@@ -164,7 +164,7 @@ export default class WaveRoom {
     private createWaveRoomUpdatePacket(): Uint8Array {
         const waveRoomUpdateWriter = new BinarySizedWriter(this.calculateWaveRoomUpdatePacketSize());
 
-        waveRoomUpdateWriter.writeUInt8(PacketClientboundOpcode.WaveRoomUpdate);
+        waveRoomUpdateWriter.writeUInt8(Clientbound.WAVE_ROOM_UPDATE);
 
         // Client count
         waveRoomUpdateWriter.writeUInt8(this.roomCandidates.length);

@@ -25,6 +25,7 @@
     "node-schedule": "^2.1.1",
     "stackblur-canvas": "^2.7.0",
     "strict-event-emitter": "^0.5.1",
+    "svgo": "^3.3.2",
     "typescript-eslint": "^8.18.0",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.51.0",
     "ws": "^8.18.0"

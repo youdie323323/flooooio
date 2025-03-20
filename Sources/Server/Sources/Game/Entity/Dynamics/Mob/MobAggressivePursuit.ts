@@ -1,7 +1,7 @@
 import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
 import { MobType } from "../../../../../../Shared/Entity/Statics/EntityType";
 import type { WavePool } from "../../../Genres/Wave/WavePool";
-import type { Entity, EntityMixinConstructor, EntityMixinTemplate} from "../Entity";
+import type { Entity, EntityMixinConstructor, EntityMixinTemplate } from "../Entity";
 import { onUpdateTick } from "../Entity";
 import { isDeadEntity } from "../EntityElimination";
 import type { BaseMob } from "./Mob";
@@ -36,28 +36,28 @@ export function turnAngleToTarget(thisAngle: number, dx: number, dy: number): nu
     return ((normalizedAngle + angleDiff * 0.1 + 255) % 255);
 }
 
-const MOB_DETECTION_RANGE = 25;
+const MOB_DETECTION_RANGE = 25 as const;
 
 export const enum MobBehavior {
-    Aggressive,
-    Passive,
-    Cautions,
-    Neutral,
-    None,
+    AGGRESSIVE,
+    PASSIVE,
+    CAUTION,
+    NEUTRAL,
+    NONE,
 }
 
 export const MOB_BEHAVIORS = {
-    [MobType.Starfish]: MobBehavior.Aggressive,
-    [MobType.Beetle]: MobBehavior.Aggressive,
-    [MobType.Bubble]: MobBehavior.Passive,
-    [MobType.Jellyfish]: MobBehavior.Cautions,
-    [MobType.Bee]: MobBehavior.Neutral,
-    [MobType.Spider]: MobBehavior.Aggressive,
+    [MobType.STARFISH]: MobBehavior.AGGRESSIVE,
+    [MobType.BEETLE]: MobBehavior.AGGRESSIVE,
+    [MobType.BUBBLE]: MobBehavior.PASSIVE,
+    [MobType.JELLYFISH]: MobBehavior.CAUTION,
+    [MobType.BEE]: MobBehavior.NEUTRAL,
+    [MobType.SPIDER]: MobBehavior.AGGRESSIVE,
 
-    [MobType.Centipede]: MobBehavior.None,
+    [MobType.CENTIPEDE]: MobBehavior.NONE,
     // TODO: elucidate desert centipede move
-    [MobType.CentipedeDesert]: MobBehavior.Neutral,
-    [MobType.CentipedeEvil]: MobBehavior.Aggressive,
+    [MobType.CENTIPEDE_DESERT]: MobBehavior.NEUTRAL,
+    [MobType.CENTIPEDE_EVIL]: MobBehavior.AGGRESSIVE,
 } as const satisfies Record<MobType, MobBehavior>;
 
 export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(Base: T) {
@@ -110,8 +110,11 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
             }
 
             switch (MOB_BEHAVIORS[this.type]) {
+                // Do nothing
+                case MobBehavior.NONE: break;
+
                 // Aggressive
-                case MobBehavior.Aggressive: {
+                case MobBehavior.AGGRESSIVE: {
                     const targetableEntity = this.targetEntity || findNearestEntity(this, targets);
                     if (targetableEntity) {
                         const dx = targetableEntity.x - this.x;
@@ -139,7 +142,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                 }
 
                 // Cautious (jellyfish)
-                case MobBehavior.Cautions: {
+                case MobBehavior.CAUTION: {
                     const targetableEntity = this.targetEntity || findNearestEntity(this, targets);
                     if (targetableEntity) {
                         const dx = targetableEntity.x - this.x;
@@ -167,14 +170,14 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
                 }
 
                 // Passive (bubble, stone)
-                case MobBehavior.Passive: {
+                case MobBehavior.PASSIVE: {
                     this.magnitude = 0;
 
                     break;
                 }
 
                 // Neutral (bee)
-                case MobBehavior.Neutral: {
+                case MobBehavior.NEUTRAL: {
                     if (this.lastAttackedEntity) {
                         const dx = this.lastAttackedEntity.x - this.x;
                         const dy = this.lastAttackedEntity.y - this.y;
@@ -194,9 +197,6 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
 
                     break;
                 }
-
-                // Do nothing
-                case MobBehavior.None: break;
             }
         }
 
@@ -215,9 +215,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
         }
 
         dispose(): void {
-            if (super.dispose) {
-                super.dispose();
-            }
+            super.dispose();
         }
     };
 }

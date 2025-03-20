@@ -20,12 +20,12 @@ export type MobData = Readonly<
 
         // TODO: replace these with MOB_HEALTH_FACTOR, MOB_DAMAGE_FACTOR
 
-        [Rarity.Common]: MobStat;
-        [Rarity.Unusual]: MobStat;
-        [Rarity.Rare]: MobStat;
-        [Rarity.Epic]: MobStat;
-        [Rarity.Legendary]: MobStat;
-        [Rarity.Mythic]: MobStat;
-        [Rarity.Ultra]: MobStat;
+        [Rarity.COMMON]: MobStat;
+        [Rarity.UNUSUAL]: MobStat;
+        [Rarity.RARE]: MobStat;
+        [Rarity.EPIC]: MobStat;
+        [Rarity.LEGENDARY]: MobStat;
+        [Rarity.MYTHIC]: MobStat;
+        [Rarity.ULTRA]: MobStat;
     }
 >;

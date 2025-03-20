@@ -103,13 +103,11 @@ class BaseMob implements Entity {
     constructor(source: PartialUnion<
         BaseMob,
         // No need to implement underlying methods
-        UnderlyingMixinUnion
+        | UnderlyingMixinUnion
         | "speed"
     >) {
         Object.assign(this, source);
     }
-
-    // Underlying EntityMixinTemplate to prevent error
 
     [onUpdateTick](poolThis: WavePool): void { }
 
@@ -150,55 +148,55 @@ Mob = EntityCoordinateMovement(Mob);
 type MobInstance = InstanceType<typeof Mob>;
 
 const MOB_SIZE_FACTOR = {
-    [Rarity.Common]: 1.0,
-    [Rarity.Unusual]: 1.2,
-    [Rarity.Rare]: 1.5,
-    [Rarity.Epic]: 1.9,
-    [Rarity.Legendary]: 3.0,
-    [Rarity.Mythic]: 5.0,
+    [Rarity.COMMON]: 1.0,
+    [Rarity.UNUSUAL]: 1.2,
+    [Rarity.RARE]: 1.5,
+    [Rarity.EPIC]: 1.9,
+    [Rarity.LEGENDARY]: 3.0,
+    [Rarity.MYTHIC]: 5.0,
 
-    [Rarity.Ultra]: 50,
-} satisfies Record<Rarity, number>;
+    [Rarity.ULTRA]: 50,
+} as const satisfies Record<Rarity, number>;
 
 const MOB_HEALTH_FACTOR = {
-    [Rarity.Common]: 1.0,
-    [Rarity.Unusual]: 2.5,
-    [Rarity.Rare]: 6.3,
-    [Rarity.Epic]: 15.6,
-    [Rarity.Legendary]: 39.0,
-    [Rarity.Mythic]: 100.0,
+    [Rarity.COMMON]: 1.0,
+    [Rarity.UNUSUAL]: 2.5,
+    [Rarity.RARE]: 6.3,
+    [Rarity.EPIC]: 15.6,
+    [Rarity.LEGENDARY]: 39.0,
+    [Rarity.MYTHIC]: 100.0,
 
-    [Rarity.Ultra]: 50,
-} satisfies Record<Rarity, number>;
+    [Rarity.ULTRA]: 50,
+} as const satisfies Record<Rarity, number>;
 
 const MOB_DAMAGE_FACTOR = {
-    [Rarity.Common]: 1.0,
-    [Rarity.Unusual]: 2.0,
-    [Rarity.Rare]: 4.0,
-    [Rarity.Epic]: 8.0,
-    [Rarity.Legendary]: 16.0,
-    [Rarity.Mythic]: 32.0,
+    [Rarity.COMMON]: 1.0,
+    [Rarity.UNUSUAL]: 2.0,
+    [Rarity.RARE]: 4.0,
+    [Rarity.EPIC]: 8.0,
+    [Rarity.LEGENDARY]: 16.0,
+    [Rarity.MYTHIC]: 32.0,
 
-    [Rarity.Ultra]: 64.0,
-} satisfies Record<Rarity, number>;
+    [Rarity.ULTRA]: 64.0,
+} as const satisfies Record<Rarity, number>;
 
 /**
  * Define speed for each mob.
  */
 const MOB_SPEED = {
-    [MobType.Bee]: 3.5,
-    [MobType.Spider]: 5,
+    [MobType.BEE]: 3.5,
+    [MobType.SPIDER]: 5,
 
-    [MobType.Centipede]: 3.5,
-    [MobType.CentipedeEvil]: 3.5,
+    [MobType.CENTIPEDE]: 3.5,
+    [MobType.CENTIPEDE_EVIL]: 3.5,
+    [MobType.CENTIPEDE_DESERT]: 14,
 
-    [MobType.Beetle]: 3.5,
-    [MobType.CentipedeDesert]: 8,
+    [MobType.BEETLE]: 3.5,
 
-    [MobType.Bubble]: 0,
-    [MobType.Jellyfish]: 3.5,
-    [MobType.Starfish]: 3.5,
-} satisfies Record<MobType, number>;
+    [MobType.BUBBLE]: 0,
+    [MobType.JELLYFISH]: 2,
+    [MobType.STARFISH]: 3.5,
+} as const satisfies Record<MobType, number>;
 
 export type { MobInstance };
 export { BaseMob, Mob, MOB_SIZE_FACTOR, MOB_HEALTH_FACTOR, MOB_DAMAGE_FACTOR, MOB_SPEED };

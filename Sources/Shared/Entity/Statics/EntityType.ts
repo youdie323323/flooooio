@@ -1,41 +1,41 @@
 export const enum MobType {
-    Bee,
-    Spider,
-    Starfish,
-    Jellyfish,
-    Beetle,
-    Bubble,
+    BEE,
+    SPIDER,
+    STARFISH,
+    JELLYFISH,
+    BEETLE,
+    BUBBLE,
 
-    Centipede,
-    CentipedeEvil,
-    CentipedeDesert,
+    CENTIPEDE,
+    CENTIPEDE_EVIL,
+    CENTIPEDE_DESERT,
 }
 
 export const enum PetalType {
     // Dont forgot to update to last index every time adding the type
-    Basic = MobType.CentipedeDesert + 1,
-    Faster,
-    BeetleEgg,
-    Bubble,
-    YinYang,
+    BASIC = MobType.CENTIPEDE_DESERT + 1,
+    FASTER,
+    EGG_BEETLE,
+    BUBBLE,
+    YIN_YANG,
 }
 
 export const PETAL_TYPES: Array<PetalType> = [
-    PetalType.Basic,
-    PetalType.Faster,
-    PetalType.BeetleEgg,
-    PetalType.Bubble,
-    PetalType.YinYang,
+    PetalType.BASIC,
+    PetalType.FASTER,
+    PetalType.EGG_BEETLE,
+    PetalType.BUBBLE,
+    PetalType.YIN_YANG,
 ] as const;
 
 export const MOB_TYPES: Array<MobType> = [
-    MobType.Bee,
-    MobType.Spider,
-    MobType.Starfish,
-    MobType.Jellyfish,
-    MobType.Beetle,
-    MobType.Bubble,
-    MobType.Centipede,
-    MobType.CentipedeEvil,
-    MobType.CentipedeDesert,
+    MobType.BEE,
+    MobType.SPIDER,
+    MobType.STARFISH,
+    MobType.JELLYFISH,
+    MobType.BEETLE,
+    MobType.BUBBLE,
+    MobType.CENTIPEDE,
+    MobType.CENTIPEDE_EVIL,
+    MobType.CENTIPEDE_DESERT,
 ] as const;

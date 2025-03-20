@@ -14,9 +14,9 @@ import type { UserData } from "./Sources/Game/Genres/Wave/WavePool";
 import WaveRoomService from "./Sources/Game/Genres/Wave/WaveRoomService";
 import { removeClientFromAllService } from "./Sources/Game/Entity/Dynamics/EntityElimination";
 import { joinWaveRoom } from "./Sources/Game/Genres/Wave/WaveRoom";
-import { PacketServerboundOpcode } from "../Shared/Websocket/Packet/Bound/Server/PacketServerboundOpcode";
 import BinaryReader from "../Shared/Websocket/Binary/ReadWriter/Reader/BinaryReader";
 import { isWaveRoomCode } from "../Shared/WaveRoomCode";
+import { Serverbound } from "../Shared/Websocket/Packet/PacketDirection";
 
 require('dotenv').config({
     path: path.resolve(__dirname, '../../.env'),
@@ -32,27 +32,27 @@ const MOCK_PLAYER_DATA: Omit<StaticPlayerData, "ws"> = {
     slots: {
         surface: Array(50).fill(
             {
-                type: PetalType.BeetleEgg,
-                rarity: Rarity.Ultra,
+                type: PetalType.EGG_BEETLE,
+                rarity: Rarity.ULTRA,
             } satisfies StaticPetalData,
         ),
         bottom: Array(3).fill(
             {
-                type: PetalType.Bubble,
-                rarity: Rarity.Ultra,
+                type: PetalType.BUBBLE,
+                rarity: Rarity.ULTRA,
             } satisfies StaticPetalData,
         ).concat(
             Array(3).fill(
                 {
-                    type: PetalType.BeetleEgg,
-                    rarity: Rarity.Ultra,
+                    type: PetalType.EGG_BEETLE,
+                    rarity: Rarity.ULTRA,
                 } satisfies StaticPetalData,
             ),
         ).concat(
             Array(4).fill(
                 {
-                    type: PetalType.YinYang,
-                    rarity: Rarity.Ultra,
+                    type: PetalType.YIN_YANG,
+                    rarity: Rarity.ULTRA,
                 } satisfies StaticPetalData,
             ),
         ),
@@ -85,12 +85,12 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
     const { waveRoomClientId, waveClientId } = userData;
 
-    const opcode = reader.readUInt8() satisfies PacketServerboundOpcode;
+    const opcode = reader.readUInt8() satisfies Serverbound;
 
     switch (opcode) {
         // Wave
 
-        case PacketServerboundOpcode.WaveChangeMove: {
+        case Serverbound.WAVE_CHANGE_MOVE: {
             if (buffer.length !== 3) return;
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
@@ -108,7 +108,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             break;
         }
 
-        case PacketServerboundOpcode.WaveChangeMood: {
+        case Serverbound.WAVE_CHANGE_MOOD: {
             if (buffer.length !== 2) return;
 
             const flag = reader.readUInt8();
@@ -125,7 +125,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             break;
         }
 
-        case PacketServerboundOpcode.WaveSwapPetal: {
+        case Serverbound.WAVE_SWAP_PETAL: {
             if (buffer.length !== 2) return;
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
@@ -138,7 +138,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             break;
         }
 
-        case PacketServerboundOpcode.WaveChat: {
+        case Serverbound.WAVE_SEND_CHAT: {
             if (buffer.length < 2) return;
 
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
@@ -151,7 +151,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             break;
         }
 
-        case PacketServerboundOpcode.WaveLeave: {
+        case Serverbound.WAVE_LEAVE: {
             const waveRoom = waveRoomService.findPlayerRoom(waveRoomClientId);
             if (!waveRoom) return;
 
@@ -167,7 +167,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
 
         // Wave room
         
-        case PacketServerboundOpcode.WaveRoomCreate: {
+        case Serverbound.WAVE_ROOM_CREATE: {
             if (buffer.length !== 2) return;
 
             const biome = reader.readUInt8();
@@ -180,7 +180,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             break;
         }
 
-        case PacketServerboundOpcode.WaveRoomJoin: {
+        case Serverbound.WAVE_ROOM_JOIN: {
             if (buffer.length < 2) return;
 
             const code = reader.readString();
@@ -193,7 +193,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             break;
         }
 
-        case PacketServerboundOpcode.WaveRoomFindPublic: {
+        case Serverbound.WAVE_ROOM_FIND_PUBLIC: {
             if (buffer.length !== 2) return;
 
             const biome = reader.readUInt8();
@@ -206,7 +206,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             break;
         }
 
-        case PacketServerboundOpcode.WaveRoomChangeReady: {
+        case Serverbound.WAVE_ROOM_CHANGE_READY: {
             if (buffer.length !== 2) return;
 
             const state = reader.readUInt8();
@@ -220,7 +220,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             break;
         }
 
-        case PacketServerboundOpcode.WaveRoomChangeVisible: {
+        case Serverbound.WAVE_ROOM_CHANGE_VISIBLE: {
             if (buffer.length !== 2) return;
 
             const state = reader.readUInt8();
@@ -234,7 +234,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             break;
         }
 
-        case PacketServerboundOpcode.WaveRoomChangeName: {
+        case Serverbound.WAVE_ROOM_CHANGE_NAME: {
             if (buffer.length < 2) return;
 
             const name = reader.readString();
@@ -248,7 +248,7 @@ function handleMessage(ws: uWS.WebSocket<UserData>, message: ArrayBuffer, isBina
             break;
         }
 
-        case PacketServerboundOpcode.WaveRoomLeave: {
+        case Serverbound.WAVE_ROOM_LEAVE: {
             const ok = waveRoomService.leaveWaveRoom(waveRoomClientId);
             if (!ok) return;
 

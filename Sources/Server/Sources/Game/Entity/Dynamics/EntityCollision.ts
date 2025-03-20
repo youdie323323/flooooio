@@ -44,7 +44,7 @@ export function EntityCollision<T extends EntityMixinConstructor<Entity>>(Base: 
             fraction: MixedBase.FLOWER_FRACTION,
             rx: MixedBase.FLOWER_ARC_RADIUS,
             ry: MixedBase.FLOWER_ARC_RADIUS,
-        } satisfies Partial<EntityCollision>;
+        } as const satisfies Partial<EntityCollision>;
 
         private static calculatePush(entity1: Entity, entity2: Entity, delta: number): [number, number] {
             const dx = entity2.x - entity1.x;
@@ -118,8 +118,8 @@ export function EntityCollision<T extends EntityMixinConstructor<Entity>>(Base: 
                                     !otherEntity.petalIsSpinningMob
                                 ) {
                                     // Pop knockback to summoned mob (enemy), not including petal
-                                    const bubbleMultiplierThis = otherEntity.type === MobType.Bubble && this.petMaster ? MixedBase.BUBBLE_PUSH_FACTOR : 1;
-                                    const bubbleMultiplierOther = this.type === MobType.Bubble && otherEntity.petMaster ? MixedBase.BUBBLE_PUSH_FACTOR : 1;
+                                    const bubbleMultiplierThis = otherEntity.type === MobType.BUBBLE && this.petMaster ? MixedBase.BUBBLE_PUSH_FACTOR : 1;
+                                    const bubbleMultiplierOther = this.type === MobType.BUBBLE && otherEntity.petMaster ? MixedBase.BUBBLE_PUSH_FACTOR : 1;
 
                                     const petalMultiplierThis = isPetalThis ? 10 : 1;
                                     const petalMultiplierOther = isPetalOther ? 10 : 1;
@@ -210,7 +210,7 @@ export function EntityCollision<T extends EntityMixinConstructor<Entity>>(Base: 
                             );
                             if (push) {
                                 // If this is bubble, give player more knockback
-                                const bubbleMultiplier = this.type === MobType.Bubble ? MixedBase.BUBBLE_PUSH_FACTOR : 1;
+                                const bubbleMultiplier = this.type === MobType.BUBBLE ? MixedBase.BUBBLE_PUSH_FACTOR : 1;
 
                                 this.x -= push[0];
                                 this.y -= push[1];

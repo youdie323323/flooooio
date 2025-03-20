@@ -3,7 +3,7 @@ import { PetalType } from "../../EntityType";
 import type { PetalData } from "./PetalData";
 
 export const PETAL_PROFILES = {
-    [PetalType.Basic]: {
+    [PetalType.BASIC]: {
         i18n: {
             name: "Basic",
             fullName: "Basic",
@@ -16,43 +16,43 @@ export const PETAL_PROFILES = {
             ry: 20,
         },
 
-        [Rarity.Common]: {
+        [Rarity.COMMON]: {
             damage: 10,
             health: 10,
             petalReload: 2.5,
             count: 1,
         },
-        [Rarity.Unusual]: {
+        [Rarity.UNUSUAL]: {
             damage: 30,
             health: 30,
             petalReload: 2.5,
             count: 1,
         },
-        [Rarity.Rare]: {
+        [Rarity.RARE]: {
             damage: 90,
             health: 90,
             petalReload: 2.5,
             count: 1,
         },
-        [Rarity.Epic]: {
+        [Rarity.EPIC]: {
             damage: 270,
             health: 270,
             petalReload: 2.5,
             count: 1,
         },
-        [Rarity.Legendary]: {
+        [Rarity.LEGENDARY]: {
             damage: 810,
             health: 810,
             petalReload: 2.5,
             count: 1,
         },
-        [Rarity.Mythic]: {
+        [Rarity.MYTHIC]: {
             damage: 2430,
             health: 2430,
             petalReload: 2.5,
             count: 1,
         },
-        [Rarity.Ultra]: {
+        [Rarity.ULTRA]: {
             damage: 7290,
             health: 7290,
             petalReload: 2.5,
@@ -60,7 +60,7 @@ export const PETAL_PROFILES = {
         },
     },
 
-    [PetalType.Faster]: {
+    [PetalType.FASTER]: {
         i18n: {
             name: "Faster",
             fullName: "Faster",
@@ -74,49 +74,49 @@ export const PETAL_PROFILES = {
             ry: 20,
         },
 
-        [Rarity.Common]: {
+        [Rarity.COMMON]: {
             damage: 8,
             health: 5,
             petalReload: 2.5,
             count: 1,
             rad: 0.5,
         },
-        [Rarity.Unusual]: {
+        [Rarity.UNUSUAL]: {
             damage: 24,
             health: 15,
             petalReload: 2.5,
             count: 1,
             rad: 0.7,
         },
-        [Rarity.Rare]: {
+        [Rarity.RARE]: {
             damage: 72,
             health: 45,
             petalReload: 2.5,
             count: 1,
             rad: 0.9,
         },
-        [Rarity.Epic]: {
+        [Rarity.EPIC]: {
             damage: 216,
             health: 135,
             petalReload: 2.5,
             count: 1,
             rad: 1.1,
         },
-        [Rarity.Legendary]: {
+        [Rarity.LEGENDARY]: {
             damage: 648,
             health: 405,
             petalReload: 2.5,
             count: 1,
             rad: 1.3,
         },
-        [Rarity.Mythic]: {
+        [Rarity.MYTHIC]: {
             damage: 1944,
             health: 1215,
             petalReload: 2.5,
             count: 2,
             rad: 1.5,
         },
-        [Rarity.Ultra]: {
+        [Rarity.ULTRA]: {
             damage: 5832,
             health: 3645,
             petalReload: 2.5,
@@ -125,7 +125,7 @@ export const PETAL_PROFILES = {
         },
     },
 
-    [PetalType.BeetleEgg]: {
+    [PetalType.EGG_BEETLE]: {
         i18n: {
             name: "Egg",
             fullName: "Beetle Egg",
@@ -138,49 +138,49 @@ export const PETAL_PROFILES = {
             ry: 40,
         },
 
-        [Rarity.Common]: {
+        [Rarity.COMMON]: {
             damage: 0,
             health: 25,
             petalReload: 1,
             usageReload: 15,
             count: 1,
         },
-        [Rarity.Unusual]: {
+        [Rarity.UNUSUAL]: {
             damage: 0,
             health: 75,
             petalReload: 1,
             usageReload: 19.2,
             count: 1,
         },
-        [Rarity.Rare]: {
+        [Rarity.RARE]: {
             damage: 0,
             health: 225,
             petalReload: 1,
             usageReload: 23.5,
             count: 1,
         },
-        [Rarity.Epic]: {
+        [Rarity.EPIC]: {
             damage: 0,
             health: 675,
             petalReload: 1,
             usageReload: 32,
             count: 1,
         },
-        [Rarity.Legendary]: {
+        [Rarity.LEGENDARY]: {
             damage: 0,
             health: 2025,
             petalReload: 1,
             usageReload: 1.8,
             count: 1,
         },
-        [Rarity.Mythic]: {
+        [Rarity.MYTHIC]: {
             damage: 0,
             health: 6075,
             petalReload: 1,
             usageReload: 7.4,
             count: 1,
         },
-        [Rarity.Ultra]: {
+        [Rarity.ULTRA]: {
             damage: 0,
             health: 18225,
             petalReload: 1,
@@ -189,7 +189,7 @@ export const PETAL_PROFILES = {
         },
     },
 
-    [PetalType.Bubble]: {
+    [PetalType.BUBBLE]: {
         i18n: {
             name: "Bubble",
             fullName: "Bubble",
@@ -202,49 +202,49 @@ export const PETAL_PROFILES = {
             ry: 20,
         },
 
-        [Rarity.Common]: {
+        [Rarity.COMMON]: {
             damage: 0,
             health: 1,
             petalReload: 5.5,
             usageReload: 0.5,
             count: 1,
         },
-        [Rarity.Unusual]: {
+        [Rarity.UNUSUAL]: {
             damage: 0,
             health: 1,
             petalReload: 4.5,
             usageReload: 0.5,
             count: 1,
         },
-        [Rarity.Rare]: {
+        [Rarity.RARE]: {
             damage: 0,
             health: 1,
             petalReload: 3.5,
             usageReload: 0.5,
             count: 1,
         },
-        [Rarity.Epic]: {
+        [Rarity.EPIC]: {
             damage: 0,
             health: 1,
             petalReload: 2.5,
             usageReload: 0.5,
             count: 1,
         },
-        [Rarity.Legendary]: {
+        [Rarity.LEGENDARY]: {
             damage: 0,
             health: 1,
             petalReload: 1.5,
             usageReload: 0.5,
             count: 1,
         },
-        [Rarity.Mythic]: {
+        [Rarity.MYTHIC]: {
             damage: 0,
             health: 1,
             petalReload: 0.8,
             usageReload: 0.5,
             count: 1,
         },
-        [Rarity.Ultra]: {
+        [Rarity.ULTRA]: {
             damage: 0,
             health: 1,
             petalReload: 0.5,
@@ -253,7 +253,7 @@ export const PETAL_PROFILES = {
         },
     },
 
-    [PetalType.YinYang]: {
+    [PetalType.YIN_YANG]: {
         i18n: {
             name: "Yin Yang",
             fullName: "Yin Yang",
@@ -266,43 +266,43 @@ export const PETAL_PROFILES = {
             ry: 20,
         },
 
-        [Rarity.Common]: {
+        [Rarity.COMMON]: {
             damage: 90,
             health: 90,
             petalReload: 2,
             count: 1,
         },
-        [Rarity.Unusual]: {
+        [Rarity.UNUSUAL]: {
             damage: 90,
             health: 90,
             petalReload: 2,
             count: 1,
         },
-        [Rarity.Rare]: {
+        [Rarity.RARE]: {
             damage: 90,
             health: 90,
             petalReload: 2,
             count: 1,
         },
-        [Rarity.Epic]: {
+        [Rarity.EPIC]: {
             damage: 90,
             health: 90,
             petalReload: 2,
             count: 1,
         },
-        [Rarity.Legendary]: {
+        [Rarity.LEGENDARY]: {
             damage: 90,
             health: 90,
             petalReload: 2,
             count: 1,
         },
-        [Rarity.Mythic]: {
+        [Rarity.MYTHIC]: {
             damage: 90,
             health: 90,
             petalReload: 2,
             count: 1,
         },
-        [Rarity.Ultra]: {
+        [Rarity.ULTRA]: {
             damage: 90,
             health: 90,
             petalReload: 2,

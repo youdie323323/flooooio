@@ -28,8 +28,8 @@ import type { WaveRoomPlayerId, WaveRoomPlayer } from "./WaveRoom";
 import { generateRandomId } from "./WaveRoom";
 import { getRandomCoordinate, getRandomSafeCoordinate } from "../../Entity/Dynamics/EntityCoordinateMovement";
 import { isPetal } from "../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
-import { PacketClientboundOpcode } from "../../../../../Shared/Websocket/Packet/Bound/Client/PacketClientboundOpcode";
 import BinarySizedWriter from "../../../../../Shared/Websocket/Binary/ReadWriter/Writer/BinarySizedWriter";
+import { Clientbound } from "../../../../../Shared/Websocket/Packet/PacketDirection";
 
 // Define UserData for WebSocket connections
 export interface UserData {
@@ -83,9 +83,9 @@ export interface WaveData {
     biome: Biome;
 }
 
-const textEncoder = new TextEncoder();
-
 export class WavePool extends AbstractPool {
+    private static readonly SPATIAL_HASH_GRID_SIZE = 1024;
+
     public clientPool: Map<PlayerId, PlayerInstance>;
     public mobPool: Map<MobId, MobInstance>;
 
@@ -96,8 +96,6 @@ export class WavePool extends AbstractPool {
     private updateWaveInterval: NodeJS.Timeout;
     private updateEntitiesInterval: NodeJS.Timeout;
     private updatePacketSendInterval: NodeJS.Timeout;
-
-    private static readonly SPATIAL_HASH_GRID_SIZE = 1024;
 
     /**
      * Shared spatial hash instance between entities.
@@ -128,8 +126,8 @@ export class WavePool extends AbstractPool {
      * Release all memory in this class.
      */
     public releaseAllMemory() {
-        this.clientPool.forEach((v) => v["dispose"]());
-        this.mobPool.forEach((v) => v["dispose"]());
+        this.clientPool.forEach((v) => v.dispose());
+        this.mobPool.forEach((v) => v.dispose());
 
         clearInterval(this.updateWaveInterval);
         clearInterval(this.updateEntitiesInterval);
@@ -169,7 +167,7 @@ export class WavePool extends AbstractPool {
     public startWave(roomCandidates: WaveRoomPlayer[]) {
         const waveStartedWriter = new BinarySizedWriter(2);
 
-        waveStartedWriter.writeUInt8(PacketClientboundOpcode.WaveStarted);
+        waveStartedWriter.writeUInt8(Clientbound.WAVE_STARTED);
 
         waveStartedWriter.writeUInt8(this.waveData.biome);
 
@@ -235,7 +233,7 @@ export class WavePool extends AbstractPool {
             y,
             angle: 0,
             magnitude: 0,
-            mood: MoodFlags.Normal,
+            mood: MoodFlags.NORMAL,
             size: Player.BASE_SIZE,
 
             id: clientId,
@@ -626,7 +624,7 @@ export class WavePool extends AbstractPool {
             ),
         );
 
-        waveChatReceivWriter.writeUInt8(PacketClientboundOpcode.WaveChatReceiv);
+        waveChatReceivWriter.writeUInt8(Clientbound.WAVE_CHAT_RECEIV);
 
         waveChatReceivWriter.writeUInt32(callee);
 
@@ -642,7 +640,7 @@ export class WavePool extends AbstractPool {
     private broadcastSeldIdPacket() {
         const waveSelfIdWriter = new BinarySizedWriter(5);
 
-        waveSelfIdWriter.writeUInt8(PacketClientboundOpcode.WaveSelfId);
+        waveSelfIdWriter.writeUInt8(Clientbound.WAVE_SELF_ID);
 
         // Loop through all WebSocket connections
         this.clientPool.forEach((player, clientId) => {
@@ -731,7 +729,7 @@ export class WavePool extends AbstractPool {
         const waveUpdateWriter = new BinarySizedWriter(this.calculateTotalUpdatePacketSize());
 
         // Opcode
-        waveUpdateWriter.writeUInt8(PacketClientboundOpcode.WaveUpdate);
+        waveUpdateWriter.writeUInt8(Clientbound.WAVE_UPDATE);
 
         // Wave informations
 

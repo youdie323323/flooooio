@@ -18,7 +18,7 @@ export function MobHealthRegen<T extends EntityMixinConstructor<BaseMob>>(Base: 
             if (
                 this.starfishRegeningHealth ||
                 (
-                    this.type === MobType.Starfish &&
+                    this.type === MobType.STARFISH &&
                     // Regen if hp is less than half
                     this.health < 0.5
                 )

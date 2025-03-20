@@ -1,35 +1,35 @@
 import type { ColorCode } from "../../Utils/Color";
 
 export const enum Rarity {
-    Common,
-    Unusual,
-    Rare,
-    Epic,
-    Legendary,
-    Mythic,
-    Ultra,
+    COMMON,
+    UNUSUAL,
+    RARE,
+    EPIC,
+    LEGENDARY,
+    MYTHIC,
+    ULTRA,
 }
 
-export const NUM_RARITIES = Rarity.Ultra;
+export const kMaxRarities = 7 as const;
 
 type RarityDisplayName = Capitalize<string>;
 
 export const RARITY_DISPLAY_NAME = {
-    [Rarity.Common]: "Common",
-    [Rarity.Unusual]: "Unusual",
-    [Rarity.Rare]: "Rare",
-    [Rarity.Epic]: "Epic",
-    [Rarity.Legendary]: "Legendary",
-    [Rarity.Mythic]: "Mythic",
-    [Rarity.Ultra]: "Ultra",
+    [Rarity.COMMON]: "Common",
+    [Rarity.UNUSUAL]: "Unusual",
+    [Rarity.RARE]: "Rare",
+    [Rarity.EPIC]: "Epic",
+    [Rarity.LEGENDARY]: "Legendary",
+    [Rarity.MYTHIC]: "Mythic",
+    [Rarity.ULTRA]: "Ultra",
 } as const satisfies Record<Rarity, RarityDisplayName>;
 
 export const RARITY_COLOR = {
-    [Rarity.Common]: "#7F0D7D",  
-    [Rarity.Unusual]: "#FFE30D", 
-    [Rarity.Rare]: "#4D5563",    
-    [Rarity.Epic]: "#8620BE",    
-    [Rarity.Legendary]: "#DE071F",
-    [Rarity.Mythic]: "#1FDE4E",  
-    [Rarity.Ultra]: "#FF2525", 
+    [Rarity.COMMON]: "#7F0D7D",  
+    [Rarity.UNUSUAL]: "#FFE30D", 
+    [Rarity.RARE]: "#4D5563",    
+    [Rarity.EPIC]: "#8620BE",    
+    [Rarity.LEGENDARY]: "#DE071F",
+    [Rarity.MYTHIC]: "#1FDE4E",  
+    [Rarity.ULTRA]: "#FF2525", 
 } as const satisfies Record<Rarity, ColorCode>;

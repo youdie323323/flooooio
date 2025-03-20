@@ -30,7 +30,7 @@ for (let i = 0; i < PRECALC_SIZE; i++) {
 const calcTableIndex = (i: number) => (((i % TAU + TAU) % TAU) * PRECALC_SIZE / TAU) | 0;
 
 export const UNMOODABLE_PETALS: Set<MobType | PetalType> = new Set([
-    PetalType.BeetleEgg,
+    PetalType.EGG_BEETLE,
 ]);
 
 export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(Base: T) {
@@ -85,7 +85,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                         curr &&
                         isDynamicPetal(curr) &&
                         curr.length > 0 &&
-                        curr[0].type === PetalType.YinYang
+                        curr[0].type === PetalType.YIN_YANG
                     )
                         ? 1
                         : 0
@@ -135,7 +135,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 const rarityProfile = profile[firstPetal.rarity];
 
                 // Add faster speed
-                if (firstPetal.type === PetalType.Faster) {
+                if (firstPetal.type === PetalType.FASTER) {
                     totalSpeed += rarityProfile.rad;
                 }
 

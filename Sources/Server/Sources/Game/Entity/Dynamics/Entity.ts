@@ -9,7 +9,7 @@ export type BrandedId<T extends string> = number & { readonly __brand: T };
 
 export type RealEntity = MobInstance | PlayerInstance;
 
-export interface Entity {
+export interface Entity extends EntityMixinTemplate {
     /**
      * Current x-pos of entity.
      */
@@ -47,14 +47,11 @@ export interface Entity {
  */
 export const onUpdateTick: unique symbol = Symbol("onUpdateTick");
 
-export type EntityMixinConstructor<T extends object> = new (...args: any[]) => T & EntityMixinTemplate;
+export type EntityMixinConstructor<T extends object> = new (...args: any[]) => T;
 
 export interface EntityMixinTemplate {
     /**
-     * Method call upon every UPDATE_FPS interval.
-     * 
-     * @remarks
-     * Call this method of parent if exists so can propagate mixin.
+     * Method call upon every update interval.
      */
     [onUpdateTick](poolThis: WavePool): void;
 
@@ -68,26 +65,5 @@ export interface EntityMixinTemplate {
  * Union typeof EntityMixinTemplate.
  */
 export type UnderlyingMixinUnion = keyof EntityMixinTemplate;
-
-export type IsEqual<A, B> =
-    (<G>() => G extends A ? 1 : 2) extends
-    (<G>() => G extends B ? 1 : 2)
-        ? true
-        : false;
-
-type WritableKeysOf<T> = NonNullable<{
-    [P in keyof T]: IsEqual<{ [Q in P]: T[P] }, { readonly [Q in P]: T[P] }> extends false ? P : never
-}[keyof T]>;
-
-/**
- * This determines the type of object passed when newing an entity.
- * 
- * @remarks
- * This type alias is used to filter out keys that are not needed when creating them, such as method/getters.
- * But readonly value are partial'ed too, you may careful with that.
- * 
- * @deprecated Use {@link PartialUnion} now.
- */
-export type ConstructorParameterObject<T, P extends WritableKeysOf<T>, U extends P = P> = Required<Pick<T, U>> & Partial<Exclude<T, U>>;
 
 export type PartialUnion<T, U extends keyof T = never> = Omit<T, U> & Partial<Pick<T, U>>;

@@ -32,7 +32,7 @@ export function MobSpecialMovement<T extends EntityMixinConstructor<BaseMob>>(Ba
             }
 
             // Dont dynamic move when passive
-            if (MOB_BEHAVIORS[this.type] === MobBehavior.Passive) return;
+            if (MOB_BEHAVIORS[this.type] === MobBehavior.PASSIVE) return;
 
             // If body, dont do anything
             if (isBody(poolThis, this)) return;
@@ -101,7 +101,7 @@ export function MobSpecialMovement<T extends EntityMixinConstructor<BaseMob>>(Ba
 
         private get shouldShakeAngle(): boolean {
             // Shake angle if bee, or hornet
-            return this.type === MobType.Bee;
+            return this.type === MobType.BEE;
         }
 
         dispose(): void {

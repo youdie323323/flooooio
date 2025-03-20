@@ -3,7 +3,7 @@ import { MobType } from "../EntityType";
 import type { MobData } from "./MobData";
 
 export const MOB_PROFILES = {
-    [MobType.Bee]: {
+    [MobType.BEE]: {
         baseSize: 30,
 
         i18n: {
@@ -17,37 +17,37 @@ export const MOB_PROFILES = {
             ry: 20,
         },
 
-        [Rarity.Common]: {
+        [Rarity.COMMON]: {
             health: 37.5,
             bodyDamage: 50,
         },
-        [Rarity.Unusual]: {
+        [Rarity.UNUSUAL]: {
             health: 140.7,
             bodyDamage: 150,
         },
-        [Rarity.Rare]: {
+        [Rarity.RARE]: {
             health: 506.25,
             bodyDamage: 450,
         },
-        [Rarity.Epic]: {
+        [Rarity.EPIC]: {
             health: 2025,
             bodyDamage: 1350,
         },
-        [Rarity.Legendary]: {
+        [Rarity.LEGENDARY]: {
             health: 15187.5,
             bodyDamage: 4050,
         },
-        [Rarity.Mythic]: {
+        [Rarity.MYTHIC]: {
             health: 91125,
             bodyDamage: 12150,
         },
-        [Rarity.Ultra]: {
+        [Rarity.ULTRA]: {
             health: 2737500,
             bodyDamage: 36450,
         },
     },
 
-    [MobType.Spider]: {
+    [MobType.SPIDER]: {
         baseSize: 20,
 
         i18n: {
@@ -61,37 +61,37 @@ export const MOB_PROFILES = {
             ry: 40,
         },
 
-        [Rarity.Common]: {
+        [Rarity.COMMON]: {
             health: 62.5,
             bodyDamage: 15,
         },
-        [Rarity.Unusual]: {
+        [Rarity.UNUSUAL]: {
             health: 234.5,
             bodyDamage: 45,
         },
-        [Rarity.Rare]: {
+        [Rarity.RARE]: {
             health: 843.75,
             bodyDamage: 135,
         },
-        [Rarity.Epic]: {
+        [Rarity.EPIC]: {
             health: 3375,
             bodyDamage: 405,
         },
-        [Rarity.Legendary]: {
+        [Rarity.LEGENDARY]: {
             health: 25312.5,
             bodyDamage: 1215,
         },
-        [Rarity.Mythic]: {
+        [Rarity.MYTHIC]: {
             health: 151875,
             bodyDamage: 3645,
         },
-        [Rarity.Ultra]: {
+        [Rarity.ULTRA]: {
             health: 4562500,
             bodyDamage: 10935,
         },
     },
 
-    [MobType.Starfish]: {
+    [MobType.STARFISH]: {
         baseSize: 20,
 
         i18n: {
@@ -105,37 +105,37 @@ export const MOB_PROFILES = {
             ry: 100,
         },
 
-        [Rarity.Common]: {
+        [Rarity.COMMON]: {
             health: 150,
             bodyDamage: 20,
         },
-        [Rarity.Unusual]: {
+        [Rarity.UNUSUAL]: {
             health: 562.8,
             bodyDamage: 60,
         },
-        [Rarity.Rare]: {
+        [Rarity.RARE]: {
             health: 2025,
             bodyDamage: 180,
         },
-        [Rarity.Epic]: {
+        [Rarity.EPIC]: {
             health: 8100,
             bodyDamage: 540,
         },
-        [Rarity.Legendary]: {
+        [Rarity.LEGENDARY]: {
             health: 60750,
             bodyDamage: 1620,
         },
-        [Rarity.Mythic]: {
+        [Rarity.MYTHIC]: {
             health: 364500,
             bodyDamage: 4860,
         },
-        [Rarity.Ultra]: {
+        [Rarity.ULTRA]: {
             health: 10950000,
             bodyDamage: 14580,
         },
     },
 
-    [MobType.Jellyfish]: {
+    [MobType.JELLYFISH]: {
         baseSize: 40,
 
         i18n: {
@@ -149,49 +149,49 @@ export const MOB_PROFILES = {
             ry: 20,
         },
 
-        [Rarity.Common]: {
+        [Rarity.COMMON]: {
             health: 125,
             bodyDamage: 25,
 
             lightning: 7,
             bounces: 2,
         },
-        [Rarity.Unusual]: {
+        [Rarity.UNUSUAL]: {
             health: 469,
             bodyDamage: 75,
 
             lightning: 21,
             bounces: 3,
         },
-        [Rarity.Rare]: {
+        [Rarity.RARE]: {
             health: 1687.5,
             bodyDamage: 225,
 
             lightning: 63,
             bounces: 4,
         },
-        [Rarity.Epic]: {
+        [Rarity.EPIC]: {
             health: 6750,
             bodyDamage: 675,
 
             lightning: 189,
             bounces: 5,
         },
-        [Rarity.Legendary]: {
+        [Rarity.LEGENDARY]: {
             health: 50625,
             bodyDamage: 2025,
 
             lightning: 567,
             bounces: 6,
         },
-        [Rarity.Mythic]: {
+        [Rarity.MYTHIC]: {
             health: 303750,
             bodyDamage: 6075,
 
             lightning: 1701,
             bounces: 7,
         },
-        [Rarity.Ultra]: {
+        [Rarity.ULTRA]: {
             health: 9125000,
             bodyDamage: 18225,
 
@@ -200,7 +200,7 @@ export const MOB_PROFILES = {
         },
     },
 
-    [MobType.Beetle]: {
+    [MobType.BEETLE]: {
         baseSize: 30,
 
         i18n: {
@@ -214,37 +214,37 @@ export const MOB_PROFILES = {
             ry: 34,
         },
 
-        [Rarity.Common]: {
+        [Rarity.COMMON]: {
             health: 100,
             bodyDamage: 30,
         },
-        [Rarity.Unusual]: {
+        [Rarity.UNUSUAL]: {
             health: 375.2,
             bodyDamage: 90,
         },
-        [Rarity.Rare]: {
+        [Rarity.RARE]: {
             health: 1350,
             bodyDamage: 270,
         },
-        [Rarity.Epic]: {
+        [Rarity.EPIC]: {
             health: 5400,
             bodyDamage: 810,
         },
-        [Rarity.Legendary]: {
+        [Rarity.LEGENDARY]: {
             health: 40500,
             bodyDamage: 2430,
         },
-        [Rarity.Mythic]: {
+        [Rarity.MYTHIC]: {
             health: 243000,
             bodyDamage: 7290,
         },
-        [Rarity.Ultra]: {
+        [Rarity.ULTRA]: {
             health: 7300000,
             bodyDamage: 21870,
         },
     },
 
-    [MobType.Bubble]: {
+    [MobType.BUBBLE]: {
         baseSize: 40,
 
         i18n: {
@@ -258,37 +258,37 @@ export const MOB_PROFILES = {
             ry: 20,
         },
 
-        [Rarity.Common]: {
+        [Rarity.COMMON]: {
             health: 0.5,
             bodyDamage: 5,
         },
-        [Rarity.Unusual]: {
+        [Rarity.UNUSUAL]: {
             health: 1.876,
             bodyDamage: 15,
         },
-        [Rarity.Rare]: {
+        [Rarity.RARE]: {
             health: 6.75,
             bodyDamage: 45,
         },
-        [Rarity.Epic]: {
+        [Rarity.EPIC]: {
             health: 27,
             bodyDamage: 135,
         },
-        [Rarity.Legendary]: {
+        [Rarity.LEGENDARY]: {
             health: 202.5,
             bodyDamage: 405,
         },
-        [Rarity.Mythic]: {
+        [Rarity.MYTHIC]: {
             health: 1215,
             bodyDamage: 1215,
         },
-        [Rarity.Ultra]: {
+        [Rarity.ULTRA]: {
             health: 36500,
             bodyDamage: 3645,
         },
     },
 
-    [MobType.Centipede]: {
+    [MobType.CENTIPEDE]: {
         baseSize: 40,
 
         i18n: {
@@ -302,37 +302,37 @@ export const MOB_PROFILES = {
             ry: 40,
         },
 
-        [Rarity.Common]: {
+        [Rarity.COMMON]: {
             health: 25,
             bodyDamage: 10,
         },
-        [Rarity.Unusual]: {
+        [Rarity.UNUSUAL]: {
             health: 93.8,
             bodyDamage: 30,
         },
-        [Rarity.Rare]: {
+        [Rarity.RARE]: {
             health: 337.5,
             bodyDamage: 90,
         },
-        [Rarity.Epic]: {
+        [Rarity.EPIC]: {
             health: 1350,
             bodyDamage: 270,
         },
-        [Rarity.Legendary]: {
+        [Rarity.LEGENDARY]: {
             health: 10125,
             bodyDamage: 810,
         },
-        [Rarity.Mythic]: {
+        [Rarity.MYTHIC]: {
             health: 60750,
             bodyDamage: 2430,
         },
-        [Rarity.Ultra]: {
+        [Rarity.ULTRA]: {
             health: 1825000,
             bodyDamage: 7290,
         },
     },
 
-    [MobType.CentipedeEvil]: {
+    [MobType.CENTIPEDE_EVIL]: {
         baseSize: 40,
 
         i18n: {
@@ -346,37 +346,37 @@ export const MOB_PROFILES = {
             ry: 40,
         },
 
-        [Rarity.Common]: {
+        [Rarity.COMMON]: {
             health: 25,
             bodyDamage: 10,
         },
-        [Rarity.Unusual]: {
+        [Rarity.UNUSUAL]: {
             health: 93.8,
             bodyDamage: 30,
         },
-        [Rarity.Rare]: {
+        [Rarity.RARE]: {
             health: 337.5,
             bodyDamage: 90,
         },
-        [Rarity.Epic]: {
+        [Rarity.EPIC]: {
             health: 1350,
             bodyDamage: 270,
         },
-        [Rarity.Legendary]: {
+        [Rarity.LEGENDARY]: {
             health: 10125,
             bodyDamage: 810,
         },
-        [Rarity.Mythic]: {
+        [Rarity.MYTHIC]: {
             health: 60750,
             bodyDamage: 2430,
         },
-        [Rarity.Ultra]: {
+        [Rarity.ULTRA]: {
             health: 1825000,
             bodyDamage: 7290,
         },
     },
     
-    [MobType.CentipedeDesert]: {
+    [MobType.CENTIPEDE_DESERT]: {
         baseSize: 40,
 
         i18n: {
@@ -390,31 +390,31 @@ export const MOB_PROFILES = {
             ry: 40,
         },
 
-        [Rarity.Common]: {
+        [Rarity.COMMON]: {
             health: 25,
             bodyDamage: 10,
         },
-        [Rarity.Unusual]: {
+        [Rarity.UNUSUAL]: {
             health: 93.8,
             bodyDamage: 30,
         },
-        [Rarity.Rare]: {
+        [Rarity.RARE]: {
             health: 337.5,
             bodyDamage: 90,
         },
-        [Rarity.Epic]: {
+        [Rarity.EPIC]: {
             health: 1350,
             bodyDamage: 270,
         },
-        [Rarity.Legendary]: {
+        [Rarity.LEGENDARY]: {
             health: 10125,
             bodyDamage: 810,
         },
-        [Rarity.Mythic]: {
+        [Rarity.MYTHIC]: {
             health: 60750,
             bodyDamage: 2430,
         },
-        [Rarity.Ultra]: {
+        [Rarity.ULTRA]: {
             health: 1825000,
             bodyDamage: 7290,
         },
