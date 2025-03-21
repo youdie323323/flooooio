@@ -10,6 +10,7 @@ const prebuildedFileName = './prebuilded-' + Date.now() + '.js';
 async function watch() {
     const obfuscateEnabled = await confirm({
         message: "Obfuscate bundled javascript?",
+        default: false,
     });
 
     await esbuild.build({

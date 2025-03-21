@@ -14,12 +14,15 @@ import TextInput from "../Layout/Components/WellKnown/TextInput";
 import type { Rarity } from "../../../../../../Shared/Entity/Statics/EntityRarity";
 import type BinaryReader from "../../../../../../Shared/Websocket/Binary/ReadWriter/Reader/BinaryReader";
 import { Button } from "../Layout/Components/WellKnown/Button";
-import { SVGLogo } from "../Layout/Components/WellKnown/Logo";
 import TilesetRenderer, { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../Shared/Tiled/TilesetRenderer";
 import TilesetWavedRenderer from "../Shared/Tiled/TilesetWavedRenderer";
 import { Clientbound } from "../../../../../../Shared/Websocket/Packet/PacketDirection";
 import type { StaticAdherableClientboundHandler } from "../../Websocket/Packet/PacketClientbound";
 import UICloseButton from "../Shared/UICloseButton";
+import { AnimationType, Components } from "../Layout/Components/Component";
+import { StaticHContainer, StaticVContainer } from "../Layout/Components/WellKnown/Container";
+import UIGameMobCard from "./UIGameMobCard";
+import { InlineRenderingCall } from "../Layout/Extensions/ExtensionInlineRenderingCall";
 
 let interpolatedMouseX = 0;
 let interpolatedMouseY = 0;
@@ -59,6 +62,8 @@ export default class UIGame extends AbstractUI {
     private players: Map<number, Player> = new Map();
     private mobs: Map<number, Mob> = new Map();
 
+    private mobCardsContainer: StaticHContainer;
+
     private updateT: number;
     private t: number;
 
@@ -80,12 +85,13 @@ export default class UIGame extends AbstractUI {
     private wasDeadMenuContinued: boolean;
     private wasGameOverContinued: boolean;
 
-    private deadMenuBackgroundOpacity: number;
-
     private deadMenuContinueButton: Button;
 
+    private deadMenuBackgroundOpacity: number;
+
     private gameOverMenuContinueButton: Button;
-    private gameOverMenuContinueButtonOpacity: number;
+
+    private gameOverMenuOpacity: number;
 
     private youWillRespawnNextWaveOpacity: number;
 
@@ -189,7 +195,6 @@ export default class UIGame extends AbstractUI {
                     this.players.set(
                         clientId,
                         new Player(
-                            false,
                             clientId,
                             clientX,
                             clientY,
@@ -252,22 +257,24 @@ export default class UIGame extends AbstractUI {
                     mob.oSize = mob.size;
                     mob.updateT = 0;
                 } else {
-                    this.mobs.set(
+                    const mobInstance = new Mob(
                         mobId,
-                        new Mob(
-                            false,
-                            mobId,
-                            mobX,
-                            mobY,
-                            mobAngle,
-                            mobSize,
-                            mobHealth,
-                            mobType,
-                            mobRarity,
-                            mobIsPet,
-                            mobIsFirstSegment,
-                        ),
+                        mobX,
+                        mobY,
+                        mobAngle,
+                        mobSize,
+                        mobHealth,
+                        mobType,
+                        mobRarity,
+                        mobIsPet,
+                        mobIsFirstSegment,
                     );
+
+                    if (this.isCardableMobInstance(mobInstance)) {
+                        this.addMobCard(mobInstance);
+                    }
+
+                    this.mobs.set(mobId, mobInstance);
                 }
             }
 
@@ -332,7 +339,7 @@ export default class UIGame extends AbstractUI {
 
         this.deadMenuBackgroundOpacity = 0;
         this.youWillRespawnNextWaveOpacity = 0;
-        this.gameOverMenuContinueButtonOpacity = 0;
+        this.gameOverMenuOpacity = 0;
 
         this.waveEnded = false;
 
@@ -469,8 +476,128 @@ export default class UIGame extends AbstractUI {
         }
     }
 
+    private addMobCard(mobInstance: Mob): void {
+        const vContainerToAdd =
+            this.mobCardsContainer.getChildren()
+                .find(
+                    container =>
+                        container instanceof StaticVContainer &&
+                        container.getChildren().find(
+                            c =>
+                                c instanceof UIGameMobCard &&
+                                c.mobInstance.type === mobInstance.type,
+                        ),
+                ) as StaticVContainer | undefined;
+
+        const createMobCard = (): UIGameMobCard => {
+            const mobCard = new UIGameMobCard(
+                {
+                    x: 0,
+                    y: 0,
+                },
+
+                mobInstance,
+            );
+
+            // Animation on appear
+            mobCard.setVisible(false, false);
+            mobCard.setVisible(true, true, AnimationType.CARD);
+
+            return mobCard;
+        };
+
+        if (vContainerToAdd) {
+            const existingMobCard = vContainerToAdd.getChildren()
+                .find(
+                    c =>
+                        c instanceof UIGameMobCard &&
+                        c.mobInstance.type === mobInstance.type &&
+                        c.mobInstance.rarity === mobInstance.rarity,
+                ) as UIGameMobCard | undefined;
+
+            if (existingMobCard) {
+                existingMobCard.mobAmountAccumulator++;
+            } else {
+                vContainerToAdd.addChild(createMobCard());
+            }
+
+            vContainerToAdd.sortChildren(
+                (({ mobInstance: mobA }: UIGameMobCard, { mobInstance: mobB }: UIGameMobCard) => mobA.rarity - mobB.rarity) as
+                Parameters<typeof vContainerToAdd["sortChildren"]>[0],
+            );
+        } else {
+            const vContainer = new StaticVContainer(
+                {
+                    x: 0,
+                    y: 0,
+                },
+
+                true,
+                6,
+            );
+
+            vContainer.addChild(createMobCard());
+
+            this.mobCardsContainer.addChild(vContainer);
+        }
+    }
+
+    private removeMobCard(mobInstance: Mob): void {
+        const vContainerToRemoveFrom = this.mobCardsContainer.getChildren()
+            .find(
+                container =>
+                    container instanceof StaticVContainer &&
+                    container.getChildren().some(
+                        c =>
+                            c instanceof UIGameMobCard &&
+                            c.mobInstance.type === mobInstance.type &&
+                            c.mobInstance.rarity === mobInstance.rarity,
+                    ),
+            ) as StaticVContainer | undefined;
+
+        if (!vContainerToRemoveFrom) return;
+
+        const mobCard = vContainerToRemoveFrom.getChildren()
+            .find(
+                c =>
+                    c instanceof UIGameMobCard &&
+                    c.mobInstance.type === mobInstance.type &&
+                    c.mobInstance.rarity === mobInstance.rarity,
+            ) as UIGameMobCard | undefined;
+
+        if (!mobCard) return;
+
+        const checksumVContainer = (): void => {
+            if (vContainerToRemoveFrom.getChildren().length === 0) {
+                this.mobCardsContainer.removeChild(vContainerToRemoveFrom);
+            }
+        };
+
+        if (mobCard.mobAmountAccumulator > 1) {
+            mobCard.mobAmountAccumulator--;
+        } else {
+            mobCard.once("onAnimationHide", () => {
+                vContainerToRemoveFrom.removeChild(mobCard);
+
+                checksumVContainer();
+            });
+
+            mobCard.setVisible(false, true, AnimationType.CARD);
+        }
+
+        checksumVContainer();
+    }
+
+    private isCardableMobInstance({ type, isPet }: Mob): boolean {
+        return this.mobCardsContainer &&
+            !(
+                isPetal(type) ||
+                isPet
+            );
+    }
+
     protected override initializeComponents(): void {
-        const exitButton = new UICloseButton(
+        this.addComponent(new UICloseButton(
             {
                 x: 6,
                 y: 6,
@@ -482,16 +609,58 @@ export default class UIGame extends AbstractUI {
 
                 uiCtx.switchUI("title");
             },
+        ));
+
+        this.deadMenuContinueButton = new Button(
+            () => ({
+                x: -(95 / 2),
+                y: this.deadMenuContinueButtonY + 50,
+                w: 95,
+                h: 27,
+
+                alignFromCenterX: true,
+            }),
+
+            2,
+
+            10,
+            0.05,
+
+            [
+                new Text(
+                    {
+                        x: 0,
+                        y: 0,
+                    },
+                    "Continue",
+                    20,
+                ),
+            ],
+
+            () => {
+                this.wasDeadMenuContinued = true;
+
+                this.gameOverMenuContinueButton.setVisible(true, true, AnimationType.FADE, 1000);
+            },
+
+            "#1dd129",
+            true,
         );
 
-        this.addComponents(exitButton);
+        // Dont show every frame
+        this.deadMenuContinueButton.setVisible(false, false);
+
+        this.addComponent(this.deadMenuContinueButton);
 
         this.gameOverMenuContinueButton = new Button(
             {
-                x: 0,
-                y: 0,
+                x: -(95 / 2),
+                y: (-(27 / 2)) + 40,
                 w: 95,
                 h: 27,
+
+                alignFromCenterX: true,
+                alignFromCenterY: true,
             },
 
             2,
@@ -506,7 +675,7 @@ export default class UIGame extends AbstractUI {
                         y: 0,
                     },
                     "Continue",
-                    50,
+                    20,
                 ),
             ],
 
@@ -519,46 +688,9 @@ export default class UIGame extends AbstractUI {
         // Dont show every frame
         this.gameOverMenuContinueButton.setVisible(false, false);
 
-        this.addComponents(this.gameOverMenuContinueButton);
+        this.addComponent(this.gameOverMenuContinueButton);
 
-        this.deadMenuContinueButton = new Button(
-            {
-                x: 0,
-                y: 0,
-                w: 95,
-                h: 27,
-            },
-
-            2,
-
-            10,
-            0.05,
-
-            [
-                new Text(
-                    {
-                        x: 0,
-                        y: 0,
-                    },
-                    "Continue",
-                    50,
-                ),
-            ],
-
-            () => {
-                this.wasDeadMenuContinued = true;
-            },
-
-            "#1dd129",
-            true,
-        );
-
-        // Dont show every frame
-        this.deadMenuContinueButton.setVisible(false, false);
-
-        this.addComponents(this.deadMenuContinueButton);
-
-        this.chatInput = new TextInput(
+        this.addComponent(this.chatInput = new TextInput(
             {
                 x: 13,
                 y: 34,
@@ -592,9 +724,18 @@ export default class UIGame extends AbstractUI {
                     self.value = "";
                 },
             },
-        );
+        ));
 
-        this.addComponents(this.chatInput);
+        this.addComponent(this.mobCardsContainer = new (InlineRenderingCall(StaticHContainer))(
+            () => ({
+                x: -(this.mobCardsContainer.w / 2),
+                y: 52,
+
+                alignFromCenterX: true,
+            }),
+            false,
+            UIGameMobCard.CARD_SIZE + 10 + 1,
+        ));
     }
 
     override animationFrame() {
@@ -648,7 +789,14 @@ export default class UIGame extends AbstractUI {
             this.mobs.forEach((mob, k) => {
                 mob.update();
 
-                if (mob.isDead && mob.deadT > 1) {
+                if (
+                    mob.isDead &&
+                    mob.deadT > 1
+                ) {
+                    if (this.isCardableMobInstance(mob)) {
+                        this.removeMobCard(mob);
+                    }
+
                     this.mobs.delete(k);
                 }
             });
@@ -658,7 +806,8 @@ export default class UIGame extends AbstractUI {
 
                 // Only remove when disconnected
                 if (
-                    player.isDead && player.deadT > 1 &&
+                    player.isDead &&
+                    player.deadT > 1 &&
                     player.isRemoved
                 ) {
                     this.players.delete(k);
@@ -702,7 +851,11 @@ export default class UIGame extends AbstractUI {
             ctx.scale(antennaScaleFactor, antennaScaleFactor);
             ctx.translate(-selfPlayer.x, -selfPlayer.y);
 
-            entitiesToDraw.forEach((v, k) => renderEntity(ctx, v));
+            entitiesToDraw.forEach((entity, k) => renderEntity({
+                ctx,
+                entity,
+                entityOnlyRenderGeneralPart: false,
+            }));
 
             ctx.restore();
         }
@@ -823,6 +976,9 @@ export default class UIGame extends AbstractUI {
             ctx.restore();
         }
 
+        // Render mob cards
+        this.mobCardsContainer.render(ctx);
+
         // Dead menu
         {
             {
@@ -912,35 +1068,30 @@ export default class UIGame extends AbstractUI {
                         );
                     } else {
                         if (!this.wasGameOverContinued) {
-                            if (this.gameOverMenuContinueButtonOpacity <= 1) {
-                                this.gameOverMenuContinueButtonOpacity += 0.005;
+                            if (this.gameOverMenuOpacity <= 1) {
+                                this.gameOverMenuOpacity += 0.005;
                             }
                         } else {
-                            if (this.gameOverMenuContinueButtonOpacity >= 0) {
+                            if (this.gameOverMenuOpacity >= 0) {
                                 // Bit faster than uncontinued i guess
-                                this.gameOverMenuContinueButtonOpacity -= 0.01;
+                                this.gameOverMenuOpacity -= 0.01;
                             }
                         }
 
-                        this.gameOverMenuContinueButtonOpacity = Math.max(Math.min(this.gameOverMenuContinueButtonOpacity, 1), 0);
-
-                        // this.gameOverMenuContinueButton.globalAlpha = this.gameOverMenuContinueButtonOpacity;
-                        this.gameOverMenuContinueButton.setX(centerWidth - (this.gameOverMenuContinueButton.w / 2));
-                        this.gameOverMenuContinueButton.setY(centerHeight + 35);
-                        this.gameOverMenuContinueButton.setVisible(true, false);
+                        this.gameOverMenuOpacity = Math.max(Math.min(this.gameOverMenuOpacity, 1), 0);
 
                         ctx.save();
 
-                        ctx.globalAlpha = this.gameOverMenuContinueButtonOpacity;
+                        ctx.globalAlpha = this.gameOverMenuOpacity;
 
                         ctx.lineJoin = 'round';
                         ctx.lineCap = 'round';
                         ctx.textBaseline = 'middle';
                         ctx.textAlign = 'center';
                         ctx.strokeStyle = '#000000';
+
                         ctx.fillStyle = "#f0666b";
                         ctx.font = "34px Ubuntu";
-
                         ctx.lineWidth = calculateStrokeWidth(34);
 
                         ctx.strokeText("GAME OVER", centerWidth, centerHeight);
@@ -976,8 +1127,6 @@ export default class UIGame extends AbstractUI {
                 {
                     ctx.save();
 
-                    this.deadMenuContinueButton.setX(centerWidth - (this.deadMenuContinueButton.w / 2));
-                    this.deadMenuContinueButton.setY(this.deadMenuContinueButtonY + 50);
                     this.deadMenuContinueButton.setVisible(true, false);
 
                     ctx.translate(centerWidth, this.deadMenuContinueButtonY);
@@ -1018,7 +1167,7 @@ export default class UIGame extends AbstractUI {
 
                 this.deadMenuBackgroundOpacity = 0;
                 this.youWillRespawnNextWaveOpacity = 0;
-                this.gameOverMenuContinueButtonOpacity = 0;
+                this.gameOverMenuOpacity = 0;
             }
         }
 
@@ -1091,6 +1240,8 @@ export default class UIGame extends AbstractUI {
 
     private leaveGame() {
         this.wasGameOverContinued = true;
+
+        this.gameOverMenuContinueButton.setVisible(false, true, AnimationType.FADE, 1000);
 
         clientWebsocket.packetServerbound.sendWaveLeave();
 

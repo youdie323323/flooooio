@@ -1,6 +1,6 @@
 import { darkend, DARKEND_BASE } from "../../../../../../../Shared/Utils/Color";
 import type Mob from "../../Mob";
-import type { RenderContext } from "../RendererRenderingContext";
+import type { RenderingContext } from "../RendererRenderingContext";
 import RendererMobBase from "./RendererMobBase";
 
 const TAU = Math.PI * 2;
@@ -21,7 +21,7 @@ function createBeetleBodyPath() {
 const beetleBodyPath = createBeetleBodyPath();
 
 export default class RendererMobBeetle extends RendererMobBase {
-    override render(context: RenderContext<Mob>): void {
+    override render(context: RenderingContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);
 

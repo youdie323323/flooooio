@@ -2,7 +2,7 @@ import ExtensionBase from "../../Extensions/Extension";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
 import type { MaybePointerLike } from "../Component";
-import { Component } from "../Component";
+import { Component, OBSTRUCTION_AFFECTABLE } from "../Component";
 import { calculateStrokeWidth } from "./Text";
 
 interface TextInputOptions {
@@ -244,7 +244,8 @@ export default class TextInput extends ExtensionBase(Component) {
     override getCacheKey(lc: LayoutContext): string {
         const { CACHE_KEY_DELIMITER } = Component;
 
-        return super.getCacheKey(lc) + CACHE_KEY_DELIMITER +
+        return super.getCacheKey(lc) +
+            CACHE_KEY_DELIMITER +
             Object.values(Component.computePointerLike(this.layoutOptions)).join(CACHE_KEY_DELIMITER);
     }
 

@@ -4,7 +4,7 @@ import LayoutCache from "../LayoutCache";
 import type { DynamicLayoutable } from "./ComponentDynamicLayoutable";
 import type { Layoutable } from "./ComponentLayoutable";
 import type { Button } from "./WellKnown/Button";
-import type { AnyStaticContainer, CoordinatedStaticSpace, StaticSpace } from "./WellKnown/Container";
+import { type AnyStaticContainer, type CoordinatedStaticSpace, type StaticSpace } from "./WellKnown/Container";
 import type { CanvasLogo, SVGLogo } from "./WellKnown/Logo";
 import type Text from "./WellKnown/Text";
 import type TextInput from "./WellKnown/TextInput";
@@ -85,20 +85,20 @@ export type OverloadParameters<T extends (...args: any[]) => any> = Parameters<O
 
 export type OverloadReturnType<T extends (...args: any[]) => any> = ReturnType<OverloadUnion<T>>;
 
-export type SetVisibleParameters = UnionToTuple<OverloadParameters<Component["setVisible"]>>;
-
-export type SetVisibleReturnType = UnionToTuple<OverloadReturnType<Component["setVisible"]>>;
+export type SetVisibleOverloadParameters = UnionToTuple<OverloadParameters<Component["setVisible"]>>;
 
 export type SetVisibleImplementationParameters = [
     toggle: boolean,
     shouldAnimate: boolean,
     animationType?: AnimationType,
-    animationSlideDirection?: AnimationSlideDirection,
+    animationConfig0?: AnimationSlideDirection | number,
 ];
 
 export const enum AnimationType {
-    Zoom,
-    Slide,
+    ZOOM,
+    SLIDE,
+    FADE,
+    CARD,
 }
 
 export type AnimationDirection = "in" | "out";
@@ -107,19 +107,21 @@ export type AnimationDirectionEasingFunction = Record<AnimationDirection, (x: nu
 
 export type AnimationSlideDirection = "v" | "h";
 
+export function renderPossibleComponent(ctx: CanvasRenderingContext2D, component: Components): void {
+    ctx.save();
+
+    component.render(ctx);
+
+    ctx.restore();
+}
+
 /**
  * Render all visible components.
  * 
  * @param components - Components to render
  */
 export function renderPossibleComponents(ctx: CanvasRenderingContext2D, components: Iterable<Components>): void {
-    for (const component of components) {
-        ctx.save();
-
-        component.render(ctx);
-
-        ctx.restore();
-    }
+    for (const component of components) renderPossibleComponent(ctx, component);
 }
 
 const getKeys = <T extends { [key: string]: unknown }>(obj: T): Array<keyof T> => {
@@ -162,13 +164,20 @@ export function hasClickableListeners(component: Components): boolean {
 
 // Typing for EventEmitter
 export type ComponentEvents =
-    Readonly<{
-        // Notify event that tell this component is added dynamically to UI
+    & Readonly<{
+        // Event that tell this component is added dynamically to UI
         "onInitialized": [];
+    }>
+    & Readonly<{
+        // Event that tell this component is hide within animation
+        "onAnimationHide": [];
     }>
     & typeof INTERACTIVE_EVENTS
     & typeof CLICKABLE_EVENTS;
 
+/**
+ * Symbol that affected to obstruction checking.
+ */
 export const OBSTRUCTION_AFFECTABLE: unique symbol = Symbol("obstructionAffectable");
 
 export interface ComponentSymbol {
@@ -183,13 +192,14 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
     // Prepare base symbols
     public [OBSTRUCTION_AFFECTABLE]: boolean = true;
 
-    protected readonly ANIMATION_ZOOM_DURATION: number = 100;
-    protected readonly ANIMATION_SLIDE_DURATION: number = 350;
+    protected static readonly ANIMATION_ZOOM_DURATION: number = 100;
+    protected static readonly ANIMATION_SLIDE_DURATION: number = 350;
+    protected static readonly ANIMATION_CARD_DURATION: number = 500;
 
-    protected readonly SLIDE_BASE_DEPTH: number = 20;
+    protected static readonly SLIDE_BASE_DEPTH: number = 20;
 
     private static readonly ANIMATION_EASING_FUNCTIONS = {
-        [AnimationType.Zoom]: {
+        [AnimationType.ZOOM]: {
             in: function easeOutExpo(x: number): number {
                 return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
             },
@@ -197,7 +207,23 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
                 return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
             },
         },
-        [AnimationType.Slide]: {
+        [AnimationType.SLIDE]: {
+            in: function easeOutExpo(x: number): number {
+                return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+            },
+            out: function easeInExpo(x: number): number {
+                return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
+            },
+        },
+        [AnimationType.FADE]: {
+            in: function linear(x: number): number {
+                return x;
+            },
+            out: function linear(x: number): number {
+                return x;
+            },
+        },
+        [AnimationType.CARD]: {
             in: function easeOutExpo(x: number): number {
                 return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
             },
@@ -216,6 +242,7 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
     public animationType: AnimationType | null = null;
     public animationDirection: AnimationDirection | null = null;
     public animationSlideDirection: AnimationSlideDirection | null = null;
+    public animationFadeTime: number | null = null;
     public animationStartTime: number | null = null;
     public animationProgress: number = 1;
 
@@ -332,21 +359,46 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
                 this.animationStartTime = currentTime;
             }
 
-            const duration =
-                this.animationType === AnimationType.Zoom ? this.ANIMATION_ZOOM_DURATION :
-                    this.animationType === AnimationType.Slide ? this.ANIMATION_SLIDE_DURATION :
-                        1000;
+            let duration: number;
+            switch (this.animationType) {
+                case AnimationType.ZOOM: {
+                    duration = Component.ANIMATION_ZOOM_DURATION;
 
-            const deltaAT = currentTime - this.animationStartTime;
-            const progress = Math.max(0, Math.min(deltaAT / duration, 1));
+                    break;
+                }
+
+                case AnimationType.SLIDE: {
+                    duration = Component.ANIMATION_SLIDE_DURATION;
+
+                    break;
+                }
+
+                case AnimationType.FADE: {
+                    duration = this.animationFadeTime;
+
+                    break;
+                }
+
+                case AnimationType.CARD: {
+                    duration = Component.ANIMATION_CARD_DURATION;
+
+                    break;
+                }
+            }
+
+            const deltaT = currentTime - this.animationStartTime;
+            const progress = Math.max(0, Math.min(deltaT / duration, 1));
 
             this.animationProgress = this.animationDirection === "in"
                 ? progress
                 : 1 - progress;
 
-            if (deltaAT >= duration) {
+            if (deltaT >= duration) {
                 if (this.animationDirection === "out") {
                     this.visible = false;
+
+                    // How to fix this error
+                    (this.emit as (...args: ReadonlyArray<any>) => {})("onAnimationHide");
                 }
 
                 // Fallback to original position
@@ -358,7 +410,7 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
                 this.animationStartTime = null;
             } else {
                 switch (this.animationType) {
-                    case AnimationType.Zoom: {
+                    case AnimationType.ZOOM: {
                         if (this.animationZoomShouldSlidePosition) {
                             const inOutProgress = 1 - Component.ZOOM_IN_OUT_EASING_FUNCTION(this.animationProgress);
 
@@ -375,6 +427,7 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
             }
         }
 
+        // This should always be executed regardless of isAnimating
         if (
             Component.ANIMATION_EASING_FUNCTIONS.hasOwnProperty(this.animationType) &&
             Component.ANIMATION_EASING_FUNCTIONS[this.animationType].hasOwnProperty(this.animationDirection)
@@ -384,7 +437,7 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
             const progress = easingFunction(this.animationProgress);
 
             switch (this.animationType) {
-                case AnimationType.Zoom: {
+                case AnimationType.ZOOM: {
                     const cx = this.x + this.w / 2,
                         cy = this.y + this.h / 2;
 
@@ -395,22 +448,41 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
                     break;
                 }
 
-                case AnimationType.Slide: {
+                case AnimationType.SLIDE: {
                     // In-out opacity
                     ctx.globalAlpha = progress;
 
                     // TODO: option for offset are singed or not
                     if (this.animationSlideDirection === "v") {
-                        const slideOffset = -(this.h + this.SLIDE_BASE_DEPTH) * (1 - progress);
+                        const slideOffset = -(this.h + Component.SLIDE_BASE_DEPTH) * (1 - progress);
 
                         ctx.translate(this.x + this.w / 2, this.realY - slideOffset + this.h / 2);
                     } else {
-                        const slideOffset = (this.w + this.SLIDE_BASE_DEPTH) * (1 - progress);
+                        const slideOffset = (this.w + Component.SLIDE_BASE_DEPTH) * (1 - progress);
 
                         ctx.translate(this.realX - slideOffset + this.w / 2, this.y + this.h / 2);
                     }
 
                     ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
+
+                    break;
+                }
+
+                case AnimationType.FADE: {
+                    // Fade in-out opacity
+                    ctx.globalAlpha = progress;
+
+                    break;
+                }
+
+                case AnimationType.CARD: {
+                    const cx = this.x + this.w / 2,
+                        cy = this.y + this.h / 2;
+
+                    ctx.translate(cx, cy);
+                    ctx.rotate(progress * Math.PI * 2);
+                    ctx.scale(progress, progress);
+                    ctx.translate(-cx, -cy);
 
                     break;
                 }
@@ -437,19 +509,30 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
     public setVisible(
         toggle: boolean,
         shouldAnimate: true,
-        animationType: AnimationType.Zoom,
+        animationType: AnimationType.ZOOM,
     ): void;
     public setVisible(
         toggle: boolean,
         shouldAnimate: true,
-        animationType: AnimationType.Slide,
+        animationType: AnimationType.SLIDE,
         animationSlideDirection: AnimationSlideDirection,
+    ): void;
+    public setVisible(
+        toggle: boolean,
+        shouldAnimate: true,
+        animationType: AnimationType.FADE,
+        animationFadeTime: number,
+    ): void;
+    public setVisible(
+        toggle: boolean,
+        shouldAnimate: true,
+        animationType: AnimationType.CARD,
     ): void;
     public setVisible(
         toggle: boolean,
         shouldAnimate: boolean,
         animationType?: AnimationType,
-        animationSlideDirection?: AnimationSlideDirection,
+        animationConfig0?: AnimationSlideDirection | number,
     ): void {
         if (toggle === this.visible && !this.isAnimating) return;
 
@@ -462,9 +545,19 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
             this.isAnimating = true;
             this.animationType = animationType ?? null;
             this.animationDirection = toggle ? "in" : "out";
-            this.animationSlideDirection = animationSlideDirection ?? null;
+
+            // Setup config for each animation
+
+            this.animationSlideDirection = animationConfig0 === "h" || animationConfig0 === "v"
+                ? animationConfig0
+                : null;
+
+            this.animationFadeTime = typeof animationConfig0 === "number"
+                ? animationConfig0
+                : null;
+
             this.animationStartTime = null;
-            this.animationProgress = toggle ? 0 : 1;
+            this.animationProgress = Number(!toggle);
 
             this.realX = this.x;
             this.realY = this.y;

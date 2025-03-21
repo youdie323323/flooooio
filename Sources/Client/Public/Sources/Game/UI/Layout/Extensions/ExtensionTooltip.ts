@@ -146,7 +146,7 @@ export default function Tooltip<T extends ExtensionConstructor>(
                 }
             }
 
-            throw new Error("Tooltip: unpositionable");
+            return { x: 0, y: 0 };
         }
 
         override destroy(): void {

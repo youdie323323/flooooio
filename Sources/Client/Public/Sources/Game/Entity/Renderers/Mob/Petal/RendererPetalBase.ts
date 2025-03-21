@@ -1,18 +1,18 @@
 import type { ColorCode } from "../../../../../../../../Shared/Utils/Color";
 import type Mob from "../../../Mob";
-import type { RenderContext } from "../../RendererRenderingContext";
+import type { RenderingContext } from "../../RendererRenderingContext";
 import RendererMobBase from "../RendererMobBase";
 
 const TAU = Math.PI * 2;
 
 export default class RendererPetalBase extends RendererMobBase {
-    override render(context: RenderContext<Mob>): void {
+    override render(context: RenderingContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);
     }
 
     protected drawBasicLike(
-        context: RenderContext<Mob>,
+        context: RenderingContext<Mob>,
         fill: ColorCode,
         stroke: ColorCode,
     ): void {

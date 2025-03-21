@@ -5,21 +5,22 @@ import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
 import type { MaybePointerLike } from "../Component";
 import { Component, OBSTRUCTION_AFFECTABLE } from "../Component";
-import type { AutomaticallySizedLayoutOptions, SizeKeys } from "./Container";
+import type { AutomaticallySizedLayoutOptions, SizeKeys, SquareSizeLayoutOptions } from "./Container";
 
 export const calculateStrokeWidth = memo((fontSize: number): number => {
     // 80 / 8.333333830038736 (actually this is 8+1/3 but floating point exception) = 9.59999942779541
     return fontSize / 8.333333830038736;
 });
 
-export default class Text extends ExtensionBase(Component<Readonly<{
+export interface ClipboardEvents {
     "onCopySucceed": [];
     "onCopyFailed": [];
-}>>) {
+}
+
+export default class Text extends ExtensionBase(Component<Readonly<ClipboardEvents>>) {
     public override[OBSTRUCTION_AFFECTABLE]: boolean = false;
 
     private static readonly TEXT_WIDTH_OFFSET: number = 10;
-    private static readonly TEXT_HEIGHT_COEF: number = 1.25;
 
     constructor(
         protected readonly layoutOptions: MaybePointerLike<AutomaticallySizedLayoutOptions>,
@@ -28,9 +29,8 @@ export default class Text extends ExtensionBase(Component<Readonly<{
         protected readonly fontSize: MaybePointerLike<number>,
         protected readonly fillStyle: MaybePointerLike<ColorCode> = "#ffffff",
         protected readonly textAlign: MaybePointerLike<CanvasTextAlign> = "center",
-        protected readonly textLimitWidth: MaybePointerLike<number> = null,
 
-        isCopyable: MaybePointerLike<boolean> = false,
+        isCopyable: boolean = false,
         copySource?: MaybePointerLike<string>,
     ) {
         super();
@@ -39,7 +39,6 @@ export default class Text extends ExtensionBase(Component<Readonly<{
             throw new Error("Text: text is copyable, but source string is not computable");
         }
 
-        // Only enable OBSTRUCTION_AFFECTABLE symbol when copyable
         if (isCopyable) this[OBSTRUCTION_AFFECTABLE] = true;
 
         let isHovered: boolean = false;
@@ -79,23 +78,27 @@ export default class Text extends ExtensionBase(Component<Readonly<{
     private calculateSize(ctx: CanvasRenderingContext2D): Pick<LayoutOptions, SizeKeys> {
         const computedFontSize = Component.computePointerLike(this.fontSize);
         const computedText = Component.computePointerLike(this.text);
+        const computedTextAlign = Component.computePointerLike(this.textAlign);
 
         ctx.save();
 
-        ctx.reset();
-
+        ctx.textAlign = computedTextAlign;
         ctx.font = `${computedFontSize}px Ubuntu`;
         const {
             width,
-            actualBoundingBoxAscent,
-            actualBoundingBoxDescent,
+            fontBoundingBoxAscent,
+            fontBoundingBoxDescent,
         } = ctx.measureText(computedText);
 
         ctx.restore();
 
         return {
-            w: width + Text.TEXT_WIDTH_OFFSET,
-            h: (actualBoundingBoxAscent + actualBoundingBoxDescent) * Text.TEXT_HEIGHT_COEF,
+            w: width + (
+                computedTextAlign === "center"
+                    ? Text.TEXT_WIDTH_OFFSET
+                    : 0
+            ),
+            h: fontBoundingBoxAscent + fontBoundingBoxDescent,
         } as const;
     }
 
@@ -116,8 +119,10 @@ export default class Text extends ExtensionBase(Component<Readonly<{
 
         const { ctx } = lc;
 
-        return super.getCacheKey(lc) + CACHE_KEY_DELIMITER +
-            Object.values(Component.computePointerLike(this.layoutOptions)).join(CACHE_KEY_DELIMITER) + CACHE_KEY_DELIMITER +
+        return super.getCacheKey(lc) +
+            CACHE_KEY_DELIMITER +
+            Object.values(Component.computePointerLike(this.layoutOptions)).join(CACHE_KEY_DELIMITER) +
+            CACHE_KEY_DELIMITER +
             Object.values(this.calculateSize(ctx)).join(CACHE_KEY_DELIMITER);
     }
 
@@ -169,37 +174,8 @@ export default class Text extends ExtensionBase(Component<Readonly<{
 
         const y = this.y + this.h / 2;
 
-        if (this.textLimitWidth) {
-            const computedTextWidthLimit = Component.computePointerLike(this.textLimitWidth);
-
-            this.drawScaledText(ctx, computedText, x, y, computedTextWidthLimit);
-        } else {
-            ctx.strokeText(computedText, x, y);
-            ctx.fillText(computedText, x, y);
-        }
-
-        ctx.restore();
-    }
-
-    private drawScaledText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number) {
-        const metrics = ctx.measureText(text);
-        const actualWidth = metrics.width;
-
-        ctx.save();
-
-        if (actualWidth > maxWidth) {
-            const scale = maxWidth / actualWidth;
-
-            ctx.translate(x, y);
-            ctx.scale(scale, 1);
-            ctx.translate(-x, -y);
-
-            ctx.strokeText(text, x, y);
-            ctx.fillText(text, x, y);
-        } else {
-            ctx.strokeText(text, x, y);
-            ctx.fillText(text, x, y);
-        }
+        ctx.strokeText(computedText, x, y);
+        ctx.fillText(computedText, x, y);
 
         ctx.restore();
     }

@@ -15,7 +15,7 @@ export default class Toggle extends ExtensionBase(Component) {
     constructor(
         protected readonly layoutOptions: MaybePointerLike<LayoutOptions>,
 
-        protected readonly onToggle: (t: boolean) => void,
+        onToggle: (t: boolean) => void,
     ) {
         super();
 
@@ -27,9 +27,7 @@ export default class Toggle extends ExtensionBase(Component) {
             this.context.canvas.style.cursor = "default";
         });
 
-        this.on("onClick", () => {
-            this.onToggle(!this.toggle);
-        });
+        this.on("onClick", () => onToggle(!this.toggle));
     }
 
     override layout(lc: LayoutContext): LayoutResult {
@@ -39,7 +37,8 @@ export default class Toggle extends ExtensionBase(Component) {
     override getCacheKey(lc: LayoutContext): string {
         const { CACHE_KEY_DELIMITER } = Component;
 
-        return super.getCacheKey(lc) + CACHE_KEY_DELIMITER +
+        return super.getCacheKey(lc) +
+            CACHE_KEY_DELIMITER +
             Object.values(Component.computePointerLike(this.layoutOptions)).join(CACHE_KEY_DELIMITER);
     }
 

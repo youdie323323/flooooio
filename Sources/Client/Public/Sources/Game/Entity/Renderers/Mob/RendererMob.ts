@@ -1,7 +1,7 @@
 import { MobType, PetalType } from "../../../../../../../Shared/Entity/Statics/EntityType";
 import type Mob from "../../Mob";
 import Renderer from "../Renderer";
-import type { RenderContext } from "../RendererRenderingContext";
+import type { RenderingContext } from "../RendererRenderingContext";
 import RendererPetalBasic from "./Petal/RendererPetalBasic";
 import RendererPetalBubble from "./Petal/RendererPetalBubble";
 import RendererPetalEgg from "./Petal/RendererPetalEgg";
@@ -40,7 +40,7 @@ const typeToRendererMapping = {
 } as const satisfies Record<MobType | PetalType, Renderer<Mob>>;
 
 export default class RendererMob extends Renderer<Mob> {
-    override render(context: RenderContext<Mob>): void {
+    override render(context: RenderingContext<Mob>): void {
         super.render(context);
 
         const { ctx, entity } = context;

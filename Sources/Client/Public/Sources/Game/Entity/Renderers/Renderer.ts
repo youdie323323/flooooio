@@ -7,7 +7,7 @@ import UIGame from "../../UI/Game/UIGame";
 import type Entity from "../Entity";
 import Mob from "../Mob";
 import Player from "../Player";
-import type { RenderContext } from "./RendererRenderingContext";
+import type { RenderingContext } from "./RendererRenderingContext";
 
 const interpolateColor = memo((sourceColor: number[], targetColor: number[], progress: number): number[] => {
     const inverseProgress = 1 - progress;
@@ -37,12 +37,12 @@ export default class Renderer<T extends Entity> {
     /**
      * Render the entity.
      */
-    public render(context: RenderContext<T>): void {
-        const { ctx, entity } = context;
+    public render(context: RenderingContext<T>): void {
+        const { ctx, entity, entityOnlyRenderGeneralPart: generalPartOnly } = context;
 
         ctx.translate(entity.x, entity.y);
 
-        if (!entity.onlyDrawGeneralPart) {
+        if (!generalPartOnly) {
             this.drawEntityDetail(context);
 
             this.drawDead(context);
@@ -52,9 +52,11 @@ export default class Renderer<T extends Entity> {
     /**
      * Determine if entity should render.
      */
-    public isEntityRenderCandidate(entity: RenderContext<T>["entity"]): boolean {
+    public isRenderingCandidate(context: RenderingContext<T>): boolean {
+        const { entity, entityOnlyRenderGeneralPart: generalPartOnly } = context;
+
         return !(
-            !entity.onlyDrawGeneralPart &&
+            !generalPartOnly &&
             entity.isDead &&
             entity.deadT > 1
         );
@@ -63,7 +65,7 @@ export default class Renderer<T extends Entity> {
     /**
      * Change the color based on hit effect.
      */
-    protected getSkinColor({ entity }: RenderContext<T>, color: ColorCode): string {
+    protected getSkinColor({ entity }: RenderingContext<T>, color: ColorCode): string {
         const invertedHurtT = 1 - entity.hurtT;
         if (invertedHurtT >= 1) {
             return color;
@@ -81,16 +83,17 @@ export default class Renderer<T extends Entity> {
     /**
      * Change scale and alpha if entity is dead.
      */
-    protected drawDead({ ctx, entity }: RenderContext<T>) {
+    protected drawDead({ ctx, entity }: RenderingContext<T>) {
         if (entity.isDead) {
             const sinWavedDeadT = Math.sin(entity.deadT * Math.PI / 2);
             const scale = 1 + sinWavedDeadT;
+            
             ctx.scale(scale, scale);
             ctx.globalAlpha *= 1 - sinWavedDeadT;
         }
     }
 
-    protected drawEntityDetail({ ctx, entity }: RenderContext<T>) {
+    protected drawEntityDetail({ ctx, entity }: RenderingContext<T>) {
         if (
             entity.hpAlpha <= 0 ||
             entity instanceof Mob && isPetal(entity.type)

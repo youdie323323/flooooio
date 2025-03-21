@@ -1,7 +1,7 @@
 import type { Biome } from "../../../../../Shared/Biome";
 import type { StaticAdherableClientboundHandler } from "../Websocket/Packet/PacketClientbound";
-import { type Components, renderPossibleComponents, hasClickableListeners, hasInteractiveListeners, OBSTRUCTION_AFFECTABLE } from "./Layout/Components/Component";
-import { type AnyStaticContainer } from "./Layout/Components/WellKnown/Container";
+import { type Components, renderPossibleComponents, OBSTRUCTION_AFFECTABLE, hasClickableListeners, hasInteractiveListeners } from "./Layout/Components/Component";
+import { AbstractStaticContainer, type AnyStaticContainer } from "./Layout/Components/WellKnown/Container";
 import { BLACKLISTED } from "./Layout/Extensions/ExtensionInlineRenderingCall";
 
 export let uiScaleFactor: number = 1;
@@ -161,7 +161,7 @@ export default abstract class AbstractUI {
 
         component.context = this;
 
-        if (!component[BLACKLISTED]) this.components.add(component);
+        this.components.add(component);
 
         // Emit initialized
         component.emit("onInitialized");
@@ -199,7 +199,10 @@ export default abstract class AbstractUI {
         for (let i = targetIndex + 1; i < allComponents.length; i++) {
             const component = allComponents[i];
 
-            if (this.isComponentInteractableWithPosition(component, x, y)) {
+            if (
+                this.isComponentObstructable(component) &&
+                this.overlapsComponent(component, x, y)
+            ) {
                 return true;
             }
         }
@@ -207,16 +210,19 @@ export default abstract class AbstractUI {
         return false;
     }
 
-    private isComponentInteractable(targetComponent: Components): boolean {
+    private isComponentObstructable(targetComponent: Components): boolean {
         return targetComponent[OBSTRUCTION_AFFECTABLE] &&
-            (
-                hasInteractiveListeners(targetComponent) ||
-                hasClickableListeners(targetComponent)
-            ) &&
             targetComponent.isRenderable;
     }
 
-    private isComponentInteractableWithPosition(targetComponent: Components, x: number, y: number): boolean {
+    private isComponentInteractable(targetComponent: Components): boolean {
+        return this.isComponentObstructable(targetComponent) && (
+            hasInteractiveListeners(targetComponent) ||
+            hasClickableListeners(targetComponent)
+        );
+    }
+
+    private isComponentInteractableAtPosition(targetComponent: Components, x: number, y: number): boolean {
         return this.isComponentInteractable(targetComponent) &&
             this.overlapsComponent(targetComponent, x, y) &&
             !this.isComponentObstructed(targetComponent, x, y);
@@ -226,6 +232,11 @@ export default abstract class AbstractUI {
         return this.components
             .values()
             .filter(c => !this.childComponents.has(c));
+    }
+
+    private getTopLevelRenderableComponents() {
+        return this.getTopLevelComponents()
+            .filter(c => !c[BLACKLISTED]);
     }
 
     private updateComponentsLayout(isResized: boolean): void {
@@ -278,7 +289,7 @@ export default abstract class AbstractUI {
 
         // Click handling
         for (const component of this.components) {
-            if (this.isComponentInteractableWithPosition(component, this.mouseX, this.mouseY)) {
+            if (this.isComponentInteractableAtPosition(component, this.mouseX, this.mouseY)) {
                 this.clickedComponent = component;
                 this.clickedComponent.emit("onMouseDown");
 
@@ -293,7 +304,7 @@ export default abstract class AbstractUI {
         this.onMouseUp(event);
 
         if (this.clickedComponent) {
-            if (this.isComponentInteractableWithPosition(this.clickedComponent, this.mouseX, this.mouseY)) {
+            if (this.isComponentInteractableAtPosition(this.clickedComponent, this.mouseX, this.mouseY)) {
                 this.clickedComponent.emit("onMouseUp");
                 this.clickedComponent.emit("onClick");
             }
@@ -320,22 +331,23 @@ export default abstract class AbstractUI {
         this.components.forEach(component => {
             if (
                 // Make it only work for component which has interactive listeners
-                this.isComponentInteractable(component)
+                component[OBSTRUCTION_AFFECTABLE]
             ) {
-                const isHoverable = this.isComponentInteractableWithPosition(component, this.mouseX, this.mouseY);
+                const isHovering = this.isComponentInteractableAtPosition(component, this.mouseX, this.mouseY);
 
-                if (isHoverable) {
+                if (isHovering) {
                     if (this.hoveredComponent !== component) {
                         this.hoveredComponent?.emit?.("onBlur");
+
                         this.hoveredComponent = component;
-                        component.emit("onFocus");
+                        this.hoveredComponent.emit("onFocus");
                     }
                 } else if (
-                    // Also !isHovering, previous hoveredComponent is this component and 
-                    // if was not hovered, emit onBlur event
+                    // If hoveredComponent is this component and not hovered, emit onBlur event
+                    // !isHovering &&
                     this.hoveredComponent === component
                 ) {
-                    component.emit("onBlur");
+                    this.hoveredComponent.emit("onBlur");
 
                     this.hoveredComponent = null;
                 }
@@ -362,7 +374,12 @@ export default abstract class AbstractUI {
 
         this.emitInteractiveEvents();
 
-        renderPossibleComponents(ctx, this.getTopLevelComponents());
+        this.updateComponentsLayout(false);
+
+        renderPossibleComponents(
+            ctx,
+            this.getTopLevelRenderableComponents(),
+        );
     }
 
     // Biome atomic store

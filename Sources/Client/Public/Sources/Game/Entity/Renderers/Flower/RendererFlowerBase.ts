@@ -1,14 +1,14 @@
 import Renderer from "../Renderer";
 import type Player from "../../Player";
-import type { RenderContext } from "../RendererRenderingContext";
+import type { RenderingContext } from "../RendererRenderingContext";
 
 export default class RendererFlowerBase extends Renderer<Player> {
-    override render(context: RenderContext<Player>): void {
+    override render(context: RenderingContext<Player>): void {
         // Non-recursive renderer
         // super.render(context);
     }
 
-    protected drawDeadEyes({ ctx }: RenderContext<Player>, eyeX: number, eyeY: number) {
+    protected drawDeadEyes({ ctx }: RenderingContext<Player>, eyeX: number, eyeY: number) {
         const OFFSET = 4;
 
         ctx.beginPath();

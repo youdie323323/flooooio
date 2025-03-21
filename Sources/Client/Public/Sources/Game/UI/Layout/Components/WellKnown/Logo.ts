@@ -2,19 +2,16 @@ import ExtensionBase from "../../Extensions/Extension";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
 import type { MaybePointerLike } from "../Component";
-import { Component } from "../Component";
+import { Component, OBSTRUCTION_AFFECTABLE } from "../Component";
 import { Canvg, presets } from "canvg";
 import * as StackBlur from
     'stackblur-canvas/dist/stackblur-es.min.js';
 
-export class CanvasLogo extends ExtensionBase(Component) {
-    /**
-     * @param drawer - Draw icon at traslated x, y
-     */
-    constructor(
-        protected layoutOptions: MaybePointerLike<LayoutOptions>,
+class Logo extends ExtensionBase(Component) {
+    public override[OBSTRUCTION_AFFECTABLE]: boolean = false;
 
-        protected drawer: (ctx: CanvasRenderingContext2D) => void,
+    constructor(
+        protected readonly layoutOptions: MaybePointerLike<LayoutOptions>,
     ) {
         super();
     }
@@ -30,11 +27,25 @@ export class CanvasLogo extends ExtensionBase(Component) {
         const { CACHE_KEY_DELIMITER } = Component;
 
         return super.getCacheKey(lc) +
+            CACHE_KEY_DELIMITER +
             Object.values(Component.computePointerLike(this.layoutOptions)).join(CACHE_KEY_DELIMITER);
     }
 
     override invalidateLayoutCache(): void {
         this.layoutCache.invalidate();
+    }
+}
+
+export class CanvasLogo extends Logo {
+    /**
+     * @param drawer - Draw icon at traslated x, y
+     */
+    constructor(
+        layoutOptions: MaybePointerLike<LayoutOptions>,
+
+        protected drawer: (ctx: CanvasRenderingContext2D) => void,
+    ) {
+        super(layoutOptions);
     }
 
     override render(ctx: CanvasRenderingContext2D): void {
@@ -55,16 +66,16 @@ export class CanvasLogo extends ExtensionBase(Component) {
     }
 }
 
-export class SVGLogo extends ExtensionBase(Component) {
+export class SVGLogo extends Logo {
     private svgCanvas: OffscreenCanvas | null = null;
 
     constructor(
-        protected readonly layoutOptions: MaybePointerLike<LayoutOptions>,
+        layoutOptions: MaybePointerLike<LayoutOptions>,
 
         protected readonly svg: string,
         protected readonly svgCoef: number = 0.8,
     ) {
-        super();
+        super(layoutOptions);
 
         (async () => {
             const canvas = new OffscreenCanvas(512, 512);
@@ -81,21 +92,6 @@ export class SVGLogo extends ExtensionBase(Component) {
                 this.svgCanvas = canvas;
             }
         })();
-    }
-
-    override layout(lc: LayoutContext): LayoutResult {
-        return Layout.layout(Component.computePointerLike(this.layoutOptions), lc);
-    }
-
-    override getCacheKey(lc: LayoutContext): string {
-        const { CACHE_KEY_DELIMITER } = Component;
-
-        return super.getCacheKey(lc) + CACHE_KEY_DELIMITER +
-            Object.values(Component.computePointerLike(this.layoutOptions)).join(CACHE_KEY_DELIMITER);
-    }
-
-    override invalidateLayoutCache(): void {
-        this.layoutCache.invalidate();
     }
 
     override render(ctx: CanvasRenderingContext2D): void {

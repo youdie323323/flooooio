@@ -6,17 +6,14 @@ import { renderEntity } from "../../Entity/Renderers/RendererEntityRenderingLink
 import type { MaybePointerLike } from "../Layout/Components/Component";
 import { Component } from "../Layout/Components/Component";
 import { AbstractDynamicLayoutable } from "../Layout/Components/ComponentDynamicLayoutable";
-import Text, { calculateStrokeWidth } from "../Layout/Components/WellKnown/Text";
-import { InlineRenderingCall } from "../Layout/Extensions/ExtensionInlineRenderingCall";
+import { calculateStrokeWidth } from "../Layout/Components/WellKnown/Text";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../Layout/Layout";
 import Layout from "../Layout/Layout";
 import type { WaveRoomPlayerInformation } from "./UITitle";
 import UITitle from "./UITitle";
 
 export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
-    private dummyPlayerEntity: Player = new Player(
-        true,
-
+    private dummyPlayer: Player = new Player(
         -1,
 
         // The coordinate will transform, so we can just send transform value here
@@ -30,8 +27,6 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
         "",
     );
 
-    private nameText: Text;
-
     constructor(
         protected readonly layoutOptions: MaybePointerLike<LayoutOptions>,
 
@@ -42,22 +37,6 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
         protected readonly isEmpty: MaybePointerLike<boolean>,
     ) {
         super();
-
-        this.once("onInitialized", () => {
-            this.context.addComponent(
-                this.nameText = new (InlineRenderingCall(Text))(
-                    {
-                        x: 0,
-                        y: 0,
-                    },
-                    this.name,
-                    10,
-                    "#ffffff",
-                    "center",
-                    () => this.w * 0.9,
-                ),
-            );
-        });
     }
 
     override layout(lc: LayoutContext): LayoutResult {
@@ -67,7 +46,8 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
     override getCacheKey(lc: LayoutContext): string {
         const { CACHE_KEY_DELIMITER } = Component;
 
-        return super.getCacheKey(lc) + CACHE_KEY_DELIMITER +
+        return super.getCacheKey(lc) +
+            CACHE_KEY_DELIMITER +
             Object.values(Component.computePointerLike(this.layoutOptions)).join(CACHE_KEY_DELIMITER);
     }
 
@@ -118,11 +98,25 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
             ctx.strokeText("Empty", 0, 0);
             ctx.fillText("Empty", 0, 0);
         } else {
-            ctx.save();
+            {
+                const computedName = Component.computePointerLike(this.name);
 
-            this.nameText.render(ctx);
+                ctx.save();
 
-            ctx.restore();
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                ctx.textBaseline = 'middle';
+                ctx.textAlign = "center";
+
+                ctx.fillStyle = "white";
+                ctx.strokeStyle = '#000000';
+                ctx.font = `${10}px Ubuntu`;
+                ctx.lineWidth = calculateStrokeWidth(10);
+
+                this.drawScaledText(ctx, computedName, 0, 0, this.w * 0.9);
+
+                ctx.restore();
+            }
 
             const computedId = Component.computePointerLike(this.id);
 
@@ -173,20 +167,44 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
                 ctx.restore();
             }
 
-            renderEntity(ctx, this.dummyPlayerEntity);
+            renderEntity({
+                ctx,
+                entity: this.dummyPlayer,
+                entityOnlyRenderGeneralPart: true,
+            });
         }
 
         ctx.restore();
     }
 
     override destroy(): void {
-        // Remove binded name text component
-        this.nameText.destroy();
-
         // To remove binded component completely, we need to access current context
         // But super.destory remove reference to context, so post-processing
         super.destroy();
 
-        this.dummyPlayerEntity = null;
+        this.dummyPlayer = null;
+    }
+
+    private drawScaledText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number) {
+        const metrics = ctx.measureText(text);
+        const actualWidth = metrics.width;
+
+        ctx.save();
+
+        if (actualWidth > maxWidth) {
+            const scale = maxWidth / actualWidth;
+
+            ctx.translate(x, y);
+            ctx.scale(scale, 1);
+            ctx.translate(-x, -y);
+
+            ctx.strokeText(text, x, y);
+            ctx.fillText(text, x, y);
+        } else {
+            ctx.strokeText(text, x, y);
+            ctx.fillText(text, x, y);
+        }
+
+        ctx.restore();
     }
 }

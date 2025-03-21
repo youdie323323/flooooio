@@ -1,11 +1,11 @@
 import type Player from "../../Player";
-import type { RenderContext } from "../RendererRenderingContext";
+import type { RenderingContext } from "../RendererRenderingContext";
 import RendererFlowerBase from "./RendererFlowerBase";
 
 const TAU = Math.PI * 2;
 
 export default class RendererFlowerNormal extends RendererFlowerBase {
-    override render(context: RenderContext<Player>): void {
+    override render(context: RenderingContext<Player>): void {
         // Non-recursive renderer
         // super.render(context);
 
@@ -69,7 +69,7 @@ export default class RendererFlowerNormal extends RendererFlowerBase {
     }
 
     private drawEyeShape(
-        { ctx }: RenderContext<Player>,
+        { ctx }: RenderingContext<Player>,
         centerX: number, centerY: number,
         widthRadius: number, heightRadius: number,
         angerOffset: number,
@@ -83,7 +83,7 @@ export default class RendererFlowerNormal extends RendererFlowerBase {
         ctx.lineTo(centerX - widthRadius, centerY - heightRadius);
     }
 
-    private drawEyeOutline({ ctx }: RenderContext<Player>, flag = 0) {
+    private drawEyeOutline({ ctx }: RenderingContext<Player>, flag = 0) {
         ctx.beginPath();
 
         ctx.ellipse(7, -5, 2.5 + flag, 6 + flag, 0, 0, TAU);

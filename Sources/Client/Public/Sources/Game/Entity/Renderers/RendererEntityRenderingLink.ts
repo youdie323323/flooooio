@@ -4,7 +4,7 @@ import Player from "../Player";
 import RendererFlower from "./Flower/RendererFlower";
 import RendererMob from "./Mob/RendererMob";
 import type Renderer from "./Renderer";
-import type { RenderContext } from "./RendererRenderingContext";
+import type { RenderingContext } from "./RendererRenderingContext";
 
 const rendererRegistry = new Map<Function, Renderer<Entity>>();
 
@@ -24,16 +24,13 @@ export function getRenderer(entityClass: Function): Renderer<Entity> {
     return rendererRegistry.get(entityClass);
 }
 
-export function renderEntity<T extends Mob | Player>(ctx: CanvasRenderingContext2D, entity: T): void {
+export function renderEntity<T extends Mob | Player>(renderingContext: RenderingContext<T>): void {
+    const { entity, ctx } = renderingContext;
+
     const renderer = getRenderer(entity.constructor);
     if (!renderer) return;
 
-    if (!renderer.isEntityRenderCandidate(entity)) return;
-
-    const renderingContext = {
-        ctx,
-        entity,
-    } satisfies RenderContext<T>;
+    if (!renderer.isRenderingCandidate(renderingContext)) return;
 
     ctx.save();
 

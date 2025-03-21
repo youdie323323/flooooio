@@ -18,8 +18,6 @@ export default class Player extends Entity {
     isDev: boolean;
 
     constructor(
-        onlyDrawGeneralPart: boolean = false,
-
         id: number,
         x: number,
         y: number,
@@ -31,7 +29,7 @@ export default class Player extends Entity {
 
         readonly nickname: string,
     ) {
-        super(onlyDrawGeneralPart, id, x, y, angle, size, health);
+        super(id, x, y, angle, size, health);
 
         this.angryT = 0;
         this.sadT = 0;

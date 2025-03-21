@@ -16,8 +16,6 @@ export default class Mob extends Entity {
     public angleSpeed: number;
 
     constructor(
-        onlyDrawGeneralPart: boolean = false,
-
         id: number,
         x: number,
         y: number,
@@ -32,6 +30,6 @@ export default class Mob extends Entity {
 
         readonly isFirstSegment: boolean,
     ) {
-        super(onlyDrawGeneralPart, id, x, y, angle, size, health);
+        super(id, x, y, angle, size, health);
     }
 }

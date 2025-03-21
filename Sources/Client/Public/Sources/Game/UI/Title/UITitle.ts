@@ -180,7 +180,7 @@ export default class UITitle extends AbstractUI {
             this.biome = waveRoomBiome;
         },
         [Clientbound.WAVE_STARTED]: (reader: BinaryReader): void => {
-            this.squadMenuContainer.setVisible(false, true, AnimationType.Zoom);
+            this.squadMenuContainer.setVisible(false, true, AnimationType.ZOOM);
 
             uiCtx.switchUI("game");
 
@@ -212,14 +212,14 @@ export default class UITitle extends AbstractUI {
         setTimeout(() => {
             this.connectingText.setVisible(true, false);
             setTimeout(() => {
-                this.connectingText.setVisible(false, true, AnimationType.Zoom);
+                this.connectingText.setVisible(false, true, AnimationType.ZOOM);
                 setTimeout(() => {
-                    this.loggingInText.setVisible(true, true, AnimationType.Zoom);
+                    this.loggingInText.setVisible(true, true, AnimationType.ZOOM);
                     setTimeout(() => {
-                        this.loggingInText.setVisible(false, true, AnimationType.Zoom);
+                        this.loggingInText.setVisible(false, true, AnimationType.ZOOM);
                         setTimeout(() => {
                             this.onLoadedComponents.forEach(c => {
-                                c.setVisible(true, true, AnimationType.Zoom);
+                                c.setVisible(true, true, AnimationType.ZOOM);
                             });
                         }, 150);
                     }, 2000);
@@ -250,7 +250,7 @@ export default class UITitle extends AbstractUI {
                         new Text(
                             {
                                 x: 0,
-                                y: 4,
+                                y: 5,
                             },
                             desc,
                             11,
@@ -360,7 +360,7 @@ export default class UITitle extends AbstractUI {
                             () => {
                                 settingIsOpen = false;
 
-                                settingContainer.setVisible(settingIsOpen, true, AnimationType.Slide, "v");
+                                settingContainer.setVisible(settingIsOpen, true, AnimationType.SLIDE, "v");
                             },
                         ),
 
@@ -414,7 +414,7 @@ export default class UITitle extends AbstractUI {
                         () => {
                             settingIsOpen = !settingIsOpen;
 
-                            settingContainer.setVisible(settingIsOpen, true, AnimationType.Slide, "v");
+                            settingContainer.setVisible(settingIsOpen, true, AnimationType.SLIDE, "v");
                         },
 
                         "#599dd8",
@@ -538,7 +538,7 @@ export default class UITitle extends AbstractUI {
                         new Text(
                             {
                                 x: 7,
-                                y: 3,
+                                y: 4,
                             },
                             "Sign in with Discord",
                             13,
@@ -678,7 +678,7 @@ export default class UITitle extends AbstractUI {
                     new Text(
                         {
                             x: 0,
-                            y: 1,
+                            y: 2,
                         },
                         "Ready",
                         16,
@@ -707,7 +707,7 @@ export default class UITitle extends AbstractUI {
                     if (this.squadMenuContainer.visible === false) {
                         clientWebsocket.packetServerbound.sendWaveRoomFindPublic(this.biome);
 
-                        this.squadMenuContainer.setVisible(true, true, AnimationType.Zoom);
+                        this.squadMenuContainer.setVisible(true, true, AnimationType.ZOOM);
 
                         this.statusTextRef = SquadContainerStatusText.SQUAD_CREATING;
 
@@ -745,7 +745,7 @@ export default class UITitle extends AbstractUI {
                     new Text(
                         {
                             x: 0,
-                            y: 1,
+                            y: 2,
                         },
                         "Squad",
                         13,
@@ -771,7 +771,7 @@ export default class UITitle extends AbstractUI {
                 () => {
                     clientWebsocket.packetServerbound.sendWaveRoomCreate(this.biome);
 
-                    this.squadMenuContainer.setVisible(true, true, AnimationType.Zoom);
+                    this.squadMenuContainer.setVisible(true, true, AnimationType.ZOOM);
 
                     this.statusTextRef = SquadContainerStatusText.SQUAD_CREATING;
 
@@ -802,7 +802,7 @@ export default class UITitle extends AbstractUI {
                         new Text(
                             {
                                 x: 0,
-                                y: 1,
+                                y: 0,
                             },
                             name,
                             10,
@@ -905,7 +905,7 @@ export default class UITitle extends AbstractUI {
                     10,
 
                     () => {
-                        this.squadMenuContainer.setVisible(false, true, AnimationType.Zoom);
+                        this.squadMenuContainer.setVisible(false, true, AnimationType.ZOOM);
 
                         readyToggle = false;
 
@@ -934,7 +934,7 @@ export default class UITitle extends AbstractUI {
                 new Text(
                     {
                         x: 26,
-                        y: 27,
+                        y: 26,
                     },
                     "Public",
                     10,
@@ -943,7 +943,7 @@ export default class UITitle extends AbstractUI {
                 new Text(
                     () => ({
                         x: 75,
-                        y: 32,
+                        y: 31,
                         w: 0,
                         h: 0,
                     }),
@@ -994,20 +994,20 @@ export default class UITitle extends AbstractUI {
                     {
                         x: 274,
                         y: 183 + 1,
-                        w: 50,
-                        h: 18,
+                        w: 46,
+                        h: 13,
                     },
 
                     2,
 
-                    10,
-                    0.05,
+                    2.4,
+                    1,
 
                     [
                         new Text(
                             {
-                                x: 0,
-                                y: 0,
+                                x: 7,
+                                y: 1,
                             },
                             "Join",
                             10,
@@ -1037,7 +1037,7 @@ export default class UITitle extends AbstractUI {
                         new Text(
                             {
                                 x: 3,
-                                y: 2,
+                                y: 1,
                             },
                             "Find Public",
                             9,
@@ -1066,7 +1066,7 @@ export default class UITitle extends AbstractUI {
                         new Text(
                             {
                                 x: 5,
-                                y: 2,
+                                y: 1,
                             },
                             "New",
                             9,
@@ -1093,29 +1093,28 @@ export default class UITitle extends AbstractUI {
                                 new CoordinatedStaticSpace(1, 1, 0, 0),
                                 new Text(
                                     {
-                                        x: 2,
-                                        y: 2,
+                                        x: 1,
+                                        y: 3,
                                     },
                                     () => tooltipLabel,
-                                    10,
+                                    9,
                                 ),
                                 new CoordinatedStaticSpace(1, 1, 0, 15),
                             ],
                             2,
                             ["top"],
-                            1,
+                            2,
                         )
                     )(
                         {
                             x: 10,
-                            y: 186,
+                            y: 187,
                         },
                         () => "Code: " + (this.waveRoomCode || ""),
                         9,
                         "#ffffff",
                         "left",
-                        null,
-    
+
                         true,
                         () => this.waveRoomCode || "",
                     );
@@ -1215,7 +1214,6 @@ export default class UITitle extends AbstractUI {
             const backgroundEntityType = spawnableMobTypes[Math.floor(Math.random() * spawnableMobTypes.length)];
 
             const backgroundEntity = new Mob(
-                true,
                 -1,
                 1,
                 randomFloat(-100, (this.canvas.height / uiScaleFactor) + 100),
@@ -1247,7 +1245,11 @@ export default class UITitle extends AbstractUI {
         const s3 = Math.min(100, deltaTime) / 60;
 
         Array.from(backgroundEntities.values()).toSorted((a, b) => a.size + b.size).forEach(e => {
-            renderEntity(ctx, e);
+            renderEntity({
+                ctx,
+                entity: e,
+                entityOnlyRenderGeneralPart: true,
+            });
 
             e.x += e.moveSpeed * s3;
             e.y += Math.sin(e.angle * 0.2) * 1.5 * s3;

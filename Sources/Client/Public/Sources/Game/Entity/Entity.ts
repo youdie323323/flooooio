@@ -49,16 +49,15 @@ export default abstract class Entity {
     hpAlpha: number;
 
     constructor(
-        /**
-         * Depicts the broad outlines of the entity and does not depict any other dynamic information.
-         */
-        public readonly onlyDrawGeneralPart: boolean = false,
-
         readonly id: number,
+
         x: number,
         y: number,
+
         angle: number,
+
         size: number,
+        
         health: number,
     ) {
         this.x = this.nx = this.ox = x;

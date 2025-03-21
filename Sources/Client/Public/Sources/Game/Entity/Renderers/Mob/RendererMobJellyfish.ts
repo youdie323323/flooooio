@@ -1,11 +1,11 @@
 import type Mob from "../../Mob";
-import type { RenderContext } from "../RendererRenderingContext";
+import type { RenderingContext } from "../RendererRenderingContext";
 import RendererMobBase from "./RendererMobBase";
 
 const TAU = Math.PI * 2;
 
 export default class RendererMobJellyfish extends RendererMobBase {
-    override render(context: RenderContext<Mob>): void {
+    override render(context: RenderingContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);
 

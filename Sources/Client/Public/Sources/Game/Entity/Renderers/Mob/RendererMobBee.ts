@@ -1,13 +1,13 @@
 import type { ColorCode} from "../../../../../../../Shared/Utils/Color";
 import { darkend, DARKEND_BASE } from "../../../../../../../Shared/Utils/Color";
 import type Mob from "../../Mob";
-import type { RenderContext } from "../RendererRenderingContext";
+import type { RenderingContext } from "../RendererRenderingContext";
 import RendererMobBase from "./RendererMobBase";
 
 const TAU = Math.PI * 2;
 
 export default class RendererMobBee extends RendererMobBase {
-    override render(context: RenderContext<Mob>): void {
+    override render(context: RenderingContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);
 
@@ -58,11 +58,11 @@ export default class RendererMobBee extends RendererMobBase {
         ctx.strokeStyle = scolor;
         ctx.stroke();
 
-        // Antennas
-        {
+        { // Antennas
             ctx.strokeStyle = bcolor;
             ctx.fillStyle = bcolor;
             ctx.lineWidth = 3;
+
             for (let dir = -1; dir <= 1; dir += 2) {
                 ctx.beginPath();
                 ctx.moveTo(25, 5 * dir);
