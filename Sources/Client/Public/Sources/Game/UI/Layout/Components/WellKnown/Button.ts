@@ -49,16 +49,12 @@ export class Button extends StaticPanelContainer {
         );
 
         this.once("onInitialized", () => {
-            this.context.addComponent(
-                this.addChild(
-                    new StaticHContainer(
-                        {
-                            x: 0,
-                            y: 0,
-                        },
-                    ).addChildren(...buttonComponents),
-                ),
-            );
+            this.addChild(new StaticHContainer(
+                {
+                    x: 0,
+                    y: 0,
+                },
+            ).addChildren(...buttonComponents));
         });
 
         this.on("onFocus", () => {

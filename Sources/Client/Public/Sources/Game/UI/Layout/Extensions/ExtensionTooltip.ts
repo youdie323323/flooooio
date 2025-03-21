@@ -1,21 +1,24 @@
-import type { Components } from "../Components/Component";
-import type { PartialSizeLayoutOptions} from "../Components/WellKnown/Container";
+import type { Components, MaybePointerLike } from "../Components/Component";
+import type { PartialSizeLayoutOptions } from "../Components/WellKnown/Container";
 import { StaticTranslucentPanelContainer } from "../Components/WellKnown/Container";
 import type { ComponentExtensionTemplate, ExtensionConstructor } from "./Extension";
 
-export type Position = "top" | "bottom" | "left" | "right";
+export type TooltipPosition = "top" | "bottom" | "left" | "right";
+
+export const DEFAULT_TOOLTIP_POSITIONS = ["top", "bottom", "left", "right"] as const;
 
 export default function Tooltip<T extends ExtensionConstructor>(
     Base: T,
-    
+
     tooltipComponents: Array<Components>,
     tooltipOffset: number,
-    preferredTooltipPositions: readonly Position[] = ["top", "bottom", "left", "right"] as const,
+    tooltipPreferredPositions: ReadonlyArray<TooltipPosition> = DEFAULT_TOOLTIP_POSITIONS,
+    tooltipRectRadii: MaybePointerLike<number> = 3,
 ) {
     abstract class MixedBase extends Base implements ComponentExtensionTemplate {
         private static readonly OPACITY_START: number = 0;
         private static readonly OPACITY_END: number = 1;
-        private static readonly OPACITY_CONTAINER_END: number = 0.3;
+        private static readonly OPACITY_CONTAINER_END: number = 0.5;
         private static readonly OPACITY_STEP: number = 0.035;
         private static readonly OPACITY_STEP_INTERVAL: number = 1;
 
@@ -27,7 +30,7 @@ export default function Tooltip<T extends ExtensionConstructor>(
 
         constructor(...args: ReadonlyArray<any>) {
             super(...args);
-    
+
             this.once("onInitialized", () => {
                 this.context.addComponent(
                     (
@@ -35,37 +38,40 @@ export default function Tooltip<T extends ExtensionConstructor>(
                             () => this.findOptimalPosition(),
                             () => this.opacity * MixedBase.OPACITY_CONTAINER_END,
                             () => this.opacity,
+                            tooltipRectRadii,
                         )
                     ).addChildren(...tooltipComponents),
                 );
             });
-    
+
             this.on("onFocus", () => {
                 this.isFocused = true;
                 this.updateOpacityAnimation();
             });
-    
+
             this.on("onBlur", () => {
                 this.isFocused = false;
                 this.updateOpacityAnimation();
             });
         }
-    
+
         private updateOpacityAnimation(): void {
             if (this.opacityInterval) {
                 clearInterval(this.opacityInterval);
                 this.opacityInterval = null;
             }
-    
+
             this.opacityInterval = setInterval(
                 () => this.updateOpacity(),
                 MixedBase.OPACITY_STEP_INTERVAL,
             );
         }
-    
+
         private updateOpacity(): void {
-            const targetOpacity = this.isFocused ? MixedBase.OPACITY_END : MixedBase.OPACITY_START;
-            
+            const targetOpacity = this.isFocused
+                ? MixedBase.OPACITY_END
+                : MixedBase.OPACITY_START;
+
             if (this.isFocused) {
                 this.opacity = Math.min(MixedBase.OPACITY_END, this.opacity + MixedBase.OPACITY_STEP);
                 if (this.opacity >= targetOpacity) {
@@ -78,7 +84,7 @@ export default function Tooltip<T extends ExtensionConstructor>(
                 }
             }
         }
-    
+
         private clearOpacityInterval(): void {
             if (this.opacityInterval) {
                 clearInterval(this.opacityInterval);
@@ -99,7 +105,7 @@ export default function Tooltip<T extends ExtensionConstructor>(
                 h: tooltipHeight,
             } = this.tooltipContainer;
 
-            for (const position of preferredTooltipPositions) {
+            for (const position of tooltipPreferredPositions) {
                 let x = 0;
                 let y = 0;
 

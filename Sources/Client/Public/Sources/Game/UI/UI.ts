@@ -1,6 +1,6 @@
 import type { Biome } from "../../../../../Shared/Biome";
 import type { StaticAdherableClientboundHandler } from "../Websocket/Packet/PacketClientbound";
-import { type Components, renderPossibleComponents, hasClickableListeners, hasInteractiveListeners } from "./Layout/Components/Component";
+import { type Components, renderPossibleComponents, hasClickableListeners, hasInteractiveListeners, OBSTRUCTION_AFFECTABLE } from "./Layout/Components/Component";
 import { type AnyStaticContainer } from "./Layout/Components/WellKnown/Container";
 import { BLACKLISTED } from "./Layout/Extensions/ExtensionInlineRenderingCall";
 
@@ -88,7 +88,7 @@ export default abstract class AbstractUI {
                 this.canvas.height / UI_BASE_HEIGHT,
             );
 
-            this.updateComponentsLayout();
+            this.updateComponentsLayout(true);
         };
 
         {
@@ -168,21 +168,16 @@ export default abstract class AbstractUI {
     }
 
     public removeComponent(component: Components): void {
-        const exists = this.components.has(component);
-        if (exists) this.components.delete(component);
+        this.components.delete(component);
     }
 
-    public addChildComponent(targetContainer: AnyStaticContainer, child: Components): void {
-        targetContainer.addChild(child);
-
+    public addChildComponent(child: Components): void {
         this.addComponent(child);
 
         this.childComponents.add(child);
     }
 
-    public removeChildComponent(targetContainer: AnyStaticContainer, child: Components): void {
-        targetContainer.removeChild(child);
-
+    public removeChildComponent(child: Components): void {
         this.removeComponent(child);
 
         this.childComponents.delete(child);
@@ -204,10 +199,7 @@ export default abstract class AbstractUI {
         for (let i = targetIndex + 1; i < allComponents.length; i++) {
             const component = allComponents[i];
 
-            if (
-                component.isRenderable &&
-                this.overlapsComponent(component, x, y)
-            ) {
+            if (this.isComponentInteractableWithPosition(component, x, y)) {
                 return true;
             }
         }
@@ -215,8 +207,18 @@ export default abstract class AbstractUI {
         return false;
     }
 
-    private isComponentInteractable(targetComponent: Components, x: number, y: number): boolean {
-        return this.overlapsComponent(targetComponent, x, y) &&
+    private isComponentInteractable(targetComponent: Components): boolean {
+        return targetComponent[OBSTRUCTION_AFFECTABLE] &&
+            (
+                hasInteractiveListeners(targetComponent) ||
+                hasClickableListeners(targetComponent)
+            ) &&
+            targetComponent.isRenderable;
+    }
+
+    private isComponentInteractableWithPosition(targetComponent: Components, x: number, y: number): boolean {
+        return this.isComponentInteractable(targetComponent) &&
+            this.overlapsComponent(targetComponent, x, y) &&
             !this.isComponentObstructed(targetComponent, x, y);
     }
 
@@ -226,7 +228,7 @@ export default abstract class AbstractUI {
             .filter(c => !this.childComponents.has(c));
     }
 
-    private updateComponentsLayout() {
+    private updateComponentsLayout(isResized: boolean): void {
         const ctx = this.canvas.getContext("2d");
         if (!ctx) return;
 
@@ -234,9 +236,11 @@ export default abstract class AbstractUI {
         const scaledHeight = this.canvas.height / uiScaleFactor;
 
         this.getTopLevelComponents().forEach(component => {
+            if (component.isAnimating) return;
+
             // Only call top-level invalidateLayoutCache, 
             // container invalidateLayoutCache will invalidate child layout too
-            component.invalidateLayoutCache();
+            if (isResized) component.invalidateLayoutCache();
 
             const layout = component.cachedLayout({
                 ctx,
@@ -274,11 +278,7 @@ export default abstract class AbstractUI {
 
         // Click handling
         for (const component of this.components) {
-            if (
-                component.isRenderable &&
-                hasClickableListeners(component) &&
-                this.isComponentInteractable(component, this.mouseX, this.mouseY)
-            ) {
+            if (this.isComponentInteractableWithPosition(component, this.mouseX, this.mouseY)) {
                 this.clickedComponent = component;
                 this.clickedComponent.emit("onMouseDown");
 
@@ -293,7 +293,7 @@ export default abstract class AbstractUI {
         this.onMouseUp(event);
 
         if (this.clickedComponent) {
-            if (this.isComponentInteractable(this.clickedComponent, this.mouseX, this.mouseY)) {
+            if (this.isComponentInteractableWithPosition(this.clickedComponent, this.mouseX, this.mouseY)) {
                 this.clickedComponent.emit("onMouseUp");
                 this.clickedComponent.emit("onClick");
             }
@@ -318,17 +318,20 @@ export default abstract class AbstractUI {
 
     private emitInteractiveEvents(): void {
         this.components.forEach(component => {
-            if (hasInteractiveListeners(component)) {
-                const isHoverable = this.isComponentInteractable(component, this.mouseX, this.mouseY);
+            if (
+                // Make it only work for component which has interactive listeners
+                this.isComponentInteractable(component)
+            ) {
+                const isHoverable = this.isComponentInteractableWithPosition(component, this.mouseX, this.mouseY);
 
-                if (component.isRenderable && isHoverable) {
+                if (isHoverable) {
                     if (this.hoveredComponent !== component) {
                         this.hoveredComponent?.emit?.("onBlur");
                         this.hoveredComponent = component;
                         component.emit("onFocus");
                     }
                 } else if (
-                    // Also !(component.isRenderable || isHovering), previous hoveredComponent is this component and 
+                    // Also !isHovering, previous hoveredComponent is this component and 
                     // if was not hovered, emit onBlur event
                     this.hoveredComponent === component
                 ) {

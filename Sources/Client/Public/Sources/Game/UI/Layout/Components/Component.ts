@@ -169,10 +169,20 @@ export type ComponentEvents =
     & typeof INTERACTIVE_EVENTS
     & typeof CLICKABLE_EVENTS;
 
+export const OBSTRUCTION_AFFECTABLE: unique symbol = Symbol("obstructionAffectable");
+
+export interface ComponentSymbol {
+    [OBSTRUCTION_AFFECTABLE]?: boolean;
+}
+
 /**
  * Base Component class for all UI components.
  */
-export abstract class Component extends Emitter<ComponentEvents> implements Layoutable {
+export abstract class Component<AdheredEvents extends EventMap = EventMap>
+    extends Emitter<ComponentEvents & AdheredEvents> implements Layoutable, ComponentSymbol {
+    // Prepare base symbols
+    public [OBSTRUCTION_AFFECTABLE]: boolean = true;
+
     protected readonly ANIMATION_ZOOM_DURATION: number = 100;
     protected readonly ANIMATION_SLIDE_DURATION: number = 350;
 
@@ -263,17 +273,23 @@ export abstract class Component extends Emitter<ComponentEvents> implements Layo
     public abstract layout(lc: LayoutContext): LayoutResult;
 
     /**
-     * Cache layout to reduce lags.
+     * Cached layout to reduce lags.
      */
     public cachedLayout(lc: LayoutContext): LayoutResult {
         const { containerWidth, containerHeight, originX, originY } = lc;
 
-        const cacheKey = `${containerWidth}${containerHeight}${originX}${originY}` + this.getCacheKey();
+        const { CACHE_KEY_DELIMITER } = Component;
+
+        const cacheKey =
+            containerWidth + CACHE_KEY_DELIMITER +
+            containerHeight + CACHE_KEY_DELIMITER +
+            originX + CACHE_KEY_DELIMITER +
+            originY +
+            this.getCacheKey(lc);
+
         if (!this.layoutCache.isDirtyCache(cacheKey)) {
             const cached = this.layoutCache.get(cacheKey);
-            if (cached) {
-                return cached;
-            }
+            if (cached) return cached;
         }
 
         const result = this.layout(lc);
@@ -283,13 +299,20 @@ export abstract class Component extends Emitter<ComponentEvents> implements Layo
         return result;
     }
 
+    protected static readonly CACHE_KEY_DELIMITER: string = "|";
+
     /**
      * Generate cache key that ensure cache is same.
      * 
      * @returns Cache key
      */
-    public getCacheKey(): string {
-        return `${this.x}${this.y}${this.w}${this.h}`;
+    public getCacheKey(lc: LayoutContext): string {
+        const { CACHE_KEY_DELIMITER } = Component;
+
+        return this.x + CACHE_KEY_DELIMITER +
+            this.y + CACHE_KEY_DELIMITER +
+            this.w + CACHE_KEY_DELIMITER +
+            this.h;
     }
 
     /**
@@ -400,11 +423,6 @@ export abstract class Component extends Emitter<ComponentEvents> implements Layo
         // ctx.lineWidth = 1;
         // ctx.strokeRect(this.x, this.y, this.w, this.h);
 
-        // ctx.font = "12px Arial";
-        // ctx.fillStyle = "black";
-        // ctx.textBaseline = "bottom";
-        // ctx.fillText(this.constructor.name, this.x, this.y);
-
         ctx.restore();
     }
 
@@ -462,6 +480,10 @@ export abstract class Component extends Emitter<ComponentEvents> implements Layo
     public destroy(): void {
         // Remove all event listeners from component
         this.removeAllListeners();
+
+        // Remove layout cache
+        this.layoutCache.clear();
+        this.layoutCache = null;
 
         this.context.removeComponent(this as unknown as Components);
 

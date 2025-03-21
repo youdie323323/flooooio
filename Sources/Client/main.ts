@@ -20,7 +20,7 @@ export let antennaScaleFactor = 1;
 
 export let cameraController: CameraController;
 
-const init = async function () {
+const init = async () => {
     // Generate tilesets beforehand so no need to generate them multiple times
     for (const biome in BIOME_SVG_TILESET) {
         const parsedBiome = parseInt(biome) as Biome;

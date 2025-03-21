@@ -241,9 +241,11 @@ export default class TextInput extends ExtensionBase(Component) {
         return Layout.layout(Component.computePointerLike(this.layoutOptions), lc);
     }
 
-    override getCacheKey(): string {
-        return super.getCacheKey() +
-            Object.values(Component.computePointerLike(this.layoutOptions)).join("");
+    override getCacheKey(lc: LayoutContext): string {
+        const { CACHE_KEY_DELIMITER } = Component;
+
+        return super.getCacheKey(lc) + CACHE_KEY_DELIMITER +
+            Object.values(Component.computePointerLike(this.layoutOptions)).join(CACHE_KEY_DELIMITER);
     }
 
     override invalidateLayoutCache(): void {
@@ -698,11 +700,11 @@ export default class TextInput extends ExtensionBase(Component) {
     }
 
     private drawTextBox(fn: () => void) {
-        const ctx = this.ctx, w = this.w, h = this.h, br = this.borderRadius, bw = this.borderWidth;
+        const ctx = this.ctx, w = this.w, h = this.h, bw = this.borderWidth;
 
         ctx.fillStyle = this.backgroundColor;
         ctx.beginPath();
-        ctx.roundRect(bw, bw, w - bw * 2, h - bw * 2, br - 2);
+        ctx.roundRect(bw, bw, w - bw * 2, h - bw * 2, 0.1);
         ctx.fill();
 
         fn();

@@ -36,9 +36,11 @@ export default class Toggle extends ExtensionBase(Component) {
         return Layout.layout(Component.computePointerLike(this.layoutOptions), lc);
     }
 
-    override getCacheKey(): string {
-        return super.getCacheKey() +
-            Object.values(Component.computePointerLike(this.layoutOptions)).join("");
+    override getCacheKey(lc: LayoutContext): string {
+        const { CACHE_KEY_DELIMITER } = Component;
+
+        return super.getCacheKey(lc) + CACHE_KEY_DELIMITER +
+            Object.values(Component.computePointerLike(this.layoutOptions)).join(CACHE_KEY_DELIMITER);
     }
 
     override invalidateLayoutCache(): void {

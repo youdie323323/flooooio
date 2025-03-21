@@ -4,6 +4,7 @@ import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from ".
 import type { WaveRoomCode } from "../../../../../../Shared/WaveRoomCode";
 import { isWaveRoomCode } from "../../../../../../Shared/WaveRoomCode";
 import { clientWebsocket, cameraController, deltaTime, uiCtx } from "../../../../../Main";
+import type { ColorCode } from "../../../../../../Shared/Utils/Color";
 import { DARKEND_BASE } from "../../../../../../Shared/Utils/Color";
 import { Rarity } from "../../../../../../Shared/Entity/Statics/EntityRarity";
 import { PETAL_TYPES } from "../../../../../../Shared/Entity/Statics/EntityType";
@@ -33,7 +34,8 @@ import SWAP_BAG_SVG from "./Assets/swap_bag.svg";
 import MOLECULE_SVG from "./Assets/molecule.svg";
 import SCROLL_UNFURLED_SVG from "./Assets/scroll_unfurled.svg";
 import DISCORD_ICON_SVG from "./Assets/discord_icon.svg";
-import Tooltip from "../Layout/Extensions/ExtensionTooltip";
+import type { TooltipPosition } from "../Layout/Extensions/ExtensionTooltip";
+import Tooltip, { DEFAULT_TOOLTIP_POSITIONS } from "../Layout/Extensions/ExtensionTooltip";
 
 const TAU = Math.PI * 2;
 
@@ -240,7 +242,7 @@ export default class UITitle extends AbstractUI {
         this.resetWaveState();
 
         {
-            const makeLowerLeftToolTippedButton = (desc: string) => {
+            const makeTitleToolTippedButton = (position: TooltipPosition, desc: string, offset: number = 6) => {
                 return Tooltip(
                     Button,
                     [
@@ -253,39 +255,293 @@ export default class UITitle extends AbstractUI {
                             desc,
                             11,
                         ),
-                        new CoordinatedStaticSpace(1, 1, 0, 20),
+                        new CoordinatedStaticSpace(1, 1, 0, 22),
                     ],
-                    6,
-                    ["right"] as const,
+                    offset,
+                    // For safety
+                    [position].concat(DEFAULT_TOOLTIP_POSITIONS.filter(pos => pos !== position)),
                 );
             };
 
             {
-                const discordButton = new (makeLowerLeftToolTippedButton("Join our Discord community!"))(
-                    {
-                        x: 15,
-                        y: 286,
-                        w: 40,
-                        h: 40,
 
-                        invertYCoordinate: true,
+                {
+                    const discordButton = new (makeTitleToolTippedButton("right", "Join our Discord community!"))(
+                        {
+                            x: 15,
+                            y: 286,
+                            w: 40,
+                            h: 40,
+
+                            invertYCoordinate: true,
+                        },
+
+                        3,
+
+                        3,
+                        1,
+
+                        [
+                            new SVGLogo(
+                                {
+                                    x: 0,
+                                    y: 0,
+                                    w: 40,
+                                    h: 40,
+                                },
+                                DISCORD_ICON_SVG,
+                                0.7,
+                            ),
+                        ],
+
+                        () => {
+                            const windowProxy = window.open("unko");
+                            windowProxy.document.write('まだ実装されてないわボケー');
+                        },
+
+                        "#5865f2",
+                        true,
+                    );
+
+                    this.addComponent(discordButton);
+                }
+
+                {
+                    const makeSettingComponents = (y: number, storageKey: FlooooIoDefaultSettingKeys, description: string): [
+                        Toggle,
+                        Text,
+                    ] => {
+                        const settingToggle = new Toggle(
+                            {
+                                x: 5,
+                                y: y - 1,
+                                w: 17,
+                                h: 17,
+                            },
+                            (t: boolean): void => {
+                                settingToggle.setToggle(t);
+
+                                SettingStorage.set(storageKey, t);
+                            },
+                        )
+                            // Load existed setting
+                            .setToggle(SettingStorage.get(storageKey));
+
+                        return [
+                            settingToggle,
+                            new Text(
+                                {
+                                    x: 26,
+                                    y,
+                                },
+                                description,
+                                11,
+                            ),
+                        ];
+                    };
+
+                    const settingContainer = new StaticPanelContainer(
+                        {
+                            x: 72,
+                            y: 225,
+
+                            invertYCoordinate: true,
+                        },
+                        "#aaaaaa",
+                        0.1,
+                    ).addChildren(
+                        new UICloseButton(
+                            {
+                                x: 150 - 4,
+                                y: 2,
+                            },
+                            12,
+
+                            () => {
+                                settingIsOpen = false;
+
+                                settingContainer.setVisible(settingIsOpen, true, AnimationType.Slide, "v");
+                            },
+                        ),
+
+                        new Text(
+                            {
+                                x: 44,
+                                y: 4,
+                            },
+                            "Settings",
+                            16,
+                        ),
+
+                        // Keyboard movement
+                        ...makeSettingComponents(40, "keyboard_control", "Keyboard movement"),
+
+                        // Movement helper
+                        ...makeSettingComponents(40 + 30, "movement_helper", "Movement helper"),
+
+                        new CoordinatedStaticSpace(15, 15, 150, 190 - 4),
+                    );
+
+                    let settingIsOpen = false;
+
+                    const settingButton = new (makeTitleToolTippedButton("right", "Inventory"))(
+                        {
+                            x: 15,
+                            y: 229,
+                            w: 40,
+                            h: 40,
+
+                            invertYCoordinate: true,
+                        },
+
+                        3,
+
+                        3,
+                        1,
+
+                        [
+                            new SVGLogo(
+                                {
+                                    x: 0,
+                                    y: 0,
+                                    w: 40,
+                                    h: 40,
+                                },
+                                SWAP_BAG_SVG,
+                            ),
+                        ],
+
+                        () => {
+                            settingIsOpen = !settingIsOpen;
+
+                            settingContainer.setVisible(settingIsOpen, true, AnimationType.Slide, "v");
+                        },
+
+                        "#599dd8",
+                        true,
+                    );
+
+                    settingContainer.setVisible(false, false);
+
+                    this.addComponent(settingContainer);
+
+                    this.addComponent(settingButton);
+                }
+
+                {
+                    const craftButton = new (makeTitleToolTippedButton("right", "Crafting"))(
+                        {
+                            x: 15,
+                            y: 173,
+                            w: 40,
+                            h: 40,
+
+                            invertYCoordinate: true,
+                        },
+
+                        3,
+
+                        3,
+                        1,
+
+                        [
+                            new SVGLogo(
+                                {
+                                    x: 0,
+                                    y: 0,
+                                    w: 40,
+                                    h: 40,
+                                },
+                                MOLECULE_SVG,
+                            ),
+                        ],
+
+                        () => {
+                            console.log("called");
+                        },
+
+                        "#db9d5a",
+                        true,
+                    );
+
+                    this.addComponent(craftButton);
+                }
+
+                {
+                    const changelogButton = new (makeTitleToolTippedButton("right", "Changelog"))(
+                        {
+                            x: 15,
+                            y: 116,
+                            w: 40,
+                            h: 40,
+
+                            invertYCoordinate: true,
+                        },
+
+                        3,
+
+                        3,
+                        1,
+
+                        [
+                            new SVGLogo(
+                                {
+                                    x: 0,
+                                    y: 0,
+                                    w: 40,
+                                    h: 40,
+                                },
+                                SCROLL_UNFURLED_SVG,
+                            ),
+                        ],
+
+                        () => {
+                            console.log("called");
+                        },
+
+                        "#9bb56b",
+                        true,
+                    );
+
+                    this.addComponent(changelogButton);
+                }
+            }
+
+            {
+                const discordLinkButton = new (makeTitleToolTippedButton("left", "Link your Discord account to save your progress!", 10))(
+                    {
+                        x: 172,
+                        y: 6,
+                        w: 162,
+                        h: 21,
+
+                        invertXCoordinate: true,
                     },
 
-                    3,
+                    2,
 
-                    3,
+                    2,
                     1,
 
                     [
                         new SVGLogo(
                             {
-                                x: 0,
+                                x: 3,
                                 y: 0,
-                                w: 40,
-                                h: 40,
+                                w: 21,
+                                h: 21,
                             },
                             DISCORD_ICON_SVG,
                             0.7,
+                        ),
+
+                        new Text(
+                            {
+                                x: 7,
+                                y: 3,
+                            },
+                            "Sign in with Discord",
+                            13,
                         ),
                     ],
 
@@ -298,207 +554,7 @@ export default class UITitle extends AbstractUI {
                     true,
                 );
 
-                this.addComponent(discordButton);
-            }
-
-            {
-                const makeSettingComponents = (y: number, storageKey: FlooooIoDefaultSettingKeys, description: string): [
-                    Toggle,
-                    Text,
-                ] => {
-                    const settingToggle = new Toggle(
-                        {
-                            x: 5,
-                            y: y - 1,
-                            w: 17,
-                            h: 17,
-                        },
-                        (t: boolean): void => {
-                            settingToggle.setToggle(t);
-
-                            SettingStorage.set(storageKey, t);
-                        },
-                    )
-                        // Load existed setting
-                        .setToggle(SettingStorage.get(storageKey));
-
-                    return [
-                        settingToggle,
-                        new Text(
-                            {
-                                x: 26,
-                                y,
-                            },
-                            description,
-                            11,
-                        ),
-                    ];
-                };
-
-                const settingContainer = new StaticPanelContainer(
-                    {
-                        x: 72,
-                        y: 225,
-
-                        invertYCoordinate: true,
-                    },
-                    "#aaaaaa",
-                    0.1,
-                ).addChildren(
-                    new UICloseButton(
-                        {
-                            x: 150 - 4,
-                            y: 2,
-                        },
-                        12,
-
-                        () => {
-                            settingIsOpen = false;
-
-                            settingContainer.setVisible(settingIsOpen, true, AnimationType.Slide, "v");
-                        },
-                    ),
-
-                    new Text(
-                        {
-                            x: 44,
-                            y: 4,
-                        },
-                        "Settings",
-                        16,
-                    ),
-
-                    // Keyboard movement
-                    ...makeSettingComponents(40, "keyboard_control", "Keyboard movement"),
-
-                    // Movement helper
-                    ...makeSettingComponents(40 + 30, "movement_helper", "Movement helper"),
-
-                    new CoordinatedStaticSpace(15, 15, 150, 190 - 4),
-                );
-
-                let settingIsOpen = false;
-
-                const settingButton = new (makeLowerLeftToolTippedButton("Inventory"))(
-                    {
-                        x: 15,
-                        y: 229,
-                        w: 40,
-                        h: 40,
-
-                        invertYCoordinate: true,
-                    },
-
-                    3,
-
-                    3,
-                    1,
-
-                    [
-                        new SVGLogo(
-                            {
-                                x: 0,
-                                y: 0,
-                                w: 40,
-                                h: 40,
-                            },
-                            SWAP_BAG_SVG,
-                        ),
-                    ],
-
-                    () => {
-                        settingIsOpen = !settingIsOpen;
-
-                        settingContainer.setVisible(settingIsOpen, true, AnimationType.Slide, "v");
-                    },
-
-                    "#599dd8",
-                    true,
-                );
-
-                settingContainer.setVisible(false, false);
-
-                this.addComponent(settingContainer);
-
-                this.addComponent(settingButton);
-            }
-
-            {
-                const craftButton = new (makeLowerLeftToolTippedButton("Crafting"))(
-                    {
-                        x: 15,
-                        y: 173,
-                        w: 40,
-                        h: 40,
-
-                        invertYCoordinate: true,
-                    },
-
-                    3,
-
-                    3,
-                    1,
-
-                    [
-                        new SVGLogo(
-                            {
-                                x: 0,
-                                y: 0,
-                                w: 40,
-                                h: 40,
-                            },
-                            MOLECULE_SVG,
-                        ),
-                    ],
-
-                    () => {
-                        console.log("called");
-                    },
-
-                    "#db9d5a",
-                    true,
-                );
-
-                this.addComponent(craftButton);
-            }
-
-            {
-                const changelogButton = new (makeLowerLeftToolTippedButton("Changelog"))(
-                    {
-                        x: 15,
-                        y: 116,
-                        w: 40,
-                        h: 40,
-
-                        invertYCoordinate: true,
-                    },
-
-                    3,
-
-                    3,
-                    1,
-
-                    [
-                        new SVGLogo(
-                            {
-                                x: 0,
-                                y: 0,
-                                w: 40,
-                                h: 40,
-                            },
-                            SCROLL_UNFURLED_SVG,
-                        ),
-                    ],
-
-                    () => {
-                        console.log("called");
-                    },
-
-                    "#9bb56b",
-                    true,
-                );
-
-                this.addComponent(changelogButton);
+                this.addComponent(discordLinkButton);
             }
         }
 
@@ -530,8 +586,8 @@ export default class UITitle extends AbstractUI {
         this.connectingText.setVisible(false, false);
         this.loggingInText.setVisible(false, false);
 
-        this.addComponents(this.connectingText);
-        this.addComponents(this.loggingInText);
+        this.addComponent(this.connectingText);
+        this.addComponent(this.loggingInText);
 
         const gameNameText = new (Collidable(Text))(
             {
@@ -552,7 +608,7 @@ export default class UITitle extends AbstractUI {
 
             const nameInputDescription = new (Collidable(Text))(
                 {
-                    x: -(100 / 2),
+                    x: -108,
                     y: (-(50 / 2)) - 10,
 
                     alignFromCenterX: true,
@@ -726,6 +782,40 @@ export default class UITitle extends AbstractUI {
                 true,
             );
 
+            function dynamicJoinArray<T, S>(array: T[], separatorFn: () => S): (T | S)[] {
+                return array.flatMap((item, index) => index ? [separatorFn(), item] : [item]);
+            }
+
+            const makeBiomeSwitchButton = (name: string, color: ColorCode, callback: () => void): Button => {
+                return new Button(
+                    {
+                        w: 42,
+                        h: 11,
+                    },
+
+                    3,
+
+                    3,
+                    1,
+
+                    [
+                        new Text(
+                            {
+                                x: 0,
+                                y: 1,
+                            },
+                            name,
+                            10,
+                        ),
+                    ],
+
+                    callback,
+
+                    color,
+                    true,
+                );
+            };
+
             const biomeSwitcher = new StaticHContainer(
                 {
                     x: -144,
@@ -734,97 +824,21 @@ export default class UITitle extends AbstractUI {
                     alignFromCenterX: true,
                     alignFromCenterY: true,
                 },
-            ).addChildren(
-                new Button(
-                    {
-                        w: 42,
-                        h: 14,
-                    },
-
-                    2,
-
-                    10,
-                    0.05,
-
-                    [
-                        new Text(
-                            {
-                                x: 0,
-                                y: 0,
-                            },
-                            "Garden",
-                            50,
-                        ),
-                    ],
-
-                    () => {
+            ).addChildren(...dynamicJoinArray(
+                [
+                    makeBiomeSwitchButton("Garden", "#2ba35b", () => {
                         this.biome = Biome.GARDEN;
-                    },
-
-                    "#2ba35b",
-                    true,
-                ),
-                new StaticSpace(5, 0),
-                new Button(
-                    {
-                        w: 42,
-                        h: 14,
-                    },
-
-                    2,
-
-                    10,
-                    0.05,
-
-                    [
-                        new Text(
-                            {
-                                x: 0,
-                                y: 0,
-                            },
-                            "Desert",
-                            50,
-                        ),
-                    ],
-
-                    () => {
+                    }),
+                    makeBiomeSwitchButton("Desert", "#ccba73", () => {
                         this.biome = Biome.DESERT;
-                    },
-
-                    "#ccba73",
-                    true,
-                ),
-                new StaticSpace(5, 0),
-                new Button(
-                    {
-                        w: 42,
-                        h: 14,
-                    },
-
-                    2,
-
-                    10,
-                    0.05,
-
-                    [
-                        new Text(
-                            {
-                                x: 0,
-                                y: 0,
-                            },
-                            "Ocean",
-                            50,
-                        ),
-                    ],
-
-                    () => {
+                    }),
+                    makeBiomeSwitchButton("Ocean", "#6089b6", () => {
                         this.biome = Biome.OCEAN;
-                    },
-
-                    "#6089b6",
-                    true,
-                ),
-            );
+                    }),
+                ],
+                // Dynamically create static space
+                () => new StaticSpace(5, 0),
+            ));
 
             // TODO: move biomeSwitchers, readyButton too
 
@@ -845,13 +859,17 @@ export default class UITitle extends AbstractUI {
 
             this.squadMenuContainer = new StaticPanelContainer(
                 {
-                    x: -172,
+                    x: -170,
                     y: -100,
 
                     alignFromCenterX: true,
                     alignFromCenterY: true,
                 },
                 "#5aa0db",
+
+                1,
+
+                4,
             ).addChildren(
                 (this.statusText = new Text(
                     {
@@ -915,8 +933,8 @@ export default class UITitle extends AbstractUI {
                 )),
                 new Text(
                     {
-                        x: 46,
-                        y: 24 + 8,
+                        x: 26,
+                        y: 27,
                     },
                     "Public",
                     10,
@@ -924,11 +942,8 @@ export default class UITitle extends AbstractUI {
 
                 new Text(
                     () => ({
-                        x:
-                            this.waveRoomVisible === WaveRoomVisibleState.Private
-                                ? 103
-                                : 117,
-                        y: 24 + 8,
+                        x: 75,
+                        y: 32,
                         w: 0,
                         h: 0,
                     }),
@@ -943,6 +958,7 @@ export default class UITitle extends AbstractUI {
                         this.waveRoomVisible === WaveRoomVisibleState.Private
                             ? "#f0666b"
                             : "#ffffff",
+                    "left",
                 ),
 
                 // Code inputer
@@ -1006,25 +1022,25 @@ export default class UITitle extends AbstractUI {
 
                 new Button(
                     {
-                        x: 195,
-                        y: 24,
-                        w: 72,
-                        h: 18,
+                        x: 208,
+                        y: 26,
+                        w: 62,
+                        h: 12,
                     },
 
                     2,
 
-                    10,
-                    0.05,
+                    2.4,
+                    1,
 
                     [
                         new Text(
                             {
-                                x: 0,
-                                y: 0,
+                                x: 3,
+                                y: 2,
                             },
-                            "Find public",
-                            10,
+                            "Find Public",
+                            9,
                         ),
                     ],
 
@@ -1035,25 +1051,25 @@ export default class UITitle extends AbstractUI {
                 ),
                 new Button(
                     {
-                        x: 274,
-                        y: 24,
-                        w: 50,
-                        h: 18,
+                        x: 280,
+                        y: 26,
+                        w: 40,
+                        h: 12,
                     },
 
                     2,
 
-                    10,
-                    0.05,
+                    2.4,
+                    1,
 
                     [
                         new Text(
                             {
-                                x: 0,
-                                y: 0,
+                                x: 5,
+                                y: 2,
                             },
                             "New",
-                            10,
+                            9,
                         ),
                     ],
 
@@ -1063,21 +1079,73 @@ export default class UITitle extends AbstractUI {
                     true,
                 ),
 
-                (this.codeText = new Text(
-                    {
-                        x: 10,
-                        y: 193,
-                    },
-                    () => "Code: " + (this.waveRoomCode || ""),
-                    9,
-                    "#ffffff",
-                    "left",
-                )),
+                this.codeText = (() => {
+                    const DEFAULT_TOOLTIP_LABEL: string = "Copy";
+                    const RESET_DELAY: number = 1500;
+
+                    let tooltipLabel: string = DEFAULT_TOOLTIP_LABEL;
+                    let resetTimer: NodeJS.Timeout | null = null;
+
+                    const codeText = new (
+                        Tooltip(
+                            Text,
+                            [
+                                new CoordinatedStaticSpace(1, 1, 0, 0),
+                                new Text(
+                                    {
+                                        x: 2,
+                                        y: 2,
+                                    },
+                                    () => tooltipLabel,
+                                    10,
+                                ),
+                                new CoordinatedStaticSpace(1, 1, 0, 15),
+                            ],
+                            2,
+                            ["top"],
+                            1,
+                        )
+                    )(
+                        {
+                            x: 10,
+                            y: 186,
+                        },
+                        () => "Code: " + (this.waveRoomCode || ""),
+                        9,
+                        "#ffffff",
+                        "left",
+                        null,
+    
+                        true,
+                        () => this.waveRoomCode || "",
+                    );
+
+                    const resetTooltip = () => {
+                        if (resetTimer) clearTimeout(resetTimer);
+
+                        resetTimer = setTimeout(() => {
+                            tooltipLabel = DEFAULT_TOOLTIP_LABEL;
+                            resetTimer = null;
+                        }, RESET_DELAY);
+                    };
+
+                    codeText.addListener("onCopySucceed", () => {
+                        tooltipLabel = "Copied!";
+                        resetTooltip();
+                    });
+
+                    codeText.addListener("onCopyFailed", () => {
+                        tooltipLabel = "Failed...";
+                        resetTooltip();
+                    });
+
+                    return codeText;
+                })(),
 
                 new Text(
                     {
-                        x: 162,
-                        y: 10,
+                        x: 140,
+                        y: 3,
                     },
                     "Squad",
                     14,
@@ -1097,12 +1165,14 @@ export default class UITitle extends AbstractUI {
             biomeSwitcher.setVisible(false, false);
             this.squadMenuContainer.setVisible(false, false);
 
-            this.addComponents(nameInputDescription);
-            this.addComponents(nameInput);
-            this.addComponents(readyButton);
-            this.addComponents(squadButton);
-            this.addComponents(biomeSwitcher);
-            this.addComponents(this.squadMenuContainer);
+            this.addComponents(
+                nameInputDescription,
+                nameInput,
+                readyButton,
+                squadButton,
+                biomeSwitcher,
+                this.squadMenuContainer,
+            );
 
             nameInputDescription.addCollidableComponents([this.squadMenuContainer, nameInput]);
             gameNameText.addCollidableComponents([this.squadMenuContainer, nameInputDescription]);
@@ -1113,7 +1183,7 @@ export default class UITitle extends AbstractUI {
             this.toggleShowStatusText(true);
         }
 
-        this.addComponents(gameNameText);
+        this.addComponent(gameNameText);
     }
 
     override animationFrame() {

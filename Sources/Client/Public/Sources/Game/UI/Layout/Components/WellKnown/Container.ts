@@ -5,11 +5,10 @@ import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
 import type { Components, MaybePointerLike, SetVisibleParameters, AnimationSlideDirection, SetVisibleImplementationParameters } from "../Component";
 import { AnimationType, Component, renderPossibleComponents } from "../Component";
-import TextInput from "./TextInput";
 
 type Optional<T, K extends keyof T> = Partial<Pick<T, K>> & Omit<T, K>;
 
-type SizeKeys = "w" | "h";
+export type SizeKeys = "w" | "h";
 
 export type AutomaticallySizedLayoutOptions = Omit<LayoutOptions, SizeKeys>;
 
@@ -49,10 +48,12 @@ export abstract class AbstractStaticContainer<T extends SelectableStaticContaine
         });
     }
 
-    override getCacheKey(): string {
-        return super.getCacheKey() +
-            Object.values(Component.computePointerLike(this.layoutOptions)).join("") +
-            Array.from(this.children).map(c => c.getCacheKey()).join("");
+    override getCacheKey(lc: LayoutContext): string {
+        const { CACHE_KEY_DELIMITER } = Component;
+
+        return super.getCacheKey(lc) + CACHE_KEY_DELIMITER +
+            Object.values(Component.computePointerLike(this.layoutOptions)).join(CACHE_KEY_DELIMITER) + CACHE_KEY_DELIMITER +
+            Array.from(this.children).map(c => c.getCacheKey(lc)).join(CACHE_KEY_DELIMITER);
     }
 
     override invalidateLayoutCache(): void {
@@ -66,11 +67,9 @@ export abstract class AbstractStaticContainer<T extends SelectableStaticContaine
         this.children.forEach(child => {
             // Destroy child
             child.destroy();
-        });
 
-        this.children.forEach(child => {
             // Remove instance
-            this.context.removeChildComponent(this, child);
+            this.context.removeChildComponent(child);
         });
 
         // Then finnally, remove the children from this
@@ -129,8 +128,12 @@ export abstract class AbstractStaticContainer<T extends SelectableStaticContaine
     public addChild(child: Components): this {
         this.children.add(child);
 
-        if (!this.wasInitialized) {
-            this.afterInitializedOperationQueue.add(() => { this.context.addChildComponent(this, child); });
+        const addChildComponentOperation = () => { this.context.addChildComponent(child); };
+
+        if (this.wasInitialized) {
+            addChildComponentOperation();
+        } else {
+            this.afterInitializedOperationQueue.add(addChildComponentOperation);
         }
 
         return this;
@@ -143,8 +146,12 @@ export abstract class AbstractStaticContainer<T extends SelectableStaticContaine
         // No need to call destroy method, can done by removeComponent
         this.children.delete(child);
 
-        if (!this.wasInitialized) {
-            this.afterInitializedOperationQueue.add(() => { this.context.removeChildComponent(this, child); });
+        const removeChildComponentOperation = () => { this.context.removeChildComponent(child); };
+
+        if (this.wasInitialized) {
+            // removeChildComponentOperation();
+        } else {
+            this.afterInitializedOperationQueue.add(removeChildComponentOperation);
         }
 
         return this;
@@ -569,9 +576,11 @@ export class StaticSpace extends ExtensionBase(Component) {
         };
     }
 
-    override getCacheKey(): string {
-        return super.getCacheKey() +
-            Component.computePointerLike(this.sw) +
+    override getCacheKey(lc: LayoutContext): string {
+        const { CACHE_KEY_DELIMITER } = Component;
+
+        return super.getCacheKey(lc) + CACHE_KEY_DELIMITER +
+            Component.computePointerLike(this.sw) + CACHE_KEY_DELIMITER +
             Component.computePointerLike(this.sh);
     }
 
@@ -605,9 +614,11 @@ export class CoordinatedStaticSpace extends StaticSpace {
         };
     }
 
-    override getCacheKey(): string {
-        return super.getCacheKey() +
-            Component.computePointerLike(this.sx) +
+    override getCacheKey(lc: LayoutContext): string {
+        const { CACHE_KEY_DELIMITER } = Component;
+
+        return super.getCacheKey(lc) + CACHE_KEY_DELIMITER +
+            Component.computePointerLike(this.sx) + CACHE_KEY_DELIMITER +
             Component.computePointerLike(this.sy);
     }
 }
