@@ -1,15 +1,33 @@
+import type { EventMap } from "strict-event-emitter";
+import { Emitter } from "strict-event-emitter";
 import type { Biome } from "../../../../../Shared/Biome";
 import type { StaticAdherableClientboundHandler } from "../Websocket/Packet/PacketClientbound";
 import { type Components, renderPossibleComponents, OBSTRUCTION_AFFECTABLE, hasClickableListeners, hasInteractiveListeners } from "./Layout/Components/Component";
-import { AbstractStaticContainer, type AnyStaticContainer } from "./Layout/Components/WellKnown/Container";
 import { BLACKLISTED } from "./Layout/Extensions/ExtensionInlineRenderingCall";
+import type { AnyStaticContainer } from "./Layout/Components/WellKnown/Container";
+import { AbstractStaticContainer } from "./Layout/Components/WellKnown/Container";
 
 export let uiScaleFactor: number = 1;
 
 export const UI_BASE_WIDTH = 1300;
 export const UI_BASE_HEIGHT = 650;
 
-export default abstract class AbstractUI {
+type Satisfies<T extends U, U> = T;
+
+export type ComponentCompatibleUnconditionalEvents =
+    Satisfies<
+        {
+            "onKeyDown": [event: KeyboardEvent];
+            "onKeyUp": [event: KeyboardEvent];
+
+            "onMouseDown": [event: MouseEvent];
+            "onMouseUp": [event: MouseEvent];
+            "onMouseMove": [event: MouseEvent];
+        },
+        EventMap
+    >;
+
+export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnconditionalEvents> {
     public mouseX: number = 0;
     public mouseY: number = 0;
 
@@ -25,6 +43,8 @@ export default abstract class AbstractUI {
 
     private hoveredComponent: Components = null;
     private clickedComponent: Components = null;
+
+    private canvasEventListenOption: AddEventListenerOptions;
 
     private mousedown: (event: MouseEvent) => void;
     private mouseup: (event: MouseEvent) => void;
@@ -42,9 +62,11 @@ export default abstract class AbstractUI {
     /**
      * Ui-definable client packet bound handler.
      */
-    abstract readonly clientboundHandler: StaticAdherableClientboundHandler;
+    abstract readonly CLIENTBOUND_HANDLER: StaticAdherableClientboundHandler;
 
     constructor(public canvas: HTMLCanvasElement) {
+        super();
+
         // Initialize components
         this.initializeComponents();
 
@@ -92,15 +114,21 @@ export default abstract class AbstractUI {
         };
 
         {
-            this.canvas.addEventListener('mousedown', this.mousedown);
-            this.canvas.addEventListener('mouseup', this.mouseup);
-            this.canvas.addEventListener('mousemove', this.mousemove);
-        }
+            this.canvasEventListenOption = { capture: true };
 
-        {
-            this.canvas.addEventListener('touchmove', this.touchmove);
-            this.canvas.addEventListener('touchstart', this.touchstart);
-            this.canvas.addEventListener('touchend', this.touchend);
+            const { canvasEventListenOption } = this;
+
+            {
+                this.canvas.addEventListener('mousedown', this.mousedown, canvasEventListenOption);
+                this.canvas.addEventListener('mouseup', this.mouseup, canvasEventListenOption);
+                this.canvas.addEventListener('mousemove', this.mousemove, canvasEventListenOption);
+            }
+
+            {
+                this.canvas.addEventListener('touchmove', this.touchmove, canvasEventListenOption);
+                this.canvas.addEventListener('touchstart', this.touchstart, canvasEventListenOption);
+                this.canvas.addEventListener('touchend', this.touchend, canvasEventListenOption);
+            }
         }
 
         {
@@ -113,23 +141,26 @@ export default abstract class AbstractUI {
 
         window.addEventListener('resize', this.onresize);
 
-        // UI Components not working properly without calling this two time
-        // Why? :(
+        // Call twice to components working properly
         this.onresize();
         this.onresize();
     }
 
     public removeEventListeners(): void {
         {
-            this.canvas.removeEventListener('mousedown', this.mousedown);
-            this.canvas.removeEventListener('mouseup', this.mouseup);
-            this.canvas.removeEventListener('mousemove', this.mousemove);
-        }
+            const { canvasEventListenOption } = this;
 
-        {
-            this.canvas.removeEventListener('touchmove', this.touchmove);
-            this.canvas.removeEventListener('touchstart', this.touchstart);
-            this.canvas.removeEventListener('touchend', this.touchend);
+            {
+                this.canvas.removeEventListener('mousedown', this.mousedown, canvasEventListenOption);
+                this.canvas.removeEventListener('mouseup', this.mouseup, canvasEventListenOption);
+                this.canvas.removeEventListener('mousemove', this.mousemove, canvasEventListenOption);
+            }
+
+            {
+                this.canvas.removeEventListener('touchmove', this.touchmove, canvasEventListenOption);
+                this.canvas.removeEventListener('touchstart', this.touchstart, canvasEventListenOption);
+                this.canvas.removeEventListener('touchend', this.touchend, canvasEventListenOption);
+            }
         }
 
         {
@@ -247,13 +278,14 @@ export default abstract class AbstractUI {
         const scaledHeight = this.canvas.height / uiScaleFactor;
 
         this.getTopLevelComponents().forEach(component => {
-            if (component.isAnimating) return;
+            // Maybe this is good for cached layout but not for now
+            // if (component.isAnimating) return;
 
             // Only call top-level invalidateLayoutCache, 
             // container invalidateLayoutCache will invalidate child layout too
             if (isResized) component.invalidateLayoutCache();
 
-            const layout = component.cachedLayout({
+            const layout = component.layout({
                 ctx,
 
                 containerWidth: scaledWidth,
@@ -270,28 +302,38 @@ export default abstract class AbstractUI {
         });
     }
 
+    private emitUnconditionalEvent(
+        event: keyof ComponentCompatibleUnconditionalEvents,
+        ...data: ComponentCompatibleUnconditionalEvents[typeof event]
+    ): void {
+        this.emit(event, ...data);
+
+        // We have listener check for event like interactive but these are meaningless, so doesnt need any kind of checks
+        this.components.forEach(c => c.emit(event, ...data));
+    }
+
     private handleKeyDown(event: KeyboardEvent): void {
         if (!event.isTrusted) return;
 
-        this.onKeyDown(event);
+        this.emitUnconditionalEvent("onKeyDown", event);
     }
 
     private handleKeyUp(event: KeyboardEvent): void {
         if (!event.isTrusted) return;
 
-        this.onKeyUp(event);
+        this.emitUnconditionalEvent("onKeyUp", event);
     }
 
     private handleMouseDown(event: MouseEvent): void {
         if (!event.isTrusted) return;
 
-        this.onMouseDown(event);
+        this.emitUnconditionalEvent("onMouseDown", event);
 
         // Click handling
         for (const component of this.components) {
             if (this.isComponentInteractableAtPosition(component, this.mouseX, this.mouseY)) {
                 this.clickedComponent = component;
-                this.clickedComponent.emit("onMouseDown");
+                this.clickedComponent.emit("onDown");
 
                 break;
             }
@@ -301,11 +343,11 @@ export default abstract class AbstractUI {
     private handleMouseUp(event: MouseEvent): void {
         if (!event.isTrusted) return;
 
-        this.onMouseUp(event);
+        this.emitUnconditionalEvent("onMouseUp", event);
 
         if (this.clickedComponent) {
             if (this.isComponentInteractableAtPosition(this.clickedComponent, this.mouseX, this.mouseY)) {
-                this.clickedComponent.emit("onMouseUp");
+                this.clickedComponent.emit("onUp");
                 this.clickedComponent.emit("onClick");
             }
 
@@ -316,7 +358,7 @@ export default abstract class AbstractUI {
     private handleMouseMove(event: MouseEvent): void {
         if (!event.isTrusted) return;
 
-        this.onMouseMove(event);
+        this.emitUnconditionalEvent("onMouseMove", event);
 
         // Update mouse position
         const rect = this.canvas.getBoundingClientRect();
@@ -327,29 +369,67 @@ export default abstract class AbstractUI {
         // this.invalidateDynamicLayoutables();
     }
 
+    private getParent(child: Components): AnyStaticContainer | null {
+        for (const component of this.components) {
+            if (
+                component instanceof AbstractStaticContainer &&
+                component.hasChild(child)
+            ) return component;
+        }
+
+        return null;
+    }
+
+    private traverseParentAndCheckIsAnimatingAndItsDirectionOut(child: Components): boolean {
+        const parent = this.getParent(child);
+
+        if (parent === null) return false;
+
+        if (parent.isAnimating && parent.animationDirection === "out") return true;
+
+        return this.traverseParentAndCheckIsAnimatingAndItsDirectionOut(parent);
+    }
+
     private emitInteractiveEvents(): void {
+        if ( 
+            this.hoveredComponent &&
+            this.traverseParentAndCheckIsAnimatingAndItsDirectionOut(this.hoveredComponent)
+        ) {
+            this.hoveredComponent.emit("onBlur");
+
+            this.hoveredComponent = null;
+        }
+
         this.components.forEach(component => {
             if (
                 // Make it only work for component which has interactive listeners
-                component[OBSTRUCTION_AFFECTABLE]
+                component[OBSTRUCTION_AFFECTABLE] &&
+                !this.traverseParentAndCheckIsAnimatingAndItsDirectionOut(component)
             ) {
                 const isHovering = this.isComponentInteractableAtPosition(component, this.mouseX, this.mouseY);
 
-                if (isHovering) {
-                    if (this.hoveredComponent !== component) {
-                        this.hoveredComponent?.emit?.("onBlur");
+                switch (isHovering) {
+                    case true: {
+                        if (this.hoveredComponent !== component) {
+                            this.hoveredComponent?.emit?.("onBlur");
 
-                        this.hoveredComponent = component;
-                        this.hoveredComponent.emit("onFocus");
+                            this.hoveredComponent = component;
+                            this.hoveredComponent.emit("onFocus");
+                        }
+
+                        break;
                     }
-                } else if (
-                    // If hoveredComponent is this component and not hovered, emit onBlur event
-                    // !isHovering &&
-                    this.hoveredComponent === component
-                ) {
-                    this.hoveredComponent.emit("onBlur");
 
-                    this.hoveredComponent = null;
+                    case false: {
+                        // If hoveredComponent is this component and not hovered, emit onBlur event
+                        if (this.hoveredComponent === component) {
+                            this.hoveredComponent.emit("onBlur");
+
+                            this.hoveredComponent = null;
+                        }
+
+                        break;
+                    }
                 }
             }
         });
@@ -380,6 +460,18 @@ export default abstract class AbstractUI {
             ctx,
             this.getTopLevelRenderableComponents(),
         );
+
+        /*
+        this.components.forEach(c => {
+            ctx.save();
+
+            ctx.strokeStyle = "blue";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(c.x, c.y, c.w, c.h);
+
+            ctx.restore();
+        }); 
+        */
     }
 
     // Biome atomic store
@@ -399,21 +491,13 @@ export default abstract class AbstractUI {
     /**
      * Destory ui-depending values.
      */
-    public abstract destroy(): void;
+    public destroy(): void {
+        // Remove all listeners registered
+        this.removeAllListeners();
+    }
 
     /**
      * Method call on ui switched.
      */
     public abstract onContextChanged(): void;
-
-    // Interactive
-
-    // Keyboard
-    abstract onKeyDown(event: KeyboardEvent): void;
-    abstract onKeyUp(event: KeyboardEvent): void;
-
-    // Mouse
-    abstract onMouseDown(event: MouseEvent): void;
-    abstract onMouseUp(event: MouseEvent): void;
-    abstract onMouseMove(event: MouseEvent): void;
 }

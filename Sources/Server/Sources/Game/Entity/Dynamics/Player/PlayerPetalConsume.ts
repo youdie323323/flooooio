@@ -3,7 +3,7 @@ import { MobType, PetalType } from "../../../../../../Shared/Entity/Statics/Enti
 import { decodeMood } from "../../../../../../Shared/Mood";
 import type { WavePool } from "../../../Genres/Wave/WavePool";
 import type { EntityMixinConstructor, EntityMixinTemplate } from "../Entity";
-import { onUpdateTick } from "../Entity";
+import { ON_UPDATE_TICK } from "../Entity";
 import { isDynamicPetal } from "../Mob/Petal/Petal";
 import type { PlayerInstance, BasePlayer } from "./Player";
 
@@ -25,20 +25,19 @@ const consumeConsumablePetal = (poolThis: WavePool, player: PlayerInstance, i: n
             petal.petalSummonedPet = poolThis.generateMob(
                 EGG_TYPE_MAPPING[petal.type],
                 Math.max(Rarity.COMMON, Math.min(Rarity.MYTHIC, petal.rarity - 1)),
-
-                // Summon on breaked petal
                 petal.x,
                 petal.y,
-
                 null,
                 player,
             );
-
             break;
         }
 
         case PetalType.BUBBLE: {
-            return [player.x - petal.x, player.y - petal.y];
+            const dx = player.x - petal.x;
+            const dy = player.y - petal.y;
+
+            return [dx, dy];
         }
     }
 
@@ -47,47 +46,47 @@ const consumeConsumablePetal = (poolThis: WavePool, player: PlayerInstance, i: n
 
 export function PlayerPetalConsume<T extends EntityMixinConstructor<BasePlayer>>(Base: T) {
     return class MixedBase extends Base implements EntityMixinTemplate {
-        private static readonly BUBBLE_BOUNCE_FORCE = 30;
-        private static readonly BUBBLE_ATTENUATION_COEFFICIENT = 0.7;
+        private static readonly BUBBLE_BOUNCE_FORCE = 20;
+        private static readonly BUBBLE_VELOCITY_ATTENUATION = 0.8;
 
         private bubbleVelocityX: number = 0;
         private bubbleVelocityY: number = 0;
 
-        [onUpdateTick](poolThis: WavePool): void {
-            super[onUpdateTick](poolThis);
+        [ON_UPDATE_TICK](poolThis: WavePool): void {
+            super[ON_UPDATE_TICK](poolThis);
 
-            if (this.isDead) {
-                return;
-            }
+            if (this.isDead) return;
 
-            this.bubbleVelocityX *= MixedBase.BUBBLE_ATTENUATION_COEFFICIENT;
-            this.bubbleVelocityY *= MixedBase.BUBBLE_ATTENUATION_COEFFICIENT;
+            this.bubbleVelocityX *= MixedBase.BUBBLE_VELOCITY_ATTENUATION;
+            this.bubbleVelocityY *= MixedBase.BUBBLE_VELOCITY_ATTENUATION;
 
             const [, isConsumeMood] = decodeMood(this.mood);
+
+            let totalForceX = 0;
+            let totalForceY = 0;
 
             this.slots.surface.forEach((petals, i) => {
                 if (petals != null && isDynamicPetal(petals)) {
                     petals.forEach((e, j) => {
                         if (
-                            // Check if petal is living
                             poolThis.getMob(e.id) &&
                             Date.now() >= this.slots.cooldownsUsage[i][j]
                         ) {
-                            // Automatically (e.g. egg)
                             if (e.type === PetalType.EGG_BEETLE) {
                                 consumeConsumablePetal(poolThis, this, i, j);
 
                                 return;
                             }
 
-                            // Bubble
                             if (isConsumeMood && e.type === PetalType.BUBBLE) {
                                 const result = consumeConsumablePetal(poolThis, this, i, j);
                                 if (result) {
-                                    const distance = Math.sqrt(result[0] * result[0] + result[1] * result[1]);
+                                    const [dx, dy] = result;
+                                    const distance = Math.sqrt(dx * dx + dy * dy);
+
                                     if (distance > 0) {
-                                        this.bubbleVelocityX += result[0] / distance;
-                                        this.bubbleVelocityY += result[1] / distance;
+                                        totalForceX += dx / distance;
+                                        totalForceY += dy / distance;
                                     }
                                 }
 
@@ -98,14 +97,11 @@ export function PlayerPetalConsume<T extends EntityMixinConstructor<BasePlayer>>
                 }
             });
 
+            this.bubbleVelocityX += totalForceX;
+            this.bubbleVelocityY += totalForceY;
+
             this.x += this.bubbleVelocityX * MixedBase.BUBBLE_BOUNCE_FORCE;
             this.y += this.bubbleVelocityY * MixedBase.BUBBLE_BOUNCE_FORCE;
-        }
-
-        dispose(): void {
-            if (super.dispose) {
-                super.dispose();
-            }
         }
     };
 }

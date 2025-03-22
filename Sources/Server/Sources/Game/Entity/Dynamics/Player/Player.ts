@@ -1,6 +1,6 @@
 import { EntityCollision } from "../EntityCollision";
 import type { BrandedId, Entity, PartialUnion, UnderlyingMixinUnion } from "../Entity";
-import { onUpdateTick } from "../Entity";
+import { ON_UPDATE_TICK } from "../Entity";
 import { EntityCoordinateMovement } from "../EntityCoordinateMovement";
 import type uWS from 'uWebSockets.js';
 import { PlayerPetalOrbit } from "./PlayerPetalOrbit";
@@ -18,7 +18,7 @@ class BasePlayer implements Entity {
     /**
      * Base speed of player.
      */
-    public static readonly BASE_SPEED = 4;
+    public static readonly BASE_SPEED = 5;
 
     /**
      * Base size of player.
@@ -53,7 +53,6 @@ class BasePlayer implements Entity {
      * Determine if player is dead.
      * 
      * @remarks
-     * 
      * The reason this property in the player and not in the mob is to revive the player with Yggdrasil, etc.
      * When a mob dies, instantly removed from the pool.
      */
@@ -106,9 +105,9 @@ class BasePlayer implements Entity {
 
     // Underlying EntityMixinTemplate to prevent error
 
-    [onUpdateTick](poolThis: WavePool): void { }
+    [ON_UPDATE_TICK](poolThis: WavePool): void { }
 
-    dispose(): void { }
+    [Symbol.dispose](): void { }
 
     /**
      * Determine if player is collidable to any collidables.

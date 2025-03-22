@@ -2,19 +2,20 @@ import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Peta
 import { MobType } from "../../../../../../Shared/Entity/Statics/EntityType";
 import type { WavePool } from "../../../Genres/Wave/WavePool";
 import type { EntityMixinConstructor, EntityMixinTemplate} from "../Entity";
-import { onUpdateTick } from "../Entity";
+import { ON_UPDATE_TICK } from "../Entity";
 import { calculateMaxHealth } from "../EntityElimination";
 import type { BaseMob } from "./Mob";
 import { turnAngleToTarget } from "./MobAggressivePursuit";
 
 export function MobHealthRegen<T extends EntityMixinConstructor<BaseMob>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
-        [onUpdateTick](poolThis: WavePool): void {
-            super[onUpdateTick](poolThis);
+        [ON_UPDATE_TICK](poolThis: WavePool): void {
+            super[ON_UPDATE_TICK](poolThis);
 
             // Dont check if this is petal
             if (isPetal(this.type)) return;
 
+            // Regen for starfish
             if (
                 this.starfishRegeningHealth ||
                 (
@@ -51,12 +52,6 @@ export function MobHealthRegen<T extends EntityMixinConstructor<BaseMob>>(Base: 
 
                     this.magnitude = 255 * this.speed;
                 }
-            }
-        }
-
-        dispose(): void {
-            if (super.dispose) {
-                super.dispose();
             }
         }
     };

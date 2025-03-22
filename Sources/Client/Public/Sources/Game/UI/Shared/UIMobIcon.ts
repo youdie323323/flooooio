@@ -1,16 +1,43 @@
 import { Component, type MaybePointerLike } from "../Layout/Components/Component";
 import type { AutomaticallySizedLayoutOptions } from "../Layout/Components/WellKnown/Container";
 import { CoordinatedStaticSpace, StaticPanelContainer, StaticSpace } from "../Layout/Components/WellKnown/Container";
-import type Mob from "../../Entity/Mob";
+import Mob from "../../Entity/Mob";
 import { RARITY_COLOR } from "../../../../../../Shared/Entity/Statics/EntityRarity";
 import { CanvasLogo } from "../Layout/Components/WellKnown/Logo";
 import { renderEntity } from "../../Entity/Renderers/RendererEntityRenderingLink";
 
-export default class UIGameMobCard extends StaticPanelContainer {
-    public static readonly CARD_SIZE: number = 30;
+export default class UIMobIcon extends StaticPanelContainer {
+    public static readonly ICON_SIZE: number = 30;
 
-    private static readonly CARD_MOB_ANGLE: number = -3 * Math.PI / 4;
-    private static readonly CARD_MOB_SIZE: number = 9;
+    private static readonly ICON_MOB_ANGLE: number = -3 * Math.PI / 4;
+
+    private static readonly ICON_MOB_SIZE: number = 9;
+
+    private static readonly ICON_MOB_LEG_DISTANCE: Array<number> = Array(Mob.STARFISH_LEG_AMOUNT).fill(150);
+
+    /**
+     * Proxy handler for mob instance that rendered to icon.
+     */
+    private static readonly ICON_MOB_INSTANCE_PROXY_HANDLER = {
+        get(target, property, receiver) {
+            // Constant size for all mob
+            if (property === "size") return UIMobIcon.ICON_MOB_SIZE;
+
+            // Constant angle for all mob
+            if (property === "angle") return UIMobIcon.ICON_MOB_ANGLE;
+
+            // No getSkinColor() interpolated color
+            if (property === "hurtT") return 0;
+
+            // No dynamic rendering
+            if (property === "moveCounter") return 0;
+
+            // No dynamic leg distance
+            if (property === "legD") return UIMobIcon.ICON_MOB_LEG_DISTANCE;
+
+            return Reflect.get(target, property, receiver);
+        },
+    } as const satisfies ProxyHandler<Mob>;
 
     constructor(
         layoutOptions: MaybePointerLike<AutomaticallySizedLayoutOptions>,
@@ -30,20 +57,12 @@ export default class UIGameMobCard extends StaticPanelContainer {
         );
 
         // Proxy the mob instance and spoof the size/angle
-        mobInstance = new Proxy(mobInstance, {
-            get(target, property, receiver) {
-                if (property === "size") return UIGameMobCard.CARD_MOB_SIZE;
+        mobInstance = new Proxy(mobInstance, UIMobIcon.ICON_MOB_INSTANCE_PROXY_HANDLER);
 
-                if (property === "angle") return UIGameMobCard.CARD_MOB_ANGLE;
-
-                return Reflect.get(target, property, receiver);
-            },
-        });
-
-        const { CARD_SIZE } = UIGameMobCard;
+        const { ICON_SIZE } = UIMobIcon;
 
         this.addChildren(
-            new CoordinatedStaticSpace(CARD_SIZE, CARD_SIZE, 0, 0),
+            new CoordinatedStaticSpace(ICON_SIZE, ICON_SIZE, 0, 0),
             new CanvasLogo(
                 {
                     x: 0,
@@ -55,12 +74,12 @@ export default class UIGameMobCard extends StaticPanelContainer {
                     // The coordinate cancel each other out
                     ctx.translate(-mobInstance.x, -mobInstance.y);
 
-                    ctx.translate(CARD_SIZE / 2, CARD_SIZE / 2);
+                    ctx.translate(ICON_SIZE / 2, ICON_SIZE / 2);
 
                     renderEntity({
                         ctx,
                         entity: mobInstance,
-                        entityOnlyRenderGeneralPart: true,
+                        isSpecimen: true,
                     });
                 },
             ),
@@ -68,8 +87,6 @@ export default class UIGameMobCard extends StaticPanelContainer {
     }
 
     override render(ctx: CanvasRenderingContext2D): void {
-        if (!this.isRenderable) return;
-
         // Slightly transparent as same as florr.io
         // ctx.globalAlpha = 0.8;
 

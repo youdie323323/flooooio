@@ -1,6 +1,6 @@
 import SinusodialWave from "./MobSpecialMovementSinusodialWave";
-import type { EntityMixinConstructor, EntityMixinTemplate} from "../Entity";
-import { onUpdateTick } from "../Entity";
+import type { EntityMixinConstructor, EntityMixinTemplate } from "../Entity";
+import { ON_UPDATE_TICK } from "../Entity";
 import type { BaseMob } from "./Mob";
 import { MOB_BEHAVIORS, MobBehavior, turnAngleToTarget } from "./MobAggressivePursuit";
 import { MobType } from "../../../../../../Shared/Entity/Statics/EntityType";
@@ -18,15 +18,13 @@ export function MobSpecialMovement<T extends EntityMixinConstructor<BaseMob>>(Ba
         private rotationCounter: number = 0;
         private isMoving: boolean = false;
 
-        [onUpdateTick](poolThis: WavePool): void {
-            super[onUpdateTick](poolThis);
+        [ON_UPDATE_TICK](poolThis: WavePool): void {
+            super[ON_UPDATE_TICK](poolThis);
 
             // Dont dynamic move when petal
             if (isPetal(this.type)) {
-                // Egg petals always up direction
-                if (EGG_TYPE_MAPPING[this.type]) {
-                    this.angle = 0;
-                }
+                // Egg petals angle is always up direction
+                if (EGG_TYPE_MAPPING[this.type]) this.angle = 0;
 
                 return;
             }
@@ -61,9 +59,7 @@ export function MobSpecialMovement<T extends EntityMixinConstructor<BaseMob>>(Ba
                 this.petGoingToMaster = false;
             }
 
-            if (
-                !this.petGoingToMaster
-            ) {
+            if (!this.petGoingToMaster) {
                 if (this.shouldShakeAngle) {
                     this.angle += SinusodialWave.at(this.sineWaveIndex++) * (this.targetEntity ? 2 : 1);
                 }
@@ -80,34 +76,22 @@ export function MobSpecialMovement<T extends EntityMixinConstructor<BaseMob>>(Ba
                             this.magnitude = 0;
                             this.isMoving = false;
                         } else {
-                            // TODO: ease move
-                            // TODO: centi always moving without stop
                             this.magnitude = 255 * (this.movementTimer * 2);
                             this.movementTimer += MOVEMENT_DURATION;
                         }
-                    } else this.startMovement();
+                    } else {
+                        this.isMoving = true;
+                        this.movementTimer = 0;
+                    }
                 } else {
                     this.isMoving = false;
                 }
             }
         }
 
-        private startMovement() {
-            if (!this.isMoving) {
-                this.isMoving = true;
-                this.movementTimer = 0;
-            }
-        }
-
         private get shouldShakeAngle(): boolean {
             // Shake angle if bee, or hornet
             return this.type === MobType.BEE;
-        }
-
-        dispose(): void {
-            if (super.dispose) {
-                super.dispose();
-            }
         }
     };
 }

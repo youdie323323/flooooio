@@ -47,8 +47,6 @@ export default class Toggle extends ExtensionBase(Component) {
     }
 
     override render(ctx: CanvasRenderingContext2D): void {
-        if (!this.isRenderable) return;
-
         super.render(ctx);
 
         this.update(ctx);

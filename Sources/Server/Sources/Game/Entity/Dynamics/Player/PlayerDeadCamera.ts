@@ -1,6 +1,6 @@
 import type { WavePool } from "../../../Genres/Wave/WavePool";
 import type { EntityMixinConstructor, EntityMixinTemplate} from "../Entity";
-import { onUpdateTick } from "../Entity";
+import { ON_UPDATE_TICK } from "../Entity";
 import { isDeadEntity } from "../EntityElimination";
 import { findNearestEntity } from "../Mob/MobAggressivePursuit";
 import type { BasePlayer } from "./Player";
@@ -12,8 +12,8 @@ export function PlayerDeadCamera<T extends EntityMixinConstructor<BasePlayer>>(B
         private isExecuting: boolean = false;
         private executionTimeout: NodeJS.Timeout;
 
-        [onUpdateTick](poolThis: WavePool): void {
-            super[onUpdateTick](poolThis);
+        [ON_UPDATE_TICK](poolThis: WavePool): void {
+            super[ON_UPDATE_TICK](poolThis);
 
             if (this.isDead) {
                 // Determine if should find dead camera entity
@@ -53,10 +53,8 @@ export function PlayerDeadCamera<T extends EntityMixinConstructor<BasePlayer>>(B
             }
         }
 
-        dispose(): void {
-            if (super.dispose) {
-                super.dispose();
-            }
+        override [Symbol.dispose](): void {
+            super[Symbol.dispose]?.();
 
             clearTimeout(this.executionTimeout);
             this.executionTimeout = null;

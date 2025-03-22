@@ -25,7 +25,7 @@ export default class WaveRoomService {
         if (!waveRoom) {
             return this.createWaveRoom(userData, biome);
         } else {
-            return waveRoom.addPlayer(userData.staticPlayerData);
+            return waveRoom.registerPlayer(userData.staticPlayerData);
         }
     }
 
@@ -44,7 +44,7 @@ export default class WaveRoomService {
             return false;
         }
 
-        return room.addPlayer(userData.staticPlayerData);
+        return room.registerPlayer(userData.staticPlayerData);
     }
 
     /**
@@ -52,7 +52,7 @@ export default class WaveRoomService {
      */
     public leaveWaveRoom(id: WaveRoomPlayerId): boolean {
         for (const waveRoom of this.waveRooms) {
-            if (waveRoom.removePlayer(id)) {
+            if (waveRoom.unregisterPlayer(id)) {
                 if (waveRoom.roomCandidates.length === 0) {
                     this.removeWaveRoom(waveRoom);
                 }
@@ -100,7 +100,7 @@ export default class WaveRoomService {
             logger.info("Created wave room");
         });
 
-        return waveRoom.addPlayer(userData.staticPlayerData);
+        return waveRoom.registerPlayer(userData.staticPlayerData);
     }
 
     /**
@@ -108,7 +108,7 @@ export default class WaveRoomService {
      */
     private findPublicRoom(biome: Biome): WaveRoom | undefined {
         // Trying to find biome-specific room, if not found, try other biome
-        const isPublic = (room: WaveRoom) => room.visible === WaveRoomVisibleState.Public && room.isCandidateJoinable;
+        const isPublic = (room: WaveRoom) => room.visible === WaveRoomVisibleState.Public && room.newPlayerAcceptable;
 
         return this.waveRooms.find(room => room.biome === biome && isPublic(room)) || this.waveRooms.find(room => isPublic(room));
     }
@@ -120,7 +120,7 @@ export default class WaveRoomService {
      * This don't actually find a private room, just find a room with the same code.
      */
     private findPrivateRoom(code: WaveRoomCode): WaveRoom | undefined {
-        return this.waveRooms.find(room => room.code === code && room.isCandidateJoinable);
+        return this.waveRooms.find(room => room.code === code && room.newPlayerAcceptable);
     }
 
     /**

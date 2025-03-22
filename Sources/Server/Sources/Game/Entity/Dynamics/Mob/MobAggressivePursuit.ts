@@ -2,7 +2,7 @@ import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Peta
 import { MobType } from "../../../../../../Shared/Entity/Statics/EntityType";
 import type { WavePool } from "../../../Genres/Wave/WavePool";
 import type { Entity, EntityMixinConstructor, EntityMixinTemplate } from "../Entity";
-import { onUpdateTick } from "../Entity";
+import { ON_UPDATE_TICK } from "../Entity";
 import { isDeadEntity } from "../EntityElimination";
 import type { BaseMob } from "./Mob";
 import { isBody } from "./MobBodyConnection";
@@ -62,8 +62,8 @@ export const MOB_BEHAVIORS = {
 
 export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
-        [onUpdateTick](poolThis: WavePool): void {
-            super[onUpdateTick](poolThis);
+        [ON_UPDATE_TICK](poolThis: WavePool): void {
+            super[ON_UPDATE_TICK](poolThis);
 
             // Dont chase player when this is petal
             if (isPetal(this.type)) return;
@@ -212,10 +212,6 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
          */
         get loseRange(): number {
             return (MOB_DETECTION_RANGE * 2) * this.size;
-        }
-
-        dispose(): void {
-            super.dispose();
         }
     };
 }

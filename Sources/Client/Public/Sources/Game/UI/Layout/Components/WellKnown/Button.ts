@@ -88,7 +88,7 @@ export class Button extends StaticPanelContainer {
             this.callback();
         });
 
-        this.on("onMouseDown", () => {
+        this.on("onDown", () => {
             if (!this.isValid) {
                 return;
             }
@@ -96,7 +96,7 @@ export class Button extends StaticPanelContainer {
             this.isPressed = true;
         });
 
-        this.on("onMouseUp", () => {
+        this.on("onUp", () => {
             if (!this.isValid) {
                 return;
             }
@@ -106,8 +106,6 @@ export class Button extends StaticPanelContainer {
     }
 
     override render(ctx: CanvasRenderingContext2D): void {
-        if (!this.isRenderable) return;
-
         super.render(ctx);
 
         this.isValid = Component.computePointerLike(this.validate);
@@ -118,14 +116,12 @@ export class Button extends StaticPanelContainer {
     }
 
     private getButtonColor(): ColorCode {
-        if (!this.isValid) {
-            return Button.INVALID_COLOR;
-        }
+        if (!this.isValid) return Button.INVALID_COLOR;
 
         const computedColor = Component.computePointerLike(this.buttonColor);
 
         if (this.isPressed) {
-            return darkend(computedColor, 0.1);
+            return darkend(computedColor, 0.106);
         } else if (this.isHovered) {
             return lighten(computedColor, 0.1);
         }

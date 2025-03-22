@@ -15,7 +15,7 @@ import SettingStorage from "../../Utils/SettingStorage";
 import type { Components } from "../Layout/Components/Component";
 import { AnimationType } from "../Layout/Components/Component";
 import type { AnyStaticContainer } from "../Layout/Components/WellKnown/Container";
-import { StaticPanelContainer, CoordinatedStaticSpace, StaticHContainer, StaticSpace, StaticTranslucentPanelContainer } from "../Layout/Components/WellKnown/Container";
+import { StaticPanelContainer, CoordinatedStaticSpace, StaticHContainer, StaticSpace } from "../Layout/Components/WellKnown/Container";
 import Text from "../Layout/Components/WellKnown/Text";
 import TextInput from "../Layout/Components/WellKnown/TextInput";
 import Toggle from "../Layout/Components/WellKnown/Toggle";
@@ -35,7 +35,7 @@ import MOLECULE_SVG from "./Assets/molecule.svg";
 import SCROLL_UNFURLED_SVG from "./Assets/scroll_unfurled.svg";
 import DISCORD_ICON_SVG from "./Assets/discord_icon.svg";
 import type { TooltipPosition } from "../Layout/Extensions/ExtensionTooltip";
-import Tooltip, { DEFAULT_TOOLTIP_POSITIONS } from "../Layout/Extensions/ExtensionTooltip";
+import Tooltip from "../Layout/Extensions/ExtensionTooltip";
 
 const TAU = Math.PI * 2;
 
@@ -141,7 +141,7 @@ export default class UITitle extends AbstractUI {
 
     public waveRoomSelfId: number = -1;
 
-    override readonly clientboundHandler: StaticAdherableClientboundHandler = {
+    override readonly CLIENTBOUND_HANDLER = {
         [Clientbound.WAVE_ROOM_SELF_ID]: (reader: BinaryReader): void => {
             this.waveRoomSelfId = reader.readUInt32();
         },
@@ -180,7 +180,7 @@ export default class UITitle extends AbstractUI {
             this.biome = waveRoomBiome;
         },
         [Clientbound.WAVE_STARTED]: (reader: BinaryReader): void => {
-            this.squadMenuContainer.setVisible(false, true, AnimationType.ZOOM);
+            this.squadMenuContainer.setVisible(false, true, AnimationType.ZOOM, {});
 
             uiCtx.switchUI("game");
 
@@ -200,7 +200,7 @@ export default class UITitle extends AbstractUI {
 
             this.statusTextRef = SquadContainerStatusText.SQUAD_NOT_FOUND;
         },
-    } as const;
+    } as const satisfies StaticAdherableClientboundHandler;
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
@@ -212,14 +212,14 @@ export default class UITitle extends AbstractUI {
         setTimeout(() => {
             this.connectingText.setVisible(true, false);
             setTimeout(() => {
-                this.connectingText.setVisible(false, true, AnimationType.ZOOM);
+                this.connectingText.setVisible(false, true, AnimationType.ZOOM, {});
                 setTimeout(() => {
-                    this.loggingInText.setVisible(true, true, AnimationType.ZOOM);
+                    this.loggingInText.setVisible(true, true, AnimationType.ZOOM, {});
                     setTimeout(() => {
-                        this.loggingInText.setVisible(false, true, AnimationType.ZOOM);
+                        this.loggingInText.setVisible(false, true, AnimationType.ZOOM, {});
                         setTimeout(() => {
                             this.onLoadedComponents.forEach(c => {
-                                c.setVisible(true, true, AnimationType.ZOOM);
+                                c.setVisible(true, true, AnimationType.ZOOM, {});
                             });
                         }, 150);
                     }, 2000);
@@ -227,16 +227,6 @@ export default class UITitle extends AbstractUI {
             }, 2000);
         }, 1);
     }
-
-    override onKeyDown(event: KeyboardEvent): void { }
-
-    override onKeyUp(event: KeyboardEvent): void { }
-
-    override onMouseDown(event: MouseEvent): void { }
-
-    override onMouseUp(event: MouseEvent): void { }
-
-    override onMouseMove(event: MouseEvent): void { }
 
     protected override initializeComponents(): void {
         this.resetWaveState();
@@ -258,8 +248,7 @@ export default class UITitle extends AbstractUI {
                         new CoordinatedStaticSpace(1, 1, 0, 22),
                     ],
                     offset,
-                    // For safety
-                    [position].concat(DEFAULT_TOOLTIP_POSITIONS.filter(pos => pos !== position)),
+                    [position],
                 );
             };
 
@@ -347,6 +336,7 @@ export default class UITitle extends AbstractUI {
 
                             invertYCoordinate: true,
                         },
+                        
                         "#aaaaaa",
                         0.1,
                     ).addChildren(
@@ -360,7 +350,10 @@ export default class UITitle extends AbstractUI {
                             () => {
                                 settingIsOpen = false;
 
-                                settingContainer.setVisible(settingIsOpen, true, AnimationType.SLIDE, "v");
+                                settingContainer.setVisible(settingIsOpen, true, AnimationType.SLIDE, {
+                                    direction: "v",
+                                    offsetSign: -1,
+                                });
                             },
                         ),
 
@@ -414,7 +407,10 @@ export default class UITitle extends AbstractUI {
                         () => {
                             settingIsOpen = !settingIsOpen;
 
-                            settingContainer.setVisible(settingIsOpen, true, AnimationType.SLIDE, "v");
+                            settingContainer.setVisible(settingIsOpen, true, AnimationType.SLIDE, {
+                                direction: "v",
+                                offsetSign: -1,
+                            });
                         },
 
                         "#599dd8",
@@ -707,7 +703,7 @@ export default class UITitle extends AbstractUI {
                     if (this.squadMenuContainer.visible === false) {
                         clientWebsocket.packetServerbound.sendWaveRoomFindPublic(this.biome);
 
-                        this.squadMenuContainer.setVisible(true, true, AnimationType.ZOOM);
+                        this.squadMenuContainer.setVisible(true, true, AnimationType.ZOOM, {});
 
                         this.statusTextRef = SquadContainerStatusText.SQUAD_CREATING;
 
@@ -771,7 +767,7 @@ export default class UITitle extends AbstractUI {
                 () => {
                     clientWebsocket.packetServerbound.sendWaveRoomCreate(this.biome);
 
-                    this.squadMenuContainer.setVisible(true, true, AnimationType.ZOOM);
+                    this.squadMenuContainer.setVisible(true, true, AnimationType.ZOOM, {});
 
                     this.statusTextRef = SquadContainerStatusText.SQUAD_CREATING;
 
@@ -905,7 +901,7 @@ export default class UITitle extends AbstractUI {
                     10,
 
                     () => {
-                        this.squadMenuContainer.setVisible(false, true, AnimationType.ZOOM);
+                        this.squadMenuContainer.setVisible(false, true, AnimationType.ZOOM, {});
 
                         readyToggle = false;
 
@@ -1248,7 +1244,7 @@ export default class UITitle extends AbstractUI {
             renderEntity({
                 ctx,
                 entity: e,
-                entityOnlyRenderGeneralPart: true,
+                isSpecimen: true,
             });
 
             e.x += e.moveSpeed * s3;

@@ -1,17 +1,18 @@
 import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
-import type { MobType} from "../../../../../../Shared/Entity/Statics/EntityType";
+import type { MobType } from "../../../../../../Shared/Entity/Statics/EntityType";
 import { PetalType } from "../../../../../../Shared/Entity/Statics/EntityType";
 import type { PetalData } from "../../../../../../Shared/Entity/Statics/Mob/Petal/PetalData";
 import { PETAL_PROFILES } from "../../../../../../Shared/Entity/Statics/Mob/Petal/PetalProfiles";
 import { decodeMood } from "../../../../../../Shared/Mood";
-import type { WavePool} from "../../../Genres/Wave/WavePool";
-import { UPDATE_ENTITIES_FPS } from "../../../Genres/Wave/WavePool";
-import type { EntityMixinConstructor, EntityMixinTemplate} from "../Entity";
-import { onUpdateTick } from "../Entity";
+import type { WavePool } from "../../../Genres/Wave/WavePool";
+import { UPDATE_FPS } from "../../../Genres/Wave/WavePool";
+import type { EntityMixinConstructor, EntityMixinTemplate } from "../Entity";
+import { ON_UPDATE_TICK } from "../Entity";
+import { FLOWER_ARC_RADIUS } from "../EntityCollision";
 import type { MobInstance } from "../Mob/Mob";
 import { findNearestEntity } from "../Mob/MobAggressivePursuit";
 import { MAX_CLUSTER_AMOUNT, isClusterPetal, isDynamicPetal } from "../Mob/Petal/Petal";
-import type { BasePlayer} from "./Player";
+import type { BasePlayer } from "./Player";
 import { Player } from "./Player";
 
 const TAU = Math.PI * 2;
@@ -35,18 +36,17 @@ export const UNMOODABLE_PETALS: Set<MobType | PetalType> = new Set([
 
 export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(Base: T) {
     return class MixedBase extends Base implements EntityMixinTemplate {
-        private static readonly DEFAULT_ROTATE_SPEED = 2.5;
+        private static readonly DEFAULT_ROTATE_SPEED = 3.5;
 
-        private static readonly SPRING_STRENGTH = 0.15;
-        private static readonly RADIUS_FRICTION = 0.75;
+        private static readonly RADIUS_SPRING_STRENGTH = 0.4;
+        private static readonly RADIUS_FRICTION = 0.6;
 
-        private static readonly ORBIT_ACCELERATION = 0.2;
-        private static readonly ORBIT_FRICTION = 0.75;
+        private static readonly PETAL_VELOCITY_ACCELERATION = 0.15;
 
         private static readonly PETAL_CLUSTER_RADIUS = 8;
 
         private static readonly SPIN_INTERPOLATION_SPEED = 0.6;
-        private static readonly SPIN_NEAREST_SIZE_COEFFICIENT = 0.3;
+        private static readonly SPIN_NEAREST_SIZE_COEFFICIENT = 0.1;
         private static readonly SPIN_ANGLE_COEFFICIENT = 10;
 
         private rotation = 0;
@@ -55,10 +55,10 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
         private historyY: Float32Array = new Float32Array(HISTORY_SIZE);
         private petalRadii: Float32Array;
         private petalRadiusVelocities: Float32Array;
-        private petalSpins: Float32Array[];
+        private petalSpins: Array<Float32Array>;
 
-        [onUpdateTick](poolThis: WavePool): void {
-            super[onUpdateTick](poolThis);
+        [ON_UPDATE_TICK](poolThis: WavePool): void {
+            super[ON_UPDATE_TICK](poolThis);
 
             this.historyX[this.historyIndex] = this.x;
             this.historyY[this.historyIndex] = this.y;
@@ -147,10 +147,9 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                             ? 25
                             : 40;
 
-                // 25 is FLOWER_ARC_RADIUS
-                targetRadius += ((this.size / Player.BASE_SIZE) - 1) * 25;
+                targetRadius += ((this.size / Player.BASE_SIZE) - 1) * FLOWER_ARC_RADIUS;
 
-                const springForce = (targetRadius - this.petalRadii[i]) * MixedBase.SPRING_STRENGTH;
+                const springForce = (targetRadius - this.petalRadii[i]) * MixedBase.RADIUS_SPRING_STRENGTH;
                 this.petalRadiusVelocities[i] = this.petalRadiusVelocities[i] * MixedBase.RADIUS_FRICTION + springForce;
                 this.petalRadii[i] += this.petalRadiusVelocities[i];
 
@@ -234,7 +233,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
             totalSpeed: number,
             clockwise: number,
         ): number {
-            return (totalSpeed * (clockwise ? -1 : 1)) / UPDATE_ENTITIES_FPS;
+            return (totalSpeed * (clockwise ? -1 : 1)) / UPDATE_FPS;
         }
 
         private doPetalOrbit(
@@ -256,14 +255,8 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
 
             if (!velocity) return;
 
-            velocity[0] += MixedBase.ORBIT_ACCELERATION * diffX;
-            velocity[1] += MixedBase.ORBIT_ACCELERATION * diffY;
-
-            velocity[0] *= MixedBase.ORBIT_FRICTION;
-            velocity[1] *= MixedBase.ORBIT_FRICTION;
-
-            petal.x += velocity[0];
-            petal.y += velocity[1];
+            velocity[0] += MixedBase.PETAL_VELOCITY_ACCELERATION * diffX;
+            velocity[1] += MixedBase.PETAL_VELOCITY_ACCELERATION * diffY;
         }
 
         /**
@@ -326,10 +319,8 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
             }
         }
 
-        dispose(): void {
-            if (super.dispose) {
-                super.dispose();
-            }
+        override [Symbol.dispose](): void {
+            super[Symbol.dispose]?.();
 
             this.historyX = null;
             this.historyY = null;

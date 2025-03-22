@@ -1,23 +1,21 @@
 import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
 import { MOB_PROFILES } from "../../../../../../Shared/Entity/Statics/Mob/MobProfiles";
 import type { WavePool } from "../../../Genres/Wave/WavePool";
-import type { EntityMixinConstructor, EntityMixinTemplate} from "../Entity";
-import { onUpdateTick } from "../Entity";
+import type { EntityMixinConstructor, EntityMixinTemplate } from "../Entity";
+import { ON_UPDATE_TICK } from "../Entity";
 import type { BaseMob, MobInstance } from "./Mob";
 
 const TAU = Math.PI * 2;
 
 /**
  * Get first segment (head) of mob.
- * 
- * @privateremarks
- * You may should care about maxium call stack size error.
  */
 export const traverseMobSegments = (poolThis: WavePool, mob: MobInstance): MobInstance => {
     // Walk through segments
-    const segment = mob.connectingSegment;
-    if (segment && poolThis.getMob(segment.id)) {
-        return traverseMobSegments(poolThis, segment);
+    const { connectingSegment } = mob;
+
+    if (connectingSegment && poolThis.getMob(connectingSegment.id)) {
+        return traverseMobSegments(poolThis, connectingSegment);
     }
 
     return mob;
@@ -30,8 +28,8 @@ export const isBody = (poolThis: WavePool, mob: MobInstance): boolean => travers
 
 export function MobBodyConnection<T extends EntityMixinConstructor<BaseMob>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
-        [onUpdateTick](poolThis: WavePool): void {
-            super[onUpdateTick](poolThis);
+        [ON_UPDATE_TICK](poolThis: WavePool): void {
+            super[ON_UPDATE_TICK](poolThis);
 
             // Dont connect when this is petal
             if (isPetal(this.type)) return;
@@ -63,12 +61,6 @@ export function MobBodyConnection<T extends EntityMixinConstructor<BaseMob>>(Bas
                 const ratio = (currentDistance - centiDistance) / currentDistance;
                 this.x += dx * ratio;
                 this.y += dy * ratio;
-            }
-        }
-
-        dispose(): void {
-            if (super.dispose) {
-                super.dispose();
             }
         }
     };

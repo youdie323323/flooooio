@@ -38,11 +38,11 @@ export default class Renderer<T extends Entity> {
      * Render the entity.
      */
     public render(context: RenderingContext<T>): void {
-        const { ctx, entity, entityOnlyRenderGeneralPart: generalPartOnly } = context;
+        const { ctx, entity, isSpecimen } = context;
 
         ctx.translate(entity.x, entity.y);
 
-        if (!generalPartOnly) {
+        if (!isSpecimen) {
             this.drawEntityDetail(context);
 
             this.drawDead(context);
@@ -53,10 +53,10 @@ export default class Renderer<T extends Entity> {
      * Determine if entity should render.
      */
     public isRenderingCandidate(context: RenderingContext<T>): boolean {
-        const { entity, entityOnlyRenderGeneralPart: generalPartOnly } = context;
+        const { entity, isSpecimen } = context;
 
         return !(
-            !generalPartOnly &&
+            !isSpecimen &&
             entity.isDead &&
             entity.deadT > 1
         );

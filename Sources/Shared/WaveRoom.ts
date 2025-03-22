@@ -2,9 +2,9 @@
 export enum WaveRoomState {
     // State waiting, mean waiting for players
     Waiting,
-    // State started, mean game playing
-    Started,
-    // State ended, mean game over
+    // State started, mean playing game currently
+    Playing,
+    // State ended, mean already game over
     Ended,
 }
 

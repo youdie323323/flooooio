@@ -10,7 +10,7 @@ import { calculateHp } from "../../Genres/Wave/Mathematics/WaveFormula";
 import type { UserData, WavePool } from "../../Genres/Wave/WavePool";
 import type WaveRoom from "../../Genres/Wave/WaveRoom";
 import type { EntityMixinConstructor, Entity, EntityMixinTemplate} from "./Entity";
-import { onUpdateTick } from "./Entity";
+import { ON_UPDATE_TICK } from "./Entity";
 import { getRandomCoordinate } from "./EntityCoordinateMovement";
 import { BaseMob, Mob } from "./Mob/Mob";
 import { isDynamicPetal, MAX_CLUSTER_AMOUNT } from "./Mob/Petal/Petal";
@@ -140,7 +140,7 @@ export function kickClient(ws: uWS.WebSocket<UserData>, reason: ClientboundConne
 
             // Wave room
             if (waveRoom.state === WaveRoomState.Waiting && userData?.waveRoomClientId) {
-                waveRoom.removePlayer(userData.waveRoomClientId);
+                waveRoom.unregisterPlayer(userData.waveRoomClientId);
             }
         }
     }
@@ -158,8 +158,8 @@ export function kickClient(ws: uWS.WebSocket<UserData>, reason: ClientboundConne
 
 export function EntityElimination<T extends EntityMixinConstructor<Entity>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
-        [onUpdateTick](poolThis: WavePool): void {
-            super[onUpdateTick](poolThis);
+        [ON_UPDATE_TICK](poolThis: WavePool): void {
+            super[ON_UPDATE_TICK](poolThis);
 
             if (
                 !isDeadEntity(poolThis, this) &&
@@ -183,12 +183,6 @@ export function EntityElimination<T extends EntityMixinConstructor<Entity>>(Base
 
                     return;
                 }
-            }
-        }
-
-        dispose(): void {
-            if (super.dispose) {
-                super.dispose();
             }
         }
     };

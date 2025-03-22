@@ -1,5 +1,5 @@
-import type { BrandedId, Entity, PartialUnion, UnderlyingMixinUnion} from "../Entity";
-import { onUpdateTick } from "../Entity";
+import type { BrandedId, Entity, PartialUnion, UnderlyingMixinUnion } from "../Entity";
+import { ON_UPDATE_TICK } from "../Entity";
 import { EntityCollision } from "../EntityCollision";
 import { EntityElimination } from "../EntityElimination";
 import { EntityCoordinateMovement } from "../EntityCoordinateMovement";
@@ -13,10 +13,16 @@ import { Rarity } from "../../../../../../Shared/Entity/Statics/EntityRarity";
 import type { PetalType } from "../../../../../../Shared/Entity/Statics/EntityType";
 import { MobType } from "../../../../../../Shared/Entity/Statics/EntityType";
 import type { WavePool } from "../../../Genres/Wave/WavePool";
+import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
 
 export type MobId = BrandedId<"Mob">;
 
 class BaseMob implements Entity {
+    /**
+     * Friction of petal velocity.
+     */
+    private static readonly PETAL_VELOCITY_FRICTION = 0.8125;
+
     x: number;
     y: number;
     magnitude: number;
@@ -80,7 +86,7 @@ class BaseMob implements Entity {
     petalIsSpinningMob: boolean;
 
     /**
-     * Velocity for friction of petal.
+     * Velocity of petal.
      */
     petalVelocity: [number, number] | null;
 
@@ -109,9 +115,21 @@ class BaseMob implements Entity {
         Object.assign(this, source);
     }
 
-    [onUpdateTick](poolThis: WavePool): void { }
+    [ON_UPDATE_TICK](poolThis: WavePool): void {
+        const { petalVelocity: velocity } = this;
 
-    dispose(): void {
+        if (!isPetal(this.type)) return;
+
+        if (!velocity) return;
+
+        velocity[0] *= Mob.PETAL_VELOCITY_FRICTION;
+        velocity[1] *= Mob.PETAL_VELOCITY_FRICTION;
+
+        this.x += velocity[0];
+        this.y += velocity[1];
+    }
+
+    [Symbol.dispose](): void {
         this.targetEntity = null;
         this.lastAttackedEntity = null;
 

@@ -19,5 +19,5 @@ export type RenderingContext<T extends Entity> = Readonly<{
     /**
      * Only render general part of entity.
      */
-    entityOnlyRenderGeneralPart: boolean;
+    isSpecimen: boolean;
 }>;

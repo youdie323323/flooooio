@@ -1,4 +1,4 @@
-import type { Components, MaybePointerLike } from "../Components/Component";
+import { OBSTRUCTION_AFFECTABLE, type Components, type MaybePointerLike } from "../Components/Component";
 import type { PartialSizeLayoutOptions } from "../Components/WellKnown/Container";
 import { StaticTranslucentPanelContainer } from "../Components/WellKnown/Container";
 import type { ComponentExtensionTemplate, ExtensionConstructor } from "./Extension";
@@ -15,6 +15,11 @@ export default function Tooltip<T extends ExtensionConstructor>(
     tooltipPreferredPositions: ReadonlyArray<TooltipPosition> = DEFAULT_TOOLTIP_POSITIONS,
     tooltipRectRadii: MaybePointerLike<number> = 3,
 ) {
+    // For safety
+    tooltipPreferredPositions = tooltipPreferredPositions.concat(
+        DEFAULT_TOOLTIP_POSITIONS.filter(pos => tooltipPreferredPositions.indexOf(pos) === -1),
+    );
+
     abstract class MixedBase extends Base implements ComponentExtensionTemplate {
         private static readonly OPACITY_START: number = 0;
         private static readonly OPACITY_END: number = 1;
@@ -32,16 +37,18 @@ export default function Tooltip<T extends ExtensionConstructor>(
             super(...args);
 
             this.once("onInitialized", () => {
-                this.context.addComponent(
-                    (
-                        this.tooltipContainer = new StaticTranslucentPanelContainer(
-                            () => this.findOptimalPosition(),
-                            () => this.opacity * MixedBase.OPACITY_CONTAINER_END,
-                            () => this.opacity,
-                            tooltipRectRadii,
-                        )
-                    ).addChildren(...tooltipComponents),
-                );
+                this.tooltipContainer =
+                    new StaticTranslucentPanelContainer(
+                        () => this.findOptimalPosition(),
+                        () => this.opacity * MixedBase.OPACITY_CONTAINER_END,
+                        () => this.opacity,
+                        tooltipRectRadii,
+                    ).addChildren(...tooltipComponents);
+
+                // Avoid tooltip blocking other components overlap
+                this.tooltipContainer[OBSTRUCTION_AFFECTABLE] = false;
+
+                this.context.addComponent(this.tooltipContainer);
             });
 
             this.on("onFocus", () => {

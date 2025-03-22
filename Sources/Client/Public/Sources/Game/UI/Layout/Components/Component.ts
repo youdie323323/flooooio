@@ -1,4 +1,5 @@
 import type AbstractUI from "../../UI";
+import type { ComponentCompatibleUnconditionalEvents } from "../../UI";
 import type { LayoutContext, LayoutResult } from "../Layout";
 import LayoutCache from "../LayoutCache";
 import type { DynamicLayoutable } from "./ComponentDynamicLayoutable";
@@ -43,56 +44,9 @@ export type Components =
         DynamicLayoutable
     >;
 
-type OverloadProps<Overload> = Pick<Overload, keyof Overload>;
-
-type OverloadUnionRecursive<Overload, PartialOverload = unknown> = Overload extends (
-    ...args: infer TArgs
-) => infer TReturn
-    ?
-    // Prevent infinite recursion by stopping recursion when TPartialOverload
-    // has accumulated all of the TOverload signatures
-    PartialOverload extends Overload ? never :
-    | OverloadUnionRecursive<
-        PartialOverload & Overload,
-        PartialOverload & ((...args: TArgs) => TReturn) & OverloadProps<Overload>
-    >
-    | ((...args: TArgs) => TReturn)
-    : never;
-
-type OverloadUnion<Overload extends (...args: any[]) => any> = Exclude<
-    OverloadUnionRecursive<
-        // The "() => never" signature must be hoisted to the "front" of the
-        // intersection, for two reasons: a) because recursion stops when it is
-        // encountered, and b) it seems to prevent the collapse of subsequent
-        // "compatible" signatures (eg. "() => void" into "(a?: 1) => void"),
-        // which gives a direct conversion to a union
-        (() => never) & Overload
-    >,
-    Overload extends () => never ? never : () => never
->;
-
-type UnionToIntersection<U> = (
-    U extends any ? (arg: U) => any : never
-) extends (arg: infer I) => void
-    ? I
-    : never;
-
-type UnionToTuple<T> = UnionToIntersection<(T extends any ? (t: T) => T : never)> extends (_: any) => infer W
-    ? [...UnionToTuple<Exclude<T, W>>, W]
-    : [];
-
-export type OverloadParameters<T extends (...args: any[]) => any> = Parameters<OverloadUnion<T>>;
-
-export type OverloadReturnType<T extends (...args: any[]) => any> = ReturnType<OverloadUnion<T>>;
-
-export type SetVisibleOverloadParameters = UnionToTuple<OverloadParameters<Component["setVisible"]>>;
-
-export type SetVisibleImplementationParameters = [
-    toggle: boolean,
-    shouldAnimate: boolean,
-    animationType?: AnimationType,
-    animationConfig0?: AnimationSlideDirection | number,
-];
+type DeepReadonly<T> = {
+    readonly [K in keyof T]: T[K] extends object ? DeepReadonly<T[K]> : T[K];
+};
 
 export const enum AnimationType {
     ZOOM,
@@ -107,12 +61,32 @@ export type AnimationDirectionEasingFunction = Record<AnimationDirection, (x: nu
 
 export type AnimationSlideDirection = "v" | "h";
 
+interface AnimationConfigBase {
+    defaultDurationOverride?: number;
+}
+
+export type AnimationConfigs = DeepReadonly<{
+    [AnimationType.ZOOM]: AnimationConfigBase;
+    [AnimationType.SLIDE]: AnimationConfigBase & {
+        direction?: AnimationSlideDirection;
+        offset?: number;
+        offsetSign?: 1 | -1;
+        fadeEffectEnabled?: boolean;
+    };
+    [AnimationType.FADE]: AnimationConfigBase;
+    [AnimationType.CARD]: AnimationConfigBase;
+}>;
+
+export type AnimationConfigOf<T extends AnimationType> = AnimationConfigs[T];
+
 export function renderPossibleComponent(ctx: CanvasRenderingContext2D, component: Components): void {
-    ctx.save();
+    if (component.isRenderable) {
+        ctx.save();
 
-    component.render(ctx);
+        component.render(ctx);
 
-    ctx.restore();
+        ctx.restore();
+    }
 }
 
 /**
@@ -140,8 +114,8 @@ const INTERACTIVE_EVENT_NAMES = getKeys(INTERACTIVE_EVENTS);
 const CLICKABLE_EVENTS = {
     "onClick": [],
 
-    "onMouseDown": [],
-    "onMouseUp": [],
+    "onDown": [],
+    "onUp": [],
 } as const satisfies EventMap;
 
 const CLICKABLE_EVENT_NAMES = getKeys(CLICKABLE_EVENTS);
@@ -164,16 +138,20 @@ export function hasClickableListeners(component: Components): boolean {
 
 // Typing for EventEmitter
 export type ComponentEvents =
-    & Readonly<{
-        // Event that tell this component is added dynamically to UI
-        "onInitialized": [];
-    }>
-    & Readonly<{
-        // Event that tell this component is hide within animation
-        "onAnimationHide": [];
-    }>
-    & typeof INTERACTIVE_EVENTS
-    & typeof CLICKABLE_EVENTS;
+    Satisfies<
+        & {
+            // Event that tell this component is added dynamically to UI
+            "onInitialized": [];
+        }
+        & {
+            // Event that tell this component is hide within animation
+            "onAnimationHide": [];
+        }
+        & typeof INTERACTIVE_EVENTS
+        & typeof CLICKABLE_EVENTS
+        & ComponentCompatibleUnconditionalEvents,
+        EventMap
+    >;
 
 /**
  * Symbol that affected to obstruction checking.
@@ -192,11 +170,12 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
     // Prepare base symbols
     public [OBSTRUCTION_AFFECTABLE]: boolean = true;
 
-    protected static readonly ANIMATION_ZOOM_DURATION: number = 100;
-    protected static readonly ANIMATION_SLIDE_DURATION: number = 350;
-    protected static readonly ANIMATION_CARD_DURATION: number = 750;
-
-    protected static readonly SLIDE_BASE_DEPTH: number = 20;
+    private static readonly ANIMATION_DEFAULT_DURATIONS = {
+        [AnimationType.ZOOM]: 100,
+        [AnimationType.SLIDE]: 350,
+        [AnimationType.FADE]: 1000,
+        [AnimationType.CARD]: 750,
+    } as const satisfies Record<AnimationType, number>;
 
     private static readonly ANIMATION_EASING_FUNCTIONS = {
         [AnimationType.ZOOM]: {
@@ -237,12 +216,20 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
         return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
     };
 
+    private static readonly SLIDE_DEFAULT_DEPTH_OFFSET: number = 20;
+
     public isAnimating: boolean = false;
 
     public animationType: AnimationType | null = null;
     public animationDirection: AnimationDirection | null = null;
-    public animationSlideDirection: AnimationSlideDirection | null = null;
-    public animationFadeTime: number | null = null;
+
+    public animationDefaultDurationOverride: number | null = null;
+
+    public animationSlideDirection: AnimationConfigs[AnimationType.SLIDE]["direction"];
+    public animationSlideOffset: AnimationConfigs[AnimationType.SLIDE]["offset"];
+    public animationSlideOffsetSign: AnimationConfigs[AnimationType.SLIDE]["offsetSign"];
+    public animationSlideFadeEffectEnabled: AnimationConfigs[AnimationType.SLIDE]["fadeEffectEnabled"];
+
     public animationStartTime: number | null = null;
     public animationProgress: number = 1;
 
@@ -301,6 +288,8 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
 
     /**
      * Cached layout to reduce lags.
+     * 
+     * @deprecated - I decided not to use this for now. I might use it in the future, but for now just use layout method
      */
     public cachedLayout(lc: LayoutContext): LayoutResult {
         const { containerWidth, containerHeight, originX, originY } = lc;
@@ -351,54 +340,30 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
      * Render the component.
      */
     public render(ctx: CanvasRenderingContext2D): void {
-        if (!this.visible && !this.isAnimating) return;
-
         if (this.isAnimating) {
             const currentTime = performance.now();
             if (this.animationStartTime === null) {
                 this.animationStartTime = currentTime;
             }
 
-            let duration: number;
-            switch (this.animationType) {
-                case AnimationType.ZOOM: {
-                    duration = Component.ANIMATION_ZOOM_DURATION;
-
-                    break;
-                }
-
-                case AnimationType.SLIDE: {
-                    duration = Component.ANIMATION_SLIDE_DURATION;
-
-                    break;
-                }
-
-                case AnimationType.FADE: {
-                    duration = this.animationFadeTime;
-
-                    break;
-                }
-
-                case AnimationType.CARD: {
-                    duration = Component.ANIMATION_CARD_DURATION;
-
-                    break;
-                }
-            }
+            const duration: number =
+                this.animationDefaultDurationOverride ||
+                Component.ANIMATION_DEFAULT_DURATIONS[this.animationType];
 
             const deltaT = currentTime - this.animationStartTime;
             const progress = Math.max(0, Math.min(deltaT / duration, 1));
 
-            this.animationProgress = this.animationDirection === "in"
-                ? progress
-                : 1 - progress;
+            this.animationProgress =
+                this.animationDirection === "in"
+                    ? progress
+                    : 1 - progress;
 
             if (deltaT >= duration) {
                 if (this.animationDirection === "out") {
                     this.visible = false;
 
                     // How to fix this error
-                    (this.emit as (...args: ReadonlyArray<any>) => {})("onAnimationHide");
+                    (this.emit as (eventName: keyof ComponentEvents, ...data: ReadonlyArray<any>) => {})("onAnimationHide");
                 }
 
                 // Fallback to original position
@@ -415,9 +380,9 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
                             const inOutProgress = 1 - Component.ZOOM_IN_OUT_EASING_FUNCTION(this.animationProgress);
 
                             if (this.animationDirection === 'out') {
-                                this.y = this.realY - (50 * inOutProgress);
+                                this.y = this.realY - (30 * inOutProgress);
                             } else {
-                                this.y = this.realY + (20 * inOutProgress);
+                                this.y = this.realY;
                             }
                         }
 
@@ -449,21 +414,31 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
                 }
 
                 case AnimationType.SLIDE: {
+                    const {
+                        animationSlideOffset: offset,
+                        animationSlideOffsetSign: offsetSign,
+                        animationSlideFadeEffectEnabled: fadeEffectEnabled,
+                        x, y, w, h,
+                    } = this;
+
                     // In-out opacity
-                    ctx.globalAlpha = progress;
+                    if (fadeEffectEnabled) ctx.globalAlpha = progress;
+
+                    const centerX = x + w / 2,
+                        centerY = y + h / 2;
 
                     // TODO: option for offset are singed or not
                     if (this.animationSlideDirection === "v") {
-                        const slideOffset = -(this.h + Component.SLIDE_BASE_DEPTH) * (1 - progress);
+                        const slideOffset = offsetSign * (h + offset) * (1 - progress);
 
-                        ctx.translate(this.x + this.w / 2, this.realY - slideOffset + this.h / 2);
+                        ctx.translate(centerX, this.realY - slideOffset + h / 2);
                     } else {
-                        const slideOffset = (this.w + Component.SLIDE_BASE_DEPTH) * (1 - progress);
+                        const slideOffset = offsetSign * (w + offset) * (1 - progress);
 
-                        ctx.translate(this.realX - slideOffset + this.w / 2, this.y + this.h / 2);
+                        ctx.translate(this.realX - slideOffset + w / 2, centerY);
                     }
 
-                    ctx.translate(-(this.x + this.w / 2), -(this.y + this.h / 2));
+                    ctx.translate(-centerX, -centerY);
 
                     break;
                 }
@@ -488,14 +463,6 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
                 }
             }
         }
-
-        ctx.save();
-
-        // ctx.strokeStyle = "blue";
-        // ctx.lineWidth = 1;
-        // ctx.strokeRect(this.x, this.y, this.w, this.h);
-
-        ctx.restore();
     }
 
     protected static computePointerLike<T>(p: MaybePointerLike<T>): T {
@@ -506,33 +473,17 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
         toggle: boolean,
         shouldAnimate: false,
     ): void;
-    public setVisible(
+    public setVisible<T extends AnimationType>(
         toggle: boolean,
         shouldAnimate: true,
-        animationType: AnimationType.ZOOM,
+        animationType: T,
+        animationConfig: AnimationConfigOf<T>,
     ): void;
-    public setVisible(
-        toggle: boolean,
-        shouldAnimate: true,
-        animationType: AnimationType.SLIDE,
-        animationSlideDirection: AnimationSlideDirection,
-    ): void;
-    public setVisible(
-        toggle: boolean,
-        shouldAnimate: true,
-        animationType: AnimationType.FADE,
-        animationFadeTime: number,
-    ): void;
-    public setVisible(
-        toggle: boolean,
-        shouldAnimate: true,
-        animationType: AnimationType.CARD,
-    ): void;
-    public setVisible(
+    public setVisible<T extends AnimationType>(
         toggle: boolean,
         shouldAnimate: boolean,
-        animationType?: AnimationType,
-        animationConfig0?: AnimationSlideDirection | number,
+        animationType?: T,
+        animationConfig?: AnimationConfigOf<T>,
     ): void {
         if (toggle === this.visible && !this.isAnimating) return;
 
@@ -548,13 +499,41 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
 
             // Setup config for each animation
 
-            this.animationSlideDirection = animationConfig0 === "h" || animationConfig0 === "v"
-                ? animationConfig0
-                : null;
+            if ("defaultDurationOverride" in animationConfig) {
+                this.animationDefaultDurationOverride = animationConfig.defaultDurationOverride as number;
+            } else {
+                this.animationDefaultDurationOverride = null;
+            }
 
-            this.animationFadeTime = typeof animationConfig0 === "number"
-                ? animationConfig0
-                : null;
+            switch (animationType) {
+                case AnimationType.ZOOM:
+                case AnimationType.FADE:
+                case AnimationType.CARD: break;
+
+                case AnimationType.SLIDE: {
+                    this.animationSlideDirection =
+                        "direction" in animationConfig
+                            ? animationConfig.direction
+                            : "v";
+
+                    this.animationSlideOffset =
+                        "offset" in animationConfig
+                            ? animationConfig.offset
+                            : Component.SLIDE_DEFAULT_DEPTH_OFFSET;
+
+                    this.animationSlideOffsetSign =
+                        "offsetSign" in animationConfig
+                            ? animationConfig.offsetSign
+                            : 1;
+
+                    this.animationSlideFadeEffectEnabled =
+                        "fadeEffectEnabled" in animationConfig
+                            ? animationConfig.fadeEffectEnabled
+                            : true;
+
+                    break;
+                }
+            }
 
             this.animationStartTime = null;
             this.animationProgress = Number(!toggle);

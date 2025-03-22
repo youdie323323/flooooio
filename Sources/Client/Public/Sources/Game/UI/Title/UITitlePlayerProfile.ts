@@ -4,7 +4,7 @@ import { WaveRoomPlayerReadyState } from "../../../../../../Shared/WaveRoom";
 import Player from "../../Entity/Player";
 import { renderEntity } from "../../Entity/Renderers/RendererEntityRenderingLink";
 import type { MaybePointerLike } from "../Layout/Components/Component";
-import { Component } from "../Layout/Components/Component";
+import { Component, OBSTRUCTION_AFFECTABLE } from "../Layout/Components/Component";
 import { AbstractDynamicLayoutable } from "../Layout/Components/ComponentDynamicLayoutable";
 import { calculateStrokeWidth } from "../Layout/Components/WellKnown/Text";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../Layout/Layout";
@@ -13,6 +13,8 @@ import type { WaveRoomPlayerInformation } from "./UITitle";
 import UITitle from "./UITitle";
 
 export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
+    public override[OBSTRUCTION_AFFECTABLE]: boolean = false;
+
     private dummyPlayer: Player = new Player(
         -1,
 
@@ -56,8 +58,6 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
     }
 
     override render(ctx: CanvasRenderingContext2D): void {
-        if (!this.isRenderable) return;
-
         super.render(ctx);
 
         this.update(ctx);
@@ -170,7 +170,7 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
             renderEntity({
                 ctx,
                 entity: this.dummyPlayer,
-                entityOnlyRenderGeneralPart: true,
+                isSpecimen: true,
             });
         }
 

@@ -17,7 +17,7 @@ export type StaticPetalData = Readonly<{
 // Unclustered (single)
 export type SinglePetal = [MobInstance];
 
-export const MAX_CLUSTER_AMOUNT = 5 as const;
+export const MAX_CLUSTER_AMOUNT = 5;
 
 // Clustered (multiple)
 export type ClusterPetal =
@@ -35,7 +35,7 @@ export function isClusterPetal(petal: DynamicPetal): petal is ClusterPetal {
 }
 
 /**
- * Determine if slot is dynamic.
+ * Determine if slot is dynamic (living).
  */
 export function isDynamicPetal(slot: Slot): slot is DynamicPetal {
     return Array.isArray(slot);
@@ -47,6 +47,6 @@ export function isDynamicPetal(slot: Slot): slot is DynamicPetal {
 export type Slot = StaticPetalData | DynamicPetal | null;
 
 export interface PetalSlots {
-    surface: Slot[];
-    bottom: Slot[];
+    surface: Array<Slot>;
+    bottom: Array<Slot>;
 }

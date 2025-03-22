@@ -45,7 +45,7 @@ export interface Entity extends EntityMixinTemplate {
 /**
  * Symbols to call in the update method of WavePool.
  */
-export const onUpdateTick: unique symbol = Symbol("onUpdateTick");
+export const ON_UPDATE_TICK: unique symbol = Symbol("onUpdateTick");
 
 export type EntityMixinConstructor<T extends object> = new (...args: any[]) => T;
 
@@ -53,12 +53,12 @@ export interface EntityMixinTemplate {
     /**
      * Method call upon every update interval.
      */
-    [onUpdateTick](poolThis: WavePool): void;
+    [ON_UPDATE_TICK](poolThis: WavePool): void;
 
     /**
      * Dispose up own mixin values.
      */
-    dispose(): void;
+    [Symbol.dispose](): void;
 }
 
 /**

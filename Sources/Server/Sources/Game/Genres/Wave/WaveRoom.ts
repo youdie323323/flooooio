@@ -64,8 +64,6 @@ export function generateRandomId<T extends MobId | PlayerId | WaveRoomPlayerId>(
     return randomUint32() as T;
 }
 
-const textEncoder = new TextEncoder();
-
 /**
  * The wave room, aka squad.
  */
@@ -93,15 +91,15 @@ export default class WaveRoom {
         // Wave room related
         public visible: WaveRoomVisibleState = WaveRoomVisibleState.Public,
         public state: WaveRoomState = WaveRoomState.Waiting,
-        public roomCandidates: WaveRoomPlayer[] = new Array<WaveRoomPlayer>(),
+        public roomCandidates: Array<WaveRoomPlayer> = new Array<WaveRoomPlayer>(),
     ) {
-        this.waveRoomPacketSendInterval = setInterval(this.broadcastWaveRoomPacket.bind(this), 1000 / WAVE_ROOM_UPDATE_SEND_FPS);
+        this.waveRoomPacketSendInterval = setInterval(this.broadcastWaveRoomState.bind(this), 1000 / WAVE_ROOM_UPDATE_SEND_FPS);
 
         this.wavePool = new WavePool(
-            this.constructWaveData(),
+            this.initializeWaveData(),
 
             () => this.state,
-            this.onChangeAnything,
+            () => this.createStateChangeHandler(),
         );
     }
 
@@ -125,9 +123,9 @@ export default class WaveRoom {
     /**
      * Construct the wave data for wave pool.
      * 
-     * @returns - Constructed wave data.
+     * @returns - Constructed wave data
      */
-    private constructWaveData(): WaveData {
+    private initializeWaveData(): WaveData {
         return {
             progress: 36,
             progressTimer: 0,
@@ -143,15 +141,15 @@ export default class WaveRoom {
     /**
      * Broadcasts the current room state to all players
      */
-    private broadcastWaveRoomPacket() {
-        const waveClientsPacket = this.createWaveRoomUpdatePacket();
+    private broadcastWaveRoomState() {
+        const waveRoomStatePacket = this.createWaveRoomStatePacket();
 
         this.roomCandidates.forEach((player) => {
-            player.ws.send(waveClientsPacket, true);
+            player.ws.send(waveRoomStatePacket, true);
         });
     }
 
-    private calculateWaveRoomUpdatePacketSize(): number {
+    private calculateWaveRoomStatePacketSize(): number {
         let size = 1 + 1 + (this.code.length + 1) + 1 + 1 + 1;
 
         this.roomCandidates.forEach(client => {
@@ -161,51 +159,47 @@ export default class WaveRoom {
         return size;
     }
 
-    private createWaveRoomUpdatePacket(): Uint8Array {
-        const waveRoomUpdateWriter = new BinarySizedWriter(this.calculateWaveRoomUpdatePacketSize());
+    private createWaveRoomStatePacket(): Uint8Array {
+        const waveRoomStateWriter = new BinarySizedWriter(this.calculateWaveRoomStatePacketSize());
 
-        waveRoomUpdateWriter.writeUInt8(Clientbound.WAVE_ROOM_UPDATE);
+        waveRoomStateWriter.writeUInt8(Clientbound.WAVE_ROOM_UPDATE);
 
         // Client count
-        waveRoomUpdateWriter.writeUInt8(this.roomCandidates.length);
+        waveRoomStateWriter.writeUInt8(this.roomCandidates.length);
 
         this.roomCandidates.forEach(({ id, name, readyState }) => {
-            waveRoomUpdateWriter.writeUInt32(id);
+            waveRoomStateWriter.writeUInt32(id);
 
             // TODO: send static petal data too
 
-            waveRoomUpdateWriter.writeString(name);
+            waveRoomStateWriter.writeString(name);
 
-            waveRoomUpdateWriter.writeUInt8(readyState);
+            waveRoomStateWriter.writeUInt8(readyState);
         });
 
-        waveRoomUpdateWriter.writeString(this.code);
+        waveRoomStateWriter.writeString(this.code);
 
-        waveRoomUpdateWriter.writeUInt8(this.biome);
+        waveRoomStateWriter.writeUInt8(this.biome);
 
-        waveRoomUpdateWriter.writeUInt8(this.state);
+        waveRoomStateWriter.writeUInt8(this.state);
 
-        waveRoomUpdateWriter.writeUInt8(this.visible);
+        waveRoomStateWriter.writeUInt8(this.visible);
 
-        return waveRoomUpdateWriter.buffer;
+        return waveRoomStateWriter.buffer;
     }
 
-    public addPlayer(player: StaticPlayerData): WaveRoomPlayerId | false {
-        if (this.state !== WaveRoomState.Waiting) {
-            return false;
-        }
+    public registerPlayer(player: StaticPlayerData): WaveRoomPlayerId | false {
+        if (this.state !== WaveRoomState.Waiting) return false;
 
-        using _disposable = this.onChangeAnything();
+        if (!this.newPlayerAcceptable) return false;
 
-        if (!this.isCandidateJoinable) {
-            return false;
-        }
+        using _disposable = this.createStateChangeHandler();
 
         const id = generateRandomId<WaveRoomPlayerId>();
 
         // Ensure unique clientId
         if (this.roomCandidates.map(v => v.id).includes(id)) {
-            return this.addPlayer(player);
+            return this.registerPlayer(player);
         }
 
         this.roomCandidates.push({
@@ -224,12 +218,10 @@ export default class WaveRoom {
         return id;
     }
 
-    public removePlayer(id: WaveRoomPlayerId): boolean {
-        if (this.state !== WaveRoomState.Waiting) {
-            return false;
-        }
+    public unregisterPlayer(id: WaveRoomPlayerId): boolean {
+        if (this.state !== WaveRoomState.Waiting) return false;
 
-        using _disposable = this.onChangeAnything();
+        using _disposable = this.createStateChangeHandler();
 
         const index = this.roomCandidates.findIndex(p => p.id === id);
         if (index >= 0) {
@@ -252,12 +244,10 @@ export default class WaveRoom {
         }
     }
 
-    public setPlayerReadyState(id: WaveRoomPlayerId, state: WaveRoomPlayerReadyState): boolean {
-        if (this.state !== WaveRoomState.Waiting) {
-            return false;
-        }
+    public updatePlayerReadyState(id: WaveRoomPlayerId, state: WaveRoomPlayerReadyState): boolean {
+        if (this.state !== WaveRoomState.Waiting) return false;
 
-        using _disposable = this.onChangeAnything();
+        using _disposable = this.createStateChangeHandler();
 
         const index = this.roomCandidates.findIndex(p => p.id === id);
         if (index >= 0) {
@@ -274,17 +264,13 @@ export default class WaveRoom {
         }
     }
 
-    public setPublicState(id: WaveRoomPlayerId, state: WaveRoomVisibleState): boolean {
-        if (this.state !== WaveRoomState.Waiting) {
-            return false;
-        }
-
-        using _disposable = this.onChangeAnything();
+    public updateRoomVisibility(id: WaveRoomPlayerId, state: WaveRoomVisibleState): boolean {
+        if (this.state !== WaveRoomState.Waiting) return false;
 
         const playerData = this.roomCandidates.find(p => p.id === id);
-        if (!playerData?.isOwner) {
-            return false;
-        }
+        if (!playerData?.isOwner) return false;
+
+        using _disposable = this.createStateChangeHandler();
 
         this.visible = state;
 
@@ -296,12 +282,10 @@ export default class WaveRoom {
         return true;
     }
 
-    public setPlayerName(id: WaveRoomPlayerId, name: string): boolean {
-        if (this.state !== WaveRoomState.Waiting) {
-            return false;
-        }
+    public updatePlayerName(id: WaveRoomPlayerId, name: string): boolean {
+        if (this.state !== WaveRoomState.Waiting) return false;
 
-        using _disposable = this.onChangeAnything();
+        using _disposable = this.createStateChangeHandler();
 
         const index = this.roomCandidates.findIndex(p => p.id === id);
         if (index >= 0) {
@@ -313,8 +297,8 @@ export default class WaveRoom {
         }
     }
 
-    private startWave() {
-        this.state = WaveRoomState.Started;
+    private startWaveRoom() {
+        this.state = WaveRoomState.Playing;
 
         // Stop update packet send
         clearInterval(this.waveRoomPacketSendInterval);
@@ -326,11 +310,12 @@ export default class WaveRoom {
                 candidateIds: this.roomCandidates.map(c => c.id).join(","),
                 code: this.code,
             });
+            
             logger.info("Wave starting");
         });
     }
 
-    private endWave() {
+    private endWaveRoom() {
         this.state = WaveRoomState.Ended;
 
         // Stop wave update
@@ -338,6 +323,7 @@ export default class WaveRoom {
 
         logger.region(() => {
             using _guard = logger.metadata({ code: this.code });
+
             logger.info("Wave ended");
         });
     }
@@ -345,35 +331,35 @@ export default class WaveRoom {
     /**
      * Disposable checksum.
      */
-    public onChangeAnything = (): Disposable => {
-        return { [Symbol.dispose]: () => this.changeStateIfShould() };
-    };
+    public createStateChangeHandler(): Disposable {
+        return { [Symbol.dispose]: () => this.checkAndUpdateGameState() };
+    }
 
     /**
      * Checksum room values.
      */
-    public changeStateIfShould() {
+    public checkAndUpdateGameState() {
         // this.roomCandidates.length !== 0 to prevent multiple wave start, before wave room deletion
         if (
             this.state === WaveRoomState.Waiting &&
             this.roomCandidates.length !== 0 &&
             this.roomCandidates.every(p => p.readyState === WaveRoomPlayerReadyState.Ready)
         ) {
-            this.startWave();
+            this.startWaveRoom();
         }
 
         if (
-            this.state === WaveRoomState.Started &&
+            this.state === WaveRoomState.Playing &&
             this.wavePool.getAllClients().every(p => p.isDead)
         ) {
-            this.endWave();
+            this.endWaveRoom();
         }
     }
 
     /**
      * Proccess chat message.
      */
-    public processChatMessage({ waveClientId }: UserData, chatMsg: string) {
+    public handleChatMessage({ waveClientId }: UserData, chatMsg: string) {
         if (waveClientId && chatMsg.length > 0) {
             const player = this.wavePool.getClient(waveClientId);
             if (player && !player.isDead) {
@@ -395,7 +381,8 @@ export default class WaveRoom {
     /**
      * Determine if this wave room is joinable.
      */
-    public get isCandidateJoinable() {
-        return this.roomCandidates.length < WaveRoom.MAX_PLAYER_AMOUNT && this.state === WaveRoomState.Waiting;
+    public get newPlayerAcceptable() {
+        return this.roomCandidates.length < WaveRoom.MAX_PLAYER_AMOUNT &&
+            this.state === WaveRoomState.Waiting;
     }
 }

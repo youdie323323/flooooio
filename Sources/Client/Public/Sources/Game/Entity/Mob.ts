@@ -9,7 +9,7 @@ export default class Mob extends Entity {
     /**
      * Current starfish leg distance.
      */
-    public legD: number[] = Array(Mob.STARFISH_LEG_AMOUNT).fill(150);
+    public legD: Array<number> = Array(Mob.STARFISH_LEG_AMOUNT).fill(150);
 
     // Menu statics
     public moveSpeed: number;

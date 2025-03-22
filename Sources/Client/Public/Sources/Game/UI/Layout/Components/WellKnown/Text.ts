@@ -131,8 +131,6 @@ export default class Text extends ExtensionBase(Component<Readonly<ClipboardEven
     }
 
     override render(ctx: CanvasRenderingContext2D): void {
-        if (!this.isRenderable) return;
-
         super.render(ctx);
 
         this.update(ctx);

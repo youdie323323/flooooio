@@ -3,7 +3,7 @@ import { darkend, DARKEND_BASE } from "../../../../../../../../Shared/Utils/Colo
 import ExtensionBase from "../../Extensions/Extension";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
-import type { Components, MaybePointerLike, SetVisibleOverloadParameters, SetVisibleImplementationParameters } from "../Component";
+import type { Components, MaybePointerLike, AnimationConfigOf, AnimationType } from "../Component";
 import { Component, OBSTRUCTION_AFFECTABLE, renderPossibleComponent } from "../Component";
 
 type Optional<T, K extends keyof T> = Partial<Pick<T, K>> & Omit<T, K>;
@@ -22,13 +22,14 @@ export type PartialSizeLayoutOptions = Optional<LayoutOptions, SizeKeys>;
 
 export type SelectableStaticContainerLayoutOptions = AutomaticallySizedLayoutOptions | PartialSizeLayoutOptions;
 
-export type AnyStaticContainer = AbstractStaticContainer<SelectableStaticContainerLayoutOptions>;
+export type AnyStaticContainer = AbstractStaticContainer<SelectableStaticContainerLayoutOptions, Components>;
 
 /**
  * Container component that can add/render childrens.
  */
-export abstract class AbstractStaticContainer<T extends SelectableStaticContainerLayoutOptions> extends ExtensionBase(Component) {
-    protected children: Array<Components> = new Array();
+export abstract class AbstractStaticContainer<T extends SelectableStaticContainerLayoutOptions, Child extends Components>
+    extends ExtensionBase(Component) {
+    protected children: Array<Child> = new Array();
     private wasInitialized: boolean = false;
     private afterInitializedOperationQueue: Set<() => void> = new Set();
 
@@ -82,30 +83,45 @@ export abstract class AbstractStaticContainer<T extends SelectableStaticContaine
         super.destroy();
     }
 
-    override setVisible(...args: SetVisibleOverloadParameters[0]): void;
-    override setVisible(...args: SetVisibleOverloadParameters[1]): void;
-    override setVisible(...args: SetVisibleOverloadParameters[2]): void;
-    override setVisible(...args: SetVisibleOverloadParameters[3]): void;
-    override setVisible(...args: SetVisibleOverloadParameters[4]): void;
     override setVisible(
-        ...[toggle]: SetVisibleImplementationParameters
+        toggle: boolean,
+        shouldAnimate: false,
+    ): void;
+    override setVisible<T extends AnimationType>(
+        toggle: boolean,
+        shouldAnimate: true,
+        animationType: T,
+        animationConfig: AnimationConfigOf<T>,
+    ): void;
+    override setVisible<T extends AnimationType>(
+        toggle: boolean,
+        shouldAnimate: boolean,
+        animationType?: T,
+        animationConfig?: AnimationConfigOf<T>,
     ): void {
         // Sorry
-        (super.setVisible as (...args: ReadonlyArray<any>) => {})(...arguments);
+        (super.setVisible as (...args: ReadonlyArray<any>) => {})(toggle, shouldAnimate, animationType, animationConfig);
 
         // Post-process for component-binded component
 
-        // TODO: do this when this container animation is done
-        this.children.forEach(child => {
-            // Dont animate it, container animation can affected to children
-            child.setVisible(toggle, false);
-        });
+        const setChildrenVisible = () => {
+            this.children.forEach(child => {
+                // Dont animate it, container animation can affected to children
+                child.setVisible(toggle, false);
+            });
+        };
+
+        if (!toggle && shouldAnimate) {
+            this.once("onAnimationHide", setChildrenVisible);
+        } else {
+            setChildrenVisible();
+        }
     }
 
     /**
      * Add chilren to this container.
      */
-    public addChildren(...children: Array<Components>): this {
+    public addChildren(...children: Array<Child>): this {
         children.forEach(child => this.addChild(child));
 
         return this;
@@ -114,21 +130,21 @@ export abstract class AbstractStaticContainer<T extends SelectableStaticContaine
     /**
      * Return the copy of cildren.
      */
-    public getChildren(): Array<Components> {
+    public getChildren(): Array<Child> {
         return this.children.slice();
     }
 
     /**
      * Sort the children.
      */
-    public sortChildren(compareFn?: (a: Components, b: Components) => number): void {
+    public sortChildren(compareFn?: (a: Child, b: Child) => number): void {
         this.children.sort(compareFn);
     }
 
     /**
      * Add child to this container.
      */
-    public addChild(child: Components): this {
+    public addChild(child: Child): this {
         this.children.push(child);
 
         const addChildComponentOperation = () => { this.context.addChildComponent(child); };
@@ -145,7 +161,7 @@ export abstract class AbstractStaticContainer<T extends SelectableStaticContaine
     /**
      * Remove child from this container.
      */
-    public removeChild(child: Components): this {
+    public removeChild(child: Child): this {
         // No need to call destroy method, can done by removeComponent
         const index = this.children.indexOf(child);
         if (index > -1) {
@@ -166,7 +182,7 @@ export abstract class AbstractStaticContainer<T extends SelectableStaticContaine
     /**
      * Check if the component is child of this container.
      */
-    public hasChild(child: Components): boolean {
+    public hasChild(child: Child): boolean {
         return this.children.includes(child);
     }
 }
@@ -174,7 +190,7 @@ export abstract class AbstractStaticContainer<T extends SelectableStaticContaine
 /**
  * Panel-like view static container.
  */
-export class StaticPanelContainer extends AbstractStaticContainer<PartialSizeLayoutOptions> {
+export class StaticPanelContainer<Child extends Components = Components> extends AbstractStaticContainer<PartialSizeLayoutOptions, Child> {
     constructor(
         layout: MaybePointerLike<PartialSizeLayoutOptions>,
 
@@ -239,8 +255,6 @@ export class StaticPanelContainer extends AbstractStaticContainer<PartialSizeLay
     }
 
     override render(ctx: CanvasRenderingContext2D): void {
-        if (!this.isRenderable) return;
-
         super.render(ctx);
 
         this.update(ctx);
@@ -268,7 +282,7 @@ export class StaticPanelContainer extends AbstractStaticContainer<PartialSizeLay
             const strokeWidth = this.getStrokeWidth();
 
             this.children.forEach(child => {
-                const childLayout = child.cachedLayout({
+                const childLayout = child.layout({
                     ctx,
 
                     containerWidth: this.w - (strokeWidth * 4),
@@ -292,11 +306,11 @@ export class StaticPanelContainer extends AbstractStaticContainer<PartialSizeLay
 /**
  * Panel-like view static container but translucent.
  */
-export class StaticTranslucentPanelContainer extends AbstractStaticContainer<PartialSizeLayoutOptions> {
+export class StaticTranslucentPanelContainer<Child extends Components = Components> extends AbstractStaticContainer<PartialSizeLayoutOptions, Child> {
     constructor(
         layout: MaybePointerLike<PartialSizeLayoutOptions>,
 
-        protected readonly containerAlpha: MaybePointerLike<number> = 1,
+        protected readonly containerAlpha: MaybePointerLike<number> = 0.5,
         protected readonly childrenAlpha: MaybePointerLike<number> = 1,
 
         protected readonly rectRadii: MaybePointerLike<number> = 3,
@@ -341,16 +355,14 @@ export class StaticTranslucentPanelContainer extends AbstractStaticContainer<Par
     }
 
     override render(ctx: CanvasRenderingContext2D): void {
-        if (!this.isRenderable) return;
-
         super.render(ctx);
 
         this.update(ctx);
 
-        {
-            ctx.save();
+        const computedContainerAlpha = Component.computePointerLike(this.containerAlpha);
 
-            const computedContainerAlpha = Component.computePointerLike(this.containerAlpha);
+        if (computedContainerAlpha > 0) {
+            ctx.save();
 
             const computedRadii = Component.computePointerLike(this.rectRadii);
 
@@ -371,7 +383,7 @@ export class StaticTranslucentPanelContainer extends AbstractStaticContainer<Par
             ctx.globalAlpha = Component.computePointerLike(this.childrenAlpha);
 
             this.children.forEach(child => {
-                const childLayout = child.cachedLayout({
+                const childLayout = child.layout({
                     ctx,
 
                     containerWidth: this.w,
@@ -394,23 +406,57 @@ export class StaticTranslucentPanelContainer extends AbstractStaticContainer<Par
     }
 }
 
-/**
- * Horizontally arranged invisible container.
- */
-export class StaticHContainer extends AbstractStaticContainer<AutomaticallySizedLayoutOptions> {
+export class StaticTransparentPanelContainer<Child extends Components = Components> extends StaticTranslucentPanelContainer<Child> {
+    constructor(
+        layout: MaybePointerLike<PartialSizeLayoutOptions>,
+
+        protected readonly childrenAlpha: MaybePointerLike<number> = 1,
+    ) {
+        super(layout, 0, childrenAlpha, -1);
+    }
+}
+
+export class AbstractChildLerpableStaticContainer<Child extends Components> extends AbstractStaticContainer<AutomaticallySizedLayoutOptions, Child> {
     public override[OBSTRUCTION_AFFECTABLE]: boolean = false;
 
-    private static readonly POSITION_LERP_FACTOR = 0.1;
+    protected static readonly POSITION_LERP_FACTOR = 0.1;
 
-    private childPositions: Map<Components, number> = new Map();
+    protected childPositions: Map<Child, number> = new Map();
 
     constructor(
         layoutOptions: MaybePointerLike<AutomaticallySizedLayoutOptions>,
 
-        private readonly reverseChildrenRender: MaybePointerLike<boolean> = false,
-        private readonly childReplaceOffset: MaybePointerLike<number | null> = null,
+        protected readonly lerpChildren: MaybePointerLike<boolean> = false,
     ) {
         super(layoutOptions);
+    }
+
+    override destroy(): void {
+        this.childPositions.clear();
+        this.childPositions = null;
+
+        super.destroy();
+    }
+}
+
+/**
+ * Horizontally arranged invisible container.
+ */
+export class StaticHContainer<Child extends Components = Components> extends AbstractChildLerpableStaticContainer<Child> {
+    constructor(
+        layoutOptions: MaybePointerLike<AutomaticallySizedLayoutOptions>,
+
+        lerpChildren: MaybePointerLike<boolean> = false,
+
+        private readonly centerChildren: MaybePointerLike<boolean> = false,
+        private readonly spacingOverride: MaybePointerLike<number | null> = null,
+        private readonly reverseChildrenRender: MaybePointerLike<boolean> = false,
+    ) {
+        super(
+            layoutOptions,
+
+            lerpChildren,
+        );
     }
 
     override layout(lc: LayoutContext): LayoutResult {
@@ -419,7 +465,16 @@ export class StaticHContainer extends AbstractStaticContainer<AutomaticallySized
         let totalWidth = 0;
         let maxHeight = 0;
 
+        const computedSpacingOverride = Component.computePointerLike(this.spacingOverride);
+        const computedReverseChildrenRender = Component.computePointerLike(this.reverseChildrenRender);
+
         if (this.children.length > 0) {
+            let currentX = 0;
+
+            if (computedReverseChildrenRender && computedSpacingOverride) {
+                currentX = computedSpacingOverride * (this.children.length - 1);
+            }
+
             this.children.forEach(child => {
                 const { w: childW, h: childH } = child.layout(
                     {
@@ -428,21 +483,32 @@ export class StaticHContainer extends AbstractStaticContainer<AutomaticallySized
                         containerWidth,
                         containerHeight,
 
-                        // Dont use x, y because only wanted size from origin (0, 0)
-                        originX: 0,
+                        originX: currentX,
                         originY: 0,
                     },
                 );
 
-                totalWidth += childW;
                 maxHeight = Math.max(maxHeight, childH);
+
+                if (computedSpacingOverride !== null) {
+                    totalWidth = Math.max(totalWidth, currentX + childW);
+                    currentX += (computedReverseChildrenRender ? -1 : 1) * computedSpacingOverride;
+                } else {
+                    totalWidth = Math.max(totalWidth, currentX + childW);
+                    currentX += (computedReverseChildrenRender ? -1 : 1) * childW;
+                }
             });
+
+            if (computedReverseChildrenRender) {
+                if (computedSpacingOverride === null) {
+                    totalWidth = currentX * -1;
+                }
+            }
         }
 
         return Layout.layout(
             {
                 ...Component.computePointerLike(this.layoutOptions),
-
                 w: totalWidth,
                 h: maxHeight,
             },
@@ -451,93 +517,143 @@ export class StaticHContainer extends AbstractStaticContainer<AutomaticallySized
     }
 
     override render(ctx: CanvasRenderingContext2D): void {
-        if (!this.isRenderable) return;
-
         super.render(ctx);
 
         this.update(ctx);
 
         if (this.children.length > 0) {
+            const computedLerpChildren = Component.computePointerLike(this.lerpChildren);
+
+            const computedCenterChildren = Component.computePointerLike(this.centerChildren);
+            const computedSpacingOverride = Component.computePointerLike(this.spacingOverride);
             const computedReverseChildrenRender = Component.computePointerLike(this.reverseChildrenRender);
-            const computedChildReplaceOffset = Component.computePointerLike(this.childReplaceOffset);
 
             let currentX = 0;
             if (computedReverseChildrenRender) {
+                if (computedSpacingOverride !== null) {
+                    currentX += computedSpacingOverride * (this.children.length - 1);
+                } else {
+                    this.children.forEach(child => {
+                        const childLayout = child.layout({
+                            ctx,
+
+                            containerWidth: this.w,
+                            containerHeight: this.h,
+
+                            originX: this.x + currentX,
+                            originY: this.y,
+                        });
+
+                        currentX += childLayout.w;
+                    });
+
+                    currentX -= (
+                        this.children[0]?.layout({
+                            ctx,
+
+                            containerWidth: this.w,
+                            containerHeight: this.h,
+
+                            originX: this.x,
+                            originY: this.y,
+                        }).w ?? 0
+                    );
+                }
+            }
+
+            if (computedLerpChildren) {
                 this.children.forEach(child => {
-                    const childLayout = child.cachedLayout({
+                    const childLayout = child.layout({
                         ctx,
+
                         containerWidth: this.w,
                         containerHeight: this.h,
+
                         originX: this.x + currentX,
                         originY: this.y,
                     });
-                    currentX += (computedChildReplaceOffset ?? childLayout.w);
+
+                    const targetX = childLayout.x;
+                    const targetY =
+                        computedCenterChildren
+                            ? this.y + (this.h - childLayout.h) / 2
+                            : childLayout.y;
+
+                    if (!this.childPositions.has(child)) {
+                        this.childPositions.set(child, targetX);
+                    }
+                    const currentPosX = this.childPositions.get(child);
+
+                    const newX = currentPosX + (targetX - currentPosX) * AbstractChildLerpableStaticContainer.POSITION_LERP_FACTOR;
+                    this.childPositions.set(child, newX);
+
+                    child.setX(newX);
+                    child.setY(targetY);
+                    child.setW(childLayout.w);
+                    child.setH(childLayout.h);
+
+                    currentX +=
+                        (computedReverseChildrenRender ? -1 : 1) *
+                        (computedSpacingOverride ?? childLayout.w);
+
+                    renderPossibleComponent(ctx, child);
                 });
-            }
 
-            this.children.forEach(child => {
-                const childLayout = child.cachedLayout({
-                    ctx,
-                    containerWidth: this.w,
-                    containerHeight: this.h,
-                    originX: this.x + currentX,
-                    originY: this.y,
+                for (const child of this.childPositions.keys()) {
+                    if (!this.children.includes(child)) {
+                        this.childPositions.delete(child);
+                    }
+                }
+            } else {
+                this.children.forEach(child => {
+                    const childLayout = child.layout({
+                        ctx,
+
+                        containerWidth: this.w,
+                        containerHeight: this.h,
+
+                        originX: this.x + currentX,
+                        originY: this.y,
+                    });
+
+                    const targetY = computedCenterChildren
+                        ? this.y + (this.h - childLayout.h) / 2
+                        : childLayout.y;
+
+                    child.setX(childLayout.x);
+                    child.setY(targetY);
+                    child.setW(childLayout.w);
+                    child.setH(childLayout.h);
+
+                    currentX +=
+                        (computedReverseChildrenRender ? -1 : 1) *
+                        (computedSpacingOverride ?? childLayout.w);
+
+                    renderPossibleComponent(ctx, child);
                 });
-
-                const targetX = childLayout.x;
-
-                if (!this.childPositions.has(child)) {
-                    this.childPositions.set(child, targetX);
-                }
-                const currentPosX = this.childPositions.get(child);
-
-                const newX = currentPosX + (targetX - currentPosX) * StaticHContainer.POSITION_LERP_FACTOR;
-                this.childPositions.set(child, newX);
-
-                child.setX(newX);
-                child.setY(childLayout.y);
-                child.setW(childLayout.w);
-                child.setH(childLayout.h);
-
-                currentX +=
-                    (computedReverseChildrenRender ? -1 : 1) *
-                    (computedChildReplaceOffset ?? childLayout.w);
-
-                renderPossibleComponent(ctx, child);
-            });
-
-            for (const child of this.childPositions.keys()) {
-                if (!this.children.includes(child)) {
-                    this.childPositions.delete(child);
-                }
             }
         }
-    }
-
-    override destroy(): void {
-        this.childPositions.clear();
-
-        super.destroy();
     }
 }
 
 /**
  * Vertically arranged invisible container.
  */
-export class StaticVContainer extends AbstractStaticContainer<AutomaticallySizedLayoutOptions> {
-    public override[OBSTRUCTION_AFFECTABLE]: boolean = false;
-
-    private static readonly POSITION_LERP_FACTOR = 0.1;
-
-    private childPositions: Map<Components, number> = new Map();
-
+export class StaticVContainer<Child extends Components = Components> extends AbstractChildLerpableStaticContainer<Child> {
     constructor(
         layoutOptions: MaybePointerLike<AutomaticallySizedLayoutOptions>,
 
+        lerpChildren: MaybePointerLike<boolean> = false,
+
+        private readonly centerChildren: MaybePointerLike<boolean> = false,
+        private readonly spacingOverride: MaybePointerLike<number | null> = null,
         private readonly reverseChildrenRender: MaybePointerLike<boolean> = false,
-        private readonly childReplaceOffset: MaybePointerLike<number | null> = null,
     ) {
-        super(layoutOptions);
+        super(
+            layoutOptions,
+
+            lerpChildren,
+        );
     }
 
     override layout(lc: LayoutContext): LayoutResult {
@@ -546,7 +662,16 @@ export class StaticVContainer extends AbstractStaticContainer<AutomaticallySized
         let totalHeight = 0;
         let maxWidth = 0;
 
+        const computedSpacingOverride = Component.computePointerLike(this.spacingOverride);
+        const computedReverseChildrenRender = Component.computePointerLike(this.reverseChildrenRender);
+
         if (this.children.length > 0) {
+            let currentY = 0;
+
+            if (computedReverseChildrenRender && computedSpacingOverride) {
+                currentY = computedSpacingOverride * (this.children.length - 1);
+            }
+
             this.children.forEach(child => {
                 const { w: childW, h: childH } = child.layout(
                     {
@@ -555,15 +680,27 @@ export class StaticVContainer extends AbstractStaticContainer<AutomaticallySized
                         containerWidth,
                         containerHeight,
 
-                        // Dont use x, y because only wanted size from origin (0, 0)
                         originX: 0,
-                        originY: 0,
+                        originY: currentY,
                     },
                 );
 
-                totalHeight += childH;
                 maxWidth = Math.max(maxWidth, childW);
+
+                if (computedSpacingOverride !== null) {
+                    totalHeight = Math.max(totalHeight, currentY + childH);
+                    currentY += (computedReverseChildrenRender ? -1 : 1) * computedSpacingOverride;
+                } else {
+                    totalHeight = Math.max(totalHeight, currentY + childH);
+                    currentY += (computedReverseChildrenRender ? -1 : 1) * childH;
+                }
             });
+
+            if (computedReverseChildrenRender) {
+                if (computedSpacingOverride === null) {
+                    totalHeight = currentY * -1;
+                }
+            }
         }
 
         return Layout.layout(
@@ -577,73 +714,122 @@ export class StaticVContainer extends AbstractStaticContainer<AutomaticallySized
     }
 
     override render(ctx: CanvasRenderingContext2D): void {
-        if (!this.isRenderable) return;
-
         super.render(ctx);
 
         this.update(ctx);
 
         if (this.children.length > 0) {
+            const computedLerpChildren = Component.computePointerLike(this.lerpChildren);
+
+            const computedCenterChildren = Component.computePointerLike(this.centerChildren);
+            const computedSpacingOverride = Component.computePointerLike(this.spacingOverride);
             const computedReverseChildrenRender = Component.computePointerLike(this.reverseChildrenRender);
-            const computedChildReplaceOffset = Component.computePointerLike(this.childReplaceOffset);
 
             let currentY = 0;
             if (computedReverseChildrenRender) {
+                if (computedSpacingOverride !== null) {
+                    currentY = computedSpacingOverride * (this.children.length - 1);
+                } else {
+                    for (const child of this.children) {
+                        const childLayout = child.layout({
+                            ctx,
+
+                            containerWidth: this.w,
+                            containerHeight: this.h,
+
+                            originX: this.x,
+                            originY: this.y,
+                        });
+
+                        currentY += childLayout.h;
+                    }
+
+                    currentY -= (
+                        this.children[0]?.layout({
+                            ctx,
+
+                            containerWidth: this.w,
+                            containerHeight: this.h,
+
+                            originX: this.x,
+                            originY: this.y,
+                        }).h ?? 0
+                    );
+                }
+            }
+
+            if (computedLerpChildren) {
                 this.children.forEach(child => {
-                    const childLayout = child.cachedLayout({
+                    const childLayout = child.layout({
                         ctx,
+
                         containerWidth: this.w,
                         containerHeight: this.h,
+
                         originX: this.x,
                         originY: this.y + currentY,
                     });
-                    currentY += (computedChildReplaceOffset ?? childLayout.h);
+
+                    const targetY = childLayout.y;
+                    const targetX = computedCenterChildren
+                        ? this.x + (this.w - childLayout.w) / 2
+                        : childLayout.x;
+
+                    if (!this.childPositions.has(child)) {
+                        this.childPositions.set(child, targetY);
+                    }
+                    const currentPosY = this.childPositions.get(child);
+
+                    const newY = currentPosY + (targetY - currentPosY) * AbstractChildLerpableStaticContainer.POSITION_LERP_FACTOR;
+                    this.childPositions.set(child, newY);
+
+                    child.setX(targetX);
+                    child.setY(newY);
+                    child.setW(childLayout.w);
+                    child.setH(childLayout.h);
+
+                    currentY +=
+                        (computedReverseChildrenRender ? -1 : 1) *
+                        (computedSpacingOverride ?? childLayout.h);
+
+                    renderPossibleComponent(ctx, child);
                 });
-            }
 
-            this.children.forEach(child => {
-                const childLayout = child.cachedLayout({
-                    ctx,
-                    containerWidth: this.w,
-                    containerHeight: this.h,
-                    originX: this.x,
-                    originY: this.y + currentY,
+                for (const child of this.childPositions.keys()) {
+                    if (!this.children.includes(child)) {
+                        this.childPositions.delete(child);
+                    }
+                }
+            } else {
+                this.children.forEach(child => {
+                    const childLayout = child.layout({
+                        ctx,
+
+                        containerWidth: this.w,
+                        containerHeight: this.h,
+
+                        originX: this.x,
+                        originY: this.y + currentY,
+                    });
+
+                    const targetX =
+                        computedCenterChildren
+                            ? this.x + (this.w - childLayout.w) / 2
+                            : childLayout.x;
+
+                    child.setX(targetX);
+                    child.setY(childLayout.y);
+                    child.setW(childLayout.w);
+                    child.setH(childLayout.h);
+
+                    currentY +=
+                        (computedReverseChildrenRender ? -1 : 1) *
+                        (computedSpacingOverride ?? childLayout.h);
+
+                    renderPossibleComponent(ctx, child);
                 });
-
-                const targetY = childLayout.y;
-
-                if (!this.childPositions.has(child)) {
-                    this.childPositions.set(child, targetY);
-                }
-                const currentPosY = this.childPositions.get(child);
-
-                const newY = currentPosY + (targetY - currentPosY) * StaticVContainer.POSITION_LERP_FACTOR;
-                this.childPositions.set(child, newY);
-
-                child.setX(childLayout.x);
-                child.setY(newY);
-                child.setW(childLayout.w);
-                child.setH(childLayout.h);
-
-                currentY +=
-                    (computedReverseChildrenRender ? -1 : 1) *
-                    (computedChildReplaceOffset ?? childLayout.h);
-
-                renderPossibleComponent(ctx, child);
-            });
-
-            for (const child of this.childPositions.keys()) {
-                if (!this.children.includes(child)) {
-                    this.childPositions.delete(child);
-                }
             }
         }
-    }
-
-    override destroy(): void {
-        this.childPositions.clear();
-
-        super.destroy();
     }
 }
 

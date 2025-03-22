@@ -35,7 +35,7 @@ const init = async () => {
 
     clientWebsocket = new ClientWebsocket(
         // Change listen for each UI
-        () => uiCtx.currentCtx.clientboundHandler,
+        () => uiCtx.currentCtx.CLIENTBOUND_HANDLER,
     );
 
     cameraController = new CameraController(canvas);

@@ -4,7 +4,7 @@ import { MOB_PROFILES } from "../../../../../Shared/Entity/Statics/Mob/MobProfil
 import { PETAL_PROFILES } from "../../../../../Shared/Entity/Statics/Mob/Petal/PetalProfiles";
 import type { WavePool } from "../../Genres/Wave/WavePool";
 import type { EntityMixinConstructor, Entity, EntityMixinTemplate} from "./Entity";
-import { onUpdateTick } from "./Entity";
+import { ON_UPDATE_TICK } from "./Entity";
 import { Mob } from "./Mob/Mob";
 import { Player } from "./Player/Player";
 
@@ -14,8 +14,8 @@ export const PROJECTILE_TYPES: Set<MobType | PetalType> = new Set([]);
 
 export function EntityCoordinateBoundary<T extends EntityMixinConstructor<Entity>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
-        [onUpdateTick](poolThis: WavePool): void {
-            super[onUpdateTick](poolThis);
+        [ON_UPDATE_TICK](poolThis: WavePool): void {
+            super[ON_UPDATE_TICK](poolThis);
 
             if (this instanceof Mob) {
                 const thisIsPetal = isPetal(this.type);
@@ -40,7 +40,7 @@ export function EntityCoordinateBoundary<T extends EntityMixinConstructor<Entity
 
             const { mapRadius } = poolThis.waveData;
 
-            const worldRadius = mapRadius - this.getRadius();
+            const worldRadius = mapRadius - this.radius;
 
             const dx = this.x - mapRadius;
             const dy = this.y - mapRadius;
@@ -54,7 +54,7 @@ export function EntityCoordinateBoundary<T extends EntityMixinConstructor<Entity
             }
         }
 
-        private getRadius(): number {
+        private get radius(): number {
             if (this instanceof Player) {
                 return this.size;
             } else if (this instanceof Mob) {
@@ -67,12 +67,6 @@ export function EntityCoordinateBoundary<T extends EntityMixinConstructor<Entity
             }
 
             return 0;
-        }
-
-        dispose(): void {
-            if (super.dispose) {
-                super.dispose();
-            }
         }
     };
 }

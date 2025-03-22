@@ -9,7 +9,7 @@ import { PETAL_PROFILES } from "../../../../../Shared/Entity/Statics/Mob/Petal/P
 import type { WavePool } from "../../Genres/Wave/WavePool";
 import { returnGoodShape, accordinglyComputeDelta, isColliding, PLAYER_MAX_COLLISION_DELTA } from "../Statics/Collision/CollisionCollide";
 import type { EntityMixinConstructor, Entity, EntityMixinTemplate, RealEntity } from "./Entity";
-import { onUpdateTick } from "./Entity";
+import { ON_UPDATE_TICK } from "./Entity";
 import { calculateMaxHealth, isDeadEntity } from "./EntityElimination";
 import type { MobInstance } from "./Mob/Mob";
 import { Mob, MOB_SIZE_FACTOR } from "./Mob/Mob";
@@ -33,18 +33,18 @@ export const damageOf = (stat: PetalStat | MobStat): number => isMobStat(stat)
 
 export const calculateMobSize = (profile: MobData, rarity: Rarity): number => profile.baseSize * MOB_SIZE_FACTOR[rarity];
 
+export const FLOWER_FRACTION = 25;
+export const FLOWER_ARC_RADIUS = 25;
+
+export const FLOWER_DEFAULT_SEARCH_DATA = {
+    fraction: FLOWER_FRACTION,
+    rx: FLOWER_ARC_RADIUS,
+    ry: FLOWER_ARC_RADIUS,
+} as const satisfies Partial<EntityCollision>;
+
 export function EntityCollision<T extends EntityMixinConstructor<Entity>>(Base: T) {
     return class MixedBase extends Base implements EntityMixinTemplate {
         private static readonly BUBBLE_PUSH_FACTOR = 3;
-
-        private static readonly FLOWER_FRACTION = 25;
-        private static readonly FLOWER_ARC_RADIUS = 25;
-
-        private static readonly FLOWER_DEFAULT_SEARCH_DATA = {
-            fraction: MixedBase.FLOWER_FRACTION,
-            rx: MixedBase.FLOWER_ARC_RADIUS,
-            ry: MixedBase.FLOWER_ARC_RADIUS,
-        } as const satisfies Partial<EntityCollision>;
 
         private static calculatePush(entity1: Entity, entity2: Entity, delta: number): [number, number] {
             const dx = entity2.x - entity1.x;
@@ -65,8 +65,8 @@ export function EntityCollision<T extends EntityMixinConstructor<Entity>>(Base: 
 
         private static calculateSearchRadius = ({ fraction, rx, ry }: Partial<EntityCollision>, size: number): number => (rx + ry) * (size / fraction);
 
-        [onUpdateTick](poolThis: WavePool): void {
-            super[onUpdateTick](poolThis);
+        [ON_UPDATE_TICK](poolThis: WavePool): void {
+            super[ON_UPDATE_TICK](poolThis);
 
             const thisMaxHealth = calculateMaxHealth(this);
 
@@ -245,7 +245,7 @@ export function EntityCollision<T extends EntityMixinConstructor<Entity>>(Base: 
             ) {
                 const shape1 = returnGoodShape(this);
 
-                const searchRadius = MixedBase.calculateSearchRadius(MixedBase.FLOWER_DEFAULT_SEARCH_DATA, this.size);
+                const searchRadius = MixedBase.calculateSearchRadius(FLOWER_DEFAULT_SEARCH_DATA, this.size);
 
                 const nearby = poolThis.sharedSpatialHash.search(this, searchRadius);
 
@@ -277,12 +277,6 @@ export function EntityCollision<T extends EntityMixinConstructor<Entity>>(Base: 
                 });
 
                 return;
-            }
-        }
-
-        dispose(): void {
-            if (super.dispose) {
-                super.dispose();
             }
         }
     };

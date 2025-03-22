@@ -1,6 +1,6 @@
 import type { WavePool } from "../../Genres/Wave/WavePool";
 import type { EntityMixinConstructor, Entity, EntityMixinTemplate} from "./Entity";
-import { onUpdateTick } from "./Entity";
+import { ON_UPDATE_TICK } from "./Entity";
 import type { PlayerInstance } from "./Player/Player";
 
 const TAU = Math.PI * 2;
@@ -12,8 +12,8 @@ export const angleToRad = (angle: number): number => (angle / 255) * TAU;
 
 export function EntityCoordinateMovement<T extends EntityMixinConstructor<Entity>>(Base: T) {
     return class extends Base implements EntityMixinTemplate {
-        [onUpdateTick](poolThis: WavePool): void {
-            super[onUpdateTick](poolThis);
+        [ON_UPDATE_TICK](poolThis: WavePool): void {
+            super[ON_UPDATE_TICK](poolThis);
 
             if (this.magnitude > 0) {
                 const rad = angleToRad(this.angle);
@@ -23,19 +23,13 @@ export function EntityCoordinateMovement<T extends EntityMixinConstructor<Entity
                 this.y += Math.sin(rad) * magnitude;
             }
         }
-
-        dispose(): void {
-            if (super.dispose) {
-                super.dispose();
-            }
-        }
     };
 }
 
 /**
  * Generate a random safe position.
  * 
- * @returns Safe random coordinate.
+ * @returns Safe random coordinate
  */
 export function getRandomSafeCoordinate(
     mapRadius: number,
@@ -74,7 +68,7 @@ export function getRandomSafeCoordinate(
 /**
  * Generate a random position.
  * 
- * @returns Random coordinate.
+ * @returns Random coordinate
  */
 export function getRandomCoordinate(
     centerX: number,

@@ -254,8 +254,6 @@ export default class TextInput extends ExtensionBase(Component) {
     }
 
     override render() {
-        if (!this.isRenderable) return;
-
         const { ctx } = this;
         if (!ctx) return;
 
@@ -502,9 +500,9 @@ export default class TextInput extends ExtensionBase(Component) {
 
         if (this.hasFocus) this.blur();
 
-        this.canvas.removeEventListener('mousemove', this.onmousemoveListen);
-        this.canvas.removeEventListener('mousedown', this.onmousedownListen);
-        this.canvas.removeEventListener('mouseup', this.onmouseupListen);
+        this.canvas.removeEventListener("mousemove", this.onmousemoveListen);
+        this.canvas.removeEventListener("mousedown", this.onmousedownListen);
+        this.canvas.removeEventListener("mouseup", this.onmouseupListen);
 
         document.body.removeChild(this.hiddenInput);
 

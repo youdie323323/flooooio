@@ -19,10 +19,11 @@ import TilesetWavedRenderer from "../Shared/Tiled/TilesetWavedRenderer";
 import { Clientbound } from "../../../../../../Shared/Websocket/Packet/PacketDirection";
 import type { StaticAdherableClientboundHandler } from "../../Websocket/Packet/PacketClientbound";
 import UICloseButton from "../Shared/UICloseButton";
-import { AnimationType, Components } from "../Layout/Components/Component";
-import { StaticHContainer, StaticVContainer } from "../Layout/Components/WellKnown/Container";
-import UIGameMobCard from "./UIGameMobCard";
+import type { AnimationConfigOf } from "../Layout/Components/Component";
+import { AnimationType } from "../Layout/Components/Component";
+import { StaticSpace, StaticTranslucentPanelContainer, StaticTransparentPanelContainer, StaticVContainer } from "../Layout/Components/WellKnown/Container";
 import { InlineRenderingCall } from "../Layout/Extensions/ExtensionInlineRenderingCall";
+import UIGameWaveEnemyIcons from "./UIGameWaveEnemyIcons";
 
 let interpolatedMouseX = 0;
 let interpolatedMouseY = 0;
@@ -54,7 +55,6 @@ let gameUiCurrentBiome: Biome = Biome.GARDEN;
 export default class UIGame extends AbstractUI {
     private readonly DEAD_BACKGROUND_TARGET_OPACITY: number = 0.3;
     private readonly DEAD_BACKGROUND_FADE_DURATION: number = 0.3;
-    private readonly DEAD_MENU_ANIMATION_DURATION: number = 2;
 
     private tilesetWavedRendererOceanPattern: TilesetWavedRenderer = new TilesetWavedRenderer();
     private tilesetRenderer: TilesetRenderer = new TilesetRenderer();
@@ -62,7 +62,7 @@ export default class UIGame extends AbstractUI {
     private players: Map<number, Player> = new Map();
     private mobs: Map<number, Mob> = new Map();
 
-    private mobCardsContainer: StaticHContainer;
+    private waveEnemyIcons: UIGameWaveEnemyIcons;
 
     private updateT: number;
     private t: number;
@@ -76,37 +76,41 @@ export default class UIGame extends AbstractUI {
     private nWaveProgressTimer: number;
     private nWaveProgressRedGageTimer: number;
 
-    private waveEnded: boolean;
+    /**
+     * Wave room state is Ended or not.
+     */
+    private wasWaveEnded: boolean;
 
     private mapRadius: number;
     private oMapRadius: number;
     private nMapRadius: number;
 
-    private wasDeadMenuContinued: boolean;
-    private wasGameOverContinued: boolean;
-
-    private deadMenuContinueButton: Button;
-
     private deadMenuBackgroundOpacity: number;
 
-    private gameOverMenuContinueButton: Button;
+    private static readonly DEAD_MENU_CONTAINER_ANIMATION_CONFIG = {
+        defaultDurationOverride: 2500,
 
-    private gameOverMenuOpacity: number;
+        direction: "v",
+        offset: 300,
+        offsetSign: 1,
+        fadeEffectEnabled: false,
+    } as const satisfies AnimationConfigOf<AnimationType.SLIDE>;
 
-    private youWillRespawnNextWaveOpacity: number;
+    private deadMenuContainer: StaticVContainer;
+    private wasDeadMenuContinued: boolean;
 
-    private deadMenuContinueButtonY: number;
-    private deadMenuAnimationActive: boolean;
-    private deadMenuAnimationTimer: number;
+    private gameOverMenuContainer: StaticVContainer;
 
-    private chats: string[];
+    private youWillRespawnNextWaveContainer: StaticTranslucentPanelContainer;
+
     private chatInput: TextInput;
+    private chats: string[];
 
     private currentMoodFlags: number;
 
     public waveSelfId: number = -1;
 
-    override readonly clientboundHandler: StaticAdherableClientboundHandler = {
+    override readonly CLIENTBOUND_HANDLER = {
         [Clientbound.WAVE_SELF_ID]: (reader: BinaryReader): void => {
             this.waveSelfId = reader.readUInt32();
         },
@@ -132,7 +136,7 @@ export default class UIGame extends AbstractUI {
                 this.nWaveProgressRedGageTimer = waveProgressRedGageTimer;
                 this.oWaveProgressRedGageTimer = this.waveProgressRedGageTimer;
 
-                this.waveEnded = waveEnded;
+                this.wasWaveEnded = waveEnded;
 
                 this.nMapRadius = waveMapRadius;
                 this.oMapRadius = this.mapRadius;
@@ -270,8 +274,8 @@ export default class UIGame extends AbstractUI {
                         mobIsFirstSegment,
                     );
 
-                    if (this.isCardableMobInstance(mobInstance)) {
-                        this.addMobCard(mobInstance);
+                    if (this.waveEnemyIcons.isIconableMobInstance(mobInstance)) {
+                        this.waveEnemyIcons.addMobIcon(mobInstance);
                     }
 
                     this.mobs.set(mobId, mobInstance);
@@ -317,7 +321,7 @@ export default class UIGame extends AbstractUI {
                 // TODO: implement
             }
         },
-    };
+    } as const satisfies StaticAdherableClientboundHandler;
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
@@ -331,272 +335,154 @@ export default class UIGame extends AbstractUI {
         this.nWaveProgressTimer = this.nWaveProgressRedGageTimer = this.nMapRadius = 0;
 
         this.wasDeadMenuContinued = false;
-        this.wasGameOverContinued = false;
-
-        this.deadMenuContinueButtonY = -50;
-        this.deadMenuAnimationTimer = 0;
-        this.deadMenuAnimationActive = false;
 
         this.deadMenuBackgroundOpacity = 0;
-        this.youWillRespawnNextWaveOpacity = 0;
-        this.gameOverMenuOpacity = 0;
 
-        this.waveEnded = false;
+        this.wasWaveEnded = false;
 
         this.chats = [];
 
         this.currentMoodFlags = MoodFlags.NORMAL;
-    }
 
-    override onKeyDown(event: KeyboardEvent): void {
-        switch (event.key) {
-            // Space means space
-            case " ": {
-                this.currentMoodFlags |= MoodFlags.ANGRY;
-                clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
+        { // Setup listeners
+            this.on("onKeyDown", (event: KeyboardEvent) => {
+                switch (event.key) {
+                    // Space means space
+                    case " ": {
+                        this.currentMoodFlags |= MoodFlags.ANGRY;
+                        clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
 
-                break;
-            }
-
-            case "Shift": {
-                this.currentMoodFlags |= MoodFlags.SAD;
-                clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
-
-                break;
-            }
-
-            case "Enter": {
-                if (this.chatInput.hasFocus) {
-                    this.chatInput.blur();
-                } else {
-                    const selfPlayer = this.players.get(this.waveSelfId);
-                    if (!selfPlayer) {
-                        return;
+                        break;
                     }
 
-                    if (selfPlayer.isDead) {
-                        if (this.wasDeadMenuContinued) this.leaveGame();
+                    case "Shift": {
+                        this.currentMoodFlags |= MoodFlags.SAD;
+                        clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
 
-                        if (!this.wasDeadMenuContinued) {
-                            this.wasDeadMenuContinued = true;
-                        }
+                        break;
                     }
 
-                    if (this.chatInput) this.chatInput.focus();
-                }
+                    case "Enter": {
+                        if (this.chatInput.hasFocus) {
+                            this.chatInput.blur();
+                        } else {
+                            const selfPlayer = this.players.get(this.waveSelfId);
+                            if (!selfPlayer) {
+                                return;
+                            }
 
-                break;
-            }
+                            if (selfPlayer.isDead) {
+                                if (this.wasDeadMenuContinued) this.leaveGame();
 
-            default: {
-                // Slot swapping
-                if (
-                    clientWebsocket &&
-                    // Dont swap while chatting
-                    !this.chatInput.hasFocus
-                ) {
-                    if (event.code.startsWith("Digit")) {
-                        let index = parseInt(event.code.slice(5));
-                        if (index === 0) {
-                            index = 10;
+                                if (!this.wasDeadMenuContinued) {
+                                    this.wasDeadMenuContinued = true;
+                                }
+                            }
+
+                            if (this.chatInput) this.chatInput.focus();
                         }
 
-                        index--;
-                        clientWebsocket.packetServerbound.sendWaveSwapPetal(index);
+                        break;
+                    }
+
+                    default: {
+                        // Slot swapping
+                        if (
+                            clientWebsocket &&
+                            // Dont swap while chatting
+                            !this.chatInput.hasFocus
+                        ) {
+                            if (event.code.startsWith("Digit")) {
+                                let index = parseInt(event.code.slice(5));
+                                if (index === 0) {
+                                    index = 10;
+                                }
+
+                                index--;
+                                clientWebsocket.packetServerbound.sendWaveSwapPetal(index);
+                            }
+                        }
+
+                        break;
                     }
                 }
-
-                break;
-            }
-        }
-    }
-
-    override onKeyUp(event: KeyboardEvent): void {
-        switch (event.key) {
-            // Space means space
-            case " ": {
-                this.currentMoodFlags &= ~MoodFlags.ANGRY;
-                clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
-
-                break;
-            }
-
-            case "Shift": {
-                this.currentMoodFlags &= ~MoodFlags.SAD;
-                clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
-
-                break;
-            }
-        }
-    }
-
-    override onMouseDown(event: MouseEvent): void {
-        if (clientWebsocket) {
-            if (event.button === 0) {
-                this.currentMoodFlags |= MoodFlags.ANGRY;
-                clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
-            }
-
-            if (event.button === 2) {
-                this.currentMoodFlags |= MoodFlags.SAD;
-                clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
-            }
-        }
-    }
-
-    override onMouseUp(event: MouseEvent): void {
-        if (clientWebsocket) {
-            if (event.button === 0) {
-                this.currentMoodFlags &= ~MoodFlags.ANGRY;
-                clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
-            }
-
-            if (event.button === 2) {
-                this.currentMoodFlags &= ~MoodFlags.SAD;
-                clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
-            }
-        }
-    }
-
-    override onMouseMove(event: MouseEvent): void {
-        mouseXOffset = event.clientX - document.documentElement.clientWidth / 2;
-        mouseYOffset = event.clientY - document.documentElement.clientHeight / 2;
-
-        if (
-            !SettingStorage.get("keyboard_control") &&
-            clientWebsocket
-        ) {
-            const angle = Math.atan2(mouseYOffset, mouseXOffset);
-            const distance = Math.hypot(mouseXOffset, mouseYOffset) / uiScaleFactor;
-
-            clientWebsocket.packetServerbound.sendWaveChangeMove(
-                angle,
-                distance < 100 ? distance / 100 : 1,
-            );
-        }
-    }
-
-    private addMobCard(mobInstance: Mob): void {
-        const vContainerToAdd =
-            this.mobCardsContainer.getChildren()
-                .find(
-                    container =>
-                        container instanceof StaticVContainer &&
-                        container.getChildren().find(
-                            c =>
-                                c instanceof UIGameMobCard &&
-                                c.mobInstance.type === mobInstance.type,
-                        ),
-                ) as StaticVContainer | undefined;
-
-        const createMobCard = (): UIGameMobCard => {
-            const mobCard = new UIGameMobCard(
-                {
-                    x: 0,
-                    y: 0,
-                },
-
-                mobInstance,
-            );
-
-            // Animation on appear
-            mobCard.setVisible(false, false);
-            mobCard.setVisible(true, true, AnimationType.CARD);
-
-            return mobCard;
-        };
-
-        if (vContainerToAdd) {
-            const existingMobCard = vContainerToAdd.getChildren()
-                .find(
-                    c =>
-                        c instanceof UIGameMobCard &&
-                        c.mobInstance.type === mobInstance.type &&
-                        c.mobInstance.rarity === mobInstance.rarity,
-                ) as UIGameMobCard | undefined;
-
-            if (existingMobCard) {
-                existingMobCard.mobAmountAccumulator++;
-            } else {
-                vContainerToAdd.addChild(createMobCard());
-            }
-
-            vContainerToAdd.sortChildren(
-                (({ mobInstance: mobA }: UIGameMobCard, { mobInstance: mobB }: UIGameMobCard) => mobA.rarity - mobB.rarity) as
-                Parameters<typeof vContainerToAdd["sortChildren"]>[0],
-            );
-        } else {
-            const vContainer = new StaticVContainer(
-                {
-                    x: 0,
-                    y: 0,
-                },
-
-                true,
-                6,
-            );
-
-            vContainer.addChild(createMobCard());
-
-            this.mobCardsContainer.addChild(vContainer);
-        }
-    }
-
-    private removeMobCard(mobInstance: Mob): void {
-        const vContainerToRemoveFrom = this.mobCardsContainer.getChildren()
-            .find(
-                container =>
-                    container instanceof StaticVContainer &&
-                    container.getChildren().some(
-                        c =>
-                            c instanceof UIGameMobCard &&
-                            c.mobInstance.type === mobInstance.type &&
-                            c.mobInstance.rarity === mobInstance.rarity,
-                    ),
-            ) as StaticVContainer | undefined;
-
-        if (!vContainerToRemoveFrom) return;
-
-        const mobCard = vContainerToRemoveFrom.getChildren()
-            .find(
-                c =>
-                    c instanceof UIGameMobCard &&
-                    c.mobInstance.type === mobInstance.type &&
-                    c.mobInstance.rarity === mobInstance.rarity,
-            ) as UIGameMobCard | undefined;
-
-        if (!mobCard) return;
-
-        const checksumVContainer = (): void => {
-            if (vContainerToRemoveFrom.getChildren().length === 0) {
-                this.mobCardsContainer.removeChild(vContainerToRemoveFrom);
-            }
-        };
-
-        if (mobCard.mobAmountAccumulator > 1) {
-            mobCard.mobAmountAccumulator--;
-        } else {
-            mobCard.once("onAnimationHide", () => {
-                vContainerToRemoveFrom.removeChild(mobCard);
-
-                checksumVContainer();
             });
 
-            mobCard.setVisible(false, true, AnimationType.CARD);
+            this.on("onKeyUp", (event: KeyboardEvent) => {
+                switch (event.key) {
+                    // Space means space
+                    case " ": {
+                        this.currentMoodFlags &= ~MoodFlags.ANGRY;
+
+                        clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
+
+                        break;
+                    }
+
+                    case "Shift": {
+                        this.currentMoodFlags &= ~MoodFlags.SAD;
+
+                        clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
+
+                        break;
+                    }
+                }
+            });
+
+            this.on("onMouseDown", (event: MouseEvent) => {
+                if (clientWebsocket) {
+                    if (event.button === 0) {
+                        this.currentMoodFlags |= MoodFlags.ANGRY;
+
+                        clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
+                    }
+
+                    if (event.button === 2) {
+                        this.currentMoodFlags |= MoodFlags.SAD;
+
+                        clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
+                    }
+                }
+            });
+
+            this.on("onMouseUp", (event: MouseEvent) => {
+                if (clientWebsocket) {
+                    if (event.button === 0) {
+                        this.currentMoodFlags &= ~MoodFlags.ANGRY;
+
+                        clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
+                    }
+
+                    if (event.button === 2) {
+                        this.currentMoodFlags &= ~MoodFlags.SAD;
+
+                        clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
+                    }
+                }
+            });
+
+            this.on("onMouseMove", (event: MouseEvent) => {
+                mouseXOffset = event.clientX - document.documentElement.clientWidth / 2;
+                mouseYOffset = event.clientY - document.documentElement.clientHeight / 2;
+
+                if (
+                    !SettingStorage.get("keyboard_control") &&
+                    clientWebsocket
+                ) {
+                    const angle = Math.atan2(mouseYOffset, mouseXOffset);
+                    const distance = Math.hypot(mouseXOffset, mouseYOffset) / uiScaleFactor;
+
+                    clientWebsocket.packetServerbound.sendWaveChangeMove(
+                        angle,
+                        distance < 100 ? distance / 100 : 1,
+                    );
+                }
+            });
         }
-
-        checksumVContainer();
-    }
-
-    private isCardableMobInstance({ type, isPet }: Mob): boolean {
-        return this.mobCardsContainer &&
-            !(
-                isPetal(type) ||
-                isPet
-            );
     }
 
     protected override initializeComponents(): void {
+        // Leave wave button
         this.addComponent(new UICloseButton(
             {
                 x: 6,
@@ -604,91 +490,192 @@ export default class UIGame extends AbstractUI {
             },
             14,
 
-            () => {
-                clientWebsocket.packetServerbound.sendWaveLeave();
-
-                uiCtx.switchUI("title");
-            },
+            () => this.leaveGame(),
         ));
 
-        this.deadMenuContinueButton = new Button(
-            () => ({
-                x: -(95 / 2),
-                y: this.deadMenuContinueButtonY + 50,
-                w: 95,
-                h: 27,
+        {
+            this.deadMenuContainer = new StaticVContainer(
+                () => ({
+                    x: -(this.deadMenuContainer.w / 2),
+                    y: -(this.deadMenuContainer.h / 2),
 
-                alignFromCenterX: true,
-            }),
+                    alignFromCenterX: true,
+                    alignFromCenterY: true,
+                }),
 
-            2,
+                false,
 
-            10,
-            0.05,
-
-            [
+                true,
+            ).addChildren(
                 new Text(
                     {
                         x: 0,
                         y: 0,
                     },
-                    "Continue",
-                    20,
+                    "You were destroyed by:",
+                    12.2,
                 ),
-            ],
-
-            () => {
-                this.wasDeadMenuContinued = true;
-
-                this.gameOverMenuContinueButton.setVisible(true, true, AnimationType.FADE, 1000);
-            },
-
-            "#1dd129",
-            true,
-        );
-
-        // Dont show every frame
-        this.deadMenuContinueButton.setVisible(false, false);
-
-        this.addComponent(this.deadMenuContinueButton);
-
-        this.gameOverMenuContinueButton = new Button(
-            {
-                x: -(95 / 2),
-                y: (-(27 / 2)) + 40,
-                w: 95,
-                h: 27,
-
-                alignFromCenterX: true,
-                alignFromCenterY: true,
-            },
-
-            2,
-
-            10,
-            0.05,
-
-            [
+                new StaticSpace(2, 2),
                 new Text(
                     {
                         x: 0,
                         y: 0,
                     },
-                    "Continue",
-                    20,
+                    "Poison",
+                    16.1,
                 ),
-            ],
 
-            () => this.leaveGame(),
+                new StaticSpace(100, 100),
 
-            "#c62327",
-            true,
-        );
+                new Button(
+                    {
+                        x: 0,
+                        y: 0,
+                        w: 88,
+                        h: 24,
+                    },
 
-        // Dont show every frame
-        this.gameOverMenuContinueButton.setVisible(false, false);
+                    3,
 
-        this.addComponent(this.gameOverMenuContinueButton);
+                    3,
+                    1,
+
+                    [
+                        new Text(
+                            {
+                                x: 3,
+                                y: 2,
+                            },
+
+                            "Continue",
+                            17,
+                        ),
+                    ],
+
+                    () => {
+                        this.wasDeadMenuContinued = true;
+
+                        this.deadMenuContainer.setVisible(false, true, AnimationType.SLIDE, UIGame.DEAD_MENU_CONTAINER_ANIMATION_CONFIG);
+                    },
+
+                    "#1dd129",
+                    true,
+                ),
+                new StaticSpace(4, 4),
+                new Text(
+                    {
+                        x: 0,
+                        y: 0,
+                    },
+
+                    "(or press enter)",
+                    12,
+                ),
+            );
+
+            this.deadMenuContainer.setVisible(false, false);
+
+            this.addComponent(this.deadMenuContainer);
+        }
+
+        {
+            this.gameOverMenuContainer = new StaticVContainer(
+                () => ({
+                    x: -(this.gameOverMenuContainer.w / 2),
+                    y: -(this.gameOverMenuContainer.h / 2),
+
+                    alignFromCenterX: true,
+                    alignFromCenterY: true,
+                }),
+
+                false,
+
+                true,
+            ).addChildren(
+                new Text(
+                    {
+                        x: 0,
+                        y: 0,
+                    },
+
+                    "GAME OVER",
+                    34,
+                    "#f0666b",
+                ),
+
+                new StaticSpace(20, 20),
+
+                new Button(
+                    {
+                        x: 0,
+                        y: 0,
+                        w: 88,
+                        h: 24,
+                    },
+
+                    3,
+
+                    3,
+                    1,
+
+                    [
+                        new Text(
+                            {
+                                x: 3,
+                                y: 2,
+                            },
+
+                            "Continue",
+                            17,
+                        ),
+                    ],
+
+                    () => this.leaveGame(),
+
+                    "#c62327",
+                    true,
+                ),
+                new StaticSpace(4, 4),
+                new Text(
+                    {
+                        x: 0,
+                        y: 0,
+                    },
+
+                    "(or press enter)",
+                    12,
+                ),
+            );
+
+            this.gameOverMenuContainer.setVisible(false, false);
+
+            this.addComponent(this.gameOverMenuContainer);
+        }
+
+        {
+            this.youWillRespawnNextWaveContainer = new StaticTranslucentPanelContainer(
+                () => ({
+                    x: -(this.youWillRespawnNextWaveContainer.w / 2),
+                    y: 300 + -(this.youWillRespawnNextWaveContainer.h / 2),
+
+                    alignFromCenterX: true,
+                }),
+            ).addChild(
+                new Text(
+                    {
+                        x: 0,
+                        y: 0,
+                    },
+
+                    "You will respawn next wave",
+                    8.4,
+                ),
+            );
+
+            this.youWillRespawnNextWaveContainer.setVisible(false, false);
+
+            this.addComponent(this.youWillRespawnNextWaveContainer);
+        }
 
         this.addComponent(this.chatInput = new TextInput(
             {
@@ -726,15 +713,13 @@ export default class UIGame extends AbstractUI {
             },
         ));
 
-        this.addComponent(this.mobCardsContainer = new (InlineRenderingCall(StaticHContainer))(
+        this.addComponent(this.waveEnemyIcons = new (InlineRenderingCall(UIGameWaveEnemyIcons))(
             () => ({
-                x: -(this.mobCardsContainer.w / 2),
-                y: 52,
+                x: -(this.waveEnemyIcons.w / 2),
+                y: 58,
 
                 alignFromCenterX: true,
             }),
-            false,
-            UIGameMobCard.CARD_SIZE + 10 + 1,
         ));
     }
 
@@ -793,8 +778,8 @@ export default class UIGame extends AbstractUI {
                     mob.isDead &&
                     mob.deadT > 1
                 ) {
-                    if (this.isCardableMobInstance(mob)) {
-                        this.removeMobCard(mob);
+                    if (this.waveEnemyIcons.isIconableMobInstance(mob)) {
+                        this.waveEnemyIcons.removeMobIcon(mob);
                     }
 
                     this.mobs.delete(k);
@@ -854,7 +839,7 @@ export default class UIGame extends AbstractUI {
             entitiesToDraw.forEach((entity, k) => renderEntity({
                 ctx,
                 entity,
-                entityOnlyRenderGeneralPart: false,
+                isSpecimen: false,
             }));
 
             ctx.restore();
@@ -875,16 +860,15 @@ export default class UIGame extends AbstractUI {
             ctx.restore();
         }
 
-        // Wave bar
-        {
+        { // Wave progression bar
             ctx.save();
 
-            const WAVE_PROGRESS_BAR_LENGTH = 135;
-            const WAVE_PROGRESS_BAR_Y = 45;
+            const WAVE_PROGRESSION_BAR_LENGTH = 135;
+            const WAVE_PROGRESSION_BAR_Y = 45;
 
-            ctx.translate(centerWidth, WAVE_PROGRESS_BAR_Y);
+            ctx.translate(centerWidth, WAVE_PROGRESSION_BAR_Y);
             ctx.scale(0.4, 0.4);
-            ctx.translate(-centerWidth, -WAVE_PROGRESS_BAR_Y);
+            ctx.translate(-centerWidth, -WAVE_PROGRESSION_BAR_Y);
 
             {
                 const maxSpawnTime = calculateWaveLength(this.waveProgress);
@@ -898,8 +882,8 @@ export default class UIGame extends AbstractUI {
                     ctx.lineCap = "round";
                     ctx.strokeStyle = "black";
                     ctx.beginPath();
-                    ctx.lineTo(centerWidth - WAVE_PROGRESS_BAR_LENGTH, WAVE_PROGRESS_BAR_Y);
-                    ctx.lineTo(centerWidth + WAVE_PROGRESS_BAR_LENGTH, WAVE_PROGRESS_BAR_Y);
+                    ctx.lineTo(centerWidth - WAVE_PROGRESSION_BAR_LENGTH, WAVE_PROGRESSION_BAR_Y);
+                    ctx.lineTo(centerWidth + WAVE_PROGRESSION_BAR_LENGTH, WAVE_PROGRESSION_BAR_Y);
                     ctx.stroke();
 
                     ctx.restore();
@@ -912,8 +896,8 @@ export default class UIGame extends AbstractUI {
                     ctx.lineCap = "round";
                     ctx.strokeStyle = BIOME_GAUGE_COLORS[this.biome];
                     ctx.beginPath();
-                    ctx.lineTo(centerWidth - WAVE_PROGRESS_BAR_LENGTH, WAVE_PROGRESS_BAR_Y);
-                    ctx.lineTo(centerWidth - WAVE_PROGRESS_BAR_LENGTH + (WAVE_PROGRESS_BAR_LENGTH * 2) * (this.waveProgressTimer / maxSpawnTime), WAVE_PROGRESS_BAR_Y);
+                    ctx.lineTo(centerWidth - WAVE_PROGRESSION_BAR_LENGTH, WAVE_PROGRESSION_BAR_Y);
+                    ctx.lineTo(centerWidth - WAVE_PROGRESSION_BAR_LENGTH + (WAVE_PROGRESSION_BAR_LENGTH * 2) * (this.waveProgressTimer / maxSpawnTime), WAVE_PROGRESSION_BAR_Y);
                     ctx.stroke();
 
                     ctx.restore();
@@ -926,8 +910,8 @@ export default class UIGame extends AbstractUI {
                     ctx.lineCap = "round";
                     ctx.strokeStyle = "#e32933";
                     ctx.beginPath();
-                    ctx.lineTo(centerWidth - WAVE_PROGRESS_BAR_LENGTH, WAVE_PROGRESS_BAR_Y);
-                    ctx.lineTo(centerWidth - WAVE_PROGRESS_BAR_LENGTH + (WAVE_PROGRESS_BAR_LENGTH * 2) * (this.waveProgressRedGageTimer / maxSpawnTime), WAVE_PROGRESS_BAR_Y);
+                    ctx.lineTo(centerWidth - WAVE_PROGRESSION_BAR_LENGTH, WAVE_PROGRESSION_BAR_Y);
+                    ctx.lineTo(centerWidth - WAVE_PROGRESSION_BAR_LENGTH + (WAVE_PROGRESSION_BAR_LENGTH * 2) * (this.waveProgressRedGageTimer / maxSpawnTime), WAVE_PROGRESSION_BAR_Y);
                     ctx.stroke();
 
                     ctx.restore();
@@ -945,8 +929,8 @@ export default class UIGame extends AbstractUI {
                     ctx.strokeStyle = '#000000';
                     ctx.fillStyle = "white";
 
-                    ctx.strokeText("Wave " + this.waveProgress, centerWidth, WAVE_PROGRESS_BAR_Y);
-                    ctx.fillText("Wave " + this.waveProgress, centerWidth, WAVE_PROGRESS_BAR_Y);
+                    ctx.strokeText("Wave " + this.waveProgress, centerWidth, WAVE_PROGRESSION_BAR_Y);
+                    ctx.fillText("Wave " + this.waveProgress, centerWidth, WAVE_PROGRESSION_BAR_Y);
 
                     ctx.restore();
                 }
@@ -967,8 +951,8 @@ export default class UIGame extends AbstractUI {
                 ctx.strokeStyle = '#000000';
                 ctx.fillStyle = "white";
 
-                ctx.strokeText(biomeDisplayName, centerWidth, WAVE_PROGRESS_BAR_Y - 36);
-                ctx.fillText(biomeDisplayName, centerWidth, WAVE_PROGRESS_BAR_Y - 36);
+                ctx.strokeText(biomeDisplayName, centerWidth, WAVE_PROGRESSION_BAR_Y - 36);
+                ctx.fillText(biomeDisplayName, centerWidth, WAVE_PROGRESSION_BAR_Y - 36);
 
                 ctx.restore();
             }
@@ -977,10 +961,9 @@ export default class UIGame extends AbstractUI {
         }
 
         // Render mob cards
-        this.mobCardsContainer.render(ctx);
+        this.waveEnemyIcons.render(ctx);
 
-        // Dead menu
-        {
+        { // Dead menu
             {
                 ctx.save();
 
@@ -991,67 +974,10 @@ export default class UIGame extends AbstractUI {
                 ctx.restore();
             }
 
-            // The reason this is not in the isDead block is to fade-out when revived
-            {
-                if (this.wasDeadMenuContinued && !this.waveEnded && selfPlayer.isDead) {
-                    if (this.youWillRespawnNextWaveOpacity <= 1) {
-                        this.youWillRespawnNextWaveOpacity += 0.02;
-                    }
-                } else {
-                    if (this.youWillRespawnNextWaveOpacity >= 0) {
-                        this.youWillRespawnNextWaveOpacity -= 0.02;
-                    }
-                }
-
-                this.youWillRespawnNextWaveOpacity = Math.max(Math.min(this.youWillRespawnNextWaveOpacity, 1), 0);
-
-                {
-                    ctx.save();
-
-                    ctx.translate(centerWidth, 300);
-
-                    {
-                        ctx.save();
-
-                        ctx.globalAlpha = Math.min(this.youWillRespawnNextWaveOpacity, 0.5);
-
-                        ctx.strokeStyle = 'black';
-                        ctx.beginPath();
-                        ctx.roundRect(-(116 / 2), -(16 / 2), 116, 16, 1);
-                        ctx.fill();
-
-                        ctx.restore();
-                    }
-
-                    {
-                        ctx.save();
-
-                        ctx.globalAlpha = this.youWillRespawnNextWaveOpacity;
-
-                        ctx.lineJoin = 'round';
-                        ctx.lineCap = 'round';
-                        ctx.textBaseline = 'middle';
-                        ctx.textAlign = 'center';
-                        ctx.strokeStyle = '#000000';
-                        ctx.fillStyle = "white";
-                        ctx.font = "8.4px Ubuntu";
-                        ctx.lineWidth = calculateStrokeWidth(8.4);
-
-                        ctx.strokeText("You will respawn next wave", 0, 0);
-                        ctx.fillText("You will respawn next wave", 0, 0);
-
-                        ctx.restore();
-                    }
-
-                    ctx.restore();
-                }
-            }
-
             if (selfPlayer.isDead) {
                 if (
                     this.deadMenuBackgroundOpacity < this.DEAD_BACKGROUND_TARGET_OPACITY &&
-                    // Stop fade-out blocking
-                    !(this.wasDeadMenuContinued && !this.waveEnded)
+                    !(this.wasDeadMenuContinued && !this.wasWaveEnded)
                 ) {
                     this.deadMenuBackgroundOpacity = Math.min(
                         this.deadMenuBackgroundOpacity + (deltaTime / 1000 / this.DEAD_BACKGROUND_FADE_DURATION) * this.DEAD_BACKGROUND_TARGET_OPACITY,
@@ -1060,114 +986,41 @@ export default class UIGame extends AbstractUI {
                 }
 
                 if (this.wasDeadMenuContinued) {
-                    if (!this.waveEnded) {
-                        // Only fade-out when not game over
-                        this.deadMenuBackgroundOpacity = Math.max(
-                            0,
-                            this.deadMenuBackgroundOpacity - (deltaTime / 1000 / this.DEAD_BACKGROUND_FADE_DURATION) * this.DEAD_BACKGROUND_TARGET_OPACITY,
-                        );
-                    } else {
-                        if (!this.wasGameOverContinued) {
-                            if (this.gameOverMenuOpacity <= 1) {
-                                this.gameOverMenuOpacity += 0.005;
-                            }
-                        } else {
-                            if (this.gameOverMenuOpacity >= 0) {
-                                // Bit faster than uncontinued i guess
-                                this.gameOverMenuOpacity -= 0.01;
-                            }
+                    if (this.wasWaveEnded) {
+                        if (!this.gameOverMenuContainer.visible) {
+                            this.gameOverMenuContainer.setVisible(true, true, AnimationType.FADE, {});
                         }
 
-                        this.gameOverMenuOpacity = Math.max(Math.min(this.gameOverMenuOpacity, 1), 0);
+                        if (this.youWillRespawnNextWaveContainer.visible) {
+                            this.youWillRespawnNextWaveContainer.setVisible(false, true, AnimationType.FADE, {});
+                        }
+                    } else {
+                        // Only fade-out when not game over
+                        this.deadMenuBackgroundOpacity = Math.max(
+                            this.deadMenuBackgroundOpacity - (deltaTime / 1000 / this.DEAD_BACKGROUND_FADE_DURATION) * this.DEAD_BACKGROUND_TARGET_OPACITY,
+                            0,
+                        );
 
-                        ctx.save();
-
-                        ctx.globalAlpha = this.gameOverMenuOpacity;
-
-                        ctx.lineJoin = 'round';
-                        ctx.lineCap = 'round';
-                        ctx.textBaseline = 'middle';
-                        ctx.textAlign = 'center';
-                        ctx.strokeStyle = '#000000';
-
-                        ctx.fillStyle = "#f0666b";
-                        ctx.font = "34px Ubuntu";
-                        ctx.lineWidth = calculateStrokeWidth(34);
-
-                        ctx.strokeText("GAME OVER", centerWidth, centerHeight);
-                        ctx.fillText("GAME OVER", centerWidth, centerHeight);
-
-                        ctx.fillStyle = "white";
-                        ctx.font = "12px Ubuntu";
-                        ctx.lineWidth = calculateStrokeWidth(12);
-
-                        ctx.strokeText("(or press enter)", centerWidth, centerHeight + 75);
-                        ctx.fillText("(or press enter)", centerWidth, centerHeight + 75);
-
-                        ctx.restore();
-                    }
-
-                    if (this.deadMenuContinueButtonY >= -100) {
-                        this.deadMenuAnimationTimer -= deltaTime / 300;
-                        this.deadMenuContinueButtonY = -100 + easeOutCubic(Math.max(this.deadMenuAnimationTimer / this.DEAD_MENU_ANIMATION_DURATION, 0)) * (centerHeight - (-100));
+                        if (!this.youWillRespawnNextWaveContainer.visible) {
+                            this.youWillRespawnNextWaveContainer.setVisible(true, true, AnimationType.FADE, {});
+                        }
                     }
                 } else {
-                    if (!this.deadMenuAnimationActive) {
-                        this.deadMenuContinueButtonY = -50;
-                        this.deadMenuAnimationTimer = 0;
-                        this.deadMenuAnimationActive = true;
+                    // If not rendered dead menu, render it
+                    if (!this.deadMenuContainer.visible) {
+                        this.deadMenuContainer.setVisible(true, true, AnimationType.SLIDE, UIGame.DEAD_MENU_CONTAINER_ANIMATION_CONFIG);
                     }
-
-                    if (this.deadMenuAnimationTimer < this.DEAD_MENU_ANIMATION_DURATION && this.deadMenuContinueButtonY <= centerHeight + 50) {
-                        this.deadMenuAnimationTimer += deltaTime / 1000;
-                        this.deadMenuContinueButtonY = -50 + easeOutCubic(Math.min(this.deadMenuAnimationTimer / this.DEAD_MENU_ANIMATION_DURATION, 1)) * (centerHeight + 50);
-                    }
-                }
-
-                {
-                    ctx.save();
-
-                    this.deadMenuContinueButton.setVisible(true, false);
-
-                    ctx.translate(centerWidth, this.deadMenuContinueButtonY);
-
-                    ctx.lineJoin = 'round';
-                    ctx.lineCap = 'round';
-                    ctx.textBaseline = 'middle';
-                    ctx.textAlign = 'center';
-                    ctx.strokeStyle = '#000000';
-                    ctx.fillStyle = "white";
-
-                    ctx.font = "12.2px Ubuntu";
-                    ctx.lineWidth = calculateStrokeWidth(12.2);
-
-                    ctx.strokeText("You were destroyed by:", 0, -81);
-                    ctx.fillText("You were destroyed by:", 0, -81);
-
-                    ctx.font = "16.1px Ubuntu";
-                    ctx.lineWidth = calculateStrokeWidth(16.1);
-
-                    ctx.strokeText("You", 0, -61);
-                    ctx.fillText("You", 0, -61);
-
-                    ctx.font = "12px Ubuntu";
-                    ctx.lineWidth = calculateStrokeWidth(12);
-
-                    ctx.strokeText("(or press enter)", 0, 90);
-                    ctx.fillText("(or press enter)", 0, 90);
-
-                    ctx.restore();
                 }
             } else {
-                this.deadMenuContinueButton.setVisible(false, false);
-
-                this.deadMenuAnimationActive = false;
-                this.deadMenuContinueButtonY = -50;
-                this.deadMenuAnimationTimer = 0;
-
                 this.deadMenuBackgroundOpacity = 0;
-                this.youWillRespawnNextWaveOpacity = 0;
-                this.gameOverMenuOpacity = 0;
+
+                if (this.deadMenuContainer.visible) {
+                    this.deadMenuContainer.setVisible(false, true, AnimationType.SLIDE, UIGame.DEAD_MENU_CONTAINER_ANIMATION_CONFIG);
+                }
+
+                if (this.youWillRespawnNextWaveContainer.visible) {
+                    this.youWillRespawnNextWaveContainer.setVisible(false, true, AnimationType.FADE, {});
+                }
             }
         }
 
@@ -1239,9 +1092,9 @@ export default class UIGame extends AbstractUI {
     }
 
     private leaveGame() {
-        this.wasGameOverContinued = true;
-
-        this.gameOverMenuContinueButton.setVisible(false, true, AnimationType.FADE, 1000);
+        this.gameOverMenuContainer.setVisible(false, true, AnimationType.FADE, {
+            defaultDurationOverride: 1000,
+        });
 
         clientWebsocket.packetServerbound.sendWaveLeave();
 

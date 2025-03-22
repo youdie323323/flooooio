@@ -10,7 +10,7 @@ import { MoodFlags } from "../../../../../Shared/Mood";
 import { WaveRoomState } from "../../../../../Shared/WaveRoom";
 import { logger } from "../../../../Main";
 import type { Entity } from "../../Entity/Dynamics/Entity";
-import { onUpdateTick } from "../../Entity/Dynamics/Entity";
+import { ON_UPDATE_TICK } from "../../Entity/Dynamics/Entity";
 import { calculateMobSize } from "../../Entity/Dynamics/EntityCollision";
 import { revivePlayer } from "../../Entity/Dynamics/EntityElimination";
 import { SAFETY_DISTANCE } from "../../Entity/Dynamics/EntityCoordinateBoundary";
@@ -40,25 +40,12 @@ export interface UserData {
      * Static data of player.
      * 
      * @remarks
-     * 
      * This data is used to squad ui to display petals and names and to convert them when wave starting.
      */
     staticPlayerData: StaticPlayerData;
 }
 
-export const UPDATE_WAVE_FPS = 30;
-
-export const UPDATE_ENTITIES_FPS = 60;
-
-/**
- * Frame per second to send update packet.
- * 
- * @remarks
- * 
- * Packets don't need to be sent at 60fps per second. 30fps per second is enough.
- * If update sent too fast, it will feel laggy.
- */
-export const UPDATE_PACKET_SEND_FPS = 33;
+export const UPDATE_FPS = 60;
 
 /**
  * Interface that represents dynamically changable live wave data.
@@ -93,9 +80,8 @@ export class WavePool extends AbstractPool {
 
     private spawnMobDeterminer: SpawnMobDeterminer;
 
-    private updateWaveInterval: NodeJS.Timeout;
-    private updateEntitiesInterval: NodeJS.Timeout;
-    private updatePacketSendInterval: NodeJS.Timeout;
+    private updateInterval: NodeJS.Timeout;
+    private frameCount: number = 0;
 
     /**
      * Shared spatial hash instance between entities.
@@ -126,16 +112,12 @@ export class WavePool extends AbstractPool {
      * Release all memory in this class.
      */
     public releaseAllMemory() {
-        this.clientPool.forEach((v) => v.dispose());
-        this.mobPool.forEach((v) => v.dispose());
+        // Clear update timer first
+        clearInterval(this.updateInterval);
+        this.updateInterval = null;
 
-        clearInterval(this.updateWaveInterval);
-        clearInterval(this.updateEntitiesInterval);
-        clearInterval(this.updatePacketSendInterval);
-
-        this.updateWaveInterval = null;
-        this.updateEntitiesInterval = null;
-        this.updatePacketSendInterval = null;
+        this.clientPool.forEach((v) => v[Symbol.dispose]());
+        this.mobPool.forEach((v) => v[Symbol.dispose]());
 
         this.clientPool.clear();
         this.mobPool.clear();
@@ -190,13 +172,31 @@ export class WavePool extends AbstractPool {
         // Broadcast self id to all connection
         this.broadcastSeldIdPacket();
 
-        // Start all intervaler
-        this.updateWaveInterval = setInterval(this.updateWave.bind(this), 1000 / UPDATE_WAVE_FPS);
-        this.updateEntitiesInterval = setInterval(this.updateEntities.bind(this), 1000 / UPDATE_ENTITIES_FPS);
-        this.updatePacketSendInterval = setInterval(this.broadcastUpdatePacket.bind(this), 1000 / UPDATE_PACKET_SEND_FPS);
+        // Use single interval with the highest FPS (60)
+        this.updateInterval = setInterval(this.update.bind(this), 1000 / UPDATE_FPS);
     }
 
     public endWave() {
+    }
+
+    private update() {
+        this.frameCount++;
+
+        // Update entities every frame (60 FPS)
+        this.updateEntities();
+
+        if (this.frameCount % 2 === 0) {
+            // Update wave at 30 FPS (every 2 frames)
+            this.updateWave();
+
+            // Update packet sending at ~33 FPS (every 2 frames)
+            this.broadcastUpdatePacket();
+        }
+
+        // Reset frame counter to prevent potential overflow
+        if (this.frameCount >= 120) {
+            this.frameCount = 0;
+        }
     }
 
     /**
@@ -427,10 +427,10 @@ export class WavePool extends AbstractPool {
      */
     private updateEntities() {
         for (const client of this.clientPool.values()) {
-            client[onUpdateTick](this);
+            client[ON_UPDATE_TICK](this);
         }
         for (const mob of this.mobPool.values()) {
-            mob[onUpdateTick](this);
+            mob[ON_UPDATE_TICK](this);
         }
 
         for (const client of this.clientPool.values()) {
@@ -449,7 +449,7 @@ export class WavePool extends AbstractPool {
     private updateWave() {
         const waveRoomState = this._state();
 
-        if (waveRoomState === WaveRoomState.Started) {
+        if (waveRoomState === WaveRoomState.Playing) {
             using _disposable = this._onChangeAnything();
 
             if (!this.waveData.progressIsRed) {
@@ -458,9 +458,7 @@ export class WavePool extends AbstractPool {
                     const [type, rarity] = staticMobData;
 
                     const randPos = getRandomSafeCoordinate(this.waveData.mapRadius, SAFETY_DISTANCE, this.getAllClients().filter(p => !p.isDead));
-                    if (!randPos) {
-                        return null;
-                    }
+                    if (!randPos) return null;
 
                     if (LINKABLE_MOBS.has(type)) {
                         this.linkedMobSegmentation(type, rarity, randPos[0], randPos[1], 10);
@@ -477,7 +475,9 @@ export class WavePool extends AbstractPool {
                 if (
                     // Force start into next wave when red gage reached
                     !(this.waveData.progressRedTimer >= waveLength) &&
-                    4 < this.getAllMobs().filter(c => /** Dont count petals & pets. */ !c.petMaster && !c.petalMaster).length
+                    4 < this.getAllMobs()
+                        .filter(c => !(c.petMaster || c.petalMaster))
+                        .length
                 ) {
                     this.waveData.progressIsRed = true;
 
@@ -505,7 +505,7 @@ export class WavePool extends AbstractPool {
     /**
      * Create linked mob.
      * 
-     * @param bodyCount - Body count not including head.
+     * @param bodyCount - Body count not including head
      */
     public linkedMobSegmentation(
         type: MobType,
@@ -619,7 +619,7 @@ export class WavePool extends AbstractPool {
             4 +
             // Length + null terminator
             (
-                message.length + 
+                message.length +
                 1
             ),
         );
@@ -846,7 +846,7 @@ export class WavePool extends AbstractPool {
         const client = this.getClient(clientId);
         if (client) {
             // Free memory
-            client.dispose();
+            client[Symbol.dispose]();
 
             this.sharedSpatialHash.remove(client);
 
@@ -873,7 +873,7 @@ export class WavePool extends AbstractPool {
         const mob = this.getMob(mobId);
         if (mob) {
             // Free memory
-            mob.dispose();
+            mob[Symbol.dispose]();
 
             this.sharedSpatialHash.remove(mob);
 

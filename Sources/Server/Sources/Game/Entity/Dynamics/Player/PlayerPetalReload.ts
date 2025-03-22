@@ -5,7 +5,7 @@ import type { PetalData } from "../../../../../../Shared/Entity/Statics/Mob/Peta
 import { PETAL_PROFILES } from "../../../../../../Shared/Entity/Statics/Mob/Petal/PetalProfiles";
 import type { WavePool } from "../../../Genres/Wave/WavePool";
 import type { EntityMixinConstructor, EntityMixinTemplate } from "../Entity";
-import { onUpdateTick } from "../Entity";
+import { ON_UPDATE_TICK } from "../Entity";
 import { isDynamicPetal, MAX_CLUSTER_AMOUNT } from "../Mob/Petal/Petal";
 import type { BasePlayer } from "./Player";
 
@@ -18,8 +18,8 @@ export const USAGE_RELOAD_PETALS: Set<MobType | PetalType> = new Set([
 
 export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(Base: T) {
     return class MixedBase extends Base implements EntityMixinTemplate {
-        [onUpdateTick](poolThis: WavePool): void {
-            super[onUpdateTick](poolThis);
+        [ON_UPDATE_TICK](poolThis: WavePool): void {
+            super[ON_UPDATE_TICK](poolThis);
 
             const surface = this.slots.surface;
 
@@ -99,12 +99,6 @@ export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(
                         });
                     }
                 });
-            }
-        }
-
-        dispose(): void {
-            if (super.dispose) {
-                super.dispose();
             }
         }
     };
