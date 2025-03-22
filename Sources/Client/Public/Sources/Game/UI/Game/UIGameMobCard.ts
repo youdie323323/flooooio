@@ -70,6 +70,9 @@ export default class UIGameMobCard extends StaticPanelContainer {
     override render(ctx: CanvasRenderingContext2D): void {
         if (!this.isRenderable) return;
 
+        // Slightly transparent as same as florr.io
+        // ctx.globalAlpha = 0.8;
+
         super.render(ctx);
 
         const computedMobCounts = Component.computePointerLike(this.mobAmountAccumulator);

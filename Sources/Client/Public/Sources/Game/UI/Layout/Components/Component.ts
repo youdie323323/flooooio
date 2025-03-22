@@ -194,7 +194,7 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
 
     protected static readonly ANIMATION_ZOOM_DURATION: number = 100;
     protected static readonly ANIMATION_SLIDE_DURATION: number = 350;
-    protected static readonly ANIMATION_CARD_DURATION: number = 500;
+    protected static readonly ANIMATION_CARD_DURATION: number = 750;
 
     protected static readonly SLIDE_BASE_DEPTH: number = 20;
 

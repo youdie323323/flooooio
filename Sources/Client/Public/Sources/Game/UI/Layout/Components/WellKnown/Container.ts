@@ -400,6 +400,10 @@ export class StaticTranslucentPanelContainer extends AbstractStaticContainer<Par
 export class StaticHContainer extends AbstractStaticContainer<AutomaticallySizedLayoutOptions> {
     public override[OBSTRUCTION_AFFECTABLE]: boolean = false;
 
+    private static readonly POSITION_LERP_FACTOR = 0.1;
+
+    private childPositions: Map<Components, number> = new Map();
+
     constructor(
         layoutOptions: MaybePointerLike<AutomaticallySizedLayoutOptions>,
 
@@ -455,7 +459,6 @@ export class StaticHContainer extends AbstractStaticContainer<AutomaticallySized
 
         if (this.children.length > 0) {
             const computedReverseChildrenRender = Component.computePointerLike(this.reverseChildrenRender);
-
             const computedChildReplaceOffset = Component.computePointerLike(this.childReplaceOffset);
 
             let currentX = 0;
@@ -463,14 +466,11 @@ export class StaticHContainer extends AbstractStaticContainer<AutomaticallySized
                 this.children.forEach(child => {
                     const childLayout = child.cachedLayout({
                         ctx,
-
                         containerWidth: this.w,
                         containerHeight: this.h,
-
                         originX: this.x + currentX,
                         originY: this.y,
                     });
-
                     currentX += (computedChildReplaceOffset ?? childLayout.w);
                 });
             }
@@ -478,15 +478,23 @@ export class StaticHContainer extends AbstractStaticContainer<AutomaticallySized
             this.children.forEach(child => {
                 const childLayout = child.cachedLayout({
                     ctx,
-
                     containerWidth: this.w,
                     containerHeight: this.h,
-
                     originX: this.x + currentX,
                     originY: this.y,
                 });
 
-                child.setX(childLayout.x);
+                const targetX = childLayout.x;
+
+                if (!this.childPositions.has(child)) {
+                    this.childPositions.set(child, targetX);
+                }
+                const currentPosX = this.childPositions.get(child);
+
+                const newX = currentPosX + (targetX - currentPosX) * StaticHContainer.POSITION_LERP_FACTOR;
+                this.childPositions.set(child, newX);
+
+                child.setX(newX);
                 child.setY(childLayout.y);
                 child.setW(childLayout.w);
                 child.setH(childLayout.h);
@@ -497,7 +505,19 @@ export class StaticHContainer extends AbstractStaticContainer<AutomaticallySized
 
                 renderPossibleComponent(ctx, child);
             });
+
+            for (const child of this.childPositions.keys()) {
+                if (!this.children.includes(child)) {
+                    this.childPositions.delete(child);
+                }
+            }
         }
+    }
+
+    override destroy(): void {
+        this.childPositions.clear();
+
+        super.destroy();
     }
 }
 
@@ -506,6 +526,10 @@ export class StaticHContainer extends AbstractStaticContainer<AutomaticallySized
  */
 export class StaticVContainer extends AbstractStaticContainer<AutomaticallySizedLayoutOptions> {
     public override[OBSTRUCTION_AFFECTABLE]: boolean = false;
+
+    private static readonly POSITION_LERP_FACTOR = 0.1;
+
+    private childPositions: Map<Components, number> = new Map();
 
     constructor(
         layoutOptions: MaybePointerLike<AutomaticallySizedLayoutOptions>,
@@ -558,10 +582,9 @@ export class StaticVContainer extends AbstractStaticContainer<AutomaticallySized
         super.render(ctx);
 
         this.update(ctx);
-        
+
         if (this.children.length > 0) {
             const computedReverseChildrenRender = Component.computePointerLike(this.reverseChildrenRender);
-
             const computedChildReplaceOffset = Component.computePointerLike(this.childReplaceOffset);
 
             let currentY = 0;
@@ -569,14 +592,11 @@ export class StaticVContainer extends AbstractStaticContainer<AutomaticallySized
                 this.children.forEach(child => {
                     const childLayout = child.cachedLayout({
                         ctx,
-
                         containerWidth: this.w,
                         containerHeight: this.h,
-
                         originX: this.x,
                         originY: this.y + currentY,
                     });
-
                     currentY += (computedChildReplaceOffset ?? childLayout.h);
                 });
             }
@@ -584,16 +604,24 @@ export class StaticVContainer extends AbstractStaticContainer<AutomaticallySized
             this.children.forEach(child => {
                 const childLayout = child.cachedLayout({
                     ctx,
-
                     containerWidth: this.w,
                     containerHeight: this.h,
-
                     originX: this.x,
                     originY: this.y + currentY,
                 });
 
+                const targetY = childLayout.y;
+
+                if (!this.childPositions.has(child)) {
+                    this.childPositions.set(child, targetY);
+                }
+                const currentPosY = this.childPositions.get(child);
+
+                const newY = currentPosY + (targetY - currentPosY) * StaticVContainer.POSITION_LERP_FACTOR;
+                this.childPositions.set(child, newY);
+
                 child.setX(childLayout.x);
-                child.setY(childLayout.y);
+                child.setY(newY);
                 child.setW(childLayout.w);
                 child.setH(childLayout.h);
 
@@ -603,7 +631,19 @@ export class StaticVContainer extends AbstractStaticContainer<AutomaticallySized
 
                 renderPossibleComponent(ctx, child);
             });
+
+            for (const child of this.childPositions.keys()) {
+                if (!this.children.includes(child)) {
+                    this.childPositions.delete(child);
+                }
+            }
         }
+    }
+
+    override destroy(): void {
+        this.childPositions.clear();
+
+        super.destroy();
     }
 }
 
