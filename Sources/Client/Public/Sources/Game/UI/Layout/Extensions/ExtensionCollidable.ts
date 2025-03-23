@@ -1,9 +1,9 @@
 import type { Components } from "../Components/Component";
 import type { LayoutContext, LayoutResult } from "../Layout";
-import type { ComponentExtensionTemplate, ExtensionConstructor } from "./Extension";
+import type { ExtensionConstructor } from "./Extension";
 
 export default function Collidable<T extends ExtensionConstructor>(Base: T) {
-    abstract class MixedBase extends Base implements ComponentExtensionTemplate {
+    abstract class MixedBase extends Base {
         private static readonly COLLISION_SPEED: number = 0.4;
         private static readonly RETURN_SPEED: number = 0.2;
         private static readonly GAP: number = 4;
@@ -44,13 +44,13 @@ export default function Collidable<T extends ExtensionConstructor>(Base: T) {
         }
 
         private isColliding(component: Components): boolean {
-            const gap = MixedBase.GAP;
+            const { GAP } = MixedBase;
 
             return !(
-                this.x + this.w + gap < component.x ||
-                this.x > component.x + component.w + gap ||
-                this.y + this.h + gap < component.y ||
-                this.y > component.y + component.h + gap
+                this.x + this.w + GAP < component.x ||
+                this.x > component.x + component.w + GAP ||
+                this.y + this.h + GAP < component.y ||
+                this.y > component.y + component.h + GAP
             );
         }
 
@@ -65,39 +65,36 @@ export default function Collidable<T extends ExtensionConstructor>(Base: T) {
             );
         }
 
-        override get update(): ComponentExtensionTemplate["update"] {
-            return (ctx: CanvasRenderingContext2D): void => {
-                // Call parent extension update(), so its possible to nest the extension
-                super.update?.(ctx);
+        override render(ctx: CanvasRenderingContext2D) {
+            super.render(ctx);
 
-                let hasCollision = false;
+            let hasCollision = false;
 
-                this.filterCollidable(this.collidableComponents).forEach(component => {
-                    if (this.isColliding(component)) {
-                        this.resolveCollision(component);
-                        hasCollision = true;
-                    }
-                });
-
-                if (!hasCollision) {
-                    this.targetYPos = this.initialYPos;
-                    this.isReturning = true;
+            this.filterCollidable(this.collidableComponents).forEach(component => {
+                if (this.isColliding(component)) {
+                    this.resolveCollision(component);
+                    hasCollision = true;
                 }
+            });
 
-                if (this.targetYPos !== null) {
-                    const speed = this.isReturning
-                        ? MixedBase.RETURN_SPEED
-                        : MixedBase.COLLISION_SPEED;
-                    const deltaY = this.targetYPos - this.y;
+            if (!hasCollision) {
+                this.targetYPos = this.initialYPos;
+                this.isReturning = true;
+            }
 
-                    this.y += deltaY * speed;
+            if (this.targetYPos !== null) {
+                const speed = this.isReturning
+                    ? MixedBase.RETURN_SPEED
+                    : MixedBase.COLLISION_SPEED;
+                const deltaY = this.targetYPos - this.y;
 
-                    if (Math.abs(deltaY) < MixedBase.DEAD_ZONE) {
-                        this.setY(this.targetYPos);
-                        this.targetYPos = null;
-                    }
+                this.y += deltaY * speed;
+
+                if (Math.abs(deltaY) < MixedBase.DEAD_ZONE) {
+                    this.setY(this.targetYPos);
+                    this.targetYPos = null;
                 }
-            };
+            }
         }
     }
 

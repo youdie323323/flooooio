@@ -2,7 +2,7 @@ import type { AnimationConfigOf, Components, MaybePointerLike } from "../Compone
 import { AnimationType, OBSTRUCTION_AFFECTABLE } from "../Components/Component";
 import type { PartialSizeLayoutOptions } from "../Components/WellKnown/Container";
 import { StaticTranslucentPanelContainer } from "../Components/WellKnown/Container";
-import type { ComponentExtensionTemplate, ExtensionConstructor } from "./Extension";
+import type { ExtensionConstructor } from "./Extension";
 
 export type TooltipPosition = "top" | "bottom" | "left" | "right";
 
@@ -21,7 +21,7 @@ export default function Tooltip<T extends ExtensionConstructor>(
         DEFAULT_TOOLTIP_POSITIONS.filter(pos => tooltipPreferredPositions.indexOf(pos) === -1),
     );
 
-    abstract class MixedBase extends Base implements ComponentExtensionTemplate {
+    abstract class MixedBase extends Base {
         private static readonly TOOLTIP_CONTAINER_ANIMATION_CONFIG = {
             defaultDurationOverride: 100,
         } as const satisfies AnimationConfigOf<AnimationType.FADE>;
@@ -55,13 +55,6 @@ export default function Tooltip<T extends ExtensionConstructor>(
             this.on("onBlur", () => {
                 this.tooltipContainer.setVisible(false, true, AnimationType.FADE, MixedBase.TOOLTIP_CONTAINER_ANIMATION_CONFIG);
             });
-        }
-
-        override get update(): ComponentExtensionTemplate["update"] {
-            return (ctx: CanvasRenderingContext2D): void => {
-                // Call parent extension update(), so its possible to nest the extension
-                super.update?.(ctx);
-            };
         }
 
         private findOptimalPosition(): PartialSizeLayoutOptions {
@@ -118,7 +111,7 @@ export default function Tooltip<T extends ExtensionConstructor>(
                 }
             }
 
-            return { x: 0, y: 0 };
+            return {};
         }
 
         override destroy(): void {

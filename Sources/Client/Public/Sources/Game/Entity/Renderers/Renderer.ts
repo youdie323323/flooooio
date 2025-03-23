@@ -9,26 +9,12 @@ import Mob from "../Mob";
 import Player from "../Player";
 import type { RenderingContext } from "./RendererRenderingContext";
 
-const interpolateColor = memo((sourceColor: number[], targetColor: number[], progress: number): number[] => {
-    const inverseProgress = 1 - progress;
-
-    return [
-        sourceColor[0] * progress + targetColor[0] * inverseProgress,
-        sourceColor[1] * progress + targetColor[1] * inverseProgress,
-        sourceColor[2] * progress + targetColor[2] * inverseProgress,
-    ];
-});
-
 const hexToRgb = memo((hexColor: ColorCode) => {
     return [
         parseInt(hexColor.slice(1, 3), 16),
         parseInt(hexColor.slice(3, 5), 16),
         parseInt(hexColor.slice(5, 7), 16),
     ];
-});
-
-const rgbArrayToString = memo((rgbArray: number[]): string => {
-    return "rgb(" + rgbArray.join(",") + ")";
 });
 
 const TARGET_COLOR = [255, 0, 0];
@@ -63,7 +49,7 @@ export default class Renderer<T extends Entity> {
     }
 
     /**
-     * Change the color based on hit effect.
+     * Change the color based on hit.
      */
     protected getSkinColor({ entity }: RenderingContext<T>, color: ColorCode): string {
         const invertedHurtT = 1 - entity.hurtT;
@@ -71,13 +57,15 @@ export default class Renderer<T extends Entity> {
             return color;
         }
 
-        return rgbArrayToString(
-            interpolateColor(
-                hexToRgb(color),
-                TARGET_COLOR,
-                invertedHurtT * 0.25 + 0.75,
-            ),
-        );
+        const progress = invertedHurtT * 0.25 + 0.75;
+
+        const sourceRgb = hexToRgb(color);
+
+        const r = Math.round(sourceRgb[0] * progress + TARGET_COLOR[0] * (1 - progress));
+        const g = Math.round(sourceRgb[1] * progress + TARGET_COLOR[1] * (1 - progress));
+        const b = Math.round(sourceRgb[2] * progress + TARGET_COLOR[2] * (1 - progress));
+
+        return `rgb(${r},${g},${b})`;
     }
 
     /**
@@ -87,7 +75,7 @@ export default class Renderer<T extends Entity> {
         if (entity.isDead) {
             const sinWavedDeadT = Math.sin(entity.deadT * Math.PI / 2);
             const scale = 1 + sinWavedDeadT;
-            
+
             ctx.scale(scale, scale);
             ctx.globalAlpha *= 1 - sinWavedDeadT;
         }

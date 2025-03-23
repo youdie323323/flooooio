@@ -49,12 +49,7 @@ export class Button extends StaticPanelContainer {
         );
 
         this.once("onInitialized", () => {
-            this.addChild(new StaticHContainer(
-                {
-                    x: 0,
-                    y: 0,
-                },
-            ).addChildren(...buttonComponents));
+            this.addChild(new StaticHContainer({}).addChildren(...buttonComponents));
 
             buttonComponents = null;
         });

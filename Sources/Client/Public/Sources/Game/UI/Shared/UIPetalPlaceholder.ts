@@ -1,7 +1,6 @@
 import { type MaybePointerLike } from "../Layout/Components/Component";
 import type { SquareSizeLayoutOptions } from "../Layout/Components/WellKnown/Container";
 import { StaticPanelContainer } from "../Layout/Components/WellKnown/Container";
-import Mob from "../../Entity/Mob";
 
 export default class UIPetalPlaceholder extends StaticPanelContainer {
     constructor(
@@ -21,8 +20,8 @@ export default class UIPetalPlaceholder extends StaticPanelContainer {
 
             0.25,
 
-            2.5,
-            1,
+            4,
+            0.085,
         );
     }
 }

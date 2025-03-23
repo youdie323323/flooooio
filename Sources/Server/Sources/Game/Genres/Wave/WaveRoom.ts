@@ -127,12 +127,12 @@ export default class WaveRoom {
      */
     private initializeWaveData(): WaveData {
         return {
-            progress: 36,
+            progress: 70,
             progressTimer: 0,
             progressRedTimer: 0,
             progressIsRed: false,
 
-            mapRadius: 3000,
+            mapRadius: 2000,
 
             biome: this.biome,
         };

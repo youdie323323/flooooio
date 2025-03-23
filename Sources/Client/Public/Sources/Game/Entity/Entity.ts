@@ -9,16 +9,11 @@ function calculateAngleDistance(startAngle: number, endAngle: number) {
     return (angleDiff * 2) % TAU - angleDiff;
 }
 
-const interpolateAngle = memo(
-    (startAngle: number, endAngle: number, progress: number) =>
-        startAngle + calculateAngleDistance(startAngle, endAngle) * progress,
-);
+const interpolateAngle = (startAngle: number, endAngle: number, progress: number) =>
+    startAngle + calculateAngleDistance(startAngle, endAngle) * progress;
 
-const smoothInterpolate = memo(
-    (current: number, target: number, duration: number): number => {
-        return current + (target - current) * Math.min(1, deltaTime / duration);
-    },
-);
+const smoothInterpolate = (current: number, target: number, duration: number): number =>
+    current + (target - current) * Math.min(1, deltaTime / duration);
 
 export default abstract class Entity {
     x: number;
@@ -57,7 +52,7 @@ export default abstract class Entity {
         angle: number,
 
         size: number,
-        
+
         health: number,
     ) {
         this.x = this.nx = this.ox = x;

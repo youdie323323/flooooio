@@ -256,8 +256,6 @@ export default class TextInput extends ExtensionBase(Component) {
     override render(ctx: CanvasRenderingContext2D) {
         super.render(ctx);
 
-        this.update(ctx);
-
         ctx.save();
 
         ctx.translate(this.x, this.y);

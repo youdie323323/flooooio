@@ -28,8 +28,6 @@ export default class UICloseButton extends Button {
             [
                 new SVGLogo(
                     {
-                        x: 0,
-                        y: 0,
                         w: size,
                         h: size,
                     },

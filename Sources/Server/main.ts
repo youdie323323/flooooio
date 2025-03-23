@@ -30,13 +30,13 @@ export const isDebug = process.argv.includes("-d");
 const MOCK_PLAYER_DATA: Omit<StaticPlayerData, "ws"> = {
     name: 'A-NNCYANCHI-N',
     slots: {
-        surface: Array(9).fill(
+        surface: Array(98).fill(
             {
                 type: PetalType.BASIC,
                 rarity: Rarity.ULTRA,
             } satisfies StaticPetalData,
         ).concat(
-            Array(1).fill(
+            Array(2).fill(
                 {
                     type: PetalType.FASTER,
                     rarity: Rarity.ULTRA,

@@ -257,9 +257,7 @@ export class StaticPanelContainer<Child extends Components = Components> extends
     override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
-        this.update(ctx);
-
-        {
+        { // Draw the background panel
             ctx.save();
 
             const computedColor = Component.computePointerLike(this.color);
@@ -354,8 +352,6 @@ export class StaticTranslucentPanelContainer<Child extends Components = Componen
 
     override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
-
-        this.update(ctx);
 
         {
             ctx.save();
@@ -503,8 +499,6 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
 
     override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
-        
-        this.update(ctx);
 
         if (this.children.length > 0) {
             const computedLerpChildren = Component.computePointerLike(this.lerpChildren);
@@ -701,8 +695,6 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
     override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
-        this.update(ctx);
-
         if (this.children.length > 0) {
             const computedLerpChildren = Component.computePointerLike(this.lerpChildren);
 
@@ -826,7 +818,7 @@ type MaybePointerLikeNumber = MaybePointerLike<number>;
  * @remarks
  * This is only used for containers whose coordinates are automatically determined (e.g. StaticHContainer).
  */
-export class StaticSpace extends Component {
+export class StaticSpace extends ExtensionBase(Component) {
     public override[OBSTRUCTION_AFFECTABLE]: boolean = false;
 
     constructor(

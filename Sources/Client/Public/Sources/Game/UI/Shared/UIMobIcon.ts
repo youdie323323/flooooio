@@ -1,6 +1,6 @@
-import { Component, type MaybePointerLike } from "../Layout/Components/Component";
+import { type MaybePointerLike } from "../Layout/Components/Component";
 import type { AutomaticallySizedLayoutOptions } from "../Layout/Components/WellKnown/Container";
-import { CoordinatedStaticSpace, StaticPanelContainer, StaticSpace } from "../Layout/Components/WellKnown/Container";
+import { CoordinatedStaticSpace, StaticPanelContainer } from "../Layout/Components/WellKnown/Container";
 import Mob from "../../Entity/Mob";
 import { RARITY_COLOR } from "../../../../../../Shared/Entity/Statics/EntityRarity";
 import { CanvasLogo } from "../Layout/Components/WellKnown/Logo";
@@ -43,7 +43,10 @@ export default class UIMobIcon extends StaticPanelContainer {
         layoutOptions: MaybePointerLike<AutomaticallySizedLayoutOptions>,
 
         public mobInstance: Mob,
-        public mobAmountAccumulator: number = 1,
+
+        public amountAccumulator: number = 1,
+
+        private readonly withName: boolean = false,
     ) {
         super(
             layoutOptions,
@@ -65,8 +68,6 @@ export default class UIMobIcon extends StaticPanelContainer {
             new CoordinatedStaticSpace(ICON_SIZE, ICON_SIZE, 0, 0),
             new CanvasLogo(
                 {
-                    x: 0,
-                    y: 0,
                     w: 0,
                     h: 0,
                 },
@@ -81,6 +82,8 @@ export default class UIMobIcon extends StaticPanelContainer {
                         entity: mobInstance,
                         isSpecimen: true,
                     });
+
+                    // TODO: withName
                 },
             ),
         );
@@ -92,8 +95,8 @@ export default class UIMobIcon extends StaticPanelContainer {
 
         super.render(ctx);
 
-        const computedMobCounts = Component.computePointerLike(this.mobAmountAccumulator);
-        if (computedMobCounts === 1) return;
+        const amount = this.amountAccumulator;
+        if (amount === 1) return;
 
         ctx.save();
 
@@ -108,8 +111,8 @@ export default class UIMobIcon extends StaticPanelContainer {
         ctx.strokeStyle = '#000000';
         ctx.fillStyle = "white";
         ctx.font = "7px Ubuntu";
-        ctx.strokeText("x" + computedMobCounts, 0, 0);
-        ctx.fillText("x" + computedMobCounts, 0, 0);
+        ctx.strokeText("x" + amount, 0, 0);
+        ctx.fillText("x" + amount, 0, 0);
 
         ctx.restore();
     }

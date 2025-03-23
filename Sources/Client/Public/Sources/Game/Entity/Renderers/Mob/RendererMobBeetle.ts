@@ -34,6 +34,7 @@ export default class RendererMobBeetle extends RendererMobBase {
         {
             ctx.fillStyle = ctx.strokeStyle = this.getSkinColor(context, "#333333");
             ctx.lineCap = ctx.lineJoin = "round";
+            
             for (let i = 0; i < 2; i++) {
                 const relative = i === 0 ? 1 : -1;
                 ctx.save();

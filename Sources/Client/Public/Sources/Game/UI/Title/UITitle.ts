@@ -36,7 +36,7 @@ import SCROLL_UNFURLED_SVG from "./Assets/scroll_unfurled.svg";
 import DISCORD_ICON_SVG from "./Assets/discord_icon.svg";
 import type { TooltipPosition } from "../Layout/Extensions/ExtensionTooltip";
 import Tooltip from "../Layout/Extensions/ExtensionTooltip";
-import UITitleInventory from "./UITitleInventory";
+import UIGameInventory from "../Game/UIGameInventory";
 
 const TAU = Math.PI * 2;
 
@@ -238,10 +238,7 @@ export default class UITitle extends AbstractUI {
                     Button,
                     [
                         new Text(
-                            {
-                                x: 0,
-                                y: 5,
-                            },
+                            { y: 5 },
                             desc,
                             11,
                         ),
@@ -273,8 +270,6 @@ export default class UITitle extends AbstractUI {
                         [
                             new SVGLogo(
                                 {
-                                    x: 0,
-                                    y: 0,
                                     w: 40,
                                     h: 40,
                                 },
@@ -336,7 +331,7 @@ export default class UITitle extends AbstractUI {
 
                             invertYCoordinate: true,
                         },
-                        
+
                         "#aaaaaa",
                         0.1,
                     ).addChildren(
@@ -395,8 +390,6 @@ export default class UITitle extends AbstractUI {
                         [
                             new SVGLogo(
                                 {
-                                    x: 0,
-                                    y: 0,
                                     w: 40,
                                     h: 40,
                                 },
@@ -443,8 +436,6 @@ export default class UITitle extends AbstractUI {
                         [
                             new SVGLogo(
                                 {
-                                    x: 0,
-                                    y: 0,
                                     w: 40,
                                     h: 40,
                                 },
@@ -482,8 +473,6 @@ export default class UITitle extends AbstractUI {
                         [
                             new SVGLogo(
                                 {
-                                    x: 0,
-                                    y: 0,
                                     w: 40,
                                     h: 40,
                                 },
@@ -672,17 +661,12 @@ export default class UITitle extends AbstractUI {
 
                 [
                     new Text(
-                        {
-                            x: 0,
-                            y: 2,
-                        },
+                        { y: 2 },
                         "Ready",
                         16,
                     ),
                     new CanvasLogo(
                         {
-                            x: 0,
-                            y: 0,
                             w: 40,
                             h: 40,
                         },
@@ -739,17 +723,12 @@ export default class UITitle extends AbstractUI {
 
                 [
                     new Text(
-                        {
-                            x: 0,
-                            y: 2,
-                        },
+                        { y: 2 },
                         "Squad",
                         13,
                     ),
                     new CanvasLogo(
                         {
-                            x: 0,
-                            y: 0,
                             w: 40,
                             h: 40,
                         },
@@ -796,10 +775,7 @@ export default class UITitle extends AbstractUI {
 
                     [
                         new Text(
-                            {
-                                x: 0,
-                                y: 0,
-                            },
+                            {},
                             name,
                             10,
                         ),
@@ -832,7 +808,7 @@ export default class UITitle extends AbstractUI {
                         this.biome = Biome.OCEAN;
                     }),
                 ],
-                
+
                 // Dynamically create static space
                 () => new StaticSpace(5, 0),
             ));
@@ -1180,11 +1156,6 @@ export default class UITitle extends AbstractUI {
         }
 
         this.addComponent(gameNameText);
-
-        this.addComponent(new UITitleInventory({
-            x: 100,
-            y: 100,
-        }));
     }
 
     override animationFrame() {
@@ -1290,7 +1261,7 @@ export default class UITitle extends AbstractUI {
 
     override destroy(): void {
         super.destroy();
-        
+
         this.wavedBackgroundRendererBiome = this.wavedBackgroundRendererOceanPattern = null;
     }
 

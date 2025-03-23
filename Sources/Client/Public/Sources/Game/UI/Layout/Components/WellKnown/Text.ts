@@ -133,8 +133,6 @@ export default class Text extends ExtensionBase(Component<Readonly<ClipboardEven
     override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
-        this.update(ctx);
-
         ctx.save();
 
         const computedFillStyle = Component.computePointerLike(this.fillStyle);

@@ -1,19 +1,5 @@
-import UITitlePlayerProfile from "../../Title/UITitlePlayerProfile";
 import type { Component } from "../Components/Component";
-import { AbstractDynamicLayoutable } from "../Components/ComponentDynamicLayoutable";
 import type { Layoutable } from "../Components/ComponentLayoutable";
-
-export interface Updatable {
-    /**
-     * Update method call on rAF frame.
-     */
-    update(ctx: CanvasRenderingContext2D): void;
-}
-
-/**
- * Base template for abstract extended component class.
- */
-export type ComponentExtensionTemplate = Updatable & Record<PropertyKey, any>;
 
 export type AbstractConstructor<T extends object> = abstract new (...args: ReadonlyArray<any>) => T;
 
@@ -23,9 +9,7 @@ export type AbstractConstructor<T extends object> = abstract new (...args: Reado
 export type ExtensionConstructor = AbstractConstructor<
     Component &
     // Compiler treat super.layout as abstract method and cant call them, so override layoutable methods (abstract methods)
-    Layoutable &
-    // Maybe component is updatable
-    Partial<Updatable>
+    Layoutable
 >;
 
 /**
@@ -36,14 +20,7 @@ export type ExtensionConstructor = AbstractConstructor<
  * so, dont forgot to mixed this extension always when make new component.
  */
 export default function ExtensionBase<T extends ExtensionConstructor>(Base: T) {
-    abstract class MixedBase extends Base implements ComponentExtensionTemplate {
-        public get update(): ComponentExtensionTemplate["update"] {
-            return (ctx: CanvasRenderingContext2D): void => {
-                // Call parent extension update(), so its possible to nest the extension
-                super.update?.(ctx);
-            };
-        }
-    }
+    abstract class MixedBase extends Base {}
 
     return MixedBase;
 }

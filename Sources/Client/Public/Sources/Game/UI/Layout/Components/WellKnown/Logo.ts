@@ -51,8 +51,6 @@ export class CanvasLogo extends Logo {
     override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
-        this.update(ctx);
-
         ctx.save();
 
         ctx.translate(this.x, this.y);
@@ -94,8 +92,6 @@ export class SVGLogo extends Logo {
 
     override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
-
-        this.update(ctx);
 
         ctx.save();
 

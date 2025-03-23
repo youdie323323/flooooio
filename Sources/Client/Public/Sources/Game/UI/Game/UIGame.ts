@@ -20,10 +20,11 @@ import { Clientbound } from "../../../../../../Shared/Websocket/Packet/PacketDir
 import type { StaticAdherableClientboundHandler } from "../../Websocket/Packet/PacketClientbound";
 import UICloseButton from "../Shared/UICloseButton";
 import type { AnimationConfigOf } from "../Layout/Components/Component";
-import { AnimationType } from "../Layout/Components/Component";
+import { AnimationType, renderPossibleComponent } from "../Layout/Components/Component";
 import { CoordinatedStaticSpace, StaticSpace, StaticTranslucentPanelContainer, StaticVContainer } from "../Layout/Components/WellKnown/Container";
 import { InlineRenderingCall } from "../Layout/Extensions/ExtensionInlineRenderingCall";
 import UIGameWaveEnemyIcons from "./UIGameWaveEnemyIcons";
+import UIGameInventory from "./UIGameInventory";
 
 let interpolatedMouseX = 0;
 let interpolatedMouseY = 0;
@@ -53,6 +54,8 @@ export default class UIGame extends AbstractUI {
     private mobs: Map<number, Mob> = new Map();
 
     private waveEnemyIcons: UIGameWaveEnemyIcons;
+
+    private inventory: UIGameInventory;
 
     private updateT: number;
     private t: number;
@@ -478,7 +481,7 @@ export default class UIGame extends AbstractUI {
                 x: 6,
                 y: 6,
             },
-            
+
             14,
 
             () => this.leaveGame(),
@@ -499,19 +502,13 @@ export default class UIGame extends AbstractUI {
                 true,
             ).addChildren(
                 new Text(
-                    {
-                        x: 0,
-                        y: 0,
-                    },
+                    {},
                     "You were destroyed by:",
                     12.2,
                 ),
                 new StaticSpace(2, 2),
                 new Text(
-                    {
-                        x: 0,
-                        y: 0,
-                    },
+                    {},
                     "Poison",
                     16.1,
                 ),
@@ -520,8 +517,6 @@ export default class UIGame extends AbstractUI {
 
                 new Button(
                     {
-                        x: 0,
-                        y: 0,
                         w: 88,
                         h: 24,
                     },
@@ -552,12 +547,9 @@ export default class UIGame extends AbstractUI {
                     "#1dd129",
                     true,
                 ),
-                new StaticSpace(4, 4),
+                new StaticSpace(0, 4),
                 new Text(
-                    {
-                        x: 0,
-                        y: 0,
-                    },
+                    {},
 
                     "(or press enter)",
                     12,
@@ -584,10 +576,7 @@ export default class UIGame extends AbstractUI {
                 true,
             ).addChildren(
                 new Text(
-                    {
-                        x: 0,
-                        y: 0,
-                    },
+                    {},
 
                     "GAME OVER",
                     34,
@@ -598,8 +587,6 @@ export default class UIGame extends AbstractUI {
 
                 new Button(
                     {
-                        x: 0,
-                        y: 0,
                         w: 88,
                         h: 24,
                     },
@@ -626,12 +613,9 @@ export default class UIGame extends AbstractUI {
                     "#c62327",
                     true,
                 ),
-                new StaticSpace(4, 4),
+                new StaticSpace(0, 4),
                 new Text(
-                    {
-                        x: 0,
-                        y: 0,
-                    },
+                    {},
 
                     "(or press enter)",
                     12,
@@ -656,10 +640,7 @@ export default class UIGame extends AbstractUI {
                 2,
             ).addChildren(
                 new Text(
-                    {
-                        x: 0,
-                        y: 3,
-                    },
+                    { y: 3 },
 
                     "You will respawn next wave",
                     10,
@@ -714,6 +695,16 @@ export default class UIGame extends AbstractUI {
                 y: 58,
 
                 alignFromCenterX: true,
+            }),
+        ));
+
+        this.addComponent(this.inventory = new (InlineRenderingCall(UIGameInventory))(
+            () => ({
+                x: -(this.inventory.w / 2),
+                y: 105,
+
+                alignFromCenterX: true,
+                invertYCoordinate: true,
             }),
         ));
     }
@@ -955,8 +946,11 @@ export default class UIGame extends AbstractUI {
             ctx.restore();
         }
 
-        // Render wave mob icons
-        this.waveEnemyIcons.render(ctx);
+        { // Render inlined components
+            renderPossibleComponent(ctx, this.waveEnemyIcons);
+
+            renderPossibleComponent(ctx, this.inventory);
+        }
 
         { // Dead menu
             {

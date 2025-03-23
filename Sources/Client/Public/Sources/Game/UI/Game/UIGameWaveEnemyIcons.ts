@@ -30,10 +30,7 @@ export default class UIGameWaveEnemyIcons extends StaticHContainer<StaticVContai
 
         const createMobIcon = (): UIMobIcon => {
             const icon = new UIMobIcon(
-                {
-                    x: 0,
-                    y: 0,
-                },
+                {},
 
                 mobInstance,
             );
@@ -54,7 +51,7 @@ export default class UIGameWaveEnemyIcons extends StaticHContainer<StaticVContai
                 );
 
             if (existingMobIcon) {
-                existingMobIcon.mobAmountAccumulator++;
+                existingMobIcon.amountAccumulator++;
             } else {
                 vContainerToAdd.addChild(createMobIcon());
             }
@@ -65,10 +62,7 @@ export default class UIGameWaveEnemyIcons extends StaticHContainer<StaticVContai
             );
         } else {
             const vContainer = new StaticVContainer<UIMobIcon>(
-                {
-                    x: 0,
-                    y: 0,
-                },
+                {},
 
                 // Lerp enabled
                 true,
@@ -111,8 +105,8 @@ export default class UIGameWaveEnemyIcons extends StaticHContainer<StaticVContai
             }
         };
 
-        if (mobIcon.mobAmountAccumulator > 1) {
-            mobIcon.mobAmountAccumulator--;
+        if (mobIcon.amountAccumulator > 1) {
+            mobIcon.amountAccumulator--;
         } else {
             mobIcon.once("onAnimationHide", () => {
                 vContainerToRemoveFrom.removeChild(mobIcon);
