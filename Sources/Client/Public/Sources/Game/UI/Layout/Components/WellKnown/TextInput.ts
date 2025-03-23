@@ -253,10 +253,7 @@ export default class TextInput extends ExtensionBase(Component) {
         this.layoutCache.invalidate();
     }
 
-    override render() {
-        const { ctx } = this;
-        if (!ctx) return;
-
+    override render(ctx: CanvasRenderingContext2D) {
         super.render(ctx);
 
         this.update(ctx);

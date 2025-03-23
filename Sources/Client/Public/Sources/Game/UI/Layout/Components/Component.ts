@@ -139,14 +139,14 @@ export function hasClickableListeners(component: Components): boolean {
 // Typing for EventEmitter
 export type ComponentEvents =
     Satisfies<
-        & {
+        & Readonly<{
             // Event that tell this component is added dynamically to UI
             "onInitialized": [];
-        }
-        & {
+        }>
+        & Readonly<{
             // Event that tell this component is hide within animation
             "onAnimationHide": [];
-        }
+        }>
         & typeof INTERACTIVE_EVENTS
         & typeof CLICKABLE_EVENTS
         & ComponentCompatibleUnconditionalEvents,
@@ -165,7 +165,7 @@ export interface ComponentSymbol {
 /**
  * Base Component class for all UI components.
  */
-export abstract class Component<AdheredEvents extends EventMap = EventMap>
+export abstract class Component<const AdheredEvents extends EventMap = EventMap>
     extends Emitter<ComponentEvents & AdheredEvents> implements Layoutable, ComponentSymbol {
     // Prepare base symbols
     public [OBSTRUCTION_AFFECTABLE]: boolean = true;
@@ -275,10 +275,17 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
     public setH(h: number) { this.h = h; }
 
     /**
-     * Determine if component will render.
+     * Determine if this component will render.
      */
     public get isRenderable(): boolean {
         return this.visible || this.isAnimating;
+    }
+
+    /**
+     * Determine if can this component unvisible within animation.
+     */
+    public get isOutAnimatable(): boolean {
+        return this.visible && !this.isAnimating;
     }
 
     /**
@@ -477,13 +484,13 @@ export abstract class Component<AdheredEvents extends EventMap = EventMap>
         toggle: boolean,
         shouldAnimate: true,
         animationType: T,
-        animationConfig: AnimationConfigOf<T>,
+        animationConfig?: AnimationConfigOf<T>,
     ): void;
     public setVisible<T extends AnimationType>(
         toggle: boolean,
         shouldAnimate: boolean,
         animationType?: T,
-        animationConfig?: AnimationConfigOf<T>,
+        animationConfig: AnimationConfigOf<T> = {},
     ): void {
         if (toggle === this.visible && !this.isAnimating) return;
 

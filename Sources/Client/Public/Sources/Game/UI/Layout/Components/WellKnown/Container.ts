@@ -66,23 +66,6 @@ export abstract class AbstractStaticContainer<T extends SelectableStaticContaine
         this.children.forEach(child => child.invalidateLayoutCache());
     }
 
-    override destroy(): void {
-        this.children.forEach(child => {
-            // Destroy child
-            child.destroy();
-
-            // Remove instance
-            this.context.removeChildComponent(child);
-        });
-
-        // Then finnally, remove the children from this
-        this.children = null;
-
-        // To remove child completely, we need to access current context
-        // But super.destory remove reference to context, so post-processing
-        super.destroy();
-    }
-
     override setVisible(
         toggle: boolean,
         shouldAnimate: false,
@@ -91,13 +74,13 @@ export abstract class AbstractStaticContainer<T extends SelectableStaticContaine
         toggle: boolean,
         shouldAnimate: true,
         animationType: T,
-        animationConfig: AnimationConfigOf<T>,
+        animationConfig?: AnimationConfigOf<T>,
     ): void;
     override setVisible<T extends AnimationType>(
         toggle: boolean,
         shouldAnimate: boolean,
         animationType?: T,
-        animationConfig?: AnimationConfigOf<T>,
+        animationConfig: AnimationConfigOf<T> = {},
     ): void {
         // Sorry
         (super.setVisible as (...args: ReadonlyArray<any>) => {})(toggle, shouldAnimate, animationType, animationConfig);
@@ -116,6 +99,23 @@ export abstract class AbstractStaticContainer<T extends SelectableStaticContaine
         } else {
             setChildrenVisible();
         }
+    }
+
+    override destroy(): void {
+        this.children.forEach(child => {
+            // Destroy child
+            child.destroy();
+
+            // Remove instance
+            this.context.removeChildComponent(child);
+        });
+
+        // Then finnally, remove the children from this
+        this.children = null;
+
+        // To remove child completely, we need to access current context
+        // But super.destory remove reference to context, so post-processing
+        super.destroy();
     }
 
     /**
@@ -310,9 +310,6 @@ export class StaticTranslucentPanelContainer<Child extends Components = Componen
     constructor(
         layout: MaybePointerLike<PartialSizeLayoutOptions>,
 
-        protected readonly containerAlpha: MaybePointerLike<number> = 0.5,
-        protected readonly childrenAlpha: MaybePointerLike<number> = 1,
-
         protected readonly rectRadii: MaybePointerLike<number> = 3,
     ) {
         super(layout);
@@ -343,15 +340,16 @@ export class StaticTranslucentPanelContainer<Child extends Components = Componen
             });
         }
 
-        const options = Object.assign(
-            {
-                w: maxW,
-                h: maxH,
-            },
-            Component.computePointerLike(this.layoutOptions),
+        return Layout.layout(
+            Object.assign(
+                {
+                    w: maxW,
+                    h: maxH,
+                },
+                Component.computePointerLike(this.layoutOptions),
+            ),
+            lc,
         );
-
-        return Layout.layout(options, lc);
     }
 
     override render(ctx: CanvasRenderingContext2D): void {
@@ -359,14 +357,13 @@ export class StaticTranslucentPanelContainer<Child extends Components = Componen
 
         this.update(ctx);
 
-        const computedContainerAlpha = Component.computePointerLike(this.containerAlpha);
-
-        if (computedContainerAlpha > 0) {
+        {
             ctx.save();
 
             const computedRadii = Component.computePointerLike(this.rectRadii);
 
-            ctx.globalAlpha = computedContainerAlpha;
+            // 0.5 if globalAlpha is 1
+            ctx.globalAlpha = ctx.globalAlpha / 2;
             ctx.fillStyle = "black";
 
             ctx.beginPath();
@@ -379,8 +376,6 @@ export class StaticTranslucentPanelContainer<Child extends Components = Componen
 
         if (this.children.length > 0) {
             ctx.save();
-
-            ctx.globalAlpha = Component.computePointerLike(this.childrenAlpha);
 
             this.children.forEach(child => {
                 const childLayout = child.layout({
@@ -406,17 +401,7 @@ export class StaticTranslucentPanelContainer<Child extends Components = Componen
     }
 }
 
-export class StaticTransparentPanelContainer<Child extends Components = Components> extends StaticTranslucentPanelContainer<Child> {
-    constructor(
-        layout: MaybePointerLike<PartialSizeLayoutOptions>,
-
-        protected readonly childrenAlpha: MaybePointerLike<number> = 1,
-    ) {
-        super(layout, 0, childrenAlpha, -1);
-    }
-}
-
-export class AbstractChildLerpableStaticContainer<Child extends Components> extends AbstractStaticContainer<AutomaticallySizedLayoutOptions, Child> {
+export abstract class AbstractStaticChildLerpableContainer<Child extends Components> extends AbstractStaticContainer<AutomaticallySizedLayoutOptions, Child> {
     public override[OBSTRUCTION_AFFECTABLE]: boolean = false;
 
     protected static readonly POSITION_LERP_FACTOR = 0.1;
@@ -442,7 +427,7 @@ export class AbstractChildLerpableStaticContainer<Child extends Components> exte
 /**
  * Horizontally arranged invisible container.
  */
-export class StaticHContainer<Child extends Components = Components> extends AbstractChildLerpableStaticContainer<Child> {
+export class StaticHContainer<Child extends Components = Components> extends AbstractStaticChildLerpableContainer<Child> {
     constructor(
         layoutOptions: MaybePointerLike<AutomaticallySizedLayoutOptions>,
 
@@ -518,7 +503,7 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
 
     override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
-
+        
         this.update(ctx);
 
         if (this.children.length > 0) {
@@ -584,7 +569,7 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
                     }
                     const currentPosX = this.childPositions.get(child);
 
-                    const newX = currentPosX + (targetX - currentPosX) * AbstractChildLerpableStaticContainer.POSITION_LERP_FACTOR;
+                    const newX = currentPosX + (targetX - currentPosX) * AbstractStaticChildLerpableContainer.POSITION_LERP_FACTOR;
                     this.childPositions.set(child, newX);
 
                     child.setX(newX);
@@ -639,7 +624,7 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
 /**
  * Vertically arranged invisible container.
  */
-export class StaticVContainer<Child extends Components = Components> extends AbstractChildLerpableStaticContainer<Child> {
+export class StaticVContainer<Child extends Components = Components> extends AbstractStaticChildLerpableContainer<Child> {
     constructor(
         layoutOptions: MaybePointerLike<AutomaticallySizedLayoutOptions>,
 
@@ -780,7 +765,7 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
                     }
                     const currentPosY = this.childPositions.get(child);
 
-                    const newY = currentPosY + (targetY - currentPosY) * AbstractChildLerpableStaticContainer.POSITION_LERP_FACTOR;
+                    const newY = currentPosY + (targetY - currentPosY) * AbstractStaticChildLerpableContainer.POSITION_LERP_FACTOR;
                     this.childPositions.set(child, newY);
 
                     child.setX(targetX);
@@ -841,7 +826,7 @@ type MaybePointerLikeNumber = MaybePointerLike<number>;
  * @remarks
  * This is only used for containers whose coordinates are automatically determined (e.g. StaticHContainer).
  */
-export class StaticSpace extends ExtensionBase(Component) {
+export class StaticSpace extends Component {
     public override[OBSTRUCTION_AFFECTABLE]: boolean = false;
 
     constructor(

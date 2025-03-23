@@ -36,6 +36,7 @@ import SCROLL_UNFURLED_SVG from "./Assets/scroll_unfurled.svg";
 import DISCORD_ICON_SVG from "./Assets/discord_icon.svg";
 import type { TooltipPosition } from "../Layout/Extensions/ExtensionTooltip";
 import Tooltip from "../Layout/Extensions/ExtensionTooltip";
+import UITitleInventory from "./UITitleInventory";
 
 const TAU = Math.PI * 2;
 
@@ -180,7 +181,7 @@ export default class UITitle extends AbstractUI {
             this.biome = waveRoomBiome;
         },
         [Clientbound.WAVE_STARTED]: (reader: BinaryReader): void => {
-            this.squadMenuContainer.setVisible(false, true, AnimationType.ZOOM, {});
+            this.squadMenuContainer.setVisible(false, true, AnimationType.ZOOM);
 
             uiCtx.switchUI("game");
 
@@ -212,14 +213,14 @@ export default class UITitle extends AbstractUI {
         setTimeout(() => {
             this.connectingText.setVisible(true, false);
             setTimeout(() => {
-                this.connectingText.setVisible(false, true, AnimationType.ZOOM, {});
+                this.connectingText.setVisible(false, true, AnimationType.ZOOM);
                 setTimeout(() => {
-                    this.loggingInText.setVisible(true, true, AnimationType.ZOOM, {});
+                    this.loggingInText.setVisible(true, true, AnimationType.ZOOM);
                     setTimeout(() => {
-                        this.loggingInText.setVisible(false, true, AnimationType.ZOOM, {});
+                        this.loggingInText.setVisible(false, true, AnimationType.ZOOM);
                         setTimeout(() => {
                             this.onLoadedComponents.forEach(c => {
-                                c.setVisible(true, true, AnimationType.ZOOM, {});
+                                c.setVisible(true, true, AnimationType.ZOOM);
                             });
                         }, 150);
                     }, 2000);
@@ -236,7 +237,6 @@ export default class UITitle extends AbstractUI {
                 return Tooltip(
                     Button,
                     [
-                        new CoordinatedStaticSpace(1, 1, 0, 0),
                         new Text(
                             {
                                 x: 0,
@@ -703,7 +703,7 @@ export default class UITitle extends AbstractUI {
                     if (this.squadMenuContainer.visible === false) {
                         clientWebsocket.packetServerbound.sendWaveRoomFindPublic(this.biome);
 
-                        this.squadMenuContainer.setVisible(true, true, AnimationType.ZOOM, {});
+                        this.squadMenuContainer.setVisible(true, true, AnimationType.ZOOM);
 
                         this.statusTextRef = SquadContainerStatusText.SQUAD_CREATING;
 
@@ -767,7 +767,7 @@ export default class UITitle extends AbstractUI {
                 () => {
                     clientWebsocket.packetServerbound.sendWaveRoomCreate(this.biome);
 
-                    this.squadMenuContainer.setVisible(true, true, AnimationType.ZOOM, {});
+                    this.squadMenuContainer.setVisible(true, true, AnimationType.ZOOM);
 
                     this.statusTextRef = SquadContainerStatusText.SQUAD_CREATING;
 
@@ -832,6 +832,7 @@ export default class UITitle extends AbstractUI {
                         this.biome = Biome.OCEAN;
                     }),
                 ],
+                
                 // Dynamically create static space
                 () => new StaticSpace(5, 0),
             ));
@@ -901,7 +902,7 @@ export default class UITitle extends AbstractUI {
                     10,
 
                     () => {
-                        this.squadMenuContainer.setVisible(false, true, AnimationType.ZOOM, {});
+                        this.squadMenuContainer.setVisible(false, true, AnimationType.ZOOM);
 
                         readyToggle = false;
 
@@ -1179,6 +1180,11 @@ export default class UITitle extends AbstractUI {
         }
 
         this.addComponent(gameNameText);
+
+        this.addComponent(new UITitleInventory({
+            x: 100,
+            y: 100,
+        }));
     }
 
     override animationFrame() {
@@ -1283,6 +1289,8 @@ export default class UITitle extends AbstractUI {
     }
 
     override destroy(): void {
+        super.destroy();
+        
         this.wavedBackgroundRendererBiome = this.wavedBackgroundRendererOceanPattern = null;
     }
 

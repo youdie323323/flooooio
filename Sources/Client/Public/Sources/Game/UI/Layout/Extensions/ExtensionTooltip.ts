@@ -1,4 +1,5 @@
-import { OBSTRUCTION_AFFECTABLE, type Components, type MaybePointerLike } from "../Components/Component";
+import type { AnimationConfigOf, Components, MaybePointerLike } from "../Components/Component";
+import { AnimationType, OBSTRUCTION_AFFECTABLE } from "../Components/Component";
 import type { PartialSizeLayoutOptions } from "../Components/WellKnown/Container";
 import { StaticTranslucentPanelContainer } from "../Components/WellKnown/Container";
 import type { ComponentExtensionTemplate, ExtensionConstructor } from "./Extension";
@@ -21,15 +22,9 @@ export default function Tooltip<T extends ExtensionConstructor>(
     );
 
     abstract class MixedBase extends Base implements ComponentExtensionTemplate {
-        private static readonly OPACITY_START: number = 0;
-        private static readonly OPACITY_END: number = 1;
-        private static readonly OPACITY_CONTAINER_END: number = 0.5;
-        private static readonly OPACITY_STEP: number = 0.035;
-        private static readonly OPACITY_STEP_INTERVAL: number = 1;
-
-        private opacity: number = MixedBase.OPACITY_START;
-        private opacityInterval: NodeJS.Timeout | null = null;
-        private isFocused: boolean = false;
+        private static readonly TOOLTIP_CONTAINER_ANIMATION_CONFIG = {
+            defaultDurationOverride: 100,
+        } as const satisfies AnimationConfigOf<AnimationType.FADE>;
 
         private tooltipContainer: StaticTranslucentPanelContainer;
 
@@ -40,63 +35,33 @@ export default function Tooltip<T extends ExtensionConstructor>(
                 this.tooltipContainer =
                     new StaticTranslucentPanelContainer(
                         () => this.findOptimalPosition(),
-                        () => this.opacity * MixedBase.OPACITY_CONTAINER_END,
-                        () => this.opacity,
+
                         tooltipRectRadii,
                     ).addChildren(...tooltipComponents);
 
                 // Avoid tooltip blocking other components overlap
                 this.tooltipContainer[OBSTRUCTION_AFFECTABLE] = false;
 
+                // Not visible first
+                this.tooltipContainer.setVisible(false, false);
+
                 this.context.addComponent(this.tooltipContainer);
             });
 
             this.on("onFocus", () => {
-                this.isFocused = true;
-                this.updateOpacityAnimation();
+                this.tooltipContainer.setVisible(true, true, AnimationType.FADE, MixedBase.TOOLTIP_CONTAINER_ANIMATION_CONFIG);
             });
 
             this.on("onBlur", () => {
-                this.isFocused = false;
-                this.updateOpacityAnimation();
+                this.tooltipContainer.setVisible(false, true, AnimationType.FADE, MixedBase.TOOLTIP_CONTAINER_ANIMATION_CONFIG);
             });
         }
 
-        private updateOpacityAnimation(): void {
-            if (this.opacityInterval) {
-                clearInterval(this.opacityInterval);
-                this.opacityInterval = null;
-            }
-
-            this.opacityInterval = setInterval(
-                () => this.updateOpacity(),
-                MixedBase.OPACITY_STEP_INTERVAL,
-            );
-        }
-
-        private updateOpacity(): void {
-            const targetOpacity = this.isFocused
-                ? MixedBase.OPACITY_END
-                : MixedBase.OPACITY_START;
-
-            if (this.isFocused) {
-                this.opacity = Math.min(MixedBase.OPACITY_END, this.opacity + MixedBase.OPACITY_STEP);
-                if (this.opacity >= targetOpacity) {
-                    this.clearOpacityInterval();
-                }
-            } else {
-                this.opacity = Math.max(MixedBase.OPACITY_START, this.opacity - MixedBase.OPACITY_STEP);
-                if (this.opacity <= targetOpacity) {
-                    this.clearOpacityInterval();
-                }
-            }
-        }
-
-        private clearOpacityInterval(): void {
-            if (this.opacityInterval) {
-                clearInterval(this.opacityInterval);
-                this.opacityInterval = null;
-            }
+        override get update(): ComponentExtensionTemplate["update"] {
+            return (ctx: CanvasRenderingContext2D): void => {
+                // Call parent extension update(), so its possible to nest the extension
+                super.update?.(ctx);
+            };
         }
 
         private findOptimalPosition(): PartialSizeLayoutOptions {
@@ -160,13 +125,6 @@ export default function Tooltip<T extends ExtensionConstructor>(
             this.tooltipContainer.destroy();
 
             super.destroy();
-        }
-
-        override get update(): ComponentExtensionTemplate["update"] {
-            return (ctx: CanvasRenderingContext2D): void => {
-                // Call parent extension update(), so its possible to nest the extension
-                super.update?.(ctx);
-            };
         }
     }
 

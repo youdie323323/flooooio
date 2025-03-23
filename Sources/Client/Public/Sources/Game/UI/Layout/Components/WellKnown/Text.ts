@@ -1,11 +1,11 @@
 import type { ColorCode } from "../../../../../../../../Shared/Utils/Color";
 import { memo } from "../../../../../../../../Shared/Utils/Memoize";
-import ExtensionBase from "../../Extensions/Extension";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
 import type { MaybePointerLike } from "../Component";
 import { Component, OBSTRUCTION_AFFECTABLE } from "../Component";
 import type { AutomaticallySizedLayoutOptions, SizeKeys, SquareSizeLayoutOptions } from "./Container";
+import ExtensionBase from "../../Extensions/Extension";
 
 export const calculateStrokeWidth = memo((fontSize: number): number => {
     // 80 / 8.333333830038736 (actually this is 8+1/3 but floating point exception) = 9.59999942779541

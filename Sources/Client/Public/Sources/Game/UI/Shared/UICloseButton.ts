@@ -7,6 +7,7 @@ import type { SquareSizeLayoutOptions } from "../Layout/Components/WellKnown/Con
 export default class UICloseButton extends Button {
     constructor(
         layoutOptions: SquareSizeLayoutOptions,
+        
         size: number,
         
         callback: () => void,

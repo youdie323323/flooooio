@@ -21,7 +21,7 @@ import type { StaticAdherableClientboundHandler } from "../../Websocket/Packet/P
 import UICloseButton from "../Shared/UICloseButton";
 import type { AnimationConfigOf } from "../Layout/Components/Component";
 import { AnimationType } from "../Layout/Components/Component";
-import { StaticSpace, StaticTranslucentPanelContainer, StaticTransparentPanelContainer, StaticVContainer } from "../Layout/Components/WellKnown/Container";
+import { CoordinatedStaticSpace, StaticSpace, StaticTranslucentPanelContainer, StaticVContainer } from "../Layout/Components/WellKnown/Container";
 import { InlineRenderingCall } from "../Layout/Extensions/ExtensionInlineRenderingCall";
 import UIGameWaveEnemyIcons from "./UIGameWaveEnemyIcons";
 
@@ -30,16 +30,6 @@ let interpolatedMouseY = 0;
 
 let mouseXOffset = 0;
 let mouseYOffset = 0;
-
-/**
- * Ease out cubic function for smooth animation.
- * 
- * @param t - Normalized time (0 to 1)
- * @returns Eased value
- */
-function easeOutCubic(t: number): number {
-    return 1 - Math.pow(1 - t, 3);
-}
 
 const TAU = Math.PI * 2;
 
@@ -347,7 +337,7 @@ export default class UIGame extends AbstractUI {
         { // Setup listeners
             this.on("onKeyDown", (event: KeyboardEvent) => {
                 switch (event.key) {
-                    // Space means space
+                    // Space mean space
                     case " ": {
                         this.currentMoodFlags |= MoodFlags.ANGRY;
                         clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
@@ -488,6 +478,7 @@ export default class UIGame extends AbstractUI {
                 x: 6,
                 y: 6,
             },
+            
             14,
 
             () => this.leaveGame(),
@@ -656,20 +647,24 @@ export default class UIGame extends AbstractUI {
             this.youWillRespawnNextWaveContainer = new StaticTranslucentPanelContainer(
                 () => ({
                     x: -(this.youWillRespawnNextWaveContainer.w / 2),
-                    y: 300 + -(this.youWillRespawnNextWaveContainer.h / 2),
+                    y: -(this.youWillRespawnNextWaveContainer.h / 2) + 50,
 
                     alignFromCenterX: true,
+                    alignFromCenterY: true,
                 }),
-            ).addChild(
+
+                2,
+            ).addChildren(
                 new Text(
                     {
                         x: 0,
-                        y: 0,
+                        y: 3,
                     },
 
                     "You will respawn next wave",
-                    8.4,
+                    10,
                 ),
+                new CoordinatedStaticSpace(1, 1, 0, 16),
             );
 
             this.youWillRespawnNextWaveContainer.setVisible(false, false);
@@ -960,7 +955,7 @@ export default class UIGame extends AbstractUI {
             ctx.restore();
         }
 
-        // Render mob cards
+        // Render wave mob icons
         this.waveEnemyIcons.render(ctx);
 
         { // Dead menu
@@ -988,11 +983,11 @@ export default class UIGame extends AbstractUI {
                 if (this.wasDeadMenuContinued) {
                     if (this.wasWaveEnded) {
                         if (!this.gameOverMenuContainer.visible) {
-                            this.gameOverMenuContainer.setVisible(true, true, AnimationType.FADE, {});
+                            this.gameOverMenuContainer.setVisible(true, true, AnimationType.FADE);
                         }
 
-                        if (this.youWillRespawnNextWaveContainer.visible) {
-                            this.youWillRespawnNextWaveContainer.setVisible(false, true, AnimationType.FADE, {});
+                        if (this.youWillRespawnNextWaveContainer.isOutAnimatable) {
+                            this.youWillRespawnNextWaveContainer.setVisible(false, true, AnimationType.FADE, { defaultDurationOverride: 500 });
                         }
                     } else {
                         // Only fade-out when not game over
@@ -1002,7 +997,7 @@ export default class UIGame extends AbstractUI {
                         );
 
                         if (!this.youWillRespawnNextWaveContainer.visible) {
-                            this.youWillRespawnNextWaveContainer.setVisible(true, true, AnimationType.FADE, {});
+                            this.youWillRespawnNextWaveContainer.setVisible(true, true, AnimationType.FADE, { defaultDurationOverride: 500 });
                         }
                     }
                 } else {
@@ -1012,14 +1007,16 @@ export default class UIGame extends AbstractUI {
                     }
                 }
             } else {
+                // Respawned, or not dead
+
                 this.deadMenuBackgroundOpacity = 0;
 
-                if (this.deadMenuContainer.visible) {
+                if (this.deadMenuContainer.isOutAnimatable) {
                     this.deadMenuContainer.setVisible(false, true, AnimationType.SLIDE, UIGame.DEAD_MENU_CONTAINER_ANIMATION_CONFIG);
                 }
 
-                if (this.youWillRespawnNextWaveContainer.visible) {
-                    this.youWillRespawnNextWaveContainer.setVisible(false, true, AnimationType.FADE, {});
+                if (this.youWillRespawnNextWaveContainer.isOutAnimatable) {
+                    this.youWillRespawnNextWaveContainer.setVisible(false, true, AnimationType.FADE, { defaultDurationOverride: 500 });
                 }
             }
         }
@@ -1028,6 +1025,8 @@ export default class UIGame extends AbstractUI {
     }
 
     override destroy(): void {
+        super.destroy();
+
         this.tilesetRenderer = this.tilesetWavedRendererOceanPattern = null;
 
         this.players.clear();

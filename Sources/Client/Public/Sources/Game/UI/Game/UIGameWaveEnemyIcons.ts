@@ -40,7 +40,7 @@ export default class UIGameWaveEnemyIcons extends StaticHContainer<StaticVContai
 
             // Animation on appear
             icon.setVisible(false, false);
-            icon.setVisible(true, true, AnimationType.CARD, {});
+            icon.setVisible(true, true, AnimationType.CARD);
 
             return icon;
         };
@@ -120,7 +120,7 @@ export default class UIGameWaveEnemyIcons extends StaticHContainer<StaticVContai
                 checksumVContainer();
             });
 
-            mobIcon.setVisible(false, true, AnimationType.CARD, {});
+            mobIcon.setVisible(false, true, AnimationType.CARD);
         }
 
         checksumVContainer();

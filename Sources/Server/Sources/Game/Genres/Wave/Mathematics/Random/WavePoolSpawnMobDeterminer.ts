@@ -142,7 +142,7 @@ export default class SpawnMobDeterminer {
             let spawnRarity = pickRandomRarity(progress, 1 + 0);
             for (const [rarity, maxWave] of Object.entries(WAVE_SPAWN_END_AT)) {
                 if (progress > maxWave && spawnRarity === parseInt(rarity)) {
-                    spawnRarity = Math.min(spawnRarity + 1, Rarity.MYTHIC) as Rarity;
+                    spawnRarity = Math.min(spawnRarity + 1, Rarity.MYTHIC) satisfies Rarity;
                 }
             }
 
