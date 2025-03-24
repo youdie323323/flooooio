@@ -50,7 +50,7 @@ export function MobBodyConnection<T extends EntityMixinConstructor<BaseMob>>(Bas
             const { collision } = MOB_PROFILES[this.type];
 
             // Arc
-            const centiDistance = (collision.rx + collision.ry) * (this.size / collision.fraction);
+            const centiDistance = (collision.radius + collision.radius) * (this.size / collision.fraction);
 
             const currentDistance = Math.hypot(dx, dy);
 

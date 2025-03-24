@@ -4,7 +4,7 @@ import { EntityCollision } from "../EntityCollision";
 import { EntityElimination } from "../EntityElimination";
 import { EntityCoordinateMovement } from "../EntityCoordinateMovement";
 import { EntityCoordinateBoundary } from "../EntityCoordinateBoundary";
-import type { PlayerInstance } from "../Player/Player";
+import { Player, type PlayerInstance } from "../Player/Player";
 import { MobAggressivePursuit } from "./MobAggressivePursuit";
 import { MobBodyConnection } from "./MobBodyConnection";
 import { MobSpecialMovement } from "./MobSpecialMovement";
@@ -14,6 +14,10 @@ import type { PetalType } from "../../../../../../Shared/Entity/Statics/EntityTy
 import { MobType } from "../../../../../../Shared/Entity/Statics/EntityType";
 import type { WavePool } from "../../../Genres/Wave/WavePool";
 import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
+import type { MobData } from "../../../../../../Shared/Entity/Statics/Mob/MobData";
+import { MOB_PROFILES } from "../../../../../../Shared/Entity/Statics/Mob/MobProfiles";
+import type { PetalData } from "../../../../../../Shared/Entity/Statics/Mob/Petal/PetalData";
+import { PETAL_PROFILES } from "../../../../../../Shared/Entity/Statics/Mob/Petal/PetalProfiles";
 
 export type MobId = BrandedId<"Mob">;
 
@@ -111,6 +115,7 @@ class BaseMob implements Entity {
         // No need to implement underlying methods
         | UnderlyingMixinUnion
         | "speed"
+        | "desiredRadius"
     >) {
         Object.assign(this, source);
     }
@@ -146,8 +151,14 @@ class BaseMob implements Entity {
     /**
      * Returns speed within mob.
      */
-    get speed(): number {
+    public get speed(): number {
         return MOB_SPEED[this.type];
+    }
+
+    public get desiredRadius(): number {
+        const { collision }: MobData | PetalData = MOB_PROFILES[this.type] || PETAL_PROFILES[this.type];
+
+        return collision.radius * (this.size / collision.fraction);
     }
 }
 
@@ -211,6 +222,7 @@ const MOB_SPEED = {
 
     [MobType.BEETLE]: 3.5,
 
+    [MobType.SPONGE]: 0,
     [MobType.BUBBLE]: 0,
     [MobType.JELLYFISH]: 2,
     [MobType.STARFISH]: 3.5,

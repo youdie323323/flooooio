@@ -53,6 +53,7 @@ export const MOB_BEHAVIORS = {
     [MobType.JELLYFISH]: MobBehavior.CAUTION,
     [MobType.BEE]: MobBehavior.NEUTRAL,
     [MobType.SPIDER]: MobBehavior.AGGRESSIVE,
+    [MobType.SPONGE]: MobBehavior.PASSIVE,
 
     [MobType.CENTIPEDE]: MobBehavior.NONE,
     // TODO: elucidate desert centipede move
@@ -92,7 +93,7 @@ export function MobAggressivePursuit<T extends EntityMixinConstructor<BaseMob>>(
             if (distanceToTarget > this.loseRange) this.targetEntity = null;
 
             // Select target
-            let targets: Entity[];
+            let targets: Array<Entity>;
 
             if (this.petMaster) {
                 // Mob which summoned by player will attack other mobs expect me, petals and pets

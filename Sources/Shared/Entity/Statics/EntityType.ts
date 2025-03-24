@@ -1,10 +1,13 @@
 export const enum MobType {
     BEE,
     SPIDER,
+
+    BEETLE,
+
     STARFISH,
     JELLYFISH,
-    BEETLE,
     BUBBLE,
+    SPONGE,
 
     CENTIPEDE,
     CENTIPEDE_EVIL,

@@ -14,6 +14,7 @@ import MobRendererCentipede from "./MobRendererCentipede";
 import MobRendererJellyfish from "./MobRendererJellyfish";
 import MobRendererSpider from "./MobRendererSpider";
 import MobRendererStarfish from "./MobRendererStarfish";
+import MobRendererSponge from "./MobRendererSponge";
 
 const centipedeRenderer = new MobRendererCentipede();
 
@@ -27,6 +28,7 @@ const MOB_TYPE_TO_RENDERER_MAPPING = {
     [MobType.STARFISH]: new MobRendererStarfish,
     [MobType.JELLYFISH]: new MobRendererJellyfish,
     [MobType.BUBBLE]: new MobRendererBubble,
+    [MobType.SPONGE]: new MobRendererSponge,
 
     [MobType.CENTIPEDE]: centipedeRenderer,
     [MobType.CENTIPEDE_DESERT]: centipedeRenderer,

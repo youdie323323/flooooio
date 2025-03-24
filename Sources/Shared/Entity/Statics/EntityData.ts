@@ -5,10 +5,9 @@ export interface EntityCollision {
     fraction: number;
 
     /**
-     * The x, y radius of ellipse. Setting both same value, you can reproduce a circle.
+     * The radius of circle.
      */
-    rx: number;
-    ry: number;
+    radius: number;
 }
 
 /**

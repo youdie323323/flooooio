@@ -23,7 +23,7 @@ import { Player } from "../../Entity/Dynamics/Player/Player";
 import { PETAL_INITIAL_COOLDOWN } from "../../Entity/Dynamics/Player/PlayerPetalReload";
 import SpatialHash from "../../Entity/Statics/Collision/CollisionSpatialHash";
 import AbstractPool from "../GenrePool";
-import SpawnMobDeterminer, { LINKABLE_MOBS } from "./Mathematics/Random/WavePoolSpawnMobDeterminer";
+import SpawnMobDeterminer, { LINKABLE_MOBS } from "./WavePoolSpawnMobDeterminer";
 import type { WaveRoomPlayerId, WaveRoomPlayer } from "./WaveRoom";
 import { generateRandomId } from "./WaveRoom";
 import { getRandomCoordinate, getRandomSafeCoordinate } from "../../Entity/Dynamics/EntityCoordinateMovement";
@@ -52,6 +52,11 @@ export const UPDATE_FPS = 60;
  */
 export interface WaveData {
     /**
+     * Biome of wave.
+     */
+    readonly biome: Biome;
+
+    /**
      * Progress of wave.
      */
     progress: number;
@@ -63,11 +68,6 @@ export interface WaveData {
      * Radius of wave map.
      */
     mapRadius: number;
-
-    /**
-     * Biome of wave.
-     */
-    biome: Biome;
 }
 
 export class WavePool extends AbstractPool {
@@ -146,7 +146,7 @@ export class WavePool extends AbstractPool {
      * @param biome - Biome of wave
      * @param roomCandidates - List of players
      */
-    public startWave(roomCandidates: WaveRoomPlayer[]) {
+    public startWave(roomCandidates: Array<WaveRoomPlayer>) {
         const waveStartedWriter = new BinarySizedWriter(2);
 
         waveStartedWriter.writeUInt8(Clientbound.WAVE_STARTED);
@@ -461,7 +461,7 @@ export class WavePool extends AbstractPool {
                     if (!randPos) return null;
 
                     if (LINKABLE_MOBS.has(type)) {
-                        this.linkedMobSegmentation(type, rarity, randPos[0], randPos[1], 10);
+                        this.linkedMobSegmentation(type, rarity, randPos[0], randPos[1], 9);
                     } else {
                         this.generateMob(type, rarity, randPos[0], randPos[1]);
                     }
@@ -519,12 +519,14 @@ export class WavePool extends AbstractPool {
 
         const { collision } = profile;
 
-        const distanceBetween = (collision.rx + collision.ry) * (calculateMobSize(profile, rarity) / collision.fraction);
+        const size = calculateMobSize(profile, rarity);
+
+        const distanceBetweenSegments = (collision.radius * 2) * (size / collision.fraction);
 
         let prevSegment: MobInstance = null;
 
         for (let i = 0; i < bodyCount + 1; i++) {
-            const radius = i * distanceBetween;
+            const radius = i * distanceBetweenSegments;
 
             prevSegment = this.generateMob(
                 type,
@@ -573,7 +575,6 @@ export class WavePool extends AbstractPool {
      */
     public swapPetal(clientId: PlayerId, at: number) {
         const client = this.clientPool.get(clientId);
-        // TODO: server broken when client switched petal ffs, fix
         if (
             client &&
             !client.isDead &&
@@ -597,7 +598,10 @@ export class WavePool extends AbstractPool {
                     }
 
                     // Remove summoned mob
-                    if (petalSummonedPet && this.getMob(petalSummonedPet.id)) {
+                    if (
+                        petalSummonedPet && 
+                        this.getMob(petalSummonedPet.id)
+                    ) {
                         this.removeMob(petalSummonedPet.id);
                     }
                 });

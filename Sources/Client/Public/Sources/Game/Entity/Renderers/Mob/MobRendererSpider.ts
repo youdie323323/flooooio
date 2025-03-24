@@ -46,9 +46,13 @@ export default class MobRendererSpider extends AbstractMobRenderer {
         // Non-recursive renderer
         // super.render(context);
 
-        const { ctx, entity } = context;
+        const { ctx, entity, isSpecimen } = context;
 
-        const scale = entity.size / 55;
+        const scale = entity.size / (
+            isSpecimen
+                ? 60
+                : 25
+        );
         ctx.scale(scale, scale);
 
         { // Legs
@@ -73,7 +77,7 @@ export default class MobRendererSpider extends AbstractMobRenderer {
         { // Body
             ctx.fillStyle = this.calculateDamageEffectColor(context, "#4f412e");
             ctx.strokeStyle = "rgba(0,0,0,0.15)";
-            ctx.lineWidth = 22;
+            ctx.lineWidth = 20;
 
             ctx.beginPath();
 

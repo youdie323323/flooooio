@@ -12,22 +12,24 @@ export default class MobRendererStarfish extends AbstractMobRenderer {
 
         const { ctx, entity, isSpecimen } = context;
 
-        const scale = entity.size / 80;
+        const scale = entity.size / 120;
         ctx.scale(scale, scale);
 
         const timeRotation =
             isSpecimen
                 ? 2000
                 : Date.now();
-        
+
         ctx.rotate(timeRotation / 2000 % TAU + entity.moveCounter * 0.4);
 
         const { STARFISH_LEG_AMOUNT } = Mob;
 
         const legDistance = entity.legD;
-        const remainingLegsCount = entity.isDead
-            ? 0
-            : Math.floor(entity.nHealth * STARFISH_LEG_AMOUNT);
+        const remainingLegsCount = isSpecimen
+            ? STARFISH_LEG_AMOUNT
+            : entity.isDead
+                ? 0
+                : Math.floor(entity.nHealth * STARFISH_LEG_AMOUNT);
 
         ctx.beginPath();
 

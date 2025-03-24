@@ -13,7 +13,7 @@ export default abstract class AbstractMobRenderer extends Renderer<Mob> {
     protected drawBubble(context: RenderingContext<Mob>, isPetal: boolean) {
         const { ctx, entity } = context;
 
-        const scale = entity.size / 15;
+        const scale = entity.size / 20;
         ctx.scale(scale, scale);
 
         const oldGlobalAlpha = ctx.globalAlpha;

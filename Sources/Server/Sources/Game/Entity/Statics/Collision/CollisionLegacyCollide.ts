@@ -13,6 +13,9 @@ import ColliderEllipse from "./Colliders/ColliderEllipse";
 const colliderEllipse = new ColliderEllipse();
 const colliderCircle = new ColliderCircle();
 
+/**
+ * @deprecated Legacy.
+ */
 export function returnGoodShape(entity: RealEntity): CollidableShapes {
     // Ok im misunderstanding something; mix two collider is not possible, because
     // if one of shape is circle and half one of shape is ellipse, its always collide with ellipse
@@ -65,8 +68,8 @@ export function returnGoodShape(entity: RealEntity): CollidableShapes {
     ) {
         const { collision }: MobData | PetalData = MOB_PROFILES[entity.type] || PETAL_PROFILES[entity.type];
 
-        a = collision.rx * (entity.size / collision.fraction);
-        b = collision.ry * (entity.size / collision.fraction);
+        a = collision.radius * (entity.size / collision.fraction);
+        b = collision.radius * (entity.size / collision.fraction);
     } else {
         // Arc (player)
 
@@ -88,8 +91,9 @@ export function returnGoodShape(entity: RealEntity): CollidableShapes {
     } satisfies Ellipse;
 }
 
-export const PLAYER_MAX_COLLISION_DELTA = 15;
-
+/**
+ * @deprecated Legacy.
+ */
 export function accordinglyComputeDelta<T extends CollidableShapes>(s0: T, s1: T): number {
     let delta: number;
 
@@ -109,6 +113,9 @@ export function accordinglyComputeDelta<T extends CollidableShapes>(s0: T, s1: T
     return delta;
 }
 
+/**
+ * @deprecated Legacy.
+ */
 export function isColliding(delta: number): boolean {
     return AbstractCollider.isColliding(delta);
 }

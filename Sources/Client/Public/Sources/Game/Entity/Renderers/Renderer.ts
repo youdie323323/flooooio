@@ -1,4 +1,5 @@
 import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
+import type { MobData } from "../../../../../../Shared/Entity/Statics/Mob/MobData";
 import { MOB_PROFILES } from "../../../../../../Shared/Entity/Statics/Mob/MobProfiles";
 import type { ColorCode } from "../../../../../../Shared/Utils/Color";
 import { memo } from "../../../../../../Shared/Utils/Memoize";
@@ -141,9 +142,9 @@ export default class Renderer<T extends Entity> {
             } else if (entity instanceof Mob) {
                 lineWidth = 6.5;
 
-                const { collision } = MOB_PROFILES[entity.type];
+                const { collision: { radius, fraction } }: MobData = MOB_PROFILES[entity.type];
 
-                const scale = ((collision.rx + collision.ry) * (entity.size / collision.fraction)) / 30;
+                const scale = ((radius * 2) * (entity.size / fraction)) / 30;
 
                 ctx.scale(scale, scale);
                 ctx.translate(-HP_BAR_MAX_WIDTH / 2, 25);

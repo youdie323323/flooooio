@@ -127,7 +127,6 @@ export default class Text extends ExtensionBase(Component<ClipboardEvents>) {
                     ? TEXT_WIDTH_OFFSET
                     : 0
             );
-
             height = metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
         }
 
@@ -203,10 +202,12 @@ export default class Text extends ExtensionBase(Component<ClipboardEvents>) {
             case "left":
             default: break;
         }
+        
+        const { LINE_HEIGHT_MULTIPLIER } = Text;
 
         if (computedWordWrapMaxWidth) {
             const lines = this.getWrappedLines(ctx, computedText, computedWordWrapMaxWidth);
-            const lineHeight = computedFontSize * Text.LINE_HEIGHT_MULTIPLIER;
+            const lineHeight = computedFontSize * LINE_HEIGHT_MULTIPLIER;
 
             lines.forEach((line, index) => {
                 const y = this.y + (lineHeight * (index + 0.5));

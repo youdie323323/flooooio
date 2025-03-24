@@ -284,7 +284,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                             entity.y - petal.y,
                         );
 
-                        return distance <= (entity.size * (1 + MixedBase.SPIN_NEAREST_SIZE_COEFFICIENT));
+                        return distance <= (entity.desiredRadius * (1 + MixedBase.SPIN_NEAREST_SIZE_COEFFICIENT));
                     }),
             );
 
@@ -311,8 +311,8 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 }
 
                 const spinAngleIndex = calcTableIndex(rotation);
-                const targetX = mobToSpin.x + lazyCosTable[spinAngleIndex] * mobToSpin.size;
-                const targetY = mobToSpin.y + lazySinTable[spinAngleIndex] * mobToSpin.size;
+                const targetX = mobToSpin.x + lazyCosTable[spinAngleIndex] * mobToSpin.desiredRadius;
+                const targetY = mobToSpin.y + lazySinTable[spinAngleIndex] * mobToSpin.desiredRadius;
 
                 petal.x += (targetX - petal.x) * MixedBase.SPIN_INTERPOLATION_SPEED;
                 petal.y += (targetY - petal.y) * MixedBase.SPIN_INTERPOLATION_SPEED;

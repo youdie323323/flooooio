@@ -92,16 +92,16 @@ function drawRoundedPolygon(
 
 // TODO: send initial data of wave room instead of send 2 packets
 
-export interface WaveRoomPlayerInformation {
+export type WaveRoomPlayerInformation = Readonly<{
     id: number;
     name: string;
     readyState: WaveRoomPlayerReadyState;
-}
+}>;
 
 export const enum SquadContainerStatusText {
-    SQUAD_LOADING = "Loading...",
-    SQUAD_CREATING = "Creating...",
-    SQUAD_NOT_FOUND = "Squad not found",
+    LOADING = "Loading...",
+    CREATING = "Creating...",
+    NOT_FOUND = "Squad not found",
 }
 
 export default class UITitle extends AbstractUI {
@@ -160,7 +160,7 @@ export default class UITitle extends AbstractUI {
                     id,
                     name,
                     readyState,
-                } satisfies WaveRoomPlayerInformation;
+                } as const satisfies WaveRoomPlayerInformation;
             }
 
             const waveRoomCode = reader.readString() as WaveRoomCode;
@@ -197,7 +197,7 @@ export default class UITitle extends AbstractUI {
             // Reset squad state to render status text
             this.resetWaveState();
 
-            this.statusTextRef = SquadContainerStatusText.SQUAD_NOT_FOUND;
+            this.statusTextRef = SquadContainerStatusText.NOT_FOUND;
         },
     } as const satisfies StaticAdheredClientboundHandlers;
 
@@ -206,7 +206,7 @@ export default class UITitle extends AbstractUI {
 
         this.lastBackgroundEntitySpawn = Date.now();
 
-        this.statusTextRef = SquadContainerStatusText.SQUAD_LOADING;
+        this.statusTextRef = SquadContainerStatusText.LOADING;
 
         setTimeout(() => {
             this.connectingText.setVisible(true, null, false);
@@ -961,7 +961,7 @@ export default class UITitle extends AbstractUI {
 
                         this.squadMenuContainer.setVisible(true, <ComponentOpener><unknown>readyButton, true, AnimationType.ZOOM);
 
-                        this.statusTextRef = SquadContainerStatusText.SQUAD_CREATING;
+                        this.statusTextRef = SquadContainerStatusText.CREATING;
 
                         clientWebsocket.packetServerbound.sendWaveRoomChangeReady(WaveRoomPlayerReadyState.Ready);
                     } else {
@@ -1020,7 +1020,7 @@ export default class UITitle extends AbstractUI {
 
                     this.squadMenuContainer.setVisible(true, <ComponentOpener><unknown>squadButton, true, AnimationType.ZOOM);
 
-                    this.statusTextRef = SquadContainerStatusText.SQUAD_CREATING;
+                    this.statusTextRef = SquadContainerStatusText.CREATING;
 
                     clientWebsocket.packetServerbound.sendWaveRoomChangeVisible(WaveRoomVisibleState.Private);
                 },
@@ -1084,8 +1084,6 @@ export default class UITitle extends AbstractUI {
                 // Dynamically create static space
                 () => new StaticSpace(5, 0),
             ));
-
-            // TODO: move biomeSwitchers, readyButton too
 
             const makePlayerProfileColumn = (i: number): UITitlePlayerProfile => {
                 return new UITitlePlayerProfile(
@@ -1161,7 +1159,7 @@ export default class UITitle extends AbstractUI {
 
                         this.resetWaveState();
 
-                        this.statusTextRef = SquadContainerStatusText.SQUAD_LOADING;
+                        this.statusTextRef = SquadContainerStatusText.LOADING;
 
                         clientWebsocket.packetServerbound.sendWaveRoomLeave();
                     },

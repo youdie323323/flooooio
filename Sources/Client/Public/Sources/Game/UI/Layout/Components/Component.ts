@@ -487,7 +487,6 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
                     const centerX = x + w / 2,
                         centerY = y + h / 2;
 
-                    // TODO: option for offset are singed or not
                     if (this.animationSlideDirection === "v") {
                         const slideOffset = offsetSign * (h + offset) * (1 - progress);
 

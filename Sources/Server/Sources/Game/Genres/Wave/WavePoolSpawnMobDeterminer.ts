@@ -1,9 +1,8 @@
-import { calculateWaveLuck } from "../WaveFormula";
-import type { WaveData } from "../../WavePool";
-import { Biome } from "../../../../../../../Shared/Biome";
-import { Rarity } from "../../../../../../../Shared/Entity/Statics/EntityRarity";
-import { MobType, MOB_TYPES } from "../../../../../../../Shared/Entity/Statics/EntityType";
-import { rarityTable } from "../../../../../../../Shared/Formula";
+import type { WaveData } from "./WavePool";
+import { Biome } from "../../../../../Shared/Biome";
+import { Rarity } from "../../../../../Shared/Entity/Statics/EntityRarity";
+import { MobType, MOB_TYPES } from "../../../../../Shared/Entity/Statics/EntityType";
+import { rarityTable } from "../../../../../Shared/Formula";
 
 /**
  * Set of linkable mobs.
@@ -33,6 +32,7 @@ const MOB_SPAWN_RULES = {
     },
     [Biome.OCEAN]: {
         [MobType.BUBBLE]: { spawnAfter: 1, weight: 1 },
+        [MobType.SPONGE]: { spawnAfter: 1, weight: 1 },
         [MobType.STARFISH]: { spawnAfter: 3, weight: 1 },
         [MobType.JELLYFISH]: { spawnAfter: 3, weight: 1 },
     },
@@ -88,7 +88,7 @@ function secureRandom() {
 function getRandomRarity(v: number): Rarity {
     for (let i = rarityTable.length - 1; i >= 0; i--) {
         if (v >= rarityTable[i]) {
-            return i as Rarity;
+            return i satisfies Rarity;
         }
     }
 
@@ -130,11 +130,15 @@ export default class SpawnMobDeterminer {
         this.points += 1500;
     }
 
+    private calculateWaveLuck(progress: number): number {
+        return 1.3 ** progress - 1;
+    }
+
     public determineStaticMobData({
-        progress,
         biome,
+        progress,
     }: WaveData): StaticMobData | null {
-        const luck = (calculateWaveLuck(progress) * (( /* All players luck */ 0.0) + 1)) * 1;
+        const luck = (this.calculateWaveLuck(progress) * (( /* All players luck */ 0.0) + 1)) * 1;
 
         if (this.shouldSpawnMob()) {
             const mobType = getRandomMobType(progress, biome);

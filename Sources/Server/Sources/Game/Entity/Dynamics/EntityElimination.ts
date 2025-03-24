@@ -6,7 +6,6 @@ import { WaveRoomState } from "../../../../../Shared/WaveRoom";
 import BinarySizedWriter from "../../../../../Shared/Websocket/Binary/ReadWriter/Writer/BinarySizedWriter";
 import { Clientbound, type ClientboundConnectionKickReason } from "../../../../../Shared/Websocket/Packet/PacketDirection";
 import { waveRoomService } from "../../../../Main";
-import { calculateHp } from "../../Genres/Wave/Mathematics/WaveFormula";
 import type { UserData, WavePool } from "../../Genres/Wave/WavePool";
 import type WaveRoom from "../../Genres/Wave/WaveRoom";
 import type { EntityMixinConstructor, Entity, EntityMixinTemplate} from "./Entity";
@@ -18,6 +17,14 @@ import type { PlayerId, PlayerInstance } from "./Player/Player";
 import { Player } from "./Player/Player";
 import { PETAL_INITIAL_COOLDOWN } from "./Player/PlayerPetalReload";
 import type uWS from 'uWebSockets.js';
+
+/**
+ * Calculate hp by level.
+ * 
+ * @remarks
+ * 100 * x, x is upgrade.
+ */
+export const calculateHp = (level: number): number => (100 * 2000) * 1.02 ** (Math.max(level, 75) - 1);
 
 /**
  * Calculate maxHealth by entity instance.

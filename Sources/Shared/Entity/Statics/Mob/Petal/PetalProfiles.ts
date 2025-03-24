@@ -12,8 +12,7 @@ export const PETAL_PROFILES = {
 
         collision: {
             fraction: 20,
-            rx: 20,
-            ry: 20,
+            radius: 20,
         },
 
         [Rarity.COMMON]: {
@@ -70,8 +69,7 @@ export const PETAL_PROFILES = {
         collision: {
             // Same as basic, light
             fraction: 20,
-            rx: 20,
-            ry: 20,
+            radius: 20,
         },
 
         [Rarity.COMMON]: {
@@ -134,8 +132,7 @@ export const PETAL_PROFILES = {
 
         collision: {
             fraction: 20,
-            rx: 30,
-            ry: 40,
+            radius: 40,
         },
 
         [Rarity.COMMON]: {
@@ -198,8 +195,7 @@ export const PETAL_PROFILES = {
 
         collision: {
             fraction: 15,
-            rx: 20,
-            ry: 20,
+            radius: 20,
         },
 
         [Rarity.COMMON]: {
@@ -262,8 +258,7 @@ export const PETAL_PROFILES = {
 
         collision: {
             fraction: 20,
-            rx: 20,
-            ry: 20,
+            radius: 20,
         },
 
         [Rarity.COMMON]: {

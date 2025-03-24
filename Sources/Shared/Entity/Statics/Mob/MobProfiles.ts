@@ -13,8 +13,7 @@ export const MOB_PROFILES = {
 
         collision: {
             fraction: 30,
-            rx: 30,
-            ry: 20,
+            radius: 30,
         },
 
         [Rarity.COMMON]: {
@@ -56,9 +55,8 @@ export const MOB_PROFILES = {
         },
 
         collision: {
-            fraction: 55,
-            rx: 35,
-            ry: 35,
+            fraction: 25,
+            radius: 35,
         },
 
         [Rarity.COMMON]: {
@@ -100,9 +98,8 @@ export const MOB_PROFILES = {
         },
 
         collision: {
-            fraction: 80,
-            rx: 100,
-            ry: 100,
+            fraction: 120,
+            radius: 100,
         },
 
         [Rarity.COMMON]: {
@@ -136,7 +133,7 @@ export const MOB_PROFILES = {
     },
 
     [MobType.JELLYFISH]: {
-        baseSize: 40,
+        baseSize: 30,
 
         i18n: {
             name: "Jellyfish",
@@ -145,8 +142,7 @@ export const MOB_PROFILES = {
 
         collision: {
             fraction: 20,
-            rx: 20,
-            ry: 20,
+            radius: 20,
         },
 
         [Rarity.COMMON]: {
@@ -210,8 +206,7 @@ export const MOB_PROFILES = {
 
         collision: {
             fraction: 40,
-            rx: 40,
-            ry: 34,
+            radius: 40,
         },
 
         [Rarity.COMMON]: {
@@ -253,9 +248,8 @@ export const MOB_PROFILES = {
         },
 
         collision: {
-            fraction: 15,
-            rx: 20,
-            ry: 20,
+            fraction: 20,
+            radius: 20,
         },
 
         [Rarity.COMMON]: {
@@ -288,6 +282,49 @@ export const MOB_PROFILES = {
         },
     },
 
+    [MobType.SPONGE]: {
+        baseSize: 30,
+
+        i18n: {
+            name: "Sponge",
+            description: "Bob",
+        },
+
+        collision: {
+            fraction: 20,
+            radius: 20,
+        },
+
+        [Rarity.COMMON]: {
+            health: 100,
+            bodyDamage: 10,
+        },
+        [Rarity.UNUSUAL]: {
+            health: 375.2,
+            bodyDamage: 30,
+        },
+        [Rarity.RARE]: {
+            health: 1350,
+            bodyDamage: 90,
+        },
+        [Rarity.EPIC]: {
+            health: 5400,
+            bodyDamage: 270,
+        },
+        [Rarity.LEGENDARY]: {
+            health: 40500,
+            bodyDamage: 810,
+        },
+        [Rarity.MYTHIC]: {
+            health: 243000,
+            bodyDamage: 2430,
+        },
+        [Rarity.ULTRA]: {
+            health: 7300000,
+            bodyDamage: 7290,
+        },
+    },
+
     [MobType.CENTIPEDE]: {
         baseSize: 40,
 
@@ -298,8 +335,7 @@ export const MOB_PROFILES = {
 
         collision: {
             fraction: 40,
-            rx: 40,
-            ry: 40,
+            radius: 40,
         },
 
         [Rarity.COMMON]: {
@@ -342,8 +378,7 @@ export const MOB_PROFILES = {
 
         collision: {
             fraction: 40,
-            rx: 40,
-            ry: 40,
+            radius: 40,
         },
 
         [Rarity.COMMON]: {
@@ -375,7 +410,7 @@ export const MOB_PROFILES = {
             bodyDamage: 7290,
         },
     },
-    
+
     [MobType.CENTIPEDE_DESERT]: {
         baseSize: 40,
 
@@ -386,8 +421,7 @@ export const MOB_PROFILES = {
 
         collision: {
             fraction: 40,
-            rx: 40,
-            ry: 40,
+            radius: 40,
         },
 
         [Rarity.COMMON]: {

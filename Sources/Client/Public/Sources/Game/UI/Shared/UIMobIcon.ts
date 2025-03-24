@@ -5,6 +5,7 @@ import Mob from "../../Entity/Mob";
 import { RARITY_COLOR } from "../../../../../../Shared/Entity/Statics/EntityRarity";
 import { CanvasLogo } from "../Layout/Components/WellKnown/Logo";
 import { renderEntity } from "../../Entity/Renderers/RendererRenderingLink";
+import { MOB_PROFILES } from "../../../../../../Shared/Entity/Statics/Mob/MobProfiles";
 
 export default class UIMobIcon extends StaticPanelContainer {
     public static readonly ICON_SIZE: number = 30;
@@ -20,7 +21,6 @@ export default class UIMobIcon extends StaticPanelContainer {
      */
     private static readonly ICON_MOB_INSTANCE_PROXY_HANDLER = {
         get(target, property, receiver) {
-            // Constant size for all mob
             if (property === "size") return UIMobIcon.ICON_MOB_SIZE;
 
             // Constant angle for all mob

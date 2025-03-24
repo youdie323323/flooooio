@@ -7,7 +7,8 @@ import { MOB_PROFILES } from "../../../../../Shared/Entity/Statics/Mob/MobProfil
 import type { PetalData, PetalStat } from "../../../../../Shared/Entity/Statics/Mob/Petal/PetalData";
 import { PETAL_PROFILES } from "../../../../../Shared/Entity/Statics/Mob/Petal/PetalProfiles";
 import type { WavePool } from "../../Genres/Wave/WavePool";
-import { returnGoodShape, accordinglyComputeDelta, isColliding, PLAYER_MAX_COLLISION_DELTA } from "../Statics/Collision/CollisionCollide";
+import type { Circle } from "../Statics/Collision/Colliders/Collider";
+import { computeCircleDelta, isColliding, PLAYER_MAX_COLLISION_DELTA } from "../Statics/Collision/CollisionModernCollide";
 import type { EntityMixinConstructor, Entity, EntityMixinTemplate, RealEntity } from "./Entity";
 import { ON_UPDATE_TICK } from "./Entity";
 import { calculateMaxHealth, isDeadEntity } from "./EntityElimination";
@@ -38,32 +39,26 @@ export const FLOWER_ARC_RADIUS = 25;
 
 export const FLOWER_DEFAULT_SEARCH_DATA = {
     fraction: FLOWER_FRACTION,
-    rx: FLOWER_ARC_RADIUS,
-    ry: FLOWER_ARC_RADIUS,
+    radius: FLOWER_ARC_RADIUS,
 } as const satisfies Partial<EntityCollision>;
 
 export function EntityCollision<T extends EntityMixinConstructor<Entity>>(Base: T) {
     return class MixedBase extends Base implements EntityMixinTemplate {
         private static readonly BUBBLE_PUSH_FACTOR = 3;
 
-        private static calculatePush(entity1: Entity, entity2: Entity, delta: number): [number, number] {
+        private static calculatePush(entity1: Entity, entity2: Entity, delta: number, distance: number): [number, number] | undefined {
+            if (distance === 0) return;
+        
             const dx = entity2.x - entity1.x;
             const dy = entity2.y - entity1.y;
-            const distance = Math.hypot(dx, dy);
-
-            if (distance === 0) return;
-
+            
             const nx = dx / distance;
             const ny = dy / distance;
-
-            // Use delta as overlap
-            const pushX = nx * delta;
-            const pushY = ny * delta;
-
-            return [pushX, pushY];
+        
+            return [nx * delta, ny * delta];
         }
 
-        private static calculateSearchRadius = ({ fraction, rx, ry }: Partial<EntityCollision>, size: number): number => (rx + ry) * (size / fraction);
+        private static calculateSearchRadius = ({ fraction, radius }: Partial<EntityCollision>, size: number): number => (2 * radius) * (size / fraction);
 
         [ON_UPDATE_TICK](poolThis: WavePool): void {
             super[ON_UPDATE_TICK](poolThis);
@@ -82,7 +77,11 @@ export function EntityCollision<T extends EntityMixinConstructor<Entity>>(Base: 
 
                 const thisDamage = damageOf(profile1[this.rarity]);
 
-                const shape1 = returnGoodShape(this);
+                const circle1 = {
+                    x: this.x,
+                    y: this.y,
+                    r: this.desiredRadius,
+                } as const satisfies Circle;
 
                 const searchRadius = MixedBase.calculateSearchRadius(collision1, this.size);
 
@@ -106,17 +105,18 @@ export function EntityCollision<T extends EntityMixinConstructor<Entity>>(Base: 
 
                         const profile2: MobData | PetalData = MOB_PROFILES[otherEntity.type] || PETAL_PROFILES[otherEntity.type];
 
-                        const shape2 = returnGoodShape(otherEntity);
+                        const circle2 = {
+                            x: otherEntity.x,
+                            y: otherEntity.y,
+                            r: otherEntity.desiredRadius,
+                        } as const satisfies Circle;
 
-                        const delta = accordinglyComputeDelta(shape1, shape2);
+                        const [delta, distance] = computeCircleDelta(circle1, circle2);
 
                         if (isColliding(delta)) {
-                            const push = MixedBase.calculatePush(this, otherEntity, delta);
+                            const push = MixedBase.calculatePush(this, otherEntity, delta, distance);
                             if (push) {
-                                if (
-                                    !this.petalIsSpinningMob &&
-                                    !otherEntity.petalIsSpinningMob
-                                ) {
+                                if (!(this.petalIsSpinningMob || otherEntity.petalIsSpinningMob)) {
                                     // Pop knockback to summoned mob (enemy), not including petal
                                     const bubbleMultiplierThis = otherEntity.type === MobType.BUBBLE && this.petMaster ? MixedBase.BUBBLE_PUSH_FACTOR : 1;
                                     const bubbleMultiplierOther = this.type === MobType.BUBBLE && otherEntity.petMaster ? MixedBase.BUBBLE_PUSH_FACTOR : 1;
@@ -195,19 +195,25 @@ export function EntityCollision<T extends EntityMixinConstructor<Entity>>(Base: 
                             this.petMaster
                         ) return;
 
-                        const shape2 = returnGoodShape(otherEntity);
+                        const shape2 = {
+                            x: otherEntity.x,
+                            y: otherEntity.y,
+                            r: otherEntity.size,
+                        } as const satisfies Circle;
 
-                        const delta = accordinglyComputeDelta(shape1, shape2);
+                        const [delta, distance] = computeCircleDelta(circle1, shape2);
 
                         if (isColliding(delta)) {
                             const push = MixedBase.calculatePush(
-                                this, 
-                                otherEntity, 
+                                this,
+                                otherEntity,
                                 Math.min(
-                                    delta, 
+                                    delta,
                                     PLAYER_MAX_COLLISION_DELTA,
                                 ),
+                                distance,
                             );
+
                             if (push) {
                                 // If this is bubble, give player more knockback
                                 const bubbleMultiplier = this.type === MobType.BUBBLE ? MixedBase.BUBBLE_PUSH_FACTOR : 1;
@@ -243,10 +249,14 @@ export function EntityCollision<T extends EntityMixinConstructor<Entity>>(Base: 
                 !this.isDead &&
                 this.isCollidable
             ) {
-                const shape1 = returnGoodShape(this);
+                const shape1 = {
+                    x: this.x,
+                    y: this.y,
+                    r: this.size,
+                } as const satisfies Circle;
 
                 const searchRadius = MixedBase.calculateSearchRadius(FLOWER_DEFAULT_SEARCH_DATA, this.size);
-
+                
                 const nearby = poolThis.sharedSpatialHash.search(this, searchRadius);
 
                 (<TypedForEach>nearby.forEach)(otherEntity => {
@@ -261,12 +271,16 @@ export function EntityCollision<T extends EntityMixinConstructor<Entity>>(Base: 
 
                     // Collide player -> player
 
-                    const shape2 = returnGoodShape(otherEntity);
+                    const shape2 = {
+                        x: otherEntity.x,
+                        y: otherEntity.y,
+                        r: otherEntity.size,
+                    } as const satisfies Circle;
 
-                    const delta = accordinglyComputeDelta(shape1, shape2);
+                    const [delta, distance] = computeCircleDelta(shape1, shape2);
 
                     if (isColliding(delta)) {
-                        const push = MixedBase.calculatePush(this, otherEntity, delta);
+                        const push = MixedBase.calculatePush(this, otherEntity, delta, distance);
                         if (push) {
                             this.x -= push[0] * 2;
                             this.y -= push[1] * 2;
