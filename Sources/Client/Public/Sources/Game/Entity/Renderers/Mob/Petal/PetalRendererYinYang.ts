@@ -1,11 +1,15 @@
 import type { ColorCode } from "../../../../../../../../Shared/Utils/Color";
 import type Mob from "../../../Mob";
 import type { RenderingContext } from "../../RendererRenderingContext";
-import RendererPetalBase from "./RendererPetalBase";
+import AbstractPetalRenderer from "./PetalRenderer";
 
 const TAU = Math.PI * 2;
 
-export default class RendererPetalYinYang extends RendererPetalBase {
+const YIN_ANGLE_START = Math.PI / 2;
+
+const YIN_ANGLE_END = Math.PI * 3 / 2;
+
+export default class PetalRendererYinYang extends AbstractPetalRenderer {
     override render(context: RenderingContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);
@@ -16,14 +20,14 @@ export default class RendererPetalYinYang extends RendererPetalBase {
         ctx.scale(scale, scale);
 
         const clipFill = (us: ColorCode, ut: ColorCode) => {
-            ctx.save();
+            using _guard = this.guard(ctx);
+
             ctx.clip();
             ctx.lineCap = "round";
-            ctx.fillStyle = this.getSkinColor(context, us);
-            ctx.strokeStyle = this.getSkinColor(context, ut);
+            ctx.fillStyle = this.calculateDamageEffectColor(context, us);
+            ctx.strokeStyle = this.calculateDamageEffectColor(context, ut);
             ctx.fill();
             ctx.stroke();
-            ctx.restore();
         };
 
         ctx.lineCap = "round";
@@ -32,13 +36,13 @@ export default class RendererPetalYinYang extends RendererPetalBase {
         clipFill("#333333", "#222222");
         ctx.rotate(Math.PI);
         ctx.beginPath();
-        ctx.arc(0, 0, 20, -Math.PI / 2, Math.PI / 2);
-        ctx.arc(0, 10, 10, Math.PI / 2, Math.PI * 3 / 2);
-        ctx.arc(0, -10, 10, Math.PI / 2, Math.PI * 3 / 2, true);
+        ctx.arc(0, 0, 20, -YIN_ANGLE_START, YIN_ANGLE_START);
+        ctx.arc(0, 10, 10, YIN_ANGLE_START, YIN_ANGLE_END);
+        ctx.arc(0, -10, 10, YIN_ANGLE_START, YIN_ANGLE_END, true);
         clipFill("#ffffff", "#cfcfcf");
         ctx.rotate(-Math.PI);
         ctx.beginPath();
-        ctx.arc(0, 10, 10, Math.PI / 2, Math.PI * 3 / 2);
+        ctx.arc(0, 10, 10, YIN_ANGLE_START, YIN_ANGLE_END);
         clipFill("#333333", "#222222");
     }
 }

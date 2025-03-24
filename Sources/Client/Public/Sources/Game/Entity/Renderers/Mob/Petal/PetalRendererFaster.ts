@@ -1,12 +1,12 @@
 import type Mob from "../../../Mob";
 import type { RenderingContext } from "../../RendererRenderingContext";
-import RendererPetalBase from "./RendererPetalBase";
+import AbstractPetalRenderer from "./PetalRenderer";
 
-export default class RendererPetalBubble extends RendererPetalBase {
+export default class PetalRendererFaster extends AbstractPetalRenderer {
     override render(context: RenderingContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);
 
-        this.drawBubble(context, true);
+        this.drawBasicLike(context, "#feffc9", "#cecfa3");
     }
 }

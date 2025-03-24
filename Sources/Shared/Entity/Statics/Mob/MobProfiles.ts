@@ -56,9 +56,9 @@ export const MOB_PROFILES = {
         },
 
         collision: {
-            fraction: 40,
-            rx: 40,
-            ry: 40,
+            fraction: 55,
+            rx: 35,
+            ry: 35,
         },
 
         [Rarity.COMMON]: {

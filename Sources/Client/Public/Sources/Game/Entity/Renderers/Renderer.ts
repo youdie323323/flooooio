@@ -24,23 +24,21 @@ export default class Renderer<T extends Entity> {
      * Render the entity.
      */
     public render(context: RenderingContext<T>): void {
-        const { ctx, entity, isSpecimen } = context;
+        const { ctx, entity: { x, y }, isSpecimen } = context;
 
-        ctx.translate(entity.x, entity.y);
+        ctx.translate(x, y);
 
         if (!isSpecimen) {
-            this.drawEntityDetail(context);
+            this.drawEntityStatus(context);
 
-            this.drawDead(context);
+            this.applyDeathAnimation(context);
         }
     }
 
     /**
      * Determine if entity should render.
      */
-    public isRenderingCandidate(context: RenderingContext<T>): boolean {
-        const { entity, isSpecimen } = context;
-
+    public isRenderingCandidate({ entity, isSpecimen }: RenderingContext<T>): boolean {
         return !(
             !isSpecimen &&
             entity.isDead &&
@@ -49,13 +47,20 @@ export default class Renderer<T extends Entity> {
     }
 
     /**
+     * Context guard that protected rendering from clip.
+     */
+    protected guard(ctx: CanvasRenderingContext2D): Disposable {
+        ctx.save();
+
+        return { [Symbol.dispose]: () => { ctx.restore(); } };
+    }
+
+    /**
      * Change the color based on hit.
      */
-    protected getSkinColor({ entity }: RenderingContext<T>, color: ColorCode): string {
+    protected calculateDamageEffectColor({ entity }: RenderingContext<T>, color: ColorCode): string {
         const invertedHurtT = 1 - entity.hurtT;
-        if (invertedHurtT >= 1) {
-            return color;
-        }
+        if (invertedHurtT >= 1) return color;
 
         const progress = invertedHurtT * 0.25 + 0.75;
 
@@ -71,9 +76,9 @@ export default class Renderer<T extends Entity> {
     /**
      * Change scale and alpha if entity is dead.
      */
-    protected drawDead({ ctx, entity }: RenderingContext<T>) {
-        if (entity.isDead) {
-            const sinWavedDeadT = Math.sin(entity.deadT * Math.PI / 2);
+    protected applyDeathAnimation({ ctx, entity: { isDead, deadT } }: RenderingContext<T>) {
+        if (isDead) {
+            const sinWavedDeadT = Math.sin(deadT * Math.PI / 2);
             const scale = 1 + sinWavedDeadT;
 
             ctx.scale(scale, scale);
@@ -81,13 +86,11 @@ export default class Renderer<T extends Entity> {
         }
     }
 
-    protected drawEntityDetail({ ctx, entity }: RenderingContext<T>) {
+    protected drawEntityStatus({ ctx, entity }: RenderingContext<T>) {
         if (
             entity.hpAlpha <= 0 ||
             entity instanceof Mob && isPetal(entity.type)
-        ) {
-            return;
-        }
+        ) return;
 
         if (
             entity instanceof Player &&

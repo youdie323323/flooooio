@@ -1,4 +1,4 @@
-import type { AnimationConfigOf, Components, MaybePointerLike } from "../Components/Component";
+import type { AnimationConfigOf, ComponentCloser, ComponentOpener, Components, MaybePointerLike } from "../Components/Component";
 import { AnimationType, OBSTRUCTION_AFFECTABLE } from "../Components/Component";
 import type { PartialSizeLayoutOptions } from "../Components/WellKnown/Container";
 import { StaticTranslucentPanelContainer } from "../Components/WellKnown/Container";
@@ -43,17 +43,17 @@ export default function Tooltip<T extends ExtensionConstructor>(
                 this.tooltipContainer[OBSTRUCTION_AFFECTABLE] = false;
 
                 // Not visible first
-                this.tooltipContainer.setVisible(false, false);
+                this.tooltipContainer.setVisible(false, null, false);
 
                 this.context.addComponent(this.tooltipContainer);
             });
 
             this.on("onFocus", () => {
-                this.tooltipContainer.setVisible(true, true, AnimationType.FADE, MixedBase.TOOLTIP_CONTAINER_ANIMATION_CONFIG);
+                this.tooltipContainer.setVisible(true, <ComponentOpener><unknown>(this), true, AnimationType.FADE, MixedBase.TOOLTIP_CONTAINER_ANIMATION_CONFIG);
             });
 
             this.on("onBlur", () => {
-                this.tooltipContainer.setVisible(false, true, AnimationType.FADE, MixedBase.TOOLTIP_CONTAINER_ANIMATION_CONFIG);
+                this.tooltipContainer.setVisible(false, <ComponentCloser><unknown>(this), true, AnimationType.FADE, MixedBase.TOOLTIP_CONTAINER_ANIMATION_CONFIG);
             });
         }
 

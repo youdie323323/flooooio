@@ -4,7 +4,7 @@ import { CoordinatedStaticSpace, StaticPanelContainer } from "../Layout/Componen
 import Mob from "../../Entity/Mob";
 import { RARITY_COLOR } from "../../../../../../Shared/Entity/Statics/EntityRarity";
 import { CanvasLogo } from "../Layout/Components/WellKnown/Logo";
-import { renderEntity } from "../../Entity/Renderers/RendererEntityRenderingLink";
+import { renderEntity } from "../../Entity/Renderers/RendererRenderingLink";
 
 export default class UIMobIcon extends StaticPanelContainer {
     public static readonly ICON_SIZE: number = 30;
@@ -50,6 +50,8 @@ export default class UIMobIcon extends StaticPanelContainer {
     ) {
         super(
             layoutOptions,
+
+            false,
 
             () => RARITY_COLOR[mobInstance.rarity],
 

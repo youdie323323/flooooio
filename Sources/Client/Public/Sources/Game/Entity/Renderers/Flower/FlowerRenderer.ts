@@ -2,7 +2,7 @@ import Renderer from "../Renderer";
 import type Player from "../../Player";
 import type { RenderingContext } from "../RendererRenderingContext";
 
-export default class RendererFlowerBase extends Renderer<Player> {
+export default class AbstractFlowerRenderer extends Renderer<Player> {
     override render(context: RenderingContext<Player>): void {
         // Non-recursive renderer
         // super.render(context);

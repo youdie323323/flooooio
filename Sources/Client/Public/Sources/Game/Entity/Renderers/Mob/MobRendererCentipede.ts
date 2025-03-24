@@ -1,13 +1,13 @@
 import { MobType } from "../../../../../../../Shared/Entity/Statics/EntityType";
 import type { ColorCode} from "../../../../../../../Shared/Utils/Color";
-import { darkend, DARKEND_BASE } from "../../../../../../../Shared/Utils/Color";
+import { darkened, DARKENED_BASE } from "../../../../../../../Shared/Utils/Color";
 import type Mob from "../../Mob";
 import type { RenderingContext } from "../RendererRenderingContext";
-import RendererMobBase from "./RendererMobBase";
+import AbstractMobRenderer from "./MobRenderer";
 
 const TAU = Math.PI * 2;
 
-export default class RendererMobCentipede extends RendererMobBase {
+export default class MobRendererCentipede extends AbstractMobRenderer {
     override render(context: RenderingContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);
@@ -27,7 +27,7 @@ export default class RendererMobCentipede extends RendererMobBase {
         }
         ctx.lineWidth = 7;
         ctx.lineJoin = ctx.lineCap = "round";
-        ctx.strokeStyle = ctx.fillStyle = this.getSkinColor(context, "#333333");
+        ctx.strokeStyle = ctx.fillStyle = this.calculateDamageEffectColor(context, "#333333");
         ctx.fill();
 
         let bodyColor: ColorCode;
@@ -41,15 +41,15 @@ export default class RendererMobCentipede extends RendererMobBase {
 
         ctx.beginPath();
         ctx.arc(0, 0, 40, 0, TAU);
-        ctx.fillStyle = this.getSkinColor(context, bodyColor);
+        ctx.fillStyle = this.calculateDamageEffectColor(context, bodyColor);
         ctx.fill();
         ctx.lineWidth = 8;
-        ctx.strokeStyle = this.getSkinColor(context, darkend(bodyColor, DARKEND_BASE));
+        ctx.strokeStyle = this.calculateDamageEffectColor(context, darkened(bodyColor, DARKENED_BASE));
         ctx.stroke();
 
         // Antennas
         if (entity.isFirstSegment) {
-            const acolor = this.getSkinColor(context, "#333333");
+            const acolor = this.calculateDamageEffectColor(context, "#333333");
 
             ctx.strokeStyle = acolor;
             ctx.fillStyle = acolor;

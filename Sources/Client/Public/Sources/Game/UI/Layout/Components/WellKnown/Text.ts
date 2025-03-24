@@ -12,12 +12,12 @@ export const calculateStrokeWidth = memo((fontSize: number): number => {
     return fontSize / 8.333333830038736;
 });
 
-export interface ClipboardEvents {
+export type ClipboardEvents = Readonly<{
     "onCopySucceed": [];
     "onCopyFailed": [];
-}
+}>;
 
-export default class Text extends ExtensionBase(Component<Readonly<ClipboardEvents>>) {
+export default class Text extends ExtensionBase(Component<ClipboardEvents>) {
     public override[OBSTRUCTION_AFFECTABLE]: boolean = false;
 
     private static readonly TEXT_WIDTH_OFFSET: number = 10;

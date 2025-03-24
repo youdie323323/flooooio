@@ -1,10 +1,10 @@
 import type Player from "../../Player";
 import type { RenderingContext } from "../RendererRenderingContext";
-import RendererFlowerBase from "./RendererFlowerBase";
+import AbstractFlowerRenderer from "./FlowerRenderer";
 
 const TAU = Math.PI * 2;
 
-export default class RendererFlowerNormal extends RendererFlowerBase {
+export default class FlowerRendererNormal extends AbstractFlowerRenderer {
     override render(context: RenderingContext<Player>): void {
         // Non-recursive renderer
         // super.render(context);
@@ -17,11 +17,10 @@ export default class RendererFlowerNormal extends RendererFlowerBase {
             sadT, angryT,
         } = entity;
 
-        // Normal body
-        {
-            ctx.fillStyle = this.getSkinColor(context, "#ffe763");
+        { // Normal body
+            ctx.fillStyle = this.calculateDamageEffectColor(context, "#ffe763");
             ctx.lineWidth = 2.75;
-            ctx.strokeStyle = this.getSkinColor(context, "#cfbb50");
+            ctx.strokeStyle = this.calculateDamageEffectColor(context, "#cfbb50");
             ctx.beginPath();
             ctx.arc(0, 0, 25, 0, TAU);
             ctx.fill();
@@ -34,7 +33,7 @@ export default class RendererFlowerNormal extends RendererFlowerBase {
             this.drawDeadEyes(context, 7, -5);
             this.drawDeadEyes(context, -7, -5);
         } else {
-            ctx.save();
+            using _guard = this.guard(ctx);
 
             ctx.beginPath();
 
@@ -52,8 +51,6 @@ export default class RendererFlowerNormal extends RendererFlowerBase {
             ctx.arc(-7 + eyeX * 2, -5 + eyeY * 3.5, 3.1, 0, TAU);
             ctx.fillStyle = "#eee";
             ctx.fill();
-
-            ctx.restore();
         }
 
         const verticRise = angryT * -10.5 + sadT * -9;
@@ -76,6 +73,7 @@ export default class RendererFlowerNormal extends RendererFlowerBase {
         flag = 0,
     ) {
         const flippedFlag = flag ^ 1;
+        
         ctx.moveTo(centerX - widthRadius, centerY - heightRadius + flag * angerOffset);
         ctx.lineTo(centerX + widthRadius, centerY - heightRadius + flippedFlag * angerOffset + flag);
         ctx.lineTo(centerX + widthRadius, centerY + heightRadius);

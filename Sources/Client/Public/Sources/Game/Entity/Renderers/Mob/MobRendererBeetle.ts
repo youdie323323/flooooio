@@ -1,7 +1,7 @@
-import { darkend, DARKEND_BASE } from "../../../../../../../Shared/Utils/Color";
+import { darkened, DARKENED_BASE } from "../../../../../../../Shared/Utils/Color";
 import type Mob from "../../Mob";
 import type { RenderingContext } from "../RendererRenderingContext";
-import RendererMobBase from "./RendererMobBase";
+import AbstractMobRenderer from "./MobRenderer";
 
 const TAU = Math.PI * 2;
 
@@ -20,7 +20,7 @@ function createBeetleBodyPath() {
 
 const beetleBodyPath = createBeetleBodyPath();
 
-export default class RendererMobBeetle extends RendererMobBase {
+export default class MobRendererBeetle extends AbstractMobRenderer {
     override render(context: RenderingContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);
@@ -32,7 +32,7 @@ export default class RendererMobBeetle extends RendererMobBase {
 
         // Draw horn
         {
-            ctx.fillStyle = ctx.strokeStyle = this.getSkinColor(context, "#333333");
+            ctx.fillStyle = ctx.strokeStyle = this.calculateDamageEffectColor(context, "#333333");
             ctx.lineCap = ctx.lineJoin = "round";
             
             for (let i = 0; i < 2; i++) {
@@ -56,10 +56,10 @@ export default class RendererMobBeetle extends RendererMobBase {
             ctx.lineWidth = 7;
 
             const skinColor = entity.isPet ? "#ffe667" : "#8f5db0";
-            ctx.fillStyle = this.getSkinColor(context, skinColor);
+            ctx.fillStyle = this.calculateDamageEffectColor(context, skinColor);
             ctx.fill(beetleBodyPath);
             // Arc points are same color with this
-            ctx.fillStyle = ctx.strokeStyle = this.getSkinColor(context, darkend(skinColor, DARKEND_BASE));
+            ctx.fillStyle = ctx.strokeStyle = this.calculateDamageEffectColor(context, darkened(skinColor, DARKENED_BASE));
             ctx.stroke(beetleBodyPath);
         }
 

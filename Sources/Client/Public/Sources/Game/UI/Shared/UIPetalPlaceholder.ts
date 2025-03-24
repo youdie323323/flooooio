@@ -16,6 +16,8 @@ export default class UIPetalPlaceholder extends StaticPanelContainer {
                 h: size,
             },
 
+            false,
+
             "#ddf2e7",
 
             0.25,

@@ -3,19 +3,19 @@ import BinaryReader from "../../../../../../Shared/Websocket/Binary/ReadWriter/R
 import { Clientbound, ClientboundConnectionKickReason } from "../../../../../../Shared/Websocket/Packet/PacketDirection";
 import type ClientWebsocket from "../ClientWebsocket";
 
-export type StaticAdherableClientboundHandler = Readonly<Partial<Record<Clientbound, (reader: BinaryReader) => void>>>;
+export type StaticAdheredClientboundHandlers = Readonly<Partial<Record<Clientbound, (reader: BinaryReader) => void>>>;
 
-export type DynamicAdherableClientboundHandler = () => StaticAdherableClientboundHandler;
+export type DynamicaAdheredClientboundHandlers = () => StaticAdheredClientboundHandlers;
 
-export type AdherableClientboundHandler = StaticAdherableClientboundHandler | DynamicAdherableClientboundHandler;
+export type AdheredClientboundHandlers = StaticAdheredClientboundHandlers | DynamicaAdheredClientboundHandlers;
 
 export default class PacketClientbound {
     /**
-     * @param clientboundHandler - Additional listener function to custom game
+     * @param adheredClientboundHandlers - Additional listener function to custom game
      */
     constructor(
         private clientWebSocket: ClientWebsocket,
-        private clientboundHandler: AdherableClientboundHandler = {},
+        private adheredClientboundHandlers: AdheredClientboundHandlers = {},
     ) { }
 
     public read(data: ReadableDataType) {
@@ -23,7 +23,7 @@ export default class PacketClientbound {
 
         const opcode = reader.readUInt8() satisfies Clientbound;
 
-        const listen = this.computeAdditionalClientboundListen(this.clientboundHandler);
+        const listen = this.computeAdheredClientboundHandlers(this.adheredClientboundHandlers);
         if (listen.hasOwnProperty(opcode)) {
             listen[opcode](reader);
 
@@ -39,8 +39,8 @@ export default class PacketClientbound {
         }
     }
 
-    private computeAdditionalClientboundListen(listen: AdherableClientboundHandler): StaticAdherableClientboundHandler {
-        return listen instanceof Function ? listen() : listen;
+    private computeAdheredClientboundHandlers(handlers: AdheredClientboundHandlers): StaticAdheredClientboundHandlers {
+        return handlers instanceof Function ? handlers() : handlers;
     }
 
     public readPacketConnectionKick(reader: BinaryReader) {

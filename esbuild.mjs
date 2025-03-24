@@ -17,7 +17,11 @@ async function watch() {
         entryPoints: ['./Sources/Client/Main.ts'],
         bundle: true,
         minify: true,
-        outfile: obfuscateEnabled ? prebuildedFileName : "./build/statics/client.js",
+        // For transform using declrations / auto-accessor, https://esbuild.github.io/content-types/#javascript
+        target: 'es2022',
+        outfile: obfuscateEnabled
+            ? prebuildedFileName
+            : "./build/statics/client.js",
         legalComments: "none",
         tsconfig: "./tsconfig.json",
         loader: { ".svg": "text" },
@@ -35,8 +39,8 @@ async function watch() {
             },
             {
                 name: 'watch-client-only',
-                setup(build) {
-                    build.onEnd(async result => {
+                setup({ onEnd }) {
+                    onEnd(async result => {
                         if (obfuscateEnabled) {
                             console.log('Builded, starts obfuscate with js-confuser...');
 

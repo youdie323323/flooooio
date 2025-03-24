@@ -5,7 +5,7 @@ export const BLACKLISTED: unique symbol = Symbol("blacklisted");
 /**
  * Mark component as blacklist, mean not rendered automatically.
  */
-export function InlineRenderingCall<T extends ExtensionConstructor>(Base: T) {
+export function InlineRendering<T extends ExtensionConstructor>(Base: T) {
     abstract class MixedBase extends Base {
         // Make sure its public and readable from outside
         public static readonly [BLACKLISTED] = BLACKLISTED;

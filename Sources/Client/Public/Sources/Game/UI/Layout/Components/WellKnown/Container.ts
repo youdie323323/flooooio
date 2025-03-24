@@ -1,9 +1,9 @@
 import type { ColorCode } from "../../../../../../../../Shared/Utils/Color";
-import { darkend, DARKEND_BASE } from "../../../../../../../../Shared/Utils/Color";
+import { darkened, DARKENED_BASE } from "../../../../../../../../Shared/Utils/Color";
 import ExtensionBase from "../../Extensions/Extension";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
-import type { Components, MaybePointerLike, AnimationConfigOf, AnimationType } from "../Component";
+import type { Components, MaybePointerLike, AnimationConfigOf, AnimationType, ComponentOpener, ComponentCloser, FakeSetVisibleToggleType, FakeSetVisibleObserverType } from "../Component";
 import { Component, OBSTRUCTION_AFFECTABLE, renderPossibleComponent } from "../Component";
 
 type Optional<T, K extends keyof T> = Partial<Pick<T, K>> & Omit<T, K>;
@@ -67,35 +67,50 @@ export abstract class AbstractStaticContainer<T extends SelectableStaticContaine
     }
 
     override setVisible(
-        toggle: boolean,
+        toggle: false,
+        closer: ComponentCloser,
         shouldAnimate: false,
     ): void;
     override setVisible<T extends AnimationType>(
-        toggle: boolean,
+        toggle: false,
+        closer: ComponentCloser,
+        shouldAnimate: true,
+        animationType: T,
+        animationConfig?: AnimationConfigOf<T>,
+    ): void;
+    override setVisible(
+        toggle: true,
+        opener: ComponentOpener,
+        shouldAnimate: false,
+    ): void;
+    override setVisible<T extends AnimationType>(
+        toggle: true,
+        opener: ComponentOpener,
         shouldAnimate: true,
         animationType: T,
         animationConfig?: AnimationConfigOf<T>,
     ): void;
     override setVisible<T extends AnimationType>(
         toggle: boolean,
+        openerOrCloser: ComponentOpener | ComponentCloser,
         shouldAnimate: boolean,
         animationType?: T,
         animationConfig: AnimationConfigOf<T> = {},
     ): void {
         // Sorry
-        (super.setVisible as (...args: ReadonlyArray<any>) => {})(toggle, shouldAnimate, animationType, animationConfig);
+        (super.setVisible as (...args: ReadonlyArray<any>) => {})(...arguments);
 
         // Post-process for component-binded component
 
         const setChildrenVisible = () => {
             this.children.forEach(child => {
                 // Dont animate it, container animation can affected to children
-                child.setVisible(toggle, false);
+                child.setVisible(<FakeSetVisibleToggleType>toggle, <FakeSetVisibleObserverType>openerOrCloser, false);
             });
         };
 
         if (!toggle && shouldAnimate) {
-            this.once("onAnimationHide", setChildrenVisible);
+            this.once("onOutAnimationEnd", setChildrenVisible);
         } else {
             setChildrenVisible();
         }
@@ -194,7 +209,9 @@ export class StaticPanelContainer<Child extends Components = Components> extends
     constructor(
         layout: MaybePointerLike<PartialSizeLayoutOptions>,
 
-        protected readonly color: MaybePointerLike<ColorCode>,
+        dismissIfClickedOutside: boolean = false,
+
+        protected readonly color: MaybePointerLike<ColorCode> = "#ffffff",
 
         protected readonly rectRadii: MaybePointerLike<number> = 1,
 
@@ -202,6 +219,10 @@ export class StaticPanelContainer<Child extends Components = Components> extends
         protected readonly strokeWidthCoef: MaybePointerLike<number> = 0.07,
     ) {
         super(layout);
+
+        if (dismissIfClickedOutside) {
+            this.on("onClickOutside", () => { this.desiredVisible && this.revertAnimation(<ComponentCloser><unknown>(this)); });
+        }
     }
 
     private getStrokeWidth(): number {
@@ -265,7 +286,7 @@ export class StaticPanelContainer<Child extends Components = Components> extends
 
             ctx.lineWidth = this.getStrokeWidth();
             ctx.fillStyle = computedColor;
-            ctx.strokeStyle = darkend(computedColor, DARKEND_BASE);
+            ctx.strokeStyle = darkened(computedColor, DARKENED_BASE);
 
             ctx.beginPath();
             ctx.roundRect(this.x, this.y, this.w, this.h, computedRadii);
@@ -430,7 +451,7 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
         lerpChildren: MaybePointerLike<boolean> = false,
 
         private readonly centerChildren: MaybePointerLike<boolean> = false,
-        private readonly spacingOverride: MaybePointerLike<number | null> = null,
+        private readonly childrenSpacingOverride: MaybePointerLike<number | null> = null,
         private readonly reverseChildrenRender: MaybePointerLike<boolean> = false,
     ) {
         super(
@@ -446,14 +467,14 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
         let totalWidth = 0;
         let maxHeight = 0;
 
-        const computedSpacingOverride = Component.computePointerLike(this.spacingOverride);
+        const computedChildrenSpacingOverride = Component.computePointerLike(this.childrenSpacingOverride);
         const computedReverseChildrenRender = Component.computePointerLike(this.reverseChildrenRender);
 
         if (this.children.length > 0) {
             let currentX = 0;
 
-            if (computedReverseChildrenRender && computedSpacingOverride) {
-                currentX = computedSpacingOverride * (this.children.length - 1);
+            if (computedReverseChildrenRender && computedChildrenSpacingOverride) {
+                currentX = computedChildrenSpacingOverride * (this.children.length - 1);
             }
 
             this.children.forEach(child => {
@@ -471,9 +492,9 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
 
                 maxHeight = Math.max(maxHeight, childH);
 
-                if (computedSpacingOverride !== null) {
+                if (computedChildrenSpacingOverride !== null) {
                     totalWidth = Math.max(totalWidth, currentX + childW);
-                    currentX += (computedReverseChildrenRender ? -1 : 1) * computedSpacingOverride;
+                    currentX += (computedReverseChildrenRender ? -1 : 1) * computedChildrenSpacingOverride;
                 } else {
                     totalWidth = Math.max(totalWidth, currentX + childW);
                     currentX += (computedReverseChildrenRender ? -1 : 1) * childW;
@@ -481,7 +502,7 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
             });
 
             if (computedReverseChildrenRender) {
-                if (computedSpacingOverride === null) {
+                if (computedChildrenSpacingOverride === null) {
                     totalWidth = currentX * -1;
                 }
             }
@@ -504,7 +525,7 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
             const computedLerpChildren = Component.computePointerLike(this.lerpChildren);
 
             const computedCenterChildren = Component.computePointerLike(this.centerChildren);
-            const computedSpacingOverride = Component.computePointerLike(this.spacingOverride);
+            const computedSpacingOverride = Component.computePointerLike(this.childrenSpacingOverride);
             const computedReverseChildrenRender = Component.computePointerLike(this.reverseChildrenRender);
 
             let currentX = 0;
@@ -625,7 +646,7 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
         lerpChildren: MaybePointerLike<boolean> = false,
 
         private readonly centerChildren: MaybePointerLike<boolean> = false,
-        private readonly spacingOverride: MaybePointerLike<number | null> = null,
+        private readonly childrenSpacingOverride: MaybePointerLike<number | null> = null,
         private readonly reverseChildrenRender: MaybePointerLike<boolean> = false,
     ) {
         super(
@@ -641,14 +662,14 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
         let totalHeight = 0;
         let maxWidth = 0;
 
-        const computedSpacingOverride = Component.computePointerLike(this.spacingOverride);
+        const computedChildrenSpacingOverride = Component.computePointerLike(this.childrenSpacingOverride);
         const computedReverseChildrenRender = Component.computePointerLike(this.reverseChildrenRender);
 
         if (this.children.length > 0) {
             let currentY = 0;
 
-            if (computedReverseChildrenRender && computedSpacingOverride) {
-                currentY = computedSpacingOverride * (this.children.length - 1);
+            if (computedReverseChildrenRender && computedChildrenSpacingOverride) {
+                currentY = computedChildrenSpacingOverride * (this.children.length - 1);
             }
 
             this.children.forEach(child => {
@@ -666,9 +687,9 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
 
                 maxWidth = Math.max(maxWidth, childW);
 
-                if (computedSpacingOverride !== null) {
+                if (computedChildrenSpacingOverride !== null) {
                     totalHeight = Math.max(totalHeight, currentY + childH);
-                    currentY += (computedReverseChildrenRender ? -1 : 1) * computedSpacingOverride;
+                    currentY += (computedReverseChildrenRender ? -1 : 1) * computedChildrenSpacingOverride;
                 } else {
                     totalHeight = Math.max(totalHeight, currentY + childH);
                     currentY += (computedReverseChildrenRender ? -1 : 1) * childH;
@@ -676,7 +697,7 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
             });
 
             if (computedReverseChildrenRender) {
-                if (computedSpacingOverride === null) {
+                if (computedChildrenSpacingOverride === null) {
                     totalHeight = currentY * -1;
                 }
             }
@@ -699,7 +720,7 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
             const computedLerpChildren = Component.computePointerLike(this.lerpChildren);
 
             const computedCenterChildren = Component.computePointerLike(this.centerChildren);
-            const computedSpacingOverride = Component.computePointerLike(this.spacingOverride);
+            const computedSpacingOverride = Component.computePointerLike(this.childrenSpacingOverride);
             const computedReverseChildrenRender = Component.computePointerLike(this.reverseChildrenRender);
 
             let currentY = 0;

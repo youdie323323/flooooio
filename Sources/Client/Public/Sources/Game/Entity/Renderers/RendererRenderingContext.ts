@@ -1,6 +1,4 @@
 import type Entity from "../Entity";
-import type Mob from "../Mob";
-import type Player from "../Player";
 
 /**
  * Render context per rAF.

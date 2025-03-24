@@ -1,4 +1,4 @@
-import type { AdherableClientboundHandler } from "./Packet/PacketClientbound";
+import type { AdheredClientboundHandlers } from "./Packet/PacketClientbound";
 import PacketClientbound from "./Packet/PacketClientbound";
 import PacketServerbound from "./Packet/PacketServerbound";
 
@@ -11,7 +11,7 @@ export default class ClientWebsocket {
     public hasBeenDestroyed: boolean;
 
     constructor(
-        additionalClientboundListen: AdherableClientboundHandler = {},
+        additionalClientboundListen: AdheredClientboundHandlers = {},
     ) {
         this.socket = null;
 

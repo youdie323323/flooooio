@@ -10,8 +10,8 @@ const textDecoder = new TextDecoder();
 export type ReadableDataType = ArrayLike<number> | ArrayBuffer;
 
 export default class BinaryReader {
-    public buffer: Uint8Array = new Uint8Array();
-    public at: number = 0;
+    public buffer: Uint8Array;
+    public at: number;
 
     constructor(buffer: ReadableDataType) {
         this.set(buffer);

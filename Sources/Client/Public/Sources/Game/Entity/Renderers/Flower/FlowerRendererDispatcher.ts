@@ -1,12 +1,12 @@
 import type Player from "../../Player";
 import Renderer from "../Renderer";
 import type { RenderingContext } from "../RendererRenderingContext";
-import RendererFlowerDev from "./RendererFlowerDev";
-import RendererFlowerNormal from "./RendererFlowerNormal";
+import FlowerRendererDev from "./FlowerRendererDev";
+import FlowerRendererNormal from "./FlowerRendererNormal";
 
-export default class RendererFlower extends Renderer<Player> {
-    private dev: RendererFlowerDev = new RendererFlowerDev();
-    private normal: RendererFlowerNormal = new RendererFlowerNormal();
+export default class FlowerRendererDispatcher extends Renderer<Player> {
+    private dev: FlowerRendererDev = new FlowerRendererDev();
+    private normal: FlowerRendererNormal = new FlowerRendererNormal();
 
     override render(context: RenderingContext<Player>): void {
         super.render(context);

@@ -31,6 +31,7 @@ export default class UICloseButton extends Button {
                         w: size,
                         h: size,
                     },
+                    
                     CROSS_ICON_SVG,
                     0.95,
                 ),

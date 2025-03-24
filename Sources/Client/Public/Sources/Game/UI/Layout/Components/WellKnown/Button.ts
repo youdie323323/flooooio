@@ -1,7 +1,7 @@
 import type { Components, MaybePointerLike } from "../Component";
 import { Component } from "../Component";
 import type { ColorCode } from "../../../../../../../../Shared/Utils/Color";
-import { darkend, lighten } from "../../../../../../../../Shared/Utils/Color";
+import { darkened, lightened } from "../../../../../../../../Shared/Utils/Color";
 import type { PartialSizeLayoutOptions } from "./Container";
 import { StaticHContainer, StaticPanelContainer } from "./Container";
 
@@ -11,7 +11,7 @@ import { StaticHContainer, StaticPanelContainer } from "./Container";
  * @remarks
  * When think of a normal button, can think of it as a combination of a StaticPanelContainer and a Text component.
  */
-export class Button extends StaticPanelContainer {
+export class Button extends StaticPanelContainer<StaticHContainer> {
     private static readonly INVALID_COLOR: ColorCode = "#aaaaa9";
 
     private isPressed: boolean = false;
@@ -39,6 +39,8 @@ export class Button extends StaticPanelContainer {
     ) {
         super(
             layoutOptions,
+
+            false,
 
             () => this.getButtonColor(),
 
@@ -116,9 +118,9 @@ export class Button extends StaticPanelContainer {
         const computedColor = Component.computePointerLike(this.buttonColor);
 
         if (this.isPressed) {
-            return darkend(computedColor, 0.106);
+            return darkened(computedColor, 0.106);
         } else if (this.isHovered) {
-            return lighten(computedColor, 0.1);
+            return lightened(computedColor, 0.1);
         }
 
         return computedColor;

@@ -1,8 +1,8 @@
 import { MoodFlags } from "../../../../../../Shared/Mood";
-import { DARKEND_BASE } from "../../../../../../Shared/Utils/Color";
+import { DARKENED_BASE } from "../../../../../../Shared/Utils/Color";
 import { WaveRoomPlayerReadyState } from "../../../../../../Shared/WaveRoom";
 import Player from "../../Entity/Player";
-import { renderEntity } from "../../Entity/Renderers/RendererEntityRenderingLink";
+import { renderEntity } from "../../Entity/Renderers/RendererRenderingLink";
 import type { MaybePointerLike } from "../Layout/Components/Component";
 import { Component, OBSTRUCTION_AFFECTABLE } from "../Layout/Components/Component";
 import { AbstractDynamicLayoutable } from "../Layout/Components/ComponentDynamicLayoutable";
@@ -70,7 +70,7 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
 
             ctx.lineWidth = 4;
             ctx.strokeStyle = "black";
-            ctx.globalAlpha = DARKEND_BASE;
+            ctx.globalAlpha = DARKENED_BASE;
 
             ctx.beginPath();
             ctx.roundRect(0, 0, this.w, this.h, 0.5);

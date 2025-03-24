@@ -4,9 +4,8 @@ import type { LayoutContext, LayoutResult } from "../Layout";
 import LayoutCache from "../LayoutCache";
 import type { DynamicLayoutable } from "./ComponentDynamicLayoutable";
 import type { Layoutable } from "./ComponentLayoutable";
-import type { Button } from "./WellKnown/Button";
-import { type AnyStaticContainer, type CoordinatedStaticSpace, type StaticSpace } from "./WellKnown/Container";
-import type { CanvasLogo, SVGLogo } from "./WellKnown/Logo";
+import { type AnyStaticContainer, type StaticSpace } from "./WellKnown/Container";
+import type { Logo } from "./WellKnown/Logo";
 import type Text from "./WellKnown/Text";
 import type TextInput from "./WellKnown/TextInput";
 import type Toggle from "./WellKnown/Toggle";
@@ -22,20 +21,22 @@ type Satisfies<T extends U, U> = T;
 
 /**
  * Union type that including all components.
- * 
- * @remarks
- * Base components like "Button" is cant addable, not including ("Button" is satisfy Component, its should not work).
  */
 export type Components =
     // Well-known components
     | Satisfies<
         | AnyStaticContainer
-        | StaticSpace | CoordinatedStaticSpace
-        | Button
+        | StaticSpace
+        // CoordinatedStaticSpace extending StaticSpace, so no need to list here
+        // | CoordinatedStaticSpace
+        // Button extending StaticHContainer, so no need to list here
+        // | Button
         | Text
         | TextInput
         | Toggle
-        | CanvasLogo | SVGLogo,
+        | Logo,
+        // Both of them are extending Logo
+        // | CanvasLogo | SVGLogo,
         Layoutable
     >
     // UI-native components (like UITitlePlayerProfile)
@@ -43,6 +44,31 @@ export type Components =
         InstanceType<abstract new (...args: any[]) => Component & DynamicLayoutable>,
         DynamicLayoutable
     >;
+
+const observerBrand = Symbol("observerBrand");
+
+declare const openerBrand: unique symbol;
+export type ComponentOpener = Components & { [observerBrand]: typeof openerBrand };
+
+declare const closerBrand: unique symbol;
+export type ComponentCloser = Components & { [observerBrand]: typeof closerBrand };
+
+// Both of their value is same, so can just return toggle
+function isOpener(toggle: boolean, component: ComponentOpener | ComponentCloser): component is ComponentOpener {
+    return toggle;
+}
+
+/**
+ * Fake type to be asserted to toggle value of setVisible first parameter.
+ * 
+ * @remarks
+ * Used to be avoid compilation error.
+ * Set visible cant accept "boolean" value because overload are true | false.
+ */
+export type FakeSetVisibleToggleType = false;
+
+// If toggle is false, this should be ComponentCloser
+export type FakeSetVisibleObserverType = ComponentCloser;
 
 type DeepReadonly<T> = {
     readonly [K in keyof T]: T[K] extends object ? DeepReadonly<T[K]> : T[K];
@@ -145,7 +171,11 @@ export type ComponentEvents =
         }>
         & Readonly<{
             // Event that tell this component is hide within animation
-            "onAnimationHide": [];
+            "onOutAnimationEnd": [];
+        }>
+        & Readonly<{
+            // Event that tell this component is not clicked on mouse up
+            "onClickOutside": [];
         }>
         & typeof INTERACTIVE_EVENTS
         & typeof CLICKABLE_EVENTS
@@ -218,10 +248,23 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
 
     private static readonly SLIDE_DEFAULT_DEPTH_OFFSET: number = 20;
 
+    /**
+     * Last component which called this setVisible with toggle true.
+     */
+    public lastOpener: ComponentOpener;
+
+    /**
+     * Last component which called this setVisible with toggle false.
+     */
+    public lastCloser: ComponentCloser;
+
     public isAnimating: boolean = false;
+
+    // These are should not null'ed on animation done
 
     public animationType: AnimationType | null = null;
     public animationDirection: AnimationDirection | null = null;
+    public animationProgress: number = 1;
 
     public animationDefaultDurationOverride: number | null = null;
 
@@ -230,13 +273,22 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
     public animationSlideOffsetSign: AnimationConfigs[AnimationType.SLIDE]["offsetSign"];
     public animationSlideFadeEffectEnabled: AnimationConfigs[AnimationType.SLIDE]["fadeEffectEnabled"];
 
+    // These can null'ed on animation done
+
     public animationStartTime: number | null = null;
-    public animationProgress: number = 1;
 
     /**
      * Component is visible, or not.
      */
-    public visible: boolean = true;
+    public accessor visible: boolean = true;
+
+    /**
+     * Desired visible.
+     * 
+     * @remarks
+     * Normal visible only set false when animation done, but this will force display the visible.
+     */
+    public accessor desiredVisible: boolean = true;
 
     /**
      * Determine if should move position while animating zoom animation.
@@ -370,7 +422,7 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
                     this.visible = false;
 
                     // How to fix this error
-                    (this.emit as (eventName: keyof ComponentEvents, ...data: ReadonlyArray<any>) => {})("onAnimationHide");
+                    (this.emit as (eventName: keyof ComponentEvents, ...data: ReadonlyArray<any>) => {})("onOutAnimationEnd");
                 }
 
                 // Fallback to original position
@@ -401,8 +453,7 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
 
         // This should always be executed regardless of isAnimating
         if (
-            Component.ANIMATION_EASING_FUNCTIONS.hasOwnProperty(this.animationType) &&
-            Component.ANIMATION_EASING_FUNCTIONS[this.animationType].hasOwnProperty(this.animationDirection)
+            Component.ANIMATION_EASING_FUNCTIONS[this.animationType]?.[this.animationDirection]
         ) {
             const easingFunction = Component.ANIMATION_EASING_FUNCTIONS[this.animationType][this.animationDirection];
 
@@ -477,27 +528,49 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
     }
 
     public setVisible(
-        toggle: boolean,
+        toggle: false,
+        closer: ComponentCloser,
         shouldAnimate: false,
     ): void;
     public setVisible<T extends AnimationType>(
-        toggle: boolean,
+        toggle: false,
+        closer: ComponentCloser,
+        shouldAnimate: true,
+        animationType: T,
+        animationConfig?: AnimationConfigOf<T>,
+    ): void;
+    public setVisible(
+        toggle: true,
+        opener: ComponentOpener,
+        shouldAnimate: false,
+    ): void;
+    public setVisible<T extends AnimationType>(
+        toggle: true,
+        opener: ComponentOpener,
         shouldAnimate: true,
         animationType: T,
         animationConfig?: AnimationConfigOf<T>,
     ): void;
     public setVisible<T extends AnimationType>(
         toggle: boolean,
+        openerOrCloser: ComponentOpener | ComponentCloser,
         shouldAnimate: boolean,
         animationType?: T,
         animationConfig: AnimationConfigOf<T> = {},
     ): void {
         if (toggle === this.visible && !this.isAnimating) return;
 
-        if (this.isAnimating) {
-            this.isAnimating = false;
-            this.visible = !toggle;
+        // Set real visible
+        this.desiredVisible = toggle;
+
+        // Set opener/closer
+        if (isOpener(toggle, openerOrCloser)) {
+            this.lastOpener = openerOrCloser;
+        } else {
+            this.lastCloser = openerOrCloser;
         }
+
+        if (this.isAnimating) this.isAnimating = false;
 
         if (shouldAnimate) {
             this.isAnimating = true;
@@ -554,6 +627,39 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
         } else {
             this.visible = toggle;
         }
+    }
+
+    /**
+     * Reverses the last performed animation.
+     */
+    public revertAnimation(openerOrCloser: ComponentOpener | ComponentCloser): void {
+        if (!this.animationType) return;
+
+        const currentState = this.visible;
+
+        // Store the current animation type and config
+        const lastAnimationType = this.animationType;
+        const lastAnimationConfig: AnimationConfigs[typeof lastAnimationType] = {
+            defaultDurationOverride: this.animationDefaultDurationOverride,
+
+            // Last SLIDE animation config if last animation type is slide
+            ...(lastAnimationType === AnimationType.SLIDE && {
+                direction: this.animationSlideDirection,
+                offset: this.animationSlideOffset,
+                offsetSign: this.animationSlideOffsetSign,
+                fadeEffectEnabled: this.animationSlideFadeEffectEnabled,
+            }),
+        };
+
+        // Set visibility with reversed animation
+        this.setVisible(
+            <FakeSetVisibleToggleType>!currentState,
+            // Closer
+            <FakeSetVisibleObserverType>openerOrCloser,
+            true,
+            lastAnimationType,
+            lastAnimationConfig,
+        );
     }
 
     public destroy(): void {

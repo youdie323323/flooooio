@@ -1,10 +1,10 @@
 import type Mob from "../../../Mob";
 import type { RenderingContext } from "../../RendererRenderingContext";
-import RendererPetalBase from "./RendererPetalBase";
+import AbstractPetalRenderer from "./PetalRenderer";
 
 const TAU = Math.PI * 2;
 
-export default class RendererPetalEgg extends RendererPetalBase {
+export default class PetalRendererEgg extends AbstractPetalRenderer {
     override render(context: RenderingContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);
@@ -16,9 +16,9 @@ export default class RendererPetalEgg extends RendererPetalBase {
 
         ctx.beginPath();
         ctx.ellipse(0, 0, 30, 40, 0, 0, TAU);
-        ctx.fillStyle = this.getSkinColor(context, "#fff0b8");
+        ctx.fillStyle = this.calculateDamageEffectColor(context, "#fff0b8");
         ctx.fill();
-        ctx.strokeStyle = this.getSkinColor(context, "#cfc295");
+        ctx.strokeStyle = this.calculateDamageEffectColor(context, "#cfc295");
         ctx.stroke();
     }
 }

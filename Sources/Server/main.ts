@@ -294,13 +294,6 @@ app
 
             const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
-            // TODO: only log html request
-            // using _guard = logger.metadata({
-            //     ipAddress: Buffer.from(res.getRemoteAddressAsText()).toString(),
-            //     mimeType: contentType,
-            // });
-            // logger.info(`Request from client`);
-
             res.cork(() => {
                 res.writeHeader('Content-Type', contentType).end(data);
             });

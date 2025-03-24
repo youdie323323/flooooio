@@ -7,7 +7,7 @@ import { Canvg, presets } from "canvg";
 import * as StackBlur from
     'stackblur-canvas/dist/stackblur-es.min.js';
 
-class Logo extends ExtensionBase(Component) {
+export abstract class Logo extends ExtensionBase(Component) {
     public override[OBSTRUCTION_AFFECTABLE]: boolean = false;
 
     constructor(

@@ -1,21 +1,26 @@
-import { darkend, DARKEND_BASE } from "../../../../../../../Shared/Utils/Color";
+import { darkened, DARKENED_BASE } from "../../../../../../../Shared/Utils/Color";
 import Mob from "../../Mob";
 import type { RenderingContext } from "../RendererRenderingContext";
-import RendererMobBase from "./RendererMobBase";
+import AbstractMobRenderer from "./MobRenderer";
 
 const TAU = Math.PI * 2;
 
-export default class RendererMobStarfish extends RendererMobBase {
+export default class MobRendererStarfish extends AbstractMobRenderer {
     override render(context: RenderingContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);
 
-        const { ctx, entity } = context;
+        const { ctx, entity, isSpecimen } = context;
 
         const scale = entity.size / 80;
         ctx.scale(scale, scale);
 
-        ctx.rotate(Date.now() / 2000 % TAU + entity.moveCounter * 0.4);
+        const timeRotation =
+            isSpecimen
+                ? 2000
+                : Date.now();
+        
+        ctx.rotate(timeRotation / 2000 % TAU + entity.moveCounter * 0.4);
 
         const { STARFISH_LEG_AMOUNT } = Mob;
 
@@ -46,12 +51,13 @@ export default class RendererMobStarfish extends RendererMobBase {
         }
 
         ctx.closePath();
+
         ctx.lineCap = ctx.lineJoin = "round";
         ctx.lineWidth = 52;
-        ctx.strokeStyle = this.getSkinColor(context, darkend("#d0504e", DARKEND_BASE));
+        ctx.strokeStyle = this.calculateDamageEffectColor(context, darkened("#d0504e", DARKENED_BASE));
         ctx.stroke();
         ctx.lineWidth = 26;
-        ctx.strokeStyle = ctx.fillStyle = this.getSkinColor(context, "#d0504e");
+        ctx.strokeStyle = ctx.fillStyle = this.calculateDamageEffectColor(context, "#d0504e");
         ctx.fill();
         ctx.stroke();
 
@@ -61,11 +67,13 @@ export default class RendererMobStarfish extends RendererMobBase {
             const legRotation = i / STARFISH_LEG_AMOUNT * TAU;
 
             ctx.save();
+
             ctx.rotate(legRotation);
 
             const SPOTS_PER_LEG = 3;
 
             const lengthRatio = legDistance[i] / 175;
+
             let spotPosition = 56;
 
             for (let j = 0; j < SPOTS_PER_LEG; j++) {

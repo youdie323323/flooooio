@@ -5,14 +5,14 @@ import type { WaveRoomCode } from "../../../../../../Shared/WaveRoomCode";
 import { isWaveRoomCode } from "../../../../../../Shared/WaveRoomCode";
 import { clientWebsocket, cameraController, deltaTime, uiCtx } from "../../../../../Main";
 import type { ColorCode } from "../../../../../../Shared/Utils/Color";
-import { DARKEND_BASE } from "../../../../../../Shared/Utils/Color";
+import { DARKENED_BASE } from "../../../../../../Shared/Utils/Color";
 import { Rarity } from "../../../../../../Shared/Entity/Statics/EntityRarity";
 import { PETAL_TYPES } from "../../../../../../Shared/Entity/Statics/EntityType";
 import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
-import { renderEntity } from "../../Entity/Renderers/RendererEntityRenderingLink";
+import { renderEntity } from "../../Entity/Renderers/RendererRenderingLink";
 import type { FlooooIoDefaultSettingKeys } from "../../Utils/SettingStorage";
 import SettingStorage from "../../Utils/SettingStorage";
-import type { Components } from "../Layout/Components/Component";
+import type { ComponentCloser, ComponentOpener, Components, FakeSetVisibleObserverType, FakeSetVisibleToggleType } from "../Layout/Components/Component";
 import { AnimationType } from "../Layout/Components/Component";
 import type { AnyStaticContainer } from "../Layout/Components/WellKnown/Container";
 import { StaticPanelContainer, CoordinatedStaticSpace, StaticHContainer, StaticSpace } from "../Layout/Components/WellKnown/Container";
@@ -24,12 +24,10 @@ import AbstractUI, { uiScaleFactor } from "../UI";
 import type BinaryReader from "../../../../../../Shared/Websocket/Binary/ReadWriter/Reader/BinaryReader";
 import { Button } from "../Layout/Components/WellKnown/Button";
 import { CanvasLogo, SVGLogo } from "../Layout/Components/WellKnown/Logo";
-import { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../Shared/Tiled/TilesetRenderer";
-import TilesetWavedRenderer from "../Shared/Tiled/TilesetWavedRenderer";
 import UITitlePlayerProfile from "./UITitlePlayerProfile";
 import UICloseButton from "../Shared/UICloseButton";
 import { Clientbound } from "../../../../../../Shared/Websocket/Packet/PacketDirection";
-import type { StaticAdherableClientboundHandler } from "../../Websocket/Packet/PacketClientbound";
+import type { StaticAdheredClientboundHandlers } from "../../Websocket/Packet/PacketClientbound";
 import SWAP_BAG_SVG from "./Assets/swap_bag.svg";
 import MOLECULE_SVG from "./Assets/molecule.svg";
 import SCROLL_UNFURLED_SVG from "./Assets/scroll_unfurled.svg";
@@ -37,6 +35,8 @@ import DISCORD_ICON_SVG from "./Assets/discord_icon.svg";
 import type { TooltipPosition } from "../Layout/Extensions/ExtensionTooltip";
 import Tooltip from "../Layout/Extensions/ExtensionTooltip";
 import UIGameInventory from "../Game/UIGameInventory";
+import { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../../Utils/Tiled/TilesetRenderer";
+import TilesetWavedRenderer from "../../Utils/Tiled/TilesetWavedRenderer";
 
 const TAU = Math.PI * 2;
 
@@ -45,11 +45,6 @@ function randomFloat(min: number, max: number) {
 }
 
 const backgroundEntities: Set<Mob> = new Set();
-
-/**
- * Current ui of title.
- */
-let titleUiCurrentBiome: Biome = Biome.GARDEN;
 
 function drawRoundedPolygon(
     ctx: CanvasRenderingContext2D,
@@ -142,7 +137,9 @@ export default class UITitle extends AbstractUI {
 
     public waveRoomSelfId: number = -1;
 
-    override readonly CLIENTBOUND_HANDLER = {
+    accessor biome: Biome = Biome.GARDEN;
+
+    override readonly CLIENTBOUND_HANDLERS = {
         [Clientbound.WAVE_ROOM_SELF_ID]: (reader: BinaryReader): void => {
             this.waveRoomSelfId = reader.readUInt32();
         },
@@ -181,7 +178,7 @@ export default class UITitle extends AbstractUI {
             this.biome = waveRoomBiome;
         },
         [Clientbound.WAVE_STARTED]: (reader: BinaryReader): void => {
-            this.squadMenuContainer.setVisible(false, true, AnimationType.ZOOM);
+            this.squadMenuContainer.setVisible(false, null, true, AnimationType.ZOOM);
 
             uiCtx.switchUI("game");
 
@@ -201,7 +198,7 @@ export default class UITitle extends AbstractUI {
 
             this.statusTextRef = SquadContainerStatusText.SQUAD_NOT_FOUND;
         },
-    } as const satisfies StaticAdherableClientboundHandler;
+    } as const satisfies StaticAdheredClientboundHandlers;
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
@@ -211,16 +208,16 @@ export default class UITitle extends AbstractUI {
         this.statusTextRef = SquadContainerStatusText.SQUAD_LOADING;
 
         setTimeout(() => {
-            this.connectingText.setVisible(true, false);
+            this.connectingText.setVisible(true, null, false);
             setTimeout(() => {
-                this.connectingText.setVisible(false, true, AnimationType.ZOOM);
+                this.connectingText.setVisible(false, null, true, AnimationType.ZOOM);
                 setTimeout(() => {
-                    this.loggingInText.setVisible(true, true, AnimationType.ZOOM);
+                    this.loggingInText.setVisible(true, null, true, AnimationType.ZOOM);
                     setTimeout(() => {
-                        this.loggingInText.setVisible(false, true, AnimationType.ZOOM);
+                        this.loggingInText.setVisible(false, null, true, AnimationType.ZOOM);
                         setTimeout(() => {
                             this.onLoadedComponents.forEach(c => {
-                                c.setVisible(true, true, AnimationType.ZOOM);
+                                c.setVisible(true, null, true, AnimationType.ZOOM);
                             });
                         }, 150);
                     }, 2000);
@@ -324,6 +321,8 @@ export default class UITitle extends AbstractUI {
                         ];
                     };
 
+                    let settingContainerCloser: UICloseButton;
+
                     const settingContainer = new StaticPanelContainer(
                         {
                             x: 72,
@@ -332,10 +331,12 @@ export default class UITitle extends AbstractUI {
                             invertYCoordinate: true,
                         },
 
+                        true,
+
                         "#aaaaaa",
                         0.1,
                     ).addChildren(
-                        new UICloseButton(
+                        (settingContainerCloser = new UICloseButton(
                             {
                                 x: 150 - 4,
                                 y: 2,
@@ -343,14 +344,18 @@ export default class UITitle extends AbstractUI {
                             12,
 
                             () => {
-                                settingIsOpen = false;
-
-                                settingContainer.setVisible(settingIsOpen, true, AnimationType.SLIDE, {
-                                    direction: "v",
-                                    offsetSign: -1,
-                                });
+                                settingContainer.setVisible(
+                                    false,
+                                    <ComponentCloser><unknown>settingContainerCloser,
+                                    true,
+                                    AnimationType.SLIDE,
+                                    {
+                                        direction: "v",
+                                        offsetSign: -1,
+                                    },
+                                );
                             },
-                        ),
+                        )),
 
                         new Text(
                             {
@@ -369,8 +374,6 @@ export default class UITitle extends AbstractUI {
 
                         new CoordinatedStaticSpace(15, 15, 150, 190 - 4),
                     );
-
-                    let settingIsOpen = false;
 
                     const settingButton = new (makeTitleToolTippedButton("right", "Inventory"))(
                         {
@@ -398,19 +401,23 @@ export default class UITitle extends AbstractUI {
                         ],
 
                         () => {
-                            settingIsOpen = !settingIsOpen;
-
-                            settingContainer.setVisible(settingIsOpen, true, AnimationType.SLIDE, {
-                                direction: "v",
-                                offsetSign: -1,
-                            });
+                            settingContainer.setVisible(
+                                <FakeSetVisibleToggleType>!settingContainer.desiredVisible,
+                                <FakeSetVisibleObserverType><unknown>settingButton,
+                                true,
+                                AnimationType.SLIDE,
+                                {
+                                    direction: "v",
+                                    offsetSign: -1,
+                                },
+                            );
                         },
 
                         "#599dd8",
                         true,
                     );
 
-                    settingContainer.setVisible(false, false);
+                    settingContainer.setVisible(false, null, false);
 
                     this.addComponent(settingContainer);
 
@@ -568,8 +575,8 @@ export default class UITitle extends AbstractUI {
             32,
         );
 
-        this.connectingText.setVisible(false, false);
-        this.loggingInText.setVisible(false, false);
+        this.connectingText.setVisible(false, null, false);
+        this.loggingInText.setVisible(false, null, false);
 
         this.addComponent(this.connectingText);
         this.addComponent(this.loggingInText);
@@ -672,7 +679,7 @@ export default class UITitle extends AbstractUI {
                         },
                         (ctx: CanvasRenderingContext2D) => {
                             ctx.fillStyle = "black";
-                            ctx.globalAlpha = DARKEND_BASE;
+                            ctx.globalAlpha = DARKENED_BASE;
 
                             drawRoundedPolygon(ctx, 7, (readyButton.h / 2) - 3, 10, 90, 40, 3);
 
@@ -687,7 +694,7 @@ export default class UITitle extends AbstractUI {
                     if (this.squadMenuContainer.visible === false) {
                         clientWebsocket.packetServerbound.sendWaveRoomFindPublic(this.biome);
 
-                        this.squadMenuContainer.setVisible(true, true, AnimationType.ZOOM);
+                        this.squadMenuContainer.setVisible(true, <ComponentOpener><unknown>readyButton, true, AnimationType.ZOOM);
 
                         this.statusTextRef = SquadContainerStatusText.SQUAD_CREATING;
 
@@ -734,7 +741,7 @@ export default class UITitle extends AbstractUI {
                         },
                         (ctx: CanvasRenderingContext2D) => {
                             ctx.fillStyle = "black";
-                            ctx.globalAlpha = DARKEND_BASE;
+                            ctx.globalAlpha = DARKENED_BASE;
 
                             drawRoundedPolygon(ctx, 5, (squadButton.h / 2) - 3, 10 - 1, 90, 40, 4);
 
@@ -746,7 +753,7 @@ export default class UITitle extends AbstractUI {
                 () => {
                     clientWebsocket.packetServerbound.sendWaveRoomCreate(this.biome);
 
-                    this.squadMenuContainer.setVisible(true, true, AnimationType.ZOOM);
+                    this.squadMenuContainer.setVisible(true, <ComponentOpener><unknown>squadButton, true, AnimationType.ZOOM);
 
                     this.statusTextRef = SquadContainerStatusText.SQUAD_CREATING;
 
@@ -830,6 +837,8 @@ export default class UITitle extends AbstractUI {
 
             let codeInput: TextInput;
 
+            let squadMenuCloser: UICloseButton;
+
             this.squadMenuContainer = new StaticPanelContainer(
                 {
                     x: -170,
@@ -838,6 +847,9 @@ export default class UITitle extends AbstractUI {
                     alignFromCenterX: true,
                     alignFromCenterY: true,
                 },
+
+                false,
+
                 "#5aa0db",
 
                 1,
@@ -870,7 +882,7 @@ export default class UITitle extends AbstractUI {
                     )
                 ),
 
-                new UICloseButton(
+                (squadMenuCloser = new UICloseButton(
                     {
                         x: 318 - 1,
                         y: 1 + 0.5,
@@ -878,7 +890,7 @@ export default class UITitle extends AbstractUI {
                     10,
 
                     () => {
-                        this.squadMenuContainer.setVisible(false, true, AnimationType.ZOOM);
+                        this.squadMenuContainer.setVisible(false, <ComponentCloser><unknown>squadMenuCloser, true, AnimationType.ZOOM);
 
                         readyToggle = false;
 
@@ -888,7 +900,8 @@ export default class UITitle extends AbstractUI {
 
                         clientWebsocket.packetServerbound.sendWaveRoomLeave();
                     },
-                ),
+                )),
+
                 new CoordinatedStaticSpace(15, 15, 318, 196),
 
                 (this.publicToggle = new Toggle(
@@ -1130,12 +1143,12 @@ export default class UITitle extends AbstractUI {
             this.onLoadedComponents.push(squadButton);
             this.onLoadedComponents.push(biomeSwitcher);
 
-            nameInputDescription.setVisible(false, false);
-            nameInput.setVisible(false, false);
-            readyButton.setVisible(false, false);
-            squadButton.setVisible(false, false);
-            biomeSwitcher.setVisible(false, false);
-            this.squadMenuContainer.setVisible(false, false);
+            nameInputDescription.setVisible(false, null, false);
+            nameInput.setVisible(false, null, false);
+            readyButton.setVisible(false, null, false);
+            squadButton.setVisible(false, null, false);
+            biomeSwitcher.setVisible(false, null, false);
+            this.squadMenuContainer.setVisible(false, null, false);
 
             this.addComponents(
                 nameInputDescription,
@@ -1276,18 +1289,10 @@ export default class UITitle extends AbstractUI {
         this.waveRoomState = WaveRoomState.Waiting;
     }
 
-    public toggleShowStatusText(t: boolean): void {
-        this.statusText.setVisible(t, false);
+    public toggleShowStatusText(toggle: boolean): void {
+        if (this.statusText.visible !== toggle) this.statusText.setVisible(<FakeSetVisibleToggleType>toggle, null, false);
 
-        this.playerProfileContainer.setVisible(!t, false);
-        this.codeText.setVisible(!t, false);
-    }
-
-    set biome(biome: Biome) {
-        titleUiCurrentBiome = biome;
-    }
-
-    get biome(): Biome {
-        return titleUiCurrentBiome;
+        if (this.playerProfileContainer.visible !== !toggle) this.playerProfileContainer.setVisible(<FakeSetVisibleToggleType>!toggle, null, false);
+        if (this.codeText.visible !== !toggle) this.codeText.setVisible(<FakeSetVisibleToggleType>!toggle, null, false);
     }
 }

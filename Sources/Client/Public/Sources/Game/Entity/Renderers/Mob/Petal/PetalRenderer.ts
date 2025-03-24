@@ -1,11 +1,11 @@
 import type { ColorCode } from "../../../../../../../../Shared/Utils/Color";
 import type Mob from "../../../Mob";
 import type { RenderingContext } from "../../RendererRenderingContext";
-import RendererMobBase from "../RendererMobBase";
+import AbstractMobRenderer from "../MobRenderer";
 
 const TAU = Math.PI * 2;
 
-export default class RendererPetalBase extends RendererMobBase {
+export default abstract class AbstractPetalRenderer extends AbstractMobRenderer {
     override render(context: RenderingContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);
@@ -23,9 +23,9 @@ export default class RendererPetalBase extends RendererMobBase {
 
         ctx.beginPath();
         ctx.arc(0, 0, 20, 0, TAU);
-        ctx.fillStyle = this.getSkinColor(context, fill);
+        ctx.fillStyle = this.calculateDamageEffectColor(context, fill);
         ctx.fill();
-        ctx.strokeStyle = this.getSkinColor(context, stroke);
+        ctx.strokeStyle = this.calculateDamageEffectColor(context, stroke);
         ctx.stroke();
     }
 }

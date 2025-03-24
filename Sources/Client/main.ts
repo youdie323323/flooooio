@@ -1,8 +1,8 @@
 import type { Biome } from "../Shared/Biome";
-import TilesetRenderer, { BIOME_SVG_TILESET, BIOME_TILESETS } from "./Public/Sources/Game/UI/Shared/Tiled/TilesetRenderer";
 import { uiScaleFactor } from "./Public/Sources/Game/UI/UI";
 import UIContext from "./Public/Sources/Game/UI/UIContext";
 import CameraController from "./Public/Sources/Game/Utils/CameraController";
+import TilesetRenderer, { BIOME_SVG_TILESET, BIOME_TILESETS } from "./Public/Sources/Game/Utils/Tiled/TilesetRenderer";
 import ClientWebsocket from "./Public/Sources/Game/Websocket/ClientWebsocket";
 
 export let lastTimestamp = Date.now();
@@ -35,7 +35,7 @@ const init = async () => {
 
     clientWebsocket = new ClientWebsocket(
         // Change listen for each UI
-        () => uiCtx.currentCtx.CLIENTBOUND_HANDLER,
+        () => uiCtx.currentCtx.CLIENTBOUND_HANDLERS,
     );
 
     cameraController = new CameraController(canvas);

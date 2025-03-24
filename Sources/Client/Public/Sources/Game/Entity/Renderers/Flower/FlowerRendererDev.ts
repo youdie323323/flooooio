@@ -1,10 +1,10 @@
 import type Player from "../../Player";
 import type { RenderingContext } from "../RendererRenderingContext";
-import RendererFlowerBase from "./RendererFlowerBase";
+import AbstractFlowerRenderer from "./FlowerRenderer";
 
 const TAU = Math.PI * 2;
 
-export default class RendererFlowerDev extends RendererFlowerBase {
+export default class FlowerRendererDev extends AbstractFlowerRenderer {
     override render(context: RenderingContext<Player>): void {
         // Non-recursive renderer
         // super.render(context);
@@ -17,8 +17,7 @@ export default class RendererFlowerDev extends RendererFlowerBase {
             sadT, angryT,
         } = entity;
 
-        // Dev body
-        {
+        { // Dev body
             ctx.save();
 
             ctx.lineCap = "round";
@@ -46,12 +45,13 @@ export default class RendererFlowerDev extends RendererFlowerBase {
             this.drawDeadEyes(context, 11, 8);
             this.drawDeadEyes(context, -10, -8);
         } else {
-            ctx.save();
+            using _guard = this.guard(ctx);
 
             ctx.beginPath();
             
             this.drawEyeOutline(context, 0.7);
             this.drawEyeOutline(context, 0);
+
             ctx.clip();
 
             ctx.beginPath();
@@ -60,8 +60,6 @@ export default class RendererFlowerDev extends RendererFlowerBase {
             ctx.arc(-10 + -eyeX * 2, -8 + -eyeY * 3.5, 3.1, 0, TAU);
             ctx.fillStyle = "#eee";
             ctx.fill();
-
-            ctx.restore();
         }
 
         const verticRise = angryT * -10.5 + sadT * -9;

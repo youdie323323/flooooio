@@ -1,9 +1,9 @@
 import type { EventMap } from "strict-event-emitter";
 import { Emitter } from "strict-event-emitter";
 import type { Biome } from "../../../../../Shared/Biome";
-import type { StaticAdherableClientboundHandler } from "../Websocket/Packet/PacketClientbound";
+import type { StaticAdheredClientboundHandlers } from "../Websocket/Packet/PacketClientbound";
 import { type Components, renderPossibleComponents, OBSTRUCTION_AFFECTABLE, hasClickableListeners, hasInteractiveListeners } from "./Layout/Components/Component";
-import { BLACKLISTED } from "./Layout/Extensions/ExtensionInlineRenderingCall";
+import { BLACKLISTED } from "./Layout/Extensions/ExtensionInlineRendering";
 import type { AnyStaticContainer } from "./Layout/Components/WellKnown/Container";
 import { AbstractStaticContainer } from "./Layout/Components/WellKnown/Container";
 
@@ -44,7 +44,7 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
     private hoveredComponent: Components = null;
     private clickedComponent: Components = null;
 
-    private canvasEventListenOption: AddEventListenerOptions;
+    private canvasEventOptions: AddEventListenerOptions;
 
     private mousedown: (event: MouseEvent) => void;
     private mouseup: (event: MouseEvent) => void;
@@ -60,9 +60,14 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
     private onresize: () => void;
 
     /**
+     * Store the biome of UI.
+     */
+    abstract accessor biome: Biome;
+
+    /**
      * Ui-definable client packet bound handler.
      */
-    abstract readonly CLIENTBOUND_HANDLER: StaticAdherableClientboundHandler;
+    abstract readonly CLIENTBOUND_HANDLERS: StaticAdheredClientboundHandlers;
 
     constructor(public canvas: HTMLCanvasElement) {
         super();
@@ -114,20 +119,20 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
         };
 
         {
-            this.canvasEventListenOption = { capture: true };
+            this.canvasEventOptions = { capture: true };
 
-            const { canvasEventListenOption } = this;
+            const { canvasEventOptions } = this;
 
             {
-                this.canvas.addEventListener('mousedown', this.mousedown, canvasEventListenOption);
-                this.canvas.addEventListener('mouseup', this.mouseup, canvasEventListenOption);
-                this.canvas.addEventListener('mousemove', this.mousemove, canvasEventListenOption);
+                this.canvas.addEventListener('mousedown', this.mousedown, canvasEventOptions);
+                this.canvas.addEventListener('mouseup', this.mouseup, canvasEventOptions);
+                this.canvas.addEventListener('mousemove', this.mousemove, canvasEventOptions);
             }
 
             {
-                this.canvas.addEventListener('touchmove', this.touchmove, canvasEventListenOption);
-                this.canvas.addEventListener('touchstart', this.touchstart, canvasEventListenOption);
-                this.canvas.addEventListener('touchend', this.touchend, canvasEventListenOption);
+                this.canvas.addEventListener('touchmove', this.touchmove, canvasEventOptions);
+                this.canvas.addEventListener('touchstart', this.touchstart, canvasEventOptions);
+                this.canvas.addEventListener('touchend', this.touchend, canvasEventOptions);
             }
         }
 
@@ -148,18 +153,18 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
 
     public removeEventListeners(): void {
         {
-            const { canvasEventListenOption } = this;
+            const { canvasEventOptions } = this;
 
             {
-                this.canvas.removeEventListener('mousedown', this.mousedown, canvasEventListenOption);
-                this.canvas.removeEventListener('mouseup', this.mouseup, canvasEventListenOption);
-                this.canvas.removeEventListener('mousemove', this.mousemove, canvasEventListenOption);
+                this.canvas.removeEventListener('mousedown', this.mousedown, canvasEventOptions);
+                this.canvas.removeEventListener('mouseup', this.mouseup, canvasEventOptions);
+                this.canvas.removeEventListener('mousemove', this.mousemove, canvasEventOptions);
             }
 
             {
-                this.canvas.removeEventListener('touchmove', this.touchmove, canvasEventListenOption);
-                this.canvas.removeEventListener('touchstart', this.touchstart, canvasEventListenOption);
-                this.canvas.removeEventListener('touchend', this.touchend, canvasEventListenOption);
+                this.canvas.removeEventListener('touchmove', this.touchmove, canvasEventOptions);
+                this.canvas.removeEventListener('touchstart', this.touchstart, canvasEventOptions);
+                this.canvas.removeEventListener('touchend', this.touchend, canvasEventOptions);
             }
         }
 
@@ -242,8 +247,7 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
     }
 
     private isComponentObstructable(targetComponent: Components): boolean {
-        return targetComponent[OBSTRUCTION_AFFECTABLE] &&
-            targetComponent.isRenderable;
+        return targetComponent[OBSTRUCTION_AFFECTABLE] && targetComponent.isRenderable;
     }
 
     private isComponentInteractable(targetComponent: Components): boolean {
@@ -259,14 +263,14 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
             !this.isComponentObstructed(targetComponent, x, y);
     }
 
-    private getTopLevelComponents() {
+    private getRootComponents() {
         return this.components
             .values()
             .filter(c => !this.childComponents.has(c));
     }
 
     private getTopLevelRenderableComponents() {
-        return this.getTopLevelComponents()
+        return this.getRootComponents()
             .filter(c => !c[BLACKLISTED]);
     }
 
@@ -277,7 +281,7 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
         const scaledWidth = this.canvas.width / uiScaleFactor;
         const scaledHeight = this.canvas.height / uiScaleFactor;
 
-        this.getTopLevelComponents().forEach(component => {
+        this.getRootComponents().forEach(component => {
             // Maybe this is good for cached layout but not for now
             // if (component.isAnimating) return;
 
@@ -302,48 +306,68 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
         });
     }
 
-    private emitUnconditionalEvent(
+    private broadcastUnconditionalEvent(
         event: keyof ComponentCompatibleUnconditionalEvents,
         ...data: ComponentCompatibleUnconditionalEvents[typeof event]
     ): void {
         this.emit(event, ...data);
 
-        // We have listener check for event like interactive but these are meaningless, so doesnt need any kind of checks
+        // We have listener check for event like interactive but these are unconditional, so doesnt need any kind of checks
         this.components.forEach(c => c.emit(event, ...data));
     }
 
     private handleKeyDown(event: KeyboardEvent): void {
         if (!event.isTrusted) return;
 
-        this.emitUnconditionalEvent("onKeyDown", event);
+        this.broadcastUnconditionalEvent("onKeyDown", event);
     }
 
     private handleKeyUp(event: KeyboardEvent): void {
         if (!event.isTrusted) return;
 
-        this.emitUnconditionalEvent("onKeyUp", event);
+        this.broadcastUnconditionalEvent("onKeyUp", event);
     }
 
     private handleMouseDown(event: MouseEvent): void {
         if (!event.isTrusted) return;
 
-        this.emitUnconditionalEvent("onMouseDown", event);
+        this.broadcastUnconditionalEvent("onMouseDown", event);
+
+        // Constant between operations
+        const { mouseX, mouseY } = this;
 
         // Click handling
         for (const component of this.components) {
-            if (this.isComponentInteractableAtPosition(component, this.mouseX, this.mouseY)) {
+            if (this.isComponentInteractableAtPosition(component, mouseX, mouseY)) {
                 this.clickedComponent = component;
                 this.clickedComponent.emit("onDown");
 
                 break;
             }
         }
+
+        // Broadcast onClickOutside event
+        // The reason placed this code outside loop is because this should broadcasted when clicked air (nothing)
+        this.components.values()
+            .filter(
+                c =>
+                    c !== this.clickedComponent &&
+                    c.lastOpener !== this.clickedComponent &&
+                    // Not overlap with component
+                    !this.overlapsComponent(c, mouseX, mouseY) &&
+                    // Supports outside of container which has static width/height
+                    !(
+                        c instanceof AbstractStaticContainer &&
+                        this.isChildDescendant(c, this.clickedComponent)
+                    ),
+            )
+            .forEach(c => c.emit("onClickOutside"));
     }
 
     private handleMouseUp(event: MouseEvent): void {
         if (!event.isTrusted) return;
 
-        this.emitUnconditionalEvent("onMouseUp", event);
+        this.broadcastUnconditionalEvent("onMouseUp", event);
 
         if (this.clickedComponent) {
             if (this.isComponentInteractableAtPosition(this.clickedComponent, this.mouseX, this.mouseY)) {
@@ -358,7 +382,7 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
     private handleMouseMove(event: MouseEvent): void {
         if (!event.isTrusted) return;
 
-        this.emitUnconditionalEvent("onMouseMove", event);
+        this.broadcastUnconditionalEvent("onMouseMove", event);
 
         // Update mouse position
         const rect = this.canvas.getBoundingClientRect();
@@ -369,7 +393,7 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
         // this.invalidateDynamicLayoutables();
     }
 
-    private getParent(child: Components): AnyStaticContainer | null {
+    private findParentContainer(child: Components): AnyStaticContainer | null {
         for (const component of this.components) {
             if (
                 component instanceof AbstractStaticContainer &&
@@ -380,20 +404,33 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
         return null;
     }
 
-    private traverseParentAndCheckIsAnimatingAndItsDirectionOut(child: Components): boolean {
-        const parent = this.getParent(child);
+    private isAncestorAnimatingOut(child: Components): boolean {
+        const parent = this.findParentContainer(child);
 
         if (parent === null) return false;
 
         if (parent.isAnimating && parent.animationDirection === "out") return true;
 
-        return this.traverseParentAndCheckIsAnimatingAndItsDirectionOut(parent);
+        return this.isAncestorAnimatingOut(parent);
+    }
+
+    private isChildDescendant(container: AnyStaticContainer, child: Components): boolean {
+        if (container.hasChild(child)) return true;
+
+        const parent = this.findParentContainer(child);
+        if (parent === null) return false;
+
+        if (container === parent) {
+            return true;
+        } else {
+            return this.isChildDescendant(container, parent);
+        }
     }
 
     private emitInteractiveEvents(): void {
-        if ( 
+        if (
             this.hoveredComponent &&
-            this.traverseParentAndCheckIsAnimatingAndItsDirectionOut(this.hoveredComponent)
+            this.isAncestorAnimatingOut(this.hoveredComponent)
         ) {
             this.hoveredComponent.emit("onBlur");
 
@@ -404,7 +441,7 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
             if (
                 // Make it only work for component which has interactive listeners
                 component[OBSTRUCTION_AFFECTABLE] &&
-                !this.traverseParentAndCheckIsAnimatingAndItsDirectionOut(component)
+                !this.isAncestorAnimatingOut(component)
             ) {
                 const isHovering = this.isComponentInteractableAtPosition(component, this.mouseX, this.mouseY);
 
@@ -435,8 +472,8 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
         });
     }
 
-    public destroyRenderComponents(): void {
-        this.getTopLevelComponents().forEach(c => c.destroy());
+    public cleanupComponentHierarchy(): void {
+        this.getRootComponents().forEach(c => c.destroy());
 
         this.components.clear();
         this.components = null;
@@ -473,10 +510,6 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
         }); 
         */
     }
-
-    // Biome atomic store
-    abstract set biome(biome: Biome);
-    abstract get biome(): Biome;
 
     /**
      * Method for initialize components, only called for once.

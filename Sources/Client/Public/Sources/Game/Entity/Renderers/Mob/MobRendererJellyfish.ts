@@ -1,10 +1,10 @@
 import type Mob from "../../Mob";
 import type { RenderingContext } from "../RendererRenderingContext";
-import RendererMobBase from "./RendererMobBase";
+import AbstractMobRenderer from "./MobRenderer";
 
 const TAU = Math.PI * 2;
 
-export default class RendererMobJellyfish extends RendererMobBase {
+export default class MobRendererJellyfish extends AbstractMobRenderer {
     override render(context: RenderingContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);
@@ -15,7 +15,7 @@ export default class RendererMobJellyfish extends RendererMobBase {
         ctx.scale(scale, scale);
 
         const oldGlobalAlpha = ctx.globalAlpha;
-        ctx.strokeStyle = ctx.fillStyle = this.getSkinColor(context, "#ffffff");
+        ctx.strokeStyle = ctx.fillStyle = this.calculateDamageEffectColor(context, "#ffffff");
         ctx.globalAlpha = oldGlobalAlpha * 0.6;
         ctx.beginPath();
 
@@ -40,14 +40,26 @@ export default class RendererMobJellyfish extends RendererMobBase {
         }
 
         ctx.lineCap = "round";
+
         ctx.lineWidth = 2.3;
         ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(0, 0, 20, 0, TAU);
-        ctx.globalAlpha = oldGlobalAlpha * 0.5;
-        ctx.fill();
-        ctx.clip();
-        ctx.lineWidth = 3;
-        ctx.stroke();
+
+        { // Body
+            using _guard = this.guard(ctx);
+
+            ctx.beginPath();
+
+            ctx.arc(0, 0, 20, 0, TAU);
+
+            ctx.globalAlpha = oldGlobalAlpha * 0.5;
+
+            ctx.fill();
+
+            ctx.clip();
+
+            ctx.lineWidth = 3;
+
+            ctx.stroke();
+        }
     }
 }

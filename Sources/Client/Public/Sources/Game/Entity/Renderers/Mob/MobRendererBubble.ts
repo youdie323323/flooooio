@@ -1,8 +1,8 @@
 import type Mob from "../../Mob";
 import type { RenderingContext } from "../RendererRenderingContext";
-import RendererMobBase from "./RendererMobBase";
+import AbstractMobRenderer from "./MobRenderer";
 
-export default class RendererMobBubble extends RendererMobBase {
+export default class MobRendererBubble extends AbstractMobRenderer {
     override render(context: RenderingContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);

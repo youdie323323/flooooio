@@ -1,571 +1,235 @@
-// ==UserScript==
-// @name         Florr render grabber
-// @namespace    http://tampermonkey.net/
-// @version      2025-02-16
-// @description  try to take over the world!
-// @author       You
-// @match        https://florr.io/
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=florr.io
-// @grant        none
-// ==/UserScript==
+const canvas = document.querySelector("#canvas");
+const ctx = canvas.getContext("2d");
 
-"use strict";
-(() => {
-    var n = class {
-        constructor(t) {
-            this.context = t;
-            this.pseudoCode = [];
-            this.pathDefinitions = new Map();
-            this.pathCounter = 0;
-            this.pathInstanceToHash = new WeakMap();
-        }
+const path2d_0 = (function () {
+    const path = new Path2D();
 
-        generatePseudoCode() {
-            const pathDefs = Array.from(this.pathDefinitions.values())
-                .map(def => def.code)
-                .join('\n');
-    
-            return [pathDefs, this.pseudoCode.join('\n')];
-        }
+    path.moveTo(11, 0);
 
-        toCallableContextOverloadMethod(t) {
-            return t.bind(this.context);
-        }
+    path.lineTo(-11, -6);
+    path.lineTo(-11, 6);
+    path.lineTo(11, 0);
 
-        getPathVariableName() {
-            return `path2d_${this.pathCounter++}`;
-        }
+    path.closePath();
 
-        getCommandsHash(commands) {
-            return commands.join('|');
-        }
-
-        processArgs(t, e) {
-            e.forEach(r => {
-                if (window.pathPseudoCode.has(r)) {
-                    const commands = window.pathPseudoCode.get(r);
-                    const commandsHash = this.getCommandsHash(commands);
-
-                    this.pathInstanceToHash.set(r, commandsHash);
-
-                    if (!this.pathDefinitions.has(commandsHash)) {
-                        const varName = this.getPathVariableName();
-                        this.pathDefinitions.set(commandsHash, {
-                            name: varName,
-                            code: `const ${varName} = (function(){
-                                const path = new Path2D();
-                                ${commands.join("\n")}
-                                return path;
-                            })();`,
-                        });
-                    }
-                }
-            });
-
-            let o = e.map(r => {
-                if (window.pathPseudoCode.has(r)) {
-                    const hash = this.pathInstanceToHash.get(r);
-
-                    return this.pathDefinitions.get(hash).name;
-                }
-
-                return JSON.stringify(r);
-            }).join(", ");
-    
-            this.pseudoCode.push(`ctx.${t}(${o});`);
-
-            return e.map(r => window.originalInstance.has(r) ? window.originalInstance.get(r) : r);
-        }
-
-        logSetter(t, e) {
-            this.pseudoCode.push(`ctx.${t} = ${JSON.stringify(e)};`);
-        }
-
-        set fontKerning(t) {
-            this.logSetter("fontKerning", t);
-            this.context.fontKerning = t;
-        }
-
-        get fontKerning() {
-            return this.context.fontKerning;
-        }
-
-        set fontStretch(t) {
-            this.logSetter("fontStretch", t);
-            this.context.fontStretch = t;
-        }
-
-        get fontStretch() {
-            return this.context.fontStretch;
-        }
-
-        set fontVariantCaps(t) {
-            this.logSetter("fontVariantCaps", t);
-            this.context.fontVariantCaps = t;
-        }
-
-        get fontVariantCaps() {
-            return this.context.fontVariantCaps;
-        }
-
-        set letterSpacing(t) {
-            this.logSetter("letterSpacing", t);
-            this.context.letterSpacing = t;
-        }
-
-        get letterSpacing() {
-            return this.context.letterSpacing;
-        }
-
-        set textRendering(t) {
-            this.logSetter("textRendering", t);
-            this.context.textRendering = t;
-        }
-
-        get textRendering() {
-            return this.context.textRendering;
-        }
-
-        set wordSpacing(t) {
-            this.logSetter("wordSpacing", t);
-            this.context.wordSpacing = t;
-        }
-
-        get wordSpacing() {
-            return this.context.wordSpacing;
-        }
-
-        get canvas() {
-            return this.context.canvas;
-        }
-
-        set direction(t) {
-            this.logSetter("direction", t);
-            this.context.direction = t;
-        }
-
-        get direction() {
-            return this.context.direction;
-        }
-
-        set fillStyle(t) {
-            this.logSetter("fillStyle", t);
-            this.context.fillStyle = t;
-        }
-
-        get fillStyle() {
-            return this.context.fillStyle;
-        }
-
-        set filter(t) {
-            this.logSetter("filter", t);
-            this.context.filter = t;
-        }
-
-        get filter() {
-            return this.context.filter;
-        }
-
-        set font(t) {
-            this.logSetter("font", t);
-            this.context.font = t;
-        }
-
-        get font() {
-            return this.context.font;
-        }
-
-        set globalAlpha(t) {
-            this.logSetter("globalAlpha", t);
-            this.context.globalAlpha = t;
-        }
-
-        get globalAlpha() {
-            return this.context.globalAlpha;
-        }
-
-        set globalCompositeOperation(t) {
-            this.logSetter("globalCompositeOperation", t);
-            this.context.globalCompositeOperation = t;
-        }
-
-        get globalCompositeOperation() {
-            return this.context.globalCompositeOperation;
-        }
-
-        set imageSmoothingEnabled(t) {
-            this.logSetter("imageSmoothingEnabled", t);
-            this.context.imageSmoothingEnabled = t;
-        }
-
-        get imageSmoothingEnabled() {
-            return this.context.imageSmoothingEnabled;
-        }
-
-        set imageSmoothingQuality(t) {
-            this.logSetter("imageSmoothingQuality", t);
-            this.context.imageSmoothingQuality = t;
-        }
-
-        get imageSmoothingQuality() {
-            return this.context.imageSmoothingQuality;
-        }
-
-        set lineCap(t) {
-            this.logSetter("lineCap", t);
-            this.context.lineCap = t;
-        }
-
-        get lineCap() {
-            return this.context.lineCap;
-        }
-
-        set lineDashOffset(t) {
-            this.logSetter("lineDashOffset", t);
-            this.context.lineDashOffset = t;
-        }
-
-        get lineDashOffset() {
-            return this.context.lineDashOffset;
-        }
-
-        set lineJoin(t) {
-            this.logSetter("lineJoin", t);
-            this.context.lineJoin = t;
-        }
-
-        get lineJoin() {
-            return this.context.lineJoin;
-        }
-
-        set lineWidth(t) {
-            this.logSetter("lineWidth", t);
-            this.context.lineWidth = t;
-        }
-
-        get lineWidth() {
-            return this.context.lineWidth;
-        }
-
-        set miterLimit(t) {
-            this.logSetter("miterLimit", t);
-            this.context.miterLimit = t;
-        }
-
-        get miterLimit() {
-            return this.context.miterLimit;
-        }
-
-        set shadowBlur(t) {
-            this.logSetter("shadowBlur", t);
-            this.context.shadowBlur = t;
-        }
-
-        get shadowBlur() {
-            return this.context.shadowBlur;
-        }
-
-        set shadowColor(t) {
-            this.logSetter("shadowColor", t);
-            this.context.shadowColor = t;
-        }
-
-        get shadowColor() {
-            return this.context.shadowColor;
-        }
-
-        set shadowOffsetX(t) {
-            this.logSetter("shadowOffsetX", t);
-            this.context.shadowOffsetX = t;
-        }
-
-        get shadowOffsetX() {
-            return this.context.shadowOffsetX;
-        }
-
-        set shadowOffsetY(t) {
-            this.logSetter("shadowOffsetY", t);
-            this.context.shadowOffsetY = t;
-        }
-
-        get shadowOffsetY() {
-            return this.context.shadowOffsetY;
-        }
-
-        set strokeStyle(t) {
-            this.logSetter("strokeStyle", t);
-            this.context.strokeStyle = t;
-        }
-
-        get strokeStyle() {
-            return this.context.strokeStyle;
-        }
-
-        set textAlign(t) {
-            this.logSetter("textAlign", t);
-            this.context.textAlign = t;
-        }
-
-        get textAlign() {
-            return this.context.textAlign;
-        }
-
-        set textBaseline(t) {
-            this.logSetter("textBaseline", t);
-            this.context.textBaseline = t;
-        }
-
-        get textBaseline() {
-            return this.context.textBaseline;
-        }
-
-        getContextAttributes(...t) {
-            return this.context.getContextAttributes(...this.processArgs("getContextAttributes", t));
-        }
-
-        createConicGradient(...t) {
-            return this.context.createConicGradient(...this.processArgs("createConicGradient", t));
-        }
-
-        roundRect(...t) {
-            this.toCallableContextOverloadMethod(this.context.roundRect)(...this.processArgs("roundRect", t));
-        }
-
-        isContextLost(...t) {
-            return this.context.isContextLost(...this.processArgs("isContextLost", t));
-        }
-
-        reset(...t) {
-            this.context.reset(...this.processArgs("reset", t));
-        }
-
-        getTransform(...t) {
-            return this.context.getTransform(...this.processArgs("getTransform", t));
-        }
-
-        arc(...t) {
-            this.context.arc(...this.processArgs("arc", t));
-        }
-
-        arcTo(...t) {
-            this.context.arcTo(...this.processArgs("arcTo", t));
-        }
-
-        beginPath(...t) {
-            this.context.beginPath(...this.processArgs("beginPath", t));
-        }
-
-        bezierCurveTo(...t) {
-            this.context.bezierCurveTo(...this.processArgs("bezierCurveTo", t));
-        }
-
-        clearRect(...t) {
-            this.context.clearRect(...this.processArgs("clearRect", t));
-        }
-
-        clip(...t) {
-            this.toCallableContextOverloadMethod(this.context.clip)(...this.processArgs("clip", t));
-        }
-
-        closePath(...t) {
-            this.context.closePath(...this.processArgs("closePath", t));
-        }
-
-        createImageData(...t) {
-            return this.toCallableContextOverloadMethod(this.context.createImageData)(...this.processArgs("createImageData", t));
-        }
-
-        createLinearGradient(...t) {
-            return this.context.createLinearGradient(...this.processArgs("createLinearGradient", t));
-        }
-
-        createPattern(...t) {
-            return this.context.createPattern(...this.processArgs("createPattern", t));
-        }
-
-        createRadialGradient(...t) {
-            return this.context.createRadialGradient(...this.processArgs("createRadialGradient", t));
-        }
-
-        drawFocusIfNeeded(...t) {
-            this.toCallableContextOverloadMethod(this.context.drawFocusIfNeeded)(...this.processArgs("drawFocusIfNeeded", t));
-        }
-
-        drawImage(...t) {
-            this.toCallableContextOverloadMethod(this.context.drawImage)(...this.processArgs("drawImage", t));
-        }
-
-        ellipse(...t) {
-            this.context.ellipse(...this.processArgs("ellipse", t));
-        }
-
-        fill(...t) {
-            this.toCallableContextOverloadMethod(this.context.fill)(...this.processArgs("fill", t));
-        }
-
-        fillRect(...t) {
-            this.context.fillRect(...this.processArgs("fillRect", t));
-        }
-
-        fillText(...t) {
-            this.context.fillText(...this.processArgs("fillText", t));
-        }
-
-        getImageData(...t) {
-            return this.context.getImageData(...this.processArgs("getImageData", t));
-        }
-
-        getLineDash(...t) {
-            return this.context.getLineDash(...this.processArgs("getLineDash", t));
-        }
-
-        isPointInPath(...t) {
-            return this.toCallableContextOverloadMethod(this.context.isPointInPath)(...this.processArgs("isPointInPath", t));
-        }
-
-        isPointInStroke(...t) {
-            return this.toCallableContextOverloadMethod(this.context.isPointInStroke)(...this.processArgs("isPointInStroke", t));
-        }
-
-        lineTo(...t) {
-            this.context.lineTo(...this.processArgs("lineTo", t));
-        }
-
-        measureText(...t) {
-            return this.context.measureText(...this.processArgs("measureText", t));
-        }
-
-        moveTo(...t) {
-            this.context.moveTo(...this.processArgs("moveTo", t));
-        }
-
-        putImageData(...t) {
-            this.toCallableContextOverloadMethod(this.context.putImageData)(...this.processArgs("putImageData", t));
-        }
-
-        quadraticCurveTo(...t) {
-            this.context.quadraticCurveTo(...this.processArgs("quadraticCurveTo", t));
-        }
-
-        rect(...t) {
-            this.context.rect(...this.processArgs("rect", t));
-        }
-
-        resetTransform(...t) {
-            this.context.resetTransform(...this.processArgs("resetTransform", t));
-        }
-
-        restore(...t) {
-            this.context.restore(...this.processArgs("restore", t));
-        }
-
-        rotate(...t) {
-            this.context.rotate(...this.processArgs("rotate", t));
-        }
-
-        save(...t) {
-            this.context.save(...this.processArgs("save", t));
-        }
-
-        scale(...t) {
-            this.context.scale(...this.processArgs("scale", t));
-        }
-
-        setLineDash(...t) {
-            this.toCallableContextOverloadMethod(this.context.setLineDash)(...this.processArgs("setLineDash", t));
-        }
-
-        setTransform(...t) {
-            this.toCallableContextOverloadMethod(this.context.setTransform)(...this.processArgs("setTransform", t));
-        }
-
-        stroke(...t) {
-            this.toCallableContextOverloadMethod(this.context.stroke)(...this.processArgs("stroke", t));
-        }
-
-        strokeRect(...t) {
-            this.context.strokeRect(...this.processArgs("strokeRect", t));
-        }
-
-        strokeText(...t) {
-            this.context.strokeText(...this.processArgs("strokeText", t));
-        }
-
-        transform(...t) {
-            this.context.transform(...this.processArgs("transform", t));
-        }
-
-        translate(...t) {
-            this.context.translate(...this.processArgs("translate", t));
-        }
-    };
-
-    window.pathPseudoCode = new WeakMap();
-    window.originalInstance = new WeakMap();
-
-    var g = window.Path2D;
-    var x = window.OffscreenCanvas;
-    Object.defineProperty(window, "Path2D", {
-        value: function (...s) {
-            let t = new g(...s);
-            let e = new Proxy(t, {
-                get(o, r, a) {
-                    let i = o[r];
-                    if (typeof i == "function") {
-                        return function (...h) {
-                            let c = window.pathPseudoCode.get(e);
-                            let l = h.map(d => JSON.stringify(d)).join(", ");
-                            c.push(`path.${String(r)}(${l});`);
-
-                            return i.apply(o, h);
-                        };
-                    } else {
-                        return i;
-                    }
-                },
-            });
-
-            window.pathPseudoCode.set(e, []);
-            window.originalInstance.set(e, t);
-
-            return e;
-        },
-    });
-
-    function C(s) {
-        return new Proxy(s, {
-            get(t, e) {
-                if (e === "getContext") {
-                    return function (o, ...r) {
-                        let a = t.getContext(o, ...r);
-                        if (o === "2d") {
-                            return new n(a);
-                        } else {
-                            return a;
-                        }
-                    };
-                } else {
-                    return Reflect.get(t, e);
-                }
-            },
-        });
-    }
-
-    Object.defineProperty(window, "OffscreenCanvas", {
-        value: function (s, t) {
-            let e = new x(s, t);
-
-            return C(e);
-        },
-    });
-
-    var p = HTMLCanvasElement.prototype.getContext;
-    HTMLCanvasElement.prototype.getContext = function (s, ...t) {
-        let e = p.call(this, s, ...t);
-        if (s === "2d") {
-            return new n(e);
-        } else {
-            return e;
-        }
-    };
+    return path;
 })();
+
+const path2d_1 = (function () {
+    const path = new Path2D();
+
+    path.moveTo(10.342206954956055, 2.411909580230713);
+
+    path.lineTo(-11.657793045043945, -3.588090419769287);
+    path.lineTo(-11, -6);
+    path.lineTo(-8.5, -6);
+    path.lineTo(-8.5, 6);
+    path.lineTo(-11, 6);
+    path.lineTo(-11.657793045043945, 3.588090419769287);
+    path.lineTo(10.342206954956055, -2.411909580230713);
+    path.lineTo(11, 0);
+    path.lineTo(10.342206954956055, 2.411909580230713);
+
+    path.closePath();
+
+    path.moveTo(11.657793045043945, -2.411909580230713);
+
+    path.quadraticCurveTo(12.298311233520508, -2.237222671508789, 12.767766952514648, -1.7677668333053589);
+    path.quadraticCurveTo(13.237222671508789, -1.2983107566833496, 13.411909103393555, -0.6577935218811035);
+    path.quadraticCurveTo(13.684375762939453, 0.34125208854675293, 13.17060661315918, 1.2403472661972046);
+    path.quadraticCurveTo(12.656837463378906, 2.1394424438476562, 11.657793045043945, 2.411909580230713);
+    path.lineTo(-10.342206954956055, 8.411909103393555);
+    path.quadraticCurveTo(-10.502988815307617, 8.455759048461914, -10.668167114257812, 8.477879524230957);
+    path.quadraticCurveTo(-10.833346366882324, 8.5, -11, 8.5);
+    path.quadraticCurveTo(-12.03553295135498, 8.5, -12.767765045166016, 7.767766952514648);
+    path.quadraticCurveTo(-13.499999046325684, 7.035533905029297, -13.5, 6);
+    path.lineTo(-13.5, -6);
+    path.quadraticCurveTo(-13.5, -6.166653633117676, -13.477879524230957, -6.3318328857421875);
+    path.quadraticCurveTo(-13.455759048461914, -6.497012138366699, -13.411909103393555, -6.6577935218811035);
+    path.quadraticCurveTo(-13.13944149017334, -7.656838417053223, -12.240346908569336, -8.17060661315918);
+    path.quadraticCurveTo(-11.341251373291016, -8.684375762939453, -10.342206954956055, -8.411909103393555);
+    path.lineTo(11.657793045043945, -2.411909580230713);
+
+    path.closePath();
+
+    return path;
+})();
+
+const path2d_2 = (function () {
+    const path = new Path2D();
+
+    path.moveTo(30, 0);
+    
+    path.quadraticCurveTo(29.999996185302734, 8.284271240234375, 21.21320152282715, 14.142135620117188);
+    path.quadraticCurveTo(12.426405906677246, 20, 0, 20);
+    path.quadraticCurveTo(-12.426405906677246, 20, -21.21320152282715, 14.142135620117188);
+    path.quadraticCurveTo(-29.999996185302734, 8.284271240234375, -30, 0);
+    path.quadraticCurveTo(-29.999996185302734, -8.284271240234375, -21.21320152282715, -14.142135620117188);
+    path.quadraticCurveTo(-12.426405906677246, -20, 0, -20);
+    path.quadraticCurveTo(12.426405906677246, -20, 21.21320152282715, -14.142135620117188);
+    path.quadraticCurveTo(29.999996185302734, -8.284271240234375, 30, 0);
+
+    return path;
+})();
+
+const path2d_3 = (function () {
+    const path = new Path2D();
+
+    path.moveTo(20, -14.907119750976562);
+
+    path.lineTo(20, 14.907119750976562);
+    path.quadraticCurveTo(17.813514709472656, 16.210886001586914, 15.289612770080566, 17.207592010498047);
+    path.quadraticCurveTo(12.765708923339844, 18.204296112060547, 10, 18.85618019104004);
+    path.lineTo(10, -18.85618019104004);
+    path.quadraticCurveTo(12.765708923339844, -18.204296112060547, 15.28961181640625, -17.207592010498047);
+    path.quadraticCurveTo(17.813514709472656, -16.210886001586914, 20, -14.907119750976562);
+
+    path.closePath();
+
+    return path;
+})();
+
+const path2d_4 = (function () {
+    const path = new Path2D();
+
+    path.moveTo(-10, -18.85618019104004);
+
+    path.quadraticCurveTo(-7.591191291809082, -19.42394256591797, -5.07305908203125, -19.711971282958984);
+    path.quadraticCurveTo(-2.554927110671997, -20, 0, -20);
+    path.lineTo(0, 20);
+    path.quadraticCurveTo(-2.554927110671997, 20, -5.07305908203125, 19.711971282958984);
+    path.quadraticCurveTo(-7.591191291809082, 19.42394256591797, -10, 18.85618019104004);
+    path.lineTo(-10, -18.85618019104004);
+
+    path.closePath();
+
+    return path;
+})();
+
+const path2d_5 = (function () {
+    const path = new Path2D();
+
+    path.moveTo(-20, 14.907119750976562);
+
+    path.quadraticCurveTo(-24.77225685119629, 12.06149673461914, -27.386127471923828, 8.164966583251953);
+    path.quadraticCurveTo(-30, 4.268435478210449, -30, 0);
+    path.quadraticCurveTo(-30, -4.268435478210449, -27.38612937927246, -8.164966583251953);
+    path.quadraticCurveTo(-24.77225685119629, -12.06149673461914, -20, -14.907119750976562);
+    path.lineTo(-20, 14.907119750976562);
+
+    path.closePath();
+
+    return path;
+})();
+
+const path2d_6 = (function () {
+    const path = new Path2D();
+
+    path.moveTo(32.5, 0);
+
+    path.quadraticCurveTo(32.5, 9.62222671508789, 22.59995460510254, 16.222261428833008);
+    path.quadraticCurveTo(13.183349609375, 22.500003814697266, 0, 22.5);
+    path.quadraticCurveTo(-13.183344841003418, 22.5, -22.59995460510254, 16.222261428833008);
+    path.quadraticCurveTo(-32.5, 9.622234344482422, -32.5, 0);
+    path.quadraticCurveTo(-32.5, -9.62222671508789, -22.59995460510254, -16.222261428833008);
+    path.quadraticCurveTo(-13.183349609375, -22.500003814697266, 0, -22.5);
+    path.quadraticCurveTo(13.183344841003418, -22.5, 22.59995460510254, -16.222261428833008);
+    path.quadraticCurveTo(32.5, -9.622234344482422, 32.5, 0);
+    path.quadraticCurveTo(32.499996185302734, 1.0355339050292969, 31.767765045166016, 1.7677669525146484);
+    path.quadraticCurveTo(31.03553009033203, 2.5, 30, 2.5);
+    path.quadraticCurveTo(28.964462280273438, 2.5, 28.23223114013672, 1.7677669525146484);
+    path.quadraticCurveTo(27.499996185302734, 1.0355339050292969, 27.5, 0);
+    path.quadraticCurveTo(27.500003814697266, -6.946311950683594, 19.826452255249023, -12.062009811401367);
+    path.quadraticCurveTo(11.669464111328125, -17.5, 0, -17.5);
+    path.quadraticCurveTo(-11.66946029663086, -17.5, -19.826452255249023, -12.062009811401367);
+    path.quadraticCurveTo(-27.499996185302734, -6.946311950683594, -27.5, 0);
+    path.quadraticCurveTo(-27.500003814697266, 6.946311950683594, -19.826452255249023, 12.062009811401367);
+    path.quadraticCurveTo(-11.669464111328125, 17.5, 0, 17.5);
+    path.quadraticCurveTo(11.66946029663086, 17.5, 19.826452255249023, 12.062009811401367);
+    path.quadraticCurveTo(27.499996185302734, 6.946311950683594, 27.5, 0);
+    path.quadraticCurveTo(27.499996185302734, -1.0355339050292969, 28.23223114013672, -1.7677669525146484);
+    path.quadraticCurveTo(28.964462280273438, -2.5, 30, -2.5);
+    path.quadraticCurveTo(31.03553009033203, -2.5, 31.767765045166016, -1.7677669525146484);
+    path.quadraticCurveTo(32.499996185302734, -1.0355339050292969, 32.5, 0);
+
+    path.closePath();
+
+    return path;
+})();
+
+const path2d_7 = (function () {
+    const path = new Path2D();
+
+    path.moveTo(-0.47434163093566895, 1.4230250120162964);
+
+    path.quadraticCurveTo(-0.9337265491485596, 1.2698967456817627, -1.2168631553649902, 0.8770654201507568);
+    path.quadraticCurveTo(-1.5, 0.4842342138290405, -1.5, 0);
+    path.quadraticCurveTo(-1.5, -0.6213203072547913, -1.0606601238250732, -1.0606601238250732);
+    path.quadraticCurveTo(-0.6213203072547913, -1.5, 0, -1.5);
+    path.quadraticCurveTo(15.621322631835938, -1.5, 26.060659408569336, 8.939339637756348);
+    path.quadraticCurveTo(26.403064727783203, 9.281744956970215, 26.48063087463379, 9.759726524353027);
+    path.quadraticCurveTo(26.558197021484375, 10.23770809173584, 26.34164047241211, 10.670820236206055);
+    path.quadraticCurveTo(26.06377601623535, 11.226545333862305, 25.47433853149414, 11.423023223876953);
+    path.quadraticCurveTo(24.884902954101562, 11.619503021240234, 24.329179763793945, 11.34164047241211);
+    path.quadraticCurveTo(14.424531936645508, 6.389315605163574, -0.47434163093566895, 1.4230250120162964);
+
+    path.closePath();
+
+    return path;
+})();
+
+{
+    ctx.direction = "ltr";
+    ctx.globalAlpha = 1;
+    ctx.lineWidth = 1;
+    ctx.miterLimit = 10;
+    ctx.font = "700 10px Game, Microsoft YaHei, sans-serif";
+    ctx.imageSmoothingEnabled = true;
+    ctx.clearRect(0, 0, 128, 128);
+
+    ctx.globalCompositeOperation = "source-over";
+
+    ctx.save();
+
+    ctx.lineJoin = "round";
+
+    ctx.save();
+
+    ctx.beginPath();
+    ctx.setTransform(1.9199999570846558, 0, 0, 1.9199999570846558, 6.400000095367432, 6.400000095367432);
+    ctx.moveTo(5, 2.5);
+    ctx.lineTo(55, 2.5);
+    ctx.quadraticCurveTo(57.5, 2.5, 57.5, 5);
+    ctx.lineTo(57.5, 55);
+    ctx.quadraticCurveTo(57.5, 57.5, 55, 57.5);
+    ctx.lineTo(5, 57.5);
+    ctx.quadraticCurveTo(2.5, 57.5, 2.5, 55);
+    ctx.lineTo(2.5, 5);
+    ctx.quadraticCurveTo(2.5, 2.5, 5, 2.5);
+    ctx.closePath();
+    ctx.clip();
+    ctx.lineWidth = 5;
+    ctx.lineCap = "round";
+    ctx.fillStyle = "#333333";
+    ctx.setTransform(0.8824692368507385, 0.8824690580368042, -0.8824690580368042, 0.8824692368507385, 102.55711364746094, 102.55711364746094);
+    ctx.fill(path2d_0, "nonzero");
+    ctx.fill(path2d_1, "nonzero");
+    ctx.fillStyle = "#FFD363";
+    ctx.setTransform(-0.8824692368507385, -0.8824690580368042, 0.8824690580368042, -0.8824692368507385, 70.78822326660156, 70.78822326660156);
+    ctx.fill(path2d_2, "nonzero");
+    ctx.fillStyle = "#333333";
+    ctx.fill(path2d_3, "evenodd");
+    ctx.fill(path2d_4, "evenodd");
+    ctx.fill(path2d_5, "evenodd");
+    ctx.fillStyle = "#D3AD46";
+    ctx.fill(path2d_6, "nonzero");
+    ctx.fillStyle = "#333333";
+    ctx.setTransform(-0.8824692368507385, -0.8824690580368042, -0.8824690580368042, 0.8824692368507385, 44.31414794921875, 53.13884353637695);
+    ctx.fill(path2d_7, "evenodd");
+    ctx.setTransform(-0.8824692368507385, -0.8824690580368042, 0.8824690580368042, -0.8824692368507385, 53.13883972167969, 44.314151763916016);
+    ctx.fill(path2d_7, "evenodd");
+    
+    ctx.restore();
+
+    ctx.restore();
+}

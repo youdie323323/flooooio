@@ -36,8 +36,8 @@ export default class UIGameWaveEnemyIcons extends StaticHContainer<StaticVContai
             );
 
             // Animation on appear
-            icon.setVisible(false, false);
-            icon.setVisible(true, true, AnimationType.CARD);
+            icon.setVisible(false, null, false);
+            icon.setVisible(true, null, true, AnimationType.CARD);
 
             return icon;
         };
@@ -108,13 +108,13 @@ export default class UIGameWaveEnemyIcons extends StaticHContainer<StaticVContai
         if (mobIcon.amountAccumulator > 1) {
             mobIcon.amountAccumulator--;
         } else {
-            mobIcon.once("onAnimationHide", () => {
+            mobIcon.once("onOutAnimationEnd", () => {
                 vContainerToRemoveFrom.removeChild(mobIcon);
 
                 checksumVContainer();
             });
 
-            mobIcon.setVisible(false, true, AnimationType.CARD);
+            mobIcon.setVisible(false, null, true, AnimationType.CARD);
         }
 
         checksumVContainer();

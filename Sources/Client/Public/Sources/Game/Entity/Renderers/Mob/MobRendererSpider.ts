@@ -1,6 +1,6 @@
 import type Mob from "../../Mob";
 import type { RenderingContext } from "../RendererRenderingContext";
-import RendererMobBase from "./RendererMobBase";
+import AbstractMobRenderer from "./MobRenderer";
 
 const TAU = Math.PI * 2;
 
@@ -10,15 +10,15 @@ interface CurveData {
     curve: [number, number, number, number];
 }
 
-const curves: CurveData[] = [];
+const curves: Array<CurveData> = new Array();
 
-function createCurve(angle: number, direction: number, offset: number = 8): void {
+function createCurve(angle: number, direction: number, offset: number = 6): void {
     direction *= -1;
-    
+
     const cosAngle: number = Math.cos(angle);
     const sinAngle: number = Math.sin(angle);
-    const startX: number = cosAngle * 40;
-    const startY: number = sinAngle * 40;
+    const startX: number = cosAngle * 25;
+    const startY: number = sinAngle * 25;
 
     curves.push({
         dir: direction,
@@ -29,54 +29,61 @@ function createCurve(angle: number, direction: number, offset: number = 8): void
             startX + cosAngle * 46,
             startY + sinAngle * 46,
         ],
-    } satisfies CurveData);
+    });
 }
 
 createCurve((Math.PI / 180) * 45, 1);
-createCurve((Math.PI / 180) * 75, 1, 6);
-createCurve((Math.PI / 180) * 105, -1, 6);
+createCurve((Math.PI / 180) * 75, 1, 3);
+createCurve((Math.PI / 180) * 105, -1, 3);
 createCurve((Math.PI / 180) * 135, -1);
 createCurve((-Math.PI / 180) * 45, -1);
-createCurve((-Math.PI / 180) * 75, -1, 6);
-createCurve((-Math.PI / 180) * 105, 1, 6);
+createCurve((-Math.PI / 180) * 75, -1, 3);
+createCurve((-Math.PI / 180) * 105, 1, 3);
 createCurve((-Math.PI / 180) * 135, 1);
 
-export default class RendererMobSpider extends RendererMobBase {
+export default class MobRendererSpider extends AbstractMobRenderer {
     override render(context: RenderingContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);
 
         const { ctx, entity } = context;
 
-        const scale = entity.size / 40;
+        const scale = entity.size / 55;
         ctx.scale(scale, scale);
 
-        // Draw legs
-        {
+        { // Legs
             for (let i = 0; i < curves.length; i++) {
                 const curve = curves[i];
+
                 ctx.save();
+
                 ctx.rotate(curve.dir * Math.sin(entity.moveCounter + i) * 0.15);
                 ctx.beginPath();
                 ctx.moveTo(...curve.start);
                 ctx.quadraticCurveTo(...curve.curve);
-                ctx.strokeStyle = this.getSkinColor(context, "#323032");
+                ctx.strokeStyle = this.calculateDamageEffectColor(context, "#323032");
                 ctx.lineWidth = 10;
                 ctx.lineCap = "round";
                 ctx.stroke();
+
                 ctx.restore();
             }
         }
 
-        ctx.fillStyle = this.getSkinColor(context, "#4f412e");
-        ctx.strokeStyle = "rgba(0,0,0,0.15)";
-        ctx.lineWidth = 22;
-        ctx.beginPath();
-        ctx.arc(0, 0, 40, 0, TAU);
-        ctx.fill();
-        ctx.save();
-        ctx.clip();
-        ctx.stroke();
-        ctx.restore();
+        { // Body
+            ctx.fillStyle = this.calculateDamageEffectColor(context, "#4f412e");
+            ctx.strokeStyle = "rgba(0,0,0,0.15)";
+            ctx.lineWidth = 22;
+
+            ctx.beginPath();
+
+            ctx.arc(0, 0, 35, 0, TAU);
+            ctx.fill();
+
+            using _guard = this.guard(ctx);
+
+            ctx.clip();
+            ctx.stroke();
+        }
     }
 }

@@ -1,6 +1,6 @@
 import Mob from "../../Entity/Mob";
 import Player from "../../Entity/Player";
-import { renderEntity } from "../../Entity/Renderers/RendererEntityRenderingLink";
+import { renderEntity } from "../../Entity/Renderers/RendererRenderingLink";
 import { interpolate } from "../../Utils/Interpolator";
 import AbstractUI, { uiScaleFactor } from "../UI";
 import SettingStorage from "../../Utils/SettingStorage";
@@ -14,17 +14,17 @@ import TextInput from "../Layout/Components/WellKnown/TextInput";
 import type { Rarity } from "../../../../../../Shared/Entity/Statics/EntityRarity";
 import type BinaryReader from "../../../../../../Shared/Websocket/Binary/ReadWriter/Reader/BinaryReader";
 import { Button } from "../Layout/Components/WellKnown/Button";
-import TilesetRenderer, { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../Shared/Tiled/TilesetRenderer";
-import TilesetWavedRenderer from "../Shared/Tiled/TilesetWavedRenderer";
 import { Clientbound } from "../../../../../../Shared/Websocket/Packet/PacketDirection";
-import type { StaticAdherableClientboundHandler } from "../../Websocket/Packet/PacketClientbound";
+import type { StaticAdheredClientboundHandlers } from "../../Websocket/Packet/PacketClientbound";
 import UICloseButton from "../Shared/UICloseButton";
-import type { AnimationConfigOf } from "../Layout/Components/Component";
+import type { AnimationConfigOf, ComponentCloser } from "../Layout/Components/Component";
 import { AnimationType, renderPossibleComponent } from "../Layout/Components/Component";
 import { CoordinatedStaticSpace, StaticSpace, StaticTranslucentPanelContainer, StaticVContainer } from "../Layout/Components/WellKnown/Container";
-import { InlineRenderingCall } from "../Layout/Extensions/ExtensionInlineRenderingCall";
+import { InlineRendering } from "../Layout/Extensions/ExtensionInlineRendering";
 import UIGameWaveEnemyIcons from "./UIGameWaveEnemyIcons";
 import UIGameInventory from "./UIGameInventory";
+import TilesetRenderer, { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../../Utils/Tiled/TilesetRenderer";
+import TilesetWavedRenderer from "../../Utils/Tiled/TilesetWavedRenderer";
 
 let interpolatedMouseX = 0;
 let interpolatedMouseY = 0;
@@ -37,11 +37,6 @@ const TAU = Math.PI * 2;
 function angleToRad(angle: number) {
     return angle / 255 * TAU;
 }
-
-/**
- * Current ui of menu
- */
-let gameUiCurrentBiome: Biome = Biome.GARDEN;
 
 export default class UIGame extends AbstractUI {
     private readonly DEAD_BACKGROUND_TARGET_OPACITY: number = 0.3;
@@ -103,7 +98,9 @@ export default class UIGame extends AbstractUI {
 
     public waveSelfId: number = -1;
 
-    override readonly CLIENTBOUND_HANDLER = {
+    accessor biome: Biome = Biome.GARDEN;
+
+    override readonly CLIENTBOUND_HANDLERS = {
         [Clientbound.WAVE_SELF_ID]: (reader: BinaryReader): void => {
             this.waveSelfId = reader.readUInt32();
         },
@@ -314,7 +311,7 @@ export default class UIGame extends AbstractUI {
                 // TODO: implement
             }
         },
-    } as const satisfies StaticAdherableClientboundHandler;
+    } as const satisfies StaticAdheredClientboundHandlers;
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
@@ -488,6 +485,8 @@ export default class UIGame extends AbstractUI {
         ));
 
         {
+            let deadMenuCloser: Button;
+
             this.deadMenuContainer = new StaticVContainer(
                 () => ({
                     x: -(this.deadMenuContainer.w / 2),
@@ -515,7 +514,7 @@ export default class UIGame extends AbstractUI {
 
                 new StaticSpace(100, 100),
 
-                new Button(
+                (deadMenuCloser = new Button(
                     {
                         w: 88,
                         h: 24,
@@ -541,12 +540,18 @@ export default class UIGame extends AbstractUI {
                     () => {
                         this.wasDeadMenuContinued = true;
 
-                        this.deadMenuContainer.setVisible(false, true, AnimationType.SLIDE, UIGame.DEAD_MENU_CONTAINER_ANIMATION_CONFIG);
+                        this.deadMenuContainer.setVisible(
+                            false, 
+                            <ComponentCloser><unknown>deadMenuCloser, 
+                            true, 
+                            AnimationType.SLIDE, 
+                            UIGame.DEAD_MENU_CONTAINER_ANIMATION_CONFIG,
+                        );
                     },
 
                     "#1dd129",
                     true,
-                ),
+                )),
                 new StaticSpace(0, 4),
                 new Text(
                     {},
@@ -556,7 +561,7 @@ export default class UIGame extends AbstractUI {
                 ),
             );
 
-            this.deadMenuContainer.setVisible(false, false);
+            this.deadMenuContainer.setVisible(false, null, false);
 
             this.addComponent(this.deadMenuContainer);
         }
@@ -622,7 +627,7 @@ export default class UIGame extends AbstractUI {
                 ),
             );
 
-            this.gameOverMenuContainer.setVisible(false, false);
+            this.gameOverMenuContainer.setVisible(false, null, false);
 
             this.addComponent(this.gameOverMenuContainer);
         }
@@ -648,7 +653,7 @@ export default class UIGame extends AbstractUI {
                 new CoordinatedStaticSpace(1, 1, 0, 16),
             );
 
-            this.youWillRespawnNextWaveContainer.setVisible(false, false);
+            this.youWillRespawnNextWaveContainer.setVisible(false, null, false);
 
             this.addComponent(this.youWillRespawnNextWaveContainer);
         }
@@ -689,7 +694,7 @@ export default class UIGame extends AbstractUI {
             },
         ));
 
-        this.addComponent(this.waveEnemyIcons = new (InlineRenderingCall(UIGameWaveEnemyIcons))(
+        this.addComponent(this.waveEnemyIcons = new (InlineRendering(UIGameWaveEnemyIcons))(
             () => ({
                 x: -(this.waveEnemyIcons.w / 2),
                 y: 58,
@@ -698,7 +703,7 @@ export default class UIGame extends AbstractUI {
             }),
         ));
 
-        this.addComponent(this.inventory = new (InlineRenderingCall(UIGameInventory))(
+        this.addComponent(this.inventory = new (InlineRendering(UIGameInventory))(
             () => ({
                 x: -(this.inventory.w / 2),
                 y: 105,
@@ -977,11 +982,11 @@ export default class UIGame extends AbstractUI {
                 if (this.wasDeadMenuContinued) {
                     if (this.wasWaveEnded) {
                         if (!this.gameOverMenuContainer.visible) {
-                            this.gameOverMenuContainer.setVisible(true, true, AnimationType.FADE);
+                            this.gameOverMenuContainer.setVisible(true, null, true, AnimationType.FADE);
                         }
 
                         if (this.youWillRespawnNextWaveContainer.isOutAnimatable) {
-                            this.youWillRespawnNextWaveContainer.setVisible(false, true, AnimationType.FADE, { defaultDurationOverride: 500 });
+                            this.youWillRespawnNextWaveContainer.setVisible(false, null, true, AnimationType.FADE, { defaultDurationOverride: 500 });
                         }
                     } else {
                         // Only fade-out when not game over
@@ -991,13 +996,13 @@ export default class UIGame extends AbstractUI {
                         );
 
                         if (!this.youWillRespawnNextWaveContainer.visible) {
-                            this.youWillRespawnNextWaveContainer.setVisible(true, true, AnimationType.FADE, { defaultDurationOverride: 500 });
+                            this.youWillRespawnNextWaveContainer.setVisible(true, null, true, AnimationType.FADE, { defaultDurationOverride: 500 });
                         }
                     }
                 } else {
                     // If not rendered dead menu, render it
                     if (!this.deadMenuContainer.visible) {
-                        this.deadMenuContainer.setVisible(true, true, AnimationType.SLIDE, UIGame.DEAD_MENU_CONTAINER_ANIMATION_CONFIG);
+                        this.deadMenuContainer.setVisible(true, null, true, AnimationType.SLIDE, UIGame.DEAD_MENU_CONTAINER_ANIMATION_CONFIG);
                     }
                 }
             } else {
@@ -1006,11 +1011,11 @@ export default class UIGame extends AbstractUI {
                 this.deadMenuBackgroundOpacity = 0;
 
                 if (this.deadMenuContainer.isOutAnimatable) {
-                    this.deadMenuContainer.setVisible(false, true, AnimationType.SLIDE, UIGame.DEAD_MENU_CONTAINER_ANIMATION_CONFIG);
+                    this.deadMenuContainer.setVisible(false, null, true, AnimationType.SLIDE, UIGame.DEAD_MENU_CONTAINER_ANIMATION_CONFIG);
                 }
 
                 if (this.youWillRespawnNextWaveContainer.isOutAnimatable) {
-                    this.youWillRespawnNextWaveContainer.setVisible(false, true, AnimationType.FADE, { defaultDurationOverride: 500 });
+                    this.youWillRespawnNextWaveContainer.setVisible(false, null, true, AnimationType.FADE, { defaultDurationOverride: 500 });
                 }
             }
         }
@@ -1085,20 +1090,12 @@ export default class UIGame extends AbstractUI {
     }
 
     private leaveGame() {
-        this.gameOverMenuContainer.setVisible(false, true, AnimationType.FADE, {
+        this.gameOverMenuContainer.setVisible(false, null, true, AnimationType.FADE, {
             defaultDurationOverride: 1000,
         });
 
         clientWebsocket.packetServerbound.sendWaveLeave();
 
         uiCtx.switchUI("title");
-    }
-
-    set biome(biome: Biome) {
-        gameUiCurrentBiome = biome;
-    }
-
-    get biome(): Biome {
-        return gameUiCurrentBiome;
     }
 }

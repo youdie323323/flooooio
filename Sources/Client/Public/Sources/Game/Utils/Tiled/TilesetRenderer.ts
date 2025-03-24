@@ -1,7 +1,7 @@
 import { Canvg, presets } from "canvg";
-import { Biome } from "../../../../../../../Shared/Biome";
-import { antennaScaleFactor } from "../../../../../../Main";
-import { uiScaleFactor } from "../../UI";
+import { Biome } from "../../../../../../Shared/Biome";
+import { antennaScaleFactor } from "../../../../../Main";
+import { uiScaleFactor } from "../../UI/UI";
 
 const TAU = Math.PI * 2;
 
@@ -360,10 +360,11 @@ export default class TilesetRenderer {
     ) {
         ctx.save();
 
-        ctx.lineWidth = (width + height) * antennaScaleFactor;
-        ctx.beginPath();
+        ctx.lineWidth = (width + height) * 5 * antennaScaleFactor;
         ctx.strokeStyle = 'black';
         ctx.globalAlpha = 0.14;
+
+        ctx.beginPath();
         ctx.arc(
             centerX,
             centerY,
@@ -402,11 +403,9 @@ export default class TilesetRenderer {
                 const x = startX + i * scaledTilesetSize;
                 const y = startY + j * scaledTilesetSize;
 
-                if (!this.isWithinBounds(x, y, scaledTilesetSize, width, height)) {
-                    continue;
+                if (this.isWithinBounds(x, y, scaledTilesetSize, width, height)) {
+                    this.renderTile(ctx, tileset[0], x, y, scaledTilesetSize);
                 }
-
-                this.renderTile(ctx, tileset[0], x, y, scaledTilesetSize);
             }
         }
 
