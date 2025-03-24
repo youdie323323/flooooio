@@ -69,7 +69,9 @@ export class SVGLogo extends Logo {
         layoutOptions: MaybePointerLike<LayoutOptions>,
 
         protected readonly svg: string,
-        protected readonly svgCoef: number = 0.8,
+
+        protected readonly sizeCoef: MaybePointerLike<number> = 0.8,
+        protected readonly rotation: MaybePointerLike<number> = 0,
     ) {
         super(layoutOptions);
 
@@ -95,12 +97,19 @@ export class SVGLogo extends Logo {
 
         ctx.save();
 
-        // Draw logo
         if (this.svgCanvas) {
-            const computedSvgCoef = Component.computePointerLike(this.svgCoef);
+            const computedSizeCoef = Component.computePointerLike(this.sizeCoef);
+            const computedRotation = Component.computePointerLike(this.rotation);
 
-            const drawWidth = this.w * computedSvgCoef;
-            const drawHeight = this.h * computedSvgCoef;
+            const drawWidth = this.w * computedSizeCoef;
+            const drawHeight = this.h * computedSizeCoef;
+
+            const centerX = this.x + this.w / 2;
+            const centerY = this.y + this.h / 2;
+
+            ctx.translate(centerX, centerY);
+            ctx.rotate(computedRotation);
+            ctx.translate(-centerX, -centerY);
 
             ctx.drawImage(
                 this.svgCanvas,

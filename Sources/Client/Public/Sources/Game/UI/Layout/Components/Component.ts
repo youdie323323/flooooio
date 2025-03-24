@@ -41,9 +41,11 @@ export type Components =
     >
     // UI-native components (like UITitlePlayerProfile)
     | Satisfies<
-        InstanceType<abstract new (...args: any[]) => Component & DynamicLayoutable>,
+        InstanceType<abstract new (...args: ReadonlyArray<any>) => Component & DynamicLayoutable>,
         DynamicLayoutable
     >;
+
+export type ComponentsConstructor = new (...args: ReadonlyArray<any>) => Components;
 
 const observerBrand = Symbol("observerBrand");
 
@@ -521,6 +523,14 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
                 }
             }
         }
+
+        // ctx.save();
+
+        // ctx.strokeStyle = "blue";
+        // ctx.lineWidth = 1;
+        // ctx.strokeRect(this.x, this.y, this.w, this.h);
+
+        // ctx.restore();
     }
 
     protected static computePointerLike<T>(p: MaybePointerLike<T>): T {

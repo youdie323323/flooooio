@@ -8,7 +8,6 @@ import type { AutomaticallySizedLayoutOptions, SizeKeys, SquareSizeLayoutOptions
 import ExtensionBase from "../../Extensions/Extension";
 
 export const calculateStrokeWidth = memo((fontSize: number): number => {
-    // 80 / 8.333333830038736 (actually this is 8+1/3 but floating point exception) = 9.59999942779541
     return fontSize / 8.333333830038736;
 });
 
@@ -21,6 +20,7 @@ export default class Text extends ExtensionBase(Component<ClipboardEvents>) {
     public override[OBSTRUCTION_AFFECTABLE]: boolean = false;
 
     private static readonly TEXT_WIDTH_OFFSET: number = 10;
+    private static readonly LINE_HEIGHT_MULTIPLIER: number = 1.4;
 
     constructor(
         protected readonly layoutOptions: MaybePointerLike<AutomaticallySizedLayoutOptions>,
@@ -29,6 +29,7 @@ export default class Text extends ExtensionBase(Component<ClipboardEvents>) {
         protected readonly fontSize: MaybePointerLike<number>,
         protected readonly fillStyle: MaybePointerLike<ColorCode> = "#ffffff",
         protected readonly textAlign: MaybePointerLike<CanvasTextAlign> = "center",
+        protected readonly wordWrapMaxWidth: MaybePointerLike<number | null> = null,
 
         isCopyable: boolean = false,
         copySource?: MaybePointerLike<string>,
@@ -48,7 +49,6 @@ export default class Text extends ExtensionBase(Component<ClipboardEvents>) {
 
             if (computedIsCopyable) {
                 this.context.canvas.style.cursor = "pointer";
-
                 isHovered = true;
             }
         });
@@ -58,7 +58,6 @@ export default class Text extends ExtensionBase(Component<ClipboardEvents>) {
 
             if (computedIsCopyable) {
                 this.context.canvas.style.cursor = "default";
-
                 isHovered = false;
             }
         });
@@ -75,30 +74,68 @@ export default class Text extends ExtensionBase(Component<ClipboardEvents>) {
         });
     }
 
+    private getWrappedLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): Array<string> {
+        const words = text.split(" ");
+        const lines: Array<string> = new Array();
+
+        let currentLine = words[0];
+
+        for (let i = 1; i < words.length; i++) {
+            const word = words[i];
+            const width = ctx.measureText(currentLine + " " + word).width;
+
+            if (width < maxWidth) {
+                currentLine += " " + word;
+            } else {
+                lines.push(currentLine);
+                currentLine = word;
+            }
+        }
+
+        lines.push(currentLine);
+
+        return lines;
+    }
+
     private calculateSize(ctx: CanvasRenderingContext2D): Pick<LayoutOptions, SizeKeys> {
         const computedFontSize = Component.computePointerLike(this.fontSize);
         const computedText = Component.computePointerLike(this.text);
         const computedTextAlign = Component.computePointerLike(this.textAlign);
+        const computedWordWrapMaxWidth = Component.computePointerLike(this.wordWrapMaxWidth);
 
         ctx.save();
 
         ctx.textAlign = computedTextAlign;
         ctx.font = `${computedFontSize}px Ubuntu`;
-        const {
-            width,
-            fontBoundingBoxAscent,
-            fontBoundingBoxDescent,
-        } = ctx.measureText(computedText);
+
+        const { LINE_HEIGHT_MULTIPLIER, TEXT_WIDTH_OFFSET } = Text;
+
+        let width: number;
+        let height: number;
+
+        if (computedWordWrapMaxWidth) {
+            const lines = this.getWrappedLines(ctx, computedText, computedWordWrapMaxWidth);
+            const lineHeight = computedFontSize * LINE_HEIGHT_MULTIPLIER;
+
+            width = computedWordWrapMaxWidth;
+            height = lineHeight * lines.length;
+        } else {
+            const metrics = ctx.measureText(computedText);
+
+            width = metrics.width + (
+                computedTextAlign === "center"
+                    ? TEXT_WIDTH_OFFSET
+                    : 0
+            );
+
+            height = metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
+        }
 
         ctx.restore();
 
         return {
-            w: width + (
-                computedTextAlign === "center"
-                    ? Text.TEXT_WIDTH_OFFSET
-                    : 0
-            ),
-            h: fontBoundingBoxAscent + fontBoundingBoxDescent,
+            w: width,
+            h: height,
         } as const;
     }
 
@@ -139,39 +176,50 @@ export default class Text extends ExtensionBase(Component<ClipboardEvents>) {
         const computedFontSize = Component.computePointerLike(this.fontSize);
         const computedText = Component.computePointerLike(this.text);
         const computedTextAlign = Component.computePointerLike(this.textAlign);
+        const computedWordWrapMaxWidth = Component.computePointerLike(this.wordWrapMaxWidth);
 
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        ctx.textBaseline = 'middle';
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.textBaseline = "middle";
         ctx.textAlign = computedTextAlign;
 
         ctx.fillStyle = computedFillStyle;
-        ctx.strokeStyle = '#000000';
+        ctx.strokeStyle = "#000000";
         ctx.font = `${computedFontSize}px Ubuntu`;
         ctx.lineWidth = calculateStrokeWidth(computedFontSize);
 
         let x = this.x;
         switch (computedTextAlign) {
-            case 'center':
+            case "center":
                 x += this.w / 2;
 
                 break;
 
-            case 'right':
+            case "right":
                 x += this.w;
 
                 break;
 
-            case 'left':
-            default:
-
-                break;
+            case "left":
+            default: break;
         }
 
-        const y = this.y + this.h / 2;
+        if (computedWordWrapMaxWidth) {
+            const lines = this.getWrappedLines(ctx, computedText, computedWordWrapMaxWidth);
+            const lineHeight = computedFontSize * Text.LINE_HEIGHT_MULTIPLIER;
 
-        ctx.strokeText(computedText, x, y);
-        ctx.fillText(computedText, x, y);
+            lines.forEach((line, index) => {
+                const y = this.y + (lineHeight * (index + 0.5));
+
+                ctx.strokeText(line, x, y);
+                ctx.fillText(line, x, y);
+            });
+        } else {
+            const y = this.y + this.h / 2;
+
+            ctx.strokeText(computedText, x, y);
+            ctx.fillText(computedText, x, y);
+        }
 
         ctx.restore();
     }

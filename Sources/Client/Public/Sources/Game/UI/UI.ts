@@ -251,10 +251,12 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
     }
 
     private isComponentInteractable(targetComponent: Components): boolean {
-        return this.isComponentObstructable(targetComponent) && (
-            hasInteractiveListeners(targetComponent) ||
-            hasClickableListeners(targetComponent)
-        );
+        return !this.isAncestorAnimatingOut(targetComponent) &&
+            this.isComponentObstructable(targetComponent) &&
+            (
+                hasInteractiveListeners(targetComponent) ||
+                hasClickableListeners(targetComponent)
+            );
     }
 
     private isComponentInteractableAtPosition(targetComponent: Components, x: number, y: number): boolean {
@@ -333,35 +335,37 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
 
         this.broadcastUnconditionalEvent("onMouseDown", event);
 
-        // Constant between operations
-        const { mouseX, mouseY } = this;
+        if (event.button == 0) {
+            // Constant between operations
+            const { mouseX, mouseY } = this;
 
-        // Click handling
-        for (const component of this.components) {
-            if (this.isComponentInteractableAtPosition(component, mouseX, mouseY)) {
-                this.clickedComponent = component;
-                this.clickedComponent.emit("onDown");
+            // Click handling
+            for (const component of this.components) {
+                if (this.isComponentInteractableAtPosition(component, mouseX, mouseY)) {
+                    this.clickedComponent = component;
+                    this.clickedComponent.emit("onDown");
 
-                break;
+                    break;
+                }
             }
-        }
 
-        // Broadcast onClickOutside event
-        // The reason placed this code outside loop is because this should broadcasted when clicked air (nothing)
-        this.components.values()
-            .filter(
-                c =>
-                    c !== this.clickedComponent &&
-                    c.lastOpener !== this.clickedComponent &&
-                    // Not overlap with component
-                    !this.overlapsComponent(c, mouseX, mouseY) &&
-                    // Supports outside of container which has static width/height
-                    !(
-                        c instanceof AbstractStaticContainer &&
-                        this.isChildDescendant(c, this.clickedComponent)
-                    ),
-            )
-            .forEach(c => c.emit("onClickOutside"));
+            // Broadcast onClickOutside event
+            // The reason placed this code outside loop is because this should broadcasted when clicked air (nothing)
+            this.components.values()
+                .filter(
+                    c =>
+                        c !== this.clickedComponent &&
+                        c.lastOpener !== this.clickedComponent &&
+                        // Not overlap with component
+                        !this.overlapsComponent(c, mouseX, mouseY) &&
+                        // Supports outside of container which has static width/height
+                        !(
+                            c instanceof AbstractStaticContainer &&
+                            this.isChildDescendant(c, this.clickedComponent)
+                        ),
+                )
+                .forEach(c => c.emit("onClickOutside"));
+        }
     }
 
     private handleMouseUp(event: MouseEvent): void {
@@ -369,13 +373,15 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
 
         this.broadcastUnconditionalEvent("onMouseUp", event);
 
-        if (this.clickedComponent) {
-            if (this.isComponentInteractableAtPosition(this.clickedComponent, this.mouseX, this.mouseY)) {
-                this.clickedComponent.emit("onUp");
-                this.clickedComponent.emit("onClick");
-            }
+        if (event.button == 0) {
+            if (this.clickedComponent) {
+                if (this.isComponentInteractableAtPosition(this.clickedComponent, this.mouseX, this.mouseY)) {
+                    this.clickedComponent.emit("onUp");
+                    this.clickedComponent.emit("onClick");
+                }
 
-            this.clickedComponent = null;
+                this.clickedComponent = null;
+            }
         }
     }
 

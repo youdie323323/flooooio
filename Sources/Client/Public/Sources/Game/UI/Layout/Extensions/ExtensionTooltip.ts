@@ -1,32 +1,36 @@
-import type { AnimationConfigOf, ComponentCloser, ComponentOpener, Components, MaybePointerLike } from "../Components/Component";
-import { AnimationType, OBSTRUCTION_AFFECTABLE } from "../Components/Component";
+import type { AnimationConfigOf, ComponentCloser, ComponentOpener, Components, FakeSetVisibleObserverType, FakeSetVisibleToggleType, MaybePointerLike } from "../Components/Component";
+import { AnimationType, Component, OBSTRUCTION_AFFECTABLE } from "../Components/Component";
 import type { PartialSizeLayoutOptions } from "../Components/WellKnown/Container";
 import { StaticTranslucentPanelContainer } from "../Components/WellKnown/Container";
 import type { ExtensionConstructor } from "./Extension";
 
-export type TooltipPosition = "top" | "bottom" | "left" | "right";
+export type TooltipAnchorPosition = "top" | "bottom" | "left" | "right";
 
-export const DEFAULT_TOOLTIP_POSITIONS = ["top", "bottom", "left", "right"] as const;
+export const TOOLTIP_FALLBACK_POSITIONS = ["top", "bottom", "left", "right"] as const;
 
-export default function Tooltip<T extends ExtensionConstructor>(
+export default function TooltipExtension<T extends ExtensionConstructor>(
     Base: T,
 
-    tooltipComponents: Array<Components>,
-    tooltipOffset: number,
-    tooltipPreferredPositions: ReadonlyArray<TooltipPosition> = DEFAULT_TOOLTIP_POSITIONS,
-    tooltipRectRadii: MaybePointerLike<number> = 3,
+    contentComponents: Array<Components>,
+    positionOffset: number,
+    anchorPositionPriority: ReadonlyArray<TooltipAnchorPosition> = TOOLTIP_FALLBACK_POSITIONS,
+    // TODO: hide when tooltip container overlaps with other component instead of this
+    shouldDisplayTooltip: MaybePointerLike<boolean> = true,
+    cornerRadius: MaybePointerLike<number> = 3,
 ) {
-    // For safety
-    tooltipPreferredPositions = tooltipPreferredPositions.concat(
-        DEFAULT_TOOLTIP_POSITIONS.filter(pos => tooltipPreferredPositions.indexOf(pos) === -1),
+    // Ensure all fallback positions are included
+    const completePositionPriority = anchorPositionPriority.concat(
+        TOOLTIP_FALLBACK_POSITIONS.filter(position => anchorPositionPriority.indexOf(position) === -1),
     );
 
     abstract class MixedBase extends Base {
-        private static readonly TOOLTIP_CONTAINER_ANIMATION_CONFIG = {
+        private static readonly FADE_ANIMATION_CONFIG = {
             defaultDurationOverride: 100,
         } as const satisfies AnimationConfigOf<AnimationType.FADE>;
 
         private tooltipContainer: StaticTranslucentPanelContainer;
+
+        private isHovered: boolean = false;
 
         constructor(...args: ReadonlyArray<any>) {
             super(...args);
@@ -34,35 +38,52 @@ export default function Tooltip<T extends ExtensionConstructor>(
             this.once("onInitialized", () => {
                 this.tooltipContainer =
                     new StaticTranslucentPanelContainer(
-                        () => this.findOptimalPosition(),
+                        () => this.calculateOptimalPosition(),
+                        cornerRadius,
+                    ).addChildren(...contentComponents);
 
-                        tooltipRectRadii,
-                    ).addChildren(...tooltipComponents);
-
-                // Avoid tooltip blocking other components overlap
+                // Prevent tooltip from blocking other components
                 this.tooltipContainer[OBSTRUCTION_AFFECTABLE] = false;
 
-                // Not visible first
+                // Initialize as hidden
                 this.tooltipContainer.setVisible(false, null, false);
 
                 this.context.addComponent(this.tooltipContainer);
             });
 
             this.on("onFocus", () => {
-                this.tooltipContainer.setVisible(true, <ComponentOpener><unknown>(this), true, AnimationType.FADE, MixedBase.TOOLTIP_CONTAINER_ANIMATION_CONFIG);
+                const computedShouldDisplayTooltip = Component.computePointerLike(shouldDisplayTooltip);
+
+                this.isHovered = true;
+
+                if (computedShouldDisplayTooltip) this.updateTooltipVisibility(true);
             });
 
             this.on("onBlur", () => {
-                this.tooltipContainer.setVisible(false, <ComponentCloser><unknown>(this), true, AnimationType.FADE, MixedBase.TOOLTIP_CONTAINER_ANIMATION_CONFIG);
+                const computedShouldDisplayTooltip = Component.computePointerLike(shouldDisplayTooltip);
+
+                this.isHovered = false;
+
+                if (computedShouldDisplayTooltip) this.updateTooltipVisibility(false);
             });
         }
 
-        private findOptimalPosition(): PartialSizeLayoutOptions {
+        private updateTooltipVisibility(isVisible: boolean): void {
+            this.tooltipContainer.setVisible(
+                <FakeSetVisibleToggleType>isVisible,
+                <FakeSetVisibleObserverType><unknown>(this),
+                true,
+                AnimationType.FADE,
+                MixedBase.FADE_ANIMATION_CONFIG,
+            );
+        }
+
+        private calculateOptimalPosition(): PartialSizeLayoutOptions {
             const {
-                x: targetX,
-                y: targetY,
-                w: targetWidth,
-                h: targetHeight,
+                x: anchorX,
+                y: anchorY,
+                w: anchorWidth,
+                h: anchorHeight,
             } = this;
 
             const {
@@ -70,53 +91,58 @@ export default function Tooltip<T extends ExtensionConstructor>(
                 h: tooltipHeight,
             } = this.tooltipContainer;
 
-            for (const position of tooltipPreferredPositions) {
-                let x = 0;
-                let y = 0;
+            for (const position of completePositionPriority) {
+                let proposedX = 0;
+                let proposedY = 0;
 
                 switch (position) {
                     case "top":
-                        x = targetX + (targetWidth / 2) - (tooltipWidth / 2);
-                        y = targetY - tooltipHeight - tooltipOffset;
-
+                        proposedX = anchorX + (anchorWidth / 2) - (tooltipWidth / 2);
+                        proposedY = anchorY - tooltipHeight - positionOffset;
                         break;
 
                     case "bottom":
-                        x = targetX + (targetWidth / 2) - (tooltipWidth / 2);
-                        y = targetY + targetHeight + tooltipOffset;
-
+                        proposedX = anchorX + (anchorWidth / 2) - (tooltipWidth / 2);
+                        proposedY = anchorY + anchorHeight + positionOffset;
                         break;
 
                     case "left":
-                        x = targetX - tooltipWidth - tooltipOffset;
-                        y = targetY + (targetHeight / 2) - (tooltipHeight / 2);
-
+                        proposedX = anchorX - tooltipWidth - positionOffset;
+                        proposedY = anchorY + (anchorHeight / 2) - (tooltipHeight / 2);
                         break;
 
                     case "right":
-                        x = targetX + targetWidth + tooltipOffset;
-                        y = targetY + (targetHeight / 2) - (tooltipHeight / 2);
-
+                        proposedX = anchorX + anchorWidth + positionOffset;
+                        proposedY = anchorY + (anchorHeight / 2) - (tooltipHeight / 2);
                         break;
                 }
 
-                // Check if tooltip fits within window bounds
+                // Validate position within viewport bounds
                 if (
-                    x >= 0 &&
-                    y >= 0 &&
-                    x + tooltipWidth <= this.context.canvas.width &&
-                    y + tooltipHeight <= this.context.canvas.height
+                    proposedX >= 0 &&
+                    proposedY >= 0 &&
+                    proposedX + tooltipWidth <= this.context.canvas.width &&
+                    proposedY + tooltipHeight <= this.context.canvas.height
                 ) {
-                    return { x, y };
+                    return { x: proposedX, y: proposedY };
                 }
             }
 
             return {};
         }
 
+        override render(ctx: CanvasRenderingContext2D): void {
+            super.render(ctx);
+
+            const computedShouldDisplayTooltip = Component.computePointerLike(shouldDisplayTooltip);
+
+            if (!computedShouldDisplayTooltip && this.tooltipContainer.desiredVisible) this.updateTooltipVisibility(false);
+
+            if (computedShouldDisplayTooltip && this.isHovered && !this.tooltipContainer.desiredVisible) this.updateTooltipVisibility(true);
+        }
+
         override destroy(): void {
             this.tooltipContainer.destroy();
-
             super.destroy();
         }
     }

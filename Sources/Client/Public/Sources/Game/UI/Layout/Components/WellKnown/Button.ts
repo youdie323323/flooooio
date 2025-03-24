@@ -17,7 +17,7 @@ export class Button extends StaticPanelContainer<StaticHContainer> {
     private isPressed: boolean = false;
     private isHovered: boolean = false;
 
-    private isValid: boolean = true;
+    protected isValid: boolean = true;
 
     /**
      * @param buttonComponents - Components to be added to button visibility, which are not "added"

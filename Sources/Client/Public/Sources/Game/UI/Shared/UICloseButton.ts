@@ -1,6 +1,6 @@
 import { Button } from "../Layout/Components/WellKnown/Button";
 import { SVGLogo } from "../Layout/Components/WellKnown/Logo";
-import CROSS_ICON_SVG from "./Assets/close_icon.svg";
+import CLOSE_ICON_SVG from "./Assets/close_icon.svg";
 import type { SquareSizeLayoutOptions } from "../Layout/Components/WellKnown/Container";
 
 // TODO: this should be DynamicLayoutable
@@ -32,7 +32,7 @@ export default class UICloseButton extends Button {
                         h: size,
                     },
                     
-                    CROSS_ICON_SVG,
+                    CLOSE_ICON_SVG,
                     0.95,
                 ),
             ],

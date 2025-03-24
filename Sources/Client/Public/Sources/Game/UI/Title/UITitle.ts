@@ -12,7 +12,7 @@ import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Peta
 import { renderEntity } from "../../Entity/Renderers/RendererRenderingLink";
 import type { FlooooIoDefaultSettingKeys } from "../../Utils/SettingStorage";
 import SettingStorage from "../../Utils/SettingStorage";
-import type { ComponentCloser, ComponentOpener, Components, FakeSetVisibleObserverType, FakeSetVisibleToggleType } from "../Layout/Components/Component";
+import type { ComponentCloser, ComponentOpener, Components, FakeSetVisibleObserverType, FakeSetVisibleToggleType, MaybePointerLike } from "../Layout/Components/Component";
 import { AnimationType } from "../Layout/Components/Component";
 import type { AnyStaticContainer } from "../Layout/Components/WellKnown/Container";
 import { StaticPanelContainer, CoordinatedStaticSpace, StaticHContainer, StaticSpace } from "../Layout/Components/WellKnown/Container";
@@ -32,11 +32,12 @@ import SWAP_BAG_SVG from "./Assets/swap_bag.svg";
 import MOLECULE_SVG from "./Assets/molecule.svg";
 import SCROLL_UNFURLED_SVG from "./Assets/scroll_unfurled.svg";
 import DISCORD_ICON_SVG from "./Assets/discord_icon.svg";
-import type { TooltipPosition } from "../Layout/Extensions/ExtensionTooltip";
+import type { TooltipAnchorPosition } from "../Layout/Extensions/ExtensionTooltip";
 import Tooltip from "../Layout/Extensions/ExtensionTooltip";
 import UIGameInventory from "../Game/UIGameInventory";
 import { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../../Utils/Tiled/TilesetRenderer";
 import TilesetWavedRenderer from "../../Utils/Tiled/TilesetWavedRenderer";
+import UISettingButton from "../Shared/UISettingButton";
 
 const TAU = Math.PI * 2;
 
@@ -230,26 +231,338 @@ export default class UITitle extends AbstractUI {
         this.resetWaveState();
 
         {
-            const makeTitleToolTippedButton = (position: TooltipPosition, desc: string, offset: number = 6) => {
+            const makeTitleToolTippedButton = <T extends typeof Button | typeof UISettingButton>(
+                ctor: T,
+                description: string,
+                positionOffset: number,
+                position: TooltipAnchorPosition,
+                shouldDisplayTooltip: MaybePointerLike<boolean> = true,
+            ) => {
                 return Tooltip(
-                    Button,
+                    ctor,
                     [
                         new Text(
                             { y: 5 },
-                            desc,
+                            description,
                             11,
                         ),
                         new CoordinatedStaticSpace(1, 1, 0, 22),
                     ],
-                    offset,
+                    positionOffset,
                     [position],
+                    shouldDisplayTooltip,
                 );
             };
 
-            {
+            const makeSettingComponents = (y: number, storageKey: FlooooIoDefaultSettingKeys, description: string): [
+                Toggle,
+                Text,
+            ] => {
+                const settingToggle = new Toggle(
+                    {
+                        x: 5,
+                        y: y - 1,
+                        w: 17,
+                        h: 17,
+                    },
+                    (t: boolean): void => {
+                        settingToggle.setToggle(t);
 
+                        SettingStorage.set(storageKey, t);
+                    },
+                )
+                    // Load existed setting
+                    .setToggle(SettingStorage.get(storageKey));
+
+                return [
+                    settingToggle,
+                    new Text(
+                        {
+                            x: 26,
+                            y,
+                        },
+                        description,
+                        11,
+                    ),
+                ];
+            };
+
+            let creditsContainerCloser: UICloseButton;
+
+            const creditsContainer = new StaticPanelContainer(
                 {
-                    const discordButton = new (makeTitleToolTippedButton("right", "Join our Discord community!"))(
+                    x: 72,
+                    y: 189 + .5,
+
+                    invertYCoordinate: true,
+                },
+
+                true,
+
+                "#aaaaaa",
+                0.1,
+            ).addChildren(
+                (creditsContainerCloser = new UICloseButton(
+                    {
+                        x: 178 - 4,
+                        y: 5,
+                    },
+                    12,
+
+                    () => {
+                        creditsContainer.setVisible(
+                            false,
+                            <ComponentCloser><unknown>creditsContainerCloser,
+                            true,
+                            AnimationType.SLIDE,
+                            {
+                                direction: "v",
+                                offsetSign: -1,
+                            },
+                        );
+                    },
+                )),
+
+                new Text(
+                    {
+                        x: 62.5,
+                        y: 4,
+                    },
+
+                    "Credits",
+                    16,
+                ),
+
+                // Yaaaaaaaaaaaaaaaaaaaaay
+                new Text(
+                    {
+                        x: 2 - .5,
+                        y: 40,
+                    },
+
+                    "Made by Youdi3",
+                    12,
+                ),
+
+                // Icon credits
+                new Text(
+                    {
+                        x: 6,
+                        y: 70,
+                    },
+
+                    "Some icons by Lorc & Skoll from game-icons.net",
+                    10.75,
+                    "#ffffff",
+                    "left",
+                    180,
+                ),
+
+                new Text(
+                    {
+                        x: 6,
+                        y: 110,
+                    },
+
+                    "Special thanks: Max Nest, k2r_n2iq and people who keep motivating me every time",
+                    10.75,
+                    "#ffffff",
+                    "left",
+                    180,
+                ),
+
+                new CoordinatedStaticSpace(15, 15, 178, 150 + .5),
+            );
+
+            const makeSettingGameUnrelatedButton = (y: number, description: string, callback: () => void): Button => {
+                const text: Text = new Text(
+                    () => ({
+                        x: 45,
+                        y: 1,
+                    }),
+
+                    description,
+                    11,
+                );
+
+                const button = new Button(
+                    {
+                        x: 5,
+                        y,
+
+                        w: 138,
+                        h: 14,
+                    },
+
+                    2,
+
+                    3,
+                    1,
+
+                    [text],
+
+                    callback,
+
+                    "#aaaaaa",
+
+                    true,
+                );
+
+                return button;
+            };
+
+            let settingContainerCloser: UICloseButton;
+
+            let creditsButton: Button;
+
+            const settingContainer = new StaticPanelContainer(
+                {
+                    x: 72,
+                    y: 225,
+
+                    invertYCoordinate: true,
+                },
+
+                true,
+
+                "#aaaaaa",
+                0.1,
+            ).addChildren(
+                (settingContainerCloser = new UICloseButton(
+                    {
+                        x: 150 - 4,
+                        y: 2,
+                    },
+                    12,
+
+                    () => {
+                        settingContainer.setVisible(
+                            false,
+                            <ComponentCloser><unknown>settingContainerCloser,
+                            true,
+                            AnimationType.SLIDE,
+                            {
+                                direction: "v",
+                                offsetSign: -1,
+                            },
+                        );
+                    },
+                )),
+
+                new Text(
+                    {
+                        x: 44,
+                        y: 4,
+                    },
+                    "Settings",
+                    16,
+                ),
+
+                // Keyboard movement
+                ...makeSettingComponents(40, "keyboard_control", "Keyboard movement"),
+
+                // Movement helper
+                ...makeSettingComponents(40 + 30, "movement_helper", "Movement helper"),
+
+                (creditsButton = makeSettingGameUnrelatedButton(40 + 30 + 30, "Credits", () => {
+                    settingContainer.setVisible(
+                        false,
+                        <ComponentCloser><unknown>creditsButton,
+                        true,
+                        AnimationType.SLIDE,
+                        {
+                            direction: "v",
+                            offsetSign: -1,
+                        },
+                    );
+
+                    creditsContainer.setVisible(
+                        <FakeSetVisibleToggleType>true,
+                        <FakeSetVisibleObserverType><unknown>creditsButton,
+                        true,
+                        AnimationType.SLIDE,
+                        {
+                            direction: "v",
+                            offsetSign: -1,
+                        },
+                    );
+                })),
+
+                new CoordinatedStaticSpace(15, 15, 150, 190 - 4),
+            );
+
+            let inventoryContainerCloser: UICloseButton;
+
+            const inventoryContainer = new StaticPanelContainer(
+                {
+                    x: 72,
+                    y: 86,
+
+                    invertYCoordinate: true,
+                },
+
+                true,
+
+                "#5a9fdb",
+                0.1,
+            ).addChildren(
+                (inventoryContainerCloser = new UICloseButton(
+                    {
+                        x: 246 - 4,
+                        y: 5,
+                    },
+                    12,
+
+                    () => {
+                        inventoryContainer.setVisible(
+                            false,
+                            <ComponentCloser><unknown>inventoryContainerCloser,
+                            true,
+                            AnimationType.SLIDE,
+                            {
+                                direction: "v",
+                                offsetSign: -1,
+                            },
+                        );
+                    },
+                )),
+
+                new Text(
+                    {
+                        x: 88,
+                        y: 4,
+                    },
+                    "Inventory",
+                    16,
+                ),
+
+                new Text(
+                    {
+                        x: 50,
+                        y: 40,
+                    },
+                    "Click on a petal to equip it",
+                    11,
+                ),
+
+                new CoordinatedStaticSpace(15, 15, 246, 47),
+            );
+
+            // Unvisible containers
+            creditsContainer.setVisible(false, null, false);
+            settingContainer.setVisible(false, null, false);
+            inventoryContainer.setVisible(false, null, false);
+
+            // Add containers
+            this.addComponents(
+                creditsContainer,
+                settingContainer,
+                inventoryContainer,
+            );
+
+            {
+                {
+                    const discordButton = new (makeTitleToolTippedButton(Button, "Join our Discord community!", 6, "right"))(
                         {
                             x: 15,
                             y: 286,
@@ -288,94 +601,13 @@ export default class UITitle extends AbstractUI {
                 }
 
                 {
-                    const makeSettingComponents = (y: number, storageKey: FlooooIoDefaultSettingKeys, description: string): [
-                        Toggle,
-                        Text,
-                    ] => {
-                        const settingToggle = new Toggle(
-                            {
-                                x: 5,
-                                y: y - 1,
-                                w: 17,
-                                h: 17,
-                            },
-                            (t: boolean): void => {
-                                settingToggle.setToggle(t);
-
-                                SettingStorage.set(storageKey, t);
-                            },
-                        )
-                            // Load existed setting
-                            .setToggle(SettingStorage.get(storageKey));
-
-                        return [
-                            settingToggle,
-                            new Text(
-                                {
-                                    x: 26,
-                                    y,
-                                },
-                                description,
-                                11,
-                            ),
-                        ];
-                    };
-
-                    let settingContainerCloser: UICloseButton;
-
-                    const settingContainer = new StaticPanelContainer(
-                        {
-                            x: 72,
-                            y: 225,
-
-                            invertYCoordinate: true,
-                        },
-
-                        true,
-
-                        "#aaaaaa",
-                        0.1,
-                    ).addChildren(
-                        (settingContainerCloser = new UICloseButton(
-                            {
-                                x: 150 - 4,
-                                y: 2,
-                            },
-                            12,
-
-                            () => {
-                                settingContainer.setVisible(
-                                    false,
-                                    <ComponentCloser><unknown>settingContainerCloser,
-                                    true,
-                                    AnimationType.SLIDE,
-                                    {
-                                        direction: "v",
-                                        offsetSign: -1,
-                                    },
-                                );
-                            },
-                        )),
-
-                        new Text(
-                            {
-                                x: 44,
-                                y: 4,
-                            },
-                            "Settings",
-                            16,
-                        ),
-
-                        // Keyboard movement
-                        ...makeSettingComponents(40, "keyboard_control", "Keyboard movement"),
-
-                        // Movement helper
-                        ...makeSettingComponents(40 + 30, "movement_helper", "Movement helper"),
-
-                        new CoordinatedStaticSpace(15, 15, 150, 190 - 4),
-                    );
-
-                    const settingButton = new (makeTitleToolTippedButton("right", "Inventory"))(
+                    const inventoryButton = new (makeTitleToolTippedButton(
+                        Button,
+                        "Inventory",
+                        6,
+                        "right",
+                        () => !inventoryContainer.desiredVisible,
+                    ))(
                         {
                             x: 15,
                             y: 229,
@@ -401,9 +633,9 @@ export default class UITitle extends AbstractUI {
                         ],
 
                         () => {
-                            settingContainer.setVisible(
-                                <FakeSetVisibleToggleType>!settingContainer.desiredVisible,
-                                <FakeSetVisibleObserverType><unknown>settingButton,
+                            inventoryContainer.setVisible(
+                                <FakeSetVisibleToggleType>!inventoryContainer.desiredVisible,
+                                <FakeSetVisibleObserverType><unknown>inventoryButton,
                                 true,
                                 AnimationType.SLIDE,
                                 {
@@ -417,15 +649,11 @@ export default class UITitle extends AbstractUI {
                         true,
                     );
 
-                    settingContainer.setVisible(false, null, false);
-
-                    this.addComponent(settingContainer);
-
-                    this.addComponent(settingButton);
+                    this.addComponent(inventoryButton);
                 }
 
                 {
-                    const craftButton = new (makeTitleToolTippedButton("right", "Crafting"))(
+                    const craftButton = new (makeTitleToolTippedButton(Button, "Crafting", 6, "right"))(
                         {
                             x: 15,
                             y: 173,
@@ -462,7 +690,7 @@ export default class UITitle extends AbstractUI {
                 }
 
                 {
-                    const changelogButton = new (makeTitleToolTippedButton("right", "Changelog"))(
+                    const changelogButton = new (makeTitleToolTippedButton(Button, "Changelog", 6, "right"))(
                         {
                             x: 15,
                             y: 116,
@@ -497,10 +725,47 @@ export default class UITitle extends AbstractUI {
 
                     this.addComponent(changelogButton);
                 }
+
+                {
+                    const settingButton = new (makeTitleToolTippedButton(
+                        UISettingButton,
+                        "Settings",
+                        6,
+                        "right",
+                        () => !settingContainer.desiredVisible,
+                    ))(
+                        {
+                            x: 15,
+                            y: 59,
+
+                            invertYCoordinate: true,
+                        },
+
+                        40,
+
+                        () => {
+                            settingContainer.setVisible(
+                                <FakeSetVisibleToggleType>!settingContainer.desiredVisible,
+                                <FakeSetVisibleObserverType><unknown>settingButton,
+                                true,
+                                AnimationType.SLIDE,
+                                {
+                                    // For some reason, the animation speed of the setting container in the original game is fast lol
+                                    defaultDurationOverride: 150,
+
+                                    direction: "v",
+                                    offsetSign: -1,
+                                },
+                            );
+                        },
+                    );
+
+                    this.addComponent(settingButton);
+                }
             }
 
             {
-                const discordLinkButton = new (makeTitleToolTippedButton("left", "Link your Discord account to save your progress!", 10))(
+                const discordLinkButton = new (makeTitleToolTippedButton(Button, "Link your Discord account to save your progress!", 10, "left"))(
                     {
                         x: 172,
                         y: 6,
@@ -1089,6 +1354,7 @@ export default class UITitle extends AbstractUI {
                             ],
                             2,
                             ["top"],
+                            true,
                             2,
                         )
                     )(
@@ -1100,6 +1366,7 @@ export default class UITitle extends AbstractUI {
                         9,
                         "#ffffff",
                         "left",
+                        null,
 
                         true,
                         () => this.waveRoomCode || "",
