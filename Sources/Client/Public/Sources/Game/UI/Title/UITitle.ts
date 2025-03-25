@@ -15,7 +15,7 @@ import SettingStorage from "../../Utils/SettingStorage";
 import type { ComponentCloser, ComponentOpener, Components, FakeSetVisibleObserverType, FakeSetVisibleToggleType, MaybePointerLike } from "../Layout/Components/Component";
 import { AnimationType } from "../Layout/Components/Component";
 import type { AnyStaticContainer } from "../Layout/Components/WellKnown/Container";
-import { StaticPanelContainer, CoordinatedStaticSpace, StaticHContainer, StaticSpace } from "../Layout/Components/WellKnown/Container";
+import { StaticPanelContainer, CoordinatedStaticSpace, StaticHContainer, StaticSpace, StaticVContainer } from "../Layout/Components/WellKnown/Container";
 import Text from "../Layout/Components/WellKnown/Text";
 import TextInput from "../Layout/Components/WellKnown/TextInput";
 import Toggle from "../Layout/Components/WellKnown/Toggle";
@@ -90,6 +90,10 @@ function drawRoundedPolygon(
     }
 
     ctx.closePath();
+}
+
+function dynamicJoinArray<T, S>(array: T[], separatorFn: () => S): (T | S)[] {
+    return array.flatMap((item, index) => index ? [separatorFn(), item] : [item]);
 }
 
 // TODO: send initial data of wave room instead of send 2 packets
@@ -294,7 +298,7 @@ export default class UITitle extends AbstractUI {
             const creditsContainer = new StaticPanelContainer(
                 {
                     x: 72,
-                    y: 189 + .5,
+                    y: 190,
 
                     invertYCoordinate: true,
                 },
@@ -424,7 +428,7 @@ export default class UITitle extends AbstractUI {
             const settingContainer = new StaticPanelContainer(
                 {
                     x: 72,
-                    y: 225,
+                    y: 225 + .5,
 
                     invertYCoordinate: true,
                 },
@@ -499,13 +503,13 @@ export default class UITitle extends AbstractUI {
 
             let inventoryContainerCloser: UICloseButton;
 
-            const inventoryContainer = new StaticPanelContainer(
-                {
+            const inventoryContainer: StaticPanelContainer = new StaticPanelContainer(
+                () => ({
                     x: 72,
-                    y: 86,
+                    y: 15 + inventoryContainer.h,
 
                     invertYCoordinate: true,
-                },
+                }),
 
                 true,
 
@@ -551,31 +555,50 @@ export default class UITitle extends AbstractUI {
                     11,
                 ),
 
-                new StaticHContainer(
+                new StaticVContainer(
                     {
-                        x: 4,
+                        x: 5,
                         y: 60,
                     },
+
+                    false,
+
+                    true,
                 ).addChildren(
-                    ...Array.from({ length: 5 }, () => new UIDraggableMobIcon(
-                        {},
+                    ...dynamicJoinArray(
+                        Array.from({ length: 2 }, () => new StaticHContainer({}).addChildren(
+                            ...dynamicJoinArray(
+                                Array.from({ length: 6 }, () => {
+                                    const icon: UIDraggableMobIcon = new UIDraggableMobIcon(
+                                        {},
 
-                        new Mob(
-                            -1,
-                            0,
-                            0,
-                            0,
-                            0,
-                            0,
-                            PetalType.BASIC,
-                            Rarity.COMMON,
-                            false,
-                            false,
-                        ),
-                    )),
+                                        new Mob(
+                                            -1,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            PetalType.BASIC,
+                                            Rarity.COMMON,
+                                            false,
+                                            false,
+                                        ),
+
+                                        1,
+
+                                        () => !icon.isDragging,
+                                    );
+
+                                    return icon;
+                                }),
+                                () => new StaticSpace(8, 0),
+                            ),
+                        )),
+                        () => new StaticSpace(0, 8),
+                    ),
+                    new StaticSpace(0, 5),
                 ),
-
-                new CoordinatedStaticSpace(15, 15, 246, 47),
             );
 
             // Unvisible containers
@@ -1058,10 +1081,6 @@ export default class UITitle extends AbstractUI {
                 "#5a9fdb",
                 true,
             );
-
-            function dynamicJoinArray<T, S>(array: T[], separatorFn: () => S): (T | S)[] {
-                return array.flatMap((item, index) => index ? [separatorFn(), item] : [item]);
-            }
 
             const makeBiomeSwitchButton = (
                 biomeName: string,

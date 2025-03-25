@@ -1,5 +1,5 @@
 import { MobType } from "../../../../../../../Shared/Entity/Statics/EntityType";
-import type { ColorCode} from "../../../../../../../Shared/Utils/Color";
+import type { ColorCode } from "../../../../../../../Shared/Utils/Color";
 import { darkened, DARKENED_BASE } from "../../../../../../../Shared/Utils/Color";
 import type Mob from "../../Mob";
 import type { RenderingContext } from "../RendererRenderingContext";
@@ -17,14 +17,34 @@ export default class MobRendererCentipede extends AbstractMobRenderer {
         const scale = entity.size / 40;
         ctx.scale(scale, scale);
 
-        ctx.beginPath();
-        for (let i = 0; i < 2; i++) {
-            ctx.save();
-            ctx.scale(1, i * 2 - 1);
-            ctx.translate(0, -3);
-            ctx.arc(0, 36, 18, 0, TAU);
-            ctx.restore();
+        this.drawCentiBody(context);
+
+        // Antennas
+        if (entity.isFirstSegment) {
+            const acolor = this.calculateDamageEffectColor(context, "#333333");
+
+            ctx.strokeStyle = acolor;
+            ctx.fillStyle = acolor;
+            ctx.lineWidth = 3;
+            for (let dir = -1; dir <= 1; dir += 2) {
+                ctx.beginPath();
+                ctx.moveTo(25, 10.21 * dir);
+                ctx.quadraticCurveTo(47.54, 11.62 * dir, 55.28, 30.63 * dir);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(55.28, 30.63 * dir, 5, 0, TAU);
+                ctx.fill();
+            }
         }
+    }
+
+    private drawCentiBody(context: RenderingContext<Mob>): void {
+        const { ctx, entity } = context;
+
+        ctx.beginPath();
+        ctx.arc(0, 33, 18, 0, TAU);
+        ctx.arc(0, -33, 18, 0, TAU);
         ctx.lineWidth = 7;
         ctx.lineJoin = ctx.lineCap = "round";
         ctx.strokeStyle = ctx.fillStyle = this.calculateDamageEffectColor(context, "#333333");
@@ -46,24 +66,5 @@ export default class MobRendererCentipede extends AbstractMobRenderer {
         ctx.lineWidth = 8;
         ctx.strokeStyle = this.calculateDamageEffectColor(context, darkened(bodyColor, DARKENED_BASE));
         ctx.stroke();
-
-        // Antennas
-        if (entity.isFirstSegment) {
-            const acolor = this.calculateDamageEffectColor(context, "#333333");
-
-            ctx.strokeStyle = acolor;
-            ctx.fillStyle = acolor;
-            ctx.lineWidth = 3;
-            for (let dir = -1; dir <= 1; dir += 2) {
-                ctx.beginPath();
-                ctx.moveTo(25, 10.21 * dir);
-                ctx.quadraticCurveTo(47.54, 11.62 * dir, 55.28, 30.63 * dir);
-                ctx.stroke();
-
-                ctx.beginPath();
-                ctx.arc(55.28, 30.63 * dir, 5, 0, TAU);
-                ctx.fill();
-            }
-        }
     }
 }

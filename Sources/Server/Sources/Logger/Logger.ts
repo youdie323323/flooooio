@@ -59,8 +59,8 @@ export class Logger {
     private emit(level: string, message: string, color: chalk.Chalk): void {
         const metadata = this.formatMetadata(this.#stack.render());
         const timestamp = this.getTimestamp();
-        const logLine = `${timestamp} ${color(level)} ${message} ${metadata}`;
-        console.log(logLine);
+
+        console.log(`${timestamp} ${color(level)} ${message} ${metadata}`);
     }
 
     /**

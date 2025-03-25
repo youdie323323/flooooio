@@ -24,13 +24,13 @@ export default function TooltipExtension<T extends ExtensionConstructor>(
     );
 
     abstract class MixedBase extends Base {
-        private static readonly FADE_ANIMATION_CONFIG = {
+        private static readonly TOOLTIP_FADE_ANIMATION_CONFIG = {
             defaultDurationOverride: 100,
         } as const satisfies AnimationConfigOf<AnimationType.FADE>;
 
         private tooltipContainer: StaticTranslucentPanelContainer;
 
-        private isHovered: boolean = false;
+        private tooltipIsHovered: boolean = false;
 
         constructor(...args: ReadonlyArray<any>) {
             super(...args);
@@ -54,7 +54,7 @@ export default function TooltipExtension<T extends ExtensionConstructor>(
             this.on("onFocus", () => {
                 const computedShouldDisplayTooltip = Component.computePointerLike(shouldDisplayTooltip);
 
-                this.isHovered = true;
+                this.tooltipIsHovered = true;
 
                 if (computedShouldDisplayTooltip) this.updateTooltipVisibility(true);
             });
@@ -62,7 +62,7 @@ export default function TooltipExtension<T extends ExtensionConstructor>(
             this.on("onBlur", () => {
                 const computedShouldDisplayTooltip = Component.computePointerLike(shouldDisplayTooltip);
 
-                this.isHovered = false;
+                this.tooltipIsHovered = false;
 
                 if (computedShouldDisplayTooltip) this.updateTooltipVisibility(false);
             });
@@ -74,7 +74,7 @@ export default function TooltipExtension<T extends ExtensionConstructor>(
                 <FakeSetVisibleObserverType><unknown>(this),
                 true,
                 AnimationType.FADE,
-                MixedBase.FADE_ANIMATION_CONFIG,
+                MixedBase.TOOLTIP_FADE_ANIMATION_CONFIG,
             );
         }
 
@@ -136,13 +136,15 @@ export default function TooltipExtension<T extends ExtensionConstructor>(
 
             const computedShouldDisplayTooltip = Component.computePointerLike(shouldDisplayTooltip);
 
-            if (!computedShouldDisplayTooltip && this.tooltipContainer.desiredVisible) this.updateTooltipVisibility(false);
+            if (computedShouldDisplayTooltip && this.tooltipIsHovered && !this.tooltipContainer.desiredVisible) this.updateTooltipVisibility(true);
 
-            if (computedShouldDisplayTooltip && this.isHovered && !this.tooltipContainer.desiredVisible) this.updateTooltipVisibility(true);
+            if (!computedShouldDisplayTooltip && this.tooltipContainer.desiredVisible) this.updateTooltipVisibility(false);
         }
 
         override destroy(): void {
-            this.tooltipContainer.destroy();
+            // tooltipContainer is not marked as child and destroyed as top-level component
+            // this.tooltipContainer.destroy();
+
             super.destroy();
         }
     }

@@ -1,4 +1,4 @@
-import { type MaybePointerLike } from "../Layout/Components/Component";
+import { Component, type MaybePointerLike } from "../Layout/Components/Component";
 import type { AutomaticallySizedLayoutOptions } from "../Layout/Components/WellKnown/Container";
 import { CoordinatedStaticSpace, StaticPanelContainer } from "../Layout/Components/WellKnown/Container";
 import Mob from "../../Entity/Mob";
@@ -44,6 +44,8 @@ export default class UIMobIcon extends StaticPanelContainer {
         public mobInstance: Mob,
 
         public amountAccumulator: number = 1,
+
+        private transparent: MaybePointerLike<boolean> = true,
     ) {
         super(
             layoutOptions,
@@ -92,7 +94,9 @@ export default class UIMobIcon extends StaticPanelContainer {
     }
 
     override render(ctx: CanvasRenderingContext2D): void {
-        {
+        const computedTransparent = Component.computePointerLike(this.transparent);
+
+        if (computedTransparent) {
             ctx.save();
 
             // Slightly transparent as same as florr.io
@@ -101,7 +105,7 @@ export default class UIMobIcon extends StaticPanelContainer {
             super.render(ctx);
 
             ctx.restore();
-        }
+        } else super.render(ctx);
 
         const amount = this.amountAccumulator;
         if (amount === 1) return;

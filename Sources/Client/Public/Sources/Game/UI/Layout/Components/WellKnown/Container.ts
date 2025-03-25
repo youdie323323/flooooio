@@ -297,10 +297,12 @@ export class StaticPanelContainer<Child extends Components = Components> extends
             ctx.restore();
         }
 
-        if (this.children.length > 0) {
+        const { children } = this;
+
+        if (children.length > 0) {
             const strokeWidth = this.getStrokeWidth();
 
-            this.children.forEach(child => {
+            children.forEach(child => {
                 const childLayout = child.cachedLayout({
                     ctx,
 
@@ -316,6 +318,8 @@ export class StaticPanelContainer<Child extends Components = Components> extends
                 child.setW(childLayout.w);
                 child.setH(childLayout.h);
             });
+
+            renderPossibleComponents(ctx, children);
         }
     }
 }
@@ -389,10 +393,10 @@ export class StaticTranslucentPanelContainer<Child extends Components = Componen
             ctx.restore();
         }
 
-        if (this.children.length > 0) {
-            ctx.save();
+        const { children } = this;
 
-            this.children.forEach(child => {
+        if (children.length > 0) {
+            children.forEach(child => {
                 const childLayout = child.cachedLayout({
                     ctx,
 
@@ -409,7 +413,7 @@ export class StaticTranslucentPanelContainer<Child extends Components = Componen
                 child.setH(childLayout.h);
             });
 
-            ctx.restore();
+            renderPossibleComponents(ctx, children);
         }
     }
 }
@@ -597,6 +601,8 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
                         (computedSpacingOverride ?? childLayout.w);
                 });
 
+                renderPossibleComponents(ctx, children);
+
                 for (const child of this.childPositions.keys()) {
                     if (!children.includes(child)) {
                         this.childPositions.delete(child);
@@ -629,6 +635,8 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
                         (computedReverseChildrenRender ? -1 : 1) *
                         (computedSpacingOverride ?? childLayout.w);
                 });
+
+                renderPossibleComponents(ctx, children);
             }
         }
     }
@@ -793,6 +801,8 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
                         (computedSpacingOverride ?? childLayout.h);
                 });
 
+                renderPossibleComponents(ctx, children);
+
                 for (const child of this.childPositions.keys()) {
                     if (!children.includes(child)) {
                         this.childPositions.delete(child);
@@ -826,6 +836,8 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
                         (computedReverseChildrenRender ? -1 : 1) *
                         (computedSpacingOverride ?? childLayout.h);
                 });
+
+                renderPossibleComponents(ctx, children);
             }
         }
     }
