@@ -282,7 +282,7 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
     /**
      * Component is visible, or not.
      */
-    public accessor visible: boolean = true;
+    public visible: boolean = true;
 
     /**
      * Desired visible.
@@ -290,7 +290,7 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
      * @remarks
      * Normal visible only set false when animation done, but this will force display the visible.
      */
-    public accessor desiredVisible: boolean = true;
+    public desiredVisible: boolean = true;
 
     /**
      * Determine if should move position while animating zoom animation.
@@ -348,9 +348,7 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
     public abstract layout(lc: LayoutContext): LayoutResult;
 
     /**
-     * Cached layout to reduce lags.
-     * 
-     * @deprecated - I decided not to use this for now. I might use it in the future, but for now just use layout method
+     * Cached layout method to reduce lags.
      */
     public cachedLayout(lc: LayoutContext): LayoutResult {
         const { containerWidth, containerHeight, originX, originY } = lc;
@@ -358,10 +356,10 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
         const { CACHE_KEY_DELIMITER } = Component;
 
         const cacheKey =
-            containerWidth + CACHE_KEY_DELIMITER +
+            containerWidth  + CACHE_KEY_DELIMITER +
             containerHeight + CACHE_KEY_DELIMITER +
-            originX + CACHE_KEY_DELIMITER +
-            originY +
+            originX         + CACHE_KEY_DELIMITER +
+            originY         + CACHE_KEY_DELIMITER +
             this.getCacheKey(lc);
 
         if (!this.layoutCache.isDirtyCache(cacheKey)) {
@@ -373,10 +371,12 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
 
         this.layoutCache.set(cacheKey, result);
 
+        console.log("generated new layout");
+
         return result;
     }
 
-    protected static readonly CACHE_KEY_DELIMITER: string = "|";
+    protected static readonly CACHE_KEY_DELIMITER: string = "_";
 
     /**
      * Generate cache key that ensure cache is same.
@@ -524,11 +524,9 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
         }
 
         // ctx.save();
-
         // ctx.strokeStyle = "blue";
         // ctx.lineWidth = 1;
         // ctx.strokeRect(this.x, this.y, this.w, this.h);
-
         // ctx.restore();
     }
 

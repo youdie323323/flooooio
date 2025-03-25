@@ -284,14 +284,14 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
         const scaledHeight = this.canvas.height / uiScaleFactor;
 
         this.getRootComponents().forEach(component => {
-            // Maybe this is good for cached layout but not for now
-            // if (component.isAnimating) return;
+            // Catching the layout on animation can cause big memory wasting
+            // if (component.isAnimating) component.invalidateLayoutCache();
 
             // Only call top-level invalidateLayoutCache, 
             // container invalidateLayoutCache will invalidate child layout too
             if (isResized) component.invalidateLayoutCache();
 
-            const layout = component.layout({
+            const layout = component.cachedLayout({
                 ctx,
 
                 containerWidth: scaledWidth,
@@ -335,7 +335,7 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
 
         this.broadcastUnconditionalEvent("onMouseDown", event);
 
-        if (event.button == 0) {
+        if (event.button === 0) {
             // Constant between operations
             const { mouseX, mouseY } = this;
 
@@ -373,7 +373,7 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
 
         this.broadcastUnconditionalEvent("onMouseUp", event);
 
-        if (event.button == 0) {
+        if (event.button === 0) {
             if (this.clickedComponent) {
                 if (this.isComponentInteractableAtPosition(this.clickedComponent, this.mouseX, this.mouseY)) {
                     this.clickedComponent.emit("onUp");
@@ -388,12 +388,12 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
     private handleMouseMove(event: MouseEvent): void {
         if (!event.isTrusted) return;
 
-        this.broadcastUnconditionalEvent("onMouseMove", event);
-
         // Update mouse position
         const rect = this.canvas.getBoundingClientRect();
         this.mouseX = ((event.clientX - rect.left) * (this.canvas.width / rect.width)) / uiScaleFactor;
         this.mouseY = ((event.clientY - rect.top) * (this.canvas.height / rect.height)) / uiScaleFactor;
+
+        this.broadcastUnconditionalEvent("onMouseMove", event);
 
         // Maybe too performance impact?
         // this.invalidateDynamicLayoutables();
@@ -503,18 +503,6 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
             ctx,
             this.getTopLevelRenderableComponents(),
         );
-
-        /*
-        this.components.forEach(c => {
-            ctx.save();
-
-            ctx.strokeStyle = "blue";
-            ctx.lineWidth = 1;
-            ctx.strokeRect(c.x, c.y, c.w, c.h);
-
-            ctx.restore();
-        }); 
-        */
     }
 
     /**

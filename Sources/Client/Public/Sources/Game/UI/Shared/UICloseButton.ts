@@ -1,3 +1,4 @@
+import type { ButtonCallback } from "../Layout/Components/WellKnown/Button";
 import { Button } from "../Layout/Components/WellKnown/Button";
 import { SVGLogo } from "../Layout/Components/WellKnown/Logo";
 import CLOSE_ICON_SVG from "./Assets/close_icon.svg";
@@ -10,7 +11,7 @@ export default class UICloseButton extends Button {
         
         size: number,
         
-        callback: () => void,
+        callback: ButtonCallback,
     ) {
         super(
             {

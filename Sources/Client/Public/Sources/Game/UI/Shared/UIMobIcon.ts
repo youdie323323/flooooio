@@ -5,7 +5,6 @@ import Mob from "../../Entity/Mob";
 import { RARITY_COLOR } from "../../../../../../Shared/Entity/Statics/EntityRarity";
 import { CanvasLogo } from "../Layout/Components/WellKnown/Logo";
 import { renderEntity } from "../../Entity/Renderers/RendererRenderingLink";
-import { MOB_PROFILES } from "../../../../../../Shared/Entity/Statics/Mob/MobProfiles";
 
 export default class UIMobIcon extends StaticPanelContainer {
     public static readonly ICON_SIZE: number = 30;
@@ -45,8 +44,6 @@ export default class UIMobIcon extends StaticPanelContainer {
         public mobInstance: Mob,
 
         public amountAccumulator: number = 1,
-
-        private readonly withName: boolean = false,
     ) {
         super(
             layoutOptions,
@@ -73,7 +70,10 @@ export default class UIMobIcon extends StaticPanelContainer {
                     w: 0,
                     h: 0,
                 },
+
                 (ctx: CanvasRenderingContext2D): void => {
+                    ctx.globalAlpha = 1;
+
                     // The coordinate cancel each other out
                     ctx.translate(-mobInstance.x, -mobInstance.y);
 
@@ -92,15 +92,19 @@ export default class UIMobIcon extends StaticPanelContainer {
     }
 
     override render(ctx: CanvasRenderingContext2D): void {
-        // Slightly transparent as same as florr.io
-        // ctx.globalAlpha = 0.8;
+        {
+            ctx.save();
 
-        super.render(ctx);
+            // Slightly transparent as same as florr.io
+            ctx.globalAlpha = 0.9;
+
+            super.render(ctx);
+
+            ctx.restore();
+        }
 
         const amount = this.amountAccumulator;
         if (amount === 1) return;
-
-        ctx.save();
 
         ctx.translate(this.x + this.w - 7, this.y + 8);
 
@@ -115,8 +119,6 @@ export default class UIMobIcon extends StaticPanelContainer {
         ctx.font = "7px Ubuntu";
         ctx.strokeText("x" + amount, 0, 0);
         ctx.fillText("x" + amount, 0, 0);
-
-        ctx.restore();
     }
 
     override destroy(): void {

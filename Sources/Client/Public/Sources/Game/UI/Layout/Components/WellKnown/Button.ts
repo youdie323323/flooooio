@@ -5,6 +5,8 @@ import { darkened, lightened } from "../../../../../../../../Shared/Utils/Color"
 import type { PartialSizeLayoutOptions } from "./Container";
 import { StaticHContainer, StaticPanelContainer } from "./Container";
 
+export type ButtonCallback = () => void;
+
 /**
  * Abstract button class.
  * 
@@ -14,8 +16,8 @@ import { StaticHContainer, StaticPanelContainer } from "./Container";
 export class Button extends StaticPanelContainer<StaticHContainer> {
     private static readonly INVALID_COLOR: ColorCode = "#aaaaa9";
 
-    private isPressed: boolean = false;
-    private isHovered: boolean = false;
+    protected isPressed: boolean = false;
+    protected isHovered: boolean = false;
 
     protected isValid: boolean = true;
 
@@ -32,7 +34,7 @@ export class Button extends StaticPanelContainer<StaticHContainer> {
 
         buttonComponents: Array<Components>,
 
-        protected readonly callback: () => void,
+        protected readonly callback: ButtonCallback,
 
         protected readonly buttonColor: MaybePointerLike<ColorCode>,
         protected readonly validate: MaybePointerLike<boolean>,

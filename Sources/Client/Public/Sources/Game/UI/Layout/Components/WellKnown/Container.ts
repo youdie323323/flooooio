@@ -301,7 +301,7 @@ export class StaticPanelContainer<Child extends Components = Components> extends
             const strokeWidth = this.getStrokeWidth();
 
             this.children.forEach(child => {
-                const childLayout = child.layout({
+                const childLayout = child.cachedLayout({
                     ctx,
 
                     containerWidth: this.w - (strokeWidth * 4),
@@ -395,7 +395,7 @@ export class StaticTranslucentPanelContainer<Child extends Components = Componen
             ctx.save();
 
             this.children.forEach(child => {
-                const childLayout = child.layout({
+                const childLayout = child.cachedLayout({
                     ctx,
 
                     containerWidth: this.w,
@@ -534,7 +534,7 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
                     currentX += computedSpacingOverride * (this.children.length - 1);
                 } else {
                     this.children.forEach(child => {
-                        const childLayout = child.layout({
+                        const childLayout = child.cachedLayout({
                             ctx,
 
                             containerWidth: this.w,
@@ -548,7 +548,7 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
                     });
 
                     currentX -= (
-                        this.children[0]?.layout({
+                        this.children[0]?.cachedLayout({
                             ctx,
 
                             containerWidth: this.w,
@@ -563,7 +563,7 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
 
             if (computedLerpChildren) {
                 this.children.forEach(child => {
-                    const childLayout = child.layout({
+                    const childLayout = child.cachedLayout({
                         ctx,
 
                         containerWidth: this.w,
@@ -606,7 +606,7 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
                 }
             } else {
                 this.children.forEach(child => {
-                    const childLayout = child.layout({
+                    const childLayout = child.cachedLayout({
                         ctx,
 
                         containerWidth: this.w,
@@ -729,7 +729,7 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
                     currentY = computedSpacingOverride * (this.children.length - 1);
                 } else {
                     for (const child of this.children) {
-                        const childLayout = child.layout({
+                        const childLayout = child.cachedLayout({
                             ctx,
 
                             containerWidth: this.w,
@@ -743,7 +743,7 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
                     }
 
                     currentY -= (
-                        this.children[0]?.layout({
+                        this.children[0]?.cachedLayout({
                             ctx,
 
                             containerWidth: this.w,
@@ -758,7 +758,7 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
 
             if (computedLerpChildren) {
                 this.children.forEach(child => {
-                    const childLayout = child.layout({
+                    const childLayout = child.cachedLayout({
                         ctx,
 
                         containerWidth: this.w,
@@ -800,7 +800,7 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
                 }
             } else {
                 this.children.forEach(child => {
-                    const childLayout = child.layout({
+                    const childLayout = child.cachedLayout({
                         ctx,
 
                         containerWidth: this.w,

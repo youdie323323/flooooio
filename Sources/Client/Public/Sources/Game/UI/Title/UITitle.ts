@@ -7,7 +7,7 @@ import { clientWebsocket, cameraController, deltaTime, uiCtx } from "../../../..
 import type { ColorCode } from "../../../../../../Shared/Utils/Color";
 import { DARKENED_BASE } from "../../../../../../Shared/Utils/Color";
 import { Rarity } from "../../../../../../Shared/Entity/Statics/EntityRarity";
-import { PETAL_TYPES } from "../../../../../../Shared/Entity/Statics/EntityType";
+import { MobType, PETAL_TYPES, PetalType } from "../../../../../../Shared/Entity/Statics/EntityType";
 import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
 import { renderEntity } from "../../Entity/Renderers/RendererRenderingLink";
 import type { FlooooIoDefaultSettingKeys } from "../../Utils/SettingStorage";
@@ -22,6 +22,7 @@ import Toggle from "../Layout/Components/WellKnown/Toggle";
 import Collidable from "../Layout/Extensions/ExtensionCollidable";
 import AbstractUI, { uiScaleFactor } from "../UI";
 import type BinaryReader from "../../../../../../Shared/Websocket/Binary/ReadWriter/Reader/BinaryReader";
+import type { ButtonCallback } from "../Layout/Components/WellKnown/Button";
 import { Button } from "../Layout/Components/WellKnown/Button";
 import { CanvasLogo, SVGLogo } from "../Layout/Components/WellKnown/Logo";
 import UITitlePlayerProfile from "./UITitlePlayerProfile";
@@ -38,6 +39,7 @@ import UIGameInventory from "../Game/UIGameInventory";
 import { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../../Utils/Tiled/TilesetRenderer";
 import TilesetWavedRenderer from "../../Utils/Tiled/TilesetWavedRenderer";
 import UISettingButton from "../Shared/UISettingButton";
+import UIDraggableMobIcon from "../Shared/UIDraggableMobIcon";
 
 const TAU = Math.PI * 2;
 
@@ -374,18 +376,14 @@ export default class UITitle extends AbstractUI {
                 new CoordinatedStaticSpace(15, 15, 178, 150 + .5),
             );
 
-            const makeSettingGameUnrelatedButton = (y: number, description: string, callback: () => void): Button => {
-                const text: Text = new Text(
-                    () => ({
-                        x: 45,
-                        y: 1,
-                    }),
+            const makeSettingGameUnrelatedButton = (
+                y: number,
 
-                    description,
-                    11,
-                );
+                text: string,
 
-                const button = new Button(
+                callback: ButtonCallback,
+            ): Button => {
+                return new Button(
                     {
                         x: 5,
                         y,
@@ -399,7 +397,17 @@ export default class UITitle extends AbstractUI {
                     3,
                     1,
 
-                    [text],
+                    [
+                        new Text(
+                            () => ({
+                                x: 45,
+                                y: 1,
+                            }),
+
+                            text,
+                            11,
+                        ),
+                    ],
 
                     callback,
 
@@ -407,8 +415,6 @@ export default class UITitle extends AbstractUI {
 
                     true,
                 );
-
-                return button;
             };
 
             let settingContainerCloser: UICloseButton;
@@ -1033,7 +1039,13 @@ export default class UITitle extends AbstractUI {
                 return array.flatMap((item, index) => index ? [separatorFn(), item] : [item]);
             }
 
-            const makeBiomeSwitchButton = (name: string, color: ColorCode, callback: () => void): Button => {
+            const makeBiomeSwitchButton = (
+                biomeName: string,
+
+                color: ColorCode,
+
+                callback: ButtonCallback,
+            ): Button => {
                 return new Button(
                     {
                         w: 42,
@@ -1048,7 +1060,7 @@ export default class UITitle extends AbstractUI {
                     [
                         new Text(
                             {},
-                            name,
+                            biomeName,
                             10,
                         ),
                     ],
@@ -1056,6 +1068,7 @@ export default class UITitle extends AbstractUI {
                     callback,
 
                     color,
+
                     true,
                 );
             };
@@ -1434,6 +1447,26 @@ export default class UITitle extends AbstractUI {
         }
 
         this.addComponent(gameNameText);
+
+        this.addComponent(new UIDraggableMobIcon(
+            {
+                x: 100,
+                y: 100,
+            },
+
+            new Mob(
+                -1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                PetalType.BASIC,
+                Rarity.COMMON,
+                false,
+                false,
+            ),
+        ));
     }
 
     override animationFrame() {
