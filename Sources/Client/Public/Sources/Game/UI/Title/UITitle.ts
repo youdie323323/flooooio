@@ -551,6 +551,30 @@ export default class UITitle extends AbstractUI {
                     11,
                 ),
 
+                new StaticHContainer(
+                    {
+                        x: 4,
+                        y: 60,
+                    },
+                ).addChildren(
+                    ...Array.from({ length: 5 }, () => new UIDraggableMobIcon(
+                        {},
+
+                        new Mob(
+                            -1,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            PetalType.BASIC,
+                            Rarity.COMMON,
+                            false,
+                            false,
+                        ),
+                    )),
+                ),
+
                 new CoordinatedStaticSpace(15, 15, 246, 47),
             );
 
@@ -1447,26 +1471,6 @@ export default class UITitle extends AbstractUI {
         }
 
         this.addComponent(gameNameText);
-
-        this.addComponent(new UIDraggableMobIcon(
-            {
-                x: 100,
-                y: 100,
-            },
-
-            new Mob(
-                -1,
-                0,
-                0,
-                0,
-                0,
-                0,
-                PetalType.BASIC,
-                Rarity.COMMON,
-                false,
-                false,
-            ),
-        ));
     }
 
     override animationFrame() {

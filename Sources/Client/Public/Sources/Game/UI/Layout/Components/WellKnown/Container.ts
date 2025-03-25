@@ -4,7 +4,7 @@ import ExtensionBase from "../../Extensions/Extension";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
 import type { Components, MaybePointerLike, AnimationConfigOf, AnimationType, ComponentOpener, ComponentCloser, FakeSetVisibleToggleType, FakeSetVisibleObserverType } from "../Component";
-import { Component, OBSTRUCTION_AFFECTABLE, renderPossibleComponent } from "../Component";
+import { Component, OBSTRUCTION_AFFECTABLE, renderPossibleComponent, renderPossibleComponents } from "../Component";
 
 type Optional<T, K extends keyof T> = Partial<Pick<T, K>> & Omit<T, K>;
 
@@ -315,8 +315,6 @@ export class StaticPanelContainer<Child extends Components = Components> extends
                 child.setY(childLayout.y);
                 child.setW(childLayout.w);
                 child.setH(childLayout.h);
-
-                renderPossibleComponent(ctx, child);
             });
         }
     }
@@ -409,8 +407,6 @@ export class StaticTranslucentPanelContainer<Child extends Components = Componen
                 child.setY(childLayout.y);
                 child.setW(childLayout.w);
                 child.setH(childLayout.h);
-
-                renderPossibleComponent(ctx, child);
             });
 
             ctx.restore();
@@ -521,7 +517,9 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
     override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
-        if (this.children.length > 0) {
+        const { children } = this;
+
+        if (children.length > 0) {
             const computedLerpChildren = Component.computePointerLike(this.lerpChildren);
 
             const computedCenterChildren = Component.computePointerLike(this.centerChildren);
@@ -531,9 +529,9 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
             let currentX = 0;
             if (computedReverseChildrenRender) {
                 if (computedSpacingOverride !== null) {
-                    currentX += computedSpacingOverride * (this.children.length - 1);
+                    currentX += computedSpacingOverride * (children.length - 1);
                 } else {
-                    this.children.forEach(child => {
+                    children.forEach(child => {
                         const childLayout = child.cachedLayout({
                             ctx,
 
@@ -548,7 +546,7 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
                     });
 
                     currentX -= (
-                        this.children[0]?.cachedLayout({
+                        children[0]?.cachedLayout({
                             ctx,
 
                             containerWidth: this.w,
@@ -562,7 +560,7 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
             }
 
             if (computedLerpChildren) {
-                this.children.forEach(child => {
+                children.forEach(child => {
                     const childLayout = child.cachedLayout({
                         ctx,
 
@@ -587,25 +585,25 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
                     const newX = currentPosX + (targetX - currentPosX) * AbstractStaticChildLerpableContainer.POSITION_LERP_FACTOR;
                     this.childPositions.set(child, newX);
 
-                    child.setX(newX);
-                    child.setY(targetY);
-                    child.setW(childLayout.w);
-                    child.setH(childLayout.h);
+                    if (child.isLayoutable) {
+                        child.setX(newX);
+                        child.setY(targetY);
+                        child.setW(childLayout.w);
+                        child.setH(childLayout.h);
+                    }
 
                     currentX +=
                         (computedReverseChildrenRender ? -1 : 1) *
                         (computedSpacingOverride ?? childLayout.w);
-
-                    renderPossibleComponent(ctx, child);
                 });
 
                 for (const child of this.childPositions.keys()) {
-                    if (!this.children.includes(child)) {
+                    if (!children.includes(child)) {
                         this.childPositions.delete(child);
                     }
                 }
             } else {
-                this.children.forEach(child => {
+                children.forEach(child => {
                     const childLayout = child.cachedLayout({
                         ctx,
 
@@ -620,16 +618,16 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
                         ? this.y + (this.h - childLayout.h) / 2
                         : childLayout.y;
 
-                    child.setX(childLayout.x);
-                    child.setY(targetY);
-                    child.setW(childLayout.w);
-                    child.setH(childLayout.h);
+                    if (child.isLayoutable) {
+                        child.setX(childLayout.x);
+                        child.setY(targetY);
+                        child.setW(childLayout.w);
+                        child.setH(childLayout.h);
+                    }
 
                     currentX +=
                         (computedReverseChildrenRender ? -1 : 1) *
                         (computedSpacingOverride ?? childLayout.w);
-
-                    renderPossibleComponent(ctx, child);
                 });
             }
         }
@@ -716,7 +714,9 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
     override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
-        if (this.children.length > 0) {
+        const { children } = this;
+
+        if (children.length > 0) {
             const computedLerpChildren = Component.computePointerLike(this.lerpChildren);
 
             const computedCenterChildren = Component.computePointerLike(this.centerChildren);
@@ -726,9 +726,9 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
             let currentY = 0;
             if (computedReverseChildrenRender) {
                 if (computedSpacingOverride !== null) {
-                    currentY = computedSpacingOverride * (this.children.length - 1);
+                    currentY = computedSpacingOverride * (children.length - 1);
                 } else {
-                    for (const child of this.children) {
+                    for (const child of children) {
                         const childLayout = child.cachedLayout({
                             ctx,
 
@@ -743,7 +743,7 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
                     }
 
                     currentY -= (
-                        this.children[0]?.cachedLayout({
+                        children[0]?.cachedLayout({
                             ctx,
 
                             containerWidth: this.w,
@@ -757,7 +757,7 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
             }
 
             if (computedLerpChildren) {
-                this.children.forEach(child => {
+                children.forEach(child => {
                     const childLayout = child.cachedLayout({
                         ctx,
 
@@ -781,25 +781,25 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
                     const newY = currentPosY + (targetY - currentPosY) * AbstractStaticChildLerpableContainer.POSITION_LERP_FACTOR;
                     this.childPositions.set(child, newY);
 
-                    child.setX(targetX);
-                    child.setY(newY);
-                    child.setW(childLayout.w);
-                    child.setH(childLayout.h);
+                    if (child.isLayoutable) {
+                        child.setX(targetX);
+                        child.setY(newY);
+                        child.setW(childLayout.w);
+                        child.setH(childLayout.h);
+                    }
 
                     currentY +=
                         (computedReverseChildrenRender ? -1 : 1) *
                         (computedSpacingOverride ?? childLayout.h);
-
-                    renderPossibleComponent(ctx, child);
                 });
 
                 for (const child of this.childPositions.keys()) {
-                    if (!this.children.includes(child)) {
+                    if (!children.includes(child)) {
                         this.childPositions.delete(child);
                     }
                 }
             } else {
-                this.children.forEach(child => {
+                children.forEach(child => {
                     const childLayout = child.cachedLayout({
                         ctx,
 
@@ -815,16 +815,16 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
                             ? this.x + (this.w - childLayout.w) / 2
                             : childLayout.x;
 
-                    child.setX(targetX);
-                    child.setY(childLayout.y);
-                    child.setW(childLayout.w);
-                    child.setH(childLayout.h);
+                    if (child.isLayoutable) {
+                        child.setX(targetX);
+                        child.setY(childLayout.y);
+                        child.setW(childLayout.w);
+                        child.setH(childLayout.h);
+                    }
 
                     currentY +=
                         (computedReverseChildrenRender ? -1 : 1) *
                         (computedSpacingOverride ?? childLayout.h);
-
-                    renderPossibleComponent(ctx, child);
                 });
             }
         }

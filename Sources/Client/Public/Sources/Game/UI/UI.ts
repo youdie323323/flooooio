@@ -265,13 +265,15 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
             !this.isComponentObstructed(targetComponent, x, y);
     }
 
-    private getRootComponents() {
-        return this.components
-            .values()
-            .filter(c => !this.childComponents.has(c));
+    private getRootComponents(): Array<Components> {
+        return Array.from(
+            this.components
+                .values()
+                .filter(c => !this.childComponents.has(c)),
+        );
     }
 
-    private getTopLevelRenderableComponents() {
+    private getTopLevelRenderableComponents(): Array<Components> {
         return this.getRootComponents()
             .filter(c => !c[BLACKLISTED]);
     }
@@ -285,11 +287,13 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
 
         this.getRootComponents().forEach(component => {
             // Catching the layout on animation can cause big memory wasting
-            // if (component.isAnimating) component.invalidateLayoutCache();
+            // if (component.isAnimating) return;
 
             // Only call top-level invalidateLayoutCache, 
             // container invalidateLayoutCache will invalidate child layout too
             if (isResized) component.invalidateLayoutCache();
+
+            if (!component.isLayoutable) return;
 
             const layout = component.cachedLayout({
                 ctx,

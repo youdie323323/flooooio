@@ -117,13 +117,20 @@ export function renderPossibleComponent(ctx: CanvasRenderingContext2D, component
     }
 }
 
+// TODO: this sort the components in the "container" not global, so its not possible to rendered last than other components outside the container
+export const sortComponents =
+    (components: Array<Components>): Array<Components> =>
+        components.toSorted(
+            (a: Components, b: Components) => Number(a[RENDERED_LAST]) - Number(b[RENDERED_LAST]),
+        );
+
 /**
  * Render all visible components.
  * 
  * @param components - Components to render
  */
-export function renderPossibleComponents(ctx: CanvasRenderingContext2D, components: Iterable<Components>): void {
-    for (const component of components) renderPossibleComponent(ctx, component);
+export function renderPossibleComponents(ctx: CanvasRenderingContext2D, components: Array<Components>): void {
+    for (const component of sortComponents(components)) renderPossibleComponent(ctx, component);
 }
 
 const getKeys = <T extends { [key: string]: unknown }>(obj: T): Array<keyof T> => {
@@ -190,8 +197,14 @@ export type ComponentEvents =
  */
 export const OBSTRUCTION_AFFECTABLE: unique symbol = Symbol("obstructionAffectable");
 
+/**
+ * Symbol that tell UI this component is rendered last.
+ */
+export const RENDERED_LAST: unique symbol = Symbol("renderedLast");
+
 export interface ComponentSymbol {
     [OBSTRUCTION_AFFECTABLE]?: boolean;
+    [RENDERED_LAST]?: boolean;
 }
 
 /**
@@ -201,6 +214,7 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
     extends Emitter<ComponentEvents & AdheredEvents> implements Layoutable, ComponentSymbol {
     // Prepare base symbols
     public [OBSTRUCTION_AFFECTABLE]: boolean = true;
+    public [RENDERED_LAST]: boolean = false;
 
     private static readonly ANIMATION_DEFAULT_DURATIONS = {
         [AnimationType.ZOOM]: 100,
@@ -342,6 +356,8 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
         return this.visible && !this.isAnimating;
     }
 
+    public accessor isLayoutable: boolean = true;
+
     /**
      * This method calculate layout by layout options, and parent container/screen.
      */
@@ -356,10 +372,10 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
         const { CACHE_KEY_DELIMITER } = Component;
 
         const cacheKey =
-            containerWidth  + CACHE_KEY_DELIMITER +
+            containerWidth + CACHE_KEY_DELIMITER +
             containerHeight + CACHE_KEY_DELIMITER +
-            originX         + CACHE_KEY_DELIMITER +
-            originY         + CACHE_KEY_DELIMITER +
+            originX + CACHE_KEY_DELIMITER +
+            originY + CACHE_KEY_DELIMITER +
             this.getCacheKey(lc);
 
         if (!this.layoutCache.isDirtyCache(cacheKey)) {
@@ -370,8 +386,6 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
         const result = this.layout(lc);
 
         this.layoutCache.set(cacheKey, result);
-
-        console.log("generated new layout");
 
         return result;
     }
