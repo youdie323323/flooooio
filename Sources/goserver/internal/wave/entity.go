@@ -4,6 +4,8 @@ import (
 	"math"
 	"math/rand/v2"
 	"sync"
+
+	"flooooio/internal/collision"
 )
 
 type Entity struct {
@@ -29,7 +31,7 @@ type Entity struct {
 
 // RandomAngle returns random angle of entity.
 func RandomAngle() float64 {
-	return rand.Float64()
+	return rand.Float64() * 255
 }
 
 // RandomId returns random id.
@@ -57,7 +59,7 @@ func GetRandomSafeCoordinate(mapRadius float64, safetyDistance float64, clients 
 			dx := client.X - x
 			dy := client.Y - y
 			distanceToClient := math.Sqrt(dx*dx + dy*dy)
-			
+
 			if distanceToClient < safetyDistance+client.Size {
 				isSafe = false
 
@@ -94,12 +96,16 @@ func (e *Entity) GetY() float64 {
 	return e.Y
 }
 
-// Nasty mixin like pattern but works
-func (e *Entity) OnUpdateTickBase(wp *WavePool) {
-	e.mu.Lock()
-	
-	e.EntityCoordinateMovement(wp)
-	e.EntityElimination(wp)
+// IsDeadNode determine if Node is dead.
+func IsDeadNode(wp *WavePool, n collision.Node) bool {
+	switch e := n.(type) {
+	case *Petal:
+	case *Mob:
+		return e.WasEliminated(wp)
 
-	e.mu.Unlock()
+	case *Player:
+		return e.IsDead
+	}
+
+	return true
 }

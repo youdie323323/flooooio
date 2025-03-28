@@ -14,8 +14,8 @@ type Petal struct {
 
 	Rarity native.Rarity
 
-	Master     *Player
-	PetBinding *Mob
+	Master      *Player
+	SummonedPet *Mob
 
 	SpinningOnMob bool
 
@@ -67,8 +67,8 @@ func NewPetal(
 
 		Rarity: rarity,
 
-		Master:     master,
-		PetBinding: nil,
+		Master:      master,
+		SummonedPet: nil,
 
 		SpinningOnMob: false,
 
@@ -86,13 +86,18 @@ func (p *Petal) CalculateMaxHealth() float64 {
 // WasEliminated determine if petal is eliminated.
 // This method exists because struct pointer petal reference doesnt nil'ed when removed.
 func (m *Petal) WasEliminated(wp *WavePool) bool {
-	return wp.findPetal(*m.Id) == nil
+	return wp.FindPetal(*m.Id) == nil
 }
 
 const petalVelocityFriction = 0.8125
 
 func (m *Petal) OnUpdateTickPetal(wp *WavePool) {
 	m.mu.Lock()
+
+	// Unneeded for petal
+	// m.EntityCoordinateMovement(wp)
+
+	m.PetalElimination(wp)
 
 	{ // Base onUpdateTick
 		m.Velocity[0] *= petalVelocityFriction
@@ -104,7 +109,6 @@ func (m *Petal) OnUpdateTickPetal(wp *WavePool) {
 
 	m.mu.Unlock()
 }
-
 
 // StaticPetal represents static data of Mob.
 type StaticPetal struct {

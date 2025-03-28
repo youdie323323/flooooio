@@ -106,19 +106,10 @@ func (pd *PlayerData) AssignWavePlayerId(id *PlayerId) {
 }
 
 func NewWaveRoom(b native.Biome, v WaveRoomVisibility) *WaveRoom {
-	waveRoom := &WaveRoom{
-		updatePacketBroadcastTicker: time.NewTicker(waveRoomUpdatePacketSendIntervalMS * time.Millisecond),
+	wr := &WaveRoom{
+		updatePacketBroadcastTicker: time.NewTicker(time.Second / waveRoomUpdatePacketSendIntervalMS),
 
-		WavePool: NewWavePool(&WaveData{
-			biome: b,
-
-			progress:         60,
-			progressTimer:    0,
-			progressRedTimer: 0,
-			progressIsRed:    false,
-
-			mapRadius: 2000,
-		}),
+		WavePool: nil,
 
 		biome:      b,
 		code:       GenerateRandomWaveRoomCode(),
@@ -127,10 +118,21 @@ func NewWaveRoom(b native.Biome, v WaveRoomVisibility) *WaveRoom {
 		candidates: make([]*StaticWaveRoomCandidatePlayer, 0, waveRoomMaxPlayerAmount),
 	}
 
-	// Start sending update packet
-	go waveRoom.startBroadcastUpdatePacket()
+	wr.WavePool = NewWavePool(wr, &WaveData{
+		Biome: b,
 
-	return waveRoom
+		Progress:         60,
+		ProgressTimer:    0,
+		ProgressRedTimer: 0,
+		ProgressIsRed:    false,
+
+		MapRadius: 2000,
+	})
+
+	// Start sending update packet
+	go wr.startBroadcastUpdatePacket()
+
+	return wr
 }
 
 // RegisterPlayer adds new player candidate.
@@ -167,9 +169,12 @@ func (w *WaveRoom) DeregisterPlayer(id WaveRoomPlayerId) (ok bool) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	if w.state != RoomStateWaiting {
-		return false
-	}
+	// If user leave while playing, its not working
+	/*
+		if w.state != RoomStateWaiting {
+			return false
+		}
+	*/
 
 	// Find player with matching id
 	for i, c := range w.candidates {
@@ -259,7 +264,7 @@ func (w *WaveRoom) UpdateRoomVisibility(caller WaveRoomPlayerId, v WaveRoomVisib
 	return false
 }
 
-func (w *WaveRoom) CheckAndUpdateRoomState() {
+func (w *WaveRoom) isAllCandidateReady() bool {
 	candidatesReady := true
 
 	for _, c := range w.candidates {
@@ -270,15 +275,13 @@ func (w *WaveRoom) CheckAndUpdateRoomState() {
 		}
 	}
 
-	if w.state == RoomStateWaiting && len(w.candidates) != 0 && candidatesReady {
+	return candidatesReady
+}
+
+func (w *WaveRoom) CheckAndUpdateRoomState() {
+	if w.state == RoomStateWaiting && len(w.candidates) != 0 && w.isAllCandidateReady() {
 		w.StartWave()
 	}
-
-	// TODO: implement
-	/*
-			this.state === WaveRoomState.PLAYING &&
-		            this.wavePool.getAllClients().every(p => p.isDead)
-	*/
 
 	if w.state == RoomStatePlaying && w.WavePool.IsAllPlayerDead() {
 		w.EndWave()
@@ -307,6 +310,7 @@ func (w *WaveRoom) Dispose() {
 	defer w.mu.Unlock()
 
 	w.WavePool.Dispose()
+	// Set nil because circular struct
 	w.WavePool = nil
 
 	if w.updatePacketBroadcastTicker != nil {
@@ -315,7 +319,6 @@ func (w *WaveRoom) Dispose() {
 	}
 
 	clear(w.candidates)
-	w.candidates = nil
 }
 
 // startBroadcastUpdatePacket starts sending update packets on an interval.

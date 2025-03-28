@@ -1,29 +1,30 @@
 package wave
 
 import (
-	"flooooio/internal/native"
 	"math"
 	"slices"
+
+	"flooooio/internal/native"
 )
 
 var PROJECTILE_MOB_TYPES = []native.MobType{}
 
-func (p *Mob) MobCoordinateBoundary(wp *WavePool) {
-	if slices.Contains(PROJECTILE_MOB_TYPES, p.Type) {
+func (m *Mob) MobCoordinateBoundary(wp *WavePool) {
+	if slices.Contains(PROJECTILE_MOB_TYPES, m.Type) {
 		return
 	}
 
-	mapRadius := float64(wp.waveData.mapRadius)
+	mapRadius := float64(wp.wd.MapRadius)
 
-	worldRadius := mapRadius - p.GetDesiredSize()
+	worldRadius := mapRadius - m.GetDesiredSize()
 
-	dx := p.X - float64(mapRadius)
-	dy := p.Y - float64(mapRadius)
+	dx := m.X - float64(mapRadius)
+	dy := m.Y - float64(mapRadius)
 
-	if math.Sqrt(dx * dx + dy * dy) > worldRadius {
+	if math.Sqrt(dx*dx+dy*dy) > worldRadius {
 		collisionAngle := math.Atan2(dy, dx)
-		
-		p.X = mapRadius + math.Cos(collisionAngle) * worldRadius
-		p.Y = mapRadius + math.Sin(collisionAngle) * worldRadius
+
+		m.X = mapRadius + math.Cos(collisionAngle)*worldRadius
+		m.Y = mapRadius + math.Sin(collisionAngle)*worldRadius
 	}
 }

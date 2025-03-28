@@ -12,7 +12,7 @@ func (p *Player) PlayerCoordinateBoundary(wp *WavePool) {
 		return
 	}
 
-	mapRadius := float64(wp.waveData.mapRadius)
+	mapRadius := float64(wp.wd.MapRadius)
 
 	worldRadius := mapRadius - p.Size
 

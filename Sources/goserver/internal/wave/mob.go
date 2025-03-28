@@ -1,6 +1,7 @@
 package wave
 
 import (
+	"flooooio/internal/collision"
 	"flooooio/internal/native"
 )
 
@@ -16,17 +17,26 @@ type Mob struct {
 
 	Rarity native.Rarity
 
-	TargetEntity *Entity
+	TargetEntity collision.Node
 
-	LastAttackedEntity *Entity
+	LastAttackedEntity collision.Node
 
-	PetMaster        *Entity
+	PetMaster        *Player
 	PetGoingToMaster bool
 
 	StarfishRegeningHealth bool
 
-	ConnectingSegment *Entity
+	// ConnectingSegment represents connected segment.
+	// Using collision.Node here because its not possible to Mob refer itself.
+	// Use type assertion.
+	ConnectingSegment collision.Node
 	IsFirstSegment    bool
+
+	// mob_special_movement.go struct definition
+	SineWaveIndex        int
+	RotationCounter      int
+	SpecialMovementTimer float64
+	IsSpecialMoving      bool
 }
 
 // Speed return speed within mob.
@@ -52,18 +62,22 @@ func (m *Mob) CalculateMaxHealth() float64 {
 // WasEliminated determine if mob is eliminated.
 // This method exists because struct pointer mob reference doesnt nil'ed when removed.
 func (m *Mob) WasEliminated(wp *WavePool) bool {
-	return wp.findMob(*m.Id) == nil
+	return wp.FindMob(*m.Id) == nil
 }
 
 func (m *Mob) OnUpdateTickMob(wp *WavePool) {
 	m.mu.Lock()
 
+	m.EntityCoordinateMovement(wp)
+	m.MobCoordinateBoundary(wp)
+	m.MobElimination(wp)
 	m.MobCollision(wp)
 
-	m.MobCoordinateBoundary(wp)
+	m.MobBodyConnection(wp)
+	m.MobAggressivePursuit(wp)
+	m.MobSpecialMovement(wp)
 
 	{ // Base onUpdateTick
-
 	}
 
 	m.mu.Unlock()
@@ -80,9 +94,9 @@ func NewMob(
 	x float64,
 	y float64,
 
-	petMaster *Entity,
+	petMaster *Player,
 
-	connectingSegment *Entity,
+	connectingSegment collision.Node,
 	isFirstSegment bool,
 ) *Mob {
 	profile := native.MobProfiles[mType]
@@ -95,7 +109,7 @@ func NewMob(
 			Magnitude: 0,
 			Angle:     RandomAngle(),
 
-			Size: calculateMobSize(profile, rarity),
+			Size: CalculateMobSize(profile, rarity),
 
 			// Max health
 			Health: 1,
@@ -118,10 +132,16 @@ func NewMob(
 
 		ConnectingSegment: connectingSegment,
 		IsFirstSegment:    isFirstSegment,
+
+		// mob_special_movement default values
+		SineWaveIndex:        0,
+		RotationCounter:      0,
+		SpecialMovementTimer: 0,
+		IsSpecialMoving:      false,
 	}
 }
 
-func calculateMobSize(profile native.MobData, rarity native.Rarity) float64 {
+func CalculateMobSize(profile native.MobData, rarity native.Rarity) float64 {
 	return profile.BaseSize * MobSizeFactor[rarity]
 }
 
@@ -137,17 +157,23 @@ var MobSizeFactor = map[native.Rarity]float64{
 }
 
 var MobSpeed = map[native.MobType]float64{
-	native.MobTypeBee:    3.5,
-	native.MobTypeSpider: 5,
+	native.MobTypeBee:    2.8,
+	native.MobTypeSpider: 4,
 
-	native.MobTypeCentipede:       3.5,
-	native.MobTypeCentipedeEvil:   4,
-	native.MobTypeCentipedeDesert: 14,
+	native.MobTypeCentipede:       2.8,
+	native.MobTypeCentipedeEvil:   3.2,
+	native.MobTypeCentipedeDesert: 11.2,
 
-	native.MobTypeBeetle: 3.5,
+	native.MobTypeBeetle: 2.8,
 
 	native.MobTypeSponge:    0,
 	native.MobTypeBubble:    0,
-	native.MobTypeJellyfish: 2,
-	native.MobTypeStarfish:  3.5,
+	native.MobTypeJellyfish: 1.6,
+	native.MobTypeStarfish:  2.8,
+}
+
+// mob_special_movement.go method definition
+
+func (m *Mob) ShouldShakeAngle() bool {
+	return m.Type == native.MobTypeBee
 }

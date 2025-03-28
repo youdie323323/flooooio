@@ -57,14 +57,12 @@ func (p *Player) IsCollidable() bool {
 	return !p.NoClip
 }
 
+const minHpLevel = 75.
+
 // calculatePlayerHp calculate hp by level.
 // 100 * x, x is upgrade.
-func calculatePlayerHp(level int) float64 {
-	baseHp := 100 * 2000
-	minLevel := 75
-	exponent := math.Max(float64(level), float64(minLevel)) - 1
-
-	return float64(baseHp) * math.Pow(1.02, exponent)
+func calculatePlayerHp(level float64) float64 {
+	return (100 * 11) * math.Pow(1.02, math.Max(level, minHpLevel) - 1)
 }
 
 // CalculateMaxHealth calculates max hp of player.
@@ -72,7 +70,7 @@ func (p *Player) CalculateMaxHealth() float64 {
 	return calculatePlayerHp(100)
 }
 
-const PlayerSpeedMultiplier = 10
+const PlayerSpeedMultiplier = 3
 
 // UpdateMovement update the movement.
 func (p *Player) UpdateMovement(angle uint8, magnitude uint8) {
@@ -85,17 +83,18 @@ func (p *Player) UpdateMood(m native.Mood) {
 	p.Mood = m
 }
 
-func (m *Player) OnUpdateTickPlayer(wp *WavePool) {
-	m.mu.Lock()
+func (p *Player) OnUpdateTickPlayer(wp *WavePool) {
+	p.mu.Lock()
 
-	m.PlayerCollision(wp)
-
-	m.PlayerCoordinateBoundary(wp)
+	p.EntityCoordinateMovement(wp)
+	p.PlayerCoordinateBoundary(wp)
+	p.PlayerElimination(wp)
+	p.PlayerCollision(wp)
 
 	{ // Base onUpdateTick
 	}
 
-	m.mu.Unlock()
+	p.mu.Unlock()
 }
 
 // NewPlayer return new player instance.

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
@@ -22,8 +21,6 @@ var upgrader = websocket.Upgrader{
 		return true
 	},
 }
-
-var wrService = wave.NewWaveRoomService()
 
 func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -53,24 +50,9 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// On close
 	defer func() {
 		wave.ConnManager.RemoveUser(conn)
-		conn.Close()
+		_ = conn.Close()
 
-		{
-			// Dont care about result
-			_ = wrService.LeaveCurrentWaveRoom(pd)
-
-			if pd.WrPId != nil && pd.WPId != nil {
-				wr := wrService.FindPlayerRoom(*pd.WrPId)
-
-				if wr != nil && wr.WavePool != nil {
-					player := wr.WavePool.SafeFindPlayer(*pd.WPId)
-
-					if player != nil {
-						wr.WavePool.SafeRemovePlayer(*pd.WPId)
-					}
-				}
-			}
-		}
+		wave.RemovePlayerFromService(pd)
 	}()
 
 	for {
@@ -122,7 +104,7 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 				return
 			}
 
-			wr := wrService.FindPlayerRoom(*pd.WrPId)
+			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
 				return
 			}
@@ -158,7 +140,7 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 				return
 			}
 
-			wr := wrService.FindPlayerRoom(*pd.WrPId)
+			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
 				return
 			}
@@ -169,6 +151,11 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 			}
 
 			player.UpdateMood(flag)
+		}
+
+	case network.ServerboundWaveLeave:
+		{
+			wave.RemovePlayerFromService(pd)
 		}
 
 	case network.ServerboundWaveRoomCreate:
@@ -184,7 +171,7 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 				return
 			}
 
-			id := wrService.NewPublicWaveRoom(pd, biome)
+			id := wave.WrService.NewPublicWaveRoom(pd, biome)
 
 			pd.AssignWaveRoomPlayerId(id)
 		}
@@ -203,7 +190,7 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 
 			code := wave.WaveRoomCode(maybeCode)
 
-			id := wrService.JoinWaveRoom(pd, code)
+			id := wave.WrService.JoinWaveRoom(pd, code)
 
 			pd.AssignWaveRoomPlayerId(id)
 		}
@@ -221,10 +208,10 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 				return
 			}
 
-			id := wrService.JoinPublicWaveRoom(pd, biome)
+			id := wave.WrService.JoinPublicWaveRoom(pd, biome)
 			if id == nil {
 				// If public wave room not found, make new public wave room
-				id = wrService.NewPublicWaveRoom(pd, biome)
+				id = wave.WrService.NewPublicWaveRoom(pd, biome)
 			}
 
 			pd.AssignWaveRoomPlayerId(id)
@@ -247,7 +234,7 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 				return
 			}
 
-			wr := wrService.FindPlayerRoom(*pd.WrPId)
+			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
 				return
 			}
@@ -272,7 +259,7 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 				return
 			}
 
-			wr := wrService.FindPlayerRoom(*pd.WrPId)
+			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
 				return
 			}
@@ -293,7 +280,7 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 			var name string
 			name, at = readString(message, at)
 
-			wr := wrService.FindPlayerRoom(*pd.WrPId)
+			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
 				return
 			}
@@ -303,7 +290,7 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 
 	case network.ServerboundWaveRoomLeave:
 		{
-			ok := wrService.LeaveCurrentWaveRoom(pd)
+			ok := wave.WrService.LeaveCurrentWaveRoom(pd)
 			if !ok {
 				return
 			}
@@ -330,5 +317,5 @@ func main() {
 	const PORT = 8080
 
 	slog.Info("Server running", "port", PORT)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", PORT), nil))
+	log.Fatal(http.ListenAndServe("0.0.0.0:8080", nil))
 }

@@ -13,6 +13,8 @@ type WaveRoomService struct {
 	mu sync.RWMutex
 }
 
+var WrService = NewWaveRoomService()
+
 func NewWaveRoomService() *WaveRoomService {
 	return &WaveRoomService{
 		waveRooms: make([]*WaveRoom, 0),
@@ -181,4 +183,27 @@ func (s *WaveRoomService) canPlayerJoin(pd *PlayerData) bool {
 	}
 
 	return true
+}
+
+func RemovePlayerFromService(pd *PlayerData) {
+	// Dont care about result
+	_ = WrService.LeaveCurrentWaveRoom(pd)
+
+	pd.WrPId = nil
+
+	if pd.WrPId != nil && pd.WPId != nil {
+		wr := WrService.FindPlayerRoom(*pd.WrPId)
+
+		if wr != nil && wr.WavePool != nil {
+			player := wr.WavePool.SafeFindPlayer(*pd.WPId)
+
+			if player != nil {
+				wr.WavePool.SafeRemovePlayer(*pd.WPId)
+
+				// TODO: remove binding of player (like pet)
+
+				pd.WPId = nil
+			}
+		}
+	}
 }

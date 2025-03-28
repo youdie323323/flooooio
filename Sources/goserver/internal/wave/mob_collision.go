@@ -2,6 +2,10 @@ package wave
 
 import "flooooio/internal/native"
 
+const (
+	mobToMobPushMultiplier = 0.75
+)
+
 func (m *Mob) MobCollision(wp *WavePool) {
 	profile0 := native.MobProfiles[m.Type]
 
@@ -9,6 +13,8 @@ func (m *Mob) MobCollision(wp *WavePool) {
 
 	mMaxHealth := m.CalculateMaxHealth()
 	mDamage := profile0.StatFromRarity(m.Rarity).GetDamage()
+
+	mTraversed := traverseMobSegments(wp, m)
 
 	c0 := circle{m.X, m.Y, m.GetDesiredSize()}
 
@@ -33,11 +39,21 @@ func (m *Mob) MobCollision(wp *WavePool) {
 
 				px, py, ok := computeCirclePush(c0, c1)
 				if ok {
-					m.X -= px * 0.3
-					m.Y -= py * 0.3
+					m.X -= px * mobToMobPushMultiplier
+					m.Y -= py * mobToMobPushMultiplier
 
-					nearEntity.X += px * 0.3
-					nearEntity.Y += py * 0.3
+					nearEntity.X += px * mobToMobPushMultiplier
+					nearEntity.Y += py * mobToMobPushMultiplier
+
+					// Mob doesnt damaged to mob
+					if m.PetMaster == nil && nearEntity.PetMaster == nil {
+						return
+					}
+
+					// Pet doesnt damaged to other pet
+					if m.PetMaster != nil && nearEntity.PetMaster != nil {
+						return
+					}
 
 					{ // Damage
 						profile1 := native.MobProfiles[nearEntity.Type]
@@ -48,7 +64,14 @@ func (m *Mob) MobCollision(wp *WavePool) {
 						m.Health -= nearEntityDamage / mMaxHealth
 						nearEntity.Health -= mDamage / nearEntityMaxHealth
 
-						// TODO: implement lastAttackedEntity set, see EntityCollision
+						{ // Set LastAttackedEntity
+							// TODO: this algorithm might collide like: mob1 -> mob2, mob2 -> mob1
+							// So maybe its possible to do multiple hit once one frame
+
+							if nearEntity.PetMaster != nil {
+								mTraversed.LastAttackedEntity = nearEntity.PetMaster
+							}
+						}
 					}
 				}
 			}
@@ -63,7 +86,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					return
 				}
 
-				// Pet doesnt damaged/knockbacked to petal
+				// Petal doesnt damaged/knockbacked to pet
 				if m.PetMaster != nil {
 					continue
 				}
@@ -88,7 +111,11 @@ func (m *Mob) MobCollision(wp *WavePool) {
 						m.Health -= nearEntityDamage / mMaxHealth
 						nearEntity.Health -= mDamage / nearEntityMaxHealth
 
-						// TODO: implement lastAttackedEntity set, see EntityCollision
+						{ // Set LastAttackedEntity
+							if nearEntity.Master != nil {
+								mTraversed.LastAttackedEntity = nearEntity.Master
+							}
+						}
 					}
 				}
 			}
@@ -125,7 +152,9 @@ func (m *Mob) MobCollision(wp *WavePool) {
 						m.Health -= nearEntity.BodyDamage / mMaxHealth
 						nearEntity.Health -= mDamage / nearEntityMaxHealth
 
-						// TODO: implement lastAttackedEntity set, see EntityCollision
+						{ // Set LastAttackedEntity
+							mTraversed.LastAttackedEntity = nearEntity
+						}
 					}
 				}
 			}

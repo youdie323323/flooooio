@@ -3,7 +3,9 @@ package wave
 import (
 	"encoding/binary"
 	"math"
+	"slices"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"flooooio/internal/collision"
@@ -15,20 +17,24 @@ import (
 )
 
 const (
-	SpatialHashGridSize = 1024
+	spatialHashGridSize = 1024
 
-	UpdateIntervalMS = 60
+	updateIntervalMS = 60
 )
 
+func calculateWaveLength(x float64) float64 {
+	return max(60, math.Pow(x, 0.2)*18.9287+30)
+}
+
 type WaveData struct {
-	biome native.Biome
+	Biome native.Biome
 
-	progress         uint16
-	progressTimer    float64
-	progressRedTimer float64
-	progressIsRed    bool
+	Progress         uint16
+	ProgressTimer    float64
+	ProgressRedTimer float64
+	ProgressIsRed    bool
 
-	mapRadius uint16
+	MapRadius uint16
 }
 
 type WavePool struct {
@@ -38,17 +44,28 @@ type WavePool struct {
 
 	eliminatedEntityIDs []uint32
 
+	ms *WaveMobSpawner
+
 	updateTicker *time.Ticker
 	frameCount   *xsync.Counter
 
-	SpatialHash *collision.SpatialHash[collision.Node]
+	SpatialHash *collision.SpatialHash
 
-	waveData *WaveData
+	isDisposing atomic.Bool
+
+	wasEnded atomic.Bool
+
+	wd *WaveData
+
+	wr *WaveRoom
 
 	mu sync.RWMutex
 }
 
-func NewWavePool(wd *WaveData) *WavePool {
+func NewWavePool(wr *WaveRoom, wd *WaveData) *WavePool {
+	spawner := new(WaveMobSpawner)
+	spawner.Next(wd)
+
 	return &WavePool{
 		playerPool: xsync.NewMapOf[PlayerId, *Player](),
 		mobPool:    xsync.NewMapOf[MobId, *Mob](),
@@ -56,12 +73,16 @@ func NewWavePool(wd *WaveData) *WavePool {
 
 		eliminatedEntityIDs: make([]uint32, 0),
 
+		ms: spawner,
+
 		updateTicker: nil,
 		frameCount:   xsync.NewCounter(),
 
-		waveData: wd,
+		SpatialHash: collision.NewSpatialHash(spatialHashGridSize),
 
-		SpatialHash: collision.NewSpatialHash[collision.Node](SpatialHashGridSize),
+		wd: wd,
+
+		wr: wr,
 	}
 }
 
@@ -76,16 +97,16 @@ func (wp *WavePool) StartWave(candidates WaveRoomCandidates) {
 	buf[at] = network.ClientboundWaveStarted
 	at++
 
-	buf[at] = wp.waveData.biome
+	buf[at] = wp.wd.Biome
 	at++
 
 	for _, c := range candidates {
 		if pd, ok := ConnManager.GetUser(c.Conn); ok {
-			mapRadius := float64(wp.waveData.mapRadius)
+			mapRadius := float64(wp.wd.MapRadius)
 
 			randX, randY := GetRandomCoordinate(mapRadius, mapRadius, mapRadius)
 
-			player := wp.generatePlayer(pd.Sp, randX, randY)
+			player := wp.GeneratePlayer(pd.Sp, randX, randY)
 
 			pd.AssignWavePlayerId(player.Id)
 
@@ -102,6 +123,8 @@ func (wp *WavePool) StartWave(candidates WaveRoomCandidates) {
 func (wp *WavePool) EndWave() {
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
+
+	wp.wasEnded.Store(true)
 }
 
 // Dispose completely remove all values from memory.
@@ -109,19 +132,23 @@ func (wp *WavePool) Dispose() {
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
 
+	wp.isDisposing.Store(true)
+
 	if wp.updateTicker != nil {
 		wp.updateTicker.Stop()
 		wp.updateTicker = nil
 	}
 
-	// TODO: call all entity dispose
+	wp.playerPool.Clear()
+	wp.mobPool.Clear()
+	wp.petalPool.Clear()
 
-	wp.eliminatedEntityIDs = nil
-
-	wp.waveData = nil
+	clear(wp.eliminatedEntityIDs)
 
 	wp.SpatialHash.Reset()
-	wp.SpatialHash = nil
+
+	// Set nil because circular struct
+	wp.wr = nil
 }
 
 func (wp *WavePool) IsAllPlayerDead() bool {
@@ -150,6 +177,7 @@ func (wp *WavePool) broadcastSeldIdPacket() {
 	buf[0] = network.ClientboundWaveSelfId
 
 	wp.playerPool.Range(func(id PlayerId, player *Player) bool {
+		// Dynamically put id
 		binary.LittleEndian.PutUint32(buf[1:], id)
 
 		player.Conn.WriteMessage(websocket.BinaryMessage, buf)
@@ -159,7 +187,7 @@ func (wp *WavePool) broadcastSeldIdPacket() {
 }
 
 func (wp *WavePool) startUpdate() {
-	wp.updateTicker = time.NewTicker(UpdateIntervalMS * time.Millisecond)
+	wp.updateTicker = time.NewTicker(time.Second / updateIntervalMS)
 
 	for range wp.updateTicker.C {
 		wp.update()
@@ -167,36 +195,39 @@ func (wp *WavePool) startUpdate() {
 }
 
 func (wp *WavePool) update() {
+	if wp.isDisposing.Load() {
+		return
+	}
+
+	// Commentout this because update not called from multiple goroutine
+	// wp.mu.Lock()
+	// defer wp.mu.Unlock()
+
 	wp.frameCount.Add(1)
 
 	wp.updateEntities()
 
-	wp.broadcastUpdatePacket()
-
 	if wp.frameCount.Value()%2 == 0 {
-		// updateWave
+		wp.broadcastUpdatePacket()
+
+		wp.updateWaveData()
 	}
 
 	// TODO: maybe frameCount will overflow?
 }
 
 func (wp *WavePool) updateEntities() {
-	wp.mu.RLock()
-
 	wp.playerPool.Range(func(id PlayerId, player *Player) bool {
-		player.OnUpdateTickBase(wp)
 		player.OnUpdateTickPlayer(wp)
 
 		return true
 	})
 	wp.mobPool.Range(func(id MobId, mob *Mob) bool {
-		mob.OnUpdateTickBase(wp)
 		mob.OnUpdateTickMob(wp)
 
 		return true
 	})
 	wp.petalPool.Range(func(id PetalId, petal *Petal) bool {
-		petal.OnUpdateTickBase(wp)
 		petal.OnUpdateTickPetal(wp)
 
 		return true
@@ -217,13 +248,70 @@ func (wp *WavePool) updateEntities() {
 
 		return true
 	})
+}
 
-	wp.mu.RUnlock()
+func (wp *WavePool) updateWaveData() {
+	if wp.wasEnded.Load() {
+		return
+	}
+
+	defer wp.wr.CheckAndUpdateRoomState()
+
+	if !wp.wd.ProgressIsRed {
+		smd := wp.ms.DetermineStaticMobData(wp.wd)
+		if smd != nil {
+			randX, randY, ok := GetRandomSafeCoordinate(
+				float64(wp.wd.MapRadius),
+				300,
+				wp.GetPlayersWithCondition(func(p *Player) bool { return !p.IsDead }),
+			)
+
+			if ok {
+				if slices.Contains(LinkableMobs, smd.MobType) {
+					wp.LinkedMobSegmentation(smd.MobType, smd.Rarity, randX, randY, 9)
+				} else {
+					wp.GenerateMob(smd.MobType, smd.Rarity, randX, randY, nil, nil, false)
+				}
+			}
+		}
+	}
+
+	waveLength := calculateWaveLength(float64(wp.wd.Progress))
+
+	if wp.wd.ProgressTimer >= waveLength {
+		mobCount := len(wp.GetMobsWithCondition(func(m *Mob) bool {
+			return m.PetMaster == nil
+		}))
+
+		if !(wp.wd.ProgressRedTimer >= waveLength) && mobCount > 4 {
+			wp.wd.ProgressIsRed = true
+			wp.wd.ProgressRedTimer = math.Min(
+				waveLength,
+				wp.wd.ProgressRedTimer+0.016,
+			)
+		} else {
+			wp.playerPool.Range(func(id PlayerId, p *Player) bool {
+				RevivePlayer(wp, p)
+
+				return true
+			})
+
+			wp.wd.ProgressIsRed = false
+			wp.wd.ProgressRedTimer = 0
+			wp.wd.ProgressTimer = 0
+			wp.wd.Progress++
+
+			wp.ms.Next(wp.wd)
+		}
+	} else {
+		wp.wd.ProgressTimer = math.Min(
+			waveLength,
+			wp.wd.ProgressTimer+0.016,
+		)
+	}
 }
 
 func (wp *WavePool) broadcastUpdatePacket() {
-	wp.mu.Lock()
-
 	updatePacket := wp.createUpdatePacket()
 
 	wp.playerPool.Range(func(id PlayerId, player *Player) bool {
@@ -231,8 +319,6 @@ func (wp *WavePool) broadcastUpdatePacket() {
 
 		return true
 	})
-
-	wp.mu.Unlock()
 }
 
 func (wp *WavePool) calculateUpdatePacketSize() int {
@@ -333,19 +419,26 @@ func (wp *WavePool) createUpdatePacket() []byte {
 	buf[at] = network.ClientboundWaveUpdate
 	at++
 
-	binary.LittleEndian.PutUint16(buf[at:], wp.waveData.progress)
+	binary.LittleEndian.PutUint16(buf[at:], wp.wd.Progress)
 	at += 2
 
-	binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(wp.waveData.progressTimer))
+	binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(wp.wd.ProgressTimer))
 	at += 8
 
-	binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(wp.waveData.progressRedTimer))
+	binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(wp.wd.ProgressRedTimer))
 	at += 8
 
-	buf[at] = 0
-	at++
+	{ // Wave is ended or not
+		var y byte = 0
+		if wp.wasEnded.Load() {
+			y = 1
+		}
 
-	binary.LittleEndian.PutUint16(buf[at:], wp.waveData.mapRadius)
+		buf[at] = y
+		at++
+	}
+
+	binary.LittleEndian.PutUint16(buf[at:], wp.wd.MapRadius)
 	at += 2
 
 	{ // Write players
@@ -493,7 +586,7 @@ func (wp *WavePool) createUpdatePacket() []byte {
 	return buf
 }
 
-func (wp *WavePool) generatePlayer(
+func (wp *WavePool) GeneratePlayer(
 	sp StaticPlayer,
 
 	x float64,
@@ -501,7 +594,7 @@ func (wp *WavePool) generatePlayer(
 ) *Player {
 	id := RandomId()
 	if _, ok := wp.playerPool.Load(id); ok {
-		return wp.generatePlayer(
+		return wp.GeneratePlayer(
 			sp,
 
 			x,
@@ -534,7 +627,7 @@ func (wp *WavePool) SafeGeneratePlayer(
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
 
-	return wp.generatePlayer(
+	return wp.GeneratePlayer(
 		sp,
 
 		x,
@@ -542,7 +635,7 @@ func (wp *WavePool) SafeGeneratePlayer(
 	)
 }
 
-func (wp *WavePool) removePlayer(id PlayerId) {
+func (wp *WavePool) RemovePlayer(id PlayerId) {
 	if player, ok := wp.playerPool.Load(id); ok {
 		// player.dispose
 
@@ -558,10 +651,10 @@ func (wp *WavePool) SafeRemovePlayer(id PlayerId) {
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
 
-	wp.removePlayer(id)
+	wp.RemovePlayer(id)
 }
 
-func (wp *WavePool) findPlayer(id PlayerId) *Player {
+func (wp *WavePool) FindPlayer(id PlayerId) *Player {
 	player, _ := wp.playerPool.Load(id)
 
 	return player
@@ -571,10 +664,32 @@ func (wp *WavePool) SafeFindPlayer(id PlayerId) *Player {
 	wp.mu.RLock()
 	defer wp.mu.RUnlock()
 
-	return wp.findPlayer(id)
+	return wp.FindPlayer(id)
 }
 
-func (wp *WavePool) generateMob(
+// GetPlayersWithCondition returns conditioned players.
+func (wp *WavePool) GetPlayersWithCondition(condition func(*Player) bool) []*Player {
+	filtered := make([]*Player, 0)
+
+	wp.playerPool.Range(func(id PlayerId, player *Player) bool {
+		if condition(player) {
+			filtered = append(filtered, player)
+		}
+
+		return true
+	})
+
+	return filtered
+}
+
+func (wp *WavePool) SafeGetPlayersWithCondition(condition func(*Player) bool) []*Player {
+	wp.mu.RLock()
+	defer wp.mu.RUnlock()
+
+	return wp.GetPlayersWithCondition(condition)
+}
+
+func (wp *WavePool) GenerateMob(
 	mType native.MobType,
 
 	rarity native.Rarity,
@@ -582,14 +697,14 @@ func (wp *WavePool) generateMob(
 	x float64,
 	y float64,
 
-	petMaster *Entity,
+	petMaster *Player,
 
-	connectingSegment *Entity,
+	connectingSegment collision.Node,
 	isFirstSegment bool,
 ) *Mob {
 	id := RandomId()
 	if _, ok := wp.mobPool.Load(id); ok {
-		return wp.generateMob(
+		return wp.GenerateMob(
 			mType,
 
 			rarity,
@@ -635,15 +750,15 @@ func (wp *WavePool) SafeGenerateMob(
 	x float64,
 	y float64,
 
-	petMaster *Entity,
+	petMaster *Player,
 
-	connectingSegment *Entity,
+	connectingSegment collision.Node,
 	isFirstSegment bool,
 ) *Mob {
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
 
-	return wp.generateMob(
+	return wp.GenerateMob(
 		mType,
 
 		rarity,
@@ -658,7 +773,7 @@ func (wp *WavePool) SafeGenerateMob(
 	)
 }
 
-func (wp *WavePool) removeMob(id MobId) {
+func (wp *WavePool) RemoveMob(id MobId) {
 	if mob, ok := wp.mobPool.Load(id); ok {
 		// mob.dispose
 
@@ -674,10 +789,10 @@ func (wp *WavePool) SafeRemoveMob(id MobId) {
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
 
-	wp.removeMob(id)
+	wp.RemoveMob(id)
 }
 
-func (wp *WavePool) findMob(id MobId) *Mob {
+func (wp *WavePool) FindMob(id MobId) *Mob {
 	mob, _ := wp.mobPool.Load(id)
 
 	return mob
@@ -687,10 +802,101 @@ func (wp *WavePool) SafeFindMob(id MobId) *Mob {
 	wp.mu.RLock()
 	defer wp.mu.RUnlock()
 
-	return wp.findMob(id)
+	return wp.FindMob(id)
 }
 
-func (wp *WavePool) generatePetal(
+// GetMobsWithCondition returns conditioned mobs.
+func (wp *WavePool) GetMobsWithCondition(condition func(*Mob) bool) []*Mob {
+	wp.mu.RLock()
+	defer wp.mu.RUnlock()
+
+	filtered := make([]*Mob, 0)
+
+	wp.mobPool.Range(func(id MobId, mob *Mob) bool {
+		if condition(mob) {
+			filtered = append(filtered, mob)
+		}
+
+		return true
+	})
+
+	return filtered
+}
+
+func (wp *WavePool) SafeGetMobsWithCondition(condition func(*Mob) bool) []*Mob {
+	wp.mu.RLock()
+	defer wp.mu.RUnlock()
+
+	return wp.GetMobsWithCondition(condition)
+}
+
+func (wp *WavePool) LinkedMobSegmentation(
+	mType native.MobType,
+
+	rarity native.Rarity,
+
+	x float64,
+	y float64,
+
+	bodyCount int,
+) {
+	profile := native.MobProfiles[mType]
+
+	mc := profile.Collision
+
+	size := CalculateMobSize(profile, rarity)
+
+	// Arc
+	segmentDistance := (mc.Radius * 2) * (size / mc.Fraction)
+
+	var prevSegment collision.Node = nil
+
+	for i := range bodyCount + 1 {
+		radius := float64(i) * segmentDistance
+
+		prevSegment = wp.GenerateMob(
+			mType,
+
+			rarity,
+
+			x+radius,
+			y+radius,
+
+			nil,
+
+			prevSegment,
+			// Head
+			i == 0,
+		)
+	}
+}
+
+func (wp *WavePool) SafeLinkedMobSegmentation(
+	mType native.MobType,
+
+	rarity native.Rarity,
+
+	x float64,
+	y float64,
+
+	bodyCount int,
+) {
+	wp.mu.Lock()
+	defer wp.mu.Unlock()
+
+	wp.LinkedMobSegmentation(
+		mType,
+
+		rarity,
+
+		x,
+		y,
+
+		bodyCount,
+	)
+}
+
+func (wp *WavePool) GeneratePetal(
 	pType native.MobType,
 
 	rarity native.Rarity,
@@ -702,7 +908,7 @@ func (wp *WavePool) generatePetal(
 ) *Petal {
 	id := RandomId()
 	if _, ok := wp.petalPool.Load(id); ok {
-		return wp.generatePetal(
+		return wp.GeneratePetal(
 			pType,
 
 			rarity,
@@ -747,7 +953,7 @@ func (wp *WavePool) SafeGeneratePetal(
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
 
-	return wp.generatePetal(
+	return wp.GeneratePetal(
 		pType,
 
 		rarity,
@@ -759,7 +965,7 @@ func (wp *WavePool) SafeGeneratePetal(
 	)
 }
 
-func (wp *WavePool) removePetal(id PetalId) {
+func (wp *WavePool) RemovePetal(id PetalId) {
 	if petal, ok := wp.petalPool.Load(id); ok {
 		// petal.dispose
 
@@ -775,10 +981,10 @@ func (wp *WavePool) SafeRemovePetal(id PetalId) {
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
 
-	wp.removePetal(id)
+	wp.RemovePetal(id)
 }
 
-func (wp *WavePool) findPetal(id PetalId) *Petal {
+func (wp *WavePool) FindPetal(id PetalId) *Petal {
 	mob, _ := wp.petalPool.Load(id)
 
 	return mob
@@ -788,5 +994,30 @@ func (wp *WavePool) SafeFindPetal(id PetalId) *Petal {
 	wp.mu.RLock()
 	defer wp.mu.RUnlock()
 
-	return wp.findPetal(id)
+	return wp.FindPetal(id)
+}
+
+// GetPetalsWithCondition returns conditioned petals.
+func (wp *WavePool) GetPetalsWithCondition(condition func(*Petal) bool) []*Petal {
+	wp.mu.RLock()
+	defer wp.mu.RUnlock()
+
+	filtered := make([]*Petal, 0)
+
+	wp.petalPool.Range(func(id PetalId, petal *Petal) bool {
+		if condition(petal) {
+			filtered = append(filtered, petal)
+		}
+
+		return true
+	})
+
+	return filtered
+}
+
+func (wp *WavePool) SafeGetPetalsWithCondition(condition func(*Petal) bool) []*Petal {
+	wp.mu.RLock()
+	defer wp.mu.RUnlock()
+
+	return wp.GetPetalsWithCondition(condition)
 }
