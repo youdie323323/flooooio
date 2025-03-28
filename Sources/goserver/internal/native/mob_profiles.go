@@ -32,6 +32,40 @@ type MobData struct {
 	Ultra     MobStat `json:"6"`
 }
 
+func (d MobData) StatFromRarity(r Rarity) MobStat {
+	switch r {
+	case RarityCommon: {
+		return d.Common
+	}
+
+	case RarityUnusual: {
+		return d.Unusual
+	}
+
+	case RarityRare: {
+		return d.Rare
+	}
+
+	case RarityEpic: {
+		return d.Epic
+	}
+
+	case RarityLegendary: {
+		return d.Legendary
+	}
+
+	case RarityMythic: {
+		return d.Mythic
+	}
+
+	case RarityUltra: {
+		return d.Ultra
+	}
+	}
+
+	panic("MobData.StatFromRarity: invalid rarity")
+}
+
 var MobProfiles map[MobType]MobData
 
 func init() {

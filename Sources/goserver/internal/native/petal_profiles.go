@@ -35,6 +35,40 @@ type PetalData struct {
 	Ultra     PetalStat `json:"6"`
 }
 
+func (d PetalData) StatFromRarity(r Rarity) PetalStat {
+	switch r {
+	case RarityCommon: {
+		return d.Common
+	}
+
+	case RarityUnusual: {
+		return d.Unusual
+	}
+
+	case RarityRare: {
+		return d.Rare
+	}
+
+	case RarityEpic: {
+		return d.Epic
+	}
+
+	case RarityLegendary: {
+		return d.Legendary
+	}
+
+	case RarityMythic: {
+		return d.Mythic
+	}
+
+	case RarityUltra: {
+		return d.Ultra
+	}
+	}
+
+	panic("PetalData.StatFromRarity: invalid rarity")
+}
+
 var PetalProfiles map[PetalType]PetalData
 
 func init() {

@@ -42,6 +42,27 @@ func (m *Mob) GetDesiredSize() float64 {
 	return collision.Radius * (m.Size / collision.Fraction)
 }
 
+// CalculateMaxHealth calculates max hp of mob.
+func (m *Mob) CalculateMaxHealth() float64 {
+	profile := native.MobProfiles[m.Type]
+
+	return profile.StatFromRarity(m.Rarity).Health
+}
+
+func (m *Mob) OnUpdateTickMob(wp *WavePool) {
+	m.mu.Lock()
+
+	m.MobCollision(wp)
+
+	m.MobCoordinateBoundary(wp)
+
+	{ // Base onUpdateTick
+
+	}
+
+	m.mu.Unlock()
+}
+
 // NewMob return new mob instance.
 func NewMob(
 	id *MobId,

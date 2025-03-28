@@ -1,6 +1,8 @@
 package wave
 
 import (
+	"math"
+
 	"flooooio/internal/native"
 
 	"github.com/gorilla/websocket"
@@ -22,7 +24,7 @@ type Player struct {
 
 	BodyDamage float64
 
-	Mood *native.Mood
+	Mood native.Mood
 
 	IsDead bool
 
@@ -55,12 +57,45 @@ func (p *Player) IsCollidable() bool {
 	return !p.NoClip
 }
 
-const PlayerSpeedMultiplier = 5
+// calculatePlayerHp calculate hp by level.
+// 100 * x, x is upgrade.
+func calculatePlayerHp(level int) float64 {
+	baseHp := 100 * 2000
+	minLevel := 75
+	exponent := math.Max(float64(level), float64(minLevel)) - 1
+
+	return float64(baseHp) * math.Pow(1.02, exponent)
+}
+
+// CalculateMaxHealth calculates max hp of player.
+func (p *Player) CalculateMaxHealth() float64 {
+	return calculatePlayerHp(100)
+}
+
+const PlayerSpeedMultiplier = 10
 
 // UpdateMovement update the movement.
 func (p *Player) UpdateMovement(angle uint8, magnitude uint8) {
 	p.Angle = float64(angle)
 	p.Magnitude = float64(magnitude) * PlayerSpeedMultiplier
+}
+
+// UpdateMovement update the movement.
+func (p *Player) UpdateMood(m native.Mood) {
+	p.Mood = m
+}
+
+func (m *Player) OnUpdateTickPlayer(wp *WavePool) {
+	m.mu.Lock()
+
+	m.PlayerCollision(wp)
+
+	m.PlayerCoordinateBoundary(wp)
+
+	{ // Base onUpdateTick
+	}
+
+	m.mu.Unlock()
 }
 
 // NewPlayer return new player instance.
@@ -72,9 +107,6 @@ func NewPlayer(
 	x float64,
 	y float64,
 ) *Player {
-	// Create new default mood instance
-	mood := native.MoodNormal
-
 	return &Player{
 		Entity: Entity{
 			X: x,
@@ -107,7 +139,7 @@ func NewPlayer(
 
 		BodyDamage: 1000,
 
-		Mood: &mood,
+		Mood: native.MoodNormal,
 
 		IsDead: false,
 

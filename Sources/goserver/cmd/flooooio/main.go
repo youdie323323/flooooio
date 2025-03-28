@@ -33,11 +33,6 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	defer func() {
-		wave.ConnManager.RemoveUser(conn)
-		conn.Close()
-	}()
-
 	// Init user data
 	pd := &wave.PlayerData{
 		WrPId: nil,
@@ -54,6 +49,29 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	wave.ConnManager.AddUser(conn, pd)
+
+	// On close
+	defer func() {
+		wave.ConnManager.RemoveUser(conn)
+		conn.Close()
+
+		{
+			// Dont care about result
+			_ = wrService.LeaveCurrentWaveRoom(pd)
+
+			if pd.WrPId != nil && pd.WPId != nil {
+				wr := wrService.FindPlayerRoom(*pd.WrPId)
+
+				if wr != nil && wr.WavePool != nil {
+					player := wr.WavePool.SafeFindPlayer(*pd.WPId)
+
+					if player != nil {
+						wr.WavePool.SafeRemovePlayer(*pd.WPId)
+					}
+				}
+			}
+		}
+	}()
 
 	for {
 		messageType, message, err := conn.ReadMessage()
@@ -121,6 +139,36 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 			at++
 
 			player.UpdateMovement(angle, magnitude)
+		}
+
+	case network.ServerboundWaveChangeMood:
+		{
+			if msgLen != 2 {
+				return
+			}
+
+			if pd.WrPId == nil || pd.WPId == nil {
+				return
+			}
+
+			flag := native.Mood(message[at])
+			at++
+
+			if !slices.Contains(native.ValidMoodFlags, flag) {
+				return
+			}
+
+			wr := wrService.FindPlayerRoom(*pd.WrPId)
+			if wr == nil {
+				return
+			}
+
+			player := wr.WavePool.SafeFindPlayer(*pd.WPId)
+			if player == nil || player.IsDead {
+				return
+			}
+
+			player.UpdateMood(flag)
 		}
 
 	case network.ServerboundWaveRoomCreate:

@@ -41,7 +41,7 @@ type WavePool struct {
 	updateTicker *time.Ticker
 	frameCount   *xsync.Counter
 
-	spatialHash *collision.SpatialHash[collision.Node]
+	SpatialHash *collision.SpatialHash[collision.Node]
 
 	waveData *WaveData
 
@@ -61,7 +61,7 @@ func NewWavePool(wd *WaveData) *WavePool {
 
 		waveData: wd,
 
-		spatialHash: collision.NewSpatialHash[collision.Node](SpatialHashGridSize),
+		SpatialHash: collision.NewSpatialHash[collision.Node](SpatialHashGridSize),
 	}
 }
 
@@ -120,8 +120,8 @@ func (wp *WavePool) Dispose() {
 
 	wp.waveData = nil
 
-	wp.spatialHash.Reset()
-	wp.spatialHash = nil
+	wp.SpatialHash.Reset()
+	wp.SpatialHash = nil
 }
 
 func (wp *WavePool) IsAllPlayerDead() bool {
@@ -171,8 +171,10 @@ func (wp *WavePool) update() {
 
 	wp.updateEntities()
 
+	wp.broadcastUpdatePacket()
+
 	if wp.frameCount.Value()%2 == 0 {
-		wp.broadcastUpdatePacket()
+		// updateWave
 	}
 
 	// TODO: maybe frameCount will overflow?
@@ -183,11 +185,13 @@ func (wp *WavePool) updateEntities() {
 
 	wp.playerPool.Range(func(id PlayerId, player *Player) bool {
 		player.OnUpdateTickBase(wp)
+		player.OnUpdateTickPlayer(wp)
 
 		return true
 	})
 	wp.mobPool.Range(func(id MobId, mob *Mob) bool {
 		mob.OnUpdateTickBase(wp)
+		mob.OnUpdateTickMob(wp)
 
 		return true
 	})
@@ -198,17 +202,17 @@ func (wp *WavePool) updateEntities() {
 	})
 
 	wp.playerPool.Range(func(id PlayerId, player *Player) bool {
-		wp.spatialHash.Update(player)
+		wp.SpatialHash.Update(player)
 
 		return true
 	})
 	wp.mobPool.Range(func(id MobId, mob *Mob) bool {
-		wp.spatialHash.Update(mob)
+		wp.SpatialHash.Update(mob)
 
 		return true
 	})
 	wp.petalPool.Range(func(id PetalId, petal *Petal) bool {
-		wp.spatialHash.Update(petal)
+		wp.SpatialHash.Update(petal)
 
 		return true
 	})
@@ -365,7 +369,7 @@ func (wp *WavePool) createUpdatePacket() []byte {
 			binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(player.Size))
 			at += 8
 
-			buf[at] = byte(*player.Mood)
+			buf[at] = byte(player.Mood)
 			at++
 
 			{ // Write name
@@ -515,7 +519,7 @@ func (wp *WavePool) generatePlayer(
 
 	wp.playerPool.Store(id, player)
 
-	wp.spatialHash.Put(player)
+	wp.SpatialHash.Put(player)
 
 	return player
 }
@@ -541,7 +545,7 @@ func (wp *WavePool) removePlayer(id PlayerId) {
 	if player, ok := wp.playerPool.Load(id); ok {
 		// player.dispose
 
-		wp.spatialHash.Remove(player)
+		wp.SpatialHash.Remove(player)
 
 		wp.eliminatedEntityIDs = append(wp.eliminatedEntityIDs, id)
 
@@ -617,7 +621,7 @@ func (wp *WavePool) generateMob(
 
 	wp.mobPool.Store(id, mob)
 
-	wp.spatialHash.Put(mob)
+	wp.SpatialHash.Put(mob)
 
 	return mob
 }
@@ -657,7 +661,7 @@ func (wp *WavePool) removeMob(id MobId) {
 	if mob, ok := wp.mobPool.Load(id); ok {
 		// mob.dispose
 
-		wp.spatialHash.Remove(mob)
+		wp.SpatialHash.Remove(mob)
 
 		wp.eliminatedEntityIDs = append(wp.eliminatedEntityIDs, id)
 
@@ -724,7 +728,7 @@ func (wp *WavePool) generatePetal(
 
 	wp.petalPool.Store(id, petal)
 
-	wp.spatialHash.Put(petal)
+	wp.SpatialHash.Put(petal)
 
 	return petal
 }
@@ -758,7 +762,7 @@ func (wp *WavePool) removePetal(id PetalId) {
 	if petal, ok := wp.petalPool.Load(id); ok {
 		// petal.dispose
 
-		wp.spatialHash.Remove(petal)
+		wp.SpatialHash.Remove(petal)
 
 		wp.eliminatedEntityIDs = append(wp.eliminatedEntityIDs, id)
 

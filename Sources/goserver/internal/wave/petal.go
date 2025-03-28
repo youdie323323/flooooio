@@ -76,6 +76,30 @@ func NewPetal(
 	}
 }
 
+// CalculateMaxHealth calculates max hp of petal.
+func (p *Petal) CalculateMaxHealth() float64 {
+	profile := native.PetalProfiles[p.Type]
+
+	return profile.StatFromRarity(p.Rarity).Health
+}
+
+const petalVelocityFriction = 0.8125
+
+func (m *Petal) OnUpdateTickPetal(wp *WavePool) {
+	m.mu.Lock()
+
+	{ // Base onUpdateTick
+		m.Velocity[0] *= petalVelocityFriction
+		m.Velocity[1] *= petalVelocityFriction
+
+		m.X += m.Velocity[0]
+		m.Y += m.Velocity[1]
+	}
+
+	m.mu.Unlock()
+}
+
+
 // StaticPetal represents static data of Mob.
 type StaticPetal struct {
 	Type   native.PetalType
