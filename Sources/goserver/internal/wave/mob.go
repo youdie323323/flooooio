@@ -49,6 +49,12 @@ func (m *Mob) CalculateMaxHealth() float64 {
 	return profile.StatFromRarity(m.Rarity).Health
 }
 
+// WasEliminated determine if mob is eliminated.
+// This method exists because struct pointer mob reference doesnt nil'ed when removed.
+func (m *Mob) WasEliminated(wp *WavePool) bool {
+	return wp.findMob(*m.Id) == nil
+}
+
 func (m *Mob) OnUpdateTickMob(wp *WavePool) {
 	m.mu.Lock()
 

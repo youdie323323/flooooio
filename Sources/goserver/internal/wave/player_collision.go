@@ -40,11 +40,11 @@ func (p *Player) PlayerCollision(wp *WavePool) {
 
 		px, py, ok := computeCirclePush(c0, c1)
 		if ok {
-			p.X -= px * 1.5
-			p.Y -= py * 1.5
+			p.X -= px * 1.25
+			p.Y -= py * 1.25
 
-			np.X += px * 1.5
-			np.Y += py * 1.5
+			np.X += px * 1.25
+			np.Y += py * 1.25
 		}
 	}
 }

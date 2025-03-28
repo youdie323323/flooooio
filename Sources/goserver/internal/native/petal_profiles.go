@@ -22,6 +22,11 @@ type PetalStat struct {
 	Extra map[string]any `json:"extra,omitempty"`
 }
 
+// GetDamage returns damage within PetalStat.
+func (s PetalStat) GetDamage() float64 {
+	return s.Damage
+}
+
 type PetalData struct {
 	EntityData[PetalI18n]
 
@@ -37,33 +42,26 @@ type PetalData struct {
 
 func (d PetalData) StatFromRarity(r Rarity) PetalStat {
 	switch r {
-	case RarityCommon: {
+	case RarityCommon:
 		return d.Common
-	}
 
-	case RarityUnusual: {
+	case RarityUnusual:
 		return d.Unusual
-	}
 
-	case RarityRare: {
+	case RarityRare:
 		return d.Rare
-	}
 
-	case RarityEpic: {
+	case RarityEpic:
 		return d.Epic
-	}
 
-	case RarityLegendary: {
+	case RarityLegendary:
 		return d.Legendary
-	}
 
-	case RarityMythic: {
+	case RarityMythic:
 		return d.Mythic
-	}
 
-	case RarityUltra: {
+	case RarityUltra:
 		return d.Ultra
-	}
 	}
 
 	panic("PetalData.StatFromRarity: invalid rarity")

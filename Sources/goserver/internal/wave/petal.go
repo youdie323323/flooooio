@@ -83,6 +83,12 @@ func (p *Petal) CalculateMaxHealth() float64 {
 	return profile.StatFromRarity(p.Rarity).Health
 }
 
+// WasEliminated determine if petal is eliminated.
+// This method exists because struct pointer petal reference doesnt nil'ed when removed.
+func (m *Petal) WasEliminated(wp *WavePool) bool {
+	return wp.findPetal(*m.Id) == nil
+}
+
 const petalVelocityFriction = 0.8125
 
 func (m *Petal) OnUpdateTickPetal(wp *WavePool) {

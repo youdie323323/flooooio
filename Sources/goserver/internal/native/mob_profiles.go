@@ -17,6 +17,11 @@ type MobStat struct {
 	Extra      map[string]any `json:"extra,omitempty"`
 }
 
+// GetDamage returns damage within MobStat.
+func (s MobStat) GetDamage() float64 {
+	return s.BodyDamage
+}
+
 type MobData struct {
 	EntityData[MobI18n]
 
@@ -34,33 +39,26 @@ type MobData struct {
 
 func (d MobData) StatFromRarity(r Rarity) MobStat {
 	switch r {
-	case RarityCommon: {
+	case RarityCommon:
 		return d.Common
-	}
 
-	case RarityUnusual: {
+	case RarityUnusual:
 		return d.Unusual
-	}
 
-	case RarityRare: {
+	case RarityRare:
 		return d.Rare
-	}
 
-	case RarityEpic: {
+	case RarityEpic:
 		return d.Epic
-	}
 
-	case RarityLegendary: {
+	case RarityLegendary:
 		return d.Legendary
-	}
 
-	case RarityMythic: {
+	case RarityMythic:
 		return d.Mythic
-	}
 
-	case RarityUltra: {
+	case RarityUltra:
 		return d.Ultra
-	}
 	}
 
 	panic("MobData.StatFromRarity: invalid rarity")

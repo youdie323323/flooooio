@@ -15,17 +15,3 @@ type EntityData[I18n any] struct {
 	// Collision is data needed for collide.
 	Collision EntityCollision `json:"collision"`
 }
-
-func DamageOfStat(s any) float64 {
-	mobStat, ok := s.(MobStat)
-	if ok {
-		return mobStat.BodyDamage
-	}
-
-	petalStat, ok := s.(PetalStat)
-	if ok {
-		return petalStat.Damage
-	}
-
-	return 0
-}

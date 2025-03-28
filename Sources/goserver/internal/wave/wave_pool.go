@@ -197,6 +197,7 @@ func (wp *WavePool) updateEntities() {
 	})
 	wp.petalPool.Range(func(id PetalId, petal *Petal) bool {
 		petal.OnUpdateTickBase(wp)
+		petal.OnUpdateTickPetal(wp)
 
 		return true
 	})

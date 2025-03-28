@@ -8,7 +8,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 	collision0 := profile0.Collision
 
 	mMaxHealth := m.CalculateMaxHealth()
-	mDamage := native.DamageOfStat(profile0.StatFromRarity(m.Rarity))
+	mDamage := profile0.StatFromRarity(m.Rarity).GetDamage()
 
 	c0 := circle{m.X, m.Y, m.GetDesiredSize()}
 
@@ -25,6 +25,10 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					continue
 				}
 
+				if nearEntity.WasEliminated(wp) {
+					return
+				}
+
 				c1 := circle{nearEntity.X, nearEntity.Y, nearEntity.GetDesiredSize()}
 
 				px, py, ok := computeCirclePush(c0, c1)
@@ -39,7 +43,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 						profile1 := native.MobProfiles[nearEntity.Type]
 
 						nearEntityMaxHealth := nearEntity.CalculateMaxHealth()
-						nearEntityDamage := native.DamageOfStat(profile1.StatFromRarity(nearEntity.Rarity))
+						nearEntityDamage := profile1.StatFromRarity(nearEntity.Rarity).GetDamage()
 
 						m.Health -= nearEntityDamage / mMaxHealth
 						nearEntity.Health -= mDamage / nearEntityMaxHealth
@@ -53,6 +57,10 @@ func (m *Mob) MobCollision(wp *WavePool) {
 			{
 				if nearEntity.Id == m.Id {
 					continue
+				}
+
+				if nearEntity.WasEliminated(wp) {
+					return
 				}
 
 				// Pet doesnt damaged/knockbacked to petal
@@ -75,7 +83,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 						profile1 := native.MobProfiles[nearEntity.Type]
 
 						nearEntityMaxHealth := nearEntity.CalculateMaxHealth()
-						nearEntityDamage := native.DamageOfStat(profile1.StatFromRarity(nearEntity.Rarity))
+						nearEntityDamage := profile1.StatFromRarity(nearEntity.Rarity).GetDamage()
 
 						m.Health -= nearEntityDamage / mMaxHealth
 						nearEntity.Health -= mDamage / nearEntityMaxHealth
