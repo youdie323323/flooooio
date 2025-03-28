@@ -5,13 +5,8 @@ import (
 	"flooooio/internal/native"
 )
 
-type MobId = uint32
-
 type Mob struct {
 	Entity
-
-	// Id is identification of mob.
-	Id *MobId
 
 	Type native.MobType
 
@@ -65,27 +60,34 @@ func (m *Mob) WasEliminated(wp *WavePool) bool {
 	return wp.FindMob(*m.Id) == nil
 }
 
-func (m *Mob) OnUpdateTickMob(wp *WavePool) {
-	m.mu.Lock()
-
+func (m *Mob) OnUpdateTick(wp *WavePool) {
 	m.EntityCoordinateMovement(wp)
 	m.MobCoordinateBoundary(wp)
 	m.MobElimination(wp)
 	m.MobCollision(wp)
 
 	m.MobBodyConnection(wp)
+	m.MobHealthRegen(wp)
 	m.MobAggressivePursuit(wp)
 	m.MobSpecialMovement(wp)
 
 	{ // Base onUpdateTick
 	}
+}
 
-	m.mu.Unlock()
+func (m *Mob) Dispose() {
+	m.TargetEntity = nil
+
+	m.LastAttackedEntity = nil
+
+	m.PetMaster = nil
+
+	m.ConnectingSegment = nil
 }
 
 // NewMob return new mob instance.
 func NewMob(
-	id *MobId,
+	id *EntityId,
 
 	mType native.MobType,
 
@@ -103,6 +105,8 @@ func NewMob(
 
 	return &Mob{
 		Entity: Entity{
+			Id: id,
+
 			X: x,
 			Y: y,
 
@@ -114,8 +118,6 @@ func NewMob(
 			// Max health
 			Health: 1,
 		},
-
-		Id: id,
 
 		Type: mType,
 

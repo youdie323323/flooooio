@@ -7,7 +7,7 @@ import (
 	"flooooio/internal/native"
 )
 
-// findNearestEntity finds the nearest entity from a slice of entities
+// findNearestEntity finds the nearest entity from a slice of entities.
 func findNearestEntity(me collision.Node, entities []collision.Node) collision.Node {
 	if len(entities) == 0 {
 		return nil
@@ -35,7 +35,7 @@ func findNearestEntity(me collision.Node, entities []collision.Node) collision.N
 
 const angleFactor = 40.5845104884 // 255/(2*PI)
 
-// TurnAngleToTarget calculates new angle when turning towards target
+// TurnAngleToTarget calculates new angle when turning towards target.
 func TurnAngleToTarget(thisAngle, dx, dy float64) float64 {
 	targetAngle := math.Mod(math.Atan2(dy, dx)*angleFactor, 255)
 	normalizedAngle := math.Mod(math.Mod(thisAngle, 255)+255, 255)
@@ -60,7 +60,7 @@ func getLoseRange(m *Mob) float64 {
 	return (mobDetectionRange * 2) * m.Size
 }
 
-func getTargets(wp *WavePool, m *Mob) []collision.Node {
+func getTargetNodes(wp *WavePool, m *Mob) []collision.Node {
 	var targets []collision.Node
 
 	if m.PetMaster != nil {
@@ -131,7 +131,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 			if m.TargetEntity != nil {
 				targetEntity = m.TargetEntity
 			} else {
-				targetEntity = findNearestEntity(m, getTargets(wp, m))
+				targetEntity = findNearestEntity(m, getTargetNodes(wp, m))
 			}
 
 			if targetEntity == nil {
@@ -163,7 +163,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 			if m.TargetEntity != nil {
 				targetEntity = m.TargetEntity
 			} else {
-				targetEntity = findNearestEntity(m, getTargets(wp, m))
+				targetEntity = findNearestEntity(m, getTargetNodes(wp, m))
 			}
 
 			if targetEntity == nil {

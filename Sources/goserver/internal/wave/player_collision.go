@@ -1,6 +1,7 @@
 package wave
 
 import (
+	"flooooio/internal/collision"
 	"flooooio/internal/native"
 )
 
@@ -21,19 +22,19 @@ func (p *Player) PlayerCollision(wp *WavePool) {
 
 	nearby := wp.SpatialHash.Search(p.X, p.Y, searchRadius)
 
-	for _, ne := range nearby {
+	nearby.Range(func(_ uint32, ne collision.Node) bool {
 		np, ok := ne.(*Player)
 		if !ok {
-			continue
+			return true
 		}
 
 		if np.Id == p.Id {
-			continue
+			return true
 		}
 
 		// Dont collide to dead/uncollidable player
 		if np.IsDead || !np.IsCollidable() {
-			continue
+			return true
 		}
 
 		c1 := circle{np.X, np.Y, np.Size}
@@ -46,5 +47,7 @@ func (p *Player) PlayerCollision(wp *WavePool) {
 			np.X += px * 1.25
 			np.Y += py * 1.25
 		}
-	}
+
+		return true
+	})
 }

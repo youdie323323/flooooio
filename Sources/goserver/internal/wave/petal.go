@@ -2,13 +2,8 @@ package wave
 
 import "flooooio/internal/native"
 
-type PetalId = uint32
-
 type Petal struct {
 	Entity
-
-	// Id is identification of petal.
-	Id *PetalId
 
 	Type native.PetalType
 
@@ -36,7 +31,7 @@ const PetalInitialCooldown = 0
 
 // NewPetal return new petal instance.
 func NewPetal(
-	id *PetalId,
+	id *EntityId,
 
 	pType native.PetalType,
 
@@ -49,6 +44,8 @@ func NewPetal(
 ) *Petal {
 	return &Petal{
 		Entity: Entity{
+			Id: id,
+
 			X: x,
 			Y: y,
 
@@ -60,8 +57,6 @@ func NewPetal(
 			// Max health
 			Health: 1,
 		},
-
-		Id: id,
 
 		Type: pType,
 
@@ -91,9 +86,7 @@ func (m *Petal) WasEliminated(wp *WavePool) bool {
 
 const petalVelocityFriction = 0.8125
 
-func (m *Petal) OnUpdateTickPetal(wp *WavePool) {
-	m.mu.Lock()
-
+func (m *Petal) OnUpdateTick(wp *WavePool) {
 	// Unneeded for petal
 	// m.EntityCoordinateMovement(wp)
 
@@ -106,8 +99,11 @@ func (m *Petal) OnUpdateTickPetal(wp *WavePool) {
 		m.X += m.Velocity[0]
 		m.Y += m.Velocity[1]
 	}
+}
 
-	m.mu.Unlock()
+func (p *Petal) Dispose() {
+	p.Master = nil
+	p.SummonedPet = nil
 }
 
 // StaticPetal represents static data of Mob.

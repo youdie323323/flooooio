@@ -11,6 +11,7 @@ import (
 type Node interface {
 	GetX() float64
 	GetY() float64
+	GetID() uint32
 }
 
 // SpatialHash provides a thread-safe 2D spatial hashing implementation.
@@ -22,25 +23,23 @@ type SpatialHash struct {
 // nodeSet is a thread-safe set implementation for Node objects.
 type nodeSet struct{ items sync.Map }
 
-// NewNodeSet creates a new thread-safe node set.
-func newNodeSet() *nodeSet {
-	return &nodeSet{}
-}
+// newNodeSet creates a new thread-safe node set.
+func newNodeSet() *nodeSet { return &nodeSet{} }
 
 // Add adds a node to the set.
 func (s *nodeSet) Add(node Node) {
-	s.items.Store(node, struct{}{})
+	s.items.Store(node.GetID(), node)
 }
 
 // Delete removes a node from the set.
 func (s *nodeSet) Delete(node Node) {
-	s.items.Delete(node)
+	s.items.Delete(node.GetID())
 }
 
 // ForEach iterates over all nodes in the set.
 func (s *nodeSet) ForEach(f func(Node)) {
-	s.items.Range(func(key, _ any) bool {
-		f(key.(Node))
+	s.items.Range(func(_, value any) bool {
+		f(value.(Node))
 
 		return true
 	})
@@ -69,9 +68,10 @@ func (sh *SpatialHash) pairPoint(x, y int64) int64 {
 
 // Put adds a node to the spatial hash.
 func (sh *SpatialHash) Put(node Node) {
-	x := int64(math.Floor(node.GetX() / sh.cellSize))
-	y := int64(math.Floor(node.GetY() / sh.cellSize))
-	key := sh.pairPoint(x, y)
+	key := sh.pairPoint(
+		int64(math.Floor(node.GetX()/sh.cellSize)),
+		int64(math.Floor(node.GetY()/sh.cellSize)),
+	)
 
 	// Get or create bucket
 	bucket, _ := sh.buckets.LoadOrStore(key, newNodeSet())
@@ -80,9 +80,10 @@ func (sh *SpatialHash) Put(node Node) {
 
 // Remove removes a node from the spatial hash.
 func (sh *SpatialHash) Remove(node Node) {
-	x := int64(math.Floor(node.GetX() / sh.cellSize))
-	y := int64(math.Floor(node.GetY() / sh.cellSize))
-	key := sh.pairPoint(x, y)
+	key := sh.pairPoint(
+		int64(math.Floor(node.GetX()/sh.cellSize)),
+		int64(math.Floor(node.GetY()/sh.cellSize)),
+	)
 
 	if bucket, ok := sh.buckets.Load(key); ok {
 		bucket.Delete(node)
@@ -96,11 +97,9 @@ func (sh *SpatialHash) Update(node Node) {
 }
 
 // Search finds all nodes within the specified radius of the target point.
-// TODO: sometime this returns same nodes
-func (sh *SpatialHash) Search(x, y, radius float64) []Node {
-	result := make([]Node, 0)
-	resultMutex := sync.Mutex{}
-	
+func (sh *SpatialHash) Search(x, y, radius float64) *xsync.MapOf[uint32, Node] {
+	result := xsync.NewMapOf[uint32, Node]()
+
 	radiusSquared := radius * radius
 
 	minX := int64(math.Floor((x - radius) / sh.cellSize))
@@ -125,12 +124,8 @@ func (sh *SpatialHash) Search(x, y, radius float64) []Node {
 						dy := node.GetY() - y
 
 						if (dx*dx + dy*dy) <= radiusSquared {
-							resultMutex.Lock()
-
-							result = append(result, node)
-
-							resultMutex.Unlock()
-						}
+							result.Store(node.GetID(), node)
+                        }
 					})
 				}(bucket)
 			}

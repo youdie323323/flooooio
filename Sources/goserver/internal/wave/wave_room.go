@@ -37,7 +37,7 @@ type WaveRoomCandidates = []*StaticWaveRoomCandidatePlayer
 
 type PlayerData struct {
 	WrPId *WaveRoomPlayerId
-	WPId  *PlayerId
+	WPId  *EntityId
 
 	// Sp represents static player data of user
 	Sp StaticPlayer
@@ -96,7 +96,7 @@ func (pd *PlayerData) AssignWaveRoomPlayerId(id *WaveRoomPlayerId) {
 	pd.Sp.Conn.WriteMessage(websocket.BinaryMessage, buf)
 }
 
-func (pd *PlayerData) AssignWavePlayerId(id *PlayerId) {
+func (pd *PlayerData) AssignWavePlayerId(id *EntityId) {
 	pd.mu.Lock()
 	defer pd.mu.Unlock()
 

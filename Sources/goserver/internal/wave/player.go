@@ -8,8 +8,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type PlayerId = uint32
-
 const playerSize = 15
 
 type Player struct {
@@ -18,9 +16,6 @@ type Player struct {
 	PlayerPrivileges
 
 	PlayerDynamicPetalSlots
-
-	// Id is identification of petal.
-	Id *PlayerId
 
 	BodyDamage float64
 
@@ -62,7 +57,7 @@ const minHpLevel = 75.
 // calculatePlayerHp calculate hp by level.
 // 100 * x, x is upgrade.
 func calculatePlayerHp(level float64) float64 {
-	return (100 * 11) * math.Pow(1.02, math.Max(level, minHpLevel) - 1)
+	return (100 * 10000) * math.Pow(1.02, math.Max(level, minHpLevel)-1)
 }
 
 // CalculateMaxHealth calculates max hp of player.
@@ -83,9 +78,7 @@ func (p *Player) UpdateMood(m native.Mood) {
 	p.Mood = m
 }
 
-func (p *Player) OnUpdateTickPlayer(wp *WavePool) {
-	p.mu.Lock()
-
+func (p *Player) OnUpdateTick(wp *WavePool) {
 	p.EntityCoordinateMovement(wp)
 	p.PlayerCoordinateBoundary(wp)
 	p.PlayerElimination(wp)
@@ -93,13 +86,15 @@ func (p *Player) OnUpdateTickPlayer(wp *WavePool) {
 
 	{ // Base onUpdateTick
 	}
+}
 
-	p.mu.Unlock()
+func (p *Player) Dispose() {
+	p.DeadCameraTarget = nil
 }
 
 // NewPlayer return new player instance.
 func NewPlayer(
-	id *PlayerId,
+	id *EntityId,
 
 	sp StaticPlayer,
 
@@ -108,6 +103,8 @@ func NewPlayer(
 ) *Player {
 	return &Player{
 		Entity: Entity{
+			Id: id,
+
 			X: x,
 			Y: y,
 
@@ -134,9 +131,7 @@ func NewPlayer(
 			UsageCooldownGrid:  generatePetalCooldownGrid(sp.Surface),
 		},
 
-		Id: id,
-
-		BodyDamage: 1000,
+		BodyDamage: 100000,
 
 		Mood: native.MoodNormal,
 

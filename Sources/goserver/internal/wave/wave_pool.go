@@ -38,9 +38,9 @@ type WaveData struct {
 }
 
 type WavePool struct {
-	playerPool *xsync.MapOf[PlayerId, *Player]
-	mobPool    *xsync.MapOf[MobId, *Mob]
-	petalPool  *xsync.MapOf[PetalId, *Petal]
+	playerPool *xsync.MapOf[EntityId, *Player]
+	mobPool    *xsync.MapOf[EntityId, *Mob]
+	petalPool  *xsync.MapOf[EntityId, *Petal]
 
 	eliminatedEntityIDs []uint32
 
@@ -67,9 +67,9 @@ func NewWavePool(wr *WaveRoom, wd *WaveData) *WavePool {
 	spawner.Next(wd)
 
 	return &WavePool{
-		playerPool: xsync.NewMapOf[PlayerId, *Player](),
-		mobPool:    xsync.NewMapOf[MobId, *Mob](),
-		petalPool:  xsync.NewMapOf[PetalId, *Petal](),
+		playerPool: xsync.NewMapOf[EntityId, *Player](),
+		mobPool:    xsync.NewMapOf[EntityId, *Mob](),
+		petalPool:  xsync.NewMapOf[EntityId, *Petal](),
 
 		eliminatedEntityIDs: make([]uint32, 0),
 
@@ -138,6 +138,22 @@ func (wp *WavePool) Dispose() {
 		wp.updateTicker.Stop()
 		wp.updateTicker = nil
 	}
+	
+	wp.playerPool.Range(func(id EntityId, player *Player) bool {
+		player.Dispose()
+
+		return true
+	})
+	wp.mobPool.Range(func(id EntityId, mob *Mob) bool {
+		mob.Dispose()
+
+		return true
+	})
+	wp.petalPool.Range(func(id EntityId, petal *Petal) bool {
+		petal.Dispose()
+
+		return true
+	})
 
 	wp.playerPool.Clear()
 	wp.mobPool.Clear()
@@ -157,7 +173,7 @@ func (wp *WavePool) IsAllPlayerDead() bool {
 
 	allDead := true
 
-	wp.playerPool.Range(func(id PlayerId, player *Player) bool {
+	wp.playerPool.Range(func(id EntityId, player *Player) bool {
 		if !player.IsDead {
 			allDead = false
 
@@ -176,7 +192,7 @@ func (wp *WavePool) broadcastSeldIdPacket() {
 
 	buf[0] = network.ClientboundWaveSelfId
 
-	wp.playerPool.Range(func(id PlayerId, player *Player) bool {
+	wp.playerPool.Range(func(id EntityId, player *Player) bool {
 		// Dynamically put id
 		binary.LittleEndian.PutUint32(buf[1:], id)
 
@@ -217,33 +233,33 @@ func (wp *WavePool) update() {
 }
 
 func (wp *WavePool) updateEntities() {
-	wp.playerPool.Range(func(id PlayerId, player *Player) bool {
-		player.OnUpdateTickPlayer(wp)
+	wp.playerPool.Range(func(id EntityId, player *Player) bool {
+		player.OnUpdateTick(wp)
 
 		return true
 	})
-	wp.mobPool.Range(func(id MobId, mob *Mob) bool {
-		mob.OnUpdateTickMob(wp)
+	wp.mobPool.Range(func(id EntityId, mob *Mob) bool {
+		mob.OnUpdateTick(wp)
 
 		return true
 	})
-	wp.petalPool.Range(func(id PetalId, petal *Petal) bool {
-		petal.OnUpdateTickPetal(wp)
+	wp.petalPool.Range(func(id EntityId, petal *Petal) bool {
+		petal.OnUpdateTick(wp)
 
 		return true
 	})
 
-	wp.playerPool.Range(func(id PlayerId, player *Player) bool {
+	wp.playerPool.Range(func(id EntityId, player *Player) bool {
 		wp.SpatialHash.Update(player)
 
 		return true
 	})
-	wp.mobPool.Range(func(id MobId, mob *Mob) bool {
+	wp.mobPool.Range(func(id EntityId, mob *Mob) bool {
 		wp.SpatialHash.Update(mob)
 
 		return true
 	})
-	wp.petalPool.Range(func(id PetalId, petal *Petal) bool {
+	wp.petalPool.Range(func(id EntityId, petal *Petal) bool {
 		wp.SpatialHash.Update(petal)
 
 		return true
@@ -255,7 +271,13 @@ func (wp *WavePool) updateWaveData() {
 		return
 	}
 
-	defer wp.wr.CheckAndUpdateRoomState()
+	defer func(){
+		// We niled wave room when dispose, so this can make error
+		// Safely check wr is nil
+		if wp.wr != nil {
+			wp.wr.CheckAndUpdateRoomState()
+		}
+	}()
 
 	if !wp.wd.ProgressIsRed {
 		smd := wp.ms.DetermineStaticMobData(wp.wd)
@@ -290,7 +312,7 @@ func (wp *WavePool) updateWaveData() {
 				wp.wd.ProgressRedTimer+0.016,
 			)
 		} else {
-			wp.playerPool.Range(func(id PlayerId, p *Player) bool {
+			wp.playerPool.Range(func(id EntityId, p *Player) bool {
 				RevivePlayer(wp, p)
 
 				return true
@@ -314,7 +336,7 @@ func (wp *WavePool) updateWaveData() {
 func (wp *WavePool) broadcastUpdatePacket() {
 	updatePacket := wp.createUpdatePacket()
 
-	wp.playerPool.Range(func(id PlayerId, player *Player) bool {
+	wp.playerPool.Range(func(id EntityId, player *Player) bool {
 		player.Conn.WriteMessage(websocket.BinaryMessage, updatePacket)
 
 		return true
@@ -337,7 +359,7 @@ func (wp *WavePool) calculateUpdatePacketSize() int {
 	{ // Add player packet size
 		// Player count
 		size += 2
-		wp.playerPool.Range(func(id PlayerId, player *Player) bool {
+		wp.playerPool.Range(func(id EntityId, player *Player) bool {
 			// String length is dynamically changeable, so we can do is just loop
 			size += 4 + // Id
 				// X
@@ -445,8 +467,8 @@ func (wp *WavePool) createUpdatePacket() []byte {
 		binary.LittleEndian.PutUint16(buf[at:], uint16(wp.playerPool.Size()))
 		at += 2
 
-		wp.playerPool.Range(func(id PlayerId, player *Player) bool {
-			binary.LittleEndian.PutUint32(buf[at:], *player.Id)
+		wp.playerPool.Range(func(id EntityId, player *Player) bool {
+			binary.LittleEndian.PutUint32(buf[at:], id)
 			at += 4
 
 			binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(player.X))
@@ -497,8 +519,8 @@ func (wp *WavePool) createUpdatePacket() []byte {
 		binary.LittleEndian.PutUint16(buf[at:], uint16(wp.mobPool.Size()))
 		at += 2
 
-		wp.mobPool.Range(func(id MobId, mob *Mob) bool {
-			binary.LittleEndian.PutUint32(buf[at:], *mob.Id)
+		wp.mobPool.Range(func(id EntityId, mob *Mob) bool {
+			binary.LittleEndian.PutUint32(buf[at:], id)
 			at += 4
 
 			binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(mob.X))
@@ -543,8 +565,8 @@ func (wp *WavePool) createUpdatePacket() []byte {
 		binary.LittleEndian.PutUint16(buf[at:], uint16(wp.petalPool.Size()))
 		at += 2
 
-		wp.petalPool.Range(func(id PetalId, petal *Petal) bool {
-			binary.LittleEndian.PutUint32(buf[at:], *petal.Id)
+		wp.petalPool.Range(func(id EntityId, petal *Petal) bool {
+			binary.LittleEndian.PutUint32(buf[at:], id)
 			at += 4
 
 			binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(petal.X))
@@ -635,9 +657,9 @@ func (wp *WavePool) SafeGeneratePlayer(
 	)
 }
 
-func (wp *WavePool) RemovePlayer(id PlayerId) {
+func (wp *WavePool) RemovePlayer(id EntityId) {
 	if player, ok := wp.playerPool.Load(id); ok {
-		// player.dispose
+		player.Dispose()
 
 		wp.SpatialHash.Remove(player)
 
@@ -647,20 +669,20 @@ func (wp *WavePool) RemovePlayer(id PlayerId) {
 	}
 }
 
-func (wp *WavePool) SafeRemovePlayer(id PlayerId) {
+func (wp *WavePool) SafeRemovePlayer(id EntityId) {
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
 
 	wp.RemovePlayer(id)
 }
 
-func (wp *WavePool) FindPlayer(id PlayerId) *Player {
+func (wp *WavePool) FindPlayer(id EntityId) *Player {
 	player, _ := wp.playerPool.Load(id)
 
 	return player
 }
 
-func (wp *WavePool) SafeFindPlayer(id PlayerId) *Player {
+func (wp *WavePool) SafeFindPlayer(id EntityId) *Player {
 	wp.mu.RLock()
 	defer wp.mu.RUnlock()
 
@@ -671,7 +693,7 @@ func (wp *WavePool) SafeFindPlayer(id PlayerId) *Player {
 func (wp *WavePool) GetPlayersWithCondition(condition func(*Player) bool) []*Player {
 	filtered := make([]*Player, 0)
 
-	wp.playerPool.Range(func(id PlayerId, player *Player) bool {
+	wp.playerPool.Range(func(id EntityId, player *Player) bool {
 		if condition(player) {
 			filtered = append(filtered, player)
 		}
@@ -773,9 +795,9 @@ func (wp *WavePool) SafeGenerateMob(
 	)
 }
 
-func (wp *WavePool) RemoveMob(id MobId) {
+func (wp *WavePool) RemoveMob(id EntityId) {
 	if mob, ok := wp.mobPool.Load(id); ok {
-		// mob.dispose
+		mob.Dispose()
 
 		wp.SpatialHash.Remove(mob)
 
@@ -785,20 +807,20 @@ func (wp *WavePool) RemoveMob(id MobId) {
 	}
 }
 
-func (wp *WavePool) SafeRemoveMob(id MobId) {
+func (wp *WavePool) SafeRemoveMob(id EntityId) {
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
 
 	wp.RemoveMob(id)
 }
 
-func (wp *WavePool) FindMob(id MobId) *Mob {
+func (wp *WavePool) FindMob(id EntityId) *Mob {
 	mob, _ := wp.mobPool.Load(id)
 
 	return mob
 }
 
-func (wp *WavePool) SafeFindMob(id MobId) *Mob {
+func (wp *WavePool) SafeFindMob(id EntityId) *Mob {
 	wp.mu.RLock()
 	defer wp.mu.RUnlock()
 
@@ -812,7 +834,7 @@ func (wp *WavePool) GetMobsWithCondition(condition func(*Mob) bool) []*Mob {
 
 	filtered := make([]*Mob, 0)
 
-	wp.mobPool.Range(func(id MobId, mob *Mob) bool {
+	wp.mobPool.Range(func(id EntityId, mob *Mob) bool {
 		if condition(mob) {
 			filtered = append(filtered, mob)
 		}
@@ -965,9 +987,9 @@ func (wp *WavePool) SafeGeneratePetal(
 	)
 }
 
-func (wp *WavePool) RemovePetal(id PetalId) {
+func (wp *WavePool) RemovePetal(id EntityId) {
 	if petal, ok := wp.petalPool.Load(id); ok {
-		// petal.dispose
+		petal.Dispose()
 
 		wp.SpatialHash.Remove(petal)
 
@@ -977,20 +999,20 @@ func (wp *WavePool) RemovePetal(id PetalId) {
 	}
 }
 
-func (wp *WavePool) SafeRemovePetal(id PetalId) {
+func (wp *WavePool) SafeRemovePetal(id EntityId) {
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
 
 	wp.RemovePetal(id)
 }
 
-func (wp *WavePool) FindPetal(id PetalId) *Petal {
+func (wp *WavePool) FindPetal(id EntityId) *Petal {
 	mob, _ := wp.petalPool.Load(id)
 
 	return mob
 }
 
-func (wp *WavePool) SafeFindPetal(id PetalId) *Petal {
+func (wp *WavePool) SafeFindPetal(id EntityId) *Petal {
 	wp.mu.RLock()
 	defer wp.mu.RUnlock()
 
@@ -1004,7 +1026,7 @@ func (wp *WavePool) GetPetalsWithCondition(condition func(*Petal) bool) []*Petal
 
 	filtered := make([]*Petal, 0)
 
-	wp.petalPool.Range(func(id PetalId, petal *Petal) bool {
+	wp.petalPool.Range(func(id EntityId, petal *Petal) bool {
 		if condition(petal) {
 			filtered = append(filtered, petal)
 		}

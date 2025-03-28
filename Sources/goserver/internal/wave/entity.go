@@ -3,12 +3,16 @@ package wave
 import (
 	"math"
 	"math/rand/v2"
-	"sync"
 
 	"flooooio/internal/collision"
 )
 
+type EntityId = uint32
+
 type Entity struct {
+	// Id is unique identifier of entity.
+	Id *EntityId
+
 	// X is x-pos of entity.
 	X float64
 	// Y is y-pos of entity.
@@ -25,8 +29,6 @@ type Entity struct {
 	// Health is health of entity.
 	// Range will be [0, 1] float range.
 	Health float64
-
-	mu sync.RWMutex
 }
 
 // RandomAngle returns random angle of entity.
@@ -94,6 +96,10 @@ func (e *Entity) GetX() float64 {
 
 func (e *Entity) GetY() float64 {
 	return e.Y
+}
+
+func (e *Entity) GetID() uint32 {
+	return *e.Id
 }
 
 // IsDeadNode determine if Node is dead.

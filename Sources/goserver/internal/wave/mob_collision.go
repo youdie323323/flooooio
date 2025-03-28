@@ -1,9 +1,12 @@
 package wave
 
-import "flooooio/internal/native"
+import (
+	"flooooio/internal/collision"
+	"flooooio/internal/native"
+)
 
 const (
-	mobToMobPushMultiplier = 0.75
+	mobToMobPushMultiplier = 0.3
 )
 
 func (m *Mob) MobCollision(wp *WavePool) {
@@ -22,17 +25,17 @@ func (m *Mob) MobCollision(wp *WavePool) {
 
 	nearby := wp.SpatialHash.Search(m.X, m.Y, searchRadius)
 
-	for _, ni := range nearby {
+	nearby.Range(func(_ uint32, ni collision.Node) bool {
 		switch nearEntity := ni.(type) {
 		// Mob -> Mob
 		case *Mob:
 			{
 				if nearEntity.Id == m.Id {
-					continue
+					return true
 				}
 
 				if nearEntity.WasEliminated(wp) {
-					return
+					return true
 				}
 
 				c1 := circle{nearEntity.X, nearEntity.Y, nearEntity.GetDesiredSize()}
@@ -47,12 +50,12 @@ func (m *Mob) MobCollision(wp *WavePool) {
 
 					// Mob doesnt damaged to mob
 					if m.PetMaster == nil && nearEntity.PetMaster == nil {
-						return
+						return true
 					}
 
 					// Pet doesnt damaged to other pet
 					if m.PetMaster != nil && nearEntity.PetMaster != nil {
-						return
+						return true
 					}
 
 					{ // Damage
@@ -79,16 +82,16 @@ func (m *Mob) MobCollision(wp *WavePool) {
 		case *Petal:
 			{
 				if nearEntity.Id == m.Id {
-					continue
+					return true
 				}
 
 				if nearEntity.WasEliminated(wp) {
-					return
+					return true
 				}
 
 				// Petal doesnt damaged/knockbacked to pet
 				if m.PetMaster != nil {
-					continue
+					return true
 				}
 
 				c1 := circle{nearEntity.X, nearEntity.Y, nearEntity.GetDesiredSize()}
@@ -123,17 +126,17 @@ func (m *Mob) MobCollision(wp *WavePool) {
 		case *Player:
 			{
 				if nearEntity.Id == m.Id {
-					continue
+					return true
 				}
 
 				// Dont collide to dead/uncollidable player
 				if nearEntity.IsDead || !nearEntity.IsCollidable() {
-					continue
+					return true
 				}
 
 				// Dont damage/knockback to player
 				if m.PetMaster != nil {
-					continue
+					return true
 				}
 
 				c1 := circle{nearEntity.X, nearEntity.Y, nearEntity.Size}
@@ -159,5 +162,6 @@ func (m *Mob) MobCollision(wp *WavePool) {
 				}
 			}
 		}
-	}
+		return true
+	})
 }
