@@ -1,6 +1,5 @@
 import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
 import type { MobData } from "../../../../../../Shared/Entity/Statics/Mob/MobData";
-import { MOB_PROFILES } from "../../../../../../Shared/Entity/Statics/Mob/MobProfiles";
 import type { ColorCode } from "../../../../../../Shared/Utils/Color";
 import { memo } from "../../../../../../Shared/Utils/Memoize";
 import { uiCtx } from "../../../../../Main";
@@ -9,6 +8,7 @@ import type Entity from "../Entity";
 import Mob from "../Mob";
 import Player from "../Player";
 import type { RenderingContext } from "./RendererRenderingContext";
+import MOB_PROFILES from "../../../../../../Shared/Native/mob_profiles.json";
 
 const hexToRgb = memo((hexColor: ColorCode) => {
     return [

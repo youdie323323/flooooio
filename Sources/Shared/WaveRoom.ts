@@ -1,25 +1,25 @@
 /** Represents the current state of a wave room */
 export enum WaveRoomState {
     // State waiting, mean waiting for players
-    Waiting,
+    WAITING,
     // State started, mean playing game currently
-    Playing,
+    PLAYING,
     // State ended, mean already game over
-    Ended,
+    ENDED,
 }
 
 /** Determines if a wave room is public or private */
 export enum WaveRoomVisibleState {
-    Public,
-    Private,
+    PUBLIC,
+    PRIVATE,
 }
 
 export const VISIBLE_STATE_VALUES = Object.values(WaveRoomVisibleState);
 
 /** Indicates if a player is ready to start the wave */
 export enum WaveRoomPlayerReadyState {
-    Unready,
-    Ready,
+    PREPARING,
+    READY,
 }
 
 export const PLAYER_STATE_VALUES = Object.values(WaveRoomPlayerReadyState);

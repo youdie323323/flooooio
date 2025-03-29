@@ -15,6 +15,7 @@
     "strictNullChecks": false,
     "useDefineForClassFields": false,
     "forceConsistentCasingInFileNames": false,
+    "resolveJsonModule": true,
   },
   "include": [
     "Sources/**/*",

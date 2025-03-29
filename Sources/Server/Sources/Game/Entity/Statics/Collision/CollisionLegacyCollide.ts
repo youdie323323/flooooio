@@ -1,7 +1,5 @@
 import type { MobData } from "../../../../../../Shared/Entity/Statics/Mob/MobData";
-import { MOB_PROFILES } from "../../../../../../Shared/Entity/Statics/Mob/MobProfiles";
 import type { PetalData } from "../../../../../../Shared/Entity/Statics/Mob/Petal/PetalData";
-import { PETAL_PROFILES } from "../../../../../../Shared/Entity/Statics/Mob/Petal/PetalProfiles";
 import type { RealEntity } from "../../Dynamics/Entity";
 import { angleToRad } from "../../Dynamics/EntityCoordinateMovement";
 // import { BaseMob } from "../../Dynamics/Mob/Mob";
@@ -9,6 +7,8 @@ import type { CollidableShapes, Ellipse } from "./Colliders/Collider";
 import { AbstractCollider, isCircle, isEllipse } from "./Colliders/Collider";
 import ColliderCircle from "./Colliders/ColliderCircle";
 import ColliderEllipse from "./Colliders/ColliderEllipse";
+import MOB_PROFILES from "../../../../../../Shared/Native/mob_profiles.json";
+import PETAL_PROFILES from "../../../../../../Shared/Native/petal_profiles.json";
 
 const colliderEllipse = new ColliderEllipse();
 const colliderCircle = new ColliderCircle();

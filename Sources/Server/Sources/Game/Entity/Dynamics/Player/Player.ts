@@ -141,8 +141,9 @@ type PlayerInstance = InstanceType<typeof Player>;
  * @remarks
  * This data for visualize player in wave room.
  */
-interface StaticPlayerData {
+interface StaticPlayer {
     name: string;
+    
     slots: PetalSlots;
 
     /**
@@ -151,5 +152,5 @@ interface StaticPlayerData {
     ws: uWS.WebSocket<UserData>;
 }
 
-export type { PlayerInstance, StaticPlayerData };
+export type { PlayerInstance, StaticPlayer };
 export { Player, BasePlayer };

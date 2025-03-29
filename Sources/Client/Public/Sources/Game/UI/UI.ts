@@ -92,13 +92,33 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
         };
         this.touchstart = (event: TouchEvent) => {
             event.preventDefault();
+            if (event.touches.length > 1) return;
 
-            this.handleMouseDown(<MouseEvent>{ isTrusted: event.isTrusted });
+            const touch = event.touches[0];
+
+            // Update mouse position first
+            const rect = this.canvas.getBoundingClientRect();
+            this.mouseX = ((touch.clientX - rect.left) * (this.canvas.width / rect.width)) / uiScaleFactor;
+            this.mouseY = ((touch.clientY - rect.top) * (this.canvas.height / rect.height)) / uiScaleFactor;
+
+            // Create a synthetic mouse event with the touch coordinates
+            this.handleMouseDown(<MouseEvent>{
+                isTrusted: event.isTrusted,
+                clientX: touch.clientX,
+                clientY: touch.clientY,
+                button: 0,
+            });
         };
         this.touchend = (event: TouchEvent) => {
             event.preventDefault();
 
-            this.handleMouseUp(<MouseEvent>{ isTrusted: event.isTrusted });
+            // Use last known coordinates for the mouseup event
+            this.handleMouseUp(<MouseEvent>{
+                isTrusted: event.isTrusted,
+                clientX: this.mouseX * uiScaleFactor,
+                clientY: this.mouseY * uiScaleFactor,
+                button: 0,
+            });
         };
 
         this.keydown = this.handleKeyDown.bind(this);
@@ -149,6 +169,9 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
         // Call twice to components working properly
         this.onresize();
         this.onresize();
+
+        // Add touch-action CSS property
+        canvas.style.touchAction = 'none';
     }
 
     public removeEventListeners(): void {

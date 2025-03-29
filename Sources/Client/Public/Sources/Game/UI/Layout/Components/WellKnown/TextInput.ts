@@ -1,4 +1,3 @@
-import ExtensionBase from "../../Extensions/Extension";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
 import type { MaybePointerLike } from "../Component";
@@ -35,7 +34,7 @@ interface TextInputOptions {
 
 const inputs: Array<TextInput> = new Array();
 
-export default class TextInput extends ExtensionBase(Component) {
+export default class TextInput extends Component {
     // Core properties
     private _value: string;
     private canvas: HTMLCanvasElement;

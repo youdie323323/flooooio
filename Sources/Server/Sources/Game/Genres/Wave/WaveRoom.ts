@@ -6,7 +6,7 @@ import { Clientbound } from "../../../../../Shared/Websocket/Packet/PacketDirect
 import { logger } from "../../../../Main";
 import type { BrandedId } from "../../Entity/Dynamics/Entity";
 import type { MobId } from "../../Entity/Dynamics/Mob/Mob";
-import type { StaticPlayerData, PlayerId } from "../../Entity/Dynamics/Player/Player";
+import type { StaticPlayer, PlayerId } from "../../Entity/Dynamics/Player/Player";
 import { Player } from "../../Entity/Dynamics/Player/Player";
 import type { UserData, WaveData } from "./WavePool";
 import { WavePool } from "./WavePool";
@@ -16,7 +16,7 @@ import type uWS from 'uWebSockets.js';
 export type WaveRoomPlayerId = BrandedId<"WaveRoomPlayer">;
 
 /** Extended player data with wave room data properties */
-export type WaveRoomPlayer = StaticPlayerData & {
+export type StaticWaveRoomPlayer = StaticPlayer & {
     id: WaveRoomPlayerId;
     readyState: WaveRoomPlayerReadyState;
     isOwner: boolean;
@@ -89,9 +89,9 @@ export default class WaveRoom {
         public readonly code: WaveRoomCode,
 
         // Wave room related
-        public visible: WaveRoomVisibleState = WaveRoomVisibleState.Public,
-        public state: WaveRoomState = WaveRoomState.Waiting,
-        public roomCandidates: Array<WaveRoomPlayer> = new Array<WaveRoomPlayer>(),
+        public visible: WaveRoomVisibleState = WaveRoomVisibleState.PUBLIC,
+        public state: WaveRoomState = WaveRoomState.WAITING,
+        public roomCandidates: Array<StaticWaveRoomPlayer> = new Array<StaticWaveRoomPlayer>(),
     ) {
         this.waveRoomPacketSendInterval = setInterval(this.broadcastWaveRoomState.bind(this), 1000 / WAVE_ROOM_UPDATE_SEND_FPS);
 
@@ -179,17 +179,17 @@ export default class WaveRoom {
 
         waveRoomStateWriter.writeString(this.code);
 
-        waveRoomStateWriter.writeUInt8(this.biome);
-
         waveRoomStateWriter.writeUInt8(this.state);
 
         waveRoomStateWriter.writeUInt8(this.visible);
 
+        waveRoomStateWriter.writeUInt8(this.biome);
+
         return waveRoomStateWriter.buffer;
     }
 
-    public registerPlayer(player: StaticPlayerData): WaveRoomPlayerId | false {
-        if (this.state !== WaveRoomState.Waiting) return false;
+    public registerPlayer(player: StaticPlayer): WaveRoomPlayerId | false {
+        if (this.state !== WaveRoomState.WAITING) return false;
 
         if (!this.newPlayerAcceptable) return false;
 
@@ -204,8 +204,9 @@ export default class WaveRoom {
 
         this.roomCandidates.push({
             ...player,
+            
             id,
-            readyState: WaveRoomPlayerReadyState.Unready,
+            readyState: WaveRoomPlayerReadyState.PREPARING,
             // First player is owner
             isOwner: this.roomCandidates.length === 0,
         });
@@ -219,7 +220,7 @@ export default class WaveRoom {
     }
 
     public unregisterPlayer(id: WaveRoomPlayerId): boolean {
-        if (this.state !== WaveRoomState.Waiting) return false;
+        if (this.state !== WaveRoomState.WAITING) return false;
 
         using _disposable = this.createStateChangeHandler();
 
@@ -245,7 +246,7 @@ export default class WaveRoom {
     }
 
     public updatePlayerReadyState(id: WaveRoomPlayerId, state: WaveRoomPlayerReadyState): boolean {
-        if (this.state !== WaveRoomState.Waiting) return false;
+        if (this.state !== WaveRoomState.WAITING) return false;
 
         using _disposable = this.createStateChangeHandler();
 
@@ -265,7 +266,7 @@ export default class WaveRoom {
     }
 
     public updateRoomVisibility(id: WaveRoomPlayerId, state: WaveRoomVisibleState): boolean {
-        if (this.state !== WaveRoomState.Waiting) return false;
+        if (this.state !== WaveRoomState.WAITING) return false;
 
         const playerData = this.roomCandidates.find(p => p.id === id);
         if (!playerData?.isOwner) return false;
@@ -283,7 +284,7 @@ export default class WaveRoom {
     }
 
     public updatePlayerName(id: WaveRoomPlayerId, name: string): boolean {
-        if (this.state !== WaveRoomState.Waiting) return false;
+        if (this.state !== WaveRoomState.WAITING) return false;
 
         using _disposable = this.createStateChangeHandler();
 
@@ -298,7 +299,7 @@ export default class WaveRoom {
     }
 
     private startWaveRoom() {
-        this.state = WaveRoomState.Playing;
+        this.state = WaveRoomState.PLAYING;
 
         // Stop update packet send
         clearInterval(this.waveRoomPacketSendInterval);
@@ -316,7 +317,7 @@ export default class WaveRoom {
     }
 
     private endWaveRoom() {
-        this.state = WaveRoomState.Ended;
+        this.state = WaveRoomState.ENDED;
 
         // Stop wave update
         this.wavePool.endWave();
@@ -341,15 +342,15 @@ export default class WaveRoom {
     public checkAndUpdateGameState() {
         // this.roomCandidates.length !== 0 to prevent multiple wave start, before wave room deletion
         if (
-            this.state === WaveRoomState.Waiting &&
+            this.state === WaveRoomState.WAITING &&
             this.roomCandidates.length !== 0 &&
-            this.roomCandidates.every(p => p.readyState === WaveRoomPlayerReadyState.Ready)
+            this.roomCandidates.every(p => p.readyState === WaveRoomPlayerReadyState.READY)
         ) {
             this.startWaveRoom();
         }
 
         if (
-            this.state === WaveRoomState.Playing &&
+            this.state === WaveRoomState.PLAYING &&
             this.wavePool.getAllClients().every(p => p.isDead)
         ) {
             this.endWaveRoom();
@@ -383,6 +384,6 @@ export default class WaveRoom {
      */
     public get newPlayerAcceptable() {
         return this.roomCandidates.length < WaveRoom.MAX_PLAYER_AMOUNT &&
-            this.state === WaveRoomState.Waiting;
+            this.state === WaveRoomState.WAITING;
     }
 }

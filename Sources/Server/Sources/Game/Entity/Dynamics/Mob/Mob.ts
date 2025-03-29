@@ -15,9 +15,9 @@ import { MobType } from "../../../../../../Shared/Entity/Statics/EntityType";
 import type { WavePool } from "../../../Genres/Wave/WavePool";
 import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
 import type { MobData } from "../../../../../../Shared/Entity/Statics/Mob/MobData";
-import { MOB_PROFILES } from "../../../../../../Shared/Entity/Statics/Mob/MobProfiles";
 import type { PetalData } from "../../../../../../Shared/Entity/Statics/Mob/Petal/PetalData";
-import { PETAL_PROFILES } from "../../../../../../Shared/Entity/Statics/Mob/Petal/PetalProfiles";
+import MOB_PROFILES from "../../../../../../Shared/Native/mob_profiles.json";
+import PETAL_PROFILES from "../../../../../../Shared/Native/petal_profiles.json";
 
 export type MobId = BrandedId<"Mob">;
 

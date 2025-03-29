@@ -2,12 +2,12 @@ import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Peta
 import type { MobType } from "../../../../../../Shared/Entity/Statics/EntityType";
 import { PetalType } from "../../../../../../Shared/Entity/Statics/EntityType";
 import type { PetalData } from "../../../../../../Shared/Entity/Statics/Mob/Petal/PetalData";
-import { PETAL_PROFILES } from "../../../../../../Shared/Entity/Statics/Mob/Petal/PetalProfiles";
 import type { WavePool } from "../../../Genres/Wave/WavePool";
 import type { EntityMixinConstructor, EntityMixinTemplate } from "../Entity";
 import { ON_UPDATE_TICK } from "../Entity";
 import { isDynamicPetal, MAX_CLUSTER_AMOUNT } from "../Mob/Petal/Petal";
 import type { BasePlayer } from "./Player";
+import PETAL_PROFILES from "../../../../../../Shared/Native/petal_profiles.json";
 
 export const PETAL_INITIAL_COOLDOWN = 0;
 
@@ -89,7 +89,7 @@ export function PlayerPetalReload<T extends EntityMixinConstructor<BasePlayer>>(
                                     // Petal respawned, start consume timer
                                     if (cooldownUsage[j] === PETAL_INITIAL_COOLDOWN) {
                                         const profile: PetalData = PETAL_PROFILES[e.type];
-                                        cooldownUsage[j] = Date.now() + (profile[e.rarity].usageReload * 1000);
+                                        cooldownUsage[j] = Date.now() + (profile[e.rarity].extra.usageReload * 1000);
                                     }
                                 } else {
                                     // Reset cooldown because its breaked

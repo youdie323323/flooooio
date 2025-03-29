@@ -134,141 +134,212 @@ export default class UIGame extends AbstractUI {
                 this.updateT = 0;
             }
 
-            const clientCount = reader.readUInt16();
+            { // Read players
+                const clientCount = reader.readUInt16();
 
-            for (let i = 0; i < clientCount; i++) {
-                const clientId = reader.readUInt32();
+                for (let i = 0; i < clientCount; i++) {
+                    const clientId = reader.readUInt32();
 
-                const clientX = reader.readFloat64();
-                const clientY = reader.readFloat64();
+                    const clientX = reader.readFloat64();
+                    const clientY = reader.readFloat64();
 
-                const clientAngle = angleToRad(reader.readUInt8());
+                    const clientAngle = angleToRad(reader.readFloat64());
 
-                const clientHealth = reader.readFloat64();
+                    const clientHealth = reader.readFloat64();
 
-                const clientSize = reader.readUInt32();
+                    const clientSize = reader.readFloat64();
 
-                const clientMood = reader.readUInt8();
+                    const clientMood = reader.readUInt8();
 
-                const clientNickname = reader.readString();
+                    const clientNickname = reader.readString();
 
-                // Decode boolean flags
-                const bFlags = reader.readUInt8();
-                const clientIsDead = !!(bFlags & 1);
-                const clientIsDev = !!(bFlags & 2);
+                    // Decode boolean flags
+                    const bFlags = reader.readUInt8();
 
-                const client = this.players.get(clientId);
-                if (client) {
-                    client.nx = clientX;
-                    client.ny = clientY;
-                    client.nAngle = clientAngle;
-                    client.nSize = clientSize;
-                    client.mood = clientMood;
-                    client.isDead = clientIsDead;
-                    client.isDev = clientIsDev;
+                    const clientIsDead = Boolean(bFlags & 1),
+                        clientIsDev = Boolean(bFlags & 2);
 
-                    if (clientHealth < client.nHealth) {
-                        client.redHealthTimer = 1;
-                    } else if (clientHealth > client.nHealth) {
-                        client.redHealthTimer = 0;
-                    }
+                    const client = this.players.get(clientId);
+                    if (client) {
+                        client.nx = clientX;
+                        client.ny = clientY;
+                        client.nAngle = clientAngle;
+                        client.nSize = clientSize;
+                        client.mood = clientMood;
+                        client.isDead = clientIsDead;
+                        client.isDev = clientIsDev;
 
-                    if (clientHealth < client.nHealth) {
-                        client.hurtT = 1;
-                    }
+                        if (clientHealth < client.nHealth) {
+                            client.redHealthTimer = 1;
+                        } else if (clientHealth > client.nHealth) {
+                            client.redHealthTimer = 0;
+                        }
 
-                    client.nHealth = clientHealth;
+                        if (clientHealth < client.nHealth) {
+                            client.hurtT = 1;
+                        }
 
-                    client.ox = client.x;
-                    client.oy = client.y;
-                    client.oAngle = client.angle;
-                    client.oHealth = client.health;
-                    client.oSize = client.size;
-                    client.updateT = 0;
-                } else {
-                    this.players.set(
-                        clientId,
-                        new Player(
+                        client.nHealth = clientHealth;
+
+                        client.ox = client.x;
+                        client.oy = client.y;
+                        client.oAngle = client.angle;
+                        client.oHealth = client.health;
+                        client.oSize = client.size;
+                        client.updateT = 0;
+                    } else {
+                        this.players.set(
                             clientId,
-                            clientX,
-                            clientY,
-                            clientAngle,
-                            clientSize,
-                            clientHealth,
-                            clientMood,
-                            clientNickname,
-                        ),
-                    );
+                            new Player(
+                                clientId,
+                                clientX,
+                                clientY,
+                                clientAngle,
+                                clientSize,
+                                clientHealth,
+                                clientMood,
+                                clientNickname,
+                            ),
+                        );
+                    }
                 }
             }
 
-            const mobCount = reader.readUInt16();
+            { // Read mobs
+                const mobCount = reader.readUInt16();
 
-            for (let i = 0; i < mobCount; i++) {
-                const mobId = reader.readUInt32();
+                for (let i = 0; i < mobCount; i++) {
+                    const mobId = reader.readUInt32();
 
-                const mobX = reader.readFloat64();
-                const mobY = reader.readFloat64();
+                    const mobX = reader.readFloat64();
+                    const mobY = reader.readFloat64();
 
-                const mobAngle = angleToRad(reader.readFloat64());
+                    const mobAngle = angleToRad(reader.readFloat64());
 
-                const mobHealth = reader.readFloat64();
+                    const mobHealth = reader.readFloat64();
 
-                const mobSize = reader.readUInt32();
+                    const mobSize = reader.readFloat64();
 
-                const mobType = reader.readUInt8();
+                    const mobType = reader.readUInt8();
 
-                const mobRarity = reader.readUInt8() as Rarity;
+                    const mobRarity = reader.readUInt8() as Rarity;
 
-                // Decode boolean flags
-                const bFlags = reader.readUInt8();
-                const mobIsPet = !!(bFlags & 1);
-                const mobIsFirstSegment = !!(bFlags & 2);
+                    // Decode boolean flags
+                    const bFlags = reader.readUInt8();
 
-                const mob = this.mobs.get(mobId);
-                if (mob) {
-                    mob.nx = mobX;
-                    mob.ny = mobY;
-                    mob.nAngle = mobAngle;
-                    mob.nSize = mobSize;
+                    const mobIsPet = Boolean(bFlags & 1),
+                        mobIsFirstSegment = Boolean(bFlags & 2);
 
-                    if (mob.health < mob.nHealth) {
-                        mob.redHealthTimer = 1;
-                    } else if (mob.health > mob.nHealth) {
-                        mob.redHealthTimer = 0;
+                    const mob = this.mobs.get(mobId);
+                    if (mob) {
+                        mob.nx = mobX;
+                        mob.ny = mobY;
+                        mob.nAngle = mobAngle;
+                        mob.nSize = mobSize;
+
+                        if (mob.health < mob.nHealth) {
+                            mob.redHealthTimer = 1;
+                        } else if (mob.health > mob.nHealth) {
+                            mob.redHealthTimer = 0;
+                        }
+
+                        if (mobHealth < mob.nHealth) {
+                            mob.hurtT = 1;
+                        }
+
+                        mob.nHealth = mobHealth;
+
+                        mob.ox = mob.x;
+                        mob.oy = mob.y;
+                        mob.oAngle = mob.angle;
+                        mob.oHealth = mob.health;
+                        mob.oSize = mob.size;
+                        mob.updateT = 0;
+                    } else {
+                        const mobInstance = new Mob(
+                            mobId,
+                            mobX,
+                            mobY,
+                            mobAngle,
+                            mobSize,
+                            mobHealth,
+                            mobType,
+                            mobRarity,
+                            mobIsPet,
+                            mobIsFirstSegment,
+                        );
+
+                        if (this.waveEnemyIcons.isIconableMobInstance(mobInstance)) {
+                            this.waveEnemyIcons.addMobIcon(mobInstance);
+                        }
+
+                        this.mobs.set(mobId, mobInstance);
                     }
+                }
+            }
 
-                    if (mobHealth < mob.nHealth) {
-                        mob.hurtT = 1;
+            { // Read petals
+                const petalCount = reader.readUInt16();
+
+                for (let i = 0; i < petalCount; i++) {
+                    const petalId = reader.readUInt32();
+
+                    const petalX = reader.readFloat64();
+                    const petalY = reader.readFloat64();
+
+                    const petalAngle = angleToRad(reader.readFloat64());
+
+                    const petalHealth = reader.readFloat64();
+
+                    const petalSize = reader.readFloat64();
+
+                    const petalType = reader.readUInt8();
+
+                    const petalRarity = reader.readUInt8() as Rarity;
+
+                    const petal = this.mobs.get(petalId);
+                    if (petal) {
+                        petal.nx = petalX;
+                        petal.ny = petalY;
+                        petal.nAngle = petalAngle;
+                        petal.nSize = petalSize;
+
+                        if (petal.health < petal.nHealth) {
+                            petal.redHealthTimer = 1;
+                        } else if (petal.health > petal.nHealth) {
+                            petal.redHealthTimer = 0;
+                        }
+
+                        if (petalHealth < petal.nHealth) {
+                            petal.hurtT = 1;
+                        }
+
+                        petal.nHealth = petalHealth;
+
+                        petal.ox = petal.x;
+                        petal.oy = petal.y;
+                        petal.oAngle = petal.angle;
+                        petal.oHealth = petal.health;
+                        petal.oSize = petal.size;
+                        petal.updateT = 0;
+                    } else {
+                        // Petal treated as mob
+                        this.mobs.set(petalId, new Mob(
+                            petalId,
+                            petalX,
+                            petalY,
+                            petalAngle,
+                            petalSize,
+                            petalHealth,
+
+                            petalType,
+
+                            petalRarity,
+
+                            false,
+                            false,
+                        ));
                     }
-
-                    mob.nHealth = mobHealth;
-
-                    mob.ox = mob.x;
-                    mob.oy = mob.y;
-                    mob.oAngle = mob.angle;
-                    mob.oHealth = mob.health;
-                    mob.oSize = mob.size;
-                    mob.updateT = 0;
-                } else {
-                    const mobInstance = new Mob(
-                        mobId,
-                        mobX,
-                        mobY,
-                        mobAngle,
-                        mobSize,
-                        mobHealth,
-                        mobType,
-                        mobRarity,
-                        mobIsPet,
-                        mobIsFirstSegment,
-                    );
-
-                    if (this.waveEnemyIcons.isIconableMobInstance(mobInstance)) {
-                        this.waveEnemyIcons.addMobIcon(mobInstance);
-                    }
-
-                    this.mobs.set(mobId, mobInstance);
                 }
             }
 
@@ -541,10 +612,10 @@ export default class UIGame extends AbstractUI {
                         this.wasDeadMenuContinued = true;
 
                         this.deadMenuContainer.setVisible(
-                            false, 
-                            <ComponentCloser><unknown>deadMenuCloser, 
-                            true, 
-                            AnimationType.SLIDE, 
+                            false,
+                            <ComponentCloser><unknown>deadMenuCloser,
+                            true,
+                            AnimationType.SLIDE,
                             UIGame.DEAD_MENU_CONTAINER_ANIMATION_CONFIG,
                         );
                     },

@@ -8,8 +8,8 @@ import { BIOME_VALUES } from "../Shared/Biome";
 import { Logger } from "./Sources/Logger/Logger";
 import { Rarity } from "../Shared/Entity/Statics/EntityRarity";
 import { PetalType } from "../Shared/Entity/Statics/EntityType";
-import type { StaticPetalData } from "./Sources/Game/Entity/Dynamics/Mob/Petal/Petal";
-import type { StaticPlayerData } from "./Sources/Game/Entity/Dynamics/Player/Player";
+import type { StaticPetal } from "./Sources/Game/Entity/Dynamics/Mob/Petal/Petal";
+import type { StaticPlayer } from "./Sources/Game/Entity/Dynamics/Player/Player";
 import type { UserData } from "./Sources/Game/Genres/Wave/WavePool";
 import WaveRoomService from "./Sources/Game/Genres/Wave/WaveRoomService";
 import { removeClientFromAllService } from "./Sources/Game/Entity/Dynamics/EntityElimination";
@@ -27,7 +27,7 @@ export const isDebug = process.argv.includes("-d");
 /**
  * Temp player data.
  */
-const MOCK_PLAYER_DATA: Omit<StaticPlayerData, "ws"> = {
+const MOCK_PLAYER_DATA: Omit<StaticPlayer, "ws"> = {
     name: 'A-NNCYANCHI-N',
     slots: {
         surface: [],
@@ -35,20 +35,20 @@ const MOCK_PLAYER_DATA: Omit<StaticPlayerData, "ws"> = {
             {
                 type: PetalType.BUBBLE,
                 rarity: Rarity.ULTRA,
-            } satisfies StaticPetalData,
+            } satisfies StaticPetal,
         ).concat(
             Array(1).fill(
                 {
                     type: PetalType.YIN_YANG,
                     rarity: Rarity.ULTRA,
-                } satisfies StaticPetalData,
+                } satisfies StaticPetal,
             ),
         ).concat(
             Array(5).fill(
                 {
                     type: PetalType.EGG_BEETLE,
                     rarity: Rarity.ULTRA,
-                } satisfies StaticPetalData,
+                } satisfies StaticPetal,
             ),
         ),
     },

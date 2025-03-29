@@ -1,9 +1,9 @@
 import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
-import { MOB_PROFILES } from "../../../../../../Shared/Entity/Statics/Mob/MobProfiles";
 import type { WavePool } from "../../../Genres/Wave/WavePool";
 import type { EntityMixinConstructor, EntityMixinTemplate } from "../Entity";
 import { ON_UPDATE_TICK } from "../Entity";
 import type { BaseMob, MobInstance } from "./Mob";
+import MOB_PROFILES from "../../../../../../Shared/Native/mob_profiles.json";
 
 const TAU = Math.PI * 2;
 
@@ -50,15 +50,15 @@ export function MobBodyConnection<T extends EntityMixinConstructor<BaseMob>>(Bas
             const { collision } = MOB_PROFILES[this.type];
 
             // Arc
-            const centiDistance = (collision.radius + collision.radius) * (this.size / collision.fraction);
+            const segmentDistance = (collision.radius * 2) * (this.size / collision.fraction);
 
             const currentDistance = Math.hypot(dx, dy);
 
-            if (currentDistance > centiDistance) {
+            if (currentDistance > segmentDistance) {
                 this.magnitude = 0;
                 this.angle = ((Math.atan2(dy, dx) / TAU) * 255 + 255) % 255;
 
-                const ratio = (currentDistance - centiDistance) / currentDistance;
+                const ratio = (currentDistance - segmentDistance) / currentDistance;
                 this.x += dx * ratio;
                 this.y += dy * ratio;
             }

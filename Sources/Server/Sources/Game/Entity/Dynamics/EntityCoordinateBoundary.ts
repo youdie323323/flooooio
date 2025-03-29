@@ -1,9 +1,5 @@
 import { isPetal } from "../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
 import type { MobType, PetalType } from "../../../../../Shared/Entity/Statics/EntityType";
-import type { MobData } from "../../../../../Shared/Entity/Statics/Mob/MobData";
-import { MOB_PROFILES } from "../../../../../Shared/Entity/Statics/Mob/MobProfiles";
-import type { PetalData } from "../../../../../Shared/Entity/Statics/Mob/Petal/PetalData";
-import { PETAL_PROFILES } from "../../../../../Shared/Entity/Statics/Mob/Petal/PetalProfiles";
 import type { WavePool } from "../../Genres/Wave/WavePool";
 import type { EntityMixinConstructor, Entity, EntityMixinTemplate} from "./Entity";
 import { ON_UPDATE_TICK } from "./Entity";
@@ -55,7 +51,7 @@ export function EntityCoordinateBoundary<T extends EntityMixinConstructor<Entity
                 this.y = mapRadius + Math.sin(collisionAngle) * (worldRadius - knockback);
             }
         }
-
+        
         private get radius(): number {
             if (this instanceof Player) {
                 return this.size;

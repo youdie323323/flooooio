@@ -2,7 +2,6 @@ import { isPetal } from "../../../../../../Shared/Entity/Dynamics/Mob/Petal/Peta
 import type { MobType } from "../../../../../../Shared/Entity/Statics/EntityType";
 import { PetalType } from "../../../../../../Shared/Entity/Statics/EntityType";
 import type { PetalData } from "../../../../../../Shared/Entity/Statics/Mob/Petal/PetalData";
-import { PETAL_PROFILES } from "../../../../../../Shared/Entity/Statics/Mob/Petal/PetalProfiles";
 import { decodeMood } from "../../../../../../Shared/Mood";
 import type { WavePool } from "../../../Genres/Wave/WavePool";
 import { UPDATE_FPS } from "../../../Genres/Wave/WavePool";
@@ -14,6 +13,7 @@ import { findNearestEntity } from "../Mob/MobAggressivePursuit";
 import { MAX_CLUSTER_AMOUNT, isClusterPetal, isDynamicPetal } from "../Mob/Petal/Petal";
 import type { BasePlayer } from "./Player";
 import { Player } from "./Player";
+import PETAL_PROFILES from "../../../../../../Shared/Native/petal_profiles.json";
 
 const TAU = Math.PI * 2;
 
@@ -132,11 +132,10 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
                 if (!isPetal(firstPetal.type)) continue;
 
                 const profile: PetalData = PETAL_PROFILES[firstPetal.type];
-                const rarityProfile = profile[firstPetal.rarity];
 
                 // Add faster speed
                 if (firstPetal.type === PetalType.FASTER) {
-                    totalSpeed += rarityProfile.rad;
+                    totalSpeed += profile[firstPetal.rarity].extra.rad;
                 }
 
                 let targetRadius = UNMOODABLE_PETALS.has(firstPetal.type)

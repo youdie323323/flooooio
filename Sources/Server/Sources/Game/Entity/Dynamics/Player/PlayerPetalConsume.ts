@@ -30,6 +30,7 @@ const consumeConsumablePetal = (poolThis: WavePool, player: PlayerInstance, i: n
                 null,
                 player,
             );
+            
             break;
         }
 

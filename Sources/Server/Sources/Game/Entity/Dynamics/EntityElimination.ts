@@ -1,7 +1,5 @@
 import type { MobData } from "../../../../../Shared/Entity/Statics/Mob/MobData";
-import { MOB_PROFILES } from "../../../../../Shared/Entity/Statics/Mob/MobProfiles";
 import type { PetalData } from "../../../../../Shared/Entity/Statics/Mob/Petal/PetalData";
-import { PETAL_PROFILES } from "../../../../../Shared/Entity/Statics/Mob/Petal/PetalProfiles";
 import { WaveRoomState } from "../../../../../Shared/WaveRoom";
 import BinarySizedWriter from "../../../../../Shared/Websocket/Binary/ReadWriter/Writer/BinarySizedWriter";
 import { Clientbound, type ClientboundConnectionKickReason } from "../../../../../Shared/Websocket/Packet/PacketDirection";
@@ -17,6 +15,8 @@ import type { PlayerId, PlayerInstance } from "./Player/Player";
 import { Player } from "./Player/Player";
 import { PETAL_INITIAL_COOLDOWN } from "./Player/PlayerPetalReload";
 import type uWS from 'uWebSockets.js';
+import MOB_PROFILES from "../../../../../Shared/Native/mob_profiles.json";
+import PETAL_PROFILES from "../../../../../Shared/Native/petal_profiles.json";
 
 /**
  * Calculate hp by level.
@@ -141,12 +141,12 @@ export function kickClient(ws: uWS.WebSocket<UserData>, reason: ClientboundConne
 
         if (waveRoom) {
             // Wave
-            if (waveRoom.state !== WaveRoomState.Waiting && waveRoom?.wavePool && userData?.waveClientId) {
+            if (waveRoom.state !== WaveRoomState.WAITING && waveRoom?.wavePool && userData?.waveClientId) {
                 removeClientFromAllService(waveRoom, userData.waveClientId);
             }
 
             // Wave room
-            if (waveRoom.state === WaveRoomState.Waiting && userData?.waveRoomClientId) {
+            if (waveRoom.state === WaveRoomState.WAITING && userData?.waveRoomClientId) {
                 waveRoom.unregisterPlayer(userData.waveRoomClientId);
             }
         }

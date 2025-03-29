@@ -25,11 +25,11 @@ export const RARITY_DISPLAY_NAME = {
 } as const satisfies Record<Rarity, RarityDisplayName>;
 
 export const RARITY_COLOR = {
-    [Rarity.COMMON]: "#7eef6d",  
-    [Rarity.UNUSUAL]: "#ffe65d", 
-    [Rarity.RARE]: "#4d52e3",    
-    [Rarity.EPIC]: "#861fde",    
+    [Rarity.COMMON]: "#7eef6d",
+    [Rarity.UNUSUAL]: "#ffe65d",
+    [Rarity.RARE]: "#4d52e3",
+    [Rarity.EPIC]: "#861fde",
     [Rarity.LEGENDARY]: "#de1f1f",
-    [Rarity.MYTHIC]: "#1fdbde",  
-    [Rarity.ULTRA]: "#ff2b75", 
+    [Rarity.MYTHIC]: "#1fdbde",
+    [Rarity.ULTRA]: "#ff2b75",
 } as const satisfies Record<Rarity, ColorCode>;

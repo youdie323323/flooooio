@@ -9,7 +9,7 @@ import type { MobInstance } from "../Mob";
  * This data for visualize petals in wave room, inventory and slots.
  * Eliminates the need for the server to create the actual living “Mob” instance.
  */
-export type StaticPetalData = Readonly<{
+export type StaticPetal = Readonly<{
     type: PetalType;
     rarity: Rarity;
 }>;
@@ -44,7 +44,7 @@ export function isDynamicPetal(slot: Slot): slot is DynamicPetal {
 /**
  * Slot placeholder.
  */
-export type Slot = StaticPetalData | DynamicPetal | null;
+export type Slot = StaticPetal | DynamicPetal | null;
 
 export interface PetalSlots {
     surface: Array<Slot>;

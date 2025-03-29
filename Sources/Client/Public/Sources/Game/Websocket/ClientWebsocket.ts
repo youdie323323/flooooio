@@ -31,7 +31,7 @@ export default class ClientWebsocket {
     public clear() { }
 
     public connect() {
-        this.socket = new WebSocket(location.protocol.replace("http", "ws") + "//" + location.host + "/");
+        this.socket = new WebSocket(location.protocol.replace("http", "ws") + "//" + location.host + "/ws");
         this.socket.binaryType = "arraybuffer";
 
         this.socket.addEventListener("open", () => {

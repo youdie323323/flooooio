@@ -1,0 +1,330 @@
+{
+    "10": {
+        "0": {
+            "damage": 10,
+            "health": 10,
+            "petalReload": 2.5,
+            "count": 1
+        },
+        "1": {
+            "damage": 30,
+            "health": 30,
+            "petalReload": 2.5,
+            "count": 1
+        },
+        "2": {
+            "damage": 90,
+            "health": 90,
+            "petalReload": 2.5,
+            "count": 1
+        },
+        "3": {
+            "damage": 270,
+            "health": 270,
+            "petalReload": 2.5,
+            "count": 1
+        },
+        "4": {
+            "damage": 810,
+            "health": 810,
+            "petalReload": 2.5,
+            "count": 1
+        },
+        "5": {
+            "damage": 2430,
+            "health": 2430,
+            "petalReload": 2.5,
+            "count": 1
+        },
+        "6": {
+            "damage": 7290,
+            "health": 7290,
+            "petalReload": 2.5,
+            "count": 1
+        },
+        "i18n": {
+            "name": "Basic",
+            "fullName": "Basic",
+            "description": "A nice petal, not too strong but not too weak."
+        },
+        "collision": {
+            "fraction": 20,
+            "radius": 20
+        }
+    },
+    "11": {
+        "0": {
+            "damage": 8,
+            "health": 5,
+            "petalReload": 2.5,
+            "count": 1,
+            "extra": {
+                "rad": 0.5
+            }
+        },
+        "1": {
+            "damage": 24,
+            "health": 15,
+            "petalReload": 2.5,
+            "count": 1,
+            "extra": {
+                "rad": 0.7
+            }
+        },
+        "2": {
+            "damage": 72,
+            "health": 45,
+            "petalReload": 2.5,
+            "count": 1,
+            "extra": {
+                "rad": 0.9
+            }
+        },
+        "3": {
+            "damage": 216,
+            "health": 135,
+            "petalReload": 2.5,
+            "count": 1,
+            "extra": {
+                "rad": 1.1
+            }
+        },
+        "4": {
+            "damage": 648,
+            "health": 405,
+            "petalReload": 2.5,
+            "count": 1,
+            "extra": {
+                "rad": 1.3
+            }
+        },
+        "5": {
+            "damage": 1944,
+            "health": 1215,
+            "petalReload": 2.5,
+            "count": 2,
+            "extra": {
+                "rad": 1.5
+            }
+        },
+        "6": {
+            "damage": 5832,
+            "health": 3645,
+            "petalReload": 2.5,
+            "count": 3,
+            "extra": {
+                "rad": 1.7
+            }
+        },
+        "i18n": {
+            "name": "Faster",
+            "fullName": "Faster",
+            "description": "It's so light it makes your other petals spin faster."
+        },
+        "collision": {
+            "fraction": 20,
+            "radius": 20
+        }
+    },
+    "12": {
+        "0": {
+            "damage": 0,
+            "health": 25,
+            "petalReload": 1,
+            "count": 1,
+            "extra": {
+                "usageReload": 15
+            }
+        },
+        "1": {
+            "damage": 0,
+            "health": 75,
+            "petalReload": 1,
+            "count": 1,
+            "extra": {
+                "usageReload": 19.2
+            }
+        },
+        "2": {
+            "damage": 0,
+            "health": 225,
+            "petalReload": 1,
+            "count": 1,
+            "extra": {
+                "usageReload": 23.5
+            }
+        },
+        "3": {
+            "damage": 0,
+            "health": 675,
+            "petalReload": 1,
+            "count": 1,
+            "extra": {
+                "usageReload": 32
+            }
+        },
+        "4": {
+            "damage": 0,
+            "health": 2025,
+            "petalReload": 1,
+            "count": 1,
+            "extra": {
+                "usageReload": 1.8
+            }
+        },
+        "5": {
+            "damage": 0,
+            "health": 6075,
+            "petalReload": 1,
+            "count": 1,
+            "extra": {
+                "usageReload": 7.4
+            }
+        },
+        "6": {
+            "damage": 0,
+            "health": 18225,
+            "petalReload": 1,
+            "count": 1,
+            "extra": {
+                "usageReload": 16.9
+            }
+        },
+        "i18n": {
+            "name": "Egg",
+            "fullName": "Beetle Egg",
+            "description": "Something interesting might pop out of this."
+        },
+        "collision": {
+            "fraction": 20,
+            "radius": 40
+        }
+    },
+    "13": {
+        "0": {
+            "damage": 0,
+            "health": 1,
+            "petalReload": 5.5,
+            "count": 1,
+            "extra": {
+                "usageReload": 0.5
+            }
+        },
+        "1": {
+            "damage": 0,
+            "health": 1,
+            "petalReload": 4.5,
+            "count": 1,
+            "extra": {
+                "usageReload": 0.5
+            }
+        },
+        "2": {
+            "damage": 0,
+            "health": 1,
+            "petalReload": 3.5,
+            "count": 1,
+            "extra": {
+                "usageReload": 0.5
+            }
+        },
+        "3": {
+            "damage": 0,
+            "health": 1,
+            "petalReload": 2.5,
+            "count": 1,
+            "extra": {
+                "usageReload": 0.5
+            }
+        },
+        "4": {
+            "damage": 0,
+            "health": 1,
+            "petalReload": 1.5,
+            "count": 1,
+            "extra": {
+                "usageReload": 0.5
+            }
+        },
+        "5": {
+            "damage": 0,
+            "health": 1,
+            "petalReload": 0.8,
+            "count": 1,
+            "extra": {
+                "usageReload": 0.5
+            }
+        },
+        "6": {
+            "damage": 0,
+            "health": 1,
+            "petalReload": 0.5,
+            "count": 1,
+            "extra": {
+                "usageReload": 0.5
+            }
+        },
+        "i18n": {
+            "name": "Bubble",
+            "fullName": "Bubble",
+            "description": "Physics are for the weak."
+        },
+        "collision": {
+            "fraction": 15,
+            "radius": 20
+        }
+    },
+    "14": {
+        "0": {
+            "damage": 90,
+            "health": 90,
+            "petalReload": 2,
+            "count": 1
+        },
+        "1": {
+            "damage": 90,
+            "health": 90,
+            "petalReload": 2,
+            "count": 1
+        },
+        "2": {
+            "damage": 90,
+            "health": 90,
+            "petalReload": 2,
+            "count": 1
+        },
+        "3": {
+            "damage": 90,
+            "health": 90,
+            "petalReload": 2,
+            "count": 1
+        },
+        "4": {
+            "damage": 90,
+            "health": 90,
+            "petalReload": 2,
+            "count": 1
+        },
+        "5": {
+            "damage": 90,
+            "health": 90,
+            "petalReload": 2,
+            "count": 1
+        },
+        "6": {
+            "damage": 90,
+            "health": 90,
+            "petalReload": 2,
+            "count": 1
+        },
+        "i18n": {
+            "name": "Yin Yang",
+            "fullName": "Yin Yang",
+            "description": "This mysterious petal affects the rotation of your petals in unpredictable ways."
+        },
+        "collision": {
+            "fraction": 20,
+            "radius": 20
+        }
+    }
+}

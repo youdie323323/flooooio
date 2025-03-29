@@ -1,4 +1,3 @@
-import ExtensionBase from "../../Extensions/Extension";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
 import type { MaybePointerLike } from "../Component";
@@ -7,7 +6,7 @@ import { Canvg, presets } from "canvg";
 import * as StackBlur from
     'stackblur-canvas/dist/stackblur-es.min.js';
 
-export abstract class Logo extends ExtensionBase(Component) {
+export abstract class Logo extends Component {
     public override[OBSTRUCTION_AFFECTABLE]: boolean = false;
 
     constructor(

@@ -10,7 +10,7 @@ export interface MobStat {
     bodyDamage: number;
     health: number;
 
-    [key: string]: any;
+    extra?: Record<string, any>;
 }
 
 export type MobData = Readonly<

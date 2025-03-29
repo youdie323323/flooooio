@@ -57,7 +57,7 @@ function getRandomMobType(difficulty: number, biome: Biome): MobType {
         }
     }
 
-    throw new Error("Unreachable");
+    return MobType.BEE;
 }
 
 // From k2r private channel

@@ -26,7 +26,7 @@ export function findNearestEntity<T extends Entity>(me: T, entities: T[]): T | n
 }
 
 export function turnAngleToTarget(thisAngle: number, dx: number, dy: number): number {
-    const targetAngle = (Math.atan2(dy, dx) * 40.549) % 255; // 255/(2*PI)≈40.549
+    const targetAngle = (Math.atan2(dy, dx) * 40.5845104884) % 255; // 255/(2*PI)≈40.5845104884
     const normalizedAngle = ((thisAngle % 255) + 255) % 255;
     let angleDiff = targetAngle - normalizedAngle;
 

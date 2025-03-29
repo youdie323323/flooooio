@@ -144,7 +144,7 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
 
             const computedReadyState = Component.computePointerLike(this.readyState);
 
-            if (computedReadyState === WaveRoomPlayerReadyState.Ready) {
+            if (computedReadyState === WaveRoomPlayerReadyState.READY) {
                 ctx.save();
 
                 ctx.translate(0, 32);

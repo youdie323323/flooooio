@@ -172,20 +172,20 @@ export function hasClickableListeners(component: Components): boolean {
 }
 
 // Typing for EventEmitter
-export type ComponentEvents =
+export type ComponentEvents<AdheredEvents extends object> =
     Satisfies<
-        & Readonly<{
+        & {
             // Event that tell this component is added dynamically to UI
             "onInitialized": [];
-        }>
-        & Readonly<{
+        }
+        & {
             // Event that tell this component is hide within animation
             "onOutAnimationEnd": [];
-        }>
-        & Readonly<{
+        }
+        & {
             // Event that tell this component is not clicked on mouse up
             "onClickOutside": [];
-        }>
+        }
         & typeof INTERACTIVE_EVENTS
         & typeof CLICKABLE_EVENTS
         & ComponentCompatibleUnconditionalEvents,
@@ -211,7 +211,7 @@ export interface ComponentSymbol {
  * Base Component class for all UI components.
  */
 export abstract class Component<const AdheredEvents extends EventMap = EventMap>
-    extends Emitter<ComponentEvents & AdheredEvents> implements Layoutable, ComponentSymbol {
+    extends Emitter<ComponentEvents<AdheredEvents>> implements Layoutable, ComponentSymbol {
     // Prepare base symbols
     public [OBSTRUCTION_AFFECTABLE]: boolean = true;
     public [RENDERED_LAST]: boolean = false;
@@ -438,7 +438,7 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
                     this.visible = false;
 
                     // How to fix this error
-                    (this.emit as (eventName: keyof ComponentEvents, ...data: ReadonlyArray<any>) => {})("onOutAnimationEnd");
+                    this.emit("onOutAnimationEnd");
                 }
 
                 // Fallback to original position

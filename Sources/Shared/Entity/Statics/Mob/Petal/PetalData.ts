@@ -15,7 +15,7 @@ interface UnusablePetalStat {
     petalReload: number;
     count: number;
 
-    [key: string]: any;
+    extra?: Record<string, any>;
 }
 
 interface UsablePetalStat extends UnusablePetalStat {

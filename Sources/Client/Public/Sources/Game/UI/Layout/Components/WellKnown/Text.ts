@@ -5,18 +5,17 @@ import Layout from "../../Layout";
 import type { MaybePointerLike } from "../Component";
 import { Component, OBSTRUCTION_AFFECTABLE } from "../Component";
 import type { AutomaticallySizedLayoutOptions, SizeKeys, SquareSizeLayoutOptions } from "./Container";
-import ExtensionBase from "../../Extensions/Extension";
 
 export const calculateStrokeWidth = memo((fontSize: number): number => {
     return fontSize / 8.333333830038736;
 });
 
-export type ClipboardEvents = Readonly<{
+export type ClipboardEvents = {
     "onCopySucceed": [];
     "onCopyFailed": [];
-}>;
+};
 
-export default class Text extends ExtensionBase(Component<ClipboardEvents>) {
+export default class Text extends Component<ClipboardEvents> {
     public override[OBSTRUCTION_AFFECTABLE]: boolean = false;
 
     private static readonly TEXT_WIDTH_OFFSET: number = 10;

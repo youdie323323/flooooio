@@ -1,6 +1,5 @@
 import type { ColorCode } from "../../../../../../../../Shared/Utils/Color";
 import { darkened, DARKENED_BASE } from "../../../../../../../../Shared/Utils/Color";
-import ExtensionBase from "../../Extensions/Extension";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
 import type { Components, MaybePointerLike, AnimationConfigOf, AnimationType, ComponentOpener, ComponentCloser, FakeSetVisibleToggleType, FakeSetVisibleObserverType } from "../Component";
@@ -28,7 +27,7 @@ export type AnyStaticContainer = AbstractStaticContainer<SelectableStaticContain
  * Container component that can add/render childrens.
  */
 export abstract class AbstractStaticContainer<T extends SelectableStaticContainerLayoutOptions, Child extends Components>
-    extends ExtensionBase(Component) {
+    extends Component {
     protected children: Array<Child> = new Array();
     private wasInitialized: boolean = false;
     private afterInitializedOperationQueue: Set<() => void> = new Set();
@@ -851,7 +850,7 @@ type MaybePointerLikeNumber = MaybePointerLike<number>;
  * @remarks
  * This is only used for containers whose coordinates are automatically determined (e.g. StaticHContainer).
  */
-export class StaticSpace extends ExtensionBase(Component) {
+export class StaticSpace extends Component {
     public override[OBSTRUCTION_AFFECTABLE]: boolean = false;
 
     constructor(

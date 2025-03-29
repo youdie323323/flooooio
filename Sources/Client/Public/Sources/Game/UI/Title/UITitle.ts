@@ -169,20 +169,15 @@ export default class UITitle extends AbstractUI {
                 } as const satisfies WaveRoomPlayerInformation;
             }
 
-            const waveRoomCode = reader.readString() as WaveRoomCode;
-
-            const waveRoomBiome = reader.readUInt8() satisfies Biome;
-
-            const waveRoomState = reader.readUInt8() satisfies WaveRoomState;
-
-            const waveRoomVisibleState = reader.readUInt8() satisfies WaveRoomVisibleState;
-
             this.waveRoomPlayerInformations = waveRoomPlayerInformations;
-            this.waveRoomCode = waveRoomCode;
-            this.waveRoomState = waveRoomState;
-            this.waveRoomVisible = waveRoomVisibleState;
 
-            this.biome = waveRoomBiome;
+            this.waveRoomCode = reader.readString() as WaveRoomCode;
+
+            this.waveRoomState = reader.readUInt8() satisfies WaveRoomState;
+
+            this.waveRoomVisible = reader.readUInt8() satisfies WaveRoomVisibleState;
+
+            this.biome = reader.readUInt8() satisfies Biome;
         },
         [Clientbound.WAVE_STARTED]: (reader: BinaryReader): void => {
             this.squadMenuContainer.setVisible(false, null, true, AnimationType.ZOOM);
@@ -298,7 +293,7 @@ export default class UITitle extends AbstractUI {
             const creditsContainer = new StaticPanelContainer(
                 {
                     x: 72,
-                    y: 190,
+                    y: 220,
 
                     invertYCoordinate: true,
                 },
@@ -342,11 +337,23 @@ export default class UITitle extends AbstractUI {
                 // Yaaaaaaaaaaaaaaaaaaaaay
                 new Text(
                     {
-                        x: 2 - .5,
-                        y: 40,
+                        x: 6 + .5,
+                        y: 35,
                     },
 
-                    "Made by Youdi3",
+                    "florr.io made by Matheus Valadares",
+                    12,
+                    "#ffffff",
+                    "left",
+                    130,
+                ),
+                new Text(
+                    {
+                        x: 2 - .5,
+                        y: 77.5,
+                    },
+
+                    "floooo.io made by Youdi3",
                     12,
                 ),
 
@@ -354,7 +361,7 @@ export default class UITitle extends AbstractUI {
                 new Text(
                     {
                         x: 6,
-                        y: 70,
+                        y: 100,
                     },
 
                     "Some icons by Lorc & Skoll from game-icons.net",
@@ -367,7 +374,7 @@ export default class UITitle extends AbstractUI {
                 new Text(
                     {
                         x: 6,
-                        y: 110,
+                        y: 140,
                     },
 
                     "Special thanks: Max Nest, k2r_n2iq and people who keep motivating me every time",
@@ -377,7 +384,7 @@ export default class UITitle extends AbstractUI {
                     180,
                 ),
 
-                new CoordinatedStaticSpace(15, 15, 178, 150 + .5),
+                new CoordinatedStaticSpace(15, 15, 178, 180 + .5),
             );
 
             const makeSettingGameUnrelatedButton = (
@@ -1016,12 +1023,12 @@ export default class UITitle extends AbstractUI {
 
                         this.statusTextRef = SquadContainerStatusText.CREATING;
 
-                        clientWebsocket.packetServerbound.sendWaveRoomChangeReady(WaveRoomPlayerReadyState.Ready);
+                        clientWebsocket.packetServerbound.sendWaveRoomChangeReady(WaveRoomPlayerReadyState.READY);
                     } else {
                         clientWebsocket.packetServerbound.sendWaveRoomChangeReady(
                             readyToggle
-                                ? WaveRoomPlayerReadyState.Ready
-                                : WaveRoomPlayerReadyState.Unready,
+                                ? WaveRoomPlayerReadyState.READY
+                                : WaveRoomPlayerReadyState.PREPARING,
                         );
                     }
                 },
@@ -1075,7 +1082,7 @@ export default class UITitle extends AbstractUI {
 
                     this.statusTextRef = SquadContainerStatusText.CREATING;
 
-                    clientWebsocket.packetServerbound.sendWaveRoomChangeVisible(WaveRoomVisibleState.Private);
+                    clientWebsocket.packetServerbound.sendWaveRoomChangeVisible(WaveRoomVisibleState.PRIVATE);
                 },
 
                 "#5a9fdb",
@@ -1136,7 +1143,6 @@ export default class UITitle extends AbstractUI {
                         this.biome = Biome.OCEAN;
                     }),
                 ],
-
                 // Dynamically create static space
                 () => new StaticSpace(5, 0),
             ));
@@ -1232,8 +1238,8 @@ export default class UITitle extends AbstractUI {
                     },
                     (t: boolean): void => clientWebsocket.packetServerbound.sendWaveRoomChangeVisible(
                         t
-                            ? WaveRoomVisibleState.Public
-                            : WaveRoomVisibleState.Private,
+                            ? WaveRoomVisibleState.PUBLIC
+                            : WaveRoomVisibleState.PRIVATE,
                     ),
                 )),
                 new Text(
@@ -1253,14 +1259,14 @@ export default class UITitle extends AbstractUI {
                         h: 0,
                     }),
                     () =>
-                        this.waveRoomVisible === WaveRoomVisibleState.Private
+                        this.waveRoomVisible === WaveRoomVisibleState.PRIVATE
                             ? "Private squad"
-                            : this.waveRoomVisible === WaveRoomVisibleState.Public
+                            : this.waveRoomVisible === WaveRoomVisibleState.PUBLIC
                                 ? "Waiting for players..."
                                 : "",
                     8,
                     () =>
-                        this.waveRoomVisible === WaveRoomVisibleState.Private
+                        this.waveRoomVisible === WaveRoomVisibleState.PRIVATE
                             ? "#f0666b"
                             : "#ffffff",
                     "left",
@@ -1580,7 +1586,7 @@ export default class UITitle extends AbstractUI {
         }
 
         if (this.waveRoomVisible !== this.prevWaveRoomVisible) {
-            this.publicToggle.setToggle(this.waveRoomVisible === WaveRoomVisibleState.Public);
+            this.publicToggle.setToggle(this.waveRoomVisible === WaveRoomVisibleState.PUBLIC);
         }
         this.prevWaveRoomVisible = this.waveRoomVisible;
 
@@ -1606,8 +1612,8 @@ export default class UITitle extends AbstractUI {
     public resetWaveState() {
         this.waveRoomPlayerInformations = [];
         this.waveRoomCode = null;
-        this.waveRoomVisible = WaveRoomVisibleState.Private;
-        this.waveRoomState = WaveRoomState.Waiting;
+        this.waveRoomVisible = WaveRoomVisibleState.PRIVATE;
+        this.waveRoomState = WaveRoomState.WAITING;
     }
 
     public toggleShowStatusText(toggle: boolean): void {

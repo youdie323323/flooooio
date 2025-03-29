@@ -1,10 +1,9 @@
-import ExtensionBase from "../../Extensions/Extension";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
 import type { MaybePointerLike } from "../Component";
 import { Component } from "../Component";
 
-export default class Toggle extends ExtensionBase(Component) {
+export default class Toggle extends Component {
     private static readonly SCALING_DURATION: number = 50;
 
     private scalingProgress: number = 0;

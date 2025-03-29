@@ -2,9 +2,7 @@ import type { Biome } from "../../../../../Shared/Biome";
 import type { Rarity } from "../../../../../Shared/Entity/Statics/EntityRarity";
 import type { MobType, PetalType } from "../../../../../Shared/Entity/Statics/EntityType";
 import type { MobData } from "../../../../../Shared/Entity/Statics/Mob/MobData";
-import { MOB_PROFILES } from "../../../../../Shared/Entity/Statics/Mob/MobProfiles";
 import type { PetalData } from "../../../../../Shared/Entity/Statics/Mob/Petal/PetalData";
-import { PETAL_PROFILES } from "../../../../../Shared/Entity/Statics/Mob/Petal/PetalProfiles";
 import { calculateWaveLength } from "../../../../../Shared/Formula";
 import { MoodFlags } from "../../../../../Shared/Mood";
 import { WaveRoomState } from "../../../../../Shared/WaveRoom";
@@ -16,20 +14,22 @@ import { revivePlayer } from "../../Entity/Dynamics/EntityElimination";
 import { SAFETY_DISTANCE } from "../../Entity/Dynamics/EntityCoordinateBoundary";
 import type { MobInstance, MobId } from "../../Entity/Dynamics/Mob/Mob";
 import { Mob } from "../../Entity/Dynamics/Mob/Mob";
-import type { StaticPetalData, DynamicPetal } from "../../Entity/Dynamics/Mob/Petal/Petal";
+import type { StaticPetal, DynamicPetal } from "../../Entity/Dynamics/Mob/Petal/Petal";
 import { MAX_CLUSTER_AMOUNT, isDynamicPetal } from "../../Entity/Dynamics/Mob/Petal/Petal";
-import type { PlayerId, StaticPlayerData, PlayerInstance } from "../../Entity/Dynamics/Player/Player";
+import type { PlayerId, StaticPlayer, PlayerInstance } from "../../Entity/Dynamics/Player/Player";
 import { Player } from "../../Entity/Dynamics/Player/Player";
 import { PETAL_INITIAL_COOLDOWN } from "../../Entity/Dynamics/Player/PlayerPetalReload";
 import SpatialHash from "../../Entity/Statics/Collision/CollisionSpatialHash";
 import AbstractPool from "../GenrePool";
 import SpawnMobDeterminer, { LINKABLE_MOBS } from "./WavePoolSpawnMobDeterminer";
-import type { WaveRoomPlayerId, WaveRoomPlayer } from "./WaveRoom";
+import type { WaveRoomPlayerId, StaticWaveRoomPlayer } from "./WaveRoom";
 import { generateRandomId } from "./WaveRoom";
 import { getRandomCoordinate, getRandomSafeCoordinate } from "../../Entity/Dynamics/EntityCoordinateMovement";
 import { isPetal } from "../../../../../Shared/Entity/Dynamics/Mob/Petal/Petal";
 import BinarySizedWriter from "../../../../../Shared/Websocket/Binary/ReadWriter/Writer/BinarySizedWriter";
 import { Clientbound } from "../../../../../Shared/Websocket/Packet/PacketDirection";
+import MOB_PROFILES from "../../../../../Shared/Native/mob_profiles.json";
+import PETAL_PROFILES from "../../../../../Shared/Native/petal_profiles.json";
 
 // Define UserData for WebSocket connections
 export interface UserData {
@@ -42,7 +42,7 @@ export interface UserData {
      * @remarks
      * This data is used to squad ui to display petals and names and to convert them when wave starting.
      */
-    staticPlayerData: StaticPlayerData;
+    staticPlayerData: StaticPlayer;
 }
 
 export const UPDATE_FPS = 60;
@@ -146,7 +146,7 @@ export class WavePool extends AbstractPool {
      * @param biome - Biome of wave
      * @param roomCandidates - List of players
      */
-    public startWave(roomCandidates: Array<WaveRoomPlayer>) {
+    public startWave(roomCandidates: Array<StaticWaveRoomPlayer>) {
         const waveStartedWriter = new BinarySizedWriter(2);
 
         waveStartedWriter.writeUInt8(Clientbound.WAVE_STARTED);
@@ -211,7 +211,7 @@ export class WavePool extends AbstractPool {
      * @returns Instance of player
      */
     public generateClient(
-        clientData: StaticPlayerData,
+        clientData: StaticPlayer,
 
         x: number,
         y: number,
@@ -391,7 +391,7 @@ export class WavePool extends AbstractPool {
     }
 
     private staticPetalDataToDynamicPetal(
-        staticPetalData: StaticPetalData,
+        staticPetalData: StaticPetal,
         parent: PlayerInstance,
         isSurface: boolean,
     ): DynamicPetal {
@@ -449,7 +449,7 @@ export class WavePool extends AbstractPool {
     private updateWave() {
         const waveRoomState = this._state();
 
-        if (waveRoomState === WaveRoomState.Playing) {
+        if (waveRoomState === WaveRoomState.PLAYING) {
             using _disposable = this._onChangeAnything();
 
             if (!this.waveData.progressIsRed) {
@@ -599,7 +599,7 @@ export class WavePool extends AbstractPool {
 
                     // Remove summoned mob
                     if (
-                        petalSummonedPet && 
+                        petalSummonedPet &&
                         this.getMob(petalSummonedPet.id)
                     ) {
                         this.removeMob(petalSummonedPet.id);
@@ -746,7 +746,7 @@ export class WavePool extends AbstractPool {
         const waveRoomState = this._state();
         // Wave is game over or not
         waveUpdateWriter.writeUInt8(
-            waveRoomState === WaveRoomState.Ended
+            waveRoomState === WaveRoomState.ENDED
                 ? 1
                 : 0,
         );
@@ -842,11 +842,11 @@ export class WavePool extends AbstractPool {
         });
     }
 
-    getClient(clientId: PlayerId): PlayerInstance | undefined {
+    public getClient(clientId: PlayerId): PlayerInstance | undefined {
         return this.clientPool.get(clientId);
     }
 
-    removeClient(clientId: PlayerId) {
+    public removeClient(clientId: PlayerId): void {
         const client = this.getClient(clientId);
         if (client) {
             // Free memory
@@ -865,15 +865,15 @@ export class WavePool extends AbstractPool {
         }
     }
 
-    getAllClients() {
+    public getAllClients(): Array<PlayerInstance> {
         return Array.from(this.clientPool.values());
     }
 
-    getMob(mobId: MobId): MobInstance | undefined {
+    public getMob(mobId: MobId): MobInstance | undefined {
         return this.mobPool.get(mobId);
     }
 
-    removeMob(mobId: MobId) {
+    public removeMob(mobId: MobId): void {
         const mob = this.getMob(mobId);
         if (mob) {
             // Free memory
@@ -887,7 +887,7 @@ export class WavePool extends AbstractPool {
         }
     }
 
-    getAllMobs() {
+    public getAllMobs(): Array<MobInstance> {
         return Array.from(this.mobPool.values());
     }
 }
