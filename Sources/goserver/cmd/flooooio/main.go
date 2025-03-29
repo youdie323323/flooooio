@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
@@ -317,5 +318,5 @@ func main() {
 	const PORT = 8080
 
 	slog.Info("Server running", "port", PORT)
-	log.Fatal(http.ListenAndServe("0.0.0.0:8080", nil))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", PORT), nil))
 }
