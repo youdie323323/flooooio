@@ -138,7 +138,7 @@ func (wp *WavePool) Dispose() {
 		wp.updateTicker.Stop()
 		wp.updateTicker = nil
 	}
-	
+
 	wp.playerPool.Range(func(id EntityId, player *Player) bool {
 		player.Dispose()
 
@@ -271,7 +271,7 @@ func (wp *WavePool) updateWaveData() {
 		return
 	}
 
-	defer func(){
+	defer func() {
 		// We niled wave room when dispose, so this can make error
 		// Safely check wr is nil
 		if wp.wr != nil {
@@ -280,19 +280,21 @@ func (wp *WavePool) updateWaveData() {
 	}()
 
 	if !wp.wd.ProgressIsRed {
-		smd := wp.ms.DetermineStaticMobData(wp.wd)
-		if smd != nil {
-			randX, randY, ok := GetRandomSafeCoordinate(
-				float64(wp.wd.MapRadius),
-				300,
-				wp.GetPlayersWithCondition(func(p *Player) bool { return !p.IsDead }),
-			)
+		smS := wp.ms.DetermineStaticMobData(wp.wd)
+		if smS != nil {
+			for _, sm := range smS {
+				randX, randY, ok := GetRandomSafeCoordinate(
+					float64(wp.wd.MapRadius),
+					300,
+					wp.GetPlayersWithCondition(func(p *Player) bool { return !p.IsDead }),
+				)
 
-			if ok {
-				if slices.Contains(LinkableMobs, smd.MobType) {
-					wp.LinkedMobSegmentation(smd.MobType, smd.Rarity, randX, randY, 9)
-				} else {
-					wp.GenerateMob(smd.MobType, smd.Rarity, randX, randY, nil, nil, false)
+				if ok {
+					if slices.Contains(LinkableMobs, sm.MobType) {
+						wp.LinkedMobSegmentation(sm.MobType, sm.Rarity, randX, randY, sm.CentiBodies)
+					} else {
+						wp.GenerateMob(sm.MobType, sm.Rarity, randX, randY, nil, nil, false)
+					}
 				}
 			}
 		}

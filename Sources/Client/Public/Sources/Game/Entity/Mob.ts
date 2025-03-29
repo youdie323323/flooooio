@@ -6,6 +6,8 @@ import Entity from "./Entity";
 export default class Mob extends Entity {
     public static readonly STARFISH_LEG_AMOUNT = 5;
 
+    public readonly jellyfishTentacleNoise: number = Math.random() * 10;
+
     /**
      * Current starfish leg distance.
      */
