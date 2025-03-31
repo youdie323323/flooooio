@@ -3,12 +3,11 @@ package wave
 import (
 	"math"
 
-	"flooooio/internal/collision"
 	"flooooio/internal/native"
 )
 
 // findNearestEntity finds the nearest entity from a slice of entities.
-func findNearestEntity(me collision.Node, entities []collision.Node) collision.Node {
+func findNearestEntity(me Node, entities []Node) Node {
 	if len(entities) == 0 {
 		return nil
 	}
@@ -35,10 +34,10 @@ func findNearestEntity(me collision.Node, entities []collision.Node) collision.N
 
 const angleFactor = 40.5845104884 // 255/(2*PI)
 
-// TurnAngleToTarget calculates new angle when turning towards target.
+// TurnAngleToTarget calculates interpolated angle to target.
 func TurnAngleToTarget(thisAngle, dx, dy float64) float64 {
 	targetAngle := math.Mod(math.Atan2(dy, dx)*angleFactor, 255)
-	normalizedAngle := math.Mod(math.Mod(thisAngle, 255)+255, 255)
+	normalizedAngle := math.Mod(thisAngle, 255)
 	angleDiff := targetAngle - normalizedAngle
 
 	if angleDiff > 127.5 {
@@ -47,7 +46,7 @@ func TurnAngleToTarget(thisAngle, dx, dy float64) float64 {
 		angleDiff += 255
 	}
 
-	return math.Mod(normalizedAngle+angleDiff*0.1+255, 255)
+	return math.Mod(normalizedAngle+angleDiff*0.1, 255)
 }
 
 const mobDetectionRange = 25.
@@ -60,15 +59,15 @@ func getLoseRange(m *Mob) float64 {
 	return (mobDetectionRange * 2) * m.Size
 }
 
-func getTargetNodes(wp *WavePool, m *Mob) []collision.Node {
-	var targets []collision.Node
+func getTargetNodes(wp *WavePool, m *Mob) []Node {
+	var targets []Node
 
 	if m.PetMaster != nil {
 		mobs := wp.SafeGetMobsWithCondition(func(fm *Mob) bool {
 			return fm.Id != m.Id && fm.PetMaster != nil
 		})
 
-		targets = make([]collision.Node, len(mobs))
+		targets = make([]Node, len(mobs))
 		for i, mob := range mobs {
 			targets[i] = mob
 		}
@@ -77,7 +76,7 @@ func getTargetNodes(wp *WavePool, m *Mob) []collision.Node {
 			return !p.IsDead
 		})
 
-		targets = make([]collision.Node, len(players))
+		targets = make([]Node, len(players))
 		for i, player := range players {
 			targets[i] = player
 		}
@@ -127,7 +126,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 
 	case native.AggressiveBehavior:
 		{
-			var targetEntity collision.Node
+			var targetEntity Node
 			if m.TargetEntity != nil {
 				targetEntity = m.TargetEntity
 			} else {
@@ -159,7 +158,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 
 	case native.CautionBehavior:
 		{
-			var targetEntity collision.Node
+			var targetEntity Node
 			if m.TargetEntity != nil {
 				targetEntity = m.TargetEntity
 			} else {

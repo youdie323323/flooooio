@@ -1,12 +1,11 @@
 package wave
 
 import (
-	"flooooio/internal/collision"
 	"flooooio/internal/native"
 )
 
 const (
-	mobToMobPushMultiplier = 0.3
+	mobToMobPushMultiplier = 0.5
 )
 
 func (m *Mob) MobCollision(wp *WavePool) {
@@ -19,13 +18,13 @@ func (m *Mob) MobCollision(wp *WavePool) {
 
 	mTraversed := traverseMobSegments(wp, m)
 
-	c0 := circle{m.X, m.Y, m.GetDesiredSize()}
+	c0 := Circle{X: m.X, Y: m.Y, R: m.GetDesiredSize()}
 
-	searchRadius := calculateSearchRadius(collision0, m.Size)
+	searchRadius := CalculateSearchRadius(collision0, m.Size)
 
 	nearby := wp.SpatialHash.Search(m.X, m.Y, searchRadius)
 
-	nearby.Range(func(_ uint32, ni collision.Node) bool {
+	nearby.Range(func(_ uint32, ni Node) bool {
 		switch nearEntity := ni.(type) {
 		// Mob -> Mob
 		case *Mob:
@@ -38,9 +37,9 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					return true
 				}
 
-				c1 := circle{nearEntity.X, nearEntity.Y, nearEntity.GetDesiredSize()}
+				c1 := Circle{X: nearEntity.X, Y: nearEntity.Y, R: nearEntity.GetDesiredSize()}
 
-				px, py, ok := computeCirclePush(c0, c1)
+				px, py, ok := ComputeCirclePush(c0, c1)
 				if ok {
 					m.X -= px * mobToMobPushMultiplier
 					m.Y -= py * mobToMobPushMultiplier
@@ -94,9 +93,9 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					return true
 				}
 
-				c1 := circle{nearEntity.X, nearEntity.Y, nearEntity.GetDesiredSize()}
+				c1 := Circle{X: nearEntity.X, Y: nearEntity.Y, R: nearEntity.GetDesiredSize()}
 
-				px, py, ok := computeCirclePush(c0, c1)
+				px, py, ok := ComputeCirclePush(c0, c1)
 				if ok {
 					m.X -= px * 0.1
 					m.Y -= py * 0.1
@@ -139,9 +138,9 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					return true
 				}
 
-				c1 := circle{nearEntity.X, nearEntity.Y, nearEntity.Size}
+				c1 := Circle{X: nearEntity.X, Y: nearEntity.Y, R: nearEntity.Size}
 
-				px, py, ok := computeCirclePush(c0, c1)
+				px, py, ok := ComputeCirclePush(c0, c1)
 				if ok {
 					m.X -= px
 					m.Y -= py

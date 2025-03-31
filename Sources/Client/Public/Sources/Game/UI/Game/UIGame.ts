@@ -23,7 +23,7 @@ import { CoordinatedStaticSpace, StaticSpace, StaticTranslucentPanelContainer, S
 import { InlineRendering } from "../Layout/Extensions/ExtensionInlineRendering";
 import UIGameWaveEnemyIcons from "./UIGameWaveEnemyIcons";
 import UIGameInventory from "./UIGameInventory";
-import TilesetRenderer, { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../../Utils/Tiled/TilesetRenderer";
+import TilesetRenderer, { BIOME_TILESETS } from "../../Utils/Tiled/TilesetRenderer";
 import TilesetWavedRenderer from "../../Utils/Tiled/TilesetWavedRenderer";
 
 let interpolatedMouseX = 0;
@@ -42,7 +42,6 @@ export default class UIGame extends AbstractUI {
     private readonly DEAD_BACKGROUND_TARGET_OPACITY: number = 0.3;
     private readonly DEAD_BACKGROUND_FADE_DURATION: number = 0.3;
 
-    private tilesetWavedRendererOceanPattern: TilesetWavedRenderer = new TilesetWavedRenderer();
     private tilesetRenderer: TilesetRenderer = new TilesetRenderer();
 
     private players: Map<number, Player> = new Map();
@@ -907,21 +906,6 @@ export default class UIGame extends AbstractUI {
             ctx.restore();
         }
 
-        // Ocean pattern background
-        if (this.biome === Biome.OCEAN && oceanBackgroundPatternTileset) {
-            ctx.save();
-
-            ctx.globalAlpha = 0.3;
-
-            this.tilesetWavedRendererOceanPattern.render({
-                canvas,
-                tileset: [oceanBackgroundPatternTileset],
-                tilesetSize: 350,
-            });
-
-            ctx.restore();
-        }
-
         { // Wave progression bar
             ctx.save();
 
@@ -1097,7 +1081,7 @@ export default class UIGame extends AbstractUI {
     override destroy(): void {
         super.destroy();
 
-        this.tilesetRenderer = this.tilesetWavedRendererOceanPattern = null;
+        this.tilesetRenderer = null;
 
         this.players.clear();
         this.mobs.clear();

@@ -118,10 +118,12 @@ func NewWaveRoom(b native.Biome, v WaveRoomVisibility) *WaveRoom {
 		candidates: make([]*StaticWaveRoomCandidatePlayer, 0, waveRoomMaxPlayerAmount),
 	}
 
+	// They have circular property wr -> wp, wp -> wr
+	// So init wp after initialized wr
 	wr.WavePool = NewWavePool(wr, &WaveData{
 		Biome: b,
 
-		Progress:         60,
+		Progress:         34,
 		ProgressTimer:    0,
 		ProgressRedTimer: 0,
 		ProgressIsRed:    false,

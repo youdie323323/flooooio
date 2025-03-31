@@ -1,7 +1,6 @@
 package wave
 
 import (
-	"flooooio/internal/collision"
 	"flooooio/internal/native"
 )
 
@@ -12,9 +11,9 @@ type Mob struct {
 
 	Rarity native.Rarity
 
-	TargetEntity collision.Node
+	TargetEntity Node
 
-	LastAttackedEntity collision.Node
+	LastAttackedEntity Node
 
 	PetMaster        *Player
 	PetGoingToMaster bool
@@ -24,7 +23,7 @@ type Mob struct {
 	// ConnectingSegment represents connected segment.
 	// Using collision.Node here because its not possible to Mob refer itself.
 	// Use type assertion.
-	ConnectingSegment collision.Node
+	ConnectingSegment Node
 	IsFirstSegment    bool
 
 	// mob_special_movement.go struct definition
@@ -98,7 +97,7 @@ func NewMob(
 
 	petMaster *Player,
 
-	connectingSegment collision.Node,
+	connectingSegment Node,
 	isFirstSegment bool,
 ) *Mob {
 	profile := native.MobProfiles[mType]
@@ -170,7 +169,7 @@ var MobSpeed = map[native.MobType]float64{
 
 	native.MobTypeSponge:    0,
 	native.MobTypeBubble:    0,
-	native.MobTypeJellyfish: 1.6,
+	native.MobTypeJellyfish: 1,
 	native.MobTypeStarfish:  2.8,
 }
 

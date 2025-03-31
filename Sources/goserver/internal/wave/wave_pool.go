@@ -8,7 +8,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"flooooio/internal/collision"
 	"flooooio/internal/native"
 	"flooooio/internal/network"
 
@@ -49,7 +48,7 @@ type WavePool struct {
 	updateTicker *time.Ticker
 	frameCount   *xsync.Counter
 
-	SpatialHash *collision.SpatialHash
+	SpatialHash *SpatialHash
 
 	isDisposing atomic.Bool
 
@@ -78,7 +77,7 @@ func NewWavePool(wr *WaveRoom, wd *WaveData) *WavePool {
 		updateTicker: nil,
 		frameCount:   xsync.NewCounter(),
 
-		SpatialHash: collision.NewSpatialHash(spatialHashGridSize),
+		SpatialHash: NewSpatialHash(spatialHashGridSize),
 
 		wd: wd,
 
@@ -280,21 +279,19 @@ func (wp *WavePool) updateWaveData() {
 	}()
 
 	if !wp.wd.ProgressIsRed {
-		smS := wp.ms.DetermineStaticMobData(wp.wd)
-		if smS != nil {
-			for _, sm := range smS {
-				randX, randY, ok := GetRandomSafeCoordinate(
-					float64(wp.wd.MapRadius),
-					300,
-					wp.GetPlayersWithCondition(func(p *Player) bool { return !p.IsDead }),
-				)
+		sm := wp.ms.DetermineStaticMobData(wp.wd)
+		if sm != nil {
+			randX, randY, ok := GetRandomSafeCoordinate(
+				float64(wp.wd.MapRadius),
+				300,
+				wp.GetPlayersWithCondition(func(p *Player) bool { return !p.IsDead }),
+			)
 
-				if ok {
-					if slices.Contains(LinkableMobs, sm.MobType) {
-						wp.LinkedMobSegmentation(sm.MobType, sm.Rarity, randX, randY, sm.CentiBodies)
-					} else {
-						wp.GenerateMob(sm.MobType, sm.Rarity, randX, randY, nil, nil, false)
-					}
+			if ok {
+				if slices.Contains(LinkableMobs, sm.MobType) {
+					wp.LinkedMobSegmentation(sm.MobType, sm.Rarity, randX, randY, sm.CentiBodies)
+				} else {
+					wp.GenerateMob(sm.MobType, sm.Rarity, randX, randY, nil, nil, false)
 				}
 			}
 		}
@@ -723,7 +720,7 @@ func (wp *WavePool) GenerateMob(
 
 	petMaster *Player,
 
-	connectingSegment collision.Node,
+	connectingSegment Node,
 	isFirstSegment bool,
 ) *Mob {
 	id := RandomId()
@@ -776,7 +773,7 @@ func (wp *WavePool) SafeGenerateMob(
 
 	petMaster *Player,
 
-	connectingSegment collision.Node,
+	connectingSegment Node,
 	isFirstSegment bool,
 ) *Mob {
 	wp.mu.Lock()
@@ -873,7 +870,7 @@ func (wp *WavePool) LinkedMobSegmentation(
 	// Arc
 	segmentDistance := (mc.Radius * 2) * (size / mc.Fraction)
 
-	var prevSegment collision.Node = nil
+	var prevSegment Node = nil
 
 	for i := range bodyCount + 1 {
 		radius := float64(i) * segmentDistance

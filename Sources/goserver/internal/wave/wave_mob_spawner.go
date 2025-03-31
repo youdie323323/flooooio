@@ -5,7 +5,6 @@ import (
 	crand "crypto/rand"
 	"encoding/binary"
 	"math"
-	"math/rand/v2"
 	"slices"
 
 	"flooooio/internal/native"
@@ -155,11 +154,13 @@ func (s *WaveMobSpawner) Next(data *WaveData) {
 	}
 }
 
-func (s *WaveMobSpawner) DetermineStaticMobData(data *WaveData) []StaticMob {
+func (s *WaveMobSpawner) DetermineStaticMobData(data *WaveData) *StaticMob {
 	s.t++
 
-	{
-		pointsToUse := int(math.Round(s.gaussian(s.t)))
+	const fps = 30 * 5
+
+	if math.Mod(s.t, fps) == 0 {
+		pointsToUse := int(math.Round(s.gaussian(s.t / fps)))
 
 		for pointsToUse > 0 {
 			mobType := getRandomMobType(data.Progress, data.Biome)
@@ -171,13 +172,13 @@ func (s *WaveMobSpawner) DetermineStaticMobData(data *WaveData) []StaticMob {
 				}
 			}
 
-			centiBodies := 0
+			centiBodies := -1
 
 			if slices.Contains(LinkableMobs, mobType) {
 				centiBodies = 9
 			}
 
-			s.spawnList.PushBack(StaticMob{
+			s.spawnList.PushBack(&StaticMob{
 				MobType:     mobType,
 				Rarity:      spawnRarity,
 				CentiBodies: centiBodies,
@@ -187,55 +188,25 @@ func (s *WaveMobSpawner) DetermineStaticMobData(data *WaveData) []StaticMob {
 		}
 	}
 
-	if int(s.t)%5 == 0 {
-		randInt := weightedRandomIntegerToFive()
-		smS := make([]StaticMob, 0, randInt)
-
-		for range randInt {
-			if s.spawnList.Len() > 0 {
-				smS = append(smS, s.consumeSpawn())
-			} else {
-				break
-			}
-		}
-
-		return smS
+	if s.spawnList.Len() == 0 {
+		return nil
 	}
 
-	return nil
-}
-
-func (s *WaveMobSpawner) consumeSpawn() StaticMob {
-	element := s.spawnList.Front()
-	s.spawnList.Remove(element)
-
-	sm := element.Value.(StaticMob)
-
-	for i := 0; i < sm.CentiBodies && s.spawnList.Len() > 0; i++ {
-		element = s.spawnList.Front()
+	if math.Mod(s.t, 5) == 0 {
+		element := s.spawnList.Front()
 		s.spawnList.Remove(element)
-	}
 
-	return sm
-}
+		sm := element.Value.(*StaticMob)
 
-func weightedRandomIntegerToFive() int {
-	weights := []float64{0.2, 0.1, 0.05, 0.025, 0.01}
-	total := 0.0
-	for _, w := range weights {
-		total += w
-	}
-
-	r := rand.Float64() * total
-	sum := 0.0
-	for i, w := range weights {
-		sum += w
-		if r < sum {
-			return i + 1
+		for i := 0; i < sm.CentiBodies && s.spawnList.Len() > 0; i++ {
+			element = s.spawnList.Front()
+			s.spawnList.Remove(element)
 		}
-	}
 
-	return 5
+		return sm
+	} else {
+		return nil
+	}
 }
 
 func flatTopGaussian(x, A, mu, w, sigma1, sigma2 float64) float64 {
@@ -256,19 +227,13 @@ func flatTopGaussian(x, A, mu, w, sigma1, sigma2 float64) float64 {
 }
 
 const (
-	gaussianAmplitude          = 5
-	gaussianMean               = 15.
+	gaussianAmplitude          = 10
+	gaussianMean               = 15
 	gaussianStandardDeviation1 = 1.
 	gaussianStandardDeviation2 = 5.
-	gaussianW                  = 75.
+	gaussianW                  = 25
 )
 
 func (s *WaveMobSpawner) gaussian(x float64) float64 {
-	endPoint := gaussianMean + (gaussianW / 2) + gaussianStandardDeviation2
-
-	if x >= endPoint {
-		return 0
-	}
-
 	return flatTopGaussian(x, gaussianAmplitude, gaussianMean, gaussianW, gaussianStandardDeviation1, gaussianStandardDeviation2)
 }

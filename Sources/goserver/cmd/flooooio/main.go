@@ -318,5 +318,5 @@ func main() {
 	const PORT = 8080
 
 	slog.Info("Server running", "port", PORT)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", PORT), nil))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", PORT), nil))
 }

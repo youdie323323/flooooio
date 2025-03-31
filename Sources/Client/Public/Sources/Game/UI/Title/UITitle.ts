@@ -35,8 +35,7 @@ import SCROLL_UNFURLED_SVG from "./Assets/scroll_unfurled.svg";
 import DISCORD_ICON_SVG from "./Assets/discord_icon.svg";
 import type { TooltipAnchorPosition } from "../Layout/Extensions/ExtensionTooltip";
 import Tooltip from "../Layout/Extensions/ExtensionTooltip";
-import UIGameInventory from "../Game/UIGameInventory";
-import { BIOME_TILESETS, oceanBackgroundPatternTileset } from "../../Utils/Tiled/TilesetRenderer";
+import { BIOME_TILESETS } from "../../Utils/Tiled/TilesetRenderer";
 import TilesetWavedRenderer from "../../Utils/Tiled/TilesetWavedRenderer";
 import UISettingButton from "../Shared/UISettingButton";
 import UIDraggableMobIcon from "../Shared/UIDraggableMobIcon";
@@ -112,7 +111,6 @@ export const enum SquadContainerStatusText {
 
 export default class UITitle extends AbstractUI {
     private wavedBackgroundRendererBiome: TilesetWavedRenderer = new TilesetWavedRenderer();
-    private wavedBackgroundRendererOceanPattern: TilesetWavedRenderer = new TilesetWavedRenderer();
 
     private lastBackgroundEntitySpawn: number;
 
@@ -1570,21 +1568,6 @@ export default class UITitle extends AbstractUI {
             e.moveCounter += deltaTime * 0.002;
         });
 
-        // Ocean pattern background
-        if (this.biome === Biome.OCEAN && oceanBackgroundPatternTileset) {
-            ctx.save();
-
-            ctx.globalAlpha = 0.3;
-
-            this.wavedBackgroundRendererOceanPattern.render({
-                canvas,
-                tileset: [oceanBackgroundPatternTileset],
-                tilesetSize: 350,
-            });
-
-            ctx.restore();
-        }
-
         if (this.waveRoomVisible !== this.prevWaveRoomVisible) {
             this.publicToggle.setToggle(this.waveRoomVisible === WaveRoomVisibleState.PUBLIC);
         }
@@ -1602,7 +1585,7 @@ export default class UITitle extends AbstractUI {
     override destroy(): void {
         super.destroy();
 
-        this.wavedBackgroundRendererBiome = this.wavedBackgroundRendererOceanPattern = null;
+        this.wavedBackgroundRendererBiome = null;
     }
 
     override onContextChanged(): void {

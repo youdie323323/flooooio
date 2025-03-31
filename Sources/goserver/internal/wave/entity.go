@@ -3,8 +3,6 @@ package wave
 import (
 	"math"
 	"math/rand/v2"
-
-	"flooooio/internal/collision"
 )
 
 type EntityId = uint32
@@ -103,7 +101,7 @@ func (e *Entity) GetID() uint32 {
 }
 
 // IsDeadNode determine if Node is dead.
-func IsDeadNode(wp *WavePool, n collision.Node) bool {
+func IsDeadNode(wp *WavePool, n Node) bool {
 	switch e := n.(type) {
 	case *Petal:
 	case *Mob:

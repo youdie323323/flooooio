@@ -1,11 +1,10 @@
 package wave
 
 import (
-	"flooooio/internal/collision"
 	"flooooio/internal/native"
 )
 
-var playerDefaultSearchData = native.EntityCollision{
+var playerCollision = native.EntityCollision{
 	Fraction: 25,
 	Radius:   25,
 }
@@ -16,13 +15,13 @@ func (p *Player) PlayerCollision(wp *WavePool) {
 		return
 	}
 
-	c0 := circle{p.X, p.Y, p.Size}
+	c0 := Circle{X: p.X, Y: p.Y, R: p.Size}
 
-	searchRadius := calculateSearchRadius(playerDefaultSearchData, p.Size)
+	searchRadius := CalculateSearchRadius(playerCollision, p.Size)
 
 	nearby := wp.SpatialHash.Search(p.X, p.Y, searchRadius)
 
-	nearby.Range(func(_ uint32, ne collision.Node) bool {
+	nearby.Range(func(_ uint32, ne Node) bool {
 		np, ok := ne.(*Player)
 		if !ok {
 			return true
@@ -37,9 +36,9 @@ func (p *Player) PlayerCollision(wp *WavePool) {
 			return true
 		}
 
-		c1 := circle{np.X, np.Y, np.Size}
+		c1 := Circle{X: np.X, Y: np.Y, R: np.Size}
 
-		px, py, ok := computeCirclePush(c0, c1)
+		px, py, ok := ComputeCirclePush(c0, c1)
 		if ok {
 			p.X -= px * 1.25
 			p.Y -= py * 1.25

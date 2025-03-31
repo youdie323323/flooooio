@@ -45,7 +45,7 @@ func (m *Mob) MobBodyConnection(wp *WavePool) {
 
 	if currentDistance > segmentDistance {
 		m.Magnitude = 0
-		m.Angle = math.Mod((math.Atan2(dy, dx)/tau)*255+255, 255)
+		m.Angle = math.Mod((math.Atan2(dy, dx)/tau)*255, 255)
 
 		ratio := (currentDistance - segmentDistance) / currentDistance
 		m.X += dx * ratio
