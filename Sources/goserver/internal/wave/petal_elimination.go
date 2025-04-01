@@ -1,7 +1,7 @@
 package wave
 
 func (p *Petal) PetalElimination(wp *WavePool) {
-	if !IsDeadNode(wp, p) && 0 >= p.Health {
+	if !p.WasEliminated(wp) && 0 >= p.Health {
 		wp.RemovePetal(*p.Id)
 	}
 }

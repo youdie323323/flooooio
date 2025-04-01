@@ -28,6 +28,7 @@ export default class Text extends Component<ClipboardEvents> {
         protected readonly fontSize: MaybePointerLike<number>,
         protected readonly fillStyle: MaybePointerLike<ColorCode> = "#ffffff",
         protected readonly textAlign: MaybePointerLike<CanvasTextAlign> = "center",
+
         protected readonly wordWrapMaxWidth: MaybePointerLike<number | null> = null,
 
         isCopyable: boolean = false,
@@ -73,7 +74,13 @@ export default class Text extends Component<ClipboardEvents> {
         });
     }
 
-    private getWrappedLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): Array<string> {
+    private getWrappedLines(
+        ctx: CanvasRenderingContext2D,
+
+        text: string,
+
+        maxWidth: number,
+    ): Array<string> {
         const words = text.split(" ");
         const lines: Array<string> = new Array();
 
@@ -113,7 +120,13 @@ export default class Text extends Component<ClipboardEvents> {
         let height: number;
 
         if (computedWordWrapMaxWidth) {
-            const lines = this.getWrappedLines(ctx, computedText, computedWordWrapMaxWidth);
+            const lines = this.getWrappedLines(
+                ctx,
+
+                computedText,
+
+                computedWordWrapMaxWidth,
+            );
             const lineHeight = computedFontSize * LINE_HEIGHT_MULTIPLIER;
 
             width = computedWordWrapMaxWidth;
@@ -201,11 +214,17 @@ export default class Text extends Component<ClipboardEvents> {
             case "left":
             default: break;
         }
-        
+
         const { LINE_HEIGHT_MULTIPLIER } = Text;
 
         if (computedWordWrapMaxWidth) {
-            const lines = this.getWrappedLines(ctx, computedText, computedWordWrapMaxWidth);
+            const lines = this.getWrappedLines(
+                ctx,
+
+                computedText,
+
+                computedWordWrapMaxWidth,
+            );
             const lineHeight = computedFontSize * LINE_HEIGHT_MULTIPLIER;
 
             lines.forEach((line, index) => {

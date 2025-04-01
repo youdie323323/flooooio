@@ -171,6 +171,10 @@ export function hasClickableListeners(component: Components): boolean {
     return false;
 }
 
+export function hasOnScrollListener(component: Components): boolean {
+    return component.listenerCount("onScroll") > 0;
+}
+
 // Typing for EventEmitter
 export type ComponentEvents<AdheredEvents extends object> =
     Satisfies<
@@ -185,6 +189,10 @@ export type ComponentEvents<AdheredEvents extends object> =
         & {
             // Event that tell this component is not clicked on mouse up
             "onClickOutside": [];
+        }
+        & {
+            // Event that tell this component is scrolled
+            "onScroll": [event: WheelEvent];
         }
         & typeof INTERACTIVE_EVENTS
         & typeof CLICKABLE_EVENTS
@@ -202,9 +210,15 @@ export const OBSTRUCTION_AFFECTABLE: unique symbol = Symbol("obstructionAffectab
  */
 export const RENDERED_LAST: unique symbol = Symbol("renderedLast");
 
+/**
+ * Symbol that tell container should not center the component.
+ */
+export const BYPASS_CENTERING: unique symbol = Symbol("bypassCentering");
+
 export interface ComponentSymbol {
     [OBSTRUCTION_AFFECTABLE]?: boolean;
     [RENDERED_LAST]?: boolean;
+    [BYPASS_CENTERING]?: boolean;
 }
 
 /**
@@ -215,6 +229,7 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
     // Prepare base symbols
     public [OBSTRUCTION_AFFECTABLE]: boolean = true;
     public [RENDERED_LAST]: boolean = false;
+    public [BYPASS_CENTERING]: boolean = false;
 
     private static readonly ANIMATION_DEFAULT_DURATIONS = {
         [AnimationType.ZOOM]: 100,
@@ -537,11 +552,15 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
             }
         }
 
-        // ctx.save();
-        // ctx.strokeStyle = "blue";
-        // ctx.lineWidth = 1;
-        // ctx.strokeRect(this.x, this.y, this.w, this.h);
-        // ctx.restore();
+        /*
+        ctx.save();
+
+        ctx.strokeStyle = "blue";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(this.x, this.y, this.w, this.h);
+        
+        ctx.restore();
+        */
     }
 
     protected static computePointerLike<T>(p: MaybePointerLike<T>): T {

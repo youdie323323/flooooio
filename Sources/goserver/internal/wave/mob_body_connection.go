@@ -17,8 +17,8 @@ func traverseMobSegments(wp *WavePool, m *Mob) *Mob {
 	return m
 }
 
-// isBody determinate if segment piece mob is body.
-func isBody(wp *WavePool, m *Mob) bool {
+// IsBody determinate if segment piece mob is body.
+func IsBody(wp *WavePool, m *Mob) bool {
 	return traverseMobSegments(wp, m) != m
 }
 
@@ -45,7 +45,7 @@ func (m *Mob) MobBodyConnection(wp *WavePool) {
 
 	if currentDistance > segmentDistance {
 		m.Magnitude = 0
-		m.Angle = math.Mod((math.Atan2(dy, dx)/tau)*255, 255)
+		m.Angle = math.Mod((math.Atan2(dy, dx)/Tau)*255+255, 255)
 
 		ratio := (currentDistance - segmentDistance) / currentDistance
 		m.X += dx * ratio

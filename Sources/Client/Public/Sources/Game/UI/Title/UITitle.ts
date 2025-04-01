@@ -15,7 +15,7 @@ import SettingStorage from "../../Utils/SettingStorage";
 import type { ComponentCloser, ComponentOpener, Components, FakeSetVisibleObserverType, FakeSetVisibleToggleType, MaybePointerLike } from "../Layout/Components/Component";
 import { AnimationType } from "../Layout/Components/Component";
 import type { AnyStaticContainer } from "../Layout/Components/WellKnown/Container";
-import { StaticPanelContainer, CoordinatedStaticSpace, StaticHContainer, StaticSpace, StaticVContainer } from "../Layout/Components/WellKnown/Container";
+import { StaticPanelContainer, CoordinatedStaticSpace, StaticHContainer, StaticSpace, StaticVContainer, StaticScrollableContainer } from "../Layout/Components/WellKnown/Container";
 import Text from "../Layout/Components/WellKnown/Text";
 import TextInput from "../Layout/Components/WellKnown/TextInput";
 import Toggle from "../Layout/Components/WellKnown/Toggle";
@@ -39,6 +39,7 @@ import { BIOME_TILESETS } from "../../Utils/Tiled/TilesetRenderer";
 import TilesetWavedRenderer from "../../Utils/Tiled/TilesetWavedRenderer";
 import UISettingButton from "../Shared/UISettingButton";
 import UIDraggableMobIcon from "../Shared/UIDraggableMobIcon";
+import { BypassCentering } from "../Layout/Extensions/ExtensionBypassCentering";
 
 const TAU = Math.PI * 2;
 
@@ -202,6 +203,8 @@ export default class UITitle extends AbstractUI {
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
+
+        document.onmouseout = this.mouseup;
 
         this.lastBackgroundEntitySpawn = Date.now();
 
@@ -542,6 +545,8 @@ export default class UITitle extends AbstractUI {
                     },
                 )),
 
+                new CoordinatedStaticSpace(15, 15, 245.5, 0),
+
                 new Text(
                     {
                         x: 88,
@@ -606,16 +611,95 @@ export default class UITitle extends AbstractUI {
                 ),
             );
 
+            let changelogContainerCloser: UICloseButton;
+
+            let changelogContainerContentContainer: StaticScrollableContainer;
+
+            const changelogContainer: StaticPanelContainer = new StaticPanelContainer(
+                () => ({
+                    x: 72,
+                    y: 15 + changelogContainer.h,
+
+                    invertYCoordinate: true,
+                }),
+
+                true,
+
+                "#9bb56b",
+                0.1,
+            ).addChildren(
+                (changelogContainerCloser = new UICloseButton(
+                    {
+                        x: 314 - 4,
+                        y: 5,
+                    },
+                    12,
+
+                    () => {
+                        changelogContainer.setVisible(
+                            false,
+                            <ComponentCloser><unknown>changelogContainerCloser,
+                            true,
+                            AnimationType.SLIDE,
+                            {
+                                direction: "v",
+                                offsetSign: -1,
+                            },
+                        );
+                    },
+                )),
+
+                new CoordinatedStaticSpace(15, 15, 313.5, 0),
+
+                new Text(
+                    {
+                        x: 118,
+                        y: 4,
+                    },
+
+                    "Changelog",
+                    16,
+                ),
+
+                (changelogContainerContentContainer = new StaticScrollableContainer(
+                    {
+                        x: 4,
+                        y: 40,
+
+                        w: 323,
+                        h: 220,
+                    },
+
+                    5.5,
+                    75,
+                    true,
+                ).addChildren(
+                    ...dynamicJoinArray(
+                        Array.from({ length: 50 }, () => new Text(
+                            {},
+
+                            "Older changelog entries not available",
+                            9.5,
+                            "#ffffff",
+                            "center",
+                        )),
+                        () => new StaticSpace(0, 10),
+                    ),
+                )),
+            );
+
             // Unvisible containers
             creditsContainer.setVisible(false, null, false);
             settingContainer.setVisible(false, null, false);
             inventoryContainer.setVisible(false, null, false);
+            changelogContainer.setVisible(false, null, false);
 
             // Add containers
             this.addComponents(
                 creditsContainer,
                 settingContainer,
                 inventoryContainer,
+                changelogContainer,
             );
 
             {
@@ -748,7 +832,13 @@ export default class UITitle extends AbstractUI {
                 }
 
                 {
-                    const changelogButton = new (makeTitleToolTippedButton(Button, "Changelog", 6, "right"))(
+                    const changelogButton = new (makeTitleToolTippedButton(
+                        Button,
+                        "Changelog",
+                        6,
+                        "right",
+                        () => !changelogContainer.desiredVisible,
+                    ))(
                         {
                             x: 15,
                             y: 116,
@@ -774,7 +864,16 @@ export default class UITitle extends AbstractUI {
                         ],
 
                         () => {
-                            console.log("called");
+                            changelogContainer.setVisible(
+                                <FakeSetVisibleToggleType>!changelogContainer.desiredVisible,
+                                <FakeSetVisibleObserverType><unknown>changelogButton,
+                                true,
+                                AnimationType.SLIDE,
+                                {
+                                    direction: "v",
+                                    offsetSign: -1,
+                                },
+                            );
                         },
 
                         "#9bb56b",
@@ -1420,10 +1519,12 @@ export default class UITitle extends AbstractUI {
                             x: 10,
                             y: 187,
                         },
+
                         () => "Code: " + (this.waveRoomCode || ""),
                         9,
                         "#ffffff",
                         "left",
+
                         null,
 
                         true,
@@ -1590,6 +1691,8 @@ export default class UITitle extends AbstractUI {
 
     override onContextChanged(): void {
         cameraController.zoom = 1;
+
+        document.onmouseout = null;
     }
 
     public resetWaveState() {

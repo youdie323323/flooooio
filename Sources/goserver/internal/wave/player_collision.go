@@ -4,7 +4,7 @@ import (
 	"flooooio/internal/native"
 )
 
-var playerCollision = native.EntityCollision{
+var PlayerCollision = native.EntityCollision{
 	Fraction: 25,
 	Radius:   25,
 }
@@ -17,7 +17,7 @@ func (p *Player) PlayerCollision(wp *WavePool) {
 
 	c0 := Circle{X: p.X, Y: p.Y, R: p.Size}
 
-	searchRadius := CalculateSearchRadius(playerCollision, p.Size)
+	searchRadius := CalculateSearchRadius(PlayerCollision, p.Size)
 
 	nearby := wp.SpatialHash.Search(p.X, p.Y, searchRadius)
 

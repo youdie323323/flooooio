@@ -1,7 +1,62 @@
 package wave
 
+import "math/rand/v2"
+
+func RevivePlayer(wp *WavePool, p *Player) {
+	if p.IsDead {
+		alivePlayers := wp.GetPlayersWithCondition(func(p2 *Player) bool {
+			return p2.Id != p.Id && !p2.IsDead
+		})
+
+		if len(alivePlayers) > 0 {
+			randAlive := alivePlayers[rand.IntN(len(alivePlayers))]
+
+			x, y := GetRandomCoordinate(
+				randAlive.X,
+				randAlive.Y,
+				200,
+			)
+
+			p.Health = p.CalculateMaxHealth()
+
+			p.IsDead = false
+
+			p.X = x
+			p.Y = y
+
+			p.DeadCameraTarget = nil
+		}
+	}
+}
+
+func ResetBindings(wp *WavePool, p *Player) {
+	// Remove all petals
+	for _, petals := range p.Slots.Surface {
+		if petals == nil {
+			continue
+		}
+
+		for _, petal := range petals {
+			if !petal.WasEliminated(wp) {
+				wp.RemovePetal(*petal.Id)
+			}
+		}
+	}
+
+	// Remove all pets
+	for _, pet := range wp.GetMobsWithCondition(func(m *Mob) bool { return m.PetMaster == p }) {
+		if pet != nil {
+			wp.RemoveMob(*pet.Id)
+		}
+	}
+
+	// Reset all reloads
+	p.Slots.ReloadCooldownGrid = GeneratePetalCooldownGrid(len(p.Slots.Surface))
+	p.Slots.UsageCooldownGrid = GeneratePetalCooldownGrid(len(p.Slots.Surface))
+}
+
 func (p *Player) PlayerElimination(wp *WavePool) {
-	if !IsDeadNode(wp, p) && 0 >= p.Health {
+	if !p.IsDead && 0 >= p.Health {
 		p.IsDead = true
 
 		p.Health = 0
@@ -9,6 +64,6 @@ func (p *Player) PlayerElimination(wp *WavePool) {
 		// Stop move
 		p.Magnitude = 0
 
-		// TODO: removeAllBindings
+		ResetBindings(wp, p)
 	}
 }

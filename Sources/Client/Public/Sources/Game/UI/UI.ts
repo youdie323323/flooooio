@@ -2,7 +2,7 @@ import type { EventMap } from "strict-event-emitter";
 import { Emitter } from "strict-event-emitter";
 import type { Biome } from "../../../../../Shared/Biome";
 import type { StaticAdheredClientboundHandlers } from "../Websocket/Packet/PacketClientbound";
-import { type Components, renderPossibleComponents, OBSTRUCTION_AFFECTABLE, hasClickableListeners, hasInteractiveListeners } from "./Layout/Components/Component";
+import { type Components, renderPossibleComponents, OBSTRUCTION_AFFECTABLE, hasClickableListeners, hasInteractiveListeners, hasOnScrollListener } from "./Layout/Components/Component";
 import { BLACKLISTED } from "./Layout/Extensions/ExtensionInlineRendering";
 import type { AnyStaticContainer } from "./Layout/Components/WellKnown/Container";
 import { AbstractStaticContainer } from "./Layout/Components/WellKnown/Container";
@@ -23,11 +23,15 @@ export type ComponentCompatibleUnconditionalEvents =
             "onMouseDown": [event: MouseEvent];
             "onMouseUp": [event: MouseEvent];
             "onMouseMove": [event: MouseEvent];
+
+            "onWheel": [event: WheelEvent];
         },
         EventMap
     >;
 
 export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnconditionalEvents> {
+    public ctx: CanvasRenderingContext2D;
+
     public mouseX: number = 0;
     public mouseY: number = 0;
 
@@ -44,20 +48,22 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
     private hoveredComponent: Components = null;
     private clickedComponent: Components = null;
 
-    private canvasEventOptions: AddEventListenerOptions;
+    protected canvasEventOptions: AddEventListenerOptions;
 
-    private mousedown: (event: MouseEvent) => void;
-    private mouseup: (event: MouseEvent) => void;
-    private mousemove: (event: MouseEvent) => void;
+    protected mousedown: (event: MouseEvent) => void;
+    protected mouseup: (event: MouseEvent) => void;
+    protected mousemove: (event: MouseEvent) => void;
 
-    private touchmove: (event: TouchEvent) => void;
-    private touchstart: (event: TouchEvent) => void;
-    private touchend: (event: TouchEvent) => void;
+    protected wheel: (event: WheelEvent) => void;
 
-    private keydown: (event: KeyboardEvent) => void;
-    private keyup: (event: KeyboardEvent) => void;
+    protected touchmove: (event: TouchEvent) => void;
+    protected touchstart: (event: TouchEvent) => void;
+    protected touchend: (event: TouchEvent) => void;
 
-    private onresize: () => void;
+    protected keydown: (event: KeyboardEvent) => void;
+    protected keyup: (event: KeyboardEvent) => void;
+
+    protected onresize: () => void;
 
     /**
      * Store the biome of UI.
@@ -72,12 +78,21 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
     constructor(public canvas: HTMLCanvasElement) {
         super();
 
+        const ctx = this.canvas.getContext("2d");
+        if (!ctx) {
+            throw new Error("Cannot get context of canvas");
+        }
+
+        this.ctx = ctx;
+
         // Initialize components
         this.initializeComponents();
 
         this.mousedown = this.handleMouseDown.bind(this);
         this.mouseup = this.handleMouseUp.bind(this);
         this.mousemove = this.handleMouseMove.bind(this);
+
+        this.wheel = this.handleWheel.bind(this);
 
         this.touchmove = (event: TouchEvent) => {
             event.preventDefault();
@@ -150,6 +165,10 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
             }
 
             {
+                this.canvas.addEventListener('wheel', this.wheel, canvasEventOptions);
+            }
+
+            {
                 this.canvas.addEventListener('touchmove', this.touchmove, canvasEventOptions);
                 this.canvas.addEventListener('touchstart', this.touchstart, canvasEventOptions);
                 this.canvas.addEventListener('touchend', this.touchend, canvasEventOptions);
@@ -182,6 +201,10 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
                 this.canvas.removeEventListener('mousedown', this.mousedown, canvasEventOptions);
                 this.canvas.removeEventListener('mouseup', this.mouseup, canvasEventOptions);
                 this.canvas.removeEventListener('mousemove', this.mousemove, canvasEventOptions);
+            }
+
+            {
+                this.canvas.removeEventListener('wheel', this.wheel, canvasEventOptions);
             }
 
             {
@@ -278,7 +301,8 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
             this.isComponentObstructable(targetComponent) &&
             (
                 hasInteractiveListeners(targetComponent) ||
-                hasClickableListeners(targetComponent)
+                hasClickableListeners(targetComponent) ||
+                hasOnScrollListener(targetComponent)
             );
     }
 
@@ -302,9 +326,6 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
     }
 
     private updateComponentsLayout(isResized: boolean): void {
-        const ctx = this.canvas.getContext("2d");
-        if (!ctx) return;
-
         const scaledWidth = this.canvas.width / uiScaleFactor;
         const scaledHeight = this.canvas.height / uiScaleFactor;
 
@@ -319,7 +340,7 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
             if (!component.isLayoutable) return;
 
             const layout = component.cachedLayout({
-                ctx,
+                ctx: this.ctx,
 
                 containerWidth: scaledWidth,
                 containerHeight: scaledHeight,
@@ -402,7 +423,8 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
 
         if (event.button === 0) {
             if (this.clickedComponent) {
-                if (this.isComponentInteractableAtPosition(this.clickedComponent, this.mouseX, this.mouseY)) {
+                const { mouseX, mouseY } = this;
+                if (this.isComponentInteractableAtPosition(this.clickedComponent, mouseX, mouseY)) {
                     this.clickedComponent.emit("onUp");
                     this.clickedComponent.emit("onClick");
                 }
@@ -424,6 +446,21 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
 
         // Maybe too performance impact?
         // this.invalidateDynamicLayoutables();
+    }
+
+    private handleWheel(event: WheelEvent): void {
+        if (!event.isTrusted) return;
+
+        this.broadcastUnconditionalEvent("onWheel", event);
+
+        const { mouseX, mouseY } = this;
+        for (const component of this.components) {
+            if (this.isComponentInteractableAtPosition(component, mouseX, mouseY)) {
+                component.emit("onScroll", event);
+
+                break;
+            }
+        }
     }
 
     private findParentContainer(child: Components): AnyStaticContainer | null {
@@ -519,15 +556,12 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
     }
 
     protected render(): void {
-        const ctx = this.canvas.getContext("2d");
-        if (!ctx) return;
-
         this.emitInteractiveEvents();
 
         this.updateComponentsLayout(false);
 
         renderPossibleComponents(
-            ctx,
+            this.ctx,
             this.getTopLevelRenderableComponents(),
         );
     }

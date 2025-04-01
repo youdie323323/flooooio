@@ -39,14 +39,14 @@ func RandomId() uint32 {
 	return rand.Uint32()
 }
 
-const tau = math.Pi * 2
+const Tau = math.Pi * 2
 
 // GetRandomSafeCoordinate generates a random safe position
 func GetRandomSafeCoordinate(mapRadius float64, safetyDistance float64, clients []*Player) (float64, float64, bool) {
 	const maxAttempts = 100
 
 	for range maxAttempts {
-		angle := rand.Float64() * tau
+		angle := rand.Float64() * Tau
 		distance := rand.Float64() * (mapRadius - safetyDistance)
 
 		x := mapRadius + math.Cos(angle)*distance
@@ -58,7 +58,7 @@ func GetRandomSafeCoordinate(mapRadius float64, safetyDistance float64, clients 
 		for _, client := range clients {
 			dx := client.X - x
 			dy := client.Y - y
-			distanceToClient := math.Sqrt(dx*dx + dy*dy)
+			distanceToClient := math.Hypot(dx, dy)
 
 			if distanceToClient < safetyDistance+client.Size {
 				isSafe = false
@@ -77,7 +77,7 @@ func GetRandomSafeCoordinate(mapRadius float64, safetyDistance float64, clients 
 
 // GetRandomCoordinate generates a random position
 func GetRandomCoordinate(centerX, centerY, spawnRadius float64) (float64, float64) {
-	angle := rand.Float64() * tau
+	angle := rand.Float64() * Tau
 	distance := (0.5 + rand.Float64()*0.5) * spawnRadius
 
 	x := centerX + math.Cos(angle)*distance

@@ -193,14 +193,15 @@ func RemovePlayerFromService(pd *PlayerData) {
 
 	if pd.WrPId != nil && pd.WPId != nil {
 		wr := WrService.FindPlayerRoom(*pd.WrPId)
+		wp := wr.WavePool
 
-		if wr != nil && wr.WavePool != nil {
-			player := wr.WavePool.SafeFindPlayer(*pd.WPId)
+		if wr != nil && wp != nil {
+			player := wp.SafeFindPlayer(*pd.WPId)
 
 			if player != nil {
-				wr.WavePool.SafeRemovePlayer(*pd.WPId)
+				ResetBindings(wp, player)
 
-				// TODO: remove binding of player (like pet)
+				wp.SafeRemovePlayer(*pd.WPId)
 
 				pd.WPId = nil
 			}

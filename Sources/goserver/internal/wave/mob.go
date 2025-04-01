@@ -26,7 +26,7 @@ type Mob struct {
 	ConnectingSegment Node
 	IsFirstSegment    bool
 
-	// mob_special_movement.go struct definition
+	// mob_special_movement.go struct field definitions
 	SineWaveIndex        int
 	RotationCounter      int
 	SpecialMovementTimer float64
@@ -172,8 +172,6 @@ var MobSpeed = map[native.MobType]float64{
 	native.MobTypeJellyfish: 1,
 	native.MobTypeStarfish:  2.8,
 }
-
-// mob_special_movement.go method definition
 
 func (m *Mob) ShouldShakeAngle() bool {
 	return m.Type == native.MobTypeBee

@@ -581,11 +581,11 @@ export class WavePool extends AbstractPool {
             client.slots.surface.length >= at && client.slots.bottom.length >= at &&
             isDynamicPetal(client.slots.bottom[at])
         ) {
-            const temp = client.slots.surface[at];
-
             // Reset cooldown
             client.slots.cooldownsPetal[at] = new Array(MAX_CLUSTER_AMOUNT).fill(PETAL_INITIAL_COOLDOWN);
             client.slots.cooldownsUsage[at] = new Array(MAX_CLUSTER_AMOUNT).fill(PETAL_INITIAL_COOLDOWN);
+
+            const temp = client.slots.surface[at];
 
             if (temp && isDynamicPetal(temp)) {
                 temp.forEach(({

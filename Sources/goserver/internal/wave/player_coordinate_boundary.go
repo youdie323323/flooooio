@@ -19,7 +19,7 @@ func (p *Player) PlayerCoordinateBoundary(wp *WavePool) {
 	dx := p.X - float64(mapRadius)
 	dy := p.Y - float64(mapRadius)
 
-	if math.Sqrt(dx*dx+dy*dy) > worldRadius {
+	if math.Hypot(dx, dy) > worldRadius {
 		collisionAngle := math.Atan2(dy, dx)
 
 		p.X = mapRadius + math.Cos(collisionAngle)*(worldRadius-playerCoordinateBoundaryKnockback)

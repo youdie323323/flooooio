@@ -9,7 +9,7 @@ export interface PetalI18n {
 
 type BaseData = EntityData<PetalI18n>;
 
-interface UnusablePetalStat {
+export interface PetalStat {
     damage: number;
     health: number;
     petalReload: number;
@@ -17,12 +17,6 @@ interface UnusablePetalStat {
 
     extra?: Record<string, any>;
 }
-
-interface UsablePetalStat extends UnusablePetalStat {
-    usageReload: number;
-}
-
-export type PetalStat = UnusablePetalStat | UsablePetalStat;
 
 export type PetalData = Readonly<
     BaseData

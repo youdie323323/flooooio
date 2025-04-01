@@ -22,6 +22,11 @@ func ComputeCirclePush(c0, c1 Circle) (float64, float64, bool) {
 		return 0, 0, false
 	}
 
+	// If distance is zero, dx and dy will be NaN and cause errors
+	if distance == 0 {
+		return 1, 1, true
+	}
+
 	nx := dx / distance
 	ny := dy / distance
 

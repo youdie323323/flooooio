@@ -1,6 +1,8 @@
 package wave
 
-import "flooooio/internal/native"
+import (
+	"flooooio/internal/native"
+)
 
 type Petal struct {
 	Entity
@@ -26,8 +28,6 @@ func (p *Petal) GetDesiredSize() float64 {
 }
 
 const PetalSize = 6
-
-const PetalInitialCooldown = 0
 
 // NewPetal return new petal instance.
 func NewPetal(
@@ -80,24 +80,22 @@ func (p *Petal) CalculateMaxHealth() float64 {
 
 // WasEliminated determine if petal is eliminated.
 // This method exists because struct pointer petal reference doesnt nil'ed when removed.
-func (m *Petal) WasEliminated(wp *WavePool) bool {
-	return wp.FindPetal(*m.Id) == nil
+func (p *Petal) WasEliminated(wp *WavePool) bool {
+	return wp.FindPetal(*p.Id) == nil
 }
 
-const petalVelocityFriction = 0.8125
-
-func (m *Petal) OnUpdateTick(wp *WavePool) {
+func (p *Petal) OnUpdateTick(wp *WavePool) {
 	// Unneeded for petal
 	// m.EntityCoordinateMovement(wp)
 
-	m.PetalElimination(wp)
+	p.PetalElimination(wp)
 
 	{ // Base onUpdateTick
-		m.Velocity[0] *= petalVelocityFriction
-		m.Velocity[1] *= petalVelocityFriction
+		p.Velocity[0] *= petalVelocityFriction
+		p.Velocity[1] *= petalVelocityFriction
 
-		m.X += m.Velocity[0]
-		m.Y += m.Velocity[1]
+		p.X += p.Velocity[0]
+		p.Y += p.Velocity[1]
 	}
 }
 
@@ -112,28 +110,18 @@ type StaticPetal struct {
 	Rarity native.Rarity
 }
 
-const MaxClusterAmount = 5
+const PetalMaxClusterAmount = 5
 
 // DynamicPetal can be either single or clustered petal.
-type DynamicPetal []*Mob
+type DynamicPetal []*Petal
 
 // IsClusterPetal checks if the petal is clustered.
 func IsClusterPetal(petal DynamicPetal) bool {
 	return len(petal) > 1
 }
 
-// Slot can be StaticPetal, DynamicPetal, or nil.
-type Slot any
-
-// IsDynamicPetal determines if slot is dynamic (living).
-func IsDynamicPetal(slot Slot) bool {
-	_, ok := slot.(DynamicPetal)
-
-	return ok
-}
-
 // StaticPlayerPetalSlots contains surface and bottom slots.
 type StaticPlayerPetalSlots struct {
-	Surface []Slot
-	Bottom  []Slot
+	Surface []StaticPetal
+	Bottom  []StaticPetal
 }

@@ -5,7 +5,7 @@ import (
 )
 
 func angleToRadian(angle float64) float64 {
-    return angle / 255 * tau
+	return angle / 255 * Tau
 }
 
 func (e *Entity) EntityCoordinateMovement(wp *WavePool) {

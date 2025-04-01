@@ -21,7 +21,7 @@ func (m *Mob) MobCoordinateBoundary(wp *WavePool) {
 	dx := m.X - float64(mapRadius)
 	dy := m.Y - float64(mapRadius)
 
-	if math.Sqrt(dx*dx+dy*dy) > worldRadius {
+	if math.Hypot(dx, dy) > worldRadius {
 		collisionAngle := math.Atan2(dy, dx)
 
 		m.X = mapRadius + math.Cos(collisionAngle)*worldRadius

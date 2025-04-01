@@ -9,6 +9,10 @@ const (
 )
 
 func (m *Mob) MobCollision(wp *WavePool) {
+	if m.WasEliminated(wp) {
+		return
+	}
+
 	profile0 := native.MobProfiles[m.Type]
 
 	collision0 := profile0.Collision
@@ -80,10 +84,6 @@ func (m *Mob) MobCollision(wp *WavePool) {
 
 		case *Petal:
 			{
-				if nearEntity.Id == m.Id {
-					return true
-				}
-
 				if nearEntity.WasEliminated(wp) {
 					return true
 				}
@@ -97,18 +97,18 @@ func (m *Mob) MobCollision(wp *WavePool) {
 
 				px, py, ok := ComputeCirclePush(c0, c1)
 				if ok {
-					m.X -= px * 0.1
-					m.Y -= py * 0.1
+					if !nearEntity.SpinningOnMob {
+						m.X -= px * 0.1
+						m.Y -= py * 0.1
 
-					// Maybe dont collide to petal?
-					nearEntity.X += px * 3
-					nearEntity.Y += py * 3
+						// Maybe dont collide to petal?
+						nearEntity.X += px * 3
+						nearEntity.Y += py * 3
+					}
 
 					{ // Damage
-						profile1 := native.MobProfiles[nearEntity.Type]
-
 						nearEntityMaxHealth := nearEntity.CalculateMaxHealth()
-						nearEntityDamage := profile1.StatFromRarity(nearEntity.Rarity).GetDamage()
+						nearEntityDamage := native.PetalProfiles[nearEntity.Type].StatFromRarity(nearEntity.Rarity).GetDamage()
 
 						m.Health -= nearEntityDamage / mMaxHealth
 						nearEntity.Health -= mDamage / nearEntityMaxHealth
@@ -124,10 +124,6 @@ func (m *Mob) MobCollision(wp *WavePool) {
 
 		case *Player:
 			{
-				if nearEntity.Id == m.Id {
-					return true
-				}
-
 				// Dont collide to dead/uncollidable player
 				if nearEntity.IsDead || !nearEntity.IsCollidable() {
 					return true

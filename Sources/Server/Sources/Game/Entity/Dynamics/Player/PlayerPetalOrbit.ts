@@ -122,7 +122,9 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
             const spinRotationDelta =
                 this.calculateRotationDelta(
                     MixedBase.DEFAULT_ROTATE_SPEED *
-                    MixedBase.SPIN_ANGLE_COEFFICIENT, clockwise);
+                    MixedBase.SPIN_ANGLE_COEFFICIENT,
+                    clockwise,
+                );
 
             for (let i = 0; i < totalPetals; i++) {
                 const petals = surface[i];
@@ -250,12 +252,12 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
             const diffX = chaseX - petal.x;
             const diffY = chaseY - petal.y;
 
-            const { petalVelocity: velocity } = petal;
+            const { petalVelocity } = petal;
 
-            if (!velocity) return;
+            if (!petalVelocity) return;
 
-            velocity[0] += MixedBase.PETAL_VELOCITY_ACCELERATION * diffX;
-            velocity[1] += MixedBase.PETAL_VELOCITY_ACCELERATION * diffY;
+            petalVelocity[0] += MixedBase.PETAL_VELOCITY_ACCELERATION * diffX;
+            petalVelocity[1] += MixedBase.PETAL_VELOCITY_ACCELERATION * diffY;
         }
 
         /**
@@ -318,7 +320,7 @@ export function PlayerPetalOrbit<T extends EntityMixinConstructor<BasePlayer>>(B
             }
         }
 
-        override [Symbol.dispose](): void {
+        override[Symbol.dispose](): void {
             super[Symbol.dispose]?.();
 
             this.historyX = null;

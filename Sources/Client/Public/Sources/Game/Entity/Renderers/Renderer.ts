@@ -113,8 +113,8 @@ export default class Renderer<T extends Entity> {
             ctx.strokeStyle = '#000000';
             ctx.fillStyle = "#ffffff";
 
-            ctx.strokeText(entity.nickname, 0, 0);
-            ctx.fillText(entity.nickname, 0, 0);
+            ctx.strokeText(entity.name, 0, 0);
+            ctx.fillText(entity.name, 0, 0);
 
             ctx.restore();
         }

@@ -6,8 +6,8 @@ import (
 	"flooooio/internal/native"
 )
 
-// findNearestEntity finds the nearest entity from a slice of entities.
-func findNearestEntity(me Node, entities []Node) Node {
+// FindNearestEntity finds the nearest entity from a slice of entities.
+func FindNearestEntity(me Node, entities []Node) Node {
 	if len(entities) == 0 {
 		return nil
 	}
@@ -37,7 +37,7 @@ const angleFactor = 40.5845104884 // 255/(2*PI)
 // TurnAngleToTarget calculates interpolated angle to target.
 func TurnAngleToTarget(thisAngle, dx, dy float64) float64 {
 	targetAngle := math.Mod(math.Atan2(dy, dx)*angleFactor, 255)
-	normalizedAngle := math.Mod(thisAngle, 255)
+	normalizedAngle := math.Mod(math.Mod(thisAngle, 255)+255, 255)
 	angleDiff := targetAngle - normalizedAngle
 
 	if angleDiff > 127.5 {
@@ -46,7 +46,7 @@ func TurnAngleToTarget(thisAngle, dx, dy float64) float64 {
 		angleDiff += 255
 	}
 
-	return math.Mod(normalizedAngle+angleDiff*0.1, 255)
+	return math.Mod(normalizedAngle+angleDiff*0.1+255, 255)
 }
 
 const mobDetectionRange = 25.
@@ -63,8 +63,8 @@ func getTargetNodes(wp *WavePool, m *Mob) []Node {
 	var targets []Node
 
 	if m.PetMaster != nil {
-		mobs := wp.SafeGetMobsWithCondition(func(fm *Mob) bool {
-			return fm.Id != m.Id && fm.PetMaster != nil
+		mobs := wp.GetMobsWithCondition(func(fm *Mob) bool {
+			return fm.Id != m.Id && fm.PetMaster == nil
 		})
 
 		targets = make([]Node, len(mobs))
@@ -72,7 +72,7 @@ func getTargetNodes(wp *WavePool, m *Mob) []Node {
 			targets[i] = mob
 		}
 	} else {
-		players := wp.SafeGetPlayersWithCondition(func(p *Player) bool {
+		players := wp.GetPlayersWithCondition(func(p *Player) bool {
 			return !p.IsDead
 		})
 
@@ -87,7 +87,7 @@ func getTargetNodes(wp *WavePool, m *Mob) []Node {
 
 func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 	// If body, dont do anything
-	if isBody(wp, m) {
+	if IsBody(wp, m) {
 		return
 	}
 
@@ -130,7 +130,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 			if m.TargetEntity != nil {
 				targetEntity = m.TargetEntity
 			} else {
-				targetEntity = findNearestEntity(m, getTargetNodes(wp, m))
+				targetEntity = FindNearestEntity(m, getTargetNodes(wp, m))
 			}
 
 			if targetEntity == nil {
@@ -162,7 +162,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 			if m.TargetEntity != nil {
 				targetEntity = m.TargetEntity
 			} else {
-				targetEntity = findNearestEntity(m, getTargetNodes(wp, m))
+				targetEntity = FindNearestEntity(m, getTargetNodes(wp, m))
 			}
 
 			if targetEntity == nil {

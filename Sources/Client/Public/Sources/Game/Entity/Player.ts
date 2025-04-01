@@ -27,7 +27,7 @@ export default class Player extends Entity {
 
         public mood: number,
 
-        readonly nickname: string,
+        readonly name: string,
     ) {
         super(id, x, y, angle, size, health);
 

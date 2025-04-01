@@ -37,10 +37,10 @@ const inputs: Array<TextInput> = new Array();
 export default class TextInput extends Component {
     // Core properties
     private _value: string;
-    private canvas: HTMLCanvasElement;
-    private ctx: CanvasRenderingContext2D | null;
-    private hiddenInput: HTMLInputElement;
-    private inputsIndex: number;
+    private _canvas: HTMLCanvasElement;
+    private _ctx: CanvasRenderingContext2D | null;
+    private _inputsIndex: number;
+    private _hiddenInput: HTMLInputElement;
 
     // Style properties
     public fontSize: number;
@@ -94,8 +94,8 @@ export default class TextInput extends Component {
         super();
 
         // Initialize core properties
-        this.canvas = o.canvas;
-        this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
+        this._canvas = o.canvas;
+        this._ctx = this._canvas ? this._canvas.getContext('2d') : null;
         this.value = (o.value || o.placeHolder || '') + '';
 
         // Initialize style properties
@@ -135,8 +135,8 @@ export default class TextInput extends Component {
         this.onfocus = o.onfocus || function () { };
         this.onblur = o.onblur || function () { };
 
-        if (this.canvas) {
-            this.canvas.addEventListener('mousemove', this.onmousemoveListen = (e: MouseEvent) => {
+        if (this._canvas) {
+            this._canvas.addEventListener('mousemove', this.onmousemoveListen = (e: MouseEvent) => {
                 if (!this.visible) {
                     return;
                 }
@@ -144,7 +144,7 @@ export default class TextInput extends Component {
                 this.mousemove(e, this);
             });
 
-            this.canvas.addEventListener('mousedown', this.onmousedownListen = (e: MouseEvent) => {
+            this._canvas.addEventListener('mousedown', this.onmousedownListen = (e: MouseEvent) => {
                 if (!this.visible) {
                     return;
                 }
@@ -152,7 +152,7 @@ export default class TextInput extends Component {
                 this.mousedown(e, this);
             });
 
-            this.canvas.addEventListener('mouseup', this.onmouseupListen = (e: MouseEvent) => {
+            this._canvas.addEventListener('mouseup', this.onmouseupListen = (e: MouseEvent) => {
                 if (!this.visible) {
                     return;
                 }
@@ -161,46 +161,46 @@ export default class TextInput extends Component {
             });
         }
 
-        this.hiddenInput = document.createElement('input');
-        this.hiddenInput.type = 'text';
-        this.hiddenInput.style.position = 'absolute';
-        this.hiddenInput.style.opacity = "0";
-        this.hiddenInput.style.pointerEvents = 'none';
-        this.hiddenInput.style.zIndex = "0";
+        this._hiddenInput = document.createElement('input');
+        this._hiddenInput.type = 'text';
+        this._hiddenInput.style.position = 'absolute';
+        this._hiddenInput.style.opacity = "0";
+        this._hiddenInput.style.pointerEvents = 'none';
+        this._hiddenInput.style.zIndex = "0";
 
-        this.hiddenInput.style.transform = 'scale(0)';
+        this._hiddenInput.style.transform = 'scale(0)';
 
         if (this.maxlength) {
-            this.hiddenInput.maxLength = this.maxlength;
+            this._hiddenInput.maxLength = this.maxlength;
         }
 
-        document.body.appendChild(this.hiddenInput);
+        document.body.appendChild(this._hiddenInput);
 
-        this.hiddenInput.value = this.value;
+        this._hiddenInput.value = this.value;
 
-        this.hiddenInput.addEventListener('keydown', (e: KeyboardEvent) => {
+        this._hiddenInput.addEventListener('keydown', (e: KeyboardEvent) => {
             if (!this.visible) {
                 return;
             }
 
             if (this.hasFocus) {
-                this.hiddenInput.focus();
+                this._hiddenInput.focus();
 
                 this.keydown(e, this);
             }
         });
 
-        this.hiddenInput.addEventListener('keyup', (e: KeyboardEvent) => {
+        this._hiddenInput.addEventListener("keyup", (e: KeyboardEvent) => {
             if (!this.visible) {
                 return;
             }
 
-            this.value = this.hiddenInput.value;
-            this.cursorPos = this.hiddenInput.selectionStart;
+            this.value = this._hiddenInput.value;
+            this.cursorPos = this._hiddenInput.selectionStart;
 
             this.selection = [
-                this.hiddenInput.selectionStart,
-                this.hiddenInput.selectionEnd,
+                this._hiddenInput.selectionStart,
+                this._hiddenInput.selectionEnd,
             ];
 
             if (this.hasFocus) {
@@ -209,19 +209,19 @@ export default class TextInput extends Component {
         });
 
         this.on("onBlur", () => {
-            this.canvas.style.cursor = "default";
+            this._canvas.style.cursor = "default";
         });
 
         inputs.push(this);
-        this.inputsIndex = inputs.length - 1;
+        this._inputsIndex = inputs.length - 1;
     }
 
     // Define getter/setter for _value
     public get value() { return this._value; }
 
     public set value(value: string) {
-        if (this.hiddenInput) {
-            this.hiddenInput.value = value;
+        if (this._hiddenInput) {
+            this._hiddenInput.value = value;
         }
 
         this._value = value;
@@ -287,7 +287,7 @@ export default class TextInput extends Component {
     }
 
     private renderFilledUnfocusedState(text: string) {
-        const { ctx, h } = this;
+        const { _ctx: ctx, h } = this;
 
         this.drawBackgroundOverlay();
 
@@ -302,7 +302,7 @@ export default class TextInput extends Component {
     }
 
     private renderEmptyUnfocusedState() {
-        const { ctx, h } = this;
+        const { _ctx: ctx, h } = this;
 
         this.setupTextContext(true);
         this.drawBackgroundOverlay();
@@ -318,7 +318,7 @@ export default class TextInput extends Component {
     }
 
     private drawBackgroundOverlay() {
-        const { ctx, w, h, borderRadius: br } = this;
+        const { _ctx: ctx, w, h, borderRadius: br } = this;
 
         ctx.save();
         ctx.globalAlpha = 0.4;
@@ -330,7 +330,7 @@ export default class TextInput extends Component {
     }
 
     private setupTextContext(reduced = false) {
-        const { ctx } = this;
+        const { _ctx: ctx } = this;
 
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
@@ -345,7 +345,7 @@ export default class TextInput extends Component {
     }
 
     private drawBorder() {
-        const { ctx, w, h, borderRadius: br } = this;
+        const { _ctx: ctx, w, h, borderRadius: br } = this;
 
         if (this.borderWidth <= 0) return;
 
@@ -373,7 +373,7 @@ export default class TextInput extends Component {
     }
 
     private clearShadow() {
-        const { ctx } = this;
+        const { _ctx: ctx } = this;
 
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
@@ -381,7 +381,7 @@ export default class TextInput extends Component {
     }
 
     private renderSelection(text: string) {
-        const { ctx, h } = this;
+        const { _ctx: ctx, h } = this;
 
         const paddingBorder = this.padding + this.borderWidth;
         const selectWidth = this.textWidth(text.substring(this.selection[0], this.selection[1]));
@@ -404,7 +404,7 @@ export default class TextInput extends Component {
     }
 
     private renderCursor(text: string) {
-        const { ctx, h } = this;
+        const { _ctx: ctx, h } = this;
 
         const paddingBorder = this.padding + this.borderWidth;
 
@@ -440,7 +440,7 @@ export default class TextInput extends Component {
     }
 
     private renderText(text: string) {
-        const { ctx, h } = this;
+        const { _ctx: ctx, h } = this;
 
         this.setupTextContext();
 
@@ -469,7 +469,7 @@ export default class TextInput extends Component {
     }
 
     private renderSelectedChar(char: string, x: number) {
-        const { ctx } = this;
+        const { _ctx: ctx } = this;
 
         ctx.strokeStyle = '#000000';
         ctx.fillStyle = "#ffffff";
@@ -480,7 +480,7 @@ export default class TextInput extends Component {
     }
 
     private renderNormalChar(char: string, x: number, fillStyle: string) {
-        const { ctx } = this;
+        const { _ctx: ctx } = this;
 
         ctx.fillStyle = fillStyle;
         ctx.fillText(char, x, 0);
@@ -494,18 +494,18 @@ export default class TextInput extends Component {
 
         if (this.hasFocus) this.blur();
 
-        this.canvas.removeEventListener("mousemove", this.onmousemoveListen);
-        this.canvas.removeEventListener("mousedown", this.onmousedownListen);
-        this.canvas.removeEventListener("mouseup", this.onmouseupListen);
+        this._canvas.removeEventListener("mousemove", this.onmousemoveListen);
+        this._canvas.removeEventListener("mousedown", this.onmousedownListen);
+        this._canvas.removeEventListener("mouseup", this.onmouseupListen);
 
-        document.body.removeChild(this.hiddenInput);
+        document.body.removeChild(this._hiddenInput);
 
         super.destroy();
     }
 
     private updateCursorStyle(e: boolean): void {
         if (e) {
-            this.canvas.style.cursor = this.hasFocus
+            this._canvas.style.cursor = this.hasFocus
                 ? "text"
                 : "pointer";
         }
@@ -530,15 +530,15 @@ export default class TextInput extends Component {
 
         this.hasFocus = true;
         if (this.readonly) {
-            this.hiddenInput.readOnly = true;
+            this._hiddenInput.readOnly = true;
         } else {
-            this.hiddenInput.readOnly = false;
+            this._hiddenInput.readOnly = false;
 
             this.cursorPos = (typeof pos === 'number') ? pos : this.clipText().length;
 
             if (this.placeHolder === this.value) {
                 this.value = '';
-                this.hiddenInput.value = '';
+                this._hiddenInput.value = '';
             }
 
             if (this.cursorInterval) clearInterval(this.cursorInterval);
@@ -561,9 +561,9 @@ export default class TextInput extends Component {
         }
 
         const hasSelection = (this.selection[0] > 0 || this.selection[1] > 0);
-        this.hiddenInput.focus();
-        this.hiddenInput.selectionStart = hasSelection ? this.selection[0] : this.cursorPos;
-        this.hiddenInput.selectionEnd = hasSelection ? this.selection[1] : this.cursorPos;
+        this._hiddenInput.focus();
+        this._hiddenInput.selectionStart = hasSelection ? this.selection[0] : this.cursorPos;
+        this._hiddenInput.selectionEnd = hasSelection ? this.selection[1] : this.cursorPos;
     }
 
     public blur() {
@@ -576,7 +576,7 @@ export default class TextInput extends Component {
         this.cursorGlobalAlpha = 0;
         this.cursorGlobalAlphaDirectionBack = false;
         this.selection = [0, 0];
-        this.hiddenInput.blur();
+        this._hiddenInput.blur();
 
         if (this.value === '') {
             this.value = this.placeHolder;
@@ -591,8 +591,6 @@ export default class TextInput extends Component {
 
             return;
         }
-
-        this.onkeydown(e, self);
 
         if (keyCode === 65 && (e.ctrlKey || e.metaKey)) {
             e.preventDefault();
@@ -614,7 +612,7 @@ export default class TextInput extends Component {
             e.preventDefault();
 
             if (inputs.length > 1) {
-                const next = (inputs[this.inputsIndex + 1]) ? this.inputsIndex + 1 : 0;
+                const next = (inputs[this._inputsIndex + 1]) ? this._inputsIndex + 1 : 0;
                 self.blur();
                 setTimeout(function () {
                     inputs[next].focus();
@@ -624,12 +622,14 @@ export default class TextInput extends Component {
 
         // Use rAF to fix input lag
         requestAnimationFrame(() => {
-            this.value = this.hiddenInput.value;
-            this.cursorPos = this.hiddenInput.selectionStart;
+            this.value = this._hiddenInput.value;
+            this.cursorPos = this._hiddenInput.selectionStart;
             this.selection = [
-                this.hiddenInput.selectionStart,
-                this.hiddenInput.selectionEnd,
+                this._hiddenInput.selectionStart,
+                this._hiddenInput.selectionEnd,
             ];
+
+            this.onkeydown(e, self);
         });
     }
 
@@ -693,7 +693,7 @@ export default class TextInput extends Component {
     }
 
     private drawTextBox(fn: () => void) {
-        const ctx = this.ctx, w = this.w, h = this.h, bw = this.borderWidth;
+        const ctx = this._ctx, w = this.w, h = this.h, bw = this.borderWidth;
 
         ctx.fillStyle = this.backgroundColor;
         ctx.beginPath();
@@ -742,7 +742,7 @@ export default class TextInput extends Component {
     }
 
     private textWidth(text: string) {
-        const ctx = this.ctx;
+        const ctx = this._ctx;
 
         ctx.font = this.fontStyle + ' ' + this.fontWeight + ' ' + this.fontSize + 'px ' + this.fontFamily;
         ctx.textAlign = 'left';
@@ -756,8 +756,8 @@ export default class TextInput extends Component {
         range = range || [0, this.value.length];
 
         this.selection = <[number, number]>range.slice();
-        this.hiddenInput.selectionStart = range[0];
-        this.hiddenInput.selectionEnd = range[1];
+        this._hiddenInput.selectionStart = range[0];
+        this._hiddenInput.selectionEnd = range[1];
     }
 
     private overInput(x: number, y: number) {

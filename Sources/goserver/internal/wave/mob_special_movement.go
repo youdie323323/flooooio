@@ -15,7 +15,7 @@ func (m *Mob) MobSpecialMovement(wp *WavePool) {
 	}
 
 	// If body, dont do anything
-	if isBody(wp, m) {
+	if IsBody(wp, m) {
 		return
 	}
 
@@ -73,7 +73,7 @@ func (m *Mob) MobSpecialMovement(wp *WavePool) {
 				m.IsSpecialMoving = false
 			} else {
 				m.Magnitude = (m.SpecialMovementTimer * m.Speed()) * 255
-				
+
 				m.SpecialMovementTimer += movementDuration
 			}
 		} else {

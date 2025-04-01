@@ -17,7 +17,7 @@ import { Button } from "../Layout/Components/WellKnown/Button";
 import { Clientbound } from "../../../../../../Shared/Websocket/Packet/PacketDirection";
 import type { StaticAdheredClientboundHandlers } from "../../Websocket/Packet/PacketClientbound";
 import UICloseButton from "../Shared/UICloseButton";
-import type { AnimationConfigOf, ComponentCloser } from "../Layout/Components/Component";
+import type { AnimationConfigOf, ComponentCloser, FakeSetVisibleToggleType } from "../Layout/Components/Component";
 import { AnimationType, renderPossibleComponent } from "../Layout/Components/Component";
 import { CoordinatedStaticSpace, StaticSpace, StaticTranslucentPanelContainer, StaticVContainer } from "../Layout/Components/WellKnown/Container";
 import { InlineRendering } from "../Layout/Extensions/ExtensionInlineRendering";
@@ -91,7 +91,8 @@ export default class UIGame extends AbstractUI {
     private youWillRespawnNextWaveContainer: StaticTranslucentPanelContainer;
 
     private chatInput: TextInput;
-    private chats: string[];
+    private chatContainer: StaticVContainer<StaticTranslucentPanelContainer>;
+    private commandsContainer: StaticVContainer<StaticTranslucentPanelContainer>;
 
     private currentMoodFlags: number;
 
@@ -378,7 +379,22 @@ export default class UIGame extends AbstractUI {
             const player = this.players.get(waveClientId);
 
             if (player) {
-                // TODO: implement
+                this.chatContainer.addChild(new StaticTranslucentPanelContainer(
+                    {},
+
+                    0,
+                    0,
+                ).addChildren(
+                    new Text(
+                        {
+                            y: 2,
+                        },
+
+                        `${player.name}: ${chatMsg}`,
+                        10,
+                    ),
+                    new CoordinatedStaticSpace(0, 0, 0, 14),
+                ));
             }
         },
     } as const satisfies StaticAdheredClientboundHandlers;
@@ -400,12 +416,12 @@ export default class UIGame extends AbstractUI {
 
         this.wasWaveEnded = false;
 
-        this.chats = [];
-
         this.currentMoodFlags = MoodFlags.NORMAL;
 
         { // Setup listeners
             this.on("onKeyDown", (event: KeyboardEvent) => {
+                if (!this.isOperative) return;
+
                 switch (event.key) {
                     // Space mean space
                     case " ": {
@@ -448,7 +464,6 @@ export default class UIGame extends AbstractUI {
                     default: {
                         // Slot swapping
                         if (
-                            clientWebsocket &&
                             // Dont swap while chatting
                             !this.chatInput.hasFocus
                         ) {
@@ -469,6 +484,8 @@ export default class UIGame extends AbstractUI {
             });
 
             this.on("onKeyUp", (event: KeyboardEvent) => {
+                if (!this.isOperative) return;
+
                 switch (event.key) {
                     // Space means space
                     case " ": {
@@ -490,44 +507,45 @@ export default class UIGame extends AbstractUI {
             });
 
             this.on("onMouseDown", (event: MouseEvent) => {
-                if (clientWebsocket) {
-                    if (event.button === 0) {
-                        this.currentMoodFlags |= MoodFlags.ANGRY;
+                if (!this.isOperative) return;
 
-                        clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
-                    }
+                if (event.button === 0) {
+                    this.currentMoodFlags |= MoodFlags.ANGRY;
 
-                    if (event.button === 2) {
-                        this.currentMoodFlags |= MoodFlags.SAD;
+                    clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
+                }
 
-                        clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
-                    }
+                if (event.button === 2) {
+                    this.currentMoodFlags |= MoodFlags.SAD;
+
+                    clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
                 }
             });
 
             this.on("onMouseUp", (event: MouseEvent) => {
-                if (clientWebsocket) {
-                    if (event.button === 0) {
-                        this.currentMoodFlags &= ~MoodFlags.ANGRY;
+                if (!this.isOperative) return;
 
-                        clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
-                    }
+                if (event.button === 0) {
+                    this.currentMoodFlags &= ~MoodFlags.ANGRY;
 
-                    if (event.button === 2) {
-                        this.currentMoodFlags &= ~MoodFlags.SAD;
+                    clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
+                }
 
-                        clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
-                    }
+                if (event.button === 2) {
+                    this.currentMoodFlags &= ~MoodFlags.SAD;
+
+                    clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
                 }
             });
 
             this.on("onMouseMove", (event: MouseEvent) => {
+                if (!this.isOperative) return;
+
                 mouseXOffset = event.clientX - document.documentElement.clientWidth / 2;
                 mouseYOffset = event.clientY - document.documentElement.clientHeight / 2;
 
                 if (
-                    !SettingStorage.get("keyboard_control") &&
-                    clientWebsocket
+                    !SettingStorage.get("keyboard_control")
                 ) {
                     const angle = Math.atan2(mouseYOffset, mouseXOffset);
                     const distance = Math.hypot(mouseXOffset, mouseYOffset) / uiScaleFactor;
@@ -728,41 +746,90 @@ export default class UIGame extends AbstractUI {
             this.addComponent(this.youWillRespawnNextWaveContainer);
         }
 
-        this.addComponent(this.chatInput = new TextInput(
-            {
-                x: 13,
-                y: 34,
-                w: 192,
-                h: 8,
+        { // Chats
+            this.addComponent(this.chatInput = new TextInput(
+                {
+                    x: 13,
+                    y: 34,
+                    w: 192,
+                    h: 8,
 
-                invertYCoordinate: true,
-            },
-            {
-                canvas: this.canvas,
-
-                value: "",
-
-                fontSize: 11,
-                fontFamily: 'Ubuntu',
-                fontColor: '#212121',
-                fontWeight: 'bold',
-
-                placeHolder: '',
-                placeHolderUnfocused: "Press [ENTER] or click here to chat",
-                placeHolderDisplayUnfocusedState: true,
-
-                borderColor: "#000000",
-                borderRadius: 4,
-                borderWidth: 2.2,
-                maxlength: 80,
-
-                onsubmit: (e, self) => {
-                    clientWebsocket.packetServerbound.sendWaveChat(self.value);
-
-                    self.value = "";
+                    invertYCoordinate: true,
                 },
-            },
-        ));
+
+                {
+                    canvas: this.canvas,
+
+                    value: "",
+
+                    fontSize: 11,
+                    fontFamily: 'Ubuntu',
+                    fontColor: '#212121',
+                    fontWeight: 'bold',
+
+                    placeHolder: '',
+                    placeHolderUnfocused: "Press [ENTER] or click here to chat",
+                    placeHolderDisplayUnfocusedState: true,
+
+                    borderColor: "#000000",
+                    borderRadius: 4,
+                    borderWidth: 2.2,
+                    maxlength: 80,
+
+                    onsubmit: (e, self) => {
+                        clientWebsocket.packetServerbound.sendWaveChat(self.value);
+
+                        self.value = "";
+                    },
+
+                    onkeydown: (e, self) => {
+                        const show = self.value.startsWith("/");
+
+                        this.chatContainer.setVisible(<FakeSetVisibleToggleType>!show, null, false);
+
+                        this.commandsContainer.setVisible(<FakeSetVisibleToggleType>show, null, false);
+                    },
+                },
+            ));
+
+            this.addComponent(this.chatContainer = new StaticVContainer<StaticTranslucentPanelContainer>(
+                () => ({
+                    x: 11,
+                    y: 37 + this.chatContainer.h,
+
+                    invertYCoordinate: true,
+                }),
+            ));
+
+            this.addComponent(this.commandsContainer = new StaticVContainer<StaticTranslucentPanelContainer>(
+                () => ({
+                    x: 11,
+                    y: 37 + this.commandsContainer.h,
+
+                    invertYCoordinate: true,
+                }),
+            ).addChildren(
+                new StaticTranslucentPanelContainer(
+                    {},
+
+                    0,
+                    0,
+                ).addChildren(
+                    new Text(
+                        {
+                            y: 2,
+                        },
+
+                        `/manko - kusai`,
+                        10,
+                        "#d2eb34",
+                    ),
+                    new CoordinatedStaticSpace(0, 0, 0, 14),
+                ),
+            ));
+
+            this.commandsContainer.setVisible(false, null, false);
+        }
 
         this.addComponent(this.waveEnemyIcons = new (InlineRendering(UIGameWaveEnemyIcons))(
             () => ({
@@ -1152,5 +1219,14 @@ export default class UIGame extends AbstractUI {
         clientWebsocket.packetServerbound.sendWaveLeave();
 
         uiCtx.switchUI("title");
+    }
+
+    private get isOperative(): boolean {
+        const selfPlayer = this.players.get(this.waveSelfId);
+        if (!selfPlayer) return false;
+
+        if (!clientWebsocket) return false;
+
+        return !selfPlayer.isDead;
     }
 }

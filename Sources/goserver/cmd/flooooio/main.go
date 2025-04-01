@@ -38,9 +38,35 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 		Sp: wave.StaticPlayer{
 			Name: "mesamura",
-			StaticPlayerPetalSlots: wave.StaticPlayerPetalSlots{
-				Surface: []wave.Slot{},
-				Bottom:  []wave.Slot{},
+			Slots: wave.StaticPlayerPetalSlots{
+				Surface: []wave.StaticPetal{
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+				},
+				Bottom: []wave.StaticPetal{
+					{
+						Type:   native.PetalTypeYinYang,
+						Rarity: native.RarityMythic,
+					},
+				},
 			},
 			Conn: conn,
 		},
@@ -151,7 +177,66 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 				return
 			}
 
-			player.UpdateMood(flag)
+			player.ChangeMood(flag)
+		}
+
+	case network.ServerboundWaveSwapPetal:
+		{
+			if msgLen != 2 {
+				return
+			}
+
+			if pd.WrPId == nil || pd.WPId == nil {
+				return
+			}
+
+			swapAt := native.Mood(message[at])
+			at++
+
+			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
+			if wr == nil {
+				return
+			}
+
+			if wr.WavePool == nil {
+				return
+			}
+
+			player := wr.WavePool.SafeFindPlayer(*pd.WPId)
+			if player == nil || player.IsDead {
+				return
+			}
+
+			player.SwapPetal(
+				wr.WavePool, 
+				
+				int(swapAt),
+			)
+		}
+
+	case network.ServerboundWaveChat:
+		{
+			if msgLen < 2 {
+				return
+			}
+
+			if pd.WrPId == nil || pd.WPId == nil {
+				return
+			}
+
+			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
+			if wr == nil {
+				return
+			}
+
+			if wr.WavePool == nil {
+				return
+			}
+
+			var chatMsg string
+			chatMsg, at = readString(message, at)
+
+			wr.WavePool.HandleChatMessage(*pd.WPId, chatMsg)
 		}
 
 	case network.ServerboundWaveLeave:

@@ -3,11 +3,13 @@ import { darkened, DARKENED_BASE } from "../../../../../../../../Shared/Utils/Co
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
 import type { Components, MaybePointerLike, AnimationConfigOf, AnimationType, ComponentOpener, ComponentCloser, FakeSetVisibleToggleType, FakeSetVisibleObserverType } from "../Component";
-import { Component, OBSTRUCTION_AFFECTABLE, renderPossibleComponent, renderPossibleComponents } from "../Component";
+import { BYPASS_CENTERING, Component, OBSTRUCTION_AFFECTABLE, renderPossibleComponent, renderPossibleComponents } from "../Component";
 
 type Optional<T, K extends keyof T> = Partial<Pick<T, K>> & Omit<T, K>;
 
 export type SizeKeys = "w" | "h";
+
+export type CoordinateKeys = "x" | "y";
 
 export type AutomaticallySizedLayoutOptions = Omit<LayoutOptions, SizeKeys>;
 
@@ -19,7 +21,7 @@ export type SquareSizeLayoutOptions = AutomaticallySizedLayoutOptions;
 
 export type PartialSizeLayoutOptions = Optional<LayoutOptions, SizeKeys>;
 
-export type SelectableStaticContainerLayoutOptions = AutomaticallySizedLayoutOptions | PartialSizeLayoutOptions;
+export type SelectableStaticContainerLayoutOptions = LayoutOptions | AutomaticallySizedLayoutOptions | PartialSizeLayoutOptions;
 
 export type AnyStaticContainer = AbstractStaticContainer<SelectableStaticContainerLayoutOptions, Components>;
 
@@ -331,6 +333,7 @@ export class StaticTranslucentPanelContainer<Child extends Components = Componen
         layout: MaybePointerLike<PartialSizeLayoutOptions>,
 
         protected readonly rectRadii: MaybePointerLike<number> = 3,
+        protected readonly globalAlphaOverride?: MaybePointerLike<number>,
     ) {
         super(layout);
     }
@@ -381,7 +384,11 @@ export class StaticTranslucentPanelContainer<Child extends Components = Componen
             const computedRadii = Component.computePointerLike(this.rectRadii);
 
             // 0.5 if globalAlpha is 1
-            ctx.globalAlpha = ctx.globalAlpha / 2;
+            ctx.globalAlpha =
+                typeof this.globalAlphaOverride !== "undefined"
+                    ? Component.computePointerLike(this.globalAlphaOverride)
+                    : ctx.globalAlpha / 2;
+
             ctx.fillStyle = "black";
 
             ctx.beginPath();
@@ -576,7 +583,7 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
 
                     const targetX = childLayout.x;
                     const targetY =
-                        computedCenterChildren
+                        !child[BYPASS_CENTERING] && computedCenterChildren
                             ? this.y + (this.h - childLayout.h) / 2
                             : childLayout.y;
 
@@ -619,9 +626,10 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
                         originY: this.y,
                     });
 
-                    const targetY = computedCenterChildren
-                        ? this.y + (this.h - childLayout.h) / 2
-                        : childLayout.y;
+                    const targetY =
+                        !child[BYPASS_CENTERING] && computedCenterChildren
+                            ? this.y + (this.h - childLayout.h) / 2
+                            : childLayout.y;
 
                     if (child.isLayoutable) {
                         child.setX(childLayout.x);
@@ -776,9 +784,10 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
                     });
 
                     const targetY = childLayout.y;
-                    const targetX = computedCenterChildren
-                        ? this.x + (this.w - childLayout.w) / 2
-                        : childLayout.x;
+                    const targetX =
+                        !child[BYPASS_CENTERING] && computedCenterChildren
+                            ? this.x + (this.w - childLayout.w) / 2
+                            : childLayout.x;
 
                     if (!this.childPositions.has(child)) {
                         this.childPositions.set(child, targetY);
@@ -820,7 +829,7 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
                     });
 
                     const targetX =
-                        computedCenterChildren
+                        !child[BYPASS_CENTERING] && computedCenterChildren
                             ? this.x + (this.w - childLayout.w) / 2
                             : childLayout.x;
 
@@ -839,6 +848,227 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
                 renderPossibleComponents(ctx, children);
             }
         }
+    }
+}
+
+function lerp(start: number, end: number, alpha: number): number {
+    return start * (1 - alpha) + end * alpha;
+}
+
+/**
+ * Scrollable container with vertical scrollbar.
+ */
+export class StaticScrollableContainer<Child extends Components = Components> extends AbstractStaticContainer<LayoutOptions, Child> {
+    private static readonly ON_SCROLLED_ALPHA: number = 0.075;
+    private static readonly SCROLLED_WITH_BAR_ALPHA: number = 0.2;
+
+    private static readonly SCROLL_SPEED: number = 15;
+
+    private currentScrollY: number = 0;
+    private targetScrollY: number = 0;
+    private scrollYAlpha: number = 1;
+    private isDragging: boolean = false;
+    private wasPointed: boolean = false;
+    private lastMouseY: number = 0;
+    private contentHeight: number = 0;
+
+    constructor(
+        layoutOptions: MaybePointerLike<LayoutOptions>,
+
+        private readonly scrollBarWidth: number = 5.5,
+        private readonly scrollBarHeight: number = 30,
+
+        private readonly centerChildren: MaybePointerLike<boolean> = false,
+    ) {
+        super(layoutOptions);
+
+        this.on("onMouseDown", (e) => this.handleMouseDown(e));
+        this.on("onMouseMove", (e) => this.handleMouseMove(e));
+        this.on("onMouseUp", () => this.handleMouseUp());
+        this.on("onScroll", (e) => this.handleScroll(e));
+    }
+
+    private get scrollBarMetrics() {
+        const {
+            currentScrollY,
+            scrollBarWidth, scrollBarHeight,
+            contentHeight,
+            x, y,
+            w, h,
+        } = this;
+
+        const visibleHeight = h - scrollBarHeight;
+        const scrollBarY = y + (currentScrollY / contentHeight) * visibleHeight;
+
+        return {
+            x: x + w - scrollBarWidth,
+            y: scrollBarY,
+
+            width: scrollBarWidth,
+            height: scrollBarHeight,
+
+            visibleHeight,
+        };
+    }
+
+    private isPointInScrollBar(x: number, y: number): boolean {
+        const { x: barX, y: barY, width, height } = this.scrollBarMetrics;
+
+        return x >= barX && x <= barX + width && y >= barY && y <= barY + height;
+    }
+
+    private handleMouseDown(e: MouseEvent): void {
+        const mouseX = this.context.mouseX;
+        const mouseY = this.context.mouseY;
+
+        if (this.isPointInScrollBar(mouseX, mouseY)) {
+            this.isDragging = true;
+            this.lastMouseY = mouseY;
+        }
+    }
+
+    private updateCursor(): void {
+        const { mouseX, mouseY } = this.context;
+        const isOverScrollBar = this.isPointInScrollBar(mouseX, mouseY);
+
+        if (isOverScrollBar && !this.wasPointed) {
+            this.context.canvas.style.cursor = "pointer";
+            this.wasPointed = true;
+        } else if (!isOverScrollBar && this.wasPointed) {
+            this.context.canvas.style.cursor = "default";
+            this.wasPointed = false;
+        }
+    }
+
+    private handleMouseMove(e: MouseEvent): void {
+        this.updateCursor();
+
+        if (!this.isDragging) return;
+
+        const mouseY = this.context.mouseY;
+        const delta = mouseY - this.lastMouseY;
+        this.lastMouseY = mouseY;
+
+        const metrics = this.scrollBarMetrics;
+        const scrollRatio = metrics.visibleHeight / this.contentHeight;
+        const scrollMove = delta / scrollRatio;
+
+        this.targetScrollY = Math.max(0, Math.min(this.contentHeight, this.targetScrollY + scrollMove));
+        this.scrollYAlpha = StaticScrollableContainer.SCROLLED_WITH_BAR_ALPHA;
+    }
+
+    private handleMouseUp(): void {
+        this.isDragging = false;
+    }
+
+    private handleScroll(e: WheelEvent): void {
+        this.targetScrollY = Math.max(0,
+            Math.min(
+                this.contentHeight,
+                this.targetScrollY +
+                (
+                    e.deltaY >= 0
+                        ? StaticScrollableContainer.SCROLL_SPEED
+                        : -StaticScrollableContainer.SCROLL_SPEED
+                ),
+            ),
+        );
+        this.scrollYAlpha = StaticScrollableContainer.ON_SCROLLED_ALPHA;
+    }
+
+    override layout(lc: LayoutContext): LayoutResult {
+        const { ctx } = lc;
+        const result = Layout.layout(Component.computePointerLike(this.layoutOptions), lc);
+
+        if (this.children.length > 0) {
+            let totalHeight = 0;
+            let maxY = 0;
+
+            this.children.forEach(child => {
+                const { y: childY, h: childH } = child.layout(
+                    {
+                        ctx,
+
+                        containerWidth: result.w - this.scrollBarWidth * 2,
+                        containerHeight: result.h,
+
+                        originX: 0,
+                        originY: 0,
+                    },
+                );
+
+                totalHeight += childH;
+                maxY = Math.max(maxY, childY);
+            });
+
+            this.contentHeight = totalHeight + (maxY - result.h);
+        }
+
+        return result;
+    }
+
+    override render(ctx: CanvasRenderingContext2D): void {
+        super.render(ctx);
+
+        // Lerp scroll
+        this.currentScrollY = lerp(this.currentScrollY, this.targetScrollY, this.scrollYAlpha);
+
+        ctx.save();
+
+        ctx.beginPath();
+        ctx.rect(this.x, this.y, this.w - this.scrollBarWidth, this.h);
+        ctx.clip();
+
+        if (this.children.length > 0) {
+            const computedCenterChildren = Component.computePointerLike(this.centerChildren);
+
+            let currentY = -this.currentScrollY;
+
+            this.children.forEach(child => {
+                const childLayout = child.cachedLayout({
+                    ctx,
+
+                    containerWidth: this.w - this.scrollBarWidth * 2,
+                    containerHeight: this.h,
+
+                    originX: this.x,
+                    originY: this.y + currentY,
+                });
+
+                const desiredX =
+                    !child[BYPASS_CENTERING] && computedCenterChildren
+                        ? this.x + (this.w - childLayout.w) / 2
+                        : childLayout.x;
+
+                if (child.isLayoutable) {
+                    child.setX(desiredX);
+                    child.setY(childLayout.y);
+                    child.setW(childLayout.w);
+                    child.setH(childLayout.h);
+                }
+
+                if (childLayout.y + childLayout.h >= this.y && childLayout.y <= this.y + this.h) {
+                    renderPossibleComponent(ctx, child);
+                }
+
+                currentY += childLayout.h;
+            });
+        }
+
+        ctx.restore();
+
+        const metrics = this.scrollBarMetrics;
+        ctx.fillStyle = "black";
+        ctx.globalAlpha = 0.2;
+        ctx.beginPath();
+        ctx.roundRect(
+            metrics.x,
+            metrics.y,
+            metrics.width,
+            metrics.height,
+            metrics.width / 2,
+        );
+        ctx.fill();
     }
 }
 
