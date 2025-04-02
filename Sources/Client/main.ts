@@ -27,9 +27,11 @@ const init = async () => {
         BIOME_TILESETS.set(parsedBiome, await TilesetRenderer.prepareTileset(parsedBiome));
     }
 
+    document.body.removeChild(document.querySelector("#status-container"));
+
     const canvas = document.querySelector<HTMLCanvasElement>('#canvas');
 
-    const ctx: CanvasRenderingContext2D = canvas.getContext("2d");
+    const ctx: CanvasRenderingContext2D = canvas.getContext("2d", { alpha: false });
 
     uiCtx = new UIContext(canvas);
 

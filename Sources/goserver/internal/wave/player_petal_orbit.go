@@ -30,7 +30,7 @@ func init() {
 const (
 	defaultRotateSpeed         = 2.5
 	radiusSpringStrength       = 0.4
-	radiusFriction             = 0.3
+	radiusFriction             = 0.1
 	petalVelocityAcceleration  = 0.1
 	petalVelocityFriction      = 0.875
 	petalClusterRadius         = 8.0
@@ -44,41 +44,43 @@ func calcTableIndex(i float64) int {
 }
 
 func calculateRotationDelta(
-	totalSpeed float64,
-	clockwise float64,
+	ts float64,
+	
+	cw float64,
 ) float64 {
-	return (totalSpeed * clockwise) / WaveUpdateFPS
+	return (ts * cw) / WaveUpdateFPS
 }
 
 func doPetalOrbit(
-	petal *Petal,
+	p *Petal,
 
-	targetX float64,
-	targetY float64,
+	tx float64,
+	ty float64,
 
-	holdingRadius float64,
+	hr float64,
 
-	angle float64,
+	ang float64,
 ) {
-	angleIdx := calcTableIndex(angle)
+	angleIdx := calcTableIndex(ang)
 
-	chaseX := targetX + lazyCosTable[angleIdx]*holdingRadius
-	chaseY := targetY + lazySinTable[angleIdx]*holdingRadius
+	chaseX := tx + lazyCosTable[angleIdx]*hr
+	chaseY := ty + lazySinTable[angleIdx]*hr
 
-	diffX := chaseX - petal.X
-	diffY := chaseY - petal.Y
+	diffX := chaseX - p.X
+	diffY := chaseY - p.Y
 
-	petal.Velocity[0] += petalVelocityAcceleration * diffX
-	petal.Velocity[1] += petalVelocityAcceleration * diffY
+	p.Velocity[0] += petalVelocityAcceleration * diffX
+	p.Velocity[1] += petalVelocityAcceleration * diffY
 }
 
 // doPetalSpin do petal spin on mob.
 func doPetalSpin(
 	wp *WavePool,
 
-	petal *Petal,
+	pe *Petal,
 
-	petalSpin []float64,
+	pss [][]float64,
+	i int,
 	j int,
 ) {
 	var spinTargets []Node
@@ -88,8 +90,8 @@ func doPetalSpin(
 			isNotPet := m.PetMaster == nil
 
 			distance := math.Hypot(
-				m.X-petal.X,
-				m.Y-petal.Y,
+				m.X-pe.X,
+				m.Y-pe.Y,
 			)
 
 			return isNotPet && distance <= (m.GetDesiredSize()*spinNearestSizeCoefficient)
@@ -102,43 +104,43 @@ func doPetalSpin(
 	}
 
 	mobToSpin, ok := FindNearestEntity(
-		petal,
+		pe,
 		spinTargets,
 	).(*Mob)
 	if !ok {
 		return
 	}
 
-	wasSpinning := petal.SpinningOnMob
+	wasSpinning := pe.SpinningOnMob
 
-	petal.SpinningOnMob = mobToSpin != nil
+	pe.SpinningOnMob = mobToSpin != nil
 
-	if petal.SpinningOnMob {
+	if pe.SpinningOnMob {
 		if !wasSpinning {
 			targetAngle := math.Atan2(
-				petal.Y-mobToSpin.Y,
-				petal.X-mobToSpin.X,
+				pe.Y-mobToSpin.Y,
+				pe.X-mobToSpin.X,
 			)
 
-			angleDiff := targetAngle - petalSpin[j]
+			angleDiff := targetAngle - pss[i][j]
 
 			angleDiff = math.Mod(math.Mod(angleDiff, Tau)+Tau, Tau)
 			if angleDiff > math.Pi {
 				angleDiff -= Tau
 			}
 
-			petalSpin[j] = math.Mod(petalSpin[j]+angleDiff, Tau)
+			pss[i][j] = math.Mod(pss[i][j]+angleDiff, Tau)
 		}
 
-		spinAngleIdx := calcTableIndex(petalSpin[j])
+		spinAngleIdx := calcTableIndex(pss[i][j])
 
 		mobToSpinDesiredSize := mobToSpin.GetDesiredSize()
 
 		targetX := mobToSpin.X + lazyCosTable[spinAngleIdx]*mobToSpinDesiredSize
 		targetY := mobToSpin.Y + lazySinTable[spinAngleIdx]*mobToSpinDesiredSize
 
-		petal.X += (targetX - petal.X) * spingInterpolationSpeed
-		petal.Y += (targetY - petal.Y) * spingInterpolationSpeed
+		pe.X += (targetX - pe.X) * spingInterpolationSpeed
+		pe.Y += (targetY - pe.Y) * spingInterpolationSpeed
 	}
 }
 
@@ -291,7 +293,8 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool) {
 
 					petal,
 
-					p.OrbitPetalSpins[i],
+					p.OrbitPetalSpins,
+					i,
 					j,
 				)
 
@@ -321,7 +324,8 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool) {
 
 				petal,
 
-				p.OrbitPetalSpins[i],
+				p.OrbitPetalSpins,
+				i,
 				0,
 			)
 

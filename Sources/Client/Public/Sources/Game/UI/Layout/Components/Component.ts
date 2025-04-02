@@ -211,14 +211,14 @@ export const OBSTRUCTION_AFFECTABLE: unique symbol = Symbol("obstructionAffectab
 export const RENDERED_LAST: unique symbol = Symbol("renderedLast");
 
 /**
- * Symbol that tell container should not center the component.
+ * Symbol that tell container should center the child.
  */
-export const BYPASS_CENTERING: unique symbol = Symbol("bypassCentering");
+export const CENTERING: unique symbol = Symbol("centering");
 
 export interface ComponentSymbol {
     [OBSTRUCTION_AFFECTABLE]?: boolean;
     [RENDERED_LAST]?: boolean;
-    [BYPASS_CENTERING]?: boolean;
+    [CENTERING]?: boolean;
 }
 
 /**
@@ -229,7 +229,7 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
     // Prepare base symbols
     public [OBSTRUCTION_AFFECTABLE]: boolean = true;
     public [RENDERED_LAST]: boolean = false;
-    public [BYPASS_CENTERING]: boolean = false;
+    public [CENTERING]: boolean = false;
 
     private static readonly ANIMATION_DEFAULT_DURATIONS = {
         [AnimationType.ZOOM]: 100,
@@ -393,10 +393,8 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
             originY + CACHE_KEY_DELIMITER +
             this.getCacheKey(lc);
 
-        if (!this.layoutCache.isDirtyCache(cacheKey)) {
-            const cached = this.layoutCache.get(cacheKey);
-            if (cached) return cached;
-        }
+        const cached = this.layoutCache.get(cacheKey);
+        if (cached) return cached;
 
         const result = this.layout(lc);
 
@@ -707,7 +705,7 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
         this.removeAllListeners();
 
         // Remove layout cache
-        this.layoutCache.clear();
+        this.layoutCache.invalidate();
         this.layoutCache = null;
 
         this.context.removeComponent(this as unknown as Components);

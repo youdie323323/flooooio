@@ -8,7 +8,7 @@ export type TooltipAnchorPosition = "top" | "bottom" | "left" | "right";
 
 export const TOOLTIP_FALLBACK_POSITIONS = ["top", "bottom", "left", "right"] as const;
 
-export default function TooltipExtension<T extends ExtensionConstructor>(
+export default function Tooltip<T extends ExtensionConstructor>(
     Base: T,
 
     contentComponents: Array<Components>,

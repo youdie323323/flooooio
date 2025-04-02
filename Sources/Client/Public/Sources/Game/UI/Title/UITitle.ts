@@ -39,7 +39,7 @@ import { BIOME_TILESETS } from "../../Utils/Tiled/TilesetRenderer";
 import TilesetWavedRenderer from "../../Utils/Tiled/TilesetWavedRenderer";
 import UISettingButton from "../Shared/UISettingButton";
 import UIDraggableMobIcon from "../Shared/UIDraggableMobIcon";
-import { BypassCentering } from "../Layout/Extensions/ExtensionBypassCentering";
+import { Centering } from "../Layout/Extensions/ExtensionCentering";
 
 const TAU = Math.PI * 2;
 
@@ -572,11 +572,9 @@ export default class UITitle extends AbstractUI {
                     },
 
                     false,
-
-                    true,
                 ).addChildren(
                     ...dynamicJoinArray(
-                        Array.from({ length: 2 }, () => new StaticHContainer({}).addChildren(
+                        Array.from({ length: 2 }, () => new (Centering(StaticHContainer))({}).addChildren(
                             ...dynamicJoinArray(
                                 Array.from({ length: 6 }, () => {
                                     const icon: UIDraggableMobIcon = new UIDraggableMobIcon(
@@ -672,10 +670,9 @@ export default class UITitle extends AbstractUI {
 
                     5.5,
                     75,
-                    true,
                 ).addChildren(
                     ...dynamicJoinArray(
-                        Array.from({ length: 50 }, () => new Text(
+                        Array.from({ length: 50 }, () => new (Centering(Text))(
                             {},
 
                             "Older changelog entries not available",
@@ -1597,7 +1594,7 @@ export default class UITitle extends AbstractUI {
         this.addComponent(gameNameText);
     }
 
-    override animationFrame() {
+    override render() {
         const canvas = this.canvas;
         const ctx = canvas.getContext("2d");
 
@@ -1680,7 +1677,7 @@ export default class UITitle extends AbstractUI {
             this.toggleShowStatusText(true);
         }
 
-        this.render();
+        this.renderComponents();
     }
 
     override destroy(): void {

@@ -3,7 +3,7 @@ import { darkened, DARKENED_BASE } from "../../../../../../../../Shared/Utils/Co
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
 import type { Components, MaybePointerLike, AnimationConfigOf, AnimationType, ComponentOpener, ComponentCloser, FakeSetVisibleToggleType, FakeSetVisibleObserverType } from "../Component";
-import { BYPASS_CENTERING, Component, OBSTRUCTION_AFFECTABLE, renderPossibleComponent, renderPossibleComponents } from "../Component";
+import { CENTERING, Component, OBSTRUCTION_AFFECTABLE, renderPossibleComponent, renderPossibleComponents } from "../Component";
 
 type Optional<T, K extends keyof T> = Partial<Pick<T, K>> & Omit<T, K>;
 
@@ -333,7 +333,7 @@ export class StaticTranslucentPanelContainer<Child extends Components = Componen
         layout: MaybePointerLike<PartialSizeLayoutOptions>,
 
         protected readonly rectRadii: MaybePointerLike<number> = 3,
-        protected readonly globalAlphaOverride?: MaybePointerLike<number>,
+        protected readonly alphaOverride?: MaybePointerLike<number>,
     ) {
         super(layout);
     }
@@ -385,8 +385,8 @@ export class StaticTranslucentPanelContainer<Child extends Components = Componen
 
             // 0.5 if globalAlpha is 1
             ctx.globalAlpha =
-                typeof this.globalAlphaOverride !== "undefined"
-                    ? Component.computePointerLike(this.globalAlphaOverride)
+                typeof this.alphaOverride !== "undefined"
+                    ? Component.computePointerLike(this.alphaOverride)
                     : ctx.globalAlpha / 2;
 
             ctx.fillStyle = "black";
@@ -434,7 +434,10 @@ export abstract class AbstractStaticChildLerpableContainer<Child extends Compone
     constructor(
         layoutOptions: MaybePointerLike<AutomaticallySizedLayoutOptions>,
 
-        protected readonly lerpChildren: MaybePointerLike<boolean> = false,
+        protected readonly lerpChildren: MaybePointerLike<boolean>,
+
+        protected readonly spacingOverride: MaybePointerLike<number | null>,
+        protected readonly reverseRender: MaybePointerLike<boolean>,
     ) {
         super(layoutOptions);
     }
@@ -456,14 +459,16 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
 
         lerpChildren: MaybePointerLike<boolean> = false,
 
-        private readonly centerChildren: MaybePointerLike<boolean> = false,
-        private readonly childrenSpacingOverride: MaybePointerLike<number | null> = null,
-        private readonly reverseChildrenRender: MaybePointerLike<boolean> = false,
+        spacingOverride: MaybePointerLike<number | null> = null,
+        reverseRender: MaybePointerLike<boolean> = false,
     ) {
         super(
             layoutOptions,
 
             lerpChildren,
+
+            spacingOverride,
+            reverseRender,
         );
     }
 
@@ -473,14 +478,14 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
         let totalWidth = 0;
         let maxHeight = 0;
 
-        const computedChildrenSpacingOverride = Component.computePointerLike(this.childrenSpacingOverride);
-        const computedReverseChildrenRender = Component.computePointerLike(this.reverseChildrenRender);
+        const computedSpacingOverride = Component.computePointerLike(this.spacingOverride);
+        const computedReverseRender = Component.computePointerLike(this.reverseRender);
 
         if (this.children.length > 0) {
             let currentX = 0;
 
-            if (computedReverseChildrenRender && computedChildrenSpacingOverride) {
-                currentX = computedChildrenSpacingOverride * (this.children.length - 1);
+            if (computedReverseRender && computedSpacingOverride) {
+                currentX = computedSpacingOverride * (this.children.length - 1);
             }
 
             this.children.forEach(child => {
@@ -498,17 +503,17 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
 
                 maxHeight = Math.max(maxHeight, childH);
 
-                if (computedChildrenSpacingOverride !== null) {
+                if (computedSpacingOverride !== null) {
                     totalWidth = Math.max(totalWidth, currentX + childW);
-                    currentX += (computedReverseChildrenRender ? -1 : 1) * computedChildrenSpacingOverride;
+                    currentX += (computedReverseRender ? -1 : 1) * computedSpacingOverride;
                 } else {
                     totalWidth = Math.max(totalWidth, currentX + childW);
-                    currentX += (computedReverseChildrenRender ? -1 : 1) * childW;
+                    currentX += (computedReverseRender ? -1 : 1) * childW;
                 }
             });
 
-            if (computedReverseChildrenRender) {
-                if (computedChildrenSpacingOverride === null) {
+            if (computedReverseRender) {
+                if (computedSpacingOverride === null) {
                     totalWidth = currentX * -1;
                 }
             }
@@ -532,12 +537,11 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
         if (children.length > 0) {
             const computedLerpChildren = Component.computePointerLike(this.lerpChildren);
 
-            const computedCenterChildren = Component.computePointerLike(this.centerChildren);
-            const computedSpacingOverride = Component.computePointerLike(this.childrenSpacingOverride);
-            const computedReverseChildrenRender = Component.computePointerLike(this.reverseChildrenRender);
+            const computedSpacingOverride = Component.computePointerLike(this.spacingOverride);
+            const computedReverseRender = Component.computePointerLike(this.reverseRender);
 
             let currentX = 0;
-            if (computedReverseChildrenRender) {
+            if (computedReverseRender) {
                 if (computedSpacingOverride !== null) {
                     currentX += computedSpacingOverride * (children.length - 1);
                 } else {
@@ -582,10 +586,6 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
                     });
 
                     const targetX = childLayout.x;
-                    const targetY =
-                        !child[BYPASS_CENTERING] && computedCenterChildren
-                            ? this.y + (this.h - childLayout.h) / 2
-                            : childLayout.y;
 
                     if (!this.childPositions.has(child)) {
                         this.childPositions.set(child, targetX);
@@ -596,6 +596,11 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
                     this.childPositions.set(child, newX);
 
                     if (child.isLayoutable) {
+                        const targetY =
+                            child[CENTERING]
+                                ? this.y + (this.h - childLayout.h) / 2
+                                : childLayout.y;
+
                         child.setX(newX);
                         child.setY(targetY);
                         child.setW(childLayout.w);
@@ -603,7 +608,7 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
                     }
 
                     currentX +=
-                        (computedReverseChildrenRender ? -1 : 1) *
+                        (computedReverseRender ? -1 : 1) *
                         (computedSpacingOverride ?? childLayout.w);
                 });
 
@@ -626,12 +631,12 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
                         originY: this.y,
                     });
 
-                    const targetY =
-                        !child[BYPASS_CENTERING] && computedCenterChildren
-                            ? this.y + (this.h - childLayout.h) / 2
-                            : childLayout.y;
-
                     if (child.isLayoutable) {
+                        const targetY =
+                            child[CENTERING]
+                                ? this.y + (this.h - childLayout.h) / 2
+                                : childLayout.y;
+
                         child.setX(childLayout.x);
                         child.setY(targetY);
                         child.setW(childLayout.w);
@@ -639,7 +644,7 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
                     }
 
                     currentX +=
-                        (computedReverseChildrenRender ? -1 : 1) *
+                        (computedReverseRender ? -1 : 1) *
                         (computedSpacingOverride ?? childLayout.w);
                 });
 
@@ -658,14 +663,16 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
 
         lerpChildren: MaybePointerLike<boolean> = false,
 
-        private readonly centerChildren: MaybePointerLike<boolean> = false,
-        private readonly childrenSpacingOverride: MaybePointerLike<number | null> = null,
-        private readonly reverseChildrenRender: MaybePointerLike<boolean> = false,
+        spacingOverride: MaybePointerLike<number | null> = null,
+        reverseRender: MaybePointerLike<boolean> = false,
     ) {
         super(
             layoutOptions,
 
             lerpChildren,
+
+            spacingOverride,
+            reverseRender,
         );
     }
 
@@ -675,14 +682,14 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
         let totalHeight = 0;
         let maxWidth = 0;
 
-        const computedChildrenSpacingOverride = Component.computePointerLike(this.childrenSpacingOverride);
-        const computedReverseChildrenRender = Component.computePointerLike(this.reverseChildrenRender);
+        const computedSpacingOverride = Component.computePointerLike(this.spacingOverride);
+        const computedReverseRender = Component.computePointerLike(this.reverseRender);
 
         if (this.children.length > 0) {
             let currentY = 0;
 
-            if (computedReverseChildrenRender && computedChildrenSpacingOverride) {
-                currentY = computedChildrenSpacingOverride * (this.children.length - 1);
+            if (computedReverseRender && computedSpacingOverride) {
+                currentY = computedSpacingOverride * (this.children.length - 1);
             }
 
             this.children.forEach(child => {
@@ -700,17 +707,17 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
 
                 maxWidth = Math.max(maxWidth, childW);
 
-                if (computedChildrenSpacingOverride !== null) {
+                if (computedSpacingOverride !== null) {
                     totalHeight = Math.max(totalHeight, currentY + childH);
-                    currentY += (computedReverseChildrenRender ? -1 : 1) * computedChildrenSpacingOverride;
+                    currentY += (computedReverseRender ? -1 : 1) * computedSpacingOverride;
                 } else {
                     totalHeight = Math.max(totalHeight, currentY + childH);
-                    currentY += (computedReverseChildrenRender ? -1 : 1) * childH;
+                    currentY += (computedReverseRender ? -1 : 1) * childH;
                 }
             });
 
-            if (computedReverseChildrenRender) {
-                if (computedChildrenSpacingOverride === null) {
+            if (computedReverseRender) {
+                if (computedSpacingOverride === null) {
                     totalHeight = currentY * -1;
                 }
             }
@@ -734,12 +741,11 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
         if (children.length > 0) {
             const computedLerpChildren = Component.computePointerLike(this.lerpChildren);
 
-            const computedCenterChildren = Component.computePointerLike(this.centerChildren);
-            const computedSpacingOverride = Component.computePointerLike(this.childrenSpacingOverride);
-            const computedReverseChildrenRender = Component.computePointerLike(this.reverseChildrenRender);
+            const computedSpacingOverride = Component.computePointerLike(this.spacingOverride);
+            const computedReverseRender = Component.computePointerLike(this.reverseRender);
 
             let currentY = 0;
-            if (computedReverseChildrenRender) {
+            if (computedReverseRender) {
                 if (computedSpacingOverride !== null) {
                     currentY = computedSpacingOverride * (children.length - 1);
                 } else {
@@ -784,10 +790,6 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
                     });
 
                     const targetY = childLayout.y;
-                    const targetX =
-                        !child[BYPASS_CENTERING] && computedCenterChildren
-                            ? this.x + (this.w - childLayout.w) / 2
-                            : childLayout.x;
 
                     if (!this.childPositions.has(child)) {
                         this.childPositions.set(child, targetY);
@@ -798,6 +800,11 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
                     this.childPositions.set(child, newY);
 
                     if (child.isLayoutable) {
+                        const targetX =
+                            child[CENTERING]
+                                ? this.x + (this.w - childLayout.w) / 2
+                                : childLayout.x;
+
                         child.setX(targetX);
                         child.setY(newY);
                         child.setW(childLayout.w);
@@ -805,7 +812,7 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
                     }
 
                     currentY +=
-                        (computedReverseChildrenRender ? -1 : 1) *
+                        (computedReverseRender ? -1 : 1) *
                         (computedSpacingOverride ?? childLayout.h);
                 });
 
@@ -828,12 +835,12 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
                         originY: this.y + currentY,
                     });
 
-                    const targetX =
-                        !child[BYPASS_CENTERING] && computedCenterChildren
-                            ? this.x + (this.w - childLayout.w) / 2
-                            : childLayout.x;
-
                     if (child.isLayoutable) {
+                        const targetX =
+                            child[CENTERING]
+                                ? this.x + (this.w - childLayout.w) / 2
+                                : childLayout.x;
+
                         child.setX(targetX);
                         child.setY(childLayout.y);
                         child.setW(childLayout.w);
@@ -841,7 +848,7 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
                     }
 
                     currentY +=
-                        (computedReverseChildrenRender ? -1 : 1) *
+                        (computedReverseRender ? -1 : 1) *
                         (computedSpacingOverride ?? childLayout.h);
                 });
 
@@ -877,8 +884,6 @@ export class StaticScrollableContainer<Child extends Components = Components> ex
 
         private readonly scrollBarWidth: number = 5.5,
         private readonly scrollBarHeight: number = 30,
-
-        private readonly centerChildren: MaybePointerLike<boolean> = false,
     ) {
         super(layoutOptions);
 
@@ -976,6 +981,16 @@ export class StaticScrollableContainer<Child extends Components = Components> ex
         this.scrollYAlpha = StaticScrollableContainer.ON_SCROLLED_ALPHA;
     }
 
+    // As said in render, scroll can use memory lots
+    override cachedLayout(lc: LayoutContext): LayoutResult {
+        return this.layout(lc);
+    }
+
+    // Its redundant to generate cache key
+    override getCacheKey(lc: LayoutContext): string {
+        return "";
+    }
+
     override layout(lc: LayoutContext): LayoutResult {
         const { ctx } = lc;
         const result = Layout.layout(Component.computePointerLike(this.layoutOptions), lc);
@@ -1010,8 +1025,9 @@ export class StaticScrollableContainer<Child extends Components = Components> ex
     override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
-        // Lerp scroll
-        this.currentScrollY = lerp(this.currentScrollY, this.targetScrollY, this.scrollYAlpha);
+        { // Lerp scroll
+            this.currentScrollY = lerp(this.currentScrollY, this.targetScrollY, this.scrollYAlpha);
+        }
 
         ctx.save();
 
@@ -1020,12 +1036,11 @@ export class StaticScrollableContainer<Child extends Components = Components> ex
         ctx.clip();
 
         if (this.children.length > 0) {
-            const computedCenterChildren = Component.computePointerLike(this.centerChildren);
-
             let currentY = -this.currentScrollY;
 
             this.children.forEach(child => {
-                const childLayout = child.cachedLayout({
+                // Scroll can very very consume memory, so just simply use layout
+                const childLayout = child.layout({
                     ctx,
 
                     containerWidth: this.w - this.scrollBarWidth * 2,
@@ -1035,12 +1050,12 @@ export class StaticScrollableContainer<Child extends Components = Components> ex
                     originY: this.y + currentY,
                 });
 
-                const desiredX =
-                    !child[BYPASS_CENTERING] && computedCenterChildren
-                        ? this.x + (this.w - childLayout.w) / 2
-                        : childLayout.x;
-
                 if (child.isLayoutable) {
+                    const desiredX =
+                        child[CENTERING]
+                            ? this.x + (this.w - childLayout.w) / 2
+                            : childLayout.x;
+
                     child.setX(desiredX);
                     child.setY(childLayout.y);
                     child.setW(childLayout.w);

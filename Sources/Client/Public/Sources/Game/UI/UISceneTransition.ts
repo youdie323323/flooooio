@@ -55,11 +55,11 @@ export default class UserInterfaceSceneTransition {
             ? [currentUI, previousUI]
             : [previousUI, currentUI];
 
-        innerUI?.animationFrame();
+        innerUI?.render();
 
         this.ctx.save();
         this.clipCircle();
-        outerUI?.animationFrame();
+        outerUI?.render();
         this.ctx.restore();
 
         this.drawTransitionBorder();

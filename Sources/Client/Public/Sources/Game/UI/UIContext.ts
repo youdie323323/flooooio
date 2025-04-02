@@ -70,7 +70,7 @@ export default class UIContext {
 
     public update(): void {
         if (!this.isTransitioning) {
-            this.currentCtx?.animationFrame();
+            this.currentCtx?.render();
 
             return;
         }

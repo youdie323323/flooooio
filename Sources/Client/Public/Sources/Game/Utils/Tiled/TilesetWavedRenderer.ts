@@ -3,6 +3,7 @@ import TilesetRenderer, { type RenderingConfig } from "./TilesetRenderer";
 export default class TilesetWavedRenderer {
     // Dont use static to make all instance different step
     private readonly stepPerRender: number = Math.random() / 200;
+    
     private tilesetRenderer: TilesetRenderer = new TilesetRenderer();
 
     private backgroundX: number = 0;

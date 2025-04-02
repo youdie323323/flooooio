@@ -25,6 +25,9 @@ import UIGameWaveEnemyIcons from "./UIGameWaveEnemyIcons";
 import UIGameInventory from "./UIGameInventory";
 import TilesetRenderer, { BIOME_TILESETS } from "../../Utils/Tiled/TilesetRenderer";
 import TilesetWavedRenderer from "../../Utils/Tiled/TilesetWavedRenderer";
+import { Centering } from "../Layout/Extensions/ExtensionCentering";
+import MOB_PROFILES from "../../../../../../Shared/Native/mob_profiles.json";
+import PETAL_PROFILES from "../../../../../../Shared/Native/petal_profiles.json";
 
 let interpolatedMouseX = 0;
 let interpolatedMouseY = 0;
@@ -380,10 +383,13 @@ export default class UIGame extends AbstractUI {
 
             if (player) {
                 this.chatContainer.addChild(new StaticTranslucentPanelContainer(
-                    {},
+                    {
+                        w: 120,
+                        h: 14,
+                    },
 
-                    0,
-                    0,
+                    2,
+                    0.4,
                 ).addChildren(
                     new Text(
                         {
@@ -585,16 +591,14 @@ export default class UIGame extends AbstractUI {
                 }),
 
                 false,
-
-                true,
             ).addChildren(
-                new Text(
+                new (Centering(Text))(
                     {},
                     "You were destroyed by:",
                     12.2,
                 ),
                 new StaticSpace(2, 2),
-                new Text(
+                new (Centering(Text))(
                     {},
                     "Poison",
                     16.1,
@@ -602,7 +606,7 @@ export default class UIGame extends AbstractUI {
 
                 new StaticSpace(100, 100),
 
-                (deadMenuCloser = new Button(
+                (deadMenuCloser = new (Centering(Button))(
                     {
                         w: 88,
                         h: 24,
@@ -641,7 +645,7 @@ export default class UIGame extends AbstractUI {
                     true,
                 )),
                 new StaticSpace(0, 4),
-                new Text(
+                new (Centering(Text))(
                     {},
 
                     "(or press enter)",
@@ -665,10 +669,8 @@ export default class UIGame extends AbstractUI {
                 }),
 
                 false,
-
-                true,
             ).addChildren(
-                new Text(
+                new (Centering(Text))(
                     {},
 
                     "GAME OVER",
@@ -678,7 +680,7 @@ export default class UIGame extends AbstractUI {
 
                 new StaticSpace(20, 20),
 
-                new Button(
+                new (Centering(Button))(
                     {
                         w: 88,
                         h: 24,
@@ -707,7 +709,7 @@ export default class UIGame extends AbstractUI {
                     true,
                 ),
                 new StaticSpace(0, 4),
-                new Text(
+                new (Centering(Text))(
                     {},
 
                     "(or press enter)",
@@ -799,6 +801,10 @@ export default class UIGame extends AbstractUI {
 
                     invertYCoordinate: true,
                 }),
+
+                false,
+
+                14 - 2,
             ));
 
             this.addComponent(this.commandsContainer = new StaticVContainer<StaticTranslucentPanelContainer>(
@@ -851,7 +857,7 @@ export default class UIGame extends AbstractUI {
         ));
     }
 
-    override animationFrame() {
+    override render() {
         // Interpolate
         {
             this.updateT += deltaTime / 100;
@@ -928,35 +934,55 @@ export default class UIGame extends AbstractUI {
             });
         }
 
-        // Render players & mobs
-        {
-            const viewportWidth = canvas.width / antennaScaleFactor;
-            const viewportHeight = canvas.height / antennaScaleFactor;
+        { // Render players & mobs
+            const viewportWidth = (canvas.width / uiScaleFactor / antennaScaleFactor) + 500;
+            const viewportHeight = (canvas.height / uiScaleFactor / antennaScaleFactor) + 500;
             const halfWidth = viewportWidth / 2;
             const halfHeight = viewportHeight / 2;
 
-            const x1 = selfPlayer.x - halfWidth;
-            const x2 = selfPlayer.x + halfWidth;
-            const y1 = selfPlayer.y - halfHeight;
-            const y2 = selfPlayer.y + halfHeight;
+            const x0 = selfPlayer.x - halfWidth;
+            const x1 = selfPlayer.x + halfWidth;
+            const y0 = selfPlayer.y - halfHeight;
+            const y1 = selfPlayer.y + halfHeight;
 
-            const entitiesToDraw: (Mob | Player)[] = new Array(this.mobs.size + this.players.size);
+            const entitiesToDraw: (Mob | Player)[] = [];
 
-            let i = 0;
-            const filterFunc = (v: Mob | Player) => {
+            for (const [, mob] of this.mobs) {
+                if (!isPetal(mob.type)) {
+                    if (
+                        mob.x >= x0 &&
+                        mob.x <= x1 &&
+                        mob.y >= y0 &&
+                        mob.y <= y1
+                    ) {
+                        entitiesToDraw.push(mob);
+                    }
+                }
+            }
+
+            for (const [, petal] of this.mobs) {
+                if (isPetal(petal.type)) {
+                    if (
+                        petal.x >= x0 &&
+                        petal.x <= x1 &&
+                        petal.y >= y0 &&
+                        petal.y <= y1
+                    ) {
+                        entitiesToDraw.push(petal);
+                    }
+                }
+            }
+
+            for (const [, player] of this.players) {
                 if (
-                    v.x >= x1 &&
-                    v.x <= x2 &&
-                    v.y >= y1 &&
-                    v.y <= y2
-                ) entitiesToDraw[i++] = v;
-            };
-
-            this.mobs.forEach(filterFunc);
-
-            entitiesToDraw.sort((a, b) => Number(a instanceof Mob && isPetal(a.type)) - Number(b instanceof Mob && isPetal(b.type)));
-
-            this.players.forEach(filterFunc);
+                    player.x >= x0 &&
+                    player.x <= x1 &&
+                    player.y >= y0 &&
+                    player.y <= y1
+                ) {
+                    entitiesToDraw.push(player);
+                }
+            }
 
             ctx.save();
 
@@ -964,11 +990,13 @@ export default class UIGame extends AbstractUI {
             ctx.scale(antennaScaleFactor, antennaScaleFactor);
             ctx.translate(-selfPlayer.x, -selfPlayer.y);
 
-            entitiesToDraw.forEach((entity, k) => renderEntity({
-                ctx,
-                entity,
-                isSpecimen: false,
-            }));
+            for (const entity of entitiesToDraw) {
+                renderEntity({
+                    ctx,
+                    entity,
+                    isSpecimen: false,
+                });
+            }
 
             ctx.restore();
         }
@@ -1142,7 +1170,7 @@ export default class UIGame extends AbstractUI {
             }
         }
 
-        this.render();
+        this.renderComponents();
     }
 
     override destroy(): void {

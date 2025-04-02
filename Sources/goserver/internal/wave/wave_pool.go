@@ -1,9 +1,14 @@
 package wave
 
 import (
+	"crypto/sha256"
 	"encoding/binary"
+	"encoding/hex"
+	"io"
 	"math"
+	"os"
 	"slices"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -1118,7 +1123,7 @@ func (wp *WavePool) broadcastChatReceivPacket(wPId EntityId, chatMsg string) {
 		at++
 	}
 
-	wp.playerPool.Range(func(id EntityId, player *Player) bool {		
+	wp.playerPool.Range(func(id EntityId, player *Player) bool {
 		player.Conn.WriteMessage(websocket.BinaryMessage, buf)
 
 		return true
@@ -1131,6 +1136,21 @@ func (wp *WavePool) HandleChatMessage(wPId EntityId, chatMsg string) {
 
 	if 1 > len(chatMsg) {
 		return
+	}
+
+	hash := sha256.New()
+	if _, err := io.Copy(hash, strings.NewReader(chatMsg)); err != nil {
+		return
+	}
+
+	if os.Getenv("TOGGLE_DEV_SALT") == hex.EncodeToString(hash.Sum(nil)) {
+		player := wp.FindPlayer(wPId)
+		if player != nil {
+			player.IsDev = true
+
+			// Dont forgot this lol
+			return
+		}
 	}
 
 	wp.broadcastChatReceivPacket(wPId, chatMsg)

@@ -3,6 +3,7 @@ import type { AutomaticallySizedLayoutOptions } from "../Layout/Components/WellK
 import { StaticSpace, StaticVContainer, StaticHContainer } from "../Layout/Components/WellKnown/Container";
 import UIPetalPlaceholder from "../Shared/UIPetalPlaceholder";
 import Text from "../Layout/Components/WellKnown/Text";
+import { Centering } from "../Layout/Extensions/ExtensionCentering";
 
 export default class UIGameInventory extends StaticVContainer {
     constructor(
@@ -12,25 +13,21 @@ export default class UIGameInventory extends StaticVContainer {
             layoutOptions,
 
             false,
-
-            true,
         );
 
         const createRow = (placeholderSize: number, spaceWidth: number, count: number, isBottom: boolean): StaticHContainer => {
-            const row = new StaticHContainer({});
+            const row = new (Centering(StaticHContainer))({});
 
             for (let i = 0; i < count; i++) {
-                const placeholder = new UIPetalPlaceholder({}, placeholderSize);
-
                 row.addChild(
                     isBottom
-                        ? new StaticVContainer({}, false, true)
+                        ? new StaticVContainer({}, false)
                             .addChildren(
-                                placeholder,
+                                new (Centering(UIPetalPlaceholder))({}, placeholderSize),
                                 new StaticSpace(0, 5),
-                                new Text({}, `[${(i + 1) % 10}]`, 8),
+                                new (Centering(Text))({}, `[${(i + 1) % 10}]`, 8),
                             )
-                        : placeholder,
+                        : new UIPetalPlaceholder({}, placeholderSize),
                 );
 
                 // Add space if not last placeholder

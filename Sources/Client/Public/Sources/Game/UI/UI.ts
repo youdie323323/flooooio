@@ -140,10 +140,8 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
         this.keyup = this.handleKeyUp.bind(this);
 
         this.onresize = () => {
-            const scale = devicePixelRatio || 1;
-
-            this.canvas.width = this.canvas.clientWidth * scale;
-            this.canvas.height = this.canvas.clientHeight * scale;
+            this.canvas.width = this.canvas.clientWidth;
+            this.canvas.height = this.canvas.clientHeight;
 
             uiScaleFactor = Math.max(
                 this.canvas.width / UI_BASE_WIDTH,
@@ -555,7 +553,7 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
         this.clickedComponent = null;
     }
 
-    protected render(): void {
+    protected renderComponents(): void {
         this.emitInteractiveEvents();
 
         this.updateComponentsLayout(false);
@@ -574,7 +572,7 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
     /**
      * Method call upon every rAF frame.
      */
-    public abstract animationFrame(): void;
+    public abstract render(): void;
 
     /**
      * Destory ui-depending values.

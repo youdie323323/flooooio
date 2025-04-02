@@ -331,10 +331,14 @@ export default class TilesetRenderer {
 
     private renderTile(
         ctx: CanvasRenderingContext2D,
+
         tileset: OffscreenCanvas,
+
         x: number,
         y: number,
+
         size: number,
+
         // I found the way to fix the weird seam between drawImage
         // https://stackoverflow.com/questions/9942209/unwanted-lines-appearing-in-html5-canvas-using-tiles
         // but couldnt fix it
@@ -350,9 +354,12 @@ export default class TilesetRenderer {
 
     private renderBoundaryCircle(
         ctx: CanvasRenderingContext2D,
+
         centerX: number,
         centerY: number,
+
         radius: number,
+
         width: number,
         height: number,
     ) {
@@ -414,8 +421,8 @@ export default class TilesetRenderer {
         canvas,
         tileset,
         tilesetSize,
-        translateX: tx,
-        translateY: ty,
+        translateX,
+        translateY,
     }: TitleRenderingOptions) {
         const ctx = canvas.getContext("2d");
         const { width, height } = this.getScaledDimensions(canvas);
@@ -428,10 +435,10 @@ export default class TilesetRenderer {
 
         for (let i = -gridX; i <= gridX; i++) {
             for (let j = -gridY; j <= gridY; j++) {
-                const x = centerX + (i * tilesetSize) - (tx % tilesetSize);
-                const y = centerY + (j * tilesetSize) - (ty % tilesetSize);
+                const x = centerX + (i * tilesetSize) - (translateX % tilesetSize);
+                const y = centerY + (j * tilesetSize) - (translateY % tilesetSize);
 
-                this.renderTile(ctx, tileset[0], x, y, tilesetSize, 0);
+                this.renderTile(ctx, tileset[0], x, y, tilesetSize);
             }
         }
     }
