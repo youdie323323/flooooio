@@ -84,7 +84,7 @@ export default class UISettingButton extends Button {
             this.isClicked = true;
         });
 
-        this.on("onClickOutside", () => {
+        this.on("onClickedOutside", () => {
             this.isClicked = false;
 
             startAdvanceReturn();

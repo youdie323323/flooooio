@@ -210,7 +210,7 @@ export class StaticPanelContainer<Child extends Components = Components> extends
     constructor(
         layout: MaybePointerLike<PartialSizeLayoutOptions>,
 
-        dismissIfClickedOutside: boolean = false,
+        closeOnClickedOutside: boolean = false,
 
         protected readonly color: MaybePointerLike<ColorCode> = "#ffffff",
 
@@ -221,8 +221,8 @@ export class StaticPanelContainer<Child extends Components = Components> extends
     ) {
         super(layout);
 
-        if (dismissIfClickedOutside) {
-            this.on("onClickOutside", () => { this.desiredVisible && this.revertAnimation(<ComponentCloser><unknown>(this)); });
+        if (closeOnClickedOutside) {
+            this.on("onClickedOutside", () => { this.desiredVisible && this.revertAnimation(<ComponentCloser><unknown>(this)); });
         }
     }
 

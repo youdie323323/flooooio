@@ -38,6 +38,7 @@ func IsWaveRoomCode(maybeCode string) bool {
 	if len(maybeCode) != 10 {
 		return false
 	}
+	
 	if maybeCode[3] != '-' {
 		return false
 	}

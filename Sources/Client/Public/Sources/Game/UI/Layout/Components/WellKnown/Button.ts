@@ -37,6 +37,7 @@ export class Button extends StaticPanelContainer<StaticHContainer> {
         protected readonly callback: ButtonCallback,
 
         protected readonly buttonColor: MaybePointerLike<ColorCode>,
+        
         protected readonly validate: MaybePointerLike<boolean>,
     ) {
         super(

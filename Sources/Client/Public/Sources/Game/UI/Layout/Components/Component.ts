@@ -55,11 +55,6 @@ export type ComponentOpener = Components & { [observerBrand]: typeof openerBrand
 declare const closerBrand: unique symbol;
 export type ComponentCloser = Components & { [observerBrand]: typeof closerBrand };
 
-// Both of their value is same, so can just return toggle
-function isOpener(toggle: boolean, component: ComponentOpener | ComponentCloser): component is ComponentOpener {
-    return toggle;
-}
-
 /**
  * Fake type to be asserted to toggle value of setVisible first parameter.
  * 
@@ -95,13 +90,16 @@ interface AnimationConfigBase {
 
 export type AnimationConfigs = DeepReadonly<{
     [AnimationType.ZOOM]: AnimationConfigBase;
+
     [AnimationType.SLIDE]: AnimationConfigBase & {
         direction?: AnimationSlideDirection;
         offset?: number;
         offsetSign?: 1 | -1;
         fadeEffectEnabled?: boolean;
     };
+
     [AnimationType.FADE]: AnimationConfigBase;
+
     [AnimationType.CARD]: AnimationConfigBase;
 }>;
 
@@ -188,7 +186,7 @@ export type ComponentEvents<AdheredEvents extends object> =
         }
         & {
             // Event that tell this component is not clicked on mouse up
-            "onClickOutside": [];
+            "onClickedOutside": [];
         }
         & {
             // Event that tell this component is scrolled
@@ -565,6 +563,11 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
         return p instanceof Function ? p() : p;
     }
 
+    // Both of their value is same, so can just return toggle
+    private isOpener(toggle: boolean, component: ComponentOpener | ComponentCloser): component is ComponentOpener {
+        return toggle;
+    }
+
     public setVisible(
         toggle: false,
         closer: ComponentCloser,
@@ -602,7 +605,7 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
         this.desiredVisible = toggle;
 
         // Set opener/closer
-        if (isOpener(toggle, openerOrCloser)) {
+        if (this.isOpener(toggle, openerOrCloser)) {
             this.lastOpener = openerOrCloser;
         } else {
             this.lastCloser = openerOrCloser;
@@ -677,7 +680,7 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
 
         // Store the current animation type and config
         const lastAnimationType = this.animationType;
-        const lastAnimationConfig: AnimationConfigs[typeof lastAnimationType] = {
+        const lastAnimationConfig = {
             defaultDurationOverride: this.animationDefaultDurationOverride,
 
             // Last SLIDE animation config if last animation type is slide
@@ -687,7 +690,7 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
                 offsetSign: this.animationSlideOffsetSign,
                 fadeEffectEnabled: this.animationSlideFadeEffectEnabled,
             }),
-        };
+        } satisfies AnimationConfigOf<typeof lastAnimationType>;
 
         // Set visibility with reversed animation
         this.setVisible(

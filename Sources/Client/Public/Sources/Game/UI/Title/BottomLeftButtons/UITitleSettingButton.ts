@@ -1,0 +1,328 @@
+import type { ButtonCallback } from "../../Layout/Components/WellKnown/Button";
+import { Button } from "../../Layout/Components/WellKnown/Button";
+import { makeTitleBottomLeftToolTippedButton, BOTTOM_LEFT_TOOLTIPPED_BUTTON_SIZE } from ".";
+import { CoordinatedStaticSpace, type AutomaticallySizedLayoutOptions, StaticPanelContainer } from "../../Layout/Components/WellKnown/Container";
+import type { FakeSetVisibleToggleType, FakeSetVisibleObserverType, ComponentCloser } from "../../Layout/Components/Component";
+import { AnimationType } from "../../Layout/Components/Component";
+import UICloseButton from "../../Shared/UICloseButton";
+import Text from "../../Layout/Components/WellKnown/Text";
+import UISettingButton from "../../Shared/UISettingButton";
+import type { FlooooIoDefaultSettingKeys } from "../../../Utils/SettingStorage";
+import SettingStorage from "../../../Utils/SettingStorage";
+import Toggle from "../../Layout/Components/WellKnown/Toggle";
+
+export default class UITitleSettingButton extends makeTitleBottomLeftToolTippedButton(
+    UISettingButton,
+
+    "Settings",
+    6,
+    "right",
+) {
+    constructor(
+        layoutOptions: AutomaticallySizedLayoutOptions,
+    ) {
+        super(
+            layoutOptions,
+
+            BOTTOM_LEFT_TOOLTIPPED_BUTTON_SIZE,
+
+            () => {
+                settingContainer.setVisible(
+                    <FakeSetVisibleToggleType>!settingContainer.desiredVisible,
+                    <FakeSetVisibleObserverType><unknown>(this),
+                    true,
+                    AnimationType.SLIDE,
+                    {
+                        // For some reason, the animation speed of the setting container in the original game is fast lol
+                        defaultDurationOverride: 150,
+
+                        direction: "v",
+                        offsetSign: -1,
+                    },
+                );
+            },
+        );
+
+        const creditContainer = this.createCreditContainer();
+
+        const settingContainer = this.createSettingContainer(creditContainer);
+
+        this.once("onInitialized", () => {
+            { // Add credit container
+                // Initialize as hidden
+                creditContainer.setVisible(false, null, false);
+
+                this.context.addComponent(creditContainer);
+            }
+
+            { // Add setting container
+                // Initialize as hidden
+                settingContainer.setVisible(false, null, false);
+
+                this.context.addComponent(settingContainer);
+            }
+        });
+    }
+
+    private createSettingContainer(creditContainer: ReturnType<typeof UITitleSettingButton["prototype"]["createCreditContainer"]>): StaticPanelContainer {
+        const makeSettingComponents = (y: number, storageKey: FlooooIoDefaultSettingKeys, description: string): [
+            Toggle,
+            Text,
+        ] => {
+            const settingToggle = new Toggle(
+                {
+                    x: 5,
+                    y: y - 1,
+                    w: 17,
+                    h: 17,
+                },
+                (t: boolean): void => {
+                    settingToggle.setToggle(t);
+
+                    SettingStorage.set(storageKey, t);
+                },
+            )
+                // Load existed setting
+                .setToggle(SettingStorage.get(storageKey));
+
+            return [
+                settingToggle,
+
+                new Text(
+                    {
+                        x: 26 - .5,
+                        y: y + 1 + .5,
+                    },
+                    description,
+                    11,
+                ),
+            ];
+        };
+
+        const makeSettingGameUnrelatedButton = (
+            y: number,
+
+            text: string,
+
+            callback: ButtonCallback,
+        ): Button => {
+            return new Button(
+                {
+                    x: 5,
+                    y,
+
+                    w: 138,
+                    h: 14,
+                },
+
+                2,
+
+                3,
+                1,
+
+                [
+                    new Text(
+                        () => ({
+                            x: 45,
+                            y: 1,
+                        }),
+
+                        text,
+                        11,
+                    ),
+                ],
+
+                callback,
+
+                "#aaaaaa",
+
+                true,
+            );
+        };
+
+        let settingContainerCloser: UICloseButton;
+
+        let creditsButton: Button;
+
+        const settingContainer = new StaticPanelContainer(
+            {
+                x: 72,
+                y: 225 + .5,
+
+                invertYCoordinate: true,
+            },
+
+            true,
+
+            "#aaaaaa",
+            0.1,
+        ).addChildren(
+            (settingContainerCloser = new UICloseButton(
+                {
+                    x: 150 - 4,
+                    y: 2,
+                },
+                12,
+
+                () => {
+                    settingContainer.setVisible(
+                        false,
+                        <ComponentCloser><unknown>settingContainerCloser,
+                        true,
+                        AnimationType.SLIDE,
+                        {
+                            direction: "v",
+                            offsetSign: -1,
+                        },
+                    );
+                },
+            )),
+
+            new Text(
+                {
+                    x: 44,
+                    y: 4,
+                },
+                "Settings",
+                16,
+            ),
+
+            // Keyboard movement
+            ...makeSettingComponents(40, "keyboard_control", "Keyboard movement"),
+
+            // Movement helper
+            ...makeSettingComponents(40 + 30, "movement_helper", "Movement helper"),
+
+            (creditsButton = makeSettingGameUnrelatedButton(40 + 30 + 30, "Credits", () => {
+                settingContainer.setVisible(
+                    false,
+                    <ComponentCloser><unknown>creditsButton,
+                    true,
+                    AnimationType.SLIDE,
+                    {
+                        direction: "v",
+                        offsetSign: -1,
+                    },
+                );
+
+                creditContainer.setVisible(
+                    <FakeSetVisibleToggleType>true,
+                    <FakeSetVisibleObserverType><unknown>creditsButton,
+                    true,
+                    AnimationType.SLIDE,
+                    {
+                        direction: "v",
+                        offsetSign: -1,
+                    },
+                );
+            })),
+
+            new CoordinatedStaticSpace(15, 15, 150, 190 - 4),
+        );
+
+        return settingContainer;
+    }
+
+    private createCreditContainer(): StaticPanelContainer {
+        let creditContainerCloser: UICloseButton;
+
+        const creditContainer = new StaticPanelContainer(
+            {
+                x: 72,
+                y: 220,
+
+                invertYCoordinate: true,
+            },
+
+            true,
+
+            "#aaaaaa",
+            0.1,
+        ).addChildren(
+            (creditContainerCloser = new UICloseButton(
+                {
+                    x: 178 - 4,
+                    y: 5,
+                },
+                12,
+
+                () => {
+                    creditContainer.setVisible(
+                        false,
+                        <ComponentCloser><unknown>creditContainerCloser,
+                        true,
+                        AnimationType.SLIDE,
+                        {
+                            direction: "v",
+                            offsetSign: -1,
+                        },
+                    );
+                },
+            )),
+
+            new Text(
+                {
+                    x: 62.5,
+                    y: 4,
+                },
+
+                "Credits",
+                16,
+            ),
+
+            // Yaaaaaaaaaaaaaaaaaaaaay
+            new Text(
+                {
+                    x: 6 + .5,
+                    y: 35,
+                },
+
+                "florr.io made by Matheus Valadares",
+                12,
+                "#ffffff",
+                "left",
+                130,
+            ),
+            new Text(
+                {
+                    x: 2 - .5,
+                    y: 77.5,
+                },
+
+                "floooo.io made by Youdi3",
+                12,
+            ),
+
+            // Icon credits
+            new Text(
+                {
+                    x: 6,
+                    y: 100,
+                },
+
+                "Some icons by Lorc & Skoll from game-icons.net",
+                10.75,
+                "#ffffff",
+                "left",
+                180,
+            ),
+
+            new Text(
+                {
+                    x: 6,
+                    y: 140,
+                },
+
+                "Special thanks: Max Nest, k2r_n2iq and people who keep motivating me every time",
+                10.75,
+                "#ffffff",
+                "left",
+                180,
+            ),
+
+            new CoordinatedStaticSpace(15, 15, 178, 180 + .5),
+        );
+
+        return creditContainer;
+    }
+}

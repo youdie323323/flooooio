@@ -264,10 +264,40 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
     }
 
     private overlapsComponent(targetComponent: Components, x: number, y: number): boolean {
-        return x >= targetComponent.x &&
+        return (
+            x >= targetComponent.x &&
             x <= targetComponent.x + targetComponent.w &&
             y >= targetComponent.y &&
-            y <= targetComponent.y + targetComponent.h;
+            y <= targetComponent.y + targetComponent.h
+        );
+    }
+
+    private componentOverlapsComponent(
+        { x: x0, y: y0, w: w0, h: h0 }: Components,
+        { x: x1, y: y1, w: w1, h: h1 }: Components,
+    ): boolean {
+        return !(
+            x0 + w0 <= x1 ||
+            x0 >= x1 + w1 ||
+            y0 + h0 <= y1 ||
+            y0 >= y1 + h1
+        );
+    }
+
+    public isComponentNotOverlappingWithOtherComponents(targetComponent: Components): boolean {
+        for (const component of this.components) {
+            if (component === targetComponent) continue;
+
+            if (this.isChildComponent(component)) continue;
+
+            if (this.isComponentAnimatingOut(component)) continue;
+
+            if (!this.isComponentObstructable(component)) continue;
+
+            if (this.componentOverlapsComponent(targetComponent, component)) return false;
+        }
+
+        return true;
     }
 
     private isComponentObstructed(targetComponent: Components, x: number, y: number): boolean {
@@ -290,8 +320,8 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
         return false;
     }
 
-    private isComponentObstructable(targetComponent: Components): boolean {
-        return targetComponent[OBSTRUCTION_AFFECTABLE] && targetComponent.isRenderable;
+    private isComponentObstructable({ [OBSTRUCTION_AFFECTABLE]: affectable, isRenderable }: Components): boolean {
+        return affectable && isRenderable;
     }
 
     private isComponentInteractable(targetComponent: Components): boolean {
@@ -308,6 +338,10 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
         return this.isComponentInteractable(targetComponent) &&
             this.overlapsComponent(targetComponent, x, y) &&
             !this.isComponentObstructed(targetComponent, x, y);
+    }
+
+    private isChildComponent(component: Components): boolean {
+        return this.childComponents.has(component);
     }
 
     private getRootComponents(): Array<Components> {
@@ -407,10 +441,10 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
                         // Supports outside of container which has static width/height
                         !(
                             c instanceof AbstractStaticContainer &&
-                            this.isChildDescendant(c, this.clickedComponent)
+                            this.isComponentDescendant(c, this.clickedComponent)
                         ),
                 )
-                .forEach(c => c.emit("onClickOutside"));
+                .forEach(c => c.emit("onClickedOutside"));
         }
     }
 
@@ -472,17 +506,21 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
         return null;
     }
 
+    private isComponentAnimatingOut(component: Components): boolean {
+        return component.isAnimating && component.animationDirection === "out";
+    }
+
     private isAncestorAnimatingOut(child: Components): boolean {
         const parent = this.findParentContainer(child);
 
         if (parent === null) return false;
 
-        if (parent.isAnimating && parent.animationDirection === "out") return true;
+        if (this.isComponentAnimatingOut(parent)) return true;
 
         return this.isAncestorAnimatingOut(parent);
     }
 
-    private isChildDescendant(container: AnyStaticContainer, child: Components): boolean {
+    private isComponentDescendant(container: AnyStaticContainer, child: Components): boolean {
         if (container.hasChild(child)) return true;
 
         const parent = this.findParentContainer(child);
@@ -491,7 +529,7 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
         if (container === parent) {
             return true;
         } else {
-            return this.isChildDescendant(container, parent);
+            return this.isComponentDescendant(container, parent);
         }
     }
 

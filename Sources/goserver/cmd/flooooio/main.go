@@ -60,6 +60,86 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 						Type:   native.PetalTypeBasic,
 						Rarity: native.RarityUltra,
 					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeFaster,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeFaster,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeFaster,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeFaster,
+						Rarity: native.RarityUltra,
+					},
 				},
 				Bottom: []wave.StaticPetal{
 					{

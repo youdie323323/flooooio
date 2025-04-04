@@ -18,7 +18,9 @@
     "resolveJsonModule": true,
   },
   "include": [
-    "Sources/**/*",
+    "Sources/Shared/**/*",
+    "Sources/Client/**/*",
+    "Sources/Server/**/*",
     "Playground/**/*",
     "eslint.config.mjs",
     "esbuild.mjs",

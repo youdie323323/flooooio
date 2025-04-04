@@ -107,7 +107,7 @@ func (pd *PlayerData) AssignWavePlayerId(id *EntityId) {
 
 func NewWaveRoom(b native.Biome, v WaveRoomVisibility) *WaveRoom {
 	wr := &WaveRoom{
-		updatePacketBroadcastTicker: nil,
+		updatePacketBroadcastTicker: time.NewTicker(time.Second / waveRoomUpdatePacketSendIntervalMS),
 
 		WavePool: nil,
 
@@ -294,8 +294,10 @@ func (w *WaveRoom) CheckAndUpdateRoomState() {
 func (w *WaveRoom) StartWave() {
 	w.state = RoomStatePlaying
 
-	w.updatePacketBroadcastTicker.Stop()
-	w.updatePacketBroadcastTicker = nil
+	if w.updatePacketBroadcastTicker != nil {
+		w.updatePacketBroadcastTicker.Stop()
+		w.updatePacketBroadcastTicker = nil
+	}
 
 	w.WavePool.StartWave(w.candidates)
 }
@@ -325,8 +327,6 @@ func (w *WaveRoom) Dispose() {
 
 // startBroadcastUpdatePacket starts sending update packets on an interval.
 func (w *WaveRoom) startBroadcastUpdatePacket() {
-	w.updatePacketBroadcastTicker = time.NewTicker(time.Second / waveRoomUpdatePacketSendIntervalMS)
-	
 	for range w.updatePacketBroadcastTicker.C {
 		w.broadcastUpdatePacket()
 	}
