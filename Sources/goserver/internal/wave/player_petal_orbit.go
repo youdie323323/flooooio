@@ -268,7 +268,7 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool) {
 				}
 
 				// Bit faster than normal orbit
-				petalAngle := Tau*float64(j)/float64(len(petals)) + multipliedRotation*1.1
+				petalAngle := Tau*float64(j)/float64(len(petals)) + multipliedRotation*1.3
 
 				doPetalOrbit(
 					petal,

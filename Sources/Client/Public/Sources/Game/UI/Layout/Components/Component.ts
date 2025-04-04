@@ -230,7 +230,7 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
     public [CENTERING]: boolean = false;
 
     private static readonly ANIMATION_DEFAULT_DURATIONS = {
-        [AnimationType.ZOOM]: 250,
+        [AnimationType.ZOOM]: 200,
         [AnimationType.SLIDE]: 350,
         [AnimationType.FADE]: 1000,
         [AnimationType.CARD]: 750,
