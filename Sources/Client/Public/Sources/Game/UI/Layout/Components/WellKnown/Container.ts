@@ -378,16 +378,18 @@ export class StaticTranslucentPanelContainer<Child extends Components = Componen
     override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
-        {
+        const alpha =
+            typeof this.alphaOverride !== "undefined"
+                ? Component.computePointerLike(this.alphaOverride)
+                : ctx.globalAlpha / 2;
+
+        if (alpha > 0) {
             ctx.save();
 
             const computedRadii = Component.computePointerLike(this.rectRadii);
 
             // 0.5 if globalAlpha is 1
-            ctx.globalAlpha =
-                typeof this.alphaOverride !== "undefined"
-                    ? Component.computePointerLike(this.alphaOverride)
-                    : ctx.globalAlpha / 2;
+            ctx.globalAlpha = alpha;
 
             ctx.fillStyle = "black";
 

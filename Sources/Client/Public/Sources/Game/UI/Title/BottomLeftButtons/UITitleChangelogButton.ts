@@ -7,15 +7,17 @@ import { AnimationType } from "../../Layout/Components/Component";
 import { Centering } from "../../Layout/Extensions/ExtensionCentering";
 import UICloseButton from "../../Shared/UICloseButton";
 import Text from "../../Layout/Components/WellKnown/Text";
-import { makeTitleBottomLeftToolTippedButton, BOTTOM_LEFT_TOOLTIPPED_BUTTON_SIZE, dynamicJoinArray } from ".";
+import { createTitleBottomLeftToolTippedButton, BOTTOM_LEFT_TOOLTIPPED_BUTTON_SIZE, dynamicJoinArray } from ".";
 
-export default class UITitleChangelogButton extends makeTitleBottomLeftToolTippedButton(
+export default class UITitleChangelogButton extends createTitleBottomLeftToolTippedButton(
     Button,
 
     "Changelog",
     6,
     "right",
 ) {
+    private changelogContainer: StaticPanelContainer;
+
     constructor(
         layoutOptions: AutomaticallySizedLayoutOptions,
     ) {
@@ -44,8 +46,8 @@ export default class UITitleChangelogButton extends makeTitleBottomLeftToolTippe
             ],
 
             () => {
-                changelogContainer.setVisible(
-                    <FakeSetVisibleToggleType>!changelogContainer.desiredVisible,
+                this.changelogContainer.setVisible(
+                    <FakeSetVisibleToggleType>!this.changelogContainer.desiredVisible,
                     <FakeSetVisibleObserverType><unknown>(this),
                     true,
                     AnimationType.SLIDE,
@@ -61,13 +63,13 @@ export default class UITitleChangelogButton extends makeTitleBottomLeftToolTippe
             true,
         );
 
-        const changelogContainer = this.createChangelogContainer();
-
         this.once("onInitialized", () => {
-            // Initialize as hidden
-            changelogContainer.setVisible(false, null, false);
+            this.changelogContainer = this.createChangelogContainer();
 
-            this.context.addComponent(changelogContainer);
+            // Initialize as hidden
+            this.changelogContainer.setVisible(false, null, false);
+
+            this.context.addComponent(this.changelogContainer);
         });
     }
 

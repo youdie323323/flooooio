@@ -294,10 +294,7 @@ func (w *WaveRoom) CheckAndUpdateRoomState() {
 func (w *WaveRoom) StartWave() {
 	w.state = RoomStatePlaying
 
-	if w.updatePacketBroadcastTicker != nil {
-		w.updatePacketBroadcastTicker.Stop()
-		w.updatePacketBroadcastTicker = nil
-	}
+	w.updatePacketBroadcastTicker.Stop()
 
 	w.WavePool.StartWave(w.candidates)
 }
@@ -317,10 +314,7 @@ func (w *WaveRoom) Dispose() {
 	// Set nil because circular struct
 	w.WavePool = nil
 
-	if w.updatePacketBroadcastTicker != nil {
-		w.updatePacketBroadcastTicker.Stop()
-		w.updatePacketBroadcastTicker = nil
-	}
+	w.updatePacketBroadcastTicker.Stop()
 
 	clear(w.candidates)
 }

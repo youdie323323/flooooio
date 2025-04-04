@@ -2,12 +2,14 @@ import type { Components } from "../Components/Component";
 import type { LayoutContext, LayoutResult } from "../Layout";
 import type { ExtensionConstructor } from "./Extension";
 
-export default function Collidable<T extends ExtensionConstructor>(Base: T) {
+export type CollisionDirection = "up" | "down";
+
+export default function Collidable<T extends ExtensionConstructor>(Base: T, direction: CollisionDirection = "up") {
     abstract class MixedBase extends Base {
-        private static readonly COLLISION_SPEED: number = 0.4;
+        private static readonly COLLISION_SPEED: number = 0.3;
         private static readonly RETURN_SPEED: number = 0.2;
         private static readonly GAP: number = 4;
-        private static readonly DEAD_ZONE: number = 8;
+        private static readonly DEAD_ZONE: number = 5;
 
         private collidableComponents: Array<Components>;
         private targetYPos: number | null;
@@ -23,9 +25,7 @@ export default function Collidable<T extends ExtensionConstructor>(Base: T) {
             this.isReturning = false;
         }
 
-        // Override layout calculate to reset initial pos
         override layout(lc: LayoutContext): LayoutResult {
-            // Moving collision always up direction
             const diffY = this.initialYPos - this.y;
 
             const layout = super.layout(lc);
@@ -38,8 +38,12 @@ export default function Collidable<T extends ExtensionConstructor>(Base: T) {
         }
 
         private resolveCollision(component: Components) {
-            // Always up direction
-            this.targetYPos = component.y - this.h - MixedBase.GAP;
+            if (direction === "up") {
+                this.targetYPos = component.y - this.h - MixedBase.GAP;
+            } else {
+                this.targetYPos = component.y + component.h + MixedBase.GAP;
+            }
+
             this.isReturning = false;
         }
 
@@ -59,7 +63,7 @@ export default function Collidable<T extends ExtensionConstructor>(Base: T) {
                 .filter(c => c.visible);
         }
 
-        public addCollidableComponents(components: Array<Components>) {
+        public addCollidableComponents(...components: Array<Components>) {
             this.collidableComponents = this.collidableComponents.concat(
                 components.filter(c => !this.collidableComponents.includes(c)),
             );

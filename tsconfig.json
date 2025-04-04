@@ -16,6 +16,7 @@
     "useDefineForClassFields": false,
     "forceConsistentCasingInFileNames": false,
     "resolveJsonModule": true,
+    "resolvePackageJsonExports": false,
   },
   "include": [
     "Sources/Shared/**/*",

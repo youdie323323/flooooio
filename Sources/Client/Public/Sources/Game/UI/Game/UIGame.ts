@@ -94,7 +94,7 @@ export default class UIGame extends AbstractUI {
     private youWillRespawnNextWaveContainer: StaticTranslucentPanelContainer;
 
     private chatInput: TextInput;
-    private chatContainer: StaticVContainer<StaticTranslucentPanelContainer>;
+    private chatContainer: StaticVContainer;
     private commandsContainer: StaticVContainer<StaticTranslucentPanelContainer>;
 
     private currentMoodFlags: number;
@@ -382,15 +382,7 @@ export default class UIGame extends AbstractUI {
             const player = this.players.get(waveClientId);
 
             if (player) {
-                this.chatContainer.addChild(new StaticTranslucentPanelContainer(
-                    {
-                        w: 120,
-                        h: 14,
-                    },
-
-                    2,
-                    0.4,
-                ).addChildren(
+                this.chatContainer.addChildren(
                     new Text(
                         {
                             y: 2,
@@ -399,8 +391,8 @@ export default class UIGame extends AbstractUI {
                         `${player.name}: ${chatMsg}`,
                         10,
                     ),
-                    new CoordinatedStaticSpace(0, 0, 0, 14),
-                ));
+                    new StaticSpace(0, 3),
+                );
             }
         },
     } as const satisfies StaticAdheredClientboundHandlers;
@@ -787,25 +779,31 @@ export default class UIGame extends AbstractUI {
                     onkeydown: (e, self) => {
                         const show = self.value.startsWith("/");
 
-                        this.chatContainer.setVisible(<FakeSetVisibleToggleType>!show, null, false);
+                        chatContainer.setVisible(<FakeSetVisibleToggleType>!show, null, false);
 
                         this.commandsContainer.setVisible(<FakeSetVisibleToggleType>show, null, false);
                     },
                 },
             ));
 
-            this.addComponent(this.chatContainer = new StaticVContainer<StaticTranslucentPanelContainer>(
-                () => ({
-                    x: 11,
-                    y: 37 + this.chatContainer.h,
+            let chatContainer: StaticTranslucentPanelContainer<StaticVContainer>;
 
-                    invertYCoordinate: true,
-                }),
+            this.addComponent(
+                chatContainer = new StaticTranslucentPanelContainer<StaticVContainer>(
+                    () => ({
+                        x: 11,
+                        y: 37 + chatContainer.h,
 
-                false,
+                        invertYCoordinate: true,
+                    }),
 
-                14 - 2,
-            ));
+                    2,
+                    () =>
+                        this.chatInput.hasFocus
+                            ? 0.5
+                            : 0,
+                ).addChild(this.chatContainer = new StaticVContainer({})),
+            );
 
             this.addComponent(this.commandsContainer = new StaticVContainer<StaticTranslucentPanelContainer>(
                 () => ({

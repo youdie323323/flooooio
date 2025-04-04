@@ -7,7 +7,7 @@ import { CoordinatedStaticSpace } from "../../Layout/Components/WellKnown/Contai
 
 export const BOTTOM_LEFT_TOOLTIPPED_BUTTON_SIZE = 35;
 
-export const makeTitleBottomLeftToolTippedButton = <T extends typeof Button | typeof UISettingButton>(
+export const createTitleBottomLeftToolTippedButton = <T extends typeof Button | typeof UISettingButton>(
     ctor: T,
 
     description: string,
@@ -27,7 +27,7 @@ export const makeTitleBottomLeftToolTippedButton = <T extends typeof Button | ty
             new CoordinatedStaticSpace(1, 1, 0, 22),
         ],
         positionOffset,
-        [position],
+        position,
     );
 };
 

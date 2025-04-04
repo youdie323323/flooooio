@@ -4,24 +4,17 @@ import type { PartialSizeLayoutOptions } from "../Components/WellKnown/Container
 import { StaticTranslucentPanelContainer } from "../Components/WellKnown/Container";
 import type { ExtensionConstructor } from "./Extension";
 
-export const TOOLTIP_POSITIONS = ["top", "bottom", "left", "right"] as const;
-
-export type TooltipAnchorPosition = typeof TOOLTIP_POSITIONS[number];
+export type TooltipAnchorPosition = "top" | "bottom" | "left" | "right";
 
 export default function Tooltip<T extends ExtensionConstructor>(
     Base: T,
 
     contentComponents: Array<Components>,
     positionOffset: number,
-    anchorPositionPriority: ReadonlyArray<TooltipAnchorPosition> = TOOLTIP_POSITIONS,
-    hideIfOverlap: MaybePointerLike<boolean> = true,
+    anchorPosition: TooltipAnchorPosition,
     cornerRadius: MaybePointerLike<number> = 3,
+    hideIfOverlap: MaybePointerLike<boolean> = true,
 ) {
-    // Ensure all fallback positions are included
-    const completePositionPriority = anchorPositionPriority.concat(
-        TOOLTIP_POSITIONS.filter(position => anchorPositionPriority.indexOf(position) === -1),
-    );
-
     abstract class MixedBase extends Base {
         private static readonly TOOLTIP_FADE_ANIMATION_CONFIG = {
             defaultDurationOverride: 100,
@@ -42,7 +35,7 @@ export default function Tooltip<T extends ExtensionConstructor>(
                         cornerRadius,
                     ).addChildren(...contentComponents);
 
-                // Prevent tooltip from blocking other components
+                // Prevent tooltip blocking other components
                 this.tooltipContainer[OBSTRUCTION_AFFECTABLE] = false;
 
                 // Initialize as hidden
@@ -91,38 +84,36 @@ export default function Tooltip<T extends ExtensionConstructor>(
                 h: tooltipHeight,
             } = this.tooltipContainer;
 
-            for (const position of completePositionPriority) {
-                let proposedX = 0;
-                let proposedY = 0;
+            let proposedX = 0;
+            let proposedY = 0;
 
-                switch (position) {
-                    case "top":
-                        proposedX = anchorX + (anchorWidth / 2) - (tooltipWidth / 2);
-                        proposedY = anchorY - tooltipHeight - positionOffset;
+            switch (anchorPosition) {
+                case "top":
+                    proposedX = anchorX + (anchorWidth / 2) - (tooltipWidth / 2);
+                    proposedY = anchorY - tooltipHeight - positionOffset;
 
-                        break;
+                    break;
 
-                    case "bottom":
-                        proposedX = anchorX + (anchorWidth / 2) - (tooltipWidth / 2);
-                        proposedY = anchorY + anchorHeight + positionOffset;
+                case "bottom":
+                    proposedX = anchorX + (anchorWidth / 2) - (tooltipWidth / 2);
+                    proposedY = anchorY + anchorHeight + positionOffset;
 
-                        break;
+                    break;
 
-                    case "left":
-                        proposedX = anchorX - tooltipWidth - positionOffset;
-                        proposedY = anchorY + (anchorHeight / 2) - (tooltipHeight / 2);
+                case "left":
+                    proposedX = anchorX - tooltipWidth - positionOffset;
+                    proposedY = anchorY + (anchorHeight / 2) - (tooltipHeight / 2);
 
-                        break;
+                    break;
 
-                    case "right":
-                        proposedX = anchorX + anchorWidth + positionOffset;
-                        proposedY = anchorY + (anchorHeight / 2) - (tooltipHeight / 2);
+                case "right":
+                    proposedX = anchorX + anchorWidth + positionOffset;
+                    proposedY = anchorY + (anchorHeight / 2) - (tooltipHeight / 2);
 
-                        break;
-                }
-
-                return { x: proposedX, y: proposedY };
+                    break;
             }
+
+            return { x: proposedX, y: proposedY };
         }
 
         private get shouldShowTooltip(): boolean {
@@ -130,7 +121,7 @@ export default function Tooltip<T extends ExtensionConstructor>(
             if (!computedHideIfOverlap) return true;
 
             if (!this.context) return true;
-            
+
             if (!this.tooltipContainer) return true;
 
             return this.context.isComponentNotOverlappingWithOtherComponents(<Components><unknown>(this.tooltipContainer));

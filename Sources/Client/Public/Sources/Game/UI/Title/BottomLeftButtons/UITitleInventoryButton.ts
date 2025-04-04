@@ -10,17 +10,19 @@ import { SVGLogo } from "../../Layout/Components/WellKnown/Logo";
 import { Centering } from "../../Layout/Extensions/ExtensionCentering";
 import UICloseButton from "../../Shared/UICloseButton";
 import UIDraggableMobIcon from "../../Shared/UIDraggableMobIcon";
-import { makeTitleBottomLeftToolTippedButton, BOTTOM_LEFT_TOOLTIPPED_BUTTON_SIZE, dynamicJoinArray } from ".";
+import { createTitleBottomLeftToolTippedButton, BOTTOM_LEFT_TOOLTIPPED_BUTTON_SIZE, dynamicJoinArray } from ".";
 import Text from "../../Layout/Components/WellKnown/Text";
 import SWAP_BAG_SVG from "../Assets/swap_bag.svg";
 
-export default class UITitleInventoryButton extends makeTitleBottomLeftToolTippedButton(
+export default class UITitleInventoryButton extends createTitleBottomLeftToolTippedButton(
     Button,
 
     "Inventory",
     6,
     "right",
 ) {
+    private inventoryContainer: StaticPanelContainer;
+
     constructor(
         layoutOptions: AutomaticallySizedLayoutOptions,
     ) {
@@ -49,8 +51,8 @@ export default class UITitleInventoryButton extends makeTitleBottomLeftToolTippe
             ],
 
             () => {
-                inventoryContainer.setVisible(
-                    <FakeSetVisibleToggleType>!inventoryContainer.desiredVisible,
+                this.inventoryContainer.setVisible(
+                    <FakeSetVisibleToggleType>!this.inventoryContainer.desiredVisible,
                     <FakeSetVisibleObserverType><unknown>(this),
                     true,
                     AnimationType.SLIDE,
@@ -66,13 +68,13 @@ export default class UITitleInventoryButton extends makeTitleBottomLeftToolTippe
             true,
         );
 
-        const inventoryContainer = this.createInventoryContainer();
-
         this.once("onInitialized", () => {
-            // Initialize as hidden
-            inventoryContainer.setVisible(false, null, false);
+            this.inventoryContainer = this.createInventoryContainer();
 
-            this.context.addComponent(inventoryContainer);
+            // Initialize as hidden
+            this.inventoryContainer.setVisible(false, null, false);
+
+            this.context.addComponent(this.inventoryContainer);
         });
     }
 

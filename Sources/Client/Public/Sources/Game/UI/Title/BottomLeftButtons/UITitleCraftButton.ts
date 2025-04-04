@@ -1,10 +1,10 @@
 import { Button } from "../../Layout/Components/WellKnown/Button";
 import type { AutomaticallySizedLayoutOptions } from "../../Layout/Components/WellKnown/Container";
 import { SVGLogo } from "../../Layout/Components/WellKnown/Logo";
-import { makeTitleBottomLeftToolTippedButton, BOTTOM_LEFT_TOOLTIPPED_BUTTON_SIZE } from ".";
+import { createTitleBottomLeftToolTippedButton, BOTTOM_LEFT_TOOLTIPPED_BUTTON_SIZE } from ".";
 import MOLECULE_SVG from "../Assets/molecule.svg";
 
-export default class UITitleCraftButton extends makeTitleBottomLeftToolTippedButton(
+export default class UITitleCraftButton extends createTitleBottomLeftToolTippedButton(
     Button,
 
     "Craft",

@@ -1,10 +1,10 @@
 import { Button } from "../../Layout/Components/WellKnown/Button";
 import type { AutomaticallySizedLayoutOptions } from "../../Layout/Components/WellKnown/Container";
 import { SVGLogo } from "../../Layout/Components/WellKnown/Logo";
-import { makeTitleBottomLeftToolTippedButton, BOTTOM_LEFT_TOOLTIPPED_BUTTON_SIZE } from ".";
+import { createTitleBottomLeftToolTippedButton, BOTTOM_LEFT_TOOLTIPPED_BUTTON_SIZE } from ".";
 import DISCORD_ICON_SVG from "../Assets/discord_icon.svg";
 
-export default class UITitleDiscordCommunityButton extends makeTitleBottomLeftToolTippedButton(
+export default class UITitleDiscordCommunityButton extends createTitleBottomLeftToolTippedButton(
     Button,
 
     "Join our Discord community!",

@@ -125,15 +125,35 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 						Rarity: native.RarityUltra,
 					},
 					{
-						Type:   native.PetalTypeFaster,
+						Type:   native.PetalTypeBasic,
 						Rarity: native.RarityUltra,
 					},
 					{
-						Type:   native.PetalTypeFaster,
+						Type:   native.PetalTypeBasic,
 						Rarity: native.RarityUltra,
 					},
 					{
-						Type:   native.PetalTypeFaster,
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBasic,
 						Rarity: native.RarityUltra,
 					},
 					{

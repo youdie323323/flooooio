@@ -28,12 +28,11 @@ import UICloseButton from "../Shared/UICloseButton";
 import { Clientbound } from "../../../../../../Shared/Websocket/Packet/PacketDirection";
 import type { StaticAdheredClientboundHandlers } from "../../Websocket/Packet/PacketClientbound";
 import DISCORD_ICON_SVG from "./Assets/discord_icon.svg";
-import type { TooltipAnchorPosition } from "../Layout/Extensions/ExtensionTooltip";
 import Tooltip from "../Layout/Extensions/ExtensionTooltip";
 import { BIOME_TILESETS } from "../../Utils/Tiled/TilesetRenderer";
 import TilesetWavedRenderer from "../../Utils/Tiled/TilesetWavedRenderer";
-import type UISettingButton from "../Shared/UISettingButton";
 import UITitleBottomLeftButtonGroup from "./BottomLeftButtons/UITitleBottomLeftButtonGroup";
+import { createTitleBottomLeftToolTippedButton } from "./BottomLeftButtons";
 
 const TAU = Math.PI * 2;
 
@@ -173,7 +172,9 @@ export default class UITitle extends AbstractUI {
             this.biome = reader.readUInt8() satisfies Biome;
         },
         [Clientbound.WAVE_STARTED]: (reader: BinaryReader): void => {
-            this.squadMenuContainer.setVisible(false, null, true, AnimationType.ZOOM);
+            this.squadMenuContainer.setVisible(false, null, true, AnimationType.ZOOM, {
+                defaultDurationOverride: 100,
+            });
 
             uiCtx.switchUI("game");
 
@@ -216,10 +217,10 @@ export default class UITitle extends AbstractUI {
                             this.onLoadedComponents.forEach(c => {
                                 c.setVisible(true, null, true, AnimationType.ZOOM);
                             });
-                        }, 150);
-                    }, 2000);
-                }, 150);
-            }, 2000);
+                        }, 250);
+                    }, 800);
+                }, 50);
+            }, 1000);
         }, 1);
     }
 
@@ -227,29 +228,7 @@ export default class UITitle extends AbstractUI {
         this.resetWaveState();
 
         {
-            const makeTitleToolTippedButton = <T extends typeof Button | typeof UISettingButton>(
-                ctor: T,
-                description: string,
-                positionOffset: number,
-                position: TooltipAnchorPosition,
-            ) => {
-                return Tooltip(
-                    ctor,
-
-                    [
-                        new Text(
-                            { y: 5 },
-                            description,
-                            11,
-                        ),
-                        new CoordinatedStaticSpace(1, 1, 0, 22),
-                    ],
-                    positionOffset,
-                    [position],
-                );
-            };
-
-            this.addComponent(new UITitleBottomLeftButtonGroup(
+            this.addComponents(new UITitleBottomLeftButtonGroup(
                 {
                     x: 13 + .5,
                     y: 260 - 1,
@@ -257,9 +236,9 @@ export default class UITitle extends AbstractUI {
                     invertYCoordinate: true,
                 },
             ));
-            
+
             {
-                const discordLinkButton = new (makeTitleToolTippedButton(Button, "Link your Discord account to save your progress!", 10, "left"))(
+                const discordLinkButton = new (createTitleBottomLeftToolTippedButton(Button, "Link your Discord account to save your progress!", 10, "left"))(
                     {
                         x: 172,
                         y: 6,
@@ -309,36 +288,42 @@ export default class UITitle extends AbstractUI {
             }
         }
 
-        // Text
-        this.connectingText = new Text(
-            {
-                x: -(200 / 2),
-                y: (-(40 / 2)) - 5,
+        {
+            // Text
+            const connectingText = this.connectingText = new (Collidable(Text, "up"))(
+                {
+                    x: -(200 / 2),
+                    y: (-(40 / 2)) - 5,
 
-                alignFromCenterX: true,
-                alignFromCenterY: true,
-            },
-            "Connecting...",
-            32,
-        );
+                    alignFromCenterX: true,
+                    alignFromCenterY: true,
+                },
+                "Connecting...",
+                32,
+            );
 
-        this.loggingInText = new Text(
-            {
-                x: -(200 / 2),
-                y: (-(40 / 2)) - 5,
+            const loggingInText = this.loggingInText = new (Collidable(Text, "down"))(
+                {
+                    x: -(200 / 2),
+                    y: (-(40 / 2)) - 5,
 
-                alignFromCenterX: true,
-                alignFromCenterY: true,
-            },
-            "Logging in...",
-            32,
-        );
+                    alignFromCenterX: true,
+                    alignFromCenterY: true,
+                },
 
-        this.connectingText.setVisible(false, null, false);
-        this.loggingInText.setVisible(false, null, false);
+                "Logging in...",
+                32,
+            );
 
-        this.addComponent(this.connectingText);
-        this.addComponent(this.loggingInText);
+            this.connectingText.setVisible(false, null, false);
+            this.loggingInText.setVisible(false, null, false);
+
+            loggingInText.addCollidableComponents(this.connectingText);
+            connectingText.addCollidableComponents(this.loggingInText);
+
+            this.addComponent(this.connectingText);
+            this.addComponent(this.loggingInText);
+        }
 
         const gameNameText = new (Collidable(Text))(
             {
@@ -352,7 +337,7 @@ export default class UITitle extends AbstractUI {
             54,
         );
 
-        gameNameText.addCollidableComponents([this.connectingText, this.loggingInText]);
+        gameNameText.addCollidableComponents(this.connectingText, this.loggingInText);
 
         {
             this.onLoadedComponents = [];
@@ -365,6 +350,7 @@ export default class UITitle extends AbstractUI {
                     alignFromCenterX: true,
                     alignFromCenterY: true,
                 },
+
                 "This pretty little flower is called...",
                 13,
             );
@@ -453,7 +439,9 @@ export default class UITitle extends AbstractUI {
                     if (this.squadMenuContainer.visible === false) {
                         clientWebsocket.packetServerbound.sendWaveRoomFindPublic(this.biome);
 
-                        this.squadMenuContainer.setVisible(true, <ComponentOpener><unknown>readyButton, true, AnimationType.ZOOM);
+                        this.squadMenuContainer.setVisible(true, <ComponentOpener><unknown>readyButton, true, AnimationType.ZOOM, {
+                            defaultDurationOverride: 100,
+                        });
 
                         this.statusTextRef = SquadContainerStatusText.CREATING;
 
@@ -490,6 +478,7 @@ export default class UITitle extends AbstractUI {
                 [
                     new Text(
                         { y: 2 },
+
                         "Squad",
                         13,
                     ),
@@ -498,6 +487,7 @@ export default class UITitle extends AbstractUI {
                             w: 40,
                             h: 40,
                         },
+
                         (ctx: CanvasRenderingContext2D) => {
                             ctx.fillStyle = "black";
                             ctx.globalAlpha = DARKENED_BASE;
@@ -512,7 +502,9 @@ export default class UITitle extends AbstractUI {
                 () => {
                     clientWebsocket.packetServerbound.sendWaveRoomCreate(this.biome);
 
-                    this.squadMenuContainer.setVisible(true, <ComponentOpener><unknown>squadButton, true, AnimationType.ZOOM);
+                    this.squadMenuContainer.setVisible(true, <ComponentOpener><unknown>squadButton, true, AnimationType.ZOOM, {
+                        defaultDurationOverride: 100,
+                    });
 
                     this.statusTextRef = SquadContainerStatusText.CREATING;
 
@@ -587,6 +579,7 @@ export default class UITitle extends AbstractUI {
                         w: 74.45,
                         h: 120,
                     },
+
                     () => this.waveRoomPlayerInformations[i]?.id,
                     () => this.waveRoomPlayerInformations[i]?.name,
                     () => this.waveRoomPlayerInformations[i]?.readyState,
@@ -620,6 +613,7 @@ export default class UITitle extends AbstractUI {
                         x: 162,
                         y: 110,
                     },
+
                     () => this.statusTextRef,
                     14,
                 )),
@@ -649,7 +643,9 @@ export default class UITitle extends AbstractUI {
                     10,
 
                     () => {
-                        this.squadMenuContainer.setVisible(false, <ComponentCloser><unknown>squadMenuCloser, true, AnimationType.ZOOM);
+                        this.squadMenuContainer.setVisible(false, <ComponentCloser><unknown>squadMenuCloser, true, AnimationType.ZOOM, {
+                            defaultDurationOverride: 100,
+                        });
 
                         readyToggle = false;
 
@@ -670,6 +666,7 @@ export default class UITitle extends AbstractUI {
                         w: 15,
                         h: 15,
                     },
+
                     (t: boolean): void => clientWebsocket.packetServerbound.sendWaveRoomChangeVisible(
                         t
                             ? WaveRoomVisibleState.PUBLIC
@@ -681,6 +678,7 @@ export default class UITitle extends AbstractUI {
                         x: 26,
                         y: 26,
                     },
+
                     "Public",
                     10,
                 ),
@@ -692,6 +690,7 @@ export default class UITitle extends AbstractUI {
                         w: 0,
                         h: 0,
                     }),
+
                     () =>
                         this.waveRoomVisible === WaveRoomVisibleState.PRIVATE
                             ? "Private squad"
@@ -714,6 +713,7 @@ export default class UITitle extends AbstractUI {
                         w: 75,
                         h: 14,
                     },
+
                     {
                         canvas: this.canvas,
 
@@ -834,6 +834,7 @@ export default class UITitle extends AbstractUI {
                     const codeText = new (
                         Tooltip(
                             Text,
+
                             [
                                 new CoordinatedStaticSpace(1, 1, 0, 0),
                                 new Text(
@@ -841,15 +842,16 @@ export default class UITitle extends AbstractUI {
                                         x: 1,
                                         y: 3,
                                     },
+
                                     () => tooltipLabel,
                                     9,
                                 ),
                                 new CoordinatedStaticSpace(1, 1, 0, 15),
                             ],
                             2,
-                            ["top"],
-                            false,
+                            "top",
                             2,
+                            false,
                         )
                     )(
                         {
@@ -922,11 +924,11 @@ export default class UITitle extends AbstractUI {
                 this.squadMenuContainer,
             );
 
-            nameInputDescription.addCollidableComponents([this.squadMenuContainer, nameInput]);
-            gameNameText.addCollidableComponents([this.squadMenuContainer, nameInputDescription]);
+            nameInputDescription.addCollidableComponents(this.squadMenuContainer, nameInput);
+            gameNameText.addCollidableComponents(this.squadMenuContainer, nameInputDescription);
 
-            nameInput.addCollidableComponents([this.squadMenuContainer]);
-            readyButton.addCollidableComponents([this.squadMenuContainer]);
+            nameInput.addCollidableComponents(this.squadMenuContainer);
+            readyButton.addCollidableComponents(this.squadMenuContainer);
 
             this.toggleShowStatusText(true);
         }

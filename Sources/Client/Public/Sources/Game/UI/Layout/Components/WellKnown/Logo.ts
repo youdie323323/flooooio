@@ -3,8 +3,6 @@ import Layout from "../../Layout";
 import type { MaybePointerLike } from "../Component";
 import { Component, OBSTRUCTION_AFFECTABLE } from "../Component";
 import { Canvg, presets } from "canvg";
-import * as StackBlur from
-    'stackblur-canvas/dist/stackblur-es.min.js';
 
 export abstract class Logo extends Component {
     public override[OBSTRUCTION_AFFECTABLE]: boolean = false;
@@ -75,19 +73,14 @@ export class SVGLogo extends Logo {
         super(layoutOptions);
 
         (async () => {
-            const canvas = new OffscreenCanvas(512, 512);
-            const ctx = canvas.getContext("2d", {
+            this.svgCanvas = new OffscreenCanvas(512, 512);
+
+            const ctx = this.svgCanvas.getContext("2d", {
                 antialias: true,
                 alpha: true,
             });
 
-            if (ctx) {
-                await Canvg.fromString(ctx, this.svg, presets.offscreen()).render();
-                // Use stackblur to relief jaggy
-                StackBlur.canvasRGBA(canvas, 0, 0, canvas.width, canvas.height, 8);
-
-                this.svgCanvas = canvas;
-            }
+            await Canvg.fromString(ctx, this.svg, presets.offscreen()).render();
         })();
     }
 

@@ -15,7 +15,7 @@ import { Emitter } from 'strict-event-emitter';
 /**
  * Dynamic computable pointer-like of T.
  */
-export type MaybePointerLike<T> = T | (() => T);
+export type MaybePointerLike<Reference> = Reference | (() => Reference);
 
 type Satisfies<T extends U, U> = T;
 
@@ -230,7 +230,7 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
     public [CENTERING]: boolean = false;
 
     private static readonly ANIMATION_DEFAULT_DURATIONS = {
-        [AnimationType.ZOOM]: 100,
+        [AnimationType.ZOOM]: 250,
         [AnimationType.SLIDE]: 350,
         [AnimationType.FADE]: 1000,
         [AnimationType.CARD]: 750,
@@ -271,11 +271,9 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
         },
     } as const satisfies Record<AnimationType, AnimationDirectionEasingFunction>;
 
-    private static readonly ZOOM_IN_OUT_EASING_FUNCTION = function easeInExpo(x: number): number {
-        return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
-    };
-
     private static readonly SLIDE_DEFAULT_DEPTH_OFFSET: number = 20;
+
+    private static readonly ZOOM_OUT_DEPTH: number = 20;
 
     /**
      * Last component which called this setVisible with toggle true.
@@ -459,22 +457,6 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
                 this.isAnimating = false;
 
                 this.animationStartTime = null;
-            } else {
-                switch (this.animationType) {
-                    case AnimationType.ZOOM: {
-                        if (this.animationZoomShouldSlidePosition) {
-                            const inOutProgress = 1 - Component.ZOOM_IN_OUT_EASING_FUNCTION(this.animationProgress);
-
-                            if (this.animationDirection === 'out') {
-                                this.y = this.realY - (30 * inOutProgress);
-                            } else {
-                                this.y = this.realY;
-                            }
-                        }
-
-                        break;
-                    }
-                }
             }
         }
 
@@ -491,7 +473,12 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
                     const cx = this.x + this.w / 2,
                         cy = this.y + this.h / 2;
 
-                    ctx.translate(cx, cy);
+                    if (this.animationDirection === "out") {
+                        ctx.translate(cx, this.y + (-(1 - progress) * Component.ZOOM_OUT_DEPTH) + this.h / 2);
+                    } else {
+                        ctx.translate(cx, cy);
+                    }
+
                     ctx.scale(progress, progress);
                     ctx.translate(-cx, -cy);
 
@@ -709,7 +696,6 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
 
         // Remove layout cache
         this.layoutCache.invalidate();
-        this.layoutCache = null;
 
         this.context.removeComponent(this as unknown as Components);
 

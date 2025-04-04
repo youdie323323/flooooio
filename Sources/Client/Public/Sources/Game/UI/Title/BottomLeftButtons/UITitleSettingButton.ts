@@ -1,6 +1,6 @@
 import type { ButtonCallback } from "../../Layout/Components/WellKnown/Button";
 import { Button } from "../../Layout/Components/WellKnown/Button";
-import { makeTitleBottomLeftToolTippedButton, BOTTOM_LEFT_TOOLTIPPED_BUTTON_SIZE } from ".";
+import { createTitleBottomLeftToolTippedButton, BOTTOM_LEFT_TOOLTIPPED_BUTTON_SIZE } from ".";
 import { CoordinatedStaticSpace, type AutomaticallySizedLayoutOptions, StaticPanelContainer } from "../../Layout/Components/WellKnown/Container";
 import type { FakeSetVisibleToggleType, FakeSetVisibleObserverType, ComponentCloser } from "../../Layout/Components/Component";
 import { AnimationType } from "../../Layout/Components/Component";
@@ -11,13 +11,16 @@ import type { FlooooIoDefaultSettingKeys } from "../../../Utils/SettingStorage";
 import SettingStorage from "../../../Utils/SettingStorage";
 import Toggle from "../../Layout/Components/WellKnown/Toggle";
 
-export default class UITitleSettingButton extends makeTitleBottomLeftToolTippedButton(
+export default class UITitleSettingButton extends createTitleBottomLeftToolTippedButton(
     UISettingButton,
 
     "Settings",
     6,
     "right",
 ) {
+    private creditContainer: StaticPanelContainer;
+    private settingContainer: StaticPanelContainer;
+
     constructor(
         layoutOptions: AutomaticallySizedLayoutOptions,
     ) {
@@ -27,8 +30,8 @@ export default class UITitleSettingButton extends makeTitleBottomLeftToolTippedB
             BOTTOM_LEFT_TOOLTIPPED_BUTTON_SIZE,
 
             () => {
-                settingContainer.setVisible(
-                    <FakeSetVisibleToggleType>!settingContainer.desiredVisible,
+                this.settingContainer.setVisible(
+                    <FakeSetVisibleToggleType>!this.settingContainer.desiredVisible,
                     <FakeSetVisibleObserverType><unknown>(this),
                     true,
                     AnimationType.SLIDE,
@@ -43,23 +46,23 @@ export default class UITitleSettingButton extends makeTitleBottomLeftToolTippedB
             },
         );
 
-        const creditContainer = this.createCreditContainer();
-
-        const settingContainer = this.createSettingContainer(creditContainer);
-
         this.once("onInitialized", () => {
+            this.creditContainer = this.createCreditContainer();
+
+            this.settingContainer = this.createSettingContainer(this.creditContainer);
+
             { // Add credit container
                 // Initialize as hidden
-                creditContainer.setVisible(false, null, false);
+                this.creditContainer.setVisible(false, null, false);
 
-                this.context.addComponent(creditContainer);
+                this.context.addComponent(this.creditContainer);
             }
 
             { // Add setting container
                 // Initialize as hidden
-                settingContainer.setVisible(false, null, false);
+                this.settingContainer.setVisible(false, null, false);
 
-                this.context.addComponent(settingContainer);
+                this.context.addComponent(this.settingContainer);
             }
         });
     }
@@ -76,6 +79,7 @@ export default class UITitleSettingButton extends makeTitleBottomLeftToolTippedB
                     w: 17,
                     h: 17,
                 },
+                
                 (t: boolean): void => {
                     settingToggle.setToggle(t);
 
@@ -162,6 +166,7 @@ export default class UITitleSettingButton extends makeTitleBottomLeftToolTippedB
                     x: 150 - 4,
                     y: 2,
                 },
+
                 12,
 
                 () => {
@@ -183,6 +188,7 @@ export default class UITitleSettingButton extends makeTitleBottomLeftToolTippedB
                     x: 44,
                     y: 4,
                 },
+
                 "Settings",
                 16,
             ),

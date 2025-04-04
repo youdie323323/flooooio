@@ -198,14 +198,7 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool) {
 		clockwise = -1
 	}
 
-	realLength := 0.
-	for _, v := range surface {
-		if v == nil {
-			continue
-		}
-
-		realLength += float64(len(v))
-	}
+	realLength := float64(len(surface))
 
 	realLength = math.Ceil(realLength / numRings)
 
