@@ -3,6 +3,7 @@ export const enum MobType {
     SPIDER,
 
     BEETLE,
+    SANDSTORM,
 
     STARFISH,
     JELLYFISH,
@@ -23,22 +24,27 @@ export const enum PetalType {
     YIN_YANG,
 }
 
+export const MOB_TYPES: Array<MobType> = [
+    MobType.BEE,
+    MobType.SPIDER,
+
+    MobType.BEETLE,
+    MobType.SANDSTORM,
+
+    MobType.STARFISH,
+    MobType.JELLYFISH,
+    MobType.BUBBLE,
+    MobType.SPONGE,
+
+    MobType.CENTIPEDE,
+    MobType.CENTIPEDE_EVIL,
+    MobType.CENTIPEDE_DESERT,
+] as const;
+
 export const PETAL_TYPES: Array<PetalType> = [
     PetalType.BASIC,
     PetalType.FASTER,
     PetalType.EGG_BEETLE,
     PetalType.BUBBLE,
     PetalType.YIN_YANG,
-] as const;
-
-export const MOB_TYPES: Array<MobType> = [
-    MobType.BEE,
-    MobType.SPIDER,
-    MobType.STARFISH,
-    MobType.JELLYFISH,
-    MobType.BEETLE,
-    MobType.BUBBLE,
-    MobType.CENTIPEDE,
-    MobType.CENTIPEDE_EVIL,
-    MobType.CENTIPEDE_DESERT,
 ] as const;

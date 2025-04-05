@@ -7,9 +7,14 @@ export default class Mob extends Entity {
     public static readonly STARFISH_LEG_AMOUNT = 5;
 
     /**
-     * Current starfish leg distance.
+     * Starfish leg distance.
      */
     public legD: Array<number> = Array(Mob.STARFISH_LEG_AMOUNT).fill(150);
+
+    /**
+     * Angle index of sandstorm hexagon.
+     */
+    public sandstormAngleIndex: number = 0;
 
     // Menu statics
     public moveSpeed: number;

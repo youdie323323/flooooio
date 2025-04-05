@@ -11,12 +11,15 @@ const (
 )
 
 var EachMobBehaviorDefinition = map[MobType]MobBehavior{
-	MobTypeStarfish:  AggressiveBehavior,
+	MobTypeBee:    NeutralBehavior,
+	MobTypeSpider: AggressiveBehavior,
+
 	MobTypeBeetle:    AggressiveBehavior,
-	MobTypeBubble:    PassiveBehavior,
+	MobTypeSandstorm: PassiveBehavior,
+
+	MobTypeStarfish:  AggressiveBehavior,
 	MobTypeJellyfish: CautionBehavior,
-	MobTypeBee:       NeutralBehavior,
-	MobTypeSpider:    AggressiveBehavior,
+	MobTypeBubble:    PassiveBehavior,
 	MobTypeSponge:    PassiveBehavior,
 
 	MobTypeCentipede:       NoneBehavior,

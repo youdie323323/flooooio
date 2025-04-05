@@ -161,16 +161,17 @@ var MobSpeed = map[native.MobType]float64{
 	native.MobTypeBee:    2.8,
 	native.MobTypeSpider: 4,
 
+	native.MobTypeBeetle:    2.8,
+	native.MobTypeSandstorm: 4,
+
+	native.MobTypeStarfish:  2.8,
+	native.MobTypeJellyfish: 1,
+	native.MobTypeBubble:    0,
+	native.MobTypeSponge:    0,
+
 	native.MobTypeCentipede:       2.8,
 	native.MobTypeCentipedeEvil:   3.2,
 	native.MobTypeCentipedeDesert: 11.2,
-
-	native.MobTypeBeetle: 2.8,
-
-	native.MobTypeSponge:    0,
-	native.MobTypeBubble:    0,
-	native.MobTypeJellyfish: 1,
-	native.MobTypeStarfish:  2.8,
 }
 
 func (m *Mob) ShouldShakeAngle() bool {

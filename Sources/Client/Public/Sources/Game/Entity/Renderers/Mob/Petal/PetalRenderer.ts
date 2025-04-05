@@ -2,8 +2,6 @@ import type { ColorCode } from "../../../../../../../../Shared/Utils/Color";
 import type Mob from "../../../Mob";
 import type { RenderingContext } from "../../RendererRenderingContext";
 import AbstractMobRenderer from "../MobRenderer";
-import PETAL_PROFILES from "../../../../../../../../Shared/Native/petal_profiles.json";
-import { PetalType } from "../../../../../../../../Shared/Entity/Statics/EntityType";
 
 const TAU = Math.PI * 2;
 
@@ -11,7 +9,6 @@ export default abstract class AbstractPetalRenderer extends AbstractMobRenderer 
     override render(context: RenderingContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);
-
     }
 
     protected drawBasicLike(

@@ -25,18 +25,21 @@ var MobSpawnRules = map[native.Biome]map[native.MobType]MobSpawnRule{
 	native.BiomeGarden: {
 		native.MobTypeBee:           {SpawnAfter: 1, Weight: 100},
 		native.MobTypeSpider:        {SpawnAfter: 3, Weight: 100},
+
 		native.MobTypeCentipede:     {SpawnAfter: 2, Weight: 1},
 		native.MobTypeCentipedeEvil: {SpawnAfter: 3, Weight: 1},
 	},
 	native.BiomeDesert: {
 		native.MobTypeBeetle:          {SpawnAfter: 2, Weight: 100},
+		native.MobTypeSandstorm:       {SpawnAfter: 1, Weight: 100},
+
 		native.MobTypeCentipedeDesert: {SpawnAfter: 1, Weight: 1},
 	},
 	native.BiomeOcean: {
-		native.MobTypeBubble:    {SpawnAfter: 1, Weight: 1},
-		native.MobTypeSponge:    {SpawnAfter: 1, Weight: 1},
 		native.MobTypeStarfish:  {SpawnAfter: 3, Weight: 1},
 		native.MobTypeJellyfish: {SpawnAfter: 3, Weight: 1},
+		native.MobTypeBubble:    {SpawnAfter: 1, Weight: 1},
+		native.MobTypeSponge:    {SpawnAfter: 1, Weight: 1},
 	},
 }
 

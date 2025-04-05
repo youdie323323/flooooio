@@ -1,32 +1,79 @@
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-canvas.width = 500;
-canvas.height = 500;
 
-function drawShape(radius, angle) {
+let i = 0;
+
+(function loop() {
+    i++;
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     ctx.save();
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate(angle);
 
-    ctx.lineCap = ctx.lineJoin = "round";
-    
+    ctx.lineJoin = "round";
+    ctx.lineWidth = 6;
+
+    ctx.save();
+
+    ctx.rotate(i * 0.02);
+
+    ctx.rotate(Math.PI / 4);
+    ctx.scale(-0.95, 0.95);
+
+    ctx.strokeStyle = "#D5C7A6";
+    ctx.fillStyle = "#D5C7A6";
     ctx.beginPath();
-    ctx.moveTo(radius, 0);
-    for (let i = 0; i < Math.PI * 2; i += Math.PI * 2 / 15) {
-        ctx.quadraticCurveTo(
-            Math.cos(i) * radius * 1.2, Math.sin(i) * radius * 1.2,
-            Math.cos(i + Math.PI * 1 / 15) * radius * 0.9, Math.sin(i + Math.PI * 1 / 15) * radius * 0.9,
-        );
-    }
-    ctx.fillStyle = "#efc99b";
-    ctx.fill();
-    ctx.strokeStyle = "#c1a37d";
-    ctx.lineWidth = radius / 6;
-    ctx.stroke();
+    ctx.moveTo(28, 0);
+    ctx.lineTo(14, 24.24871253967285);
+    ctx.lineTo(-14, 24.24871063232422);
+    ctx.lineTo(-28, 0);
+    ctx.lineTo(-14, -24.24871253967285);
+    ctx.lineTo(14, -24.24871253967285);
     ctx.closePath();
-    
-    ctx.restore();
-}
+    ctx.fill();
+    ctx.stroke();
 
-drawShape(100, Math.PI / 6);
+    ctx.restore();
+
+    ctx.save();
+
+    ctx.rotate(i * -0.03);
+
+    ctx.strokeStyle = "#BFB295";
+    ctx.fillStyle = "#BFB295";
+    ctx.beginPath();
+    ctx.moveTo(18, 0);
+    ctx.lineTo(9, 15.588458061218262);
+    ctx.lineTo(-9, 15.588457107543945);
+    ctx.lineTo(-18, 0);
+    ctx.lineTo(-9, -15.588458061218262);
+    ctx.lineTo(9, -15.588458061218262);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.restore();
+
+    ctx.save();
+
+    ctx.rotate(i * 0.04);
+
+    ctx.strokeStyle = "#A99E84";
+    ctx.fillStyle = "#A99E84";
+    ctx.beginPath();
+    ctx.moveTo(8, 0);
+    ctx.lineTo(4, 6.928203582763672);
+    ctx.lineTo(-4, 6.928203105926514);
+    ctx.lineTo(-8, 0);
+    ctx.lineTo(-4, -6.928203582763672);
+    ctx.lineTo(4, -6.928203582763672);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.restore();
+
+    ctx.restore();
+
+    requestAnimationFrame(loop);
+})();

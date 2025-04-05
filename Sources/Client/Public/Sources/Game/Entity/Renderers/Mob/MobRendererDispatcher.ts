@@ -15,15 +15,18 @@ import MobRendererJellyfish from "./MobRendererJellyfish";
 import MobRendererSpider from "./MobRendererSpider";
 import MobRendererStarfish from "./MobRendererStarfish";
 import MobRendererSponge from "./MobRendererSponge";
+import MobRendererSandstorm from "./MobRendererSandstorm";
 
 const centipedeRenderer = new MobRendererCentipede();
 
-const MOB_TYPE_TO_RENDERER_MAPPING = {
+const MOB_RENDERERS = {
     // Mob
     
     [MobType.SPIDER]: new MobRendererSpider,
-    [MobType.BEETLE]: new MobRendererBeetle,
     [MobType.BEE]: new MobRendererBee,
+
+    [MobType.BEETLE]: new MobRendererBeetle,
+    [MobType.SANDSTORM]: new MobRendererSandstorm,
 
     [MobType.STARFISH]: new MobRendererStarfish,
     [MobType.JELLYFISH]: new MobRendererJellyfish,
@@ -33,7 +36,7 @@ const MOB_TYPE_TO_RENDERER_MAPPING = {
     [MobType.CENTIPEDE]: centipedeRenderer,
     [MobType.CENTIPEDE_DESERT]: centipedeRenderer,
     [MobType.CENTIPEDE_EVIL]: centipedeRenderer,
-
+    
     // Petal
     
     [PetalType.BASIC]: new PetalRendererBasic,
@@ -53,7 +56,7 @@ export default class MobRendererDispatcher extends Renderer<Mob> {
 
         ctx.rotate(entity.angle);
 
-        const renderer = MOB_TYPE_TO_RENDERER_MAPPING[entity.type];
+        const renderer = MOB_RENDERERS[entity.type];
 
         renderer.render(context);
     }

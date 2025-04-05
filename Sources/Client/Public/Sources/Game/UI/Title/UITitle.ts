@@ -219,7 +219,7 @@ export default class UITitle extends AbstractUI {
                             });
                         }, 250);
                     }, 800);
-                }, 50);
+                }, 25);
             }, 1500);
         }, 1);
     }

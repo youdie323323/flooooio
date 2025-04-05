@@ -9,6 +9,7 @@ const (
 	MobTypeSpider
 
 	MobTypeBeetle
+	MobTypeSandstorm
 
 	MobTypeStarfish
 	MobTypeJellyfish
@@ -18,7 +19,7 @@ const (
 	MobTypeCentipede
 	MobTypeCentipedeEvil
 	MobTypeCentipedeDesert
-
+	
 	PetalTypeBasic PetalType = iota
 	PetalTypeFaster
 	PetalTypeEggBeetle
@@ -31,6 +32,7 @@ var MobTypeValues = []MobType{
 	MobTypeSpider,
 
 	MobTypeBeetle,
+	MobTypeSandstorm,
 
 	MobTypeStarfish,
 	MobTypeJellyfish,
