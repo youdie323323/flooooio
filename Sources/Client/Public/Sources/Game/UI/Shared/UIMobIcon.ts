@@ -31,10 +31,17 @@ export default class UIMobIcon extends StaticPanelContainer {
             // No dynamic rendering
             if (property === "moveCounter") return 0;
 
+            // No sandstorm angle move
+            if (property === "sandstormAngle") return 0;
+
             // No dynamic leg distance
             if (property === "legD") return UIMobIcon.ICON_MOB_LEG_DISTANCE;
 
             return Reflect.get(target, property, receiver);
+        },
+        // Disable write
+        set: function () {
+            return false;
         },
     } as const satisfies ProxyHandler<Mob>;
 
@@ -44,8 +51,6 @@ export default class UIMobIcon extends StaticPanelContainer {
         public mobInstance: Mob,
 
         public amountAccumulator: number = 1,
-
-        private transparent: MaybePointerLike<boolean> = true,
     ) {
         super(
             layoutOptions,
@@ -94,18 +99,7 @@ export default class UIMobIcon extends StaticPanelContainer {
     }
 
     override render(ctx: CanvasRenderingContext2D): void {
-        const computedTransparent = Component.computePointerLike(this.transparent);
-
-        if (computedTransparent) {
-            ctx.save();
-
-            // Slightly transparent as same as florr.io
-            ctx.globalAlpha = 0.9;
-
-            super.render(ctx);
-
-            ctx.restore();
-        } else super.render(ctx);
+        super.render(ctx);
 
         const amount = this.amountAccumulator;
         if (amount === 1) return;

@@ -164,8 +164,6 @@ export default class UITitleInventoryButton extends createTitleBottomLeftToolTip
                                     ),
 
                                     1,
-
-                                    () => !icon.isDragging,
                                 );
 
                                 return icon;

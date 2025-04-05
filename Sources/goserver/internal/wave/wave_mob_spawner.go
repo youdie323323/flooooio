@@ -23,15 +23,18 @@ type MobSpawnRule struct {
 
 var MobSpawnRules = map[native.Biome]map[native.MobType]MobSpawnRule{
 	native.BiomeGarden: {
-		native.MobTypeBee:           {SpawnAfter: 1, Weight: 100},
-		native.MobTypeSpider:        {SpawnAfter: 3, Weight: 100},
+		native.MobTypeBee:    {SpawnAfter: 1, Weight: 50},
+		native.MobTypeSpider: {SpawnAfter: 3, Weight: 50},
 
 		native.MobTypeCentipede:     {SpawnAfter: 2, Weight: 1},
 		native.MobTypeCentipedeEvil: {SpawnAfter: 3, Weight: 1},
 	},
 	native.BiomeDesert: {
-		native.MobTypeBeetle:          {SpawnAfter: 2, Weight: 100},
-		native.MobTypeSandstorm:       {SpawnAfter: 1, Weight: 100},
+		native.MobTypeBeetle:       {SpawnAfter: 2, Weight: 50},
+		native.MobTypeSandstorm:    {SpawnAfter: 1, Weight: 50},
+		native.MobTypeCactus:       {SpawnAfter: 1, Weight: 50},
+		native.MobTypeScorpion:     {SpawnAfter: 3, Weight: 50},
+		native.MobTypeLadybugShiny: {SpawnAfter: 3, Weight: 50},
 
 		native.MobTypeCentipedeDesert: {SpawnAfter: 1, Weight: 1},
 	},

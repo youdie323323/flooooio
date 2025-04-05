@@ -4,6 +4,9 @@ export const enum MobType {
 
     BEETLE,
     SANDSTORM,
+    CACTUS,
+    SCORPION,
+    LADYBUG_SHINY,
 
     STARFISH,
     JELLYFISH,
@@ -22,6 +25,7 @@ export const enum PetalType {
     EGG_BEETLE,
     BUBBLE,
     YIN_YANG,
+    STICK,
 }
 
 export const MOB_TYPES: Array<MobType> = [
@@ -30,6 +34,9 @@ export const MOB_TYPES: Array<MobType> = [
 
     MobType.BEETLE,
     MobType.SANDSTORM,
+    MobType.CACTUS,
+    MobType.SCORPION,
+    MobType.LADYBUG_SHINY,
 
     MobType.STARFISH,
     MobType.JELLYFISH,
@@ -47,4 +54,5 @@ export const PETAL_TYPES: Array<PetalType> = [
     PetalType.EGG_BEETLE,
     PetalType.BUBBLE,
     PetalType.YIN_YANG,
+    PetalType.STICK,
 ] as const;

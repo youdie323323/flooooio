@@ -14,11 +14,7 @@ export default class Mob extends Entity {
     /**
      * Angle index of sandstorm hexagon.
      */
-    public sandstormAngleIndex: number = 0;
-
-    // Menu statics
-    public moveSpeed: number;
-    public angleSpeed: number;
+    public sandstormAngle: number = 0;
 
     constructor(
         id: number,

@@ -19,9 +19,10 @@ async function watch() {
         minify: true,
         // For transform using declrations / auto-accessor, https://esbuild.github.io/content-types/#javascript
         target: 'es2022',
-        outfile: obfuscateEnabled
-            ? prebuildedFileName
-            : "./build/statics/client.js",
+        outfile:
+            obfuscateEnabled
+                ? prebuildedFileName
+                : "./build/statics/client.js",
         legalComments: "none",
         tsconfig: "./tsconfig.json",
         loader: { ".svg": "text" },
@@ -81,5 +82,5 @@ async function watch() {
     });
 }
 
-// IMPORTANT: this call MUST NOT have an `await`.
+// IMPORTANT: this call MUST NOT have an `await`
 watch();

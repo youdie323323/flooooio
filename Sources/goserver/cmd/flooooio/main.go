@@ -41,124 +41,44 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Slots: wave.StaticPlayerPetalSlots{
 				Surface: []wave.StaticPetal{
 					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityMythic,
 					},
 					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityMythic,
 					},
 					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityMythic,
 					},
 					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityMythic,
 					},
 					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityMythic,
 					},
 					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityMythic,
 					},
 					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityMythic,
 					},
 					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityMythic,
 					},
 					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityMythic,
 					},
 					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeFaster,
-						Rarity: native.RarityUltra,
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityMythic,
 					},
 				},
 				Bottom: []wave.StaticPetal{

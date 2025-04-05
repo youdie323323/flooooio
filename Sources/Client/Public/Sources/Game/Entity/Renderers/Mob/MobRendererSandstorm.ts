@@ -1,3 +1,4 @@
+import type { ColorCode } from "../../../../../../../Shared/Utils/Color";
 import type Mob from "../../Mob";
 import type { RenderingContext } from "../RendererRenderingContext";
 import AbstractMobRenderer from "./MobRenderer";
@@ -7,12 +8,19 @@ export default class MobRendererSandstorm extends AbstractMobRenderer {
         // Non-recursive renderer
         // super.render(context);
 
-        const { ctx, entity } = context;
+        const { ctx, entity, isSpecimen } = context;
 
-        const i = entity.sandstormAngleIndex++;
+        const i =
+            isSpecimen
+                ? 0
+                : entity.sandstormAngle++;
 
         const scale = entity.size / 20;
         ctx.scale(scale, scale);
+
+        const outerColor = (entity.isPet ? "#ffe763" : "#D5C7A6") satisfies ColorCode;
+        const middleColor = (entity.isPet ? "#e6d059" : "#BFB295") satisfies ColorCode;
+        const innerColor = (entity.isPet ? "#cfbb50" : "#A99E84") satisfies ColorCode;
 
         ctx.lineJoin = "round";
         ctx.lineWidth = 6;
@@ -24,9 +32,7 @@ export default class MobRendererSandstorm extends AbstractMobRenderer {
         ctx.rotate(Math.PI / 4);
         ctx.scale(-0.95, 0.95);
 
-        ctx.strokeStyle = "#D5C7A6";
-        ctx.fillStyle = "#D5C7A6";
-        
+        ctx.fillStyle = ctx.strokeStyle = this.calculateDamageEffectColor(context, outerColor);
         ctx.beginPath();
         ctx.moveTo(28, 0);
         ctx.lineTo(14, 24.24871253967285);
@@ -44,8 +50,7 @@ export default class MobRendererSandstorm extends AbstractMobRenderer {
 
         ctx.rotate(i * -0.03);
 
-        ctx.strokeStyle = "#BFB295";
-        ctx.fillStyle = "#BFB295";
+        ctx.fillStyle = ctx.strokeStyle = this.calculateDamageEffectColor(context, middleColor);
         ctx.beginPath();
         ctx.moveTo(18, 0);
         ctx.lineTo(9, 15.588458061218262);
@@ -63,8 +68,7 @@ export default class MobRendererSandstorm extends AbstractMobRenderer {
 
         ctx.rotate(i * 0.04);
 
-        ctx.strokeStyle = "#A99E84";
-        ctx.fillStyle = "#A99E84";
+        ctx.fillStyle = ctx.strokeStyle = this.calculateDamageEffectColor(context, innerColor);
         ctx.beginPath();
         ctx.moveTo(8, 0);
         ctx.lineTo(4, 6.928203582763672);

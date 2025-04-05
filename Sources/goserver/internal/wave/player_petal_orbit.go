@@ -83,6 +83,10 @@ func doPetalSpin(
 	i int,
 	j int,
 ) {
+	if slices.Contains(UNCOLLIDABLE_PETAL_TYPES, pe.Type) {
+		return
+	}
+
 	var spinTargets []Node
 
 	{
@@ -134,7 +138,7 @@ func doPetalSpin(
 
 		spinAngleIdx := calcTableIndex(pss[i][j])
 
-		mobToSpinDesiredSize := mobToSpin.GetDesiredSize()
+		mobToSpinDesiredSize := mobToSpin.GetDesiredSize() * 1.1
 
 		targetX := mobToSpin.X + lazyCosTable[spinAngleIdx]*mobToSpinDesiredSize
 		targetY := mobToSpin.Y + lazySinTable[spinAngleIdx]*mobToSpinDesiredSize

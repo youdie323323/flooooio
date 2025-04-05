@@ -1,5 +1,5 @@
 {
-    "10": {
+    "14": {
         "0": {
             "damage": 10,
             "health": 10,
@@ -52,7 +52,7 @@
             "radius": 20
         }
     },
-    "11": {
+    "15": {
         "0": {
             "damage": 8,
             "health": 5,
@@ -126,7 +126,7 @@
             "radius": 20
         }
     },
-    "12": {
+    "16": {
         "0": {
             "damage": 0,
             "health": 25,
@@ -200,7 +200,7 @@
             "radius": 40
         }
     },
-    "13": {
+    "17": {
         "0": {
             "damage": 0,
             "health": 1,
@@ -274,7 +274,7 @@
             "radius": 20
         }
     },
-    "14": {
+    "18": {
         "0": {
             "damage": 90,
             "health": 90,
@@ -324,6 +324,80 @@
         },
         "collision": {
             "fraction": 20,
+            "radius": 20
+        }
+    },
+    "19": {
+        "0": {
+            "damage": 0,
+            "health": 0,
+            "petalReload": 99,
+            "count": 1,
+            "extra": {
+                "usageReload": 99
+            }
+        },
+        "1": {
+            "damage": 0,
+            "health": 0,
+            "petalReload": 99,
+            "count": 1,
+            "extra": {
+                "usageReload": 99
+            }
+        },
+        "2": {
+            "damage": 0,
+            "health": 0,
+            "petalReload": 99,
+            "count": 1,
+            "extra": {
+                "usageReload": 99
+            }
+        },
+        "3": {
+            "damage": 27,
+            "health": 270,
+            "petalReload": 4,
+            "count": 1,
+            "extra": {
+                "usageReload": 2.5
+            }
+        },
+        "4": {
+            "damage": 81,
+            "health": 810,
+            "petalReload": 4,
+            "count": 1,
+            "extra": {
+                "usageReload": 3.7
+            }
+        },
+        "5": {
+            "damage": 243,
+            "health": 2430,
+            "petalReload": 4,
+            "count": 1,
+            "extra": {
+                "usageReload": 10.7
+            }
+        },
+        "6": {
+            "damage": 729,
+            "health": 7290,
+            "petalReload": 4,
+            "count": 1,
+            "extra": {
+                "usageReload": 22.3
+            }
+        },
+        "i18n": {
+            "name": "Stick",
+            "fullName": "Stick",
+            "description": "I DONT KNOW SHITTTT"
+        },
+        "collision": {
+            "fraction": 10,
             "radius": 20
         }
     }

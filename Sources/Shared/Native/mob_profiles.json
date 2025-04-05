@@ -118,6 +118,162 @@
     },
     "3": {
         "0": {
+            "health": 125,
+            "bodyDamage": 40
+        },
+        "1": {
+            "health": 469,
+            "bodyDamage": 120
+        },
+        "2": {
+            "health": 1687.5,
+            "bodyDamage": 360
+        },
+        "3": {
+            "health": 6750,
+            "bodyDamage": 1080
+        },
+        "4": {
+            "health": 50625,
+            "bodyDamage": 3240
+        },
+        "5": {
+            "health": 303750,
+            "bodyDamage": 9720
+        },
+        "6": {
+            "health": 9125000,
+            "bodyDamage": 29160
+        },
+        "baseSize": 30,
+        "i18n": {
+            "name": "Sandstorm",
+            "description": "Darude (1999)"
+        },
+        "collision": {
+            "fraction": 20,
+            "radius": 22
+        }
+    },
+    "4": {
+        "0": {
+            "health": 75,
+            "bodyDamage": 5
+        },
+        "1": {
+            "health": 281.4,
+            "bodyDamage": 15
+        },
+        "2": {
+            "health": 1012.5,
+            "bodyDamage": 45
+        },
+        "3": {
+            "health": 4050,
+            "bodyDamage": 135
+        },
+        "4": {
+            "health": 30375,
+            "bodyDamage": 405
+        },
+        "5": {
+            "health": 182250,
+            "bodyDamage": 1215
+        },
+        "6": {
+            "health": 5475000,
+            "bodyDamage": 3654
+        },
+        "baseSize": 30,
+        "i18n": {
+            "name": "Cactus",
+            "description": "Avoid touching it, it hurts"
+        },
+        "collision": {
+            "fraction": 30,
+            "radius": 35
+        }
+    },
+    "5": {
+        "0": {
+            "health": 100,
+            "bodyDamage": 15
+        },
+        "1": {
+            "health": 375.2,
+            "bodyDamage": 45
+        },
+        "2": {
+            "health": 1350,
+            "bodyDamage": 135
+        },
+        "3": {
+            "health": 5400,
+            "bodyDamage": 405
+        },
+        "4": {
+            "health": 40500,
+            "bodyDamage": 1215
+        },
+        "5": {
+            "health": 243000,
+            "bodyDamage": 3654
+        },
+        "6": {
+            "health": 7300000,
+            "bodyDamage": 10935
+        },
+        "baseSize": 30,
+        "i18n": {
+            "name": "Scorpion",
+            "description": "IT STINGS"
+        },
+        "collision": {
+            "fraction": 30,
+            "radius": 27.5
+        }
+    },
+    "6": {
+        "0": {
+            "health": 87.5,
+            "bodyDamage": 10
+        },
+        "1": {
+            "health": 328.3,
+            "bodyDamage": 30
+        },
+        "2": {
+            "health": 1181.25,
+            "bodyDamage": 90
+        },
+        "3": {
+            "health": 4725,
+            "bodyDamage": 270
+        },
+        "4": {
+            "health": 35437.5,
+            "bodyDamage": 810
+        },
+        "5": {
+            "health": 243000,
+            "bodyDamage": 2430
+        },
+        "6": {
+            "health": 6387500,
+            "bodyDamage": 7290
+        },
+        "baseSize": 30,
+        "i18n": {
+            "name": "Shiny Ladybug",
+            "description": "Shiny, cute and mostly harmless."
+        },
+        "collision": {
+            "fraction": 30,
+            "radius": 25
+        }
+    },
+    "7": {
+        "0": {
             "health": 150,
             "bodyDamage": 20
         },
@@ -155,7 +311,7 @@
             "radius": 100
         }
     },
-    "4": {
+    "8": {
         "0": {
             "health": 125,
             "bodyDamage": 25,
@@ -222,7 +378,7 @@
             "radius": 20
         }
     },
-    "5": {
+    "9": {
         "0": {
             "health": 0.5,
             "bodyDamage": 5
@@ -261,7 +417,7 @@
             "radius": 20
         }
     },
-    "6": {
+    "10": {
         "0": {
             "health": 100,
             "bodyDamage": 10
@@ -300,7 +456,7 @@
             "radius": 20
         }
     },
-    "7": {
+    "11": {
         "0": {
             "health": 25,
             "bodyDamage": 10
@@ -339,7 +495,7 @@
             "radius": 40
         }
     },
-    "8": {
+    "12": {
         "0": {
             "health": 25,
             "bodyDamage": 10
@@ -378,7 +534,7 @@
             "radius": 40
         }
     },
-    "9": {
+    "13": {
         "0": {
             "health": 25,
             "bodyDamage": 10

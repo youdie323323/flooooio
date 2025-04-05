@@ -123,12 +123,12 @@ func NewWaveRoom(b native.Biome, v WaveRoomVisibility) *WaveRoom {
 	wr.WavePool = NewWavePool(wr, &WaveData{
 		Biome: b,
 
-		Progress:         60,
+		Progress:         36,
 		ProgressTimer:    0,
 		ProgressRedTimer: 0,
 		ProgressIsRed:    false,
 
-		MapRadius: 2000,
+		MapRadius: 1000,
 	})
 
 	// Start sending update packet

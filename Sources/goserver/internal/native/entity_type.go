@@ -10,6 +10,9 @@ const (
 
 	MobTypeBeetle
 	MobTypeSandstorm
+	MobTypeCactus
+	MobTypeScorpion
+	MobTypeLadybugShiny
 
 	MobTypeStarfish
 	MobTypeJellyfish
@@ -25,6 +28,7 @@ const (
 	PetalTypeEggBeetle
 	PetalTypeBubble
 	PetalTypeYinYang
+	PetalTypeStick
 )
 
 var MobTypeValues = []MobType{
@@ -33,6 +37,9 @@ var MobTypeValues = []MobType{
 
 	MobTypeBeetle,
 	MobTypeSandstorm,
+	MobTypeCactus,
+	MobTypeScorpion,
+	MobTypeLadybugShiny,
 
 	MobTypeStarfish,
 	MobTypeJellyfish,

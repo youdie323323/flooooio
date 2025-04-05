@@ -116,8 +116,12 @@ func (p *Player) SwapPetal(
 				}
 
 				// Remove summoned mob
-				if petal.SummonedPet != nil && !petal.SummonedPet.WasEliminated(wp) {
-					wp.SafeRemovePetal(*petal.SummonedPet.Id)
+				if petal.SummonedPets != nil {
+					for _, p := range petal.SummonedPets {
+						if !p.WasEliminated(wp) {
+							wp.SafeRemovePetal(*p.Id)
+						}
+					}
 				}
 			}
 		}

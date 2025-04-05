@@ -16,6 +16,10 @@ import MobRendererSpider from "./MobRendererSpider";
 import MobRendererStarfish from "./MobRendererStarfish";
 import MobRendererSponge from "./MobRendererSponge";
 import MobRendererSandstorm from "./MobRendererSandstorm";
+import MobRendererCactus from "./MobRendererCactus";
+import MobRendererScorpion from "./MobRendererScorpion";
+import MobRendererShinyLadybug from "./MobRendererShinyLadybug";
+import PetalRendererStick from "./Petal/PetalRendererStick";
 
 const centipedeRenderer = new MobRendererCentipede();
 
@@ -27,6 +31,9 @@ const MOB_RENDERERS = {
 
     [MobType.BEETLE]: new MobRendererBeetle,
     [MobType.SANDSTORM]: new MobRendererSandstorm,
+    [MobType.CACTUS]: new MobRendererCactus,
+    [MobType.SCORPION]: new MobRendererScorpion,
+    [MobType.LADYBUG_SHINY]: new MobRendererShinyLadybug,
 
     [MobType.STARFISH]: new MobRendererStarfish,
     [MobType.JELLYFISH]: new MobRendererJellyfish,
@@ -44,6 +51,7 @@ const MOB_RENDERERS = {
     [PetalType.BUBBLE]: new PetalRendererBubble,
     [PetalType.EGG_BEETLE]: new PetalRendererEgg,
     [PetalType.YIN_YANG]: new PetalRendererYinYang,
+    [PetalType.STICK]: new PetalRendererStick,
 } as const satisfies Record<MobType | PetalType, Renderer<Mob>>;
 
 export default class MobRendererDispatcher extends Renderer<Mob> {

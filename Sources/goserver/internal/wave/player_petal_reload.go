@@ -10,6 +10,7 @@ import (
 var UsageReloadPetalTypes = []native.PetalType{
 	native.PetalTypeEggBeetle,
 	native.PetalTypeBubble,
+	native.PetalTypeStick,
 }
 
 func (p *Player) PlayerPetalReload(wp *WavePool) {
@@ -35,9 +36,24 @@ func (p *Player) PlayerPetalReload(wp *WavePool) {
 
 			// Petal breaked, start reloading
 			if pe.WasEliminated(wp) {
-				// If summoned mob is not dead, not reloading
-				if pe.SummonedPet != nil && !pe.SummonedPet.WasEliminated(wp) {
-					continue
+				switch pe.Type {
+				case native.PetalTypeEggBeetle:
+					{
+						isSummonedPetsNotEliminated := false
+
+						for _, p := range pe.SummonedPets {
+							if p != nil && !p.WasEliminated(wp) {
+								isSummonedPetsNotEliminated = true
+
+								break
+							}
+						}
+
+						// If summoned pets is not eliminated, not reloading
+						if isSummonedPetsNotEliminated {
+							continue
+						}
+					}
 				}
 
 				peReloadCooldown := reloadCooldownGrid[i]

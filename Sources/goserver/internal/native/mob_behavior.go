@@ -14,8 +14,11 @@ var EachMobBehaviorDefinition = map[MobType]MobBehavior{
 	MobTypeBee:    NeutralBehavior,
 	MobTypeSpider: AggressiveBehavior,
 
-	MobTypeBeetle:    AggressiveBehavior,
-	MobTypeSandstorm: PassiveBehavior,
+	MobTypeBeetle:       AggressiveBehavior,
+	MobTypeSandstorm:    AggressiveBehavior,
+	MobTypeCactus:       PassiveBehavior,
+	MobTypeScorpion:     AggressiveBehavior,
+	MobTypeLadybugShiny: NeutralBehavior,
 
 	MobTypeStarfish:  AggressiveBehavior,
 	MobTypeJellyfish: CautionBehavior,

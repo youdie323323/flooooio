@@ -13,8 +13,9 @@ const (
 	bubbleVelocityAttenuation = .8
 )
 
-var eggTypeMapping = map[native.PetalType]native.MobType{
+var summonTypeMapping = map[native.PetalType]native.MobType{
 	native.PetalTypeEggBeetle: native.MobTypeBeetle,
+	native.PetalTypeStick:     native.MobTypeSandstorm,
 }
 
 func (p *Player) PlayerPetalConsume(wp *WavePool) {
@@ -29,6 +30,8 @@ func (p *Player) PlayerPetalConsume(wp *WavePool) {
 
 	totalForceX := 0.
 	totalForceY := 0.
+
+	usageCooldownGrid := p.Slots.UsageCooldownGrid
 
 	for i, petals := range p.Slots.Surface {
 		if petals == nil {
@@ -50,18 +53,21 @@ func (p *Player) PlayerPetalConsume(wp *WavePool) {
 
 			now := time.Now()
 
-			if !(now.After(p.Slots.UsageCooldownGrid[i][j]) || now.Equal(p.Slots.UsageCooldownGrid[i][j])) {
+			usageCooldown := usageCooldownGrid[i]
+
+			if !(now.After(usageCooldown[j]) || now.Equal(usageCooldown[j])) {
 				continue
 			}
 
 			switch petal.Type {
 			case native.PetalTypeEggBeetle:
 				{
-					// Remove mob as it consumed
+					// Remove petal as it consumed
 					wp.RemovePetal(*petal.Id)
 
-					petal.SummonedPet = wp.GenerateMob(
-						eggTypeMapping[petal.Type],
+					// Its not really multiple beetles because removing petal have usage cooldown resetted
+					petal.SummonedPets = append(petal.SummonedPets, wp.GenerateMob(
+						summonTypeMapping[petal.Type],
 
 						max(native.RarityCommon, min(native.RarityMythic, petal.Rarity-1)),
 
@@ -72,7 +78,28 @@ func (p *Player) PlayerPetalConsume(wp *WavePool) {
 
 						nil,
 						false,
-					)
+					))
+				}
+
+			case native.PetalTypeStick:
+				{
+					// TODO: add limit
+
+					petal.SummonedPets = append(petal.SummonedPets, wp.GenerateMob(
+						summonTypeMapping[petal.Type],
+
+						max(native.RarityCommon, min(native.RarityMythic, petal.Rarity-1)),
+
+						petal.X,
+						petal.Y,
+
+						p,
+
+						nil,
+						false,
+					))
+
+					usageCooldown[j] = time.Time{}
 				}
 
 			case native.PetalTypeBubble:
@@ -81,7 +108,7 @@ func (p *Player) PlayerPetalConsume(wp *WavePool) {
 						continue
 					}
 
-					// Remove mob as it consumed
+					// Remove petal as it consumed
 					wp.RemovePetal(*petal.Id)
 
 					dx := p.X - petal.X

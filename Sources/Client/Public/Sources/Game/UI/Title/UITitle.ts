@@ -40,7 +40,17 @@ function randomFloat(min: number, max: number) {
     return Math.random() * (max - min + 1) + min;
 }
 
-const backgroundEntities: Set<Mob> = new Set();
+type BackgroundMob = Mob & {
+    moveSpeed: number;
+    angleSpeed: number;
+};
+
+const SPAWNABLE_BACKGROUND_ENTITY_TYPES = [
+    PETAL_TYPES,
+    // MOB_TYPES,
+].flat();
+
+const backgroundEntities: Set<BackgroundMob> = new Set();
 
 function drawRoundedPolygon(
     ctx: CanvasRenderingContext2D,
@@ -957,12 +967,7 @@ export default class UITitle extends AbstractUI {
         });
 
         if (Date.now() - this.lastBackgroundEntitySpawn > 250) {
-            const spawnableMobTypes = [
-                PETAL_TYPES,
-                // MOB_TYPES,
-            ].flat();
-
-            const backgroundEntityType = spawnableMobTypes[Math.floor(Math.random() * spawnableMobTypes.length)];
+            const backgroundEntityType = SPAWNABLE_BACKGROUND_ENTITY_TYPES[Math.floor(Math.random() * SPAWNABLE_BACKGROUND_ENTITY_TYPES.length)];
 
             const backgroundEntity = new Mob(
                 -1,
@@ -975,7 +980,7 @@ export default class UITitle extends AbstractUI {
                 Rarity.COMMON,
                 false,
                 false,
-            );
+            ) as BackgroundMob;
 
             if (isPetal(backgroundEntityType)) {
                 backgroundEntity.nSize = backgroundEntity.size = randomFloat(0.7, 1.8) * 5;

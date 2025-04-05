@@ -1,5 +1,7 @@
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+import type { ColorCode } from "../../../../../../../../Shared/Utils/Color";
+import type Mob from "../../../Mob";
+import type { RenderingContext } from "../../RendererRenderingContext";
+import AbstractPetalRenderer from "./PetalRenderer";
 
 const stickBodyStroke = (function () {
     const path = new Path2D();
@@ -75,22 +77,21 @@ const stickBody = (function () {
     return path;
 })();
 
-(function loop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+export default class PetalRendererStick extends AbstractPetalRenderer {
+    override render(context: RenderingContext<Mob>): void {
+        // Non-recursive renderer
+        // super.render(context);
 
-    ctx.lineJoin = "round";
+        const { ctx, entity } = context;
 
-    ctx.save();
+        const scale = entity.size / 10;
+        ctx.scale(scale, scale);
 
-    ctx.translate(100, 100);
-    ctx.scale(5, 5);
+        ctx.lineJoin = "round";
 
-    ctx.fillStyle = "#654A19";
-    ctx.fill(stickBodyStroke, "nonzero");
-    ctx.fillStyle = "#7D5B1F";
-    ctx.fill(stickBody, "nonzero");
-
-    ctx.restore();
-
-    requestAnimationFrame(loop);
-})();
+        ctx.fillStyle = "#654A19";
+        ctx.fill(stickBodyStroke, "nonzero");
+        ctx.fillStyle = "#7D5B1F";
+        ctx.fill(stickBody, "nonzero");
+    }
+}

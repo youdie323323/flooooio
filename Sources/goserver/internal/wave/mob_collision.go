@@ -2,11 +2,16 @@ package wave
 
 import (
 	"flooooio/internal/native"
+	"slices"
 )
 
 const (
 	mobToMobPushMultiplier = 0.5
 )
+
+var UNCOLLIDABLE_PETAL_TYPES = []native.PetalType{
+	native.PetalTypeStick,
+}
 
 func (m *Mob) MobCollision(wp *WavePool) {
 	if m.WasEliminated(wp) {
@@ -90,6 +95,10 @@ func (m *Mob) MobCollision(wp *WavePool) {
 
 				// Petal doesnt damaged/knockbacked to pet
 				if m.PetMaster != nil {
+					return true
+				}
+
+				if slices.Contains(UNCOLLIDABLE_PETAL_TYPES, nearEntity.Type) {
 					return true
 				}
 

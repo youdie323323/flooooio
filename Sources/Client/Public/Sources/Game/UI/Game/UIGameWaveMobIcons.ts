@@ -10,7 +10,7 @@ interface MobIconMatch {
     rarity: boolean;
 }
 
-export default class UIGameWaveEnemyIcons extends StaticHContainer<StaticVContainer<UIMobIcon>> {
+export default class UIGameWaveMobIcons extends StaticHContainer<StaticVContainer<UIMobIcon>> {
     private static readonly SPACING = 10;
     private static readonly BORDER_PADDING = 1;
     private static readonly VERTICAL_GAP = 6;
@@ -19,7 +19,7 @@ export default class UIGameWaveEnemyIcons extends StaticHContainer<StaticVContai
         super(
             layoutOptions,
             true, // Lerp enabled
-            UIMobIcon.ICON_SIZE + UIGameWaveEnemyIcons.SPACING + UIGameWaveEnemyIcons.BORDER_PADDING,
+            UIMobIcon.ICON_SIZE + UIGameWaveMobIcons.SPACING + UIGameWaveMobIcons.BORDER_PADDING,
         );
     }
 
@@ -53,7 +53,7 @@ export default class UIGameWaveEnemyIcons extends StaticHContainer<StaticVContai
 
             true, // Lerp enabled
 
-            UIGameWaveEnemyIcons.VERTICAL_GAP,
+            UIGameWaveMobIcons.VERTICAL_GAP,
             true,
         );
     }

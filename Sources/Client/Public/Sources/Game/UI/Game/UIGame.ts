@@ -21,7 +21,7 @@ import type { AnimationConfigOf, ComponentCloser, FakeSetVisibleToggleType } fro
 import { AnimationType, renderPossibleComponent } from "../Layout/Components/Component";
 import { CoordinatedStaticSpace, StaticSpace, StaticTranslucentPanelContainer, StaticVContainer } from "../Layout/Components/WellKnown/Container";
 import { InlineRendering } from "../Layout/Extensions/ExtensionInlineRendering";
-import UIGameWaveEnemyIcons from "./UIGameWaveEnemyIcons";
+import UIGameWaveMobIcons from "./UIGameWaveMobIcons";
 import UIGameInventory from "./UIGameInventory";
 import TilesetRenderer, { BIOME_TILESETS } from "../../Utils/Tiled/TilesetRenderer";
 import TilesetWavedRenderer from "../../Utils/Tiled/TilesetWavedRenderer";
@@ -50,7 +50,7 @@ export default class UIGame extends AbstractUI {
     private players: Map<number, Player> = new Map();
     private mobs: Map<number, Mob> = new Map();
 
-    private waveEnemyIcons: UIGameWaveEnemyIcons;
+    private waveEnemyIcons: UIGameWaveMobIcons;
 
     private inventory: UIGameInventory;
 
@@ -835,7 +835,7 @@ export default class UIGame extends AbstractUI {
             this.commandsContainer.setVisible(false, null, false);
         }
 
-        this.addComponent(this.waveEnemyIcons = new (InlineRendering(UIGameWaveEnemyIcons))(
+        this.addComponent(this.waveEnemyIcons = new (InlineRendering(UIGameWaveMobIcons))(
             () => ({
                 x: -(this.waveEnemyIcons.w / 2),
                 y: 58,

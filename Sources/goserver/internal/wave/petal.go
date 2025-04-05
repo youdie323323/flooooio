@@ -11,8 +11,8 @@ type Petal struct {
 
 	Rarity native.Rarity
 
-	Master      *Player
-	SummonedPet *Mob
+	Master       *Player
+	SummonedPets []*Mob
 
 	SpinningOnMob bool
 
@@ -62,8 +62,8 @@ func NewPetal(
 
 		Rarity: rarity,
 
-		Master:      master,
-		SummonedPet: nil,
+		Master:       master,
+		SummonedPets: make([]*Mob, 0),
 
 		SpinningOnMob: false,
 
@@ -88,6 +88,7 @@ func (p *Petal) OnUpdateTick(wp *WavePool) {
 	// Unneeded for petal
 	// m.EntityCoordinateMovement(wp)
 
+	p.PetalSpecialAngle(wp)
 	p.PetalElimination(wp)
 
 	{ // Base onUpdateTick
@@ -101,7 +102,6 @@ func (p *Petal) OnUpdateTick(wp *WavePool) {
 
 func (p *Petal) Dispose() {
 	p.Master = nil
-	p.SummonedPet = nil
 }
 
 // StaticPetal represents static data of Mob.

@@ -30,14 +30,15 @@ export default class MobRendererBeetle extends AbstractMobRenderer {
         const scale = entity.size / 40;
         ctx.scale(scale, scale);
 
-        // Draw horn
-        {
-            ctx.fillStyle = ctx.strokeStyle = this.calculateDamageEffectColor(context, "#333333");
+        { // Draw beak
+            ctx.fillStyle = ctx.strokeStyle = "#333333";
             ctx.lineCap = ctx.lineJoin = "round";
-            
+
             for (let i = 0; i < 2; i++) {
                 const relative = i === 0 ? 1 : -1;
+
                 ctx.save();
+
                 // Maybe relative * 10 better
                 ctx.translate(34, relative * 12);
                 ctx.rotate(Math.sin(entity.moveCounter * 1.24) * 0.1 * relative);
@@ -48,6 +49,7 @@ export default class MobRendererBeetle extends AbstractMobRenderer {
                 ctx.closePath();
                 ctx.fill();
                 ctx.stroke();
+
                 ctx.restore();
             }
         }
@@ -55,7 +57,11 @@ export default class MobRendererBeetle extends AbstractMobRenderer {
         {
             ctx.lineWidth = 7;
 
-            const skinColor = entity.isPet ? "#ffe667" : "#8f5db0";
+            const skinColor =
+                entity.isPet
+                    ? "#ffe667"
+                    : "#8f5db0";
+                    
             ctx.fillStyle = this.calculateDamageEffectColor(context, skinColor);
             ctx.fill(beetleBodyPath);
             // Arc points are same color with this
