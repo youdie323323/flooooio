@@ -88,25 +88,28 @@ export default class MobRendererShinyLadybug extends AbstractMobRenderer {
 
         ctx.lineJoin = "round";
 
-        ctx.fillStyle = "#0E0E0E";
+        const bodyColor = this.calculateDamageEffectColor(context, "#EBEB34");
+        const bodyStrokeColor = this.calculateDamageEffectColor(context, "#0E0E0E");
+        const bodyStrokeStrokeColor = this.calculateDamageEffectColor(context, "#111111");
 
+        ctx.fillStyle = bodyStrokeColor;
         ctx.beginPath();
         ctx.arc(15, 0, 18.5, 0, TAU, false);
         ctx.fill();
 
-        ctx.fillStyle = "#111111";
+        ctx.fillStyle = bodyStrokeStrokeColor;
         ctx.beginPath();
         ctx.arc(15, 0, 11.5, 0, TAU, false);
         ctx.fill();
 
-        ctx.fillStyle = "#EBEB34";
+        ctx.fillStyle = bodyColor;
         ctx.fill(shinyLadybugBody, "nonzero");
 
         ctx.save();
         ctx.clip(shinyLadybugBody);
 
-        ctx.fillStyle = "#111111";
-        ctx.strokeStyle = "#0E0E0E";
+        ctx.fillStyle = bodyStrokeStrokeColor;
+        ctx.strokeStyle = bodyStrokeColor;
 
         for (let i = 0; i < LADYBUG_NUM_SPOTS; i++) {
             const [rx, ry, rRadius] = seededRandom3(entity.id, i);
@@ -121,7 +124,7 @@ export default class MobRendererShinyLadybug extends AbstractMobRenderer {
 
         ctx.restore();
 
-        ctx.fillStyle = "#BEBE2A";
+        ctx.fillStyle = this.calculateDamageEffectColor(context, "#BEBE2A");
         ctx.fill(shinyLadybugBodyStroke, "nonzero");
     }
 }

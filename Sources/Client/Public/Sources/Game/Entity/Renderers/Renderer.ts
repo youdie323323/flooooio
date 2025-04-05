@@ -25,14 +25,14 @@ export default class Renderer<T extends Entity> {
      * Render the entity.
      */
     public render(context: RenderingContext<T>): void {
-        const { ctx, entity: { x, y }, isSpecimen } = context;
+        const { ctx, entity: { x, y }, entity, isSpecimen } = context;
 
         ctx.translate(x, y);
 
         if (!isSpecimen) {
-            this.drawEntityStatus(context);
-
             this.applyDeathAnimation(context);
+
+            if (!(entity instanceof Mob && isPetal(entity.type))) this.drawEntityStatus(context);
         }
     }
 
@@ -80,6 +80,7 @@ export default class Renderer<T extends Entity> {
     protected applyDeathAnimation({ ctx, entity: { isDead, deadT } }: RenderingContext<T>) {
         if (isDead) {
             const sinWavedDeadT = Math.sin(deadT * Math.PI / 2);
+
             const scale = 1 + sinWavedDeadT;
 
             ctx.scale(scale, scale);
@@ -88,10 +89,7 @@ export default class Renderer<T extends Entity> {
     }
 
     protected drawEntityStatus({ ctx, entity }: RenderingContext<T>) {
-        if (
-            entity.hpAlpha <= 0 ||
-            entity instanceof Mob && isPetal(entity.type)
-        ) return;
+        if (entity.hpAlpha <= 0) return;
 
         if (
             entity instanceof Player &&
@@ -100,8 +98,6 @@ export default class Renderer<T extends Entity> {
             entity.id !== uiCtx.currentCtx.waveSelfId
         ) {
             ctx.save();
-
-            if (entity.isDead) ctx.globalAlpha *= 1 - Math.sin(entity.deadT * Math.PI / 2);
 
             ctx.translate(0, -(entity.size + 10));
             ctx.scale(0.2, 0.2);
@@ -164,6 +160,7 @@ export default class Renderer<T extends Entity> {
 
             if (entity.redHealth > 0) {
                 setGlobalAlpha(entity.redHealth);
+
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
                 ctx.lineTo(HP_BAR_MAX_WIDTH * entity.redHealth, 0);
@@ -174,6 +171,7 @@ export default class Renderer<T extends Entity> {
 
             if (entity.health > 0) {
                 setGlobalAlpha(entity.health);
+
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
                 ctx.lineTo(HP_BAR_MAX_WIDTH * entity.health, 0);

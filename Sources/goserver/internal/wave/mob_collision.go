@@ -10,7 +10,8 @@ const (
 )
 
 var UNCOLLIDABLE_PETAL_TYPES = []native.PetalType{
-	native.PetalTypeStick,
+	// In wave era stick doesnt have infinity hp
+	// native.PetalTypeStick,
 }
 
 func (m *Mob) MobCollision(wp *WavePool) {

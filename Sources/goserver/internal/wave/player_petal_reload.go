@@ -63,14 +63,18 @@ func (p *Player) PlayerPetalReload(wp *WavePool) {
 				} else if now.After(peReloadCooldown[j]) || now.Equal(peReloadCooldown[j]) {
 					// If cooldown elapsed
 
+					// We overriding petal so save summoned pets
+					tempSummonedPets := pe.SummonedPets
+
+					// Dispose pe summoned pets because we no longer have this in memory
+					pe.SummonedPets = nil
+
 					s[j] = wp.GeneratePetal(
 						pe.Type,
 
 						pe.Rarity,
 
 						// Make it player coordinate so its looks like spawning from player body
-						// TODO: It may not appear to be coming from the player, because the setInterval for sending update packets and
-						// the setInterval for update are different. To solve this, delay PlayerPetalOrbit
 						p.X,
 						p.Y,
 
@@ -78,6 +82,8 @@ func (p *Player) PlayerPetalReload(wp *WavePool) {
 
 						false,
 					)
+
+					s[j].SummonedPets = tempSummonedPets
 
 					// Zero
 					peReloadCooldown[j] = time.Time{}

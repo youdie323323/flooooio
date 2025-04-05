@@ -84,3 +84,7 @@ func (m *Mob) MobSpecialMovement(wp *WavePool) {
 		m.IsSpecialMoving = false
 	}
 }
+
+func (m *Mob) ShouldShakeAngle() bool {
+	return m.Type == native.MobTypeBee
+}

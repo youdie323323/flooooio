@@ -85,6 +85,10 @@ const stickBody = (function () {
     ctx.translate(100, 100);
     ctx.scale(5, 5);
 
+    ctx.beginPath();
+    ctx.arc(0, 0, 10, 0, Math.PI * 2);
+    ctx.fill();
+
     ctx.fillStyle = "#654A19";
     ctx.fill(stickBodyStroke, "nonzero");
     ctx.fillStyle = "#7D5B1F";

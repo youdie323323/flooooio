@@ -55,15 +55,23 @@ func ResetBindings(wp *WavePool, p *Player) {
 	p.Slots.UsageCooldownGrid = GeneratePetalCooldownGrid(len(p.Slots.Surface))
 }
 
+func (p *Player) onEliminate(wp *WavePool) {
+	p.IsDead = true
+
+	p.Health = 0
+
+	// Stop move
+	p.Magnitude = 0
+
+	ResetBindings(wp, p)
+}
+
 func (p *Player) PlayerElimination(wp *WavePool) {
 	if !p.IsDead && 0 >= p.Health {
-		p.IsDead = true
-
-		p.Health = 0
-
-		// Stop move
-		p.Magnitude = 0
-
-		ResetBindings(wp, p)
+		p.onEliminate(wp)
 	}
+}
+
+func (p *Player) InstantlyKill(wp *WavePool) {
+	p.onEliminate(wp)
 }

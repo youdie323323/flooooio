@@ -176,7 +176,3 @@ var MobSpeed = map[native.MobType]float64{
 	native.MobTypeCentipedeEvil:   3.2,
 	native.MobTypeCentipedeDesert: 11.2,
 }
-
-func (m *Mob) ShouldShakeAngle() bool {
-	return m.Type == native.MobTypeBee
-}

@@ -49,15 +49,15 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 						Rarity: native.RarityMythic,
 					},
 					{
-						Type:   native.PetalTypeEggBeetle,
+						Type:   native.PetalTypeStick,
 						Rarity: native.RarityMythic,
 					},
 					{
-						Type:   native.PetalTypeEggBeetle,
+						Type:   native.PetalTypeStick,
 						Rarity: native.RarityMythic,
 					},
 					{
-						Type:   native.PetalTypeEggBeetle,
+						Type:   native.PetalTypeStick,
 						Rarity: native.RarityMythic,
 					},
 				},

@@ -19,15 +19,17 @@ export default class PetalRendererYinYang extends AbstractPetalRenderer {
         const scale = entity.size / 20;
         ctx.scale(scale, scale);
 
-        const clipFill = (us: ColorCode, ut: ColorCode) => {
-            using _guard = this.guard(ctx);
+        const clipFill = (fillColor: ColorCode, strokeColor: ColorCode) => {
+            ctx.save();
 
             ctx.clip();
             ctx.lineCap = "round";
-            ctx.fillStyle = this.calculateDamageEffectColor(context, us);
-            ctx.strokeStyle = this.calculateDamageEffectColor(context, ut);
+            ctx.fillStyle = this.calculateDamageEffectColor(context, fillColor);
+            ctx.strokeStyle = this.calculateDamageEffectColor(context, strokeColor);
             ctx.fill();
             ctx.stroke();
+
+            ctx.restore();
         };
 
         ctx.lineCap = "round";
