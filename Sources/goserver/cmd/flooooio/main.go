@@ -41,43 +41,23 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Slots: wave.StaticPlayerPetalSlots{
 				Surface: []wave.StaticPetal{
 					{
-						Type:   native.PetalTypeStick,
+						Type:   native.PetalTypeEggBeetle,
 						Rarity: native.RarityMythic,
 					},
 					{
-						Type:   native.PetalTypeStick,
+						Type:   native.PetalTypeEggBeetle,
 						Rarity: native.RarityMythic,
 					},
 					{
-						Type:   native.PetalTypeStick,
+						Type:   native.PetalTypeEggBeetle,
 						Rarity: native.RarityMythic,
 					},
 					{
-						Type:   native.PetalTypeStick,
+						Type:   native.PetalTypeEggBeetle,
 						Rarity: native.RarityMythic,
 					},
 					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityMythic,
-					},
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityMythic,
-					},
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityMythic,
-					},
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityMythic,
-					},
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityMythic,
-					},
-					{
-						Type:   native.PetalTypeStick,
+						Type:   native.PetalTypeEggBeetle,
 						Rarity: native.RarityMythic,
 					},
 				},

@@ -34,23 +34,21 @@ func (p *Player) PlayerPetalReload(wp *WavePool) {
 				continue
 			}
 
+			// Remove eliminated pets
+			for i, pet := range pe.SummonedPets {
+				if pet != nil && pet.WasEliminated(wp) {
+					pe.SummonedPets = slices.Delete(pe.SummonedPets, i, i+1)
+				}
+			}
+
 			// Petal breaked, start reloading
 			if pe.WasEliminated(wp) {
 				switch pe.Type {
 				case native.PetalTypeEggBeetle:
 					{
-						isSummonedPetsNotEliminated := false
-
-						for _, p := range pe.SummonedPets {
-							if p != nil && !p.WasEliminated(wp) {
-								isSummonedPetsNotEliminated = true
-
-								break
-							}
-						}
-
-						// If summoned pets is not eliminated, not reloading
-						if isSummonedPetsNotEliminated {
+						// If summoned pets is not eliminated, not reload
+						// Already deleted eliminated pets, so just check the length
+						if len(pe.SummonedPets) > 0 {
 							continue
 						}
 					}
