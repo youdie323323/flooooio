@@ -439,6 +439,8 @@ func (wp *WavePool) calculateUpdatePacketSize() int {
 }
 
 func (wp *WavePool) createUpdatePacket() []byte {
+	wp.mu.Lock()
+
 	buf := make([]byte, wp.calculateUpdatePacketSize())
 	at := 0
 
@@ -472,6 +474,8 @@ func (wp *WavePool) createUpdatePacket() []byte {
 		at += 2
 
 		wp.playerPool.Range(func(id EntityId, player *Player) bool {
+			player.Mu.RLock()
+
 			binary.LittleEndian.PutUint32(buf[at:], id)
 			at += 4
 
@@ -514,6 +518,8 @@ func (wp *WavePool) createUpdatePacket() []byte {
 
 			buf[at] = bFlags
 			at++
+			
+			player.Mu.RUnlock()
 
 			return true
 		})
@@ -608,6 +614,8 @@ func (wp *WavePool) createUpdatePacket() []byte {
 
 		clear(wp.eliminatedEntityIDs)
 	}
+
+	wp.mu.Unlock()
 
 	return buf
 }

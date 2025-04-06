@@ -303,7 +303,9 @@ func (w *WaveRoom) StartWave() {
 func (w *WaveRoom) EndWave() {
 	w.state = RoomStateEnded
 
-	w.WavePool.EndWave()
+	if w.WavePool != nil {
+		w.WavePool.EndWave()
+	}
 }
 
 func (w *WaveRoom) Dispose() {

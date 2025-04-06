@@ -9,7 +9,7 @@ func getCameraTargets(wp *WavePool) []Node {
 
 	{ // Add camera targets
 		mobs := wp.GetMobsWithCondition(func(m *Mob) bool { return m.PetMaster == nil })
-		players := wp.GetPlayersWithCondition(func(p2 *Player) bool { return /* p2.Id != p.Id && */ !p2.IsDead })
+		players := wp.GetPlayersWithCondition(func(p2 *Player) bool { return !p2.IsDead })
 
 		mobsLen := len(mobs)
 		playersLen := len(players)
@@ -31,31 +31,22 @@ func getCameraTargets(wp *WavePool) []Node {
 const playerDeadCameraSwitchAfterMS = 500
 
 func (p *Player) PlayerDeadCamera(wp *WavePool) {
-	if !p.IsDead {
-		return
-	}
+    if !p.IsDead {
+        return
+    }
 
-	isFindable := p.DeadCameraTarget == nil || // Theres no DeadCameraTarget
-		IsDeadNode(wp, p.DeadCameraTarget) // Camera target dead, reroll target
+    isFindable := p.DeadCameraTarget == nil || IsDeadNode(wp, p.DeadCameraTarget)
 
-	if isFindable {
-		if p.DeadCameraTimer == nil {
-			p.DeadCameraTimer = time.AfterFunc(playerDeadCameraSwitchAfterMS*time.Millisecond, func() {
-				defer func() {
-					// Set camera timer to nil
-					p.DeadCameraTimer = nil
-				}()
+    if isFindable {
+        now := time.Now()
 
-				// Dont change camera if player is not dead
-				if !p.IsDead {
-					return
-				}
-
-				p.DeadCameraTarget = FindNearestEntity(p, getCameraTargets(wp))
-			})
-		}
-	} else {
-		p.X = p.DeadCameraTarget.GetX()
-		p.Y = p.DeadCameraTarget.GetY()
-	}
+        if now.Sub(p.LastDeadCameraUpdate) >= playerDeadCameraSwitchAfterMS*time.Millisecond {
+            p.DeadCameraTarget = FindNearestEntity(p, getCameraTargets(wp))
+			
+            p.LastDeadCameraUpdate = now
+        }
+    } else {
+        p.X = p.DeadCameraTarget.GetX()
+        p.Y = p.DeadCameraTarget.GetY()
+    }
 }

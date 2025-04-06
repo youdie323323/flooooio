@@ -16,6 +16,8 @@ type Player struct {
 
 	BodyDamage float64
 
+	// Mood a current mood of player.
+	// If you want to read/write, use Mu.
 	Mood native.Mood
 
 	IsDead bool
@@ -31,7 +33,7 @@ type Player struct {
 	// player_dead_camera.go struct field definitions
 	DeadCameraTarget Node
 
-	DeadCameraTimer *time.Timer
+	LastDeadCameraUpdate time.Time
 
 	// player_petal_orbit.go struct field definitions
 	OrbitRotation         float64
@@ -83,13 +85,21 @@ const PlayerSpeedMultiplier = 3
 
 // UpdateMovement update the movement.
 func (p *Player) UpdateMovement(angle uint8, magnitude uint8) {
+	p.Mu.Lock()
+
 	p.Angle = float64(angle)
 	p.Magnitude = float64(magnitude) * PlayerSpeedMultiplier
+
+	p.Mu.Unlock()
 }
 
 // UpdateMovement update the movement.
 func (p *Player) ChangeMood(m native.Mood) {
+	p.Mu.Lock()
+
 	p.Mood = m
+
+	p.Mu.Unlock()
 }
 
 // UpdateMovement update the movement.
@@ -98,7 +108,23 @@ func (p *Player) SwapPetal(
 
 	at int,
 ) {
-	if !p.IsDead && len(p.Slots.Surface) >= at && len(p.Slots.Bottom) >= at && p.Slots.Bottom[at] != nil {
+	// TODO: spam this while moving have dead lock
+
+	p.Mu.Lock()
+
+	if p.IsDead {
+		return
+	}
+
+	if at < 0 || at >= len(p.Slots.Surface) || at >= len(p.Slots.Bottom) {
+		return
+	}
+
+	if p.Slots.Bottom[at] == nil {
+		return
+	}
+
+	{
 		p.Slots.ReloadCooldownGrid[at] = GeneratePetalCooldown()
 		p.Slots.UsageCooldownGrid[at] = GeneratePetalCooldown()
 
@@ -129,9 +155,13 @@ func (p *Player) SwapPetal(
 		p.Slots.Surface[at] = p.Slots.Bottom[at]
 		p.Slots.Bottom[at] = temp
 	}
+
+	p.Mu.Unlock()
 }
 
 func (p *Player) OnUpdateTick(wp *WavePool) {
+	p.Mu.Lock()
+
 	p.EntityCoordinateMovement(wp)
 	p.PlayerCoordinateBoundary(wp)
 	p.PlayerElimination(wp)
@@ -144,6 +174,8 @@ func (p *Player) OnUpdateTick(wp *WavePool) {
 
 	{ // Base onUpdateTick
 	}
+
+	p.Mu.Unlock()
 }
 
 func (p *Player) Dispose() {
@@ -188,11 +220,6 @@ func (p *Player) Dispose() {
 	}
 
 	p.DeadCameraTarget = nil
-
-	if p.DeadCameraTimer != nil {
-		p.DeadCameraTimer.Stop()
-		p.DeadCameraTimer = nil
-	}
 
 	p.OrbitHistoryX = nil
 	p.OrbitHistoryY = nil
@@ -258,7 +285,7 @@ func NewPlayer(
 
 		DeadCameraTarget: nil,
 
-		DeadCameraTimer: nil,
+		LastDeadCameraUpdate: time.Time{},
 
 		OrbitRotation:         0,
 		OrbitHistoryIndex:     0,

@@ -3,6 +3,7 @@ package wave
 import (
 	"math"
 	"math/rand/v2"
+	"sync"
 )
 
 type EntityId = uint32
@@ -27,6 +28,8 @@ type Entity struct {
 	// Health is health of entity.
 	// Range will be [0, 1] float range.
 	Health float64
+
+	Mu sync.RWMutex
 }
 
 // RandomAngle returns random angle of entity.

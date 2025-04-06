@@ -60,6 +60,8 @@ func (m *Mob) WasEliminated(wp *WavePool) bool {
 }
 
 func (m *Mob) OnUpdateTick(wp *WavePool) {
+	m.Mu.Lock()
+
 	m.EntityCoordinateMovement(wp)
 	m.MobCoordinateBoundary(wp)
 	m.MobElimination(wp)
@@ -72,9 +74,12 @@ func (m *Mob) OnUpdateTick(wp *WavePool) {
 
 	{ // Base onUpdateTick
 	}
+
+	m.Mu.Unlock()
 }
 
 func (m *Mob) Dispose() {
+
 	m.TargetEntity = nil
 
 	m.LastAttackedEntity = nil

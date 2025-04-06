@@ -85,6 +85,8 @@ func (p *Petal) WasEliminated(wp *WavePool) bool {
 }
 
 func (p *Petal) OnUpdateTick(wp *WavePool) {
+	p.Mu.Lock()
+
 	// Unneeded for petal
 	// m.EntityCoordinateMovement(wp)
 
@@ -98,6 +100,8 @@ func (p *Petal) OnUpdateTick(wp *WavePool) {
 		p.X += p.Velocity[0]
 		p.Y += p.Velocity[1]
 	}
+	
+	p.Mu.Unlock()
 }
 
 func (p *Petal) Dispose() {

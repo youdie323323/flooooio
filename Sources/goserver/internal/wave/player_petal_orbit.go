@@ -212,6 +212,19 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool) {
 
 	spinRotationDelta := calculateRotationDelta(defaultRotateSpeed*spinAngleCoefficient, clockwise)
 
+	var targetRadius float64
+	if isAngry {
+		targetRadius = 90
+	} else {
+		if isSad {
+			targetRadius = 25
+		} else {
+			targetRadius = 40
+		}
+	}
+
+	targetRadius += ((p.Size / PlayerSize) - 1) * PlayerCollision.Radius
+
 	for i, petals := range surface {
 		if petals == nil {
 			continue
@@ -231,24 +244,13 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool) {
 			}
 		}
 
-		var targetRadius float64
+		var springForce float64
 		if slices.Contains(UsageReloadPetalTypes, firstPetal.Type) {
-			targetRadius = 40
+			springForce = (40 - p.OrbitPetalRadii[i]) * radiusSpringStrength
 		} else {
-			if isAngry {
-				targetRadius = 90
-			} else {
-				if isSad {
-					targetRadius = 25
-				} else {
-					targetRadius = 40
-				}
-			}
+			springForce = (targetRadius - p.OrbitPetalRadii[i]) * radiusSpringStrength
 		}
 
-		targetRadius += ((p.Size / PlayerSize) - 1) * PlayerCollision.Radius
-
-		springForce := (targetRadius - p.OrbitPetalRadii[i]) * radiusSpringStrength
 		p.OrbitRadiusVelocities[i] = p.OrbitRadiusVelocities[i]*radiusFriction + springForce
 		p.OrbitPetalRadii[i] += p.OrbitRadiusVelocities[i]
 

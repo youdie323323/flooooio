@@ -15,10 +15,6 @@ var ValidMoodFlags = []Mood{
 	MoodAngry | MoodSad,
 }
 
-func (m *Mood) Set(mood Mood) {
-	*m |= mood
-}
-
 func (m Mood) IsSet(mood Mood) bool {
 	return m&mood != 0
 }
