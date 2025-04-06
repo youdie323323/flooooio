@@ -18,6 +18,7 @@ const (
 	MobTypeJellyfish
 	MobTypeBubble
 	MobTypeSponge
+	MobTypeShell
 
 	MobTypeCentipede
 	MobTypeCentipedeEvil
@@ -45,6 +46,7 @@ var MobTypeValues = []MobType{
 	MobTypeJellyfish,
 	MobTypeBubble,
 	MobTypeSponge,
+	MobTypeShell,
 
 	MobTypeCentipede,
 	MobTypeCentipedeEvil,

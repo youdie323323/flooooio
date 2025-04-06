@@ -83,6 +83,9 @@ export default class MobRendererShinyLadybug extends AbstractMobRenderer {
 
         const { ctx, entity } = context;
 
+        // Change angle
+        ctx.rotate(entity.angle);
+
         const scale = entity.size / 30;
         ctx.scale(scale, scale);
 

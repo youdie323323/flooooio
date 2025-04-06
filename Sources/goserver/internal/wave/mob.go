@@ -38,8 +38,8 @@ func (m *Mob) Speed() float64 {
 	return MobSpeed[m.Type]
 }
 
-// GetDesiredSize return desired size (display size).
-func (m *Mob) GetDesiredSize() float64 {
+// DesiredSize return desired size (display size).
+func (m *Mob) DesiredSize() float64 {
 	profile := native.MobProfiles[m.Type]
 	collision := profile.Collision
 
@@ -171,6 +171,7 @@ var MobSpeed = map[native.MobType]float64{
 	native.MobTypeJellyfish: 1,
 	native.MobTypeBubble:    0,
 	native.MobTypeSponge:    0,
+	native.MobTypeShell:    0,
 
 	native.MobTypeCentipede:       2.8,
 	native.MobTypeCentipedeEvil:   3.2,

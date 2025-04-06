@@ -43,6 +43,7 @@ var MobSpawnRules = map[native.Biome]map[native.MobType]MobSpawnRule{
 		native.MobTypeJellyfish: {SpawnAfter: 3, Weight: 1},
 		native.MobTypeBubble:    {SpawnAfter: 1, Weight: 1},
 		native.MobTypeSponge:    {SpawnAfter: 1, Weight: 1},
+		native.MobTypeShell:     {SpawnAfter: 1, Weight: 1},
 	},
 }
 

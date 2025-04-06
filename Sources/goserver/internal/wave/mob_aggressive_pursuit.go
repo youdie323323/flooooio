@@ -2,6 +2,7 @@ package wave
 
 import (
 	"math"
+	"math/rand/v2"
 
 	"flooooio/internal/native"
 )
@@ -52,11 +53,11 @@ func TurnAngleToTarget(thisAngle, dx, dy float64) float64 {
 const mobDetectionRange = 15.
 
 func getDetectionRange(m *Mob) float64 {
-	return mobDetectionRange * m.GetDesiredSize()
+	return mobDetectionRange * m.DesiredSize()
 }
 
 func getLoseRange(m *Mob) float64 {
-	return (mobDetectionRange * 2) * m.GetDesiredSize()
+	return (mobDetectionRange * 2) * m.DesiredSize()
 }
 
 func getTargetNodes(wp *WavePool, m *Mob) []Node {
@@ -195,6 +196,13 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 			}
 		}
 
+	case native.ChaoticBehavior:
+		{
+			m.Angle = math.Mod(m.Angle+generateValleyDistribution(-25, 25), 255)
+
+			m.Magnitude = m.Speed() * 255 * (1. + (15.-1.)*math.Pow(rand.Float64(), 2))
+		}
+
 	case native.PassiveBehavior:
 		{
 			m.Magnitude = 0
@@ -220,4 +228,16 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 			}
 		}
 	}
+}
+
+func generateValleyDistribution(min, max float64) float64 {
+    for {
+        x := min + rand.Float64()*(max-min)
+
+        probability := math.Abs(x) / max
+
+        if rand.Float64() < probability {
+            return x
+        }
+    }
 }

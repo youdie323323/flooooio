@@ -27,6 +27,9 @@ export default class MobRendererBeetle extends AbstractMobRenderer {
 
         const { ctx, entity } = context;
 
+        // Change angle
+        ctx.rotate(entity.angle);
+
         const scale = entity.size / 40;
         ctx.scale(scale, scale);
 
@@ -61,7 +64,7 @@ export default class MobRendererBeetle extends AbstractMobRenderer {
                 entity.isPet
                     ? "#ffe667"
                     : "#8f5db0";
-                    
+
             ctx.fillStyle = this.calculateDamageEffectColor(context, skinColor);
             ctx.fill(beetleBodyPath);
             // Arc points are same color with this

@@ -6,7 +6,8 @@ const (
 	AggressiveBehavior MobBehavior = iota // AggressiveBehavior behave aggressively.
 	PassiveBehavior                       // PassiveBehavior behave passively.
 	CautionBehavior                       // CautionBehavior behave cautionary.
-	NeutralBehavior                       // CautionBehavior behave neutrality.
+	NeutralBehavior                       // NeutralBehavior behave neutrality.
+	ChaoticBehavior                       // ChaoticBehavior behave chaotic.
 	NoneBehavior                          // NoneBehavior do nothings.
 )
 
@@ -15,7 +16,7 @@ var EachMobBehaviorDefinition = map[MobType]MobBehavior{
 	MobTypeSpider: AggressiveBehavior,
 
 	MobTypeBeetle:       AggressiveBehavior,
-	MobTypeSandstorm:    AggressiveBehavior,
+	MobTypeSandstorm:    ChaoticBehavior,
 	MobTypeCactus:       PassiveBehavior,
 	MobTypeScorpion:     AggressiveBehavior,
 	MobTypeLadybugShiny: NeutralBehavior,
@@ -24,6 +25,7 @@ var EachMobBehaviorDefinition = map[MobType]MobBehavior{
 	MobTypeJellyfish: CautionBehavior,
 	MobTypeBubble:    PassiveBehavior,
 	MobTypeSponge:    PassiveBehavior,
+	MobTypeShell:     PassiveBehavior,
 
 	MobTypeCentipede:       NoneBehavior,
 	MobTypeCentipedeDesert: NeutralBehavior,

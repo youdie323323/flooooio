@@ -21,6 +21,7 @@ export default class FlowerRendererNormal extends AbstractFlowerRenderer {
             ctx.fillStyle = this.calculateDamageEffectColor(context, "#ffe763");
             ctx.lineWidth = 2.75;
             ctx.strokeStyle = this.calculateDamageEffectColor(context, "#cfbb50");
+            
             ctx.beginPath();
             ctx.arc(0, 0, 25, 0, TAU);
             ctx.fill();

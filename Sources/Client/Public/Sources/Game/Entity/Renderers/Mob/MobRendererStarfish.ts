@@ -12,6 +12,9 @@ export default class MobRendererStarfish extends AbstractMobRenderer {
 
         const { ctx, entity, isSpecimen } = context;
 
+        // Change angle
+        ctx.rotate(entity.angle);
+
         const scale = entity.size / 120;
         ctx.scale(scale, scale);
 

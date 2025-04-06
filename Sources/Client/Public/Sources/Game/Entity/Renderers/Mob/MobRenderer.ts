@@ -13,6 +13,9 @@ export default abstract class AbstractMobRenderer extends Renderer<Mob> {
     protected drawBubble(context: RenderingContext<Mob>, isPetal: boolean) {
         const { ctx, entity } = context;
 
+        // Change angle
+        ctx.rotate(entity.angle);
+
         const scale = entity.size / 20;
         ctx.scale(scale, scale);
 

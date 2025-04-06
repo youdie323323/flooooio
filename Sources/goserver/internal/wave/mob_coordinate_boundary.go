@@ -16,7 +16,7 @@ func (m *Mob) MobCoordinateBoundary(wp *WavePool) {
 
 	mapRadius := float64(wp.wd.MapRadius)
 
-	worldRadius := mapRadius - m.GetDesiredSize()
+	worldRadius := mapRadius - m.DesiredSize()
 
 	dx := m.X - float64(mapRadius)
 	dy := m.Y - float64(mapRadius)

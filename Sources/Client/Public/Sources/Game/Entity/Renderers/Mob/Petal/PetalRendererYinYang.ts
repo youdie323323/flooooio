@@ -16,6 +16,9 @@ export default class PetalRendererYinYang extends AbstractPetalRenderer {
 
         const { ctx, entity } = context;
 
+        // Change angle
+        ctx.rotate(entity.angle);
+
         const scale = entity.size / 20;
         ctx.scale(scale, scale);
 

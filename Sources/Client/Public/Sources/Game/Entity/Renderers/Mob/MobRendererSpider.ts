@@ -48,6 +48,9 @@ export default class MobRendererSpider extends AbstractMobRenderer {
 
         const { ctx, entity, isSpecimen } = context;
 
+        // Change angle
+        ctx.rotate(entity.angle);
+
         const scale = entity.size / (
             isSpecimen
                 ? 60

@@ -18,26 +18,30 @@ func (m *Mob) MobSpecialMovement(wp *WavePool) {
 	if IsBody(wp, m) {
 		return
 	}
-
-	// Follows the player when the player moves away from this (pet) for a certain distance
-	// Dont follows if targetting other mob
 	if m.PetMaster != nil && m.TargetEntity == nil {
-		dx := m.PetMaster.X - m.X
-		dy := m.PetMaster.Y - m.Y
-		distanceToParent := math.Hypot(dx, dy)
+		switch m.Type {
+		// Follows the player when the player moves away from this (pet) for a certain distance
+		// Dont follows if targetting other mob
+		case native.MobTypeBeetle:
+			{
+				dx := m.PetMaster.X - m.X
+				dy := m.PetMaster.Y - m.Y
+				distanceToParent := math.Hypot(dx, dy)
 
-		if distanceToParent > m.Size*2 {
-			m.Angle = TurnAngleToTarget(
-				m.Angle,
-				dx,
-				dy,
-			)
+				if distanceToParent > m.Size*2 {
+					m.Angle = TurnAngleToTarget(
+						m.Angle,
+						dx,
+						dy,
+					)
 
-			m.Magnitude = m.Speed() * 255
+					m.Magnitude = m.Speed() * 255
 
-			m.PetGoingToMaster = true
-		} else {
-			m.PetGoingToMaster = false
+					m.PetGoingToMaster = true
+				} else {
+					m.PetGoingToMaster = false
+				}
+			}
 		}
 	} else {
 		m.PetGoingToMaster = false

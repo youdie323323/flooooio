@@ -20,6 +20,7 @@ import MobRendererCactus from "./MobRendererCactus";
 import MobRendererScorpion from "./MobRendererScorpion";
 import MobRendererShinyLadybug from "./MobRendererShinyLadybug";
 import PetalRendererStick from "./Petal/PetalRendererStick";
+import MobRendererShell from "./MobRendererShell";
 
 const centipedeRenderer = new MobRendererCentipede();
 
@@ -39,6 +40,7 @@ const MOB_RENDERERS = {
     [MobType.JELLYFISH]: new MobRendererJellyfish,
     [MobType.BUBBLE]: new MobRendererBubble,
     [MobType.SPONGE]: new MobRendererSponge,
+    [MobType.SHELL]: new MobRendererShell,
 
     [MobType.CENTIPEDE]: centipedeRenderer,
     [MobType.CENTIPEDE_DESERT]: centipedeRenderer,
@@ -61,8 +63,6 @@ export default class MobRendererDispatcher extends Renderer<Mob> {
         const { ctx, entity } = context;
 
         ctx.lineWidth = 6;
-
-        ctx.rotate(entity.angle);
 
         const renderer = MOB_RENDERERS[entity.type];
 

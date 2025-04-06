@@ -14,6 +14,9 @@ export default class MobRendererCentipede extends AbstractMobRenderer {
 
         const { ctx, entity } = context;
 
+        // Change angle
+        ctx.rotate(entity.angle);
+
         const scale = entity.size / 40;
         ctx.scale(scale, scale);
 

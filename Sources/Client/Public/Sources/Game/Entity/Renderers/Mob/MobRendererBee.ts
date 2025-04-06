@@ -13,12 +13,15 @@ export default class MobRendererBee extends AbstractMobRenderer {
 
         const { ctx, entity } = context;
 
-        const bcolor = this.calculateDamageEffectColor(context, "#333333");
-        const fcolor = "#ffe763" satisfies ColorCode;
-        const scolor = darkened(fcolor, DARKENED_BASE);
+        // Change angle
+        ctx.rotate(entity.angle);
 
         const scale = entity.size / 30;
         ctx.scale(scale, scale);
+
+        const bcolor = this.calculateDamageEffectColor(context, "#333333");
+        const fcolor = "#ffe763" satisfies ColorCode;
+        const scolor = darkened(fcolor, DARKENED_BASE);
 
         ctx.lineJoin = ctx.lineCap = "round";
         ctx.lineWidth = 5;

@@ -84,6 +84,9 @@ export default class PetalRendererStick extends AbstractPetalRenderer {
 
         const { ctx, entity } = context;
 
+        // Change angle
+        ctx.rotate(entity.angle);
+
         const scale = entity.size / 10;
         ctx.scale(scale, scale);
 

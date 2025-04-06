@@ -1,0 +1,67 @@
+import type Mob from "../../Mob";
+import type { RenderingContext } from "../RendererRenderingContext";
+import AbstractMobRenderer from "./MobRenderer";
+
+export default class MobRendererShell extends AbstractMobRenderer {
+    override render(context: RenderingContext<Mob>): void {
+        // Non-recursive renderer
+        // super.render(context);
+
+        const { ctx, entity, isSpecimen } = context;
+
+        // Change angle
+        ctx.rotate(entity.angle);
+
+        const scale = entity.size / (
+            isSpecimen
+                ? 25
+                : 20
+        );
+        ctx.scale(scale, scale);
+
+        ctx.lineWidth = 5;
+        ctx.lineJoin = ctx.lineCap = "round";
+
+        { // Draw auricle
+            ctx.fillStyle = ctx.strokeStyle = this.calculateDamageEffectColor(context, "#CCB36D");
+
+            ctx.beginPath();
+            ctx.moveTo(-20, -15);
+            ctx.quadraticCurveTo(-15, 0, -20, 15);
+            ctx.lineTo(0, 3);
+            ctx.lineTo(0, -3);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        { // Draw body
+            ctx.fillStyle = this.calculateDamageEffectColor(context, "#FCDD86");
+
+            ctx.beginPath();
+            ctx.arc(0, 0, 30, -1.2566370964050293, 1.2566370964050293, false);
+            ctx.quadraticCurveTo(0, 20, -15, 8);
+            ctx.quadraticCurveTo(-20, 0, -15, -8);
+            ctx.quadraticCurveTo(0, -20, 9.270508766174316, -28.531696319580078);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        { // Draw wrinkles
+            ctx.lineWidth = 4;
+
+            for (let dir = -1; dir <= 1; dir += 2) {
+                ctx.beginPath();
+                ctx.moveTo(12, 15 * dir);
+                ctx.quadraticCurveTo(0, 8 * dir, -8, 5 * dir);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(17.399999618530273, 6 * dir);
+                ctx.quadraticCurveTo(0, 3.200000047683716 * dir, -6.199999809265137, 2 * dir);
+                ctx.stroke();
+            }
+        }
+    }
+}

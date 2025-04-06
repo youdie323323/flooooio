@@ -45,7 +45,7 @@ func calcTableIndex(i float64) int {
 
 func calculateRotationDelta(
 	ts float64,
-	
+
 	cw float64,
 ) float64 {
 	return (ts * cw) / WaveUpdateFPS
@@ -98,7 +98,7 @@ func doPetalSpin(
 				m.Y-pe.Y,
 			)
 
-			return isNotPet && distance <= (m.GetDesiredSize()*spinNearestSizeCoefficient)
+			return isNotPet && distance <= (m.DesiredSize()*spinNearestSizeCoefficient)
 		})
 
 		spinTargets = make([]Node, len(mobs))
@@ -138,7 +138,7 @@ func doPetalSpin(
 
 		spinAngleIdx := calcTableIndex(pss[i][j])
 
-		mobToSpinDesiredSize := mobToSpin.GetDesiredSize() * 1.1
+		mobToSpinDesiredSize := mobToSpin.DesiredSize() * 1.1
 
 		targetX := mobToSpin.X + lazyCosTable[spinAngleIdx]*mobToSpinDesiredSize
 		targetY := mobToSpin.Y + lazySinTable[spinAngleIdx]*mobToSpinDesiredSize

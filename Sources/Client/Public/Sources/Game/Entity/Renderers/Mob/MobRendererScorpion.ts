@@ -94,29 +94,32 @@ export default class MobRendererScorpion extends AbstractMobRenderer {
 
         const { ctx, entity } = context;
 
+        // Change angle
+        ctx.rotate(entity.angle);
+
         const scale = entity.size / 30;
         ctx.scale(scale, scale);
 
         ctx.lineJoin = ctx.lineCap = "round";
-    
+
         ctx.lineWidth = 7;
 
         {
             ctx.save();
-    
+
             ctx.fillStyle = ctx.strokeStyle = "#333333";
-    
+
             ctx.translate(85 - 64, 67.80140686035156 - 64);
             ctx.scale(0.6628867661928461, 0.6628867198043205);
-    
+
             // TODO: this is not movement counter
             const sinMoveCounter = Math.sin(entity.moveCounter);
-    
+
             {
                 ctx.save();
-    
+
                 ctx.rotate(sinMoveCounter * 0.1);
-    
+
                 ctx.beginPath();
                 ctx.moveTo(-10, 5);
                 ctx.quadraticCurveTo(15, 30, 35, 10);
@@ -124,15 +127,15 @@ export default class MobRendererScorpion extends AbstractMobRenderer {
                 ctx.closePath();
                 ctx.fill();
                 ctx.stroke();
-    
+
                 ctx.restore();
             }
-    
+
             {
                 ctx.save();
-    
+
                 ctx.rotate(sinMoveCounter * -0.1);
-    
+
                 ctx.beginPath();
                 ctx.moveTo(-10, -5);
                 ctx.quadraticCurveTo(15, -30, 35, -10);
@@ -140,39 +143,39 @@ export default class MobRendererScorpion extends AbstractMobRenderer {
                 ctx.closePath();
                 ctx.fill();
                 ctx.stroke();
-    
+
                 ctx.restore();
             }
-    
+
             ctx.restore();
         }
-    
+
         {
             ctx.save();
-    
+
             ctx.translate(67.80140686035156 - 64, 67.80140686035156 - 64);
             ctx.scale(0.7679999578592127, 0.7679999578592127);
-    
+
             { // Legs
                 ctx.strokeStyle = "#333333";
-    
+
                 const LEG_LENGTH = 38;
-    
+
                 ctx.beginPath();
-    
+
                 for (let i = 0; i < 8; i++) {
                     let dir = (0.25 + i % 4 / 3 * 0.4) * Math.PI + Math.sin(i + entity.moveCounter * 1.3) * 0.2;
                     if (i >= 4) {
                         dir *= -1;
                     }
-    
+
                     ctx.moveTo(0, 0);
                     ctx.lineTo(Math.cos(dir) * LEG_LENGTH, Math.sin(dir) * LEG_LENGTH);
                 }
-    
+
                 ctx.stroke();
             }
-    
+
             { // Body
                 ctx.beginPath();
                 ctx.moveTo(0, -30);
@@ -188,75 +191,75 @@ export default class MobRendererScorpion extends AbstractMobRenderer {
                 ctx.fill();
                 ctx.stroke();
             }
-    
+
             { // Wrinkles
                 ctx.lineWidth = 7;
 
                 ctx.strokeStyle = this.calculateDamageEffectColor(context, "#9E7C24");
-    
+
                 ctx.beginPath();
                 ctx.moveTo(22, -12);
                 ctx.quadraticCurveTo(26, 0, 22, 12);
                 ctx.stroke();
-    
+
                 ctx.beginPath();
                 ctx.moveTo(7, -18);
                 ctx.quadraticCurveTo(10.5, 0, 7, 18);
                 ctx.stroke();
-    
+
                 ctx.beginPath();
                 ctx.moveTo(-7, -18);
                 ctx.quadraticCurveTo(-10.5, 0, -7, 18);
                 ctx.stroke();
-    
+
                 ctx.beginPath();
                 ctx.moveTo(-22, -15);
                 ctx.quadraticCurveTo(-27, 0, -22, 15);
                 ctx.stroke();
             }
-    
+
             ctx.restore();
         }
-    
+
         {
             ctx.save();
-    
+
             ctx.translate(30 - 64, 57 - 64);
             ctx.scale(0.30719998103634244, 0.30719998103634244);
-    
+
             ctx.fillStyle = this.calculateDamageEffectColor(context, "#DBAB32");
             ctx.fill(scorpionTail, "nonzero");
-    
+
             ctx.fillStyle = this.calculateDamageEffectColor(context, "#B18B28");
             ctx.fill(scorpionTailStroke, "nonzero");
-    
+
             ctx.restore();
         }
-    
+
         {
             ctx.save();
-    
+
             ctx.translate(67.80140686035156 - 64, 67.80140686035156 - 64);
             ctx.scale(0.7679999578592127, 0.7679999578592127);
-    
+
             ctx.fillStyle = this.calculateDamageEffectColor(context, "#B18B28");
 
             ctx.fill(scorpionTailWrinkle1, "nonzero");
             ctx.fill(scorpionTailWrinkle2, "nonzero");
-    
+
             ctx.restore();
         }
-    
+
         { // Pincer
             ctx.save();
-    
+
             ctx.lineWidth = 4;
             ctx.fillStyle = "#333333";
             ctx.strokeStyle = "#292929";
-    
+
             ctx.translate(59 - 64, 67.80140686035156 - 64);
             ctx.scale(0.7679999578592127, 0.7679999578592127);
-    
+
             ctx.beginPath();
             ctx.moveTo(3.5, 0);
             ctx.lineTo(-3.5, -7);
@@ -264,7 +267,7 @@ export default class MobRendererScorpion extends AbstractMobRenderer {
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
-    
+
             ctx.restore();
         }
     }

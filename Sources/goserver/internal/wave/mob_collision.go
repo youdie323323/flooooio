@@ -1,8 +1,9 @@
 package wave
 
 import (
-	"flooooio/internal/native"
 	"slices"
+
+	"flooooio/internal/native"
 )
 
 const (
@@ -28,7 +29,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 
 	mTraversed := traverseMobSegments(wp, m)
 
-	c0 := Circle{X: m.X, Y: m.Y, R: m.GetDesiredSize()}
+	c0 := Circle{X: m.X, Y: m.Y, R: m.DesiredSize()}
 
 	searchRadius := CalculateSearchRadius(collision0, m.Size)
 
@@ -47,7 +48,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					return true
 				}
 
-				c1 := Circle{X: nearEntity.X, Y: nearEntity.Y, R: nearEntity.GetDesiredSize()}
+				c1 := Circle{X: nearEntity.X, Y: nearEntity.Y, R: nearEntity.DesiredSize()}
 
 				px, py, ok := ComputeCirclePush(c0, c1)
 				if ok {

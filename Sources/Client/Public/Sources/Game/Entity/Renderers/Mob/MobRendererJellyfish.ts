@@ -11,6 +11,9 @@ export default class MobRendererJellyfish extends AbstractMobRenderer {
 
         const { ctx, entity, isSpecimen } = context;
 
+        // Change angle
+        ctx.rotate(entity.angle);
+
         const scale = entity.size / 20;
         ctx.scale(scale, scale);
 

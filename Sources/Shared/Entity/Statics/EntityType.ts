@@ -12,6 +12,7 @@ export const enum MobType {
     JELLYFISH,
     BUBBLE,
     SPONGE,
+    SHELL,
 
     CENTIPEDE,
     CENTIPEDE_EVIL,
@@ -42,6 +43,7 @@ export const MOB_TYPES: Array<MobType> = [
     MobType.JELLYFISH,
     MobType.BUBBLE,
     MobType.SPONGE,
+    MobType.SHELL,
 
     MobType.CENTIPEDE,
     MobType.CENTIPEDE_EVIL,

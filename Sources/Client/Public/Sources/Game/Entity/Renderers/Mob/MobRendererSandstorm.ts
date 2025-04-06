@@ -10,13 +10,16 @@ export default class MobRendererSandstorm extends AbstractMobRenderer {
 
         const { ctx, entity, isSpecimen } = context;
 
+        // Change angle
+        // ctx.rotate(entity.angle);
+
+        const scale = entity.size / 20;
+        ctx.scale(scale, scale);
+
         const i =
             isSpecimen
                 ? 0
                 : entity.sandstormAngle++;
-
-        const scale = entity.size / 20;
-        ctx.scale(scale, scale);
 
         const outerColor = (entity.isPet ? "#ffe763" : "#D5C7A6") satisfies ColorCode;
         const middleColor = (entity.isPet ? "#e6d059" : "#BFB295") satisfies ColorCode;
