@@ -17,6 +17,10 @@ export default class MobRendererJellyfish extends AbstractMobRenderer {
         const oldGlobalAlpha = ctx.globalAlpha;
         ctx.strokeStyle = ctx.fillStyle = this.calculateDamageEffectColor(context, "#ffffff");
         ctx.globalAlpha = oldGlobalAlpha * 0.6;
+
+        ctx.lineCap = "round";
+        ctx.lineWidth = 2.3;
+
         ctx.beginPath();
 
         for (let i = 0; i < 10; i++) {
@@ -39,9 +43,6 @@ export default class MobRendererJellyfish extends AbstractMobRenderer {
             ctx.restore();
         }
 
-        ctx.lineCap = "round";
-
-        ctx.lineWidth = 2.3;
         ctx.stroke();
 
         { // Body

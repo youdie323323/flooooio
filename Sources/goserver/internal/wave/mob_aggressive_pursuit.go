@@ -49,14 +49,14 @@ func TurnAngleToTarget(thisAngle, dx, dy float64) float64 {
 	return math.Mod(normalizedAngle+angleDiff*0.1+255, 255)
 }
 
-const mobDetectionRange = 25.
+const mobDetectionRange = 15.
 
 func getDetectionRange(m *Mob) float64 {
-	return mobDetectionRange * m.Size
+	return mobDetectionRange * m.GetDesiredSize()
 }
 
 func getLoseRange(m *Mob) float64 {
-	return (mobDetectionRange * 2) * m.Size
+	return (mobDetectionRange * 2) * m.GetDesiredSize()
 }
 
 func getTargetNodes(wp *WavePool, m *Mob) []Node {

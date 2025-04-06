@@ -269,7 +269,7 @@
         },
         "collision": {
             "fraction": 30,
-            "radius": 25
+            "radius": 30
         }
     },
     "7": {

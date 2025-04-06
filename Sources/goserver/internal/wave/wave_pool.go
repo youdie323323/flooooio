@@ -644,6 +644,7 @@ func (wp *WavePool) GeneratePlayer(
 			for i, s := range sp.Slots.Surface {
 				player.Slots.Surface[i] = wp.staticPetalToDynamicPetal(s, player, true)
 
+				// Force require reload
 				for _, p := range player.Slots.Surface[i] {
 					if p != nil {
 						p.InstantlyKill(wp)

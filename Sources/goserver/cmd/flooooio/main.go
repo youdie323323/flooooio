@@ -41,30 +41,210 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Slots: wave.StaticPlayerPetalSlots{
 				Surface: []wave.StaticPetal{
 					{
-						Type:   native.PetalTypeEggBeetle,
-						Rarity: native.RarityMythic,
-					},
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
 					{
-						Type:   native.PetalTypeEggBeetle,
-						Rarity: native.RarityMythic,
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},				
+						{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
 					},
 					{
 						Type:   native.PetalTypeStick,
-						Rarity: native.RarityMythic,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},				
+						{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
 					},
 					{
 						Type:   native.PetalTypeStick,
-						Rarity: native.RarityMythic,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},				
+						{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
 					},
 					{
 						Type:   native.PetalTypeStick,
-						Rarity: native.RarityMythic,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},				
+						{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},				
+						{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},				
+						{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},				
+						{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},				
+						{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},				
+						{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},				
+						{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},					
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
 					},
 				},
 				Bottom: []wave.StaticPetal{
 					{
 						Type:   native.PetalTypeYinYang,
-						Rarity: native.RarityMythic,
+						Rarity: native.RarityUltra,
 					},
 				},
 			},
