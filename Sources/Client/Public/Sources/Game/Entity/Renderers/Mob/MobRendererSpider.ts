@@ -58,7 +58,12 @@ export default class MobRendererSpider extends AbstractMobRenderer {
         );
         ctx.scale(scale, scale);
 
+        ctx.lineCap = "round";
+
         { // Legs
+            ctx.strokeStyle = this.calculateDamageEffectColor(context, "#323032");
+            ctx.lineWidth = 10;
+
             for (let i = 0; i < curves.length; i++) {
                 const curve = curves[i];
 
@@ -68,9 +73,6 @@ export default class MobRendererSpider extends AbstractMobRenderer {
                 ctx.beginPath();
                 ctx.moveTo(...curve.start);
                 ctx.quadraticCurveTo(...curve.curve);
-                ctx.strokeStyle = this.calculateDamageEffectColor(context, "#323032");
-                ctx.lineWidth = 10;
-                ctx.lineCap = "round";
                 ctx.stroke();
 
                 ctx.restore();
@@ -82,13 +84,11 @@ export default class MobRendererSpider extends AbstractMobRenderer {
             ctx.strokeStyle = "rgba(0,0,0,0.15)";
             ctx.lineWidth = 20;
 
-            ctx.beginPath();
-
-            ctx.arc(0, 0, 35, 0, TAU);
-            ctx.fill();
-
             using _guard = this.guard(ctx);
 
+            ctx.beginPath();
+            ctx.arc(0, 0, 35, 0, TAU);
+            ctx.fill();
             ctx.clip();
             ctx.stroke();
         }

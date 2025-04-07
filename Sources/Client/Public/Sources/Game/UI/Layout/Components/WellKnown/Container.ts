@@ -157,12 +157,7 @@ export abstract class AbstractStaticContainer<T extends SelectableStaticContaine
         this.children.sort(compareFn);
     }
 
-    /**
-     * Add child to this container.
-     */
-    public addChild(child: Child): this {
-        this.children.push(child);
-
+    private pushAddChildComponentOperation(child: Child): void {
         const addChildComponentOperation = () => { this.context.addChildComponent(child); };
 
         if (this.wasInitialized) {
@@ -170,6 +165,26 @@ export abstract class AbstractStaticContainer<T extends SelectableStaticContaine
         } else {
             this.afterInitializedOperationQueue.add(addChildComponentOperation);
         }
+    }
+
+    /**
+     * Add child to this container.
+     */
+    public addChild(child: Child): this {
+        this.children.push(child);
+
+        this.pushAddChildComponentOperation(child);
+
+        return this;
+    }
+
+    /**
+     * Prepend child to this container.
+     */
+    public prependChild(child: Child): this {
+        this.children.unshift(child);
+
+        this.pushAddChildComponentOperation(child);
 
         return this;
     }

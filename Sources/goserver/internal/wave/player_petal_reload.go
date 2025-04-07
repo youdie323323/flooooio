@@ -11,6 +11,8 @@ var UsageReloadPetalTypes = []native.PetalType{
 	native.PetalTypeEggBeetle,
 	native.PetalTypeBubble,
 	native.PetalTypeStick,
+	native.PetalTypeLightning,
+	native.PetalTypeYggdrasil,
 }
 
 func (p *Player) PlayerPetalReload(wp *WavePool) {
@@ -116,12 +118,12 @@ func (p *Player) PlayerPetalReload(wp *WavePool) {
 				if peUsageCooldown[j].IsZero() {
 					now := time.Now()
 
-					peUsageReload, ok := native.PetalProfiles[pe.Type].StatFromRarity(pe.Rarity).Extra["usageReload"].(float64)
-					if !ok {
+					usageReload := native.PetalProfiles[pe.Type].StatFromRarity(pe.Rarity).UsageReload
+					if usageReload == nil {
 						continue
 					}
 
-					peUsageCooldown[j] = now.Add(time.Duration(peUsageReload * float64(time.Second)))
+					peUsageCooldown[j] = now.Add(time.Duration(*usageReload * float64(time.Second)))
 				}
 			}
 		}

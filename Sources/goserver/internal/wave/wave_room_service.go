@@ -186,25 +186,30 @@ func (s *WaveRoomService) canPlayerJoin(pd *PlayerData) bool {
 }
 
 func RemovePlayerFromService(pd *PlayerData) {
-	// Dont care about result
-	_ = WrService.LeaveCurrentWaveRoom(pd)
-
-	pd.WrPId = nil
-
 	if pd.WrPId != nil && pd.WPId != nil {
 		wr := WrService.FindPlayerRoom(*pd.WrPId)
-		wp := wr.WavePool
 
-		if wr != nil && wp != nil {
-			player := wp.SafeFindPlayer(*pd.WPId)
+		if wr != nil {
+			wp := wr.WavePool
 
-			if player != nil {
-				ResetBindings(wp, player)
+			if wp != nil {
+				player := wp.FindPlayer(*pd.WPId)
 
-				wp.SafeRemovePlayer(*pd.WPId)
+				if player != nil {
+					DisposeBindings(wp, player)
 
-				pd.WPId = nil
+					wp.RemovePlayer(*pd.WPId)
+
+					pd.WPId = nil
+				}
 			}
 		}
+	}
+
+	{ // This block should executed after because needs to use FindPlayerRoom
+		// Dont care about result
+		_ = WrService.LeaveCurrentWaveRoom(pd)
+
+		pd.WrPId = nil
 	}
 }

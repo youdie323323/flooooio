@@ -108,20 +108,14 @@ func NewMob(
 	profile := native.MobProfiles[mType]
 
 	return &Mob{
-		Entity: Entity{
-			Id: id,
-
-			X: x,
-			Y: y,
-
-			Magnitude: 0,
-			Angle:     RandomAngle(),
-
-			Size: CalculateMobSize(profile, rarity),
-
-			// Max health
-			Health: 1,
-		},
+		Entity: NewEntity(
+			id, 
+			
+			x, 
+			y, 
+			
+			CalculateMobSize(profile, rarity),
+		),
 
 		Type: mType,
 

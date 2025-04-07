@@ -25,8 +25,9 @@ import UIGameWaveMobIcons from "./UIGameWaveMobIcons";
 import UIGameInventory from "./UIGameInventory";
 import { Centering } from "../Layout/Extensions/ExtensionCentering";
 import Gauge from "../Layout/Components/WellKnown/Gauge";
-import UIGamePlayerStatusBar from "./UIGamePlayerStatusBar";
+import UIGameOtherPlayerStatus from "./UIGameOtherPlayerStatus";
 import TilesetRenderer, { BIOME_TILESETS } from "../../Utils/Tile/Tileset/TilesetRenderer";
+import UIGamePlayerStatuses from "./UIGamePlayerStatuses";
 
 let interpolatedMouseX = 0;
 let interpolatedMouseY = 0;
@@ -51,6 +52,8 @@ export default class UIGame extends AbstractUI {
 
     private waveInformationContainer: StaticVContainer;
     private waveMobIcons: UIGameWaveMobIcons;
+
+    private playerStatuses: UIGamePlayerStatuses;
 
     private inventory: UIGameInventory;
 
@@ -199,14 +202,8 @@ export default class UIGame extends AbstractUI {
 
                         this.players.set(clientId, player);
 
-                        this.addComponent(new UIGamePlayerStatusBar(
-                            {
-                                x: 55,
-                                y: 60,
-                            },
-
-                            player,
-                        ));
+                        // Add status
+                        this.playerStatuses.addPlayer(player, this.waveSelfId === player.id);
                     }
                 }
             }
@@ -372,6 +369,9 @@ export default class UIGame extends AbstractUI {
                     // Maybe client is already dead and got revived, deadT is maybe halfway
                     player.deadT = 0;
                     player.health = 0;
+
+                    // Remove from status
+                    this.playerStatuses.removePlayer(player, this.waveSelfId === player.id);
 
                     continue;
                 }
@@ -631,6 +631,13 @@ export default class UIGame extends AbstractUI {
             new StaticSpace(0, 8),
 
             this.waveMobIcons = new (Centering(UIGameWaveMobIcons))({}),
+        ));
+
+        this.addComponent(this.playerStatuses = new (InlineRendering(UIGamePlayerStatuses))(
+            () => ({
+                x: 55,
+                y: 60,
+            }),
         ));
 
         {
@@ -952,8 +959,7 @@ export default class UIGame extends AbstractUI {
         // Render mutable functions
         this.drawMutableFunctions(canvas);
 
-        // Update entities
-        {
+        { // Update entities
             this.mobs.forEach((mob, k) => {
                 mob.update();
 
@@ -1053,6 +1059,8 @@ export default class UIGame extends AbstractUI {
         { // Render inlined components
             renderPossibleComponent(ctx, this.waveInformationContainer);
 
+            renderPossibleComponent(ctx, this.playerStatuses);
+            
             renderPossibleComponent(ctx, this.inventory);
         }
 

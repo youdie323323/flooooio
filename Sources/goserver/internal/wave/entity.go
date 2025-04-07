@@ -42,6 +42,30 @@ func RandomId() uint32 {
 	return rand.Uint32()
 }
 
+func NewEntity(
+	id *EntityId,
+
+	x float64,
+	y float64,
+
+	size float64,
+) Entity {
+	return Entity{
+		Id: id,
+
+		X: x,
+		Y: y,
+
+		Magnitude: 0,
+		Angle:     RandomAngle(),
+
+		Size: size,
+
+		// Max health
+		Health: 1,
+	}
+}
+
 const Tau = math.Pi * 2
 
 // GetRandomSafeCoordinate generates a random safe position

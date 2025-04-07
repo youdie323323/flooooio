@@ -15,9 +15,8 @@ type PetalStat struct {
 	Damage      float64 `json:"damage"`
 	Health      float64 `json:"health"`
 	PetalReload float64 `json:"petalReload"`
-	Count       int     `json:"count"`
-
 	UsageReload *float64 `json:"usageReload,omitempty"`
+	Count       int     `json:"count"`
 
 	Extra map[string]any `json:"extra,omitempty"`
 }

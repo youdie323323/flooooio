@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
+	"math/rand/v2"
 	"net/http"
 	"slices"
 
@@ -31,216 +32,66 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	surface := []wave.StaticPetal{
+		{
+			Type:   native.PetalTypeFang,
+			Rarity: native.RarityUltra,
+		},
+		{
+			Type:   native.PetalTypeFang,
+			Rarity: native.RarityUltra,
+		},
+		{
+			Type:   native.PetalTypeFang,
+			Rarity: native.RarityUltra,
+		},
+		{
+			Type:   native.PetalTypeFang,
+			Rarity: native.RarityUltra,
+		},
+		{
+			Type:   native.PetalTypeFang,
+			Rarity: native.RarityUltra,
+		},
+		{
+			Type:   native.PetalTypeLightning,
+			Rarity: native.RarityUltra,
+		},
+		{
+			Type:   native.PetalTypeLightning,
+			Rarity: native.RarityUltra,
+		},
+		{
+			Type:   native.PetalTypeClaw,
+			Rarity: native.RarityUltra,
+		},
+		{
+			Type:   native.PetalTypeClaw,
+			Rarity: native.RarityUltra,
+		},
+		{
+			Type:   native.PetalTypeFaster,
+			Rarity: native.RarityUltra,
+		},
+		{
+			Type:   native.PetalTypeYggdrasil,
+			Rarity: native.RarityUltra,
+		},
+	}
+
+	rand.Shuffle(len(surface), func(i, j int) {
+		surface[i], surface[j] = surface[j], surface[i]
+	})
+
 	// Init user data
 	pd := &wave.PlayerData{
 		WrPId: nil,
 		WPId:  nil,
 
-		Sp: wave.StaticPlayer{
+		Sp: &wave.StaticPlayer{
 			Name: "mesamura",
 			Slots: wave.StaticPlayerPetalSlots{
-				Surface: []wave.StaticPetal{
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},				
-						{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},				
-						{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},				
-						{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},				
-						{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},				
-						{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},				
-						{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},				
-						{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},				
-						{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},				
-						{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},				
-						{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},					
-					{
-						Type:   native.PetalTypeStick,
-						Rarity: native.RarityUltra,
-					},
-				},
+				Surface: surface,
 				Bottom: []wave.StaticPetal{
 					{
 						Type:   native.PetalTypeYinYang,
@@ -388,8 +239,8 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 			}
 
 			player.SwapPetal(
-				wr.WavePool, 
-				
+				wr.WavePool,
+
 				int(swapAt),
 			)
 		}

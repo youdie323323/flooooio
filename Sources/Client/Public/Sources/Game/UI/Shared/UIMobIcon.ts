@@ -1,7 +1,8 @@
 import { Component, type MaybePointerLike } from "../Layout/Components/Component";
 import type { AutomaticallySizedLayoutOptions } from "../Layout/Components/WellKnown/Container";
 import { CoordinatedStaticSpace, StaticPanelContainer } from "../Layout/Components/WellKnown/Container";
-import Mob from "../../Entity/Mob";
+import type Mob from "../../Entity/Mob";
+import { generateDefaultStarfishLegDistance } from "../../Entity/Mob";
 import { RARITY_COLOR } from "../../../../../../Shared/Entity/Statics/EntityRarity";
 import { CanvasLogo } from "../Layout/Components/WellKnown/Logo";
 import { renderEntity } from "../../Entity/Renderers/RendererRenderingLink";
@@ -13,7 +14,7 @@ export default class UIMobIcon extends StaticPanelContainer {
 
     private static readonly ICON_MOB_SIZE: number = 9;
 
-    private static readonly ICON_MOB_LEG_DISTANCE: Array<number> = Array(Mob.STARFISH_LEG_AMOUNT).fill(150);
+    private static readonly ICON_MOB_LEG_DISTANCE: Array<number> = generateDefaultStarfishLegDistance();
 
     /**
      * Proxy handler for mob instance that rendered to icon.

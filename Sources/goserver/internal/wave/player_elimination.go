@@ -29,7 +29,7 @@ func RevivePlayer(wp *WavePool, p *Player) {
 	}
 }
 
-func ResetBindings(wp *WavePool, p *Player) {
+func DisposeBindings(wp *WavePool, p *Player) {
 	// Remove all petals
 	for _, petals := range p.Slots.Surface {
 		if petals == nil {
@@ -63,7 +63,7 @@ func (p *Player) onEliminate(wp *WavePool) {
 	// Stop move
 	p.Magnitude = 0
 
-	ResetBindings(wp, p)
+	DisposeBindings(wp, p)
 }
 
 func (p *Player) PlayerElimination(wp *WavePool) {

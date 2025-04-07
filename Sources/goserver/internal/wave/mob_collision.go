@@ -118,11 +118,18 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					}
 
 					{ // Damage
+						nearEntityStat := native.PetalProfiles[nearEntity.Type].StatFromRarity(nearEntity.Rarity)
+
 						nearEntityMaxHealth := nearEntity.CalculateMaxHealth()
-						nearEntityDamage := native.PetalProfiles[nearEntity.Type].StatFromRarity(nearEntity.Rarity).GetDamage()
+						nearEntityDamage := nearEntityStat.GetDamage()
 
 						m.Health -= nearEntityDamage / mMaxHealth
 						nearEntity.Health -= mDamage / nearEntityMaxHealth
+
+						// Petal specials
+						switch nearEntity.Type {
+						case native.PetalTypeFang: doFangLifesteal(nearEntity, nearEntityStat, nearEntityDamage)
+						}
 
 						{ // Set LastAttackedEntity
 							if nearEntity.Master != nil {
@@ -170,4 +177,25 @@ func (m *Mob) MobCollision(wp *WavePool) {
 		}
 		return true
 	})
+}
+
+func doFangLifesteal(fang *Petal, stat native.PetalStat, damage float64) {
+	if fang.Master == nil {
+		return
+	}
+
+	healDamaged, ok := stat.Extra["damageHealed"].(float64)
+	if !ok {
+		return
+	}
+
+	master := fang.Master
+	if master.Health >= 1 {
+		return
+	}
+
+	masterMaxHP := master.CalculateMaxHealth()
+	healAmount := damage * (healDamaged / 100)
+
+	master.Health = min(1, master.Health+(healAmount/masterMaxHP))
 }

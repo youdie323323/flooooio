@@ -21,6 +21,11 @@ import MobRendererScorpion from "./MobRendererScorpion";
 import MobRendererShinyLadybug from "./MobRendererShinyLadybug";
 import PetalRendererStick from "./Petal/PetalRendererStick";
 import MobRendererShell from "./MobRendererShell";
+import PetalRendererSand from "./Petal/PetalRendererSand";
+import PetalRendererLightning from "./Petal/PetalRendererLightning";
+import PetalRendererClaw from "./Petal/PetalRendererClaw";
+import PetalRendererFang from "./Petal/PetalRendererFang";
+import PetalRendererYggdrasil from "./Petal/PetalRendererYggdrasil";
 
 const centipedeRenderer = new MobRendererCentipede();
 
@@ -54,6 +59,11 @@ const MOB_RENDERERS = {
     [PetalType.EGG_BEETLE]: new PetalRendererEgg,
     [PetalType.YIN_YANG]: new PetalRendererYinYang,
     [PetalType.STICK]: new PetalRendererStick,
+    [PetalType.SAND]: new PetalRendererSand,
+    [PetalType.LIGHTNING]: new PetalRendererLightning,
+    [PetalType.CLAW]: new PetalRendererClaw,
+    [PetalType.FANG]: new PetalRendererFang,
+    [PetalType.YGGDRASIL]: new PetalRendererYggdrasil,
 } as const satisfies Record<MobType | PetalType, Renderer<Mob>>;
 
 export default class MobRendererDispatcher extends Renderer<Mob> {
@@ -61,8 +71,6 @@ export default class MobRendererDispatcher extends Renderer<Mob> {
         super.render(context);
 
         const { ctx, entity } = context;
-
-        ctx.lineWidth = 6;
 
         const renderer = MOB_RENDERERS[entity.type];
 

@@ -153,25 +153,27 @@ export default class UITitle extends AbstractUI {
             this.waveRoomSelfId = reader.readUInt32();
         },
         [Clientbound.WAVE_ROOM_UPDATE]: (reader: BinaryReader): void => {
-            const waveClientCount = reader.readUInt8();
+            { // Read player informations
+                const waveClientCount = reader.readUInt8();
 
-            const waveRoomPlayerInformations: Array<WaveRoomPlayerInformation> = new Array(waveClientCount);
+                const informations: Array<WaveRoomPlayerInformation> = new Array(waveClientCount);
 
-            for (let i = 0; i < waveClientCount; i++) {
-                const id = reader.readUInt32();
+                for (let i = 0; i < waveClientCount; i++) {
+                    const id = reader.readUInt32();
 
-                const name = reader.readString() || "Unnamed";
+                    const name = reader.readString() || "Unnamed";
 
-                const readyState = reader.readUInt8() satisfies WaveRoomPlayerReadyState;
+                    const readyState = reader.readUInt8() satisfies WaveRoomPlayerReadyState;
 
-                waveRoomPlayerInformations[i] = {
-                    id,
-                    name,
-                    readyState,
-                } as const satisfies WaveRoomPlayerInformation;
+                    informations[i] = {
+                        id,
+                        name,
+                        readyState,
+                    } as const satisfies WaveRoomPlayerInformation;
+                }
+
+                this.waveRoomPlayerInformations = informations;
             }
-
-            this.waveRoomPlayerInformations = waveRoomPlayerInformations;
 
             this.waveRoomCode = reader.readString() as WaveRoomCode;
 

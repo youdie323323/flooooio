@@ -97,9 +97,9 @@ export type TileMapOptions<T extends object = any> = {
      * If set to a negative number, only render chunks which are fully inside
      * the screen bounds.
      *
-     * @defaultValue 1
+     * @defaultValue vec2(1)
      */
-    chunkBorder: number;
+    chunkBorder: vec2;
 
     /**
      * The maximum size of the LRU cache/queue.
@@ -181,7 +181,7 @@ type TileMapImage = HTMLImageElement | HTMLCanvasElement | OffscreenCanvas;
 
 type TileMapChunk = {
     chunkPosition: vec2;
-    image: HTMLCanvasElement;
+    image: OffscreenCanvas;
 };
 
 /**
@@ -232,13 +232,16 @@ export function cameraBoundsSize(bounds: Camera["bounds"]): vec2 {
     return vec2.sub(convertedBounds.bottomRight, convertedBounds.topLeft);
 }
 
+/**
+ * @deprecated Shit!
+ */
 export class TileMap<T extends object = any> {
     private static readonly DEFAULT_OPTIONS = {
         clampPositionToBounds: false,
         tileSize: 16,
         layers: [],
         chunkSize: 8,
-        chunkBorder: 1,
+        chunkBorder: vec2(1),
         chunkBufferMaxSize: 64,
     } as const satisfies TileMapOptions;
 
@@ -292,35 +295,36 @@ export class TileMap<T extends object = any> {
         position: vec2,
         scale: number,
     ) {
-        const absoluteChunkSize = this.options.tileSize * this.options.chunkSize;
-        const chunkBorder = vec2(this.options.chunkBorder);
+        const { tileSize, chunkSize, chunkBorder, minScale, maxScale, clampPositionToBounds, bounds } = this.options;
+
+        const absoluteChunkSize = tileSize * chunkSize;
 
         // Maybe clamp scale
         let actualScale = scale;
 
-        if (this.options.minScale && actualScale < this.options.minScale) {
-            actualScale = this.options.minScale;
+        if (minScale && actualScale < minScale) {
+            actualScale = minScale;
         }
 
-        if (this.options.maxScale && actualScale > this.options.maxScale) {
-            actualScale = this.options.maxScale;
+        if (maxScale && actualScale > maxScale) {
+            actualScale = maxScale;
         }
 
         // Maybe clamp position to bounds
         let actualPosition = vec2(position);
-        if (this.options.clampPositionToBounds && this.options.bounds) {
-            const tileSizeScaled = this.options.tileSize / actualScale;
+        if (clampPositionToBounds && bounds) {
+            const tileSizeScaled = tileSize / actualScale;
             const halfScreenScaled = vec2.map(
                 vec2.mul(screen, 1 / (actualScale * 2)),
                 Math.ceil,
             );
             const minPosition = vec2(
-                this.options.bounds.topLeft.x * tileSizeScaled + halfScreenScaled.x,
-                this.options.bounds.topLeft.y * tileSizeScaled + halfScreenScaled.y,
+                bounds.topLeft.x * tileSizeScaled + halfScreenScaled.x,
+                bounds.topLeft.y * tileSizeScaled + halfScreenScaled.y,
             );
             const maxPosition = vec2(
-                this.options.bounds.bottomRight.x * tileSizeScaled - halfScreenScaled.x,
-                this.options.bounds.bottomRight.y * tileSizeScaled - halfScreenScaled.y,
+                bounds.bottomRight.x * tileSizeScaled - halfScreenScaled.x,
+                bounds.bottomRight.y * tileSizeScaled - halfScreenScaled.y,
             );
 
             actualPosition = vec2(
@@ -369,8 +373,6 @@ export class TileMap<T extends object = any> {
             -actualPosition.y + screen.y / (actualScale * 2),
         );
 
-        const unseamChunkSize = absoluteChunkSize + (1 / 3);
-
         // Render chunks
         for (let y = topLeftChunk.y; y < bottomRightChunk.y; y++) {
             for (let x = topLeftChunk.x; x < bottomRightChunk.x; x++) {
@@ -392,8 +394,6 @@ export class TileMap<T extends object = any> {
                         chunk.image,
                         chunkAbsolutePosition.x,
                         chunkAbsolutePosition.y,
-                        unseamChunkSize,
-                        unseamChunkSize,
                     );
                 }
             }
@@ -412,7 +412,7 @@ export class TileMap<T extends object = any> {
                         vec2(1),
                     ),
                 ),
-                this.options.chunkSize,
+                chunkSize,
             );
             const bottomRightTile = vec2.mul(
                 vec2.add(
@@ -425,7 +425,7 @@ export class TileMap<T extends object = any> {
                         vec2(1),
                     ),
                 ),
-                this.options.chunkSize,
+                chunkSize,
             );
 
             for (let y = topLeftTile.y; y < bottomRightTile.y; y++) {
@@ -433,11 +433,11 @@ export class TileMap<T extends object = any> {
                     context,
                     vec2(
                         actualPosition.x - screen.x / (actualScale * 2),
-                        y * this.options.tileSize,
+                        y * tileSize,
                     ),
                     vec2(
                         actualPosition.x + screen.x / (actualScale * 2),
-                        y * this.options.tileSize,
+                        y * tileSize,
                     ),
                     TileMap.DEBUG_TILE_BORDER_COLOUR,
                     TileMap.DEBUG_TILE_BORDER_LINE_WIDTH,
@@ -448,11 +448,11 @@ export class TileMap<T extends object = any> {
                 this.drawLine(
                     context,
                     vec2(
-                        x * this.options.tileSize,
+                        x * tileSize,
                         actualPosition.y - screen.y / (actualScale * 2),
                     ),
                     vec2(
-                        x * this.options.tileSize,
+                        x * tileSize,
                         actualPosition.y + screen.y / (actualScale * 2),
                     ),
                     TileMap.DEBUG_TILE_BORDER_COLOUR,
@@ -535,27 +535,27 @@ export class TileMap<T extends object = any> {
         chunkPosition: vec2,
         absoluteChunkSize: number,
     ): TileMapChunk {
-        const chunkCanvas = document.createElement("canvas");
-        const chunkContext = chunkCanvas.getContext("2d");
+        const { tileSize, chunkSize, bounds, layers } = this.options;
 
-        chunkCanvas.width = absoluteChunkSize;
-        chunkCanvas.height = absoluteChunkSize;
+        const chunkCanvas = new OffscreenCanvas(absoluteChunkSize, absoluteChunkSize);
+        const chunkContext = chunkCanvas.getContext("2d");
 
         const chunk = {
             chunkPosition,
             image: chunkCanvas,
         } satisfies TileMapChunk;
 
-        const topLeftTile = vec2.mul(chunkPosition, this.options.chunkSize);
+        const topLeftTile = vec2.mul(chunkPosition, chunkSize);
         const bottomRightTile = vec2.add(
             topLeftTile,
-            vec2(this.options.chunkSize - 1),
+            vec2(chunkSize - 1),
         );
-        const boundsTopLeft = this.options.bounds?.topLeft ?? vec2(0);
+        const boundsTopLeft = bounds?.topLeft ?? vec2(0);
+
+        chunkContext.save();
 
         // Default generation, render tiles from tilemap data
-        for (const layer of this.options.layers) {
-            chunkContext.save();
+        for (const layer of layers) {
             chunkContext.globalAlpha = layer.opacity ?? 1;
 
             for (let y = topLeftTile.y; y <= bottomRightTile.y; y++) {
@@ -586,31 +586,23 @@ export class TileMap<T extends object = any> {
                     const tileAbsolutePosition = vec2.sub(
                         vec2.mul(
                             tilePosition,
-                            this.options.tileSize,
+                            tileSize,
                         ),
                         vec2.mul(chunkPosition, absoluteChunkSize),
                     );
 
-                    // Tile alignment
-                    const tileImageAbsolutePosition = vec2(
-                        (
-                            tileAbsolutePosition.x + this.options.tileSize / 2
-                        ) - tileImage.width / 2,
-                        (
-                            tileAbsolutePosition.y + this.options.tileSize / 2
-                        ) - tileImage.height / 2,
-                    );
-
                     chunkContext.drawImage(
                         tileImage,
-                        tileImageAbsolutePosition.x,
-                        tileImageAbsolutePosition.y,
+                        tileAbsolutePosition.x,
+                        tileAbsolutePosition.y,
+                        tileSize,
+                        tileSize,
                     );
                 }
             }
-
-            chunkContext.restore();
         }
+
+        chunkContext.restore();
 
         return chunk;
     }

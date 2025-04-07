@@ -35,17 +35,22 @@ export default class PetalRendererYinYang extends AbstractPetalRenderer {
             ctx.restore();
         };
 
+        ctx.lineWidth = 6;
+
         ctx.lineCap = "round";
+
         ctx.beginPath();
         ctx.arc(0, 0, 20, 0, TAU);
         clipFill("#333333", "#222222");
         ctx.rotate(Math.PI);
+
         ctx.beginPath();
         ctx.arc(0, 0, 20, -YIN_ANGLE_START, YIN_ANGLE_START);
         ctx.arc(0, 10, 10, YIN_ANGLE_START, YIN_ANGLE_END);
         ctx.arc(0, -10, 10, YIN_ANGLE_START, YIN_ANGLE_END, true);
         clipFill("#ffffff", "#cfcfcf");
         ctx.rotate(-Math.PI);
+        
         ctx.beginPath();
         ctx.arc(0, 10, 10, YIN_ANGLE_START, YIN_ANGLE_END);
         clipFill("#333333", "#222222");

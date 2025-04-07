@@ -83,6 +83,8 @@ func (p *Player) CalculateMaxHealth() float64 {
 
 const PlayerSpeedMultiplier = 3
 
+// TODO: batch process these to avoid dead lock & data race
+
 // UpdateMovement update the movement.
 func (p *Player) UpdateMovement(angle uint8, magnitude uint8) {
 	p.Mu.Lock()
@@ -238,26 +240,20 @@ const PlayerSize = 15
 func NewPlayer(
 	id *EntityId,
 
-	sp StaticPlayer,
+	sp *StaticPlayer,
 
 	x float64,
 	y float64,
 ) *Player {
 	return &Player{
-		Entity: Entity{
-			Id: id,
-
-			X: x,
-			Y: y,
-
-			Magnitude: 0,
-			Angle:     RandomAngle(),
-
-			Size: PlayerSize,
-
-			// Max health
-			Health: 1,
-		},
+		Entity: NewEntity(
+			id, 
+			
+			x, 
+			y, 
+			
+			PlayerSize,
+		),
 
 		PlayerPrivileges: PlayerPrivileges{
 			IsDev: false,

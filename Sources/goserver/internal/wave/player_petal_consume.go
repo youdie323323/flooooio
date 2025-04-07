@@ -81,6 +81,14 @@ func (p *Player) PlayerPetalConsume(wp *WavePool) {
 					))
 				}
 
+			case native.PetalTypeYggdrasil:
+				{
+					// Detach
+					petal.DetachedFromOrbit = true
+
+					// TODO: implement logic
+				}
+
 			case native.PetalTypeStick:
 				{
 					// TODO: add limit

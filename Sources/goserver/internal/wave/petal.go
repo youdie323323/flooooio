@@ -14,6 +14,8 @@ type Petal struct {
 	Master       *Player
 	SummonedPets []*Mob
 
+	DetachedFromOrbit bool
+
 	SpinningOnMob bool
 
 	Velocity [2]float64
@@ -43,20 +45,14 @@ func NewPetal(
 	master *Player,
 ) *Petal {
 	return &Petal{
-		Entity: Entity{
-			Id: id,
-
-			X: x,
-			Y: y,
-
-			Magnitude: 0,
-			Angle:     RandomAngle(),
-
-			Size: PetalSize,
-
-			// Max health
-			Health: 1,
-		},
+		Entity: NewEntity(
+			id, 
+			
+			x, 
+			y, 
+			
+			PetalSize,
+		),
 
 		Type: pType,
 
@@ -64,6 +60,8 @@ func NewPetal(
 
 		Master:       master,
 		SummonedPets: make([]*Mob, 0),
+
+		DetachedFromOrbit: false,
 
 		SpinningOnMob: false,
 

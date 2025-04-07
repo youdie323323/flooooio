@@ -27,34 +27,23 @@ export const enum PetalType {
     BUBBLE,
     YIN_YANG,
     STICK,
+    SAND,
+    LIGHTNING,
+    CLAW,
+    FANG,
+    YGGDRASIL,
 }
 
-export const MOB_TYPES: Array<MobType> = [
-    MobType.BEE,
-    MobType.SPIDER,
-
-    MobType.BEETLE,
-    MobType.SANDSTORM,
-    MobType.CACTUS,
-    MobType.SCORPION,
-    MobType.LADYBUG_SHINY,
-
-    MobType.STARFISH,
-    MobType.JELLYFISH,
-    MobType.BUBBLE,
-    MobType.SPONGE,
-    MobType.SHELL,
-
-    MobType.CENTIPEDE,
-    MobType.CENTIPEDE_EVIL,
-    MobType.CENTIPEDE_DESERT,
-] as const;
-
-export const PETAL_TYPES: Array<PetalType> = [
+export const PETAL_TYPES = [
     PetalType.BASIC,
     PetalType.FASTER,
     PetalType.EGG_BEETLE,
     PetalType.BUBBLE,
     PetalType.YIN_YANG,
     PetalType.STICK,
+    PetalType.SAND,
+    PetalType.LIGHTNING,
+    PetalType.CLAW,
+    PetalType.FANG,
+    PetalType.YGGDRASIL,
 ] as const;

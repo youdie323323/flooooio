@@ -33,7 +33,7 @@ const (
 	radiusFriction             = 0.1
 	petalVelocityAcceleration  = 0.1
 	petalVelocityFriction      = 0.875
-	petalClusterRadius         = 8.0
+	petalClusterRadius         = 6.0
 	spingInterpolationSpeed    = 0.6
 	spinNearestSizeCoefficient = 1.075
 	spinAngleCoefficient       = 10.0
@@ -273,6 +273,10 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool) {
 					continue
 				}
 
+				if petal.DetachedFromOrbit {
+					continue
+				}
+
 				// Bit faster than normal orbit
 				petalAngle := Tau*float64(j)/float64(len(petals)) + multipliedRotation*1.3
 
@@ -304,6 +308,10 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool) {
 		} else {
 			petal := petals[0]
 			if petal == nil {
+				continue
+			}
+
+			if petal.DetachedFromOrbit {
 				continue
 			}
 

@@ -1,4 +1,5 @@
 import type { ColorCode } from "../../../../../../../../Shared/Utils/Color";
+import type Entity from "../../../../Entity/Entity";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
 import type { MaybePointerLike } from "../Component";
@@ -159,4 +160,28 @@ export default class Gauge extends Component {
             });
         }
     }
+}
+
+export function entityHealthGaugeSources(entity: Entity): GaugeSources<GaugeSource> {
+    return () => [
+        { // Red health
+            value: entity.redHealth,
+            maxValue: 1,
+
+            thickness: 0.65,
+
+            color: "#f22",
+            lowBehavior: "fade",
+        },
+
+        { // Hp
+            value: entity.health,
+            maxValue: 1,
+
+            thickness: 0.75,
+
+            color: "#6dd24a",
+            lowBehavior: "fade",
+        },
+    ];
 }

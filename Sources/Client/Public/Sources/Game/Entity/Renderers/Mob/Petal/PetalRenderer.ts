@@ -24,8 +24,10 @@ export default abstract class AbstractPetalRenderer extends AbstractMobRenderer 
         const scale = entity.size / 20;
         ctx.scale(scale, scale);
 
+        ctx.lineWidth = 6;
+
         ctx.beginPath();
-        ctx.arc(0, 0, 20, 0, TAU);
+        ctx.arc(0, 0, 14, 0, TAU);
         ctx.fillStyle = this.calculateDamageEffectColor(context, fill);
         ctx.fill();
         ctx.strokeStyle = this.calculateDamageEffectColor(context, stroke);

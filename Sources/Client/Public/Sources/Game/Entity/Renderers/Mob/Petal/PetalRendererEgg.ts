@@ -17,6 +17,8 @@ export default class PetalRendererEgg extends AbstractPetalRenderer {
         const scale = entity.size / 20;
         ctx.scale(scale, scale);
 
+        ctx.lineWidth = 6;
+
         ctx.beginPath();
         ctx.ellipse(0, 0, 30, 40, 0, 0, TAU);
         ctx.fillStyle = this.calculateDamageEffectColor(context, "#fff0b8");

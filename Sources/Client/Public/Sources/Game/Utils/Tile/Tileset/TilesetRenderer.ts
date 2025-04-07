@@ -1,8 +1,4 @@
 import { Canvg, presets } from "canvg";
-import { Biome } from "../../../../../../../Shared/Biome";
-import { antennaScaleFactor } from "../../../../../../Main";
-import { uiScaleFactor } from "../../../UI/UI";
-import { TileMap } from "../TileMap";
 
 import GRASS_0 from "./Tiles/grass_c_0.svg";
 import GRASS_1 from "./Tiles/grass_c_1.svg";
@@ -19,7 +15,9 @@ import OCEAN_0 from "./Tiles/ocean_c_0.svg";
 import OCEAN_1 from "./Tiles/ocean_c_1.svg";
 import OCEAN_2 from "./Tiles/ocean_c_2.svg";
 import OCEAN_3 from "./Tiles/ocean_c_3.svg";
-import { vec2 } from "@basementuniverse/vec";
+import { Biome } from "../../../../../../../Shared/Biome";
+import { antennaScaleFactor } from "../../../../../../Main";
+import { uiScaleFactor } from "../../../UI/UI";
 
 const TAU = Math.PI * 2;
 
@@ -67,8 +65,6 @@ export interface TitleRenderingOptions extends RenderingConfig {
 }
 
 export default class TilesetRenderer {
-    private tileMap: TileMap;
-
     static async prepareTileset(
         biome: keyof typeof BIOME_SVG_TILESET,
     ): Promise<Tileset> {
@@ -92,37 +88,26 @@ export default class TilesetRenderer {
         return tempCanvas;
     }
 
-    private initializeMap(tileset: Tileset, tileSize: number): void {
-        const tilesetLength = tileset.length;
-
-        this.tileMap = new TileMap({
-            clampPositionToBounds: false,
-            tileSize: tileSize,
-            layers: [
-                {
-                    name: "default",
-                    tiles: tileset.map((tile, i) => ({
-                        name: `tile_${i}`,
-                        image: tile,
-                    })),
-                    data: Array.from(
-                        { length: 10 }, 
-                        () => Array.from({ length: 10 }, () => Math.floor(Math.random() * tilesetLength)),
-                    ),
-                },
-            ],
-            chunkSize: 4,
-            chunkBorder: 1,
-            chunkBufferMaxSize: 64,
-            debug: false,
-        });
-    }
-
     private getScaledDimensions(canvas: HTMLCanvasElement) {
         return {
             width: canvas.width / uiScaleFactor,
             height: canvas.height / uiScaleFactor,
         };
+    }
+
+    private isWithinBounds(
+        x: number,
+        y: number,
+        tilesetSize: number,
+        width: number,
+        height: number,
+    ): boolean {
+        return !(
+            x + tilesetSize < 0 ||
+            x > width ||
+            y + tilesetSize < 0 ||
+            y > height
+        );
     }
 
     private renderTile(
@@ -187,23 +172,30 @@ export default class TilesetRenderer {
         playerX,
         playerY,
     }: MapRenderingOptions) {
-        if (!this.tileMap) {
-            this.initializeMap(tileset, tileSize);
-        }
-
         const ctx = canvas.getContext("2d");
         const { width, height } = this.getScaledDimensions(canvas);
 
-        this.tileMap.draw(ctx, vec2(width, height), vec2(playerX, playerY), antennaScaleFactor);
+        const gridSize = radius / 100;
+        const scaledTilesetSize = tileSize * antennaScaleFactor;
 
-        this.renderBoundaryCircle(
-            ctx,
-            (radius - playerX) * antennaScaleFactor + width / 2,
-            (radius - playerY) * antennaScaleFactor + height / 2,
-            radius,
-            width,
-            height,
-        );
+        const centerX = (radius - playerX) * antennaScaleFactor + width / 2;
+        const centerY = (radius - playerY) * antennaScaleFactor + height / 2;
+
+        const startX = centerX - (gridSize / 2 * scaledTilesetSize);
+        const startY = centerY - (gridSize / 2 * scaledTilesetSize);
+
+        for (let i = 0; i < gridSize; i++) {
+            for (let j = 0; j < gridSize; j++) {
+                const x = startX + i * scaledTilesetSize;
+                const y = startY + j * scaledTilesetSize;
+
+                if (this.isWithinBounds(x, y, scaledTilesetSize, width, height)) {
+                    this.renderTile(ctx, tileset[0], x, y, scaledTilesetSize);
+                }
+            }
+        }
+
+        this.renderBoundaryCircle(ctx, centerX, centerY, radius, width, height);
     }
 
     public renderTitleTileset({

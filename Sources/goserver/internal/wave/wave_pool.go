@@ -621,7 +621,7 @@ func (wp *WavePool) createUpdatePacket() []byte {
 }
 
 func (wp *WavePool) GeneratePlayer(
-	sp StaticPlayer,
+	sp *StaticPlayer,
 
 	x float64,
 	y float64,
@@ -678,7 +678,7 @@ func (wp *WavePool) GeneratePlayer(
 }
 
 func (wp *WavePool) SafeGeneratePlayer(
-	sp StaticPlayer,
+	sp *StaticPlayer,
 
 	x float64,
 	y float64,

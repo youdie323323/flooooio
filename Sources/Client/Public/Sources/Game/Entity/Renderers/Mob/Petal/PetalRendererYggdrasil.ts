@@ -1,5 +1,6 @@
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+import type Mob from "../../../Mob";
+import type { RenderingContext } from "../../RendererRenderingContext";
+import AbstractPetalRenderer from "./PetalRenderer";
 
 const yggdrasilBody = (function () {
     const path = new Path2D();
@@ -336,29 +337,28 @@ const yggdrasilBodyStroke = (function () {
     return path;
 })();
 
-(function loop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+export default class PetalRendererYggdrasil extends AbstractPetalRenderer {
+    override render(context: RenderingContext<Mob>): void {
+        // Non-recursive renderer
+        // super.render(context);
 
-    ctx.save();
+        const { ctx, entity } = context;
 
-    ctx.scale(3, 3);
+        // Change angle
+        ctx.rotate(entity.angle);
 
-    ctx.translate(100, 100);
+        const scale = entity.size / 16;
+        ctx.scale(scale, scale);
 
-    ctx.beginPath();
-    ctx.arc(0, 0, 28, 0, Math.PI * 2);
-    ctx.stroke();
-    
-    ctx.lineJoin = ctx.lineCap = "round";
-    ctx.translate(20, 20);
-    ctx.rotate(3.141592653589793);
-    ctx.scale(0.0803571417927742, 0.0803571417927742);
-    ctx.fillStyle = "#886D35";
-    ctx.fill(yggdrasilBody, "evenodd");
-    ctx.fillStyle = "#A88642";
-    ctx.fill(yggdrasilBodyStroke, "evenodd");
+        ctx.lineJoin = ctx.lineCap = "round";
 
-    ctx.restore();
+        ctx.translate(20, 20);
+        ctx.rotate(Math.PI);
+        ctx.scale(0.0803571417927742, 0.0803571417927742);
 
-    requestAnimationFrame(loop);
-})();
+        ctx.fillStyle = "#886D35";
+        ctx.fill(yggdrasilBody, "evenodd");
+        ctx.fillStyle = "#A88642";
+        ctx.fill(yggdrasilBodyStroke, "evenodd");
+    }
+}

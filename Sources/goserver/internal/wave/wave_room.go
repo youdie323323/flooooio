@@ -23,7 +23,7 @@ type WaveRoomPlayerId = uint32
 
 // StaticWaveRoomCandidatePlayer is static candidate player data to generate the dynamic player instance.
 type StaticWaveRoomCandidatePlayer struct {
-	StaticPlayer
+	*StaticPlayer
 
 	// Id is id of player.
 	Id WaveRoomPlayerId
@@ -40,7 +40,7 @@ type PlayerData struct {
 	WPId  *EntityId
 
 	// Sp represents static player data of user
-	Sp StaticPlayer
+	Sp *StaticPlayer
 
 	mu sync.RWMutex
 }
@@ -128,7 +128,7 @@ func NewWaveRoom(b native.Biome, v WaveRoomVisibility) *WaveRoom {
 		ProgressRedTimer: 0,
 		ProgressIsRed:    false,
 
-		MapRadius: 3000,
+		MapRadius: 2000,
 	})
 
 	// Start sending update packet
@@ -138,7 +138,7 @@ func NewWaveRoom(b native.Biome, v WaveRoomVisibility) *WaveRoom {
 }
 
 // RegisterPlayer adds new player candidate.
-func (w *WaveRoom) RegisterPlayer(sp StaticPlayer) *WaveRoomPlayerId {
+func (w *WaveRoom) RegisterPlayer(sp *StaticPlayer) *WaveRoomPlayerId {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
