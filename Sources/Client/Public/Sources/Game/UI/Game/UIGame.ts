@@ -23,11 +23,10 @@ import { CoordinatedStaticSpace, StaticSpace, StaticTranslucentPanelContainer, S
 import { InlineRendering } from "../Layout/Extensions/ExtensionInlineRendering";
 import UIGameWaveMobIcons from "./UIGameWaveMobIcons";
 import UIGameInventory from "./UIGameInventory";
-import TilesetRenderer, { BIOME_TILESETS } from "../../Utils/Tiled/TilesetRenderer";
-import TilesetWavedRenderer from "../../Utils/Tiled/TilesetWavedRenderer";
 import { Centering } from "../Layout/Extensions/ExtensionCentering";
-import MOB_PROFILES from "../../../../../../Shared/Native/mob_profiles.json";
-import PETAL_PROFILES from "../../../../../../Shared/Native/petal_profiles.json";
+import Gauge from "../Layout/Components/WellKnown/Gauge";
+import UIGamePlayerStatusBar from "./UIGamePlayerStatusBar";
+import TilesetRenderer, { BIOME_TILESETS } from "../../Utils/Tile/Tileset/TilesetRenderer";
 
 let interpolatedMouseX = 0;
 let interpolatedMouseY = 0;
@@ -50,7 +49,8 @@ export default class UIGame extends AbstractUI {
     private players: Map<number, Player> = new Map();
     private mobs: Map<number, Mob> = new Map();
 
-    private waveEnemyIcons: UIGameWaveMobIcons;
+    private waveInformationContainer: StaticVContainer;
+    private waveMobIcons: UIGameWaveMobIcons;
 
     private inventory: UIGameInventory;
 
@@ -61,10 +61,6 @@ export default class UIGame extends AbstractUI {
 
     private waveProgressTimer: number;
     private waveProgressRedGageTimer: number;
-    private oWaveProgressTimer: number;
-    private oWaveProgressRedGageTimer: number;
-    private nWaveProgressTimer: number;
-    private nWaveProgressRedGageTimer: number;
 
     /**
      * Wave room state is Ended or not.
@@ -101,15 +97,14 @@ export default class UIGame extends AbstractUI {
 
     public waveSelfId: number = -1;
 
-    accessor biome: Biome = Biome.GARDEN;
+    override biome: Biome = Biome.GARDEN;
 
     override readonly CLIENTBOUND_HANDLERS = {
         [Clientbound.WAVE_SELF_ID]: (reader: BinaryReader): void => {
             this.waveSelfId = reader.readUInt32();
         },
         [Clientbound.WAVE_UPDATE]: (reader: BinaryReader): void => {
-            // Wave informations
-            {
+            { // Wave informations
                 const waveProgress = reader.readUInt16();
 
                 const waveProgressTimer = reader.readFloat64();
@@ -123,11 +118,9 @@ export default class UIGame extends AbstractUI {
 
                 this.waveProgress = waveProgress;
 
-                this.nWaveProgressTimer = waveProgressTimer;
-                this.oWaveProgressTimer = this.waveProgressTimer;
+                this.waveProgressTimer = waveProgressTimer;
 
-                this.nWaveProgressRedGageTimer = waveProgressRedGageTimer;
-                this.oWaveProgressRedGageTimer = this.waveProgressRedGageTimer;
+                this.waveProgressRedGageTimer = waveProgressRedGageTimer;
 
                 this.wasWaveEnded = waveEnded;
 
@@ -154,7 +147,7 @@ export default class UIGame extends AbstractUI {
 
                     const clientMood = reader.readUInt8();
 
-                    const clientNickname = reader.readString();
+                    const clientName = reader.readString();
 
                     // Decode boolean flags
                     const bFlags = reader.readUInt8();
@@ -191,19 +184,29 @@ export default class UIGame extends AbstractUI {
                         client.oSize = client.size;
                         client.updateT = 0;
                     } else {
-                        this.players.set(
+                        const player = new Player(
                             clientId,
-                            new Player(
-                                clientId,
-                                clientX,
-                                clientY,
-                                clientAngle,
-                                clientSize,
-                                clientHealth,
-                                clientMood,
-                                clientNickname,
-                            ),
+                            clientX,
+                            clientY,
+                            clientAngle,
+                            clientSize,
+                            clientHealth,
+
+                            clientMood,
+
+                            clientName,
                         );
+
+                        this.players.set(clientId, player);
+
+                        this.addComponent(new UIGamePlayerStatusBar(
+                            {
+                                x: 55,
+                                y: 60,
+                            },
+
+                            player,
+                        ));
                     }
                 }
             }
@@ -272,8 +275,8 @@ export default class UIGame extends AbstractUI {
                             mobIsFirstSegment,
                         );
 
-                        if (this.waveEnemyIcons.isIconableMobInstance(mobInstance)) {
-                            this.waveEnemyIcons.addMobIcon(mobInstance);
+                        if (this.waveMobIcons.isIconableMobInstance(mobInstance)) {
+                            this.waveMobIcons.addMobIcon(mobInstance);
                         }
 
                         this.mobs.set(mobId, mobInstance);
@@ -405,8 +408,8 @@ export default class UIGame extends AbstractUI {
         this.updateT = 0;
 
         this.waveProgressTimer = this.waveProgressRedGageTimer = this.mapRadius = 0;
-        this.oWaveProgressTimer = this.oWaveProgressRedGageTimer = this.oMapRadius = 0;
-        this.nWaveProgressTimer = this.nWaveProgressRedGageTimer = this.nMapRadius = 0;
+        this.oMapRadius = 0;
+        this.nMapRadius = 0;
 
         this.wasDeadMenuContinued = false;
 
@@ -424,6 +427,7 @@ export default class UIGame extends AbstractUI {
                     // Space mean space
                     case " ": {
                         this.currentMoodFlags |= MoodFlags.ANGRY;
+
                         clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
 
                         break;
@@ -431,6 +435,7 @@ export default class UIGame extends AbstractUI {
 
                     case "Shift": {
                         this.currentMoodFlags |= MoodFlags.SAD;
+
                         clientWebsocket.packetServerbound.sendWaveChangeMood(this.currentMoodFlags);
 
                         break;
@@ -472,6 +477,7 @@ export default class UIGame extends AbstractUI {
                                 }
 
                                 index--;
+
                                 clientWebsocket.packetServerbound.sendWaveSwapPetal(index);
                             }
                         }
@@ -557,7 +563,7 @@ export default class UIGame extends AbstractUI {
         }
     }
 
-    protected override initializeComponents(): void {
+    protected override onInitialize(): void {
         // Leave wave button
         this.addComponent(new UICloseButton(
             {
@@ -568,6 +574,63 @@ export default class UIGame extends AbstractUI {
             14,
 
             () => this.leaveGame(),
+        ));
+
+        this.addComponent(this.waveInformationContainer = new (InlineRendering(StaticVContainer))(
+            () => ({
+                x: -(this.waveInformationContainer.w / 2),
+                y: 30,
+
+                alignFromCenterX: true,
+            }),
+        ).addChildren(
+            new (Centering(Text))(
+                {},
+
+                () => BIOME_DISPLAY_NAME[this.biome],
+                16,
+            ),
+
+            new StaticSpace(0, 4),
+
+            new (Centering(Gauge))(
+                {
+                    w: 140,
+                    h: 12,
+                },
+
+                () => {
+                    const maxWaveProgress = calculateWaveLength(this.waveProgress);
+
+                    return [
+                        {
+                            value: this.waveProgressTimer,
+                            maxValue: maxWaveProgress,
+
+                            thickness: 0.75,
+
+                            color: BIOME_GAUGE_COLORS[this.biome],
+                            lowBehavior: "lineWidth",
+                        },
+
+                        {
+                            value: this.waveProgressRedGageTimer,
+                            maxValue: maxWaveProgress,
+
+                            thickness: 0.6,
+
+                            color: "#e32933",
+                            lowBehavior: "lineWidth",
+                        },
+                    ];
+                },
+                0,
+                () => "Wave " + this.waveProgress,
+            ),
+
+            new StaticSpace(0, 8),
+
+            this.waveMobIcons = new (Centering(UIGameWaveMobIcons))({}),
         ));
 
         {
@@ -589,7 +652,9 @@ export default class UIGame extends AbstractUI {
                     "You were destroyed by:",
                     12.2,
                 ),
+
                 new StaticSpace(2, 2),
+
                 new (Centering(Text))(
                     {},
                     "Poison",
@@ -636,7 +701,9 @@ export default class UIGame extends AbstractUI {
                     "#1dd129",
                     true,
                 )),
+
                 new StaticSpace(0, 4),
+
                 new (Centering(Text))(
                     {},
 
@@ -835,15 +902,6 @@ export default class UIGame extends AbstractUI {
             this.commandsContainer.setVisible(false, null, false);
         }
 
-        this.addComponent(this.waveEnemyIcons = new (InlineRendering(UIGameWaveMobIcons))(
-            () => ({
-                x: -(this.waveEnemyIcons.w / 2),
-                y: 58,
-
-                alignFromCenterX: true,
-            }),
-        ));
-
         this.addComponent(this.inventory = new (InlineRendering(UIGameInventory))(
             () => ({
                 x: -(this.inventory.w / 2),
@@ -861,8 +919,6 @@ export default class UIGame extends AbstractUI {
             this.updateT += deltaTime / 100;
             this.t = Math.min(1, this.updateT);
 
-            this.waveProgressTimer = this.oWaveProgressTimer + (this.nWaveProgressTimer - this.oWaveProgressTimer) * this.t;
-            this.waveProgressRedGageTimer = this.oWaveProgressRedGageTimer + (this.nWaveProgressRedGageTimer - this.oWaveProgressRedGageTimer) * this.t;
             this.mapRadius = this.oMapRadius + (this.nMapRadius - this.oMapRadius) * this.t;
 
             interpolatedMouseX = interpolate(interpolatedMouseX, mouseXOffset / antennaScaleFactor, 50);
@@ -872,27 +928,22 @@ export default class UIGame extends AbstractUI {
         const canvas = this.canvas;
         const ctx = canvas.getContext("2d");
 
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
         const widthRelative = canvas.width / uiScaleFactor;
         const heightRelative = canvas.height / uiScaleFactor;
 
         const centerWidth = widthRelative / 2;
         const centerHeight = heightRelative / 2;
 
-        const savedFillStyle = ctx.fillStyle;
-        ctx.fillStyle = "black";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = savedFillStyle;
-
         const selfPlayer = this.players.get(this.waveSelfId);
-        if (!selfPlayer) {
-            return;
-        }
+        if (!selfPlayer) return;
 
         // Render map
         this.tilesetRenderer.renderGameTileset({
             canvas,
             tileset: BIOME_TILESETS.get(this.biome),
-            tilesetSize: 300,
+            tileSize: 300,
             radius: this.mapRadius,
             playerX: selfPlayer.x,
             playerY: selfPlayer.y,
@@ -910,8 +961,8 @@ export default class UIGame extends AbstractUI {
                     mob.isDead &&
                     mob.deadT > 1
                 ) {
-                    if (this.waveEnemyIcons.isIconableMobInstance(mob)) {
-                        this.waveEnemyIcons.removeMobIcon(mob);
+                    if (this.waveMobIcons.isIconableMobInstance(mob)) {
+                        this.waveMobIcons.removeMobIcon(mob);
                     }
 
                     this.mobs.delete(k);
@@ -999,108 +1050,8 @@ export default class UIGame extends AbstractUI {
             ctx.restore();
         }
 
-        { // Wave progression bar
-            ctx.save();
-
-            const WAVE_PROGRESSION_BAR_LENGTH = 135;
-            const WAVE_PROGRESSION_BAR_Y = 45;
-
-            ctx.translate(centerWidth, WAVE_PROGRESSION_BAR_Y);
-            ctx.scale(0.4, 0.4);
-            ctx.translate(-centerWidth, -WAVE_PROGRESSION_BAR_Y);
-
-            {
-                const maxSpawnTime = calculateWaveLength(this.waveProgress);
-
-                {
-                    ctx.save();
-
-                    ctx.globalAlpha = 0.9;
-
-                    ctx.lineWidth = 25;
-                    ctx.lineCap = "round";
-                    ctx.strokeStyle = "black";
-                    ctx.beginPath();
-                    ctx.lineTo(centerWidth - WAVE_PROGRESSION_BAR_LENGTH, WAVE_PROGRESSION_BAR_Y);
-                    ctx.lineTo(centerWidth + WAVE_PROGRESSION_BAR_LENGTH, WAVE_PROGRESSION_BAR_Y);
-                    ctx.stroke();
-
-                    ctx.restore();
-                }
-
-                if (this.waveProgressTimer > 0) {
-                    ctx.save();
-
-                    ctx.lineWidth = Math.min((this.waveProgressTimer / maxSpawnTime) * (maxSpawnTime * 16.6666), 18.5);
-                    ctx.lineCap = "round";
-                    ctx.strokeStyle = BIOME_GAUGE_COLORS[this.biome];
-                    ctx.beginPath();
-                    ctx.lineTo(centerWidth - WAVE_PROGRESSION_BAR_LENGTH, WAVE_PROGRESSION_BAR_Y);
-                    ctx.lineTo(centerWidth - WAVE_PROGRESSION_BAR_LENGTH + (WAVE_PROGRESSION_BAR_LENGTH * 2) * (this.waveProgressTimer / maxSpawnTime), WAVE_PROGRESSION_BAR_Y);
-                    ctx.stroke();
-
-                    ctx.restore();
-                }
-
-                if (this.waveProgressRedGageTimer > 0) {
-                    ctx.save();
-
-                    ctx.lineWidth = Math.min((this.waveProgressRedGageTimer / maxSpawnTime) * (maxSpawnTime * 16.6666), 15);
-                    ctx.lineCap = "round";
-                    ctx.strokeStyle = "#e32933";
-                    ctx.beginPath();
-                    ctx.lineTo(centerWidth - WAVE_PROGRESSION_BAR_LENGTH, WAVE_PROGRESSION_BAR_Y);
-                    ctx.lineTo(centerWidth - WAVE_PROGRESSION_BAR_LENGTH + (WAVE_PROGRESSION_BAR_LENGTH * 2) * (this.waveProgressRedGageTimer / maxSpawnTime), WAVE_PROGRESSION_BAR_Y);
-                    ctx.stroke();
-
-                    ctx.restore();
-                }
-
-                {
-                    ctx.save();
-
-                    ctx.lineJoin = 'round';
-                    ctx.lineCap = 'round';
-                    ctx.font = "1em Ubuntu";
-                    ctx.textBaseline = 'middle';
-                    ctx.textAlign = 'center';
-                    ctx.lineWidth = 3;
-                    ctx.strokeStyle = '#000000';
-                    ctx.fillStyle = "white";
-
-                    ctx.strokeText("Wave " + this.waveProgress, centerWidth, WAVE_PROGRESSION_BAR_Y);
-                    ctx.fillText("Wave " + this.waveProgress, centerWidth, WAVE_PROGRESSION_BAR_Y);
-
-                    ctx.restore();
-                }
-
-            }
-
-            {
-                ctx.save();
-
-                const biomeDisplayName = BIOME_DISPLAY_NAME[this.biome];
-
-                ctx.lineJoin = 'round';
-                ctx.lineCap = 'round';
-                ctx.font = "2em Ubuntu";
-                ctx.textBaseline = 'middle';
-                ctx.textAlign = 'center';
-                ctx.lineWidth = 4;
-                ctx.strokeStyle = '#000000';
-                ctx.fillStyle = "white";
-
-                ctx.strokeText(biomeDisplayName, centerWidth, WAVE_PROGRESSION_BAR_Y - 36);
-                ctx.fillText(biomeDisplayName, centerWidth, WAVE_PROGRESSION_BAR_Y - 36);
-
-                ctx.restore();
-            }
-
-            ctx.restore();
-        }
-
         { // Render inlined components
-            renderPossibleComponent(ctx, this.waveEnemyIcons);
+            renderPossibleComponent(ctx, this.waveInformationContainer);
 
             renderPossibleComponent(ctx, this.inventory);
         }
@@ -1180,7 +1131,7 @@ export default class UIGame extends AbstractUI {
         this.mobs.clear();
     }
 
-    override onContextChanged(): void {
+    override onContextChange(): void {
         // Fake dead animation
         const player = this.players.get(this.waveSelfId);
         if (player && !player.isDead) {

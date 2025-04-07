@@ -79,20 +79,16 @@ export default class UIMobIcon extends StaticPanelContainer {
                 },
 
                 (ctx: CanvasRenderingContext2D): void => {
-                    ctx.globalAlpha = 1;
+                    ctx.translate(ICON_SIZE / 2, ICON_SIZE / 2);
 
                     // The coordinate cancel each other out
                     ctx.translate(-mobInstance.x, -mobInstance.y);
-
-                    ctx.translate(ICON_SIZE / 2, ICON_SIZE / 2);
 
                     renderEntity({
                         ctx,
                         entity: mobInstance,
                         isSpecimen: true,
                     });
-
-                    // TODO: withName
                 },
             ),
         );

@@ -68,7 +68,7 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
     /**
      * Store the biome of UI.
      */
-    abstract accessor biome: Biome;
+    public abstract biome: Biome;
 
     /**
      * Ui-definable client packet bound handler.
@@ -84,9 +84,6 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
         }
 
         this.ctx = ctx;
-
-        // Initialize components
-        this.initializeComponents();
 
         this.mousedown = this.handleMouseDown.bind(this);
         this.mouseup = this.handleMouseUp.bind(this);
@@ -157,38 +154,41 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
             const { canvasEventOptions } = this;
 
             {
-                this.canvas.addEventListener('mousedown', this.mousedown, canvasEventOptions);
-                this.canvas.addEventListener('mouseup', this.mouseup, canvasEventOptions);
-                this.canvas.addEventListener('mousemove', this.mousemove, canvasEventOptions);
+                this.canvas.addEventListener("mousedown", this.mousedown, canvasEventOptions);
+                this.canvas.addEventListener("mouseup", this.mouseup, canvasEventOptions);
+                this.canvas.addEventListener("mousemove", this.mousemove, canvasEventOptions);
             }
 
             {
-                this.canvas.addEventListener('wheel', this.wheel, canvasEventOptions);
+                this.canvas.addEventListener("wheel", this.wheel, canvasEventOptions);
             }
 
             {
-                this.canvas.addEventListener('touchmove', this.touchmove, canvasEventOptions);
-                this.canvas.addEventListener('touchstart', this.touchstart, canvasEventOptions);
-                this.canvas.addEventListener('touchend', this.touchend, canvasEventOptions);
+                this.canvas.addEventListener("touchmove", this.touchmove, canvasEventOptions);
+                this.canvas.addEventListener("touchstart", this.touchstart, canvasEventOptions);
+                this.canvas.addEventListener("touchend", this.touchend, canvasEventOptions);
             }
         }
 
         {
-            window.addEventListener('keydown', this.keydown);
-            window.addEventListener('keyup', this.keyup);
+            window.addEventListener("keydown", this.keydown);
+            window.addEventListener("keyup", this.keyup);
         }
 
         // Resize observer cause flash when resizing
         // So ill use primitive methods
 
-        window.addEventListener('resize', this.onresize);
+        window.addEventListener("resize", this.onresize);
+
+        // Initialize components
+        this.onInitialize();
 
         // Call twice to components working properly
         this.onresize();
         this.onresize();
 
         // Add touch-action CSS property
-        canvas.style.touchAction = 'none';
+        canvas.style.touchAction = "none";
     }
 
     public removeEventListeners(): void {
@@ -196,28 +196,28 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
             const { canvasEventOptions } = this;
 
             {
-                this.canvas.removeEventListener('mousedown', this.mousedown, canvasEventOptions);
-                this.canvas.removeEventListener('mouseup', this.mouseup, canvasEventOptions);
-                this.canvas.removeEventListener('mousemove', this.mousemove, canvasEventOptions);
+                this.canvas.removeEventListener("mousedown", this.mousedown, canvasEventOptions);
+                this.canvas.removeEventListener("mouseup", this.mouseup, canvasEventOptions);
+                this.canvas.removeEventListener("mousemove", this.mousemove, canvasEventOptions);
             }
 
             {
-                this.canvas.removeEventListener('wheel', this.wheel, canvasEventOptions);
+                this.canvas.removeEventListener("wheel", this.wheel, canvasEventOptions);
             }
 
             {
-                this.canvas.removeEventListener('touchmove', this.touchmove, canvasEventOptions);
-                this.canvas.removeEventListener('touchstart', this.touchstart, canvasEventOptions);
-                this.canvas.removeEventListener('touchend', this.touchend, canvasEventOptions);
+                this.canvas.removeEventListener("touchmove", this.touchmove, canvasEventOptions);
+                this.canvas.removeEventListener("touchstart", this.touchstart, canvasEventOptions);
+                this.canvas.removeEventListener("touchend", this.touchend, canvasEventOptions);
             }
         }
 
         {
-            window.removeEventListener('keydown', this.keydown);
-            window.removeEventListener('keyup', this.keyup);
+            window.removeEventListener("keydown", this.keydown);
+            window.removeEventListener("keyup", this.keyup);
         }
 
-        window.removeEventListener('resize', this.onresize);
+        window.removeEventListener("resize", this.onresize);
 
         this.mousedown = null;
         this.mouseup = null;
@@ -605,7 +605,12 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
     /**
      * Method for initialize components, only called for once.
      */
-    protected abstract initializeComponents(): void;
+    protected abstract onInitialize(): void;
+
+    /**
+     * Method call on ui switched.
+     */
+    public abstract onContextChange(): void;
 
     /**
      * Method call upon every rAF frame.
@@ -619,9 +624,4 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
         // Remove all listeners registered
         this.removeAllListeners();
     }
-
-    /**
-     * Method call on ui switched.
-     */
-    public abstract onContextChanged(): void;
 }

@@ -28,9 +28,7 @@ export function renderEntity<T extends Mob | Player>(renderingContext: Rendering
     const { entity, ctx } = renderingContext;
 
     const renderer = getRenderer(entity.constructor);
-    if (!renderer) return;
-
-    if (!renderer.isRenderingCandidate(renderingContext)) return;
+    if (!(renderer && renderer.isRenderingCandidate(renderingContext))) return;
 
     ctx.save();
 

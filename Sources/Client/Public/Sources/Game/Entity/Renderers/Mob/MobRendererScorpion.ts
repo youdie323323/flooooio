@@ -159,7 +159,7 @@ export default class MobRendererScorpion extends AbstractMobRenderer {
             { // Legs
                 ctx.strokeStyle = "#333333";
 
-                const LEG_LENGTH = 38;
+                const LEG_LENGTH = 35;
 
                 ctx.beginPath();
 

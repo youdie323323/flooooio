@@ -8,6 +8,8 @@
     "start:server": "cd Sources/goserver && go run cmd/flooooio/main.go"
   },
   "devDependencies": {
+    "@basementuniverse/utils": "^1.7.0",
+    "@basementuniverse/vec": "^2.2.2",
     "@stylistic/eslint-plugin": "^4.1.0",
     "@types/express": "^5.0.0",
     "@types/node-schedule": "^2.1.7",
@@ -21,6 +23,7 @@
     "globals": "^15.13.0",
     "inquirer": "^12.2.0",
     "js-confuser": "^2.0.0",
+    "lru_map": "^0.4.1",
     "mnemonist": "^0.40.3",
     "node-schedule": "^2.1.1",
     "stackblur-canvas": "^2.7.0",

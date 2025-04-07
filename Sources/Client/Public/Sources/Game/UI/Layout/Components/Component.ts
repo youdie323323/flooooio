@@ -5,6 +5,7 @@ import LayoutCache from "../LayoutCache";
 import type { DynamicLayoutable } from "./ComponentDynamicLayoutable";
 import type { Layoutable } from "./ComponentLayoutable";
 import { type AnyStaticContainer, type StaticSpace } from "./WellKnown/Container";
+import type Gauge from "./WellKnown/Gauge";
 import type { Logo } from "./WellKnown/Logo";
 import type Text from "./WellKnown/Text";
 import type TextInput from "./WellKnown/TextInput";
@@ -34,7 +35,8 @@ export type Components =
         | Text
         | TextInput
         | Toggle
-        | Logo,
+        | Logo
+        | Gauge,
         // Both of them are extending Logo
         // | CanvasLogo | SVGLogo,
         Layoutable

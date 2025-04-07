@@ -29,10 +29,10 @@ import { Clientbound } from "../../../../../../Shared/Websocket/Packet/PacketDir
 import type { StaticAdheredClientboundHandlers } from "../../Websocket/Packet/PacketClientbound";
 import DISCORD_ICON_SVG from "./Assets/discord_icon.svg";
 import Tooltip from "../Layout/Extensions/ExtensionTooltip";
-import { BIOME_TILESETS } from "../../Utils/Tiled/TilesetRenderer";
-import TilesetWavedRenderer from "../../Utils/Tiled/TilesetWavedRenderer";
-import UITitleBottomLeftButtonGroup from "./BottomLeftButtons/UITitleBottomLeftButtonGroup";
-import { createTitleBottomLeftToolTippedButton } from "./BottomLeftButtons";
+import UITitleBottomLeftButtonGroup from "./BottomLeftButtonGroup/UITitleBottomLeftButtonGroup";
+import { createTitleBottomLeftToolTippedButton } from "./BottomLeftButtonGroup";
+import { BIOME_TILESETS } from "../../Utils/Tile/Tileset/TilesetRenderer";
+import TilesetWavedRenderer from "../../Utils/Tile/Tileset/TilesetWavedRenderer";
 
 const TAU = Math.PI * 2;
 
@@ -146,7 +146,7 @@ export default class UITitle extends AbstractUI {
 
     public waveRoomSelfId: number = -1;
 
-    accessor biome: Biome = Biome.GARDEN;
+    override biome: Biome = Biome.GARDEN;
 
     override readonly CLIENTBOUND_HANDLERS = {
         [Clientbound.WAVE_ROOM_SELF_ID]: (reader: BinaryReader): void => {
@@ -234,10 +234,10 @@ export default class UITitle extends AbstractUI {
         }, 1);
     }
 
-    protected override initializeComponents(): void {
+    protected override onInitialize(): void {
         this.resetWaveState();
 
-        {
+        { // Buttons
             this.addComponents(new UITitleBottomLeftButtonGroup(
                 {
                     x: 13 + .5,
@@ -957,7 +957,7 @@ export default class UITitle extends AbstractUI {
         this.wavedBackgroundRendererBiome.render({
             canvas,
             tileset: BIOME_TILESETS.get(this.biome),
-            tilesetSize: 350,
+            tileSize: 350,
         });
 
         backgroundEntities.forEach((v) => {
@@ -1033,7 +1033,7 @@ export default class UITitle extends AbstractUI {
         this.wavedBackgroundRendererBiome = null;
     }
 
-    override onContextChanged(): void {
+    override onContextChange(): void {
         cameraController.zoom = 1;
 
         document.onmouseout = null;

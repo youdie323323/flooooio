@@ -41,7 +41,7 @@ export default class UIContext {
 
         this.previousCtx = this.currentCtx;
 
-        this.previousCtx.onContextChanged();
+        this.previousCtx.onContextChange();
 
         // Cleanup listeners so cant touch before ui buttons
         this.previousCtx?.removeEventListeners();
