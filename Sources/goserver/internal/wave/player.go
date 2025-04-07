@@ -73,7 +73,7 @@ const minHpLevel = 75.
 // calculatePlayerHp calculate hp by level.
 // 100 * x, x is upgrade.
 func calculatePlayerHp(level float64) float64 {
-	return (100 * 10) * math.Pow(1.02, math.Max(level, minHpLevel)-1)
+	return (100 * 200) * math.Pow(1.02, math.Max(level, minHpLevel)-1)
 }
 
 // CalculateMaxHealth calculates max hp of player.
@@ -108,7 +108,7 @@ func (p *Player) SwapPetal(
 
 	at int,
 ) {
-	// TODO: spam this while moving have dead lock
+	// TODO: spam this while moving cause dead lock
 
 	p.Mu.Lock()
 

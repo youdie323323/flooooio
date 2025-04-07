@@ -123,7 +123,7 @@ func NewWaveRoom(b native.Biome, v WaveRoomVisibility) *WaveRoom {
 	wr.WavePool = NewWavePool(wr, &WaveData{
 		Biome: b,
 
-		Progress:         44,
+		Progress:         60,
 		ProgressTimer:    0,
 		ProgressRedTimer: 0,
 		ProgressIsRed:    false,
