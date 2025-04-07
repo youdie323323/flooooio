@@ -11,6 +11,8 @@ import (
 const (
 	bubbleBounceForce         = 20.
 	bubbleVelocityAttenuation = .8
+
+	yggdrasilPushForce = 10.
 )
 
 var summonTypeMapping = map[native.PetalType]native.MobType{
@@ -83,8 +85,28 @@ func (p *Player) PlayerPetalConsume(wp *WavePool) {
 
 			case native.PetalTypeYggdrasil:
 				{
+					// Already used yggdrasil
+					if petal.DetachedFromOrbit {
+						continue
+					}
+
 					// Detach
 					petal.DetachedFromOrbit = true
+
+					{
+						dx := petal.X - p.X
+						dy := petal.Y - p.Y
+
+						distance := math.Hypot(dx, dy)
+
+						if distance > 0 {
+							dirX := dx / distance
+							dirY := dy / distance
+
+							petal.X += dirX * yggdrasilPushForce
+							petal.Y += dirY * yggdrasilPushForce
+						}
+					}
 
 					// TODO: implement logic
 				}
@@ -106,8 +128,6 @@ func (p *Player) PlayerPetalConsume(wp *WavePool) {
 						nil,
 						false,
 					))
-
-					usageCooldown[j] = time.Time{}
 				}
 
 			case native.PetalTypeBubble:
@@ -130,6 +150,9 @@ func (p *Player) PlayerPetalConsume(wp *WavePool) {
 					}
 				}
 			}
+
+			// If succeed consume, reset cooldown
+			usageCooldown[j] = time.Time{}
 		}
 	}
 

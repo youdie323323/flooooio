@@ -21,8 +21,8 @@ type Petal struct {
 	Velocity [2]float64
 }
 
-// GetDesiredSize return desired size (display size).
-func (p *Petal) GetDesiredSize() float64 {
+// DesiredSize return desired size (display size).
+func (p *Petal) DesiredSize() float64 {
 	profile := native.PetalProfiles[p.Type]
 	collision := profile.Collision
 
@@ -46,11 +46,11 @@ func NewPetal(
 ) *Petal {
 	return &Petal{
 		Entity: NewEntity(
-			id, 
-			
-			x, 
-			y, 
-			
+			id,
+
+			x,
+			y,
+
 			PetalSize,
 		),
 
@@ -88,6 +88,7 @@ func (p *Petal) OnUpdateTick(wp *WavePool) {
 	// Unneeded for petal
 	// m.EntityCoordinateMovement(wp)
 
+	p.PetalCoordinateBoundary(wp)
 	p.PetalSpecialAngle(wp)
 	p.PetalElimination(wp)
 
@@ -98,7 +99,7 @@ func (p *Petal) OnUpdateTick(wp *WavePool) {
 		p.X += p.Velocity[0]
 		p.Y += p.Velocity[1]
 	}
-	
+
 	p.Mu.Unlock()
 }
 

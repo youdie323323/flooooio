@@ -104,7 +104,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					return true
 				}
 
-				c1 := Circle{X: nearEntity.X, Y: nearEntity.Y, R: nearEntity.GetDesiredSize()}
+				c1 := Circle{X: nearEntity.X, Y: nearEntity.Y, R: nearEntity.DesiredSize()}
 
 				px, py, ok := ComputeCirclePush(c0, c1)
 				if ok {
@@ -128,7 +128,8 @@ func (m *Mob) MobCollision(wp *WavePool) {
 
 						// Petal specials
 						switch nearEntity.Type {
-						case native.PetalTypeFang: doFangLifesteal(nearEntity, nearEntityStat, nearEntityDamage)
+						case native.PetalTypeFang:
+							doFangLifesteal(nearEntity, nearEntityStat, nearEntityDamage)
 						}
 
 						{ // Set LastAttackedEntity
