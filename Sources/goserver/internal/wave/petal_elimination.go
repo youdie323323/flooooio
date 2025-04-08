@@ -16,7 +16,7 @@ func (p *Petal) onEliminate(wp *WavePool) {
 			for i, pet := range p.SummonedPets {
 				if pet != nil {
 					if !pet.WasEliminated(wp) {
-						pet.InstantlyKill(wp)
+						pet.ForceEliminate(wp)
 					}
 
 					p.SummonedPets = slices.Delete(p.SummonedPets, i, i+1)
@@ -32,7 +32,11 @@ func (p *Petal) PetalElimination(wp *WavePool) {
 	}
 }
 
-func (p *Petal) InstantlyKill(wp *WavePool) {
+// ForceEliminate forces eliminate a petal.
+//
+// Warning: This behaves the same as when it is "naturally" removed.
+// What this means is that binded entities may also be deleted. If this is not desired, use wp.RemovePetal instead.
+func (p *Petal) ForceEliminate(wp *WavePool) {
 	p.Health = 0
 
 	p.onEliminate(wp)

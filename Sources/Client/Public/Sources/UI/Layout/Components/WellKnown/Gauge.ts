@@ -21,7 +21,7 @@ export type GaugeSources<G> = MaybePointerLike<ReadonlyArray<G>>;
 export default class Gauge extends Component {
     public override[OBSTRUCTION_AFFECTABLE]: boolean = false;
 
-    private static readonly ANIMATION_SPEED = 0.1;
+    private static readonly ANIMATION_SPEED = 0.05;
     private static readonly EPSILON = 1e-10;
 
     private currentValues: Array<number>;

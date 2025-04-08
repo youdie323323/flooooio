@@ -39,7 +39,7 @@ type PlayerData struct {
 	WrPId *WaveRoomPlayerId
 	WPId  *EntityId
 
-	// Sp represents static player data of user
+	// Sp represents static player data of user.
 	Sp *StaticPlayer
 
 	mu sync.RWMutex
@@ -123,12 +123,12 @@ func NewWaveRoom(b native.Biome, v WaveRoomVisibility) *WaveRoom {
 	wr.WavePool = NewWavePool(wr, &WaveData{
 		Biome: b,
 
-		Progress:         60,
+		Progress:         43,
 		ProgressTimer:    0,
 		ProgressRedTimer: 0,
 		ProgressIsRed:    false,
 
-		MapRadius: 2000,
+		MapRadius: 1500,
 	})
 
 	// Start sending update packet

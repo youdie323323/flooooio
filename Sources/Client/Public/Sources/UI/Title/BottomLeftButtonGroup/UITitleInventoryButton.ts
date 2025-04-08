@@ -122,6 +122,7 @@ export default class UITitleInventoryButton extends createTitleBottomLeftToolTip
                     x: 88,
                     y: 4,
                 },
+                
                 "Inventory",
                 16,
             ),
@@ -131,6 +132,7 @@ export default class UITitleInventoryButton extends createTitleBottomLeftToolTip
                     x: 50,
                     y: 40,
                 },
+
                 "Click on a petal to equip it",
                 11,
             ),
@@ -148,18 +150,28 @@ export default class UITitleInventoryButton extends createTitleBottomLeftToolTip
                         ...dynamicJoinArray(
                             Array.from({ length: 6 }, () => {
                                 const icon: UIDraggableMobIcon = new UIDraggableMobIcon(
-                                    {},
+                                    {
+                                        w: 30,
+                                        h: 30,
+                                    },
 
                                     new Mob(
                                         -1,
+
                                         0,
                                         0,
+
                                         0,
+
                                         0,
+
                                         0,
+
                                         PetalType.BASIC,
                                         Rarity.COMMON,
+
                                         false,
+
                                         false,
                                     ),
 

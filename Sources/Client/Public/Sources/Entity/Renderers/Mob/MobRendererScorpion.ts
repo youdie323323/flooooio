@@ -102,28 +102,28 @@ export default class MobRendererScorpion extends AbstractMobRenderer {
 
         ctx.lineJoin = ctx.lineCap = "round";
 
-        ctx.lineWidth = 7;
-
         {
             ctx.save();
 
             ctx.fillStyle = ctx.strokeStyle = "#333333";
+            ctx.lineWidth = 6;
 
-            ctx.translate(85 - 64, 67.80140686035156 - 64);
+            ctx.translate(84 - 64, 67.80140686035156 - 64);
             ctx.scale(0.6628867661928461, 0.6628867198043205);
 
             // TODO: this is not movement counter
-            const sinMoveCounter = Math.sin(entity.moveCounter);
+            const sinMoveCounter = Math.sin(entity.moveCounter * 1.6) * 0.1;
 
             {
                 ctx.save();
 
-                ctx.rotate(sinMoveCounter * 0.1);
+                ctx.rotate(sinMoveCounter);
+                ctx.translate(0, -2);
 
                 ctx.beginPath();
                 ctx.moveTo(-10, 5);
-                ctx.quadraticCurveTo(15, 30, 35, 10);
-                ctx.quadraticCurveTo(15, 20, -10, 5);
+                ctx.quadraticCurveTo(0, 30, 35, 11);
+                ctx.quadraticCurveTo(0, 20, -10, 5);
                 ctx.closePath();
                 ctx.fill();
                 ctx.stroke();
@@ -134,12 +134,13 @@ export default class MobRendererScorpion extends AbstractMobRenderer {
             {
                 ctx.save();
 
-                ctx.rotate(sinMoveCounter * -0.1);
+                ctx.rotate(-sinMoveCounter);
+                ctx.translate(0, 2);
 
                 ctx.beginPath();
                 ctx.moveTo(-10, -5);
-                ctx.quadraticCurveTo(15, -30, 35, -10);
-                ctx.quadraticCurveTo(15, -20, -10, -5);
+                ctx.quadraticCurveTo(0, -30, 35, -11);
+                ctx.quadraticCurveTo(0, -20, -10, -5);
                 ctx.closePath();
                 ctx.fill();
                 ctx.stroke();
@@ -153,13 +154,15 @@ export default class MobRendererScorpion extends AbstractMobRenderer {
         {
             ctx.save();
 
+            ctx.lineWidth = 7;
+
             ctx.translate(67.80140686035156 - 64, 67.80140686035156 - 64);
             ctx.scale(0.7679999578592127, 0.7679999578592127);
 
             { // Legs
                 ctx.strokeStyle = "#333333";
 
-                const LEG_LENGTH = 35;
+                const LEG_LENGTH = 36;
 
                 ctx.beginPath();
 
@@ -176,6 +179,8 @@ export default class MobRendererScorpion extends AbstractMobRenderer {
                 ctx.stroke();
             }
 
+            ctx.strokeStyle = this.calculateDamageEffectColor(context, "#9E7C24");
+
             { // Body
                 ctx.beginPath();
                 ctx.moveTo(0, -30);
@@ -186,17 +191,11 @@ export default class MobRendererScorpion extends AbstractMobRenderer {
                 ctx.closePath();
 
                 ctx.fillStyle = this.calculateDamageEffectColor(context, "#C69A2D");
-                ctx.strokeStyle = this.calculateDamageEffectColor(context, "#9E7C24");
-                ctx.lineWidth = 7;
                 ctx.fill();
                 ctx.stroke();
             }
 
             { // Wrinkles
-                ctx.lineWidth = 7;
-
-                ctx.strokeStyle = this.calculateDamageEffectColor(context, "#9E7C24");
-
                 ctx.beginPath();
                 ctx.moveTo(22, -12);
                 ctx.quadraticCurveTo(26, 0, 22, 12);
@@ -221,28 +220,32 @@ export default class MobRendererScorpion extends AbstractMobRenderer {
             ctx.restore();
         }
 
-        {
+        const tailColor = this.calculateDamageEffectColor(context, "#DBAB32");
+
+        const tailStrokeColor = this.calculateDamageEffectColor(context, "#B18B28");
+
+        { // Tail
             ctx.save();
 
             ctx.translate(30 - 64, 57 - 64);
             ctx.scale(0.30719998103634244, 0.30719998103634244);
 
-            ctx.fillStyle = this.calculateDamageEffectColor(context, "#DBAB32");
+            ctx.fillStyle = tailColor;
             ctx.fill(scorpionTail, "nonzero");
 
-            ctx.fillStyle = this.calculateDamageEffectColor(context, "#B18B28");
+            ctx.fillStyle = tailStrokeColor;
             ctx.fill(scorpionTailStroke, "nonzero");
 
             ctx.restore();
         }
 
-        {
+        { // Tail wrinkle
             ctx.save();
 
             ctx.translate(67.80140686035156 - 64, 67.80140686035156 - 64);
             ctx.scale(0.7679999578592127, 0.7679999578592127);
 
-            ctx.fillStyle = this.calculateDamageEffectColor(context, "#B18B28");
+            ctx.fillStyle = tailStrokeColor;
 
             ctx.fill(scorpionTailWrinkle1, "nonzero");
             ctx.fill(scorpionTailWrinkle2, "nonzero");

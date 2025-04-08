@@ -47,6 +47,64 @@ function angleToRad(angle: number) {
  */
 export const calculateWaveLength = (x: number) => Math.max(60, x ** 0.2 * 18.9287 + 30);
 
+interface LightningBounce {
+    points: Array<[number, number]>;
+    a: number;
+
+    path?: Path2D;
+}
+
+function prepareLightningBouncePath({ points }: LightningBounce): Path2D {
+    const path = new Path2D();
+
+    const addRandomOffset = (value: number, magnitude: number = 2) => {
+        const randomFactor = (Math.random() - 0.5) * 2;
+
+        return value + (randomFactor * magnitude);
+    };
+
+    // If point is just one, add distorted first point to render correctly
+    if (points.length === 1) {
+        const [x, y] = points[0];
+
+        points.push([
+            addRandomOffset(x),
+            addRandomOffset(y),
+        ]);
+    }
+
+    path.moveTo(...points[0]);
+
+    for (let i = 0; i < points.length - 1; i++) {
+        const startPoint = points[i];
+        const endPoint = points[i + 1];
+        const deltaX = endPoint[0] - startPoint[0];
+        const deltaY = endPoint[1] - startPoint[1];
+        const totalDistance = Math.hypot(deltaX, deltaY);
+
+        let currentDistance = 0;
+
+        while (currentDistance < totalDistance) {
+            const JITTER_AMOUNT = 25;
+
+            const ratio = currentDistance / totalDistance;
+            const jitterX = (Math.random() * 2 - 1) * JITTER_AMOUNT;
+            const jitterY = (Math.random() * 2 - 1) * JITTER_AMOUNT;
+
+            path.lineTo(
+                startPoint[0] + ratio * deltaX + jitterX,
+                startPoint[1] + ratio * deltaY + jitterY,
+            );
+
+            currentDistance += Math.random() * 50 + 50;
+        }
+
+        path.lineTo(...endPoint);
+    }
+
+    return path;
+}
+
 export default class UIGame extends AbstractUI {
     private static readonly DEAD_BACKGROUND_TARGET_OPACITY = 0.3 as const;
     private static readonly DEAD_BACKGROUND_FADE_DURATION = 0.3 as const;
@@ -55,6 +113,8 @@ export default class UIGame extends AbstractUI {
 
     private players: Map<number, Player> = new Map();
     private mobs: Map<number, Mob> = new Map();
+
+    private lightningBounces: Array<LightningBounce> = new Array();
 
     private waveInformationContainer: StaticVContainer;
     private waveMobIcons: UIGameWaveMobIcons;
@@ -385,34 +445,60 @@ export default class UIGame extends AbstractUI {
                 }
             }
 
-            const eliminatedEntitiesCount = reader.readUInt16();
+            { // Read eliminated entities
+                const eliminatedEntitiesCount = reader.readUInt16();
 
-            for (let i = 0; i < eliminatedEntitiesCount; i++) {
-                const entityId = reader.readUInt32();
+                for (let i = 0; i < eliminatedEntitiesCount; i++) {
+                    const entityId = reader.readUInt32();
 
-                if (this.mobs.has(entityId)) {
-                    const mob = this.mobs.get(entityId);
+                    if (this.mobs.has(entityId)) {
+                        const mob = this.mobs.get(entityId);
 
-                    mob.isDead = true;
+                        mob.isDead = true;
 
-                    continue;
+                        continue;
+                    }
+
+                    if (this.players.has(entityId)) {
+                        const player = this.players.get(entityId);
+
+                        player.wasEliminated = true;
+
+                        player.isDead = true;
+
+                        // Maybe player is already dead and got revived, deadT is maybe half
+                        player.deadT = 0;
+                        player.health = 0;
+
+                        // Remove from status
+                        this.playerStatuses.removePlayer(player, this.waveSelfId === player.id);
+
+                        continue;
+                    }
                 }
+            }
 
-                if (this.players.has(entityId)) {
-                    const player = this.players.get(entityId);
+            { // Read lightning bounces
+                const lightningBouncesCount = reader.readUInt16();
 
-                    player.wasEliminated = true;
+                for (let i = 0; i < lightningBouncesCount; i++) {
+                    const positionsCount = reader.readUInt16();
 
-                    player.isDead = true;
+                    const bounce: LightningBounce = {
+                        points: [],
+                        a: 1,
+                    };
 
-                    // Maybe player is already dead and got revived, deadT is maybe half
-                    player.deadT = 0;
-                    player.health = 0;
+                    for (let j = 0; j < positionsCount; j++) {
+                        const x = reader.readFloat64();
+                        const y = reader.readFloat64();
 
-                    // Remove from status
-                    this.playerStatuses.removePlayer(player, this.waveSelfId === player.id);
+                        bounce.points.push([x, y]);
+                    }
 
-                    continue;
+                    bounce.path = prepareLightningBouncePath(bounce);
+
+                    this.lightningBounces.push(bounce);
                 }
             }
         },
@@ -1090,6 +1176,33 @@ export default class UIGame extends AbstractUI {
                     entity,
                     isSpecimen: false,
                 });
+            }
+
+            { // Render lightning bounces
+                const { lightningBounces } = this;
+
+                ctx.save();
+
+                ctx.strokeStyle = "#fff";
+                ctx.lineCap = "round";
+
+                for (let i = lightningBounces.length - 1; i >= 0; i--) {
+                    const bounce = lightningBounces[i];
+
+                    bounce.a -= deltaTime / 500;
+                    if (bounce.a <= 0) {
+                        lightningBounces.splice(i, 1);
+
+                        continue;
+                    }
+
+                    ctx.lineWidth = bounce.a * 4;
+                    ctx.globalAlpha = bounce.a;
+
+                    ctx.stroke(bounce.path);
+                }
+
+                ctx.restore();
             }
 
             ctx.restore();

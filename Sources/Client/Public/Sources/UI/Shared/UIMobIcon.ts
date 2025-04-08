@@ -6,10 +6,9 @@ import { generateDefaultStarfishLegDistance } from "../../Entity/Mob";
 import { RARITY_COLOR } from "../../Native/Rarity";
 import { CanvasLogo } from "../Layout/Components/WellKnown/Logo";
 import { renderEntity } from "../../Entity/Renderers/RendererRenderingLink";
+import type { LayoutOptions } from "../Layout/Layout";
 
 export default class UIMobIcon extends StaticPanelContainer {
-    public static readonly ICON_SIZE: number = 30;
-
     private static readonly ICON_MOB_ANGLE: number = -3 * Math.PI / 4;
 
     private static readonly ICON_MOB_SIZE: number = 9;
@@ -47,20 +46,20 @@ export default class UIMobIcon extends StaticPanelContainer {
     } as const satisfies ProxyHandler<Mob>;
 
     constructor(
-        layoutOptions: MaybePointerLike<AutomaticallySizedLayoutOptions>,
+        layoutOptions: MaybePointerLike<LayoutOptions>,
 
-        public mobInstance: Mob,
+        public mob: Mob,
 
-        public amountAccumulator: number = 1,
+        public amount: number = 1,
     ) {
-        const { ICON_SIZE, ICON_MOB_INSTANCE_PROXY_HANDLER } = UIMobIcon;
+        const { ICON_MOB_INSTANCE_PROXY_HANDLER } = UIMobIcon;
 
         super(
             layoutOptions,
 
             false,
 
-            () => RARITY_COLOR[mobInstance.rarity],
+            () => RARITY_COLOR[mob.rarity],
 
             2,
 
@@ -69,39 +68,37 @@ export default class UIMobIcon extends StaticPanelContainer {
         );
 
         // Proxy the mob instance and spoof the size/angle
-        mobInstance = new Proxy(mobInstance, ICON_MOB_INSTANCE_PROXY_HANDLER);
-
-        this.addChildren(
-            new CoordinatedStaticSpace(ICON_SIZE, ICON_SIZE, 0, 0),
-            new CanvasLogo(
-                {
-                    w: 0,
-                    h: 0,
-                },
-
-                (ctx: CanvasRenderingContext2D): void => {
-                    ctx.translate(ICON_SIZE / 2, ICON_SIZE / 2);
-
-                    // The coordinate cancel each other out
-                    ctx.translate(-mobInstance.x, -mobInstance.y);
-
-                    renderEntity({
-                        ctx,
-                        entity: mobInstance,
-                        isSpecimen: true,
-                    });
-                },
-            ),
-        );
+        this.mob = new Proxy(this.mob, ICON_MOB_INSTANCE_PROXY_HANDLER);
     }
 
     override render(ctx: CanvasRenderingContext2D): void {
         super.render(ctx);
 
-        const amount = this.amountAccumulator;
+        const { mob, amount } = this;
+
+        const cw = this.w / 2,
+            ch = this.h / 2;
+
+        ctx.translate(this.x + cw, this.y + ch);
+
+        { // Draw mob
+            ctx.save();
+
+            // The coordinate cancel each other out
+            ctx.translate(-mob.x, -mob.y);
+
+            renderEntity({
+                ctx,
+                entity: mob,
+                isSpecimen: true,
+            });
+
+            ctx.restore();
+        }
+
         if (amount === 1) return;
 
-        ctx.translate(this.x + this.w - 7, this.y + 8);
+        ctx.translate(cw - 7, -ch + 8);
 
         ctx.rotate((30 * Math.PI) / 180);
 
@@ -119,6 +116,6 @@ export default class UIMobIcon extends StaticPanelContainer {
     override destroy(): void {
         super.destroy();
 
-        this.mobInstance = null;
+        this.mob = null;
     }
 }

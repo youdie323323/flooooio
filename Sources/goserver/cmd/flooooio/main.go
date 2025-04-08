@@ -34,95 +34,43 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	surface := []wave.StaticPetal{
 		{
-			Type:   native.PetalTypeStick,
-			Rarity: native.RarityMythic,
-		},
-		{
-			Type:   native.PetalTypeStick,
-			Rarity: native.RarityMythic,
-		},
-		{
-			Type:   native.PetalTypeStick,
-			Rarity: native.RarityMythic,
-		},
-		{
-			Type:   native.PetalTypeStick,
-			Rarity: native.RarityMythic,
-		},
-		{
-			Type:   native.PetalTypeStick,
-			Rarity: native.RarityMythic,
+			Type:   native.PetalTypeEggBeetle,
+			Rarity: native.RarityUltra,
 		},
 		{
 			Type:   native.PetalTypeEggBeetle,
-			Rarity: native.RarityMythic,
+			Rarity: native.RarityUltra,
 		},
 		{
 			Type:   native.PetalTypeEggBeetle,
-			Rarity: native.RarityMythic,
+			Rarity: native.RarityUltra,
 		},
 		{
 			Type:   native.PetalTypeEggBeetle,
-			Rarity: native.RarityMythic,
+			Rarity: native.RarityUltra,
 		},
 		{
 			Type:   native.PetalTypeEggBeetle,
-			Rarity: native.RarityMythic,
-		},
-		{
-			Type:   native.PetalTypeEggBeetle,
-			Rarity: native.RarityMythic,
-		},
-		{
-			Type:   native.PetalTypeFang,
 			Rarity: native.RarityUltra,
 		},
 		{
-			Type:   native.PetalTypeClaw,
+			Type:   native.PetalTypeStick,
 			Rarity: native.RarityUltra,
 		},
 		{
-			Type:   native.PetalTypeFang,
+			Type:   native.PetalTypeStick,
 			Rarity: native.RarityUltra,
 		},
 		{
-			Type:   native.PetalTypeSand,
+			Type:   native.PetalTypeStick,
 			Rarity: native.RarityUltra,
 		},
 		{
-			Type:   native.PetalTypeLightning,
+			Type:   native.PetalTypeStick,
 			Rarity: native.RarityUltra,
 		},
 		{
-			Type:   native.PetalTypeClaw,
-			Rarity: native.RarityUltra,
-		},
-		{
-			Type:   native.PetalTypeFang,
-			Rarity: native.RarityUltra,
-		},
-		{
-			Type:   native.PetalTypeSand,
-			Rarity: native.RarityUltra,
-		},
-		{
-			Type:   native.PetalTypeLightning,
-			Rarity: native.RarityUltra,
-		},
-		{
-			Type:   native.PetalTypeClaw,
-			Rarity: native.RarityUltra,
-		},
-		{
-			Type:   native.PetalTypeFang,
-			Rarity: native.RarityUltra,
-		},
-		{
-			Type:   native.PetalTypeSand,
-			Rarity: native.RarityUltra,
-		},
-		{
-			Type:   native.PetalTypeFaster,
+			Type:   native.PetalTypeStick,
 			Rarity: native.RarityUltra,
 		},
 	}

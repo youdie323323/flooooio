@@ -1,6 +1,9 @@
 package wave
 
-import "math/rand/v2"
+import (
+	"math/rand/v2"
+	"time"
+)
 
 func RevivePlayer(wp *WavePool, p *Player) {
 	if p.IsDead {
@@ -38,7 +41,7 @@ func DisposeBindings(wp *WavePool, p *Player) {
 
 		for _, petal := range petals {
 			if !petal.WasEliminated(wp) {
-				wp.RemovePetal(*petal.Id)
+				petal.ForceEliminate(wp)
 			}
 		}
 	}
@@ -46,7 +49,7 @@ func DisposeBindings(wp *WavePool, p *Player) {
 	// Remove all pets
 	for _, pet := range wp.GetMobsWithCondition(func(m *Mob) bool { return m.PetMaster == p }) {
 		if pet != nil {
-			wp.RemoveMob(*pet.Id)
+			pet.ForceEliminate(wp)
 		}
 	}
 
@@ -55,23 +58,17 @@ func DisposeBindings(wp *WavePool, p *Player) {
 	p.Slots.UsageCooldownGrid = GeneratePetalCooldownGrid(len(p.Slots.Surface))
 }
 
-func (p *Player) onEliminate(wp *WavePool) {
-	p.IsDead = true
-
-	p.Health = 0
-
-	// Stop move
-	p.Magnitude = 0
-
-	DisposeBindings(wp, p)
-}
-
 func (p *Player) PlayerElimination(wp *WavePool) {
 	if !p.IsDead && 0 >= p.Health {
-		p.onEliminate(wp)
-	}
-}
+		p.IsDead = true
 
-func (p *Player) InstantlyKill(wp *WavePool) {
-	p.onEliminate(wp)
+		p.Health = 0
+
+		// Stop move
+		p.Magnitude = 0
+
+		p.LastDeadCameraUpdate = time.Now()
+
+		DisposeBindings(wp, p)
+	}
 }

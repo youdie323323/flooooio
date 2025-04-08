@@ -76,8 +76,8 @@ func calculatePlayerHp(level float64) float64 {
 	return (100 * 200) * math.Pow(1.02, math.Max(level, minHpLevel)-1)
 }
 
-// CalculateMaxHealth calculates max hp of player.
-func (p *Player) CalculateMaxHealth() float64 {
+// MaxHealth calculates max hp of player.
+func (p *Player) MaxHealth() float64 {
 	return calculatePlayerHp(100)
 }
 
@@ -247,11 +247,11 @@ func NewPlayer(
 ) *Player {
 	return &Player{
 		Entity: NewEntity(
-			id, 
-			
-			x, 
-			y, 
-			
+			id,
+
+			x,
+			y,
+
 			PlayerSize,
 		),
 

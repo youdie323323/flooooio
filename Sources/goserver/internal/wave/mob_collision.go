@@ -24,7 +24,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 
 	collision0 := profile0.Collision
 
-	mMaxHealth := m.CalculateMaxHealth()
+	mMaxHealth := m.MaxHealth()
 	mDamage := profile0.StatFromRarity(m.Rarity).GetDamage()
 
 	mTraversed := TraverseMobSegments(wp, m)
@@ -71,7 +71,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					{ // Damage
 						profile1 := native.MobProfiles[nearEntity.Type]
 
-						nearEntityMaxHealth := nearEntity.CalculateMaxHealth()
+						nearEntityMaxHealth := nearEntity.MaxHealth()
 						nearEntityDamage := profile1.StatFromRarity(nearEntity.Rarity).GetDamage()
 
 						m.Health -= nearEntityDamage / mMaxHealth
@@ -130,6 +130,8 @@ func (m *Mob) MobCollision(wp *WavePool) {
 						switch nearEntity.Type {
 						case native.PetalTypeFang:
 							doFangLifesteal(nearEntity, nearEntityStat, nearEntityDamage)
+						case native.PetalTypeLightning:
+							wp.PetalDoLightningBounce(nearEntity, m)
 						}
 
 						{ // Set LastAttackedEntity
@@ -164,7 +166,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					nearEntity.Y += py * 5
 
 					{ // Damage
-						nearEntityMaxHealth := nearEntity.CalculateMaxHealth()
+						nearEntityMaxHealth := nearEntity.MaxHealth()
 
 						m.Health -= nearEntity.BodyDamage / mMaxHealth
 						nearEntity.Health -= mDamage / nearEntityMaxHealth
@@ -195,7 +197,7 @@ func doFangLifesteal(fang *Petal, stat native.PetalStat, damage float64) {
 		return
 	}
 
-	masterMaxHP := master.CalculateMaxHealth()
+	masterMaxHP := master.MaxHealth()
 	healAmount := damage * (healDamaged / 100)
 
 	master.Health = min(1, master.Health+(healAmount/masterMaxHP))

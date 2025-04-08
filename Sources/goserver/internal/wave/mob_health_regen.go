@@ -7,7 +7,7 @@ func (m *Mob) MobHealthRegen(wp *WavePool) {
 	if m.StarfishRegeningHealth || (m.Type == native.MobTypeStarfish && 0.5 >= m.Health) {
 		m.StarfishRegeningHealth = true
 
-		maxHealth := m.CalculateMaxHealth()
+		maxHealth := m.MaxHealth()
 
 		healAmount := (3 * m.Size) / maxHealth
 

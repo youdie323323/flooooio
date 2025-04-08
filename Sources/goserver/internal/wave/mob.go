@@ -1,6 +1,8 @@
 package wave
 
 import (
+	"time"
+
 	"flooooio/internal/native"
 )
 
@@ -26,6 +28,9 @@ type Mob struct {
 	ConnectingSegment Node
 	IsFirstSegment    bool
 
+	// JellyfishLastBounce is last time lightning bounced from jellyfish.
+	JellyfishLastBounce time.Time
+
 	// mob_special_movement.go struct field definitions
 	SineWaveIndex        int
 	RotationCounter      int
@@ -46,8 +51,8 @@ func (m *Mob) DesiredSize() float64 {
 	return collision.Radius * (m.Size / collision.Fraction)
 }
 
-// CalculateMaxHealth calculates max hp of mob.
-func (m *Mob) CalculateMaxHealth() float64 {
+// MaxHealth calculates max hp of mob.
+func (m *Mob) MaxHealth() float64 {
 	profile := native.MobProfiles[m.Type]
 
 	return profile.StatFromRarity(m.Rarity).Health
@@ -131,6 +136,8 @@ func NewMob(
 
 		ConnectingSegment: connectingSegment,
 		IsFirstSegment:    isFirstSegment,
+
+		JellyfishLastBounce: time.Time{},
 
 		// mob_special_movement default values
 		SineWaveIndex:        0,

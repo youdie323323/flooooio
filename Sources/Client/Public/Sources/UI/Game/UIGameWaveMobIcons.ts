@@ -11,21 +11,24 @@ interface MobIconMatch {
 }
 
 export default class UIGameWaveMobIcons extends StaticHContainer<StaticVContainer<UIMobIcon>> {
-    private static readonly SPACING = 10;
-    private static readonly BORDER_PADDING = 1;
-    private static readonly VERTICAL_GAP = 6;
+    private static readonly SPACING = 10 as const;
+    private static readonly BORDER_PADDING = 1 as const;
+    private static readonly VERTICAL_GAP = 6 as const;
+    private static readonly ICON_SIZE = 30 as const;
 
     constructor(layoutOptions: MaybePointerLike<AutomaticallySizedLayoutOptions>) {
+        const { ICON_SIZE, SPACING, BORDER_PADDING } = UIGameWaveMobIcons;
+
         super(
             layoutOptions,
             true, // Lerp enabled
-            UIMobIcon.ICON_SIZE + UIGameWaveMobIcons.SPACING + UIGameWaveMobIcons.BORDER_PADDING,
+            ICON_SIZE + SPACING + BORDER_PADDING,
         );
     }
 
     private findVContainer(mobInstance: Mob, matchCriteria: MobIconMatch = { type: true, rarity: false }): StaticVContainer<UIMobIcon> | undefined {
         return this.getChildren().find(container =>
-            container.getChildren().some(({ mobInstance: iconMobInstance }) =>
+            container.getChildren().some(({ mob: iconMobInstance }) =>
                 this.isMobMatch(iconMobInstance, mobInstance, matchCriteria),
             ),
         );
@@ -38,8 +41,17 @@ export default class UIGameWaveMobIcons extends StaticHContainer<StaticVContaine
         );
     }
 
-    private createMobIcon(mobInstance: Mob): UIMobIcon {
-        const icon = new UIMobIcon({}, mobInstance);
+    private createMobIcon(mob: Mob): UIMobIcon {
+        const { ICON_SIZE } = UIGameWaveMobIcons;
+
+        const icon = new UIMobIcon(
+            {
+                w: ICON_SIZE,
+                h: ICON_SIZE,
+            },
+
+            mob,
+        );
 
         icon.setVisible(false, null, false);
         icon.setVisible(true, null, true, AnimationType.CARD);
@@ -48,30 +60,32 @@ export default class UIGameWaveMobIcons extends StaticHContainer<StaticVContaine
     }
 
     private createVContainer(): StaticVContainer<UIMobIcon> {
+        const { VERTICAL_GAP } = UIGameWaveMobIcons;
+
         return new StaticVContainer<UIMobIcon>(
             {},
 
             true, // Lerp enabled
 
-            UIGameWaveMobIcons.VERTICAL_GAP,
+            VERTICAL_GAP,
             true,
         );
     }
 
     private sortVContainerByRarity(container: StaticVContainer<UIMobIcon>): void {
         container.sortChildren(((a: UIMobIcon, b: UIMobIcon) =>
-            a.mobInstance.rarity - b.mobInstance.rarity
+            a.mob.rarity - b.mob.rarity
         ) as Parameters<typeof container["sortChildren"]>[0]);
     }
 
-    public addMobIcon(mobInstance: Mob): void {
-        const vContainer = this.findVContainer(mobInstance) || this.createAndAddNewVContainer();
-        const existingIcon = this.findExistingIcon(vContainer, mobInstance);
+    public addMobIcon(mob: Mob): void {
+        const vContainer = this.findVContainer(mob) || this.createAndAddNewVContainer();
+        const existingIcon = this.findExistingIcon(vContainer, mob);
 
         if (existingIcon) {
-            existingIcon.amountAccumulator++;
+            existingIcon.amount++;
         } else {
-            vContainer.addChild(this.createMobIcon(mobInstance));
+            vContainer.addChild(this.createMobIcon(mob));
         }
 
         this.sortVContainerByRarity(vContainer);
@@ -87,7 +101,7 @@ export default class UIGameWaveMobIcons extends StaticHContainer<StaticVContaine
 
     private findExistingIcon(container: StaticVContainer<UIMobIcon>, mobInstance: Mob): UIMobIcon | undefined {
         return container.getChildren().find(icon =>
-            this.isMobMatch(icon.mobInstance, mobInstance, { type: true, rarity: true }),
+            this.isMobMatch(icon.mob, mobInstance, { type: true, rarity: true }),
         );
     }
 
@@ -98,8 +112,8 @@ export default class UIGameWaveMobIcons extends StaticHContainer<StaticVContaine
         const mobIcon = this.findExistingIcon(vContainer, mobInstance);
         if (!mobIcon) return;
 
-        if (mobIcon.amountAccumulator > 1) {
-            mobIcon.amountAccumulator--;
+        if (mobIcon.amount > 1) {
+            mobIcon.amount--;
 
             return;
         }
@@ -107,13 +121,14 @@ export default class UIGameWaveMobIcons extends StaticHContainer<StaticVContaine
         this.animateAndRemoveMobIcon(mobIcon, vContainer);
     }
 
-    private animateAndRemoveMobIcon(mobIcon: UIMobIcon, vContainer: StaticVContainer<UIMobIcon>): void {
-        mobIcon.once("onOutAnimationEnd", () => {
-            vContainer.removeChild(mobIcon);
+    private animateAndRemoveMobIcon(icon: UIMobIcon, vContainer: StaticVContainer<UIMobIcon>): void {
+        icon.once("onOutAnimationEnd", () => {
+            vContainer.removeChild(icon);
             this.removeEmptyContainer(vContainer);
         });
 
-        mobIcon.setVisible(false, null, true, AnimationType.CARD);
+        icon.setVisible(false, null, true, AnimationType.CARD);
+        
         this.removeEmptyContainer(vContainer);
     }
 

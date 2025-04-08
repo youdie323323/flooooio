@@ -48,6 +48,8 @@ type WavePool struct {
 
 	eliminatedEntityIDs []uint32
 
+	lightningBounces [][][2]float64
+
 	ms *WaveMobSpawner
 
 	updateTicker *time.Ticker
@@ -76,6 +78,8 @@ func NewWavePool(wr *WaveRoom, wd *WaveData) *WavePool {
 		petalPool:  xsync.NewMapOf[EntityId, *Petal](),
 
 		eliminatedEntityIDs: make([]uint32, 0),
+
+		lightningBounces: make([][][2]float64, 0),
 
 		ms: spawner,
 
@@ -164,6 +168,8 @@ func (wp *WavePool) Dispose() {
 	wp.petalPool.Clear()
 
 	clear(wp.eliminatedEntityIDs)
+
+	wp.lightningBounces = wp.lightningBounces[:0]
 
 	wp.SpatialHash.Reset()
 
@@ -435,6 +441,18 @@ func (wp *WavePool) calculateUpdatePacketSize() int {
 		size += len(wp.eliminatedEntityIDs) * 4
 	}
 
+	{ // Add size for lightning bounces
+		// Lightning bounce count
+		size += 2
+
+		for _, points := range wp.lightningBounces {
+			// Points count
+			size += 2
+			// Each point has X and Y coordinates (float64)
+			size += len(points) * (8 + 8)
+		}
+	}
+
 	return size
 }
 
@@ -518,7 +536,7 @@ func (wp *WavePool) createUpdatePacket() []byte {
 
 			buf[at] = bFlags
 			at++
-			
+
 			player.Mu.RUnlock()
 
 			return true
@@ -615,6 +633,25 @@ func (wp *WavePool) createUpdatePacket() []byte {
 		clear(wp.eliminatedEntityIDs)
 	}
 
+	{ // Write lightning bounces
+		binary.LittleEndian.PutUint16(buf[at:], uint16(len(wp.lightningBounces)))
+		at += 2
+
+		for _, points := range wp.lightningBounces {
+			binary.LittleEndian.PutUint16(buf[at:], uint16(len(points)))
+			at += 2
+
+			for _, point := range points {
+				binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(point[0]))
+				at += 8
+				binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(point[1]))
+				at += 8
+			}
+		}
+
+		wp.lightningBounces = wp.lightningBounces[:0]
+	}
+
 	wp.mu.Unlock()
 
 	return buf
@@ -655,7 +692,7 @@ func (wp *WavePool) GeneratePlayer(
 				// Force require reload
 				for _, p := range player.Slots.Surface[i] {
 					if p != nil {
-						p.InstantlyKill(wp)
+						p.ForceEliminate(wp)
 					}
 				}
 			}
@@ -886,6 +923,68 @@ func (wp *WavePool) SafeGetMobsWithCondition(condition func(*Mob) bool) []*Mob {
 	return wp.GetMobsWithCondition(condition)
 }
 
+// MobDoLightningBounce performs lightning bounce effect between player.
+// hitPlayer is the initially struck player.
+func (wp *WavePool) MobDoLightningBounce(jellyfish *Mob, hitPlayer *Player) {
+	mobExtra := native.MobProfiles[jellyfish.Type].StatFromRarity(jellyfish.Rarity).Extra
+
+	maxBounces, ok := mobExtra["bounces"].(float64)
+	if !ok {
+		return
+	}
+
+	lightningDamage, ok := mobExtra["lightning"].(float64)
+	if !ok {
+		return
+	}
+
+	maxBouncesInt := int(maxBounces)
+
+	bouncePoints := make([][2]float64, 0, maxBouncesInt+1)
+
+	// Make it looks like shooted from jellyfish
+	bouncePoints = append(bouncePoints, [2]float64{jellyfish.X, jellyfish.Y})
+
+	bouncedIds := make([]*EntityId, 0, maxBouncesInt)
+
+	var currentTarget Node = hitPlayer
+
+	for range maxBouncesInt {
+		currentPlayer, ok := currentTarget.(*Player)
+		if !ok {
+			continue
+		}
+
+		bouncePoints = append(bouncePoints, [2]float64{currentPlayer.X, currentPlayer.Y})
+
+		bouncedIds = append(bouncedIds, currentPlayer.Id)
+
+		playerMaxHealth := currentPlayer.MaxHealth()
+
+		currentPlayer.Health -= lightningDamage / playerMaxHealth
+
+		availableTargets := wp.GetPlayersWithCondition(func(targetMob *Player) bool {
+			return !slices.Contains(bouncedIds, targetMob.Id)
+		})
+
+		nodeTargets := make([]Node, len(availableTargets))
+		for i, mob := range availableTargets {
+			nodeTargets[i] = mob
+		}
+
+		// Distance is radius * 1.5
+		// TODO: this should very very expanded
+		currentTarget = FindNearestEntityWithLimitedDistance(currentTarget, nodeTargets, currentPlayer.Size*3)
+		if currentTarget == nil {
+			break
+		}
+	}
+
+	clear(bouncedIds)
+
+	wp.lightningBounces = append(wp.lightningBounces, bouncePoints)
+}
+
 func (wp *WavePool) LinkedMobSegmentation(
 	mType native.MobType,
 
@@ -1083,6 +1182,68 @@ func (wp *WavePool) SafeGetPetalsWithCondition(condition func(*Petal) bool) []*P
 	defer wp.mu.RUnlock()
 
 	return wp.GetPetalsWithCondition(condition)
+}
+
+// PetalDoLightningBounce performs lightning bounce effect between mobs.
+// hitMob is the initially struck mob.
+func (wp *WavePool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
+	petalExtra := native.PetalProfiles[lightning.Type].StatFromRarity(lightning.Rarity).Extra
+
+	maxBounces, ok := petalExtra["bounces"].(float64)
+	if !ok {
+		return
+	}
+
+	lightningDamage, ok := petalExtra["lightning"].(float64)
+	if !ok {
+		return
+	}
+
+	maxBouncesInt := int(maxBounces)
+
+	bouncePoints := make([][2]float64, 0, maxBouncesInt)
+
+	bouncedIds := make([]*EntityId, 0, maxBouncesInt)
+
+	var currentTarget Node = hitMob
+
+	for range maxBouncesInt {
+		currentMob, ok := currentTarget.(*Mob)
+		if !ok {
+			continue
+		}
+
+		bouncePoints = append(bouncePoints, [2]float64{currentMob.X, currentMob.Y})
+
+		bouncedIds = append(bouncedIds, currentMob.Id)
+
+		mobMaxHealth := currentMob.MaxHealth()
+
+		currentMob.Health -= lightningDamage / mobMaxHealth
+
+		availableTargets := wp.GetMobsWithCondition(func(targetMob *Mob) bool {
+			return !slices.Contains(bouncedIds, targetMob.Id) && targetMob.PetMaster == nil
+		})
+
+		nodeTargets := make([]Node, len(availableTargets))
+		for i, mob := range availableTargets {
+			nodeTargets[i] = mob
+		}
+
+		// Distance is radius * 1.5
+		// TODO: this should very very expanded
+		currentTarget = FindNearestEntityWithLimitedDistance(currentTarget, nodeTargets, currentMob.DesiredSize()*3)
+		if currentTarget == nil {
+			break
+		}
+	}
+
+	clear(bouncedIds)
+
+	// Remove lightning
+	lightning.ForceEliminate(wp)
+
+	wp.lightningBounces = append(wp.lightningBounces, bouncePoints)
 }
 
 func (wp *WavePool) staticPetalToDynamicPetal(

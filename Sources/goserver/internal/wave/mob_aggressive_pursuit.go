@@ -3,8 +3,13 @@ package wave
 import (
 	"math"
 	"math/rand/v2"
+	"time"
 
 	"flooooio/internal/native"
+)
+
+const (
+	jellyfishLightningShootMS = 1000
 )
 
 // FindNearestEntity finds the nearest entity from a slice of entities.
@@ -13,6 +18,7 @@ func FindNearestEntity(me Node, entities []Node) Node {
 		return nil
 	}
 
+	// TODO: this should be nil
 	nearest := entities[0]
 	for _, current := range entities[1:] {
 		distanceToCurrent := math.Hypot(
@@ -27,6 +33,29 @@ func FindNearestEntity(me Node, entities []Node) Node {
 
 		if distanceToCurrent < distanceToNearest {
 			nearest = current
+		}
+	}
+
+	return nearest
+}
+
+func FindNearestEntityWithLimitedDistance(me Node, entities []Node, maxDistance float64) Node {
+	if len(entities) == 0 {
+		return nil
+	}
+
+	var nearest Node
+	nearestDistance := maxDistance
+
+	for _, current := range entities {
+		distanceToCurrent := math.Hypot(
+			current.GetX()-me.GetX(),
+			current.GetY()-me.GetY(),
+		)
+
+		if distanceToCurrent <= maxDistance && (nearest == nil || distanceToCurrent < nearestDistance) {
+			nearest = current
+			nearestDistance = distanceToCurrent
 		}
 	}
 
@@ -181,16 +210,40 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 					dy,
 				)
 
-				var magnitude float64
-				if m.TargetEntity != nil && (3*m.Size) > distanceToTarget {
-					magnitude = 0
-				} else {
-					magnitude = m.Speed()
-				}
-
-				m.Magnitude = magnitude * 255
+				shouldStop := m.TargetEntity != nil && (3*m.Size) > distanceToTarget
 
 				m.TargetEntity = targetEntity
+
+				var magnitude float64
+				if shouldStop {
+					magnitude = 0
+				} else {
+					magnitude = m.Speed() * 255
+				}
+
+				m.Magnitude = magnitude
+
+				switch v := targetEntity.(type) {
+				case *Player:
+					{
+						// Specials
+						switch m.Type {
+						// Do lightning bounce to player
+						case native.MobTypeJellyfish:
+							{
+								if shouldStop {
+									now := time.Now()
+
+									if now.Sub(m.JellyfishLastBounce) >= jellyfishLightningShootMS*time.Millisecond {
+										wp.MobDoLightningBounce(m, v)
+
+										m.JellyfishLastBounce = now
+									}
+								}
+							}
+						}
+					}
+				}
 			} else {
 				m.TargetEntity = nil
 			}
@@ -231,13 +284,13 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 }
 
 func generateValleyDistribution(min, max float64) float64 {
-    for {
-        x := min + rand.Float64()*(max-min)
+	for {
+		x := min + rand.Float64()*(max-min)
 
-        probability := math.Abs(x) / max
+		probability := math.Abs(x) / max
 
-        if rand.Float64() < probability {
-            return x
-        }
-    }
+		if rand.Float64() < probability {
+			return x
+		}
+	}
 }
