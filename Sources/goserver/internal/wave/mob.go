@@ -79,7 +79,6 @@ func (m *Mob) OnUpdateTick(wp *WavePool) {
 }
 
 func (m *Mob) Dispose() {
-
 	m.TargetEntity = nil
 
 	m.LastAttackedEntity = nil
@@ -109,11 +108,11 @@ func NewMob(
 
 	return &Mob{
 		Entity: NewEntity(
-			id, 
-			
-			x, 
-			y, 
-			
+			id,
+
+			x,
+			y,
+
 			CalculateMobSize(profile, rarity),
 		),
 
@@ -170,7 +169,8 @@ var MobSpeed = map[native.MobType]float64{
 	native.MobTypeJellyfish: 1,
 	native.MobTypeBubble:    0,
 	native.MobTypeSponge:    0,
-	native.MobTypeShell:    0,
+	native.MobTypeShell:     0,
+	native.MobTypeCrab:      4,
 
 	native.MobTypeCentipede:       2.8,
 	native.MobTypeCentipedeEvil:   3.2,

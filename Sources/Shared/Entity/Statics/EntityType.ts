@@ -13,6 +13,7 @@ export const enum MobType {
     BUBBLE,
     SPONGE,
     SHELL,
+    CRAB,
 
     CENTIPEDE,
     CENTIPEDE_EVIL,

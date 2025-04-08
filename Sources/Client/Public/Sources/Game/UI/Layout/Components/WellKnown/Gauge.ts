@@ -22,6 +22,7 @@ export default class Gauge extends Component {
     public override[OBSTRUCTION_AFFECTABLE]: boolean = false;
 
     private static readonly ANIMATION_SPEED = 0.1;
+    private static readonly EPSILON = 1e-10;
 
     private currentValues: Array<number>;
 
@@ -153,7 +154,11 @@ export default class Gauge extends Component {
             this.currentValues = this.currentValues.map((current, index) => {
                 const { value: target } = computedGaugeSources[index];
                 if (current !== target) {
-                    return current + (target - current) * Gauge.ANIMATION_SPEED;
+                    const next = current + (target - current) * Gauge.ANIMATION_SPEED;
+
+                    return Math.abs(next) < Gauge.EPSILON
+                        ? 0
+                        : next;
                 }
 
                 return current;

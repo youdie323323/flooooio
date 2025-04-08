@@ -452,8 +452,8 @@
             "description": "Bob"
         },
         "collision": {
-            "fraction": 20,
-            "radius": 20
+            "fraction": 25,
+            "radius": 35
         }
     },
     "11": {
@@ -497,6 +497,45 @@
     },
     "12": {
         "0": {
+            "health": 150,
+            "bodyDamage": 25
+        },
+        "1": {
+            "health": 562.8,
+            "bodyDamage": 75
+        },
+        "2": {
+            "health": 2025,
+            "bodyDamage": 225
+        },
+        "3": {
+            "health": 8100,
+            "bodyDamage": 675
+        },
+        "4": {
+            "health": 60750,
+            "bodyDamage": 2025
+        },
+        "5": {
+            "health": 364500,
+            "bodyDamage": 6075
+        },
+        "6": {
+            "health": 10950000,
+            "bodyDamage": 18225
+        },
+        "baseSize": 30,
+        "i18n": {
+            "name": "Crab",
+            "description": "Mr. Crab"
+        },
+        "collision": {
+            "fraction": 25,
+            "radius": 20
+        }
+    },
+    "13": {
+        "0": {
             "health": 25,
             "bodyDamage": 10
         },
@@ -534,7 +573,7 @@
             "radius": 40
         }
     },
-    "13": {
+    "14": {
         "0": {
             "health": 25,
             "bodyDamage": 10
@@ -573,7 +612,7 @@
             "radius": 40
         }
     },
-    "14": {
+    "15": {
         "0": {
             "health": 25,
             "bodyDamage": 10

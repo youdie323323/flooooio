@@ -21,9 +21,9 @@ export default class MobRendererSandstorm extends AbstractMobRenderer {
                 ? 0
                 : entity.sandstormAngle++;
 
-        const outerColor = (entity.isPet ? "#ffe763" : "#D5C7A6") satisfies ColorCode;
-        const middleColor = (entity.isPet ? "#e6d059" : "#BFB295") satisfies ColorCode;
-        const innerColor = (entity.isPet ? "#cfbb50" : "#A99E84") satisfies ColorCode;
+        const outerColor = (entity.isPet ? "#cb979c" : "#D5C7A6") satisfies ColorCode;
+        const middleColor = (entity.isPet ? "#b18687" : "#BFB295") satisfies ColorCode;
+        const innerColor = (entity.isPet ? "#9b7477" : "#A99E84") satisfies ColorCode;
 
         ctx.lineJoin = "round";
         ctx.lineWidth = 6;

@@ -11,7 +11,6 @@ var UsageReloadPetalTypes = []native.PetalType{
 	native.PetalTypeEggBeetle,
 	native.PetalTypeBubble,
 	native.PetalTypeStick,
-	native.PetalTypeLightning,
 	native.PetalTypeYggdrasil,
 }
 

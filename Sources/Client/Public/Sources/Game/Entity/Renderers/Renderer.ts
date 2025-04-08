@@ -18,7 +18,7 @@ const hexToRgb = memo((hexColor: ColorCode) => {
     ];
 });
 
-const TARGET_COLOR = [255, 0, 0];
+const TARGET_COLOR = [255, 0, 0] as const;
 
 export default class Renderer<T extends Entity> {
     /**
@@ -59,11 +59,11 @@ export default class Renderer<T extends Entity> {
     /**
      * Change the color based on hit.
      */
-    protected calculateDamageEffectColor({ entity }: RenderingContext<T>, color: ColorCode): string {
-        const invertedHurtT = 1 - entity.hurtT;
+    protected calculateDamageEffectColor({ entity: { hurtT } }: RenderingContext<T>, color: ColorCode): string {
+        const invertedHurtT = 1 - hurtT;
         if (invertedHurtT >= 1) return color;
 
-        const progress = invertedHurtT * 0.25 + 0.75;
+        const progress = invertedHurtT * 0.5 + 0.5;
 
         const sourceRgb = hexToRgb(color);
 

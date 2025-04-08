@@ -26,6 +26,7 @@ import PetalRendererLightning from "./Petal/PetalRendererLightning";
 import PetalRendererClaw from "./Petal/PetalRendererClaw";
 import PetalRendererFang from "./Petal/PetalRendererFang";
 import PetalRendererYggdrasil from "./Petal/PetalRendererYggdrasil";
+import MobRendererCrab from "./MobRendererCrab";
 
 const centipedeRenderer = new MobRendererCentipede();
 
@@ -46,6 +47,7 @@ const MOB_RENDERERS = {
     [MobType.BUBBLE]: new MobRendererBubble,
     [MobType.SPONGE]: new MobRendererSponge,
     [MobType.SHELL]: new MobRendererShell,
+    [MobType.CRAB]: new MobRendererCrab,
 
     [MobType.CENTIPEDE]: centipedeRenderer,
     [MobType.CENTIPEDE_DESERT]: centipedeRenderer,

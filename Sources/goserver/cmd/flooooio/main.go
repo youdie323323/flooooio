@@ -38,7 +38,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Rarity: native.RarityUltra,
 		},
 		{
-			Type:   native.PetalTypeFang,
+			Type:   native.PetalTypeClaw,
 			Rarity: native.RarityUltra,
 		},
 		{
@@ -46,15 +46,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Rarity: native.RarityUltra,
 		},
 		{
-			Type:   native.PetalTypeFang,
-			Rarity: native.RarityUltra,
-		},
-		{
-			Type:   native.PetalTypeFang,
-			Rarity: native.RarityUltra,
-		},
-		{
-			Type:   native.PetalTypeLightning,
+			Type:   native.PetalTypeSand,
 			Rarity: native.RarityUltra,
 		},
 		{
@@ -66,15 +58,31 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Rarity: native.RarityUltra,
 		},
 		{
+			Type:   native.PetalTypeFang,
+			Rarity: native.RarityUltra,
+		},
+		{
+			Type:   native.PetalTypeSand,
+			Rarity: native.RarityUltra,
+		},
+		{
+			Type:   native.PetalTypeLightning,
+			Rarity: native.RarityUltra,
+		},
+		{
 			Type:   native.PetalTypeClaw,
+			Rarity: native.RarityUltra,
+		},
+		{
+			Type:   native.PetalTypeFang,
+			Rarity: native.RarityUltra,
+		},
+		{
+			Type:   native.PetalTypeSand,
 			Rarity: native.RarityUltra,
 		},
 		{
 			Type:   native.PetalTypeFaster,
-			Rarity: native.RarityUltra,
-		},
-		{
-			Type:   native.PetalTypeYggdrasil,
 			Rarity: native.RarityUltra,
 		},
 	}

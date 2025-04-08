@@ -17,7 +17,7 @@ func RevivePlayer(wp *WavePool, p *Player) {
 				200,
 			)
 
-			p.Health = p.CalculateMaxHealth()
+			p.Health = 1
 
 			p.IsDead = false
 
