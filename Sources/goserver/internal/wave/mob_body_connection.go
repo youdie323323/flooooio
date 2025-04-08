@@ -6,11 +6,11 @@ import (
 	"flooooio/internal/native"
 )
 
-// traverseMobSegments traverse mob segments and return final segment.
-func traverseMobSegments(wp *WavePool, m *Mob) *Mob {
+// TraverseMobSegments traverse mob segments and return final segment.
+func TraverseMobSegments(wp *WavePool, m *Mob) *Mob {
 	if m.ConnectingSegment != nil {
 		if segment, ok := m.ConnectingSegment.(*Mob); ok && !segment.WasEliminated(wp) {
-			return traverseMobSegments(wp, segment)
+			return TraverseMobSegments(wp, segment)
 		}
 	}
 
@@ -19,7 +19,7 @@ func traverseMobSegments(wp *WavePool, m *Mob) *Mob {
 
 // IsBody determinate if segment piece mob is body.
 func IsBody(wp *WavePool, m *Mob) bool {
-	return traverseMobSegments(wp, m) != m
+	return TraverseMobSegments(wp, m) != m
 }
 
 func (m *Mob) MobBodyConnection(wp *WavePool) {

@@ -18,6 +18,7 @@ func (m *Mob) MobSpecialMovement(wp *WavePool) {
 	if IsBody(wp, m) {
 		return
 	}
+	
 	if m.PetMaster != nil && m.TargetEntity == nil {
 		switch m.Type {
 		// Follows the player when the player moves away from this (pet) for a certain distance

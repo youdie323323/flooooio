@@ -27,7 +27,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 	mMaxHealth := m.CalculateMaxHealth()
 	mDamage := profile0.StatFromRarity(m.Rarity).GetDamage()
 
-	mTraversed := traverseMobSegments(wp, m)
+	mTraversed := TraverseMobSegments(wp, m)
 
 	c0 := Circle{X: m.X, Y: m.Y, R: m.DesiredSize()}
 
