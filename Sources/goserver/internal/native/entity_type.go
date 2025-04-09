@@ -7,6 +7,7 @@ type PetalType = uint8
 const (
 	MobTypeBee MobType = iota
 	MobTypeSpider
+	MobTypeHornet
 
 	MobTypeBeetle
 	MobTypeSandstorm
@@ -24,6 +25,8 @@ const (
 	MobTypeCentipede
 	MobTypeCentipedeEvil
 	MobTypeCentipedeDesert
+
+	MobTypeMissile
 	
 	PetalTypeBasic PetalType = iota
 	PetalTypeFaster
@@ -41,6 +44,7 @@ const (
 var MobTypeValues = []MobType{
 	MobTypeBee,
 	MobTypeSpider,
+	MobTypeHornet,
 
 	MobTypeBeetle,
 	MobTypeSandstorm,
@@ -58,6 +62,8 @@ var MobTypeValues = []MobType{
 	MobTypeCentipede,
 	MobTypeCentipedeEvil,
 	MobTypeCentipedeDesert,
+	
+	// MobTypeMissile,
 }
 
 var PetalTypeValues = []PetalType{

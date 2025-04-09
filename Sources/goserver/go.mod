@@ -7,3 +7,5 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/puzpuzpuz/xsync/v3 v3.5.1
 )
+
+require github.com/alecthomas/kong v1.10.0 // indirect

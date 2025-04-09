@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"slices"
 
+	"flooooio/internal/game"
 	"flooooio/internal/native"
 	"flooooio/internal/network"
-	"flooooio/internal/wave"
 
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
@@ -32,45 +32,45 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	surface := []wave.StaticPetal{
+	surface := []game.StaticPetal{
 		{
-			Type:   native.PetalTypeEggBeetle,
+			Type:   native.PetalTypeFang,
 			Rarity: native.RarityUltra,
 		},
 		{
-			Type:   native.PetalTypeEggBeetle,
+			Type:   native.PetalTypeLightning,
 			Rarity: native.RarityUltra,
 		},
 		{
-			Type:   native.PetalTypeEggBeetle,
+			Type:   native.PetalTypeClaw,
 			Rarity: native.RarityUltra,
 		},
 		{
-			Type:   native.PetalTypeEggBeetle,
+			Type:   native.PetalTypeFang,
 			Rarity: native.RarityUltra,
 		},
 		{
-			Type:   native.PetalTypeEggBeetle,
+			Type:   native.PetalTypeLightning,
 			Rarity: native.RarityUltra,
 		},
 		{
-			Type:   native.PetalTypeStick,
+			Type:   native.PetalTypeClaw,
 			Rarity: native.RarityUltra,
 		},
 		{
-			Type:   native.PetalTypeStick,
+			Type:   native.PetalTypeFang,
 			Rarity: native.RarityUltra,
 		},
 		{
-			Type:   native.PetalTypeStick,
+			Type:   native.PetalTypeLightning,
 			Rarity: native.RarityUltra,
 		},
 		{
-			Type:   native.PetalTypeStick,
+			Type:   native.PetalTypeClaw,
 			Rarity: native.RarityUltra,
 		},
 		{
-			Type:   native.PetalTypeStick,
+			Type:   native.PetalTypeFaster,
 			Rarity: native.RarityUltra,
 		},
 	}
@@ -80,15 +80,15 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Init user data
-	pd := &wave.PlayerData{
+	pd := &game.PlayerData{
 		WrPId: nil,
 		WPId:  nil,
 
-		Sp: &wave.StaticPlayer{
+		Sp: &game.StaticPlayer[game.StaticPlayerPetalSlots]{
 			Name: "mesamura",
-			Slots: wave.StaticPlayerPetalSlots{
+			Slots: game.StaticPlayerPetalSlots{
 				Surface: surface,
-				Bottom: []wave.StaticPetal{
+				Bottom: []game.StaticPetal{
 					{
 						Type:   native.PetalTypeYinYang,
 						Rarity: native.RarityUltra,
@@ -99,14 +99,14 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	wave.ConnManager.AddUser(conn, pd)
+	game.ConnManager.AddUser(conn, pd)
 
 	// On close
 	defer func() {
-		wave.ConnManager.RemoveUser(conn)
+		game.ConnManager.RemoveUser(conn)
 		_ = conn.Close()
 
-		wave.RemovePlayerFromService(pd)
+		game.RemovePlayerFromService(pd)
 	}()
 
 	for {
@@ -135,7 +135,7 @@ func readString(buf []byte, at int) (string, int) {
 	return string(buf[at:end]), end + 1
 }
 
-func handleMessage(pd *wave.PlayerData, message []byte) {
+func handleMessage(pd *game.PlayerData, message []byte) {
 	msgLen := len(message)
 
 	if msgLen < 1 {
@@ -158,7 +158,7 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 				return
 			}
 
-			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
+			wr := game.WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
 				return
 			}
@@ -194,7 +194,7 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 				return
 			}
 
-			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
+			wr := game.WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
 				return
 			}
@@ -220,7 +220,7 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 			swapAt := native.Mood(message[at])
 			at++
 
-			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
+			wr := game.WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
 				return
 			}
@@ -251,7 +251,7 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 				return
 			}
 
-			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
+			wr := game.WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
 				return
 			}
@@ -268,7 +268,7 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 
 	case network.ServerboundWaveLeave:
 		{
-			wave.RemovePlayerFromService(pd)
+			game.RemovePlayerFromService(pd)
 		}
 
 	case network.ServerboundWaveRoomCreate:
@@ -284,7 +284,7 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 				return
 			}
 
-			id := wave.WrService.NewPublicWaveRoom(pd, biome)
+			id := game.WrService.NewPublicWaveRoom(pd, biome)
 
 			pd.AssignWaveRoomPlayerId(id)
 		}
@@ -297,13 +297,13 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 
 			var maybeCode string
 			maybeCode, at = readString(message, at)
-			if !wave.IsWaveRoomCode(maybeCode) {
+			if !game.IsWaveRoomCode(maybeCode) {
 				return
 			}
 
-			code := wave.WaveRoomCode(maybeCode)
+			code := game.WaveRoomCode(maybeCode)
 
-			id := wave.WrService.JoinWaveRoom(pd, code)
+			id := game.WrService.JoinWaveRoom(pd, code)
 
 			pd.AssignWaveRoomPlayerId(id)
 		}
@@ -321,10 +321,10 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 				return
 			}
 
-			id := wave.WrService.JoinPublicWaveRoom(pd, biome)
+			id := game.WrService.JoinPublicWaveRoom(pd, biome)
 			if id == nil {
 				// If public wave room not found, make new public wave room
-				id = wave.WrService.NewPublicWaveRoom(pd, biome)
+				id = game.WrService.NewPublicWaveRoom(pd, biome)
 			}
 
 			pd.AssignWaveRoomPlayerId(id)
@@ -343,16 +343,16 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 			state := message[at]
 			at++
 
-			if !slices.Contains(wave.PlayerStateValues, state) {
+			if !slices.Contains(game.PlayerStateValues, state) {
 				return
 			}
 
-			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
+			wr := game.WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
 				return
 			}
 
-			wr.UpdatePlayerState(*pd.WrPId, wave.PlayerState(state))
+			wr.UpdatePlayerState(*pd.WrPId, game.PlayerState(state))
 		}
 
 	case network.ServerboundWaveRoomChangeVisible:
@@ -368,16 +368,16 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 			state := message[at]
 			at++
 
-			if !slices.Contains(wave.WaveRoomVisibilityValues, state) {
+			if !slices.Contains(game.WaveRoomVisibilityValues, state) {
 				return
 			}
 
-			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
+			wr := game.WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
 				return
 			}
 
-			wr.UpdateRoomVisibility(*pd.WrPId, wave.WaveRoomVisibility(state))
+			wr.UpdateRoomVisibility(*pd.WrPId, game.WaveRoomVisibility(state))
 		}
 
 	case network.ServerboundWaveRoomChangeName:
@@ -393,7 +393,7 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 			var name string
 			name, at = readString(message, at)
 
-			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
+			wr := game.WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
 				return
 			}
@@ -403,7 +403,7 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 
 	case network.ServerboundWaveRoomLeave:
 		{
-			ok := wave.WrService.LeaveCurrentWaveRoom(pd)
+			ok := game.WrService.LeaveCurrentWaveRoom(pd)
 			if !ok {
 				return
 			}

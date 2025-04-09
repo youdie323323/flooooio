@@ -8,12 +8,13 @@ const (
 	CautionBehavior                       // CautionBehavior behave cautionary.
 	NeutralBehavior                       // NeutralBehavior behave neutrality.
 	ChaoticBehavior                       // ChaoticBehavior behave chaotic.
-	NoneBehavior                          // NoneBehavior do nothings.
+	VoidBehavior                          // NoneBehavior do nothings.
 )
 
 var EachMobBehaviorDefinition = map[MobType]MobBehavior{
 	MobTypeBee:    NeutralBehavior,
 	MobTypeSpider: AggressiveBehavior,
+	MobTypeHornet: CautionBehavior,
 
 	MobTypeBeetle:       AggressiveBehavior,
 	MobTypeSandstorm:    ChaoticBehavior,
@@ -28,7 +29,9 @@ var EachMobBehaviorDefinition = map[MobType]MobBehavior{
 	MobTypeShell:     PassiveBehavior,
 	MobTypeCrab:      AggressiveBehavior,
 
-	MobTypeCentipede:       NoneBehavior,
+	MobTypeCentipede:       VoidBehavior,
 	MobTypeCentipedeDesert: NeutralBehavior,
 	MobTypeCentipedeEvil:   AggressiveBehavior,
+
+	MobTypeMissile: VoidBehavior,
 }
