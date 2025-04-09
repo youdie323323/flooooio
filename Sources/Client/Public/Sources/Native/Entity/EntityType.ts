@@ -1,6 +1,7 @@
 export const enum MobType {
     BEE,
     SPIDER,
+    HORNET,
 
     BEETLE,
     SANDSTORM,
@@ -18,11 +19,13 @@ export const enum MobType {
     CENTIPEDE,
     CENTIPEDE_EVIL,
     CENTIPEDE_DESERT,
+
+    MISSILE,
 }
 
 export const enum PetalType {
     // Dont forgot to update to last index every time adding the type
-    BASIC = MobType.CENTIPEDE_DESERT + 1,
+    BASIC = MobType.MISSILE + 1,
     FASTER,
     EGG_BEETLE,
     BUBBLE,

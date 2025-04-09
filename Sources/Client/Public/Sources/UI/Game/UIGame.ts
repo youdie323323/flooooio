@@ -85,7 +85,7 @@ function prepareLightningBouncePath({ points }: LightningBounce): Path2D {
         let currentDistance = 0;
 
         while (currentDistance < totalDistance) {
-            const JITTER_AMOUNT = 25;
+            const JITTER_AMOUNT = 50;
 
             const ratio = currentDistance / totalDistance;
             const jitterX = (Math.random() * 2 - 1) * JITTER_AMOUNT;
@@ -96,7 +96,7 @@ function prepareLightningBouncePath({ points }: LightningBounce): Path2D {
                 startPoint[1] + ratio * deltaY + jitterY,
             );
 
-            currentDistance += Math.random() * 50 + 50;
+            currentDistance += Math.random() * 40 + 30;
         }
 
         path.lineTo(...endPoint);
@@ -160,7 +160,6 @@ export default class UIGame extends AbstractUI {
 
     private chatInput: TextInput;
     private chatContainer: StaticVContainer;
-    private commandsContainer: StaticVContainer<StaticTranslucentPanelContainer>;
 
     private currentMoodFlags: number;
 
@@ -503,25 +502,21 @@ export default class UIGame extends AbstractUI {
             }
         },
         [Clientbound.WAVE_CHAT_RECEIV]: (reader: BinaryReader): void => {
-            const waveClientId = reader.readUInt32();
+            const lines = reader.readString();
 
-            const chatMsg = reader.readString();
-
-            const player = this.players.get(waveClientId);
-
-            if (player) {
+            lines.split("\n").forEach(message => {                
                 this.chatContainer.addChildren(
                     new Text(
                         {
                             y: 2,
                         },
-
-                        `${player.name}: ${chatMsg}`,
+    
+                        message,
                         10,
                     ),
                     new StaticSpace(0, 3),
                 );
-            }
+            });
         },
     } as const satisfies StaticAdheredClientboundHandlers;
 
@@ -974,24 +969,16 @@ export default class UIGame extends AbstractUI {
 
                         self.value = "";
                     },
-
-                    onkeydown: (e, self) => {
-                        const show = self.value.startsWith("/");
-
-                        chatContainer.setVisible(<FakeSetVisibleToggleType>!show, null, false);
-
-                        this.commandsContainer.setVisible(<FakeSetVisibleToggleType>show, null, false);
-                    },
                 },
             ));
 
-            let chatContainer: StaticTranslucentPanelContainer<StaticVContainer>;
+            let chatContainerParent: StaticTranslucentPanelContainer<StaticVContainer>;
 
             this.addComponent(
-                chatContainer = new StaticTranslucentPanelContainer<StaticVContainer>(
+                chatContainerParent = new StaticTranslucentPanelContainer<StaticVContainer>(
                     () => ({
                         x: 11,
-                        y: 37 + chatContainer.h,
+                        y: 37 + chatContainerParent.h,
 
                         invertYCoordinate: true,
                     }),
@@ -1003,35 +990,6 @@ export default class UIGame extends AbstractUI {
                             : 0,
                 ).addChild(this.chatContainer = new StaticVContainer({})),
             );
-
-            this.addComponent(this.commandsContainer = new StaticVContainer<StaticTranslucentPanelContainer>(
-                () => ({
-                    x: 11,
-                    y: 37 + this.commandsContainer.h,
-
-                    invertYCoordinate: true,
-                }),
-            ).addChildren(
-                new StaticTranslucentPanelContainer(
-                    {},
-
-                    0,
-                    0,
-                ).addChildren(
-                    new Text(
-                        {
-                            y: 2,
-                        },
-
-                        `/manko - kusai`,
-                        10,
-                        "#d2eb34",
-                    ),
-                    new CoordinatedStaticSpace(0, 0, 0, 14),
-                ),
-            ));
-
-            this.commandsContainer.setVisible(false, null, false);
         }
 
         this.addComponent(this.inventory = new (InlineRendering(UIGameInventory))(

@@ -27,6 +27,8 @@ import PetalRendererClaw from "./Petal/PetalRendererClaw";
 import PetalRendererFang from "./Petal/PetalRendererFang";
 import PetalRendererYggdrasil from "./Petal/PetalRendererYggdrasil";
 import MobRendererCrab from "./MobRendererCrab";
+import MobRendererHornet from "./MobRendererHornet";
+import MobRendererMissile from "./MobRendererMissile";
 
 const centipedeRenderer = new MobRendererCentipede();
 
@@ -35,6 +37,7 @@ const MOB_RENDERERS = {
     
     [MobType.SPIDER]: new MobRendererSpider,
     [MobType.BEE]: new MobRendererBee,
+    [MobType.HORNET]: new MobRendererHornet,
 
     [MobType.BEETLE]: new MobRendererBeetle,
     [MobType.SANDSTORM]: new MobRendererSandstorm,
@@ -52,6 +55,8 @@ const MOB_RENDERERS = {
     [MobType.CENTIPEDE]: centipedeRenderer,
     [MobType.CENTIPEDE_DESERT]: centipedeRenderer,
     [MobType.CENTIPEDE_EVIL]: centipedeRenderer,
+
+    [MobType.MISSILE]: new MobRendererMissile,
     
     // Petal
     

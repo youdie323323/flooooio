@@ -9,6 +9,7 @@ import type { MobData } from "../../../../Private/Sources/Entity/Mob/MobData";
 import type { ColorCode } from "../../Utils/Color";
 import { memo } from "../../Utils/Memoize";
 import { isPetal } from "../Petal";
+import { MobType, PetalType } from "../../Native/Entity/EntityType";
 
 const hexToRgb = memo((hexColor: ColorCode) => {
     return [
@@ -32,7 +33,7 @@ export default class Renderer<T extends Entity> {
         if (!isSpecimen) {
             this.applyDeathAnimation(context);
 
-            if (!(entity instanceof Mob && isPetal(entity.type))) this.drawEntityStatus(context);
+            this.drawEntityStatus(context);
         }
     }
 
@@ -89,6 +90,8 @@ export default class Renderer<T extends Entity> {
     }
 
     protected drawEntityStatus({ ctx, entity }: RenderingContext<T>) {
+        if (entity instanceof Mob && (isPetal(entity.type) || entity.type === MobType.MISSILE)) return;
+
         if (entity.hpAlpha <= 0) return;
 
         if (

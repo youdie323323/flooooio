@@ -67,17 +67,56 @@
             "health": 4562500,
             "bodyDamage": 10935
         },
-        "baseSize": 20,
+        "baseSize": 15,
         "i18n": {
             "name": "Spider",
             "description": "Spooky."
         },
         "collision": {
             "fraction": 25,
-            "radius": 35
+            "radius": 45
         }
     },
     "2": {
+        "0": {
+            "health": 62.5,
+            "bodyDamage": 50
+        },
+        "1": {
+            "health": 234.5,
+            "bodyDamage": 150
+        },
+        "2": {
+            "health": 843.75,
+            "bodyDamage": 450
+        },
+        "3": {
+            "health": 3375,
+            "bodyDamage": 1350
+        },
+        "4": {
+            "health": 25312.5,
+            "bodyDamage": 4050
+        },
+        "5": {
+            "health": 151875,
+            "bodyDamage": 12150
+        },
+        "6": {
+            "health": 4562500,
+            "bodyDamage": 36450
+        },
+        "baseSize": 25,
+        "i18n": {
+            "name": "Hornet",
+            "description": "These aren't quite as nice as the little bees."
+        },
+        "collision": {
+            "fraction": 25,
+            "radius": 20
+        }
+    },
+    "3": {
         "0": {
             "health": 100,
             "bodyDamage": 30
@@ -116,7 +155,7 @@
             "radius": 40
         }
     },
-    "3": {
+    "4": {
         "0": {
             "health": 125,
             "bodyDamage": 40
@@ -155,7 +194,7 @@
             "radius": 22
         }
     },
-    "4": {
+    "5": {
         "0": {
             "health": 75,
             "bodyDamage": 5
@@ -194,7 +233,7 @@
             "radius": 35
         }
     },
-    "5": {
+    "6": {
         "0": {
             "health": 100,
             "bodyDamage": 15
@@ -233,7 +272,7 @@
             "radius": 27.5
         }
     },
-    "6": {
+    "7": {
         "0": {
             "health": 87.5,
             "bodyDamage": 10
@@ -272,7 +311,7 @@
             "radius": 30
         }
     },
-    "7": {
+    "8": {
         "0": {
             "health": 150,
             "bodyDamage": 20
@@ -311,7 +350,7 @@
             "radius": 100
         }
     },
-    "8": {
+    "9": {
         "0": {
             "health": 125,
             "bodyDamage": 25,
@@ -378,7 +417,7 @@
             "radius": 20
         }
     },
-    "9": {
+    "10": {
         "0": {
             "health": 0.5,
             "bodyDamage": 5
@@ -417,7 +456,7 @@
             "radius": 20
         }
     },
-    "10": {
+    "11": {
         "0": {
             "health": 100,
             "bodyDamage": 10
@@ -456,7 +495,7 @@
             "radius": 35
         }
     },
-    "11": {
+    "12": {
         "0": {
             "health": 225,
             "bodyDamage": 10
@@ -495,7 +534,7 @@
             "radius": 30
         }
     },
-    "12": {
+    "13": {
         "0": {
             "health": 150,
             "bodyDamage": 25
@@ -534,7 +573,7 @@
             "radius": 20
         }
     },
-    "13": {
+    "14": {
         "0": {
             "health": 25,
             "bodyDamage": 10
@@ -573,7 +612,7 @@
             "radius": 40
         }
     },
-    "14": {
+    "15": {
         "0": {
             "health": 25,
             "bodyDamage": 10
@@ -612,7 +651,7 @@
             "radius": 40
         }
     },
-    "15": {
+    "16": {
         "0": {
             "health": 25,
             "bodyDamage": 10
@@ -649,6 +688,45 @@
         "collision": {
             "fraction": 40,
             "radius": 40
+        }
+    },
+    "17": {
+        "0": {
+            "health": 25,
+            "bodyDamage": 10
+        },
+        "1": {
+            "health": 93.8,
+            "bodyDamage": 30
+        },
+        "2": {
+            "health": 337.5,
+            "bodyDamage": 90
+        },
+        "3": {
+            "health": 1350,
+            "bodyDamage": 270
+        },
+        "4": {
+            "health": 10125,
+            "bodyDamage": 810
+        },
+        "5": {
+            "health": 60750,
+            "bodyDamage": 2430
+        },
+        "6": {
+            "health": 1825000,
+            "bodyDamage": 7290
+        },
+        "baseSize": 25,
+        "i18n": {
+            "name": "Missile",
+            "description": "How do you see this?"
+        },
+        "collision": {
+            "fraction": 25,
+            "radius": 10
         }
     }
 }

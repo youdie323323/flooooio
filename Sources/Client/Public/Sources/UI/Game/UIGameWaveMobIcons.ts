@@ -1,5 +1,6 @@
 import type Mob from "../../Entity/Mob";
 import { isPetal } from "../../Entity/Petal";
+import { MobType } from "../../Native/Entity/EntityType";
 import { AnimationType, type MaybePointerLike } from "../Layout/Components/Component";
 import type { AutomaticallySizedLayoutOptions } from "../Layout/Components/WellKnown/Container";
 import { StaticHContainer, StaticVContainer } from "../Layout/Components/WellKnown/Container";
@@ -124,6 +125,7 @@ export default class UIGameWaveMobIcons extends StaticHContainer<StaticVContaine
     private animateAndRemoveMobIcon(icon: UIMobIcon, vContainer: StaticVContainer<UIMobIcon>): void {
         icon.once("onOutAnimationEnd", () => {
             vContainer.removeChild(icon);
+
             this.removeEmptyContainer(vContainer);
         });
 
@@ -139,6 +141,6 @@ export default class UIGameWaveMobIcons extends StaticHContainer<StaticVContaine
     }
 
     public isIconableMobInstance({ type, isPet }: Mob): boolean {
-        return !(isPetal(type) || isPet);
+        return !(isPetal(type) || isPet || type === MobType.MISSILE);
     }
 }
