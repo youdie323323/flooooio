@@ -24,7 +24,7 @@ import { createTitleBottomLeftToolTippedButton } from "./BottomLeftButtonGroup";
 import { BIOME_TILESETS } from "../../Utils/Tile/Tileset/TilesetRenderer";
 import TilesetWavedRenderer from "../../Utils/Tile/Tileset/TilesetWavedRenderer";
 import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../../Private/Sources/Wave/WaveRoom";
-import type { WaveRoomCode} from "../../../../Private/Sources/Wave/WaveRoomCode";
+import type { WaveRoomCode } from "../../../../Private/Sources/Wave/WaveRoomCode";
 import { isWaveRoomCode } from "../../../../Private/Sources/Wave/WaveRoomCode";
 import { uiCtx, clientWebsocket, deltaTime, cameraController } from "../../../../Main";
 import { isPetal } from "../../Entity/Petal";
@@ -250,7 +250,22 @@ export default class UITitle extends AbstractUI {
             ));
 
             {
-                const discordLinkButton = new (createTitleBottomLeftToolTippedButton(Button, "Link your Discord account to save your progress!", 10, "left"))(
+                const discordLinkButton = new (Tooltip(
+                    Button,
+
+                    [
+                        new Text(
+                            { y: 5 },
+
+                            "Link your Discord account to save your progress!",
+                            11,
+                        ),
+                        new CoordinatedStaticSpace(1, 1, 0, 22),
+                    ],
+                    10,
+                    "left",
+                    false,
+                ))(
                     {
                         x: 172,
                         y: 6,
@@ -380,24 +395,24 @@ export default class UITitle extends AbstractUI {
                 {
                     canvas: this.canvas,
 
-                    value: "",
+                    text: "",
 
                     fontSize: 15,
                     fontFamily: 'Ubuntu',
-                    fontColor: '#212121',
+                    textColor: '#212121',
                     fontWeight: 'bold',
 
-                    placeHolder: '',
-                    placeHolderDisplayUnfocusedState: false,
+                    placeholder: '',
+                    showPlaceholderWhenUnfocused: false,
 
                     borderColor: "#000000",
                     borderRadius: 2,
                     borderWidth: 2.5,
-                    maxlength: 80,
+                    maxLength: 80,
 
-                    padding: 1,
+                    paddingSize: 1,
 
-                    onkeyup(e, self) {
+                    onKeyUp(e, self) {
                         const name = self.value;
 
                         clientWebsocket.packetServerbound.sendWaveRoomChangeName(name);
@@ -729,22 +744,22 @@ export default class UITitle extends AbstractUI {
                     {
                         canvas: this.canvas,
 
-                        value: "",
+                        text: "",
 
                         fontSize: 10,
                         fontFamily: 'Ubuntu',
-                        fontColor: '#212121',
+                        textColor: '#212121',
                         fontWeight: 'bold',
 
-                        placeHolder: '',
-                        placeHolderDisplayUnfocusedState: false,
+                        placeholder: '',
+                        showPlaceholderWhenUnfocused: false,
 
                         borderColor: "#000000",
                         borderRadius: 2,
                         borderWidth: 2,
-                        maxlength: 20,
+                        maxLength: 20,
 
-                        padding: 1,
+                        paddingSize: 1,
                     },
                 )),
                 new Button(
@@ -864,8 +879,8 @@ export default class UITitle extends AbstractUI {
                             ],
                             2,
                             "top",
-                            2,
                             false,
+                            2,
                         )
                     )(
                         {

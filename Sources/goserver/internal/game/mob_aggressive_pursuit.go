@@ -105,18 +105,18 @@ func predictInterceptionAngle(dx, dy float64, target Node, missileSpeed float64)
 	b := -2 * (dx*targetVx + dy*targetVy)
 	c := -(dx*dx + dy*dy)
 
-	discriminant := b*b - 4*a*c
-	if discriminant < 0 {
+	d := b*b - 4*a*c
+	if d < 0 {
 		// No valid solution
 
 		return nil
 	}
 
-	discriminantSqrt := math.Sqrt(discriminant)
+	sqrtd := math.Sqrt(d)
 
 	// Use the smallest positive solution
-	t1 := (-b + discriminantSqrt) / (2 * a)
-	t2 := (-b - discriminantSqrt) / (2 * a)
+	t1 := (-b + sqrtd) / (2 * a)
+	t2 := (-b - sqrtd) / (2 * a)
 	t := math.Min(t1, t2)
 
 	if t < 0 {

@@ -1,20 +1,37 @@
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-function createBeetleBodyPath() {
-    const path = new Path2D();
+const TAU = Math.PI * 2;
+const curves = new Array();
 
-    path.moveTo(0, -30);
-    path.quadraticCurveTo(40, -30, 40, 0);
-    path.quadraticCurveTo(40, 30, 0, 30);
-    path.quadraticCurveTo(-40, 30, -40, 0);
-    path.quadraticCurveTo(-40, -30, 0, -30);
-    path.closePath();
+function createCurve(angle, direction, offset = 6) {
+    direction *= -1;
+    const cosAngle = Math.cos(angle);
+    const sinAngle = Math.sin(angle);
+    const startX = cosAngle * 25;
+    const startY = sinAngle * 25;
 
-    return path;
+    curves.push({
+        dir: direction,
+        start: [startX, startY],
+        curve: [
+            startX + cosAngle * 23 + -sinAngle * direction * offset,
+            startY + sinAngle * 23 + cosAngle * direction * offset,
+            startX + cosAngle * 46,
+            startY + sinAngle * 46,
+        ],
+    });
 }
 
-const beetleBodyPath = createBeetleBodyPath();
+createCurve((Math.PI / 180) * 40, 1);
+createCurve((Math.PI / 180) * 75, 1, 3);
+createCurve((Math.PI / 180) * 105, -1, 3);
+createCurve((Math.PI / 180) * 140, -1);
+
+createCurve((-Math.PI / 180) * 40, -1);
+createCurve((-Math.PI / 180) * 75, -1, 3);
+createCurve((-Math.PI / 180) * 105, 1, 3);
+createCurve((-Math.PI / 180) * 140, 1);
 
 let moveCounter = 0;
 
@@ -25,30 +42,40 @@ let moveCounter = 0;
 
     ctx.save();
 
-    ctx.scale(5, 5);
+    ctx.scale(3, 3);
     ctx.translate(100, 100);
 
-    ctx.lineJoin = ctx.lineCap = "round";
+    ctx.lineCap = "round";
 
-    {
-        ctx.lineWidth = 7;
+    { // Legs
+        ctx.strokeStyle = "#323032";
+        ctx.lineWidth = 10;
 
-        const skinColor = "#8f5db0";
+        for (let i = 0; i < curves.length; i++) {
+            const curve = curves[i];
 
-        ctx.fillStyle = skinColor;
-        ctx.fill(beetleBodyPath);
+            ctx.save();
 
-        // Arc points are same color with this
-        ctx.fillStyle = ctx.strokeStyle = skinColor;
-        ctx.stroke(beetleBodyPath);
+            ctx.rotate(curve.dir * Math.sin(moveCounter + i ** 2) * 0.2);
+            ctx.beginPath();
+            ctx.moveTo(...curve.start);
+            ctx.quadraticCurveTo(...curve.curve);
+            ctx.stroke();
+
+            ctx.restore();
+        }
     }
 
-    ctx.strokeStyle = "black";
-    ctx.lineWidth = 1;
-
-    ctx.beginPath();
-    ctx.arc(0, 0, 40, 0, Math.PI * 2);
-    ctx.stroke();
+    { // Body
+        ctx.fillStyle = "#4f412e";
+        ctx.strokeStyle = "rgba(0,0,0,0.15)";
+        ctx.lineWidth = 20;
+        ctx.beginPath();
+        ctx.arc(0, 0, 35, 0, TAU);
+        ctx.fill();
+        ctx.clip();
+        ctx.stroke();
+    }
 
     ctx.restore();
 

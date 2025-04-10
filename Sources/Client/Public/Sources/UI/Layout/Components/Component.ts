@@ -221,6 +221,10 @@ export interface ComponentSymbol {
     [CENTERING]?: boolean;
 }
 
+function clamp(value: number, min: number, max: number): number {
+    return Math.min(Math.max(value, min), max);
+}
+
 /**
  * Base Component class for all UI components.
  */
@@ -399,6 +403,22 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
         this.layoutCache.set(cacheKey, result);
 
         return result;
+    }
+
+    /**
+     * Clamp layout result in viewport.
+     */
+    protected doClamp(lr: LayoutResult): LayoutResult {
+        const { width, height } = this.context.canvas;
+        const { w, h, x, y } = lr;
+
+        return {
+            x: clamp(x, 0, width - w),
+            y: clamp(y, 0, height - h),
+            
+            w,
+            h,
+        };
     }
 
     protected static readonly CACHE_KEY_DELIMITER: string = "_";

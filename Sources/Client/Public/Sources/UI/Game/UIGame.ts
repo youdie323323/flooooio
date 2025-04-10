@@ -562,7 +562,7 @@ export default class UIGame extends AbstractUI {
                     }
 
                     case "Enter": {
-                        if (this.chatInput.hasFocus) {
+                        if (this.chatInput.isFocused) {
                             this.chatInput.blur();
                         } else {
                             const selfPlayer = this.players.get(this.waveSelfId);
@@ -588,7 +588,7 @@ export default class UIGame extends AbstractUI {
                         // Slot swapping
                         if (
                             // Dont swap while chatting
-                            !this.chatInput.hasFocus
+                            !this.chatInput.isFocused
                         ) {
                             if (event.code.startsWith("Digit")) {
                                 let index = parseInt(event.code.slice(5));
@@ -948,23 +948,23 @@ export default class UIGame extends AbstractUI {
                 {
                     canvas: this.canvas,
 
-                    value: "",
+                    text: "",
 
                     fontSize: 11,
                     fontFamily: 'Ubuntu',
-                    fontColor: '#212121',
+                    textColor: '#212121',
                     fontWeight: 'bold',
 
-                    placeHolder: '',
-                    placeHolderUnfocused: "Press [ENTER] or click here to chat",
-                    placeHolderDisplayUnfocusedState: true,
+                    placeholder: '',
+                    placeholderUnfocused: "Press [ENTER] or click here to chat",
+                    showPlaceholderWhenUnfocused: true,
 
                     borderColor: "#000000",
                     borderRadius: 4,
                     borderWidth: 2.2,
-                    maxlength: 80,
+                    maxLength: 80,
 
-                    onsubmit: (e, self) => {
+                    onSubmit: (e, self) => {
                         clientWebsocket.packetServerbound.sendWaveChat(self.value);
 
                         self.value = "";
@@ -985,7 +985,7 @@ export default class UIGame extends AbstractUI {
 
                     2,
                     () =>
-                        this.chatInput.hasFocus
+                        this.chatInput.isFocused
                             ? 0.5
                             : 0,
                 ).addChild(this.chatContainer = new StaticVContainer({})),

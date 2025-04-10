@@ -5,138 +5,144 @@ import { Component } from "../Component";
 import { calculateStrokeWidth } from "./Text";
 
 interface TextInputOptions {
+    // Core properties
+    text?: string;
     canvas: HTMLCanvasElement;
-    value?: string;
-    selectionColor?: string;
-    backgroundColor?: string;
+
+    highlightColor?: string;
+    backgroundColor?: string | CanvasGradient | CanvasPattern;
     fontSize?: number;
     fontFamily?: string;
-    fontColor?: string;
+    textColor?: string;
     fontWeight?: string;
     fontStyle?: string;
-    readonly?: boolean;
-    maxlength?: number;
-    padding?: number;
+    isReadOnly?: boolean;
+    maxLength?: number;
+    paddingSize?: number;
     borderWidth?: number;
     borderColor?: string;
     borderRadius?: number;
-    placeHolder?: string;
-    placeHolderUnfocused?: string;
-    placeHolderColor?: string;
-    placeHolderDisplayUnfocusedState?: boolean;
 
-    onsubmit?: (e: KeyboardEvent, self: TextInput) => void;
-    onkeydown?: (e: KeyboardEvent, self: TextInput) => void;
-    onkeyup?: (e: KeyboardEvent, self: TextInput) => void;
-    onfocus?: (self: TextInput) => void;
-    onblur?: (self: TextInput) => void;
+    // Placeholder properties
+    placeholder?: string;
+    placeholderUnfocused?: string;
+    placeholderColor?: string;
+    showPlaceholderWhenUnfocused?: boolean;
+
+    // Event handlers
+    onSubmit?: (e: KeyboardEvent, self: TextInput) => void;
+    onKeyDown?: (e: KeyboardEvent, self: TextInput) => void;
+    onKeyUp?: (e: KeyboardEvent, self: TextInput) => void;
+    onFocus?: (self: TextInput) => void;
+    onBlur?: (self: TextInput) => void;
 }
 
 const inputs: Array<TextInput> = new Array();
 
 export default class TextInput extends Component {
     // Core properties
-    private _value: string;
-    private _canvas: HTMLCanvasElement;
-    private _ctx: CanvasRenderingContext2D | null;
-    private _inputsIndex: number;
-    private _hiddenInput: HTMLInputElement;
+    private text: string;
+    private canvas: HTMLCanvasElement;
+    private ctx: CanvasRenderingContext2D | null;
+    private inputIndex: number;
+    private hiddenInput: HTMLInputElement;
 
     // Style properties
     public fontSize: number;
     public fontFamily: string;
-    public fontColor: string;
+    public textColor: string;
     public fontWeight: string;
     public fontStyle: string;
     public placeHolderColor: string;
-    public backgroundColor: string | CanvasGradient;
-    public padding: number;
+    public backgroundColor: string | CanvasGradient | CanvasPattern;
+    public paddingSize: number;
     public borderWidth: number;
     public borderColor: string;
     public borderRadius: number;
-    public selectionColor: string;
+    public highlightColor: string;
 
     // Input state
-    public hasFocus: boolean;
-    public readonly: boolean;
-    public maxlength: number | null;
+    public isFocused: boolean;
+    public isReadOnly: boolean;
+    public maxLength: number | null;
     public selectionStart?: number;
-    public selectionUpdated?: boolean;
+    public isSelectionUpdated?: boolean;
 
     // Cursor & Selection
-    private cursorInterval?: NodeJS.Timeout;
-    private cursorGlobalAlpha: number;
-    private cursorGlobalAlphaDirectionBack: boolean;
-    private cursorPos: number;
-    private selection: [number, number];
+    private cursorBlinkInterval?: NodeJS.Timeout;
+    private cursorOpacity: number;
+    private isCursorFadingOut: boolean;
+    private cursorPosition: number;
+    private selectionRange: [number, number];
 
     // Placeholder properties
-    private placeHolder: string;
-    private placeHolderUnfocused: string;
-    private placeHolderDisplayUnfocusedState: boolean;
+    private placeholder: string;
+    private placeholderUnfocused: string;
+    private showPlaceholderWhenUnfocused: boolean;
 
     // Event handlers
-    private onsubmit: (e: KeyboardEvent, self: TextInput) => void;
-    private onkeydown: (e: KeyboardEvent, self: TextInput) => void;
-    private onkeyup: (e: KeyboardEvent, self: TextInput) => void;
-    private onfocus: (self: TextInput) => void;
-    private onblur: (self: TextInput) => void;
+    private onSubmit: (e: KeyboardEvent, self: TextInput) => void;
+    private onKeyDown: (e: KeyboardEvent, self: TextInput) => void;
+    private onKeyUp: (e: KeyboardEvent, self: TextInput) => void;
+    private onFocus: (self: TextInput) => void;
+    private onBlur: (self: TextInput) => void;
 
     // Event listeners
-    private onmousemoveListen: (e: any) => void;
-    private onmousedownListen: (e: any) => void;
-    private onmouseupListen: (e: any) => void;
+    private mouseMoveHandler: (e: MouseEvent) => void;
+    private mouseDownHandler: (e: MouseEvent) => void;
+    private mouseUpHandler: (e: MouseEvent) => void;
 
     constructor(
         protected readonly layoutOptions: MaybePointerLike<LayoutOptions>,
-        o: TextInputOptions,
+
+        options: TextInputOptions,
     ) {
         super();
 
         // Initialize core properties
-        this._canvas = o.canvas;
-        this._ctx = this._canvas ? this._canvas.getContext('2d') : null;
-        this.value = (o.value || o.placeHolder || '') + '';
+        this.canvas = options.canvas;
+        this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
+        this.value = options.text || "";
 
         // Initialize style properties
-        this.fontSize = o.fontSize || 14;
-        this.fontFamily = o.fontFamily || 'Arial';
-        this.fontColor = o.fontColor || '#000';
-        this.fontWeight = o.fontWeight || 'normal';
-        this.fontStyle = o.fontStyle || 'normal';
-        this.placeHolderColor = o.placeHolderColor || '#bfbebd';
-        this.backgroundColor = o.backgroundColor || '#fff';
-        this.padding = o.padding >= 0 ? o.padding : 5;
-        this.borderWidth = o.borderWidth >= 0 ? o.borderWidth : 1;
-        this.borderColor = o.borderColor || '#959595';
-        this.borderRadius = o.borderRadius >= 0 ? o.borderRadius : 3;
-        this.selectionColor = o.selectionColor || '#909090';
+        this.fontSize = options.fontSize || 14;
+        this.fontFamily = options.fontFamily || 'Arial';
+        this.textColor = options.textColor || '#000';
+        this.fontWeight = options.fontWeight || 'normal';
+        this.fontStyle = options.fontStyle || 'normal';
+        this.placeHolderColor = options.placeholderColor || '#bfbebd';
+        this.backgroundColor = options.backgroundColor || '#fff';
+        this.paddingSize = options.paddingSize >= 0 ? options.paddingSize : 5;
+        this.borderWidth = options.borderWidth >= 0 ? options.borderWidth : 1;
+        this.borderColor = options.borderColor || '#959595';
+        this.borderRadius = options.borderRadius >= 0 ? options.borderRadius : 3;
+        this.highlightColor = options.highlightColor || '#909090';
 
         // Initialize input state
-        this.readonly = o.readonly || false;
-        this.maxlength = o.maxlength || null;
-        this.hasFocus = false;
+        this.isReadOnly = options.isReadOnly || false;
+        this.maxLength = options.maxLength || null;
+        this.isFocused = false;
 
         // Initialize cursor & selection
-        this.cursorGlobalAlpha = 0;
-        this.cursorGlobalAlphaDirectionBack = false;
-        this.cursorPos = 0;
-        this.selection = [0, 0];
+        this.cursorOpacity = 0;
+        this.isCursorFadingOut = false;
+        this.cursorPosition = 0;
+        this.selectionRange = [0, 0];
 
         // Initialize placeholder properties
-        this.placeHolder = o.placeHolder || '';
-        this.placeHolderUnfocused = o.placeHolderUnfocused || '';
-        this.placeHolderDisplayUnfocusedState = o.placeHolderDisplayUnfocusedState || false;
+        this.placeholder = options.placeholder || '';
+        this.placeholderUnfocused = options.placeholderUnfocused || '';
+        this.showPlaceholderWhenUnfocused = options.showPlaceholderWhenUnfocused || false;
 
         // Initialize event handlers
-        this.onsubmit = o.onsubmit || function () { };
-        this.onkeydown = o.onkeydown || function () { };
-        this.onkeyup = o.onkeyup || function () { };
-        this.onfocus = o.onfocus || function () { };
-        this.onblur = o.onblur || function () { };
+        this.onSubmit = options.onSubmit || function () { };
+        this.onKeyDown = options.onKeyDown || function () { };
+        this.onKeyUp = options.onKeyUp || function () { };
+        this.onFocus = options.onFocus || function () { };
+        this.onBlur = options.onBlur || function () { };
 
-        if (this._canvas) {
-            this._canvas.addEventListener('mousemove', this.onmousemoveListen = (e: MouseEvent) => {
+        if (this.canvas) {
+            this.canvas.addEventListener('mousemove', this.mouseMoveHandler = (e: MouseEvent) => {
                 if (!this.visible) {
                     return;
                 }
@@ -144,7 +150,7 @@ export default class TextInput extends Component {
                 this.mousemove(e, this);
             });
 
-            this._canvas.addEventListener('mousedown', this.onmousedownListen = (e: MouseEvent) => {
+            this.canvas.addEventListener('mousedown', this.mouseDownHandler = (e: MouseEvent) => {
                 if (!this.visible) {
                     return;
                 }
@@ -152,7 +158,7 @@ export default class TextInput extends Component {
                 this.mousedown(e, this);
             });
 
-            this._canvas.addEventListener('mouseup', this.onmouseupListen = (e: MouseEvent) => {
+            this.canvas.addEventListener('mouseup', this.mouseUpHandler = (e: MouseEvent) => {
                 if (!this.visible) {
                     return;
                 }
@@ -161,79 +167,79 @@ export default class TextInput extends Component {
             });
         }
 
-        this._hiddenInput = document.createElement('input');
-        this._hiddenInput.type = 'text';
-        this._hiddenInput.style.position = 'absolute';
-        this._hiddenInput.style.opacity = "0";
-        this._hiddenInput.style.pointerEvents = 'none';
-        this._hiddenInput.style.zIndex = "0";
+        this.hiddenInput = document.createElement('input');
+        this.hiddenInput.type = 'text';
+        this.hiddenInput.style.position = 'absolute';
+        this.hiddenInput.style.opacity = "0";
+        this.hiddenInput.style.pointerEvents = 'none';
+        this.hiddenInput.style.zIndex = "0";
 
-        this._hiddenInput.style.transform = 'scale(0)';
+        this.hiddenInput.style.transform = 'scale(0)';
 
-        if (this.maxlength) {
-            this._hiddenInput.maxLength = this.maxlength;
+        if (this.maxLength) {
+            this.hiddenInput.maxLength = this.maxLength;
         }
 
-        document.body.appendChild(this._hiddenInput);
+        document.body.appendChild(this.hiddenInput);
 
-        this._hiddenInput.value = this.value;
+        this.hiddenInput.value = this.value;
 
-        this._hiddenInput.addEventListener('keydown', (e: KeyboardEvent) => {
+        this.hiddenInput.addEventListener('keydown', (e: KeyboardEvent) => {
             if (!this.visible) {
                 return;
             }
 
-            if (this.hasFocus) {
-                this._hiddenInput.focus();
+            if (this.isFocused) {
+                this.hiddenInput.focus();
 
                 this.keydown(e, this);
             }
         });
 
-        this._hiddenInput.addEventListener("keyup", (e: KeyboardEvent) => {
+        this.hiddenInput.addEventListener("keyup", (e: KeyboardEvent) => {
             if (!this.visible) {
                 return;
             }
 
-            this.value = this._hiddenInput.value;
-            this.cursorPos = this._hiddenInput.selectionStart;
+            this.value = this.hiddenInput.value;
+            this.cursorPosition = this.hiddenInput.selectionStart;
 
-            this.selection = [
-                this._hiddenInput.selectionStart,
-                this._hiddenInput.selectionEnd,
+            this.selectionRange = [
+                this.hiddenInput.selectionStart,
+                this.hiddenInput.selectionEnd,
             ];
 
-            if (this.hasFocus) {
-                this.onkeyup(e, this);
+            if (this.isFocused) {
+                this.onKeyUp(e, this);
             }
         });
 
         this.on("onBlur", () => {
-            this._canvas.style.cursor = "default";
+            this.canvas.style.cursor = "default";
         });
 
         inputs.push(this);
-        this._inputsIndex = inputs.length - 1;
+        this.inputIndex = inputs.length - 1;
     }
 
-    // Define getter/setter for _value
-    public get value() { return this._value; }
+    // Define getter/setter for text
+    public get value() { return this.text; }
 
     public set value(value: string) {
-        if (this._hiddenInput) {
-            this._hiddenInput.value = value;
+        if (this.hiddenInput) {
+            this.hiddenInput.value = value;
         }
 
-        this._value = value;
+        this.text = value;
     }
 
     // Override them to calc wh
     override setW(w: number) {
-        this.w = w + this.padding * 2 + this.borderWidth * 2;
+        this.w = w + this.paddingSize * 2 + this.borderWidth * 2;
     }
 
     override setH(h: number) {
-        this.h = h + this.padding * 2 + this.borderWidth * 2;
+        this.h = h + this.paddingSize * 2 + this.borderWidth * 2;
     }
 
     override layout(lc: LayoutContext): LayoutResult {
@@ -255,23 +261,19 @@ export default class TextInput extends Component {
     override render(ctx: CanvasRenderingContext2D) {
         super.render(ctx);
 
-        ctx.save();
-
         ctx.translate(this.x, this.y);
 
         const text = this.clipText();
 
-        if (this.placeHolderDisplayUnfocusedState) {
+        if (this.showPlaceholderWhenUnfocused) {
             this.renderPlaceholderState(text);
         } else {
             this.renderTextInput(text);
         }
-
-        ctx.restore();
     }
 
     private renderPlaceholderState(text: string) {
-        if (this.hasFocus) {
+        if (this.isFocused) {
             this.renderTextInput(text);
 
             return;
@@ -287,7 +289,7 @@ export default class TextInput extends Component {
     }
 
     private renderFilledUnfocusedState(text: string) {
-        const { _ctx: ctx, h } = this;
+        const { ctx: ctx, h } = this;
 
         this.drawBackgroundOverlay();
 
@@ -295,14 +297,14 @@ export default class TextInput extends Component {
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = calculateStrokeWidth(this.fontSize);
 
-        ctx.translate(this.padding + this.borderWidth, h / 2);
+        ctx.translate(this.paddingSize + this.borderWidth, h / 2);
 
         ctx.strokeText(text, 0, 0);
         ctx.fillText(text, 0, 0);
     }
 
     private renderEmptyUnfocusedState() {
-        const { _ctx: ctx, h } = this;
+        const { ctx: ctx, h } = this;
 
         this.setupTextContext(true);
         this.drawBackgroundOverlay();
@@ -311,14 +313,14 @@ export default class TextInput extends Component {
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = calculateStrokeWidth(this.fontSize);
 
-        ctx.translate(this.padding + this.borderWidth, h / 2);
+        ctx.translate(this.paddingSize + this.borderWidth, h / 2);
 
-        ctx.strokeText(this.placeHolderUnfocused, 0, 0);
-        ctx.fillText(this.placeHolderUnfocused, 0, 0);
+        ctx.strokeText(this.placeholderUnfocused, 0, 0);
+        ctx.fillText(this.placeholderUnfocused, 0, 0);
     }
 
     private drawBackgroundOverlay() {
-        const { _ctx: ctx, w, h, borderRadius: br } = this;
+        const { ctx: ctx, w, h, borderRadius: br } = this;
 
         ctx.save();
         ctx.globalAlpha = 0.4;
@@ -330,7 +332,7 @@ export default class TextInput extends Component {
     }
 
     private setupTextContext(reduced = false) {
-        const { _ctx: ctx } = this;
+        const { ctx: ctx } = this;
 
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
@@ -345,7 +347,7 @@ export default class TextInput extends Component {
     }
 
     private drawBorder() {
-        const { _ctx: ctx, w, h, borderRadius: br } = this;
+        const { ctx: ctx, w, h, borderRadius: br } = this;
 
         if (this.borderWidth <= 0) return;
 
@@ -362,7 +364,7 @@ export default class TextInput extends Component {
     private renderTextContent(text: string) {
         this.clearShadow();
 
-        const hasSelection = this.selection[1] - this.selection[0] > 0;
+        const hasSelection = this.selectionRange[1] - this.selectionRange[0] > 0;
         if (hasSelection) {
             this.renderSelection(text);
         } else {
@@ -373,7 +375,7 @@ export default class TextInput extends Component {
     }
 
     private clearShadow() {
-        const { _ctx: ctx } = this;
+        const { ctx: ctx } = this;
 
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
@@ -381,15 +383,15 @@ export default class TextInput extends Component {
     }
 
     private renderSelection(text: string) {
-        const { _ctx: ctx, h } = this;
+        const { ctx: ctx, h } = this;
 
-        const paddingBorder = this.padding + this.borderWidth;
-        const selectWidth = this.textWidth(text.substring(this.selection[0], this.selection[1]));
+        const paddingBorder = this.paddingSize + this.borderWidth;
+        const selectWidth = this.textWidth(text.substring(this.selectionRange[0], this.selectionRange[1]));
 
         ctx.save();
 
-        const selectOffset = this.textWidth(text.substring(0, this.selection[0]));
-        ctx.fillStyle = this.selectionColor;
+        const selectOffset = this.textWidth(text.substring(0, this.selectionRange[0]));
+        ctx.fillStyle = this.highlightColor;
 
         const heightResized = h * 0.64;
         const WIDTH_OFFSET = 4;
@@ -404,18 +406,18 @@ export default class TextInput extends Component {
     }
 
     private renderCursor(text: string) {
-        const { _ctx: ctx, h } = this;
+        const { ctx: ctx, h } = this;
 
-        const paddingBorder = this.padding + this.borderWidth;
+        const paddingBorder = this.paddingSize + this.borderWidth;
 
         ctx.save();
 
-        ctx.globalAlpha = this.cursorGlobalAlpha;
+        ctx.globalAlpha = this.cursorOpacity;
 
         const CURSOR_WIDTH = 1.8;
         const CURSOR_RELATIVE_HEIGHT = 12;
 
-        const cursorOffset = this.textWidth(text.slice(0, this.cursorPos));
+        const cursorOffset = this.textWidth(text.slice(0, this.cursorPosition));
 
         // Draw black cursor background
         ctx.fillStyle = "#000000";
@@ -440,23 +442,24 @@ export default class TextInput extends Component {
     }
 
     private renderText(text: string) {
-        const { _ctx: ctx, h } = this;
+        const { ctx: ctx, h } = this;
 
         this.setupTextContext();
 
-        const displayText = text || this.placeHolder;
-        const normalFillStyle = (this.value && this.value !== this.placeHolder)
-            ? this.fontColor
-            : this.placeHolderColor;
+        const displayText = text || this.placeholder;
+        const normalFillStyle =
+            (this.value && this.value !== this.placeholder)
+                ? this.textColor
+                : this.placeHolderColor;
 
-        let textX = this.padding + this.borderWidth;
+        let textX = this.paddingSize + this.borderWidth;
         const textY = Math.round(h / 2);
 
         ctx.translate(0, textY);
 
         for (let i = 0; i < displayText.length; i++) {
             const char = displayText[i];
-            const isSelected = i >= this.selection[0] && i < this.selection[1];
+            const isSelected = i >= this.selectionRange[0] && i < this.selectionRange[1];
 
             if (isSelected) {
                 this.renderSelectedChar(char, textX);
@@ -469,7 +472,7 @@ export default class TextInput extends Component {
     }
 
     private renderSelectedChar(char: string, x: number) {
-        const { _ctx: ctx } = this;
+        const { ctx: ctx } = this;
 
         ctx.strokeStyle = '#000000';
         ctx.fillStyle = "#ffffff";
@@ -480,7 +483,7 @@ export default class TextInput extends Component {
     }
 
     private renderNormalChar(char: string, x: number, fillStyle: string) {
-        const { _ctx: ctx } = this;
+        const { ctx: ctx } = this;
 
         ctx.fillStyle = fillStyle;
         ctx.fillText(char, x, 0);
@@ -492,101 +495,105 @@ export default class TextInput extends Component {
             inputs.splice(index, 1);
         }
 
-        if (this.hasFocus) this.blur();
+        if (this.isFocused) this.blur();
 
-        this._canvas.removeEventListener("mousemove", this.onmousemoveListen);
-        this._canvas.removeEventListener("mousedown", this.onmousedownListen);
-        this._canvas.removeEventListener("mouseup", this.onmouseupListen);
+        this.canvas.removeEventListener("mousemove", this.mouseMoveHandler);
+        this.canvas.removeEventListener("mousedown", this.mouseDownHandler);
+        this.canvas.removeEventListener("mouseup", this.mouseUpHandler);
 
-        document.body.removeChild(this._hiddenInput);
+        document.body.removeChild(this.hiddenInput);
 
         super.destroy();
     }
 
     private updateCursorStyle(e: boolean): void {
         if (e) {
-            this._canvas.style.cursor = this.hasFocus
+            this.canvas.style.cursor = this.isFocused
                 ? "text"
                 : "pointer";
         }
     }
 
     public focus(pos: number = undefined) {
-        if (!this.hasFocus) {
-            this.onfocus(this);
+        if (!this.isFocused) {
+            this.onFocus(this);
 
             for (let i = 0; i < inputs.length; i++) {
-                if (inputs[i].hasFocus) {
+                if (inputs[i].isFocused) {
                     inputs[i].blur();
                 }
             }
         }
 
-        if (!this.selectionUpdated) {
-            this.selection = [0, 0];
+        if (!this.isSelectionUpdated) {
+            this.selectionRange = [0, 0];
         } else {
-            delete this.selectionUpdated;
+            delete this.isSelectionUpdated;
         }
 
-        this.hasFocus = true;
-        if (this.readonly) {
-            this._hiddenInput.readOnly = true;
+        this.isFocused = true;
+        if (this.isReadOnly) {
+            this.hiddenInput.readOnly = true;
         } else {
-            this._hiddenInput.readOnly = false;
+            this.hiddenInput.readOnly = false;
 
-            this.cursorPos = (typeof pos === 'number') ? pos : this.clipText().length;
+            this.cursorPosition =
+                (typeof pos === "number")
+                    ? pos
+                    : this.clipText().length;
 
-            if (this.placeHolder === this.value) {
-                this.value = '';
-                this._hiddenInput.value = '';
+            if (this.placeholder === this.value) {
+                this.value = "";
+                this.hiddenInput.value = "";
             }
 
-            if (this.cursorInterval) clearInterval(this.cursorInterval);
+            if (this.cursorBlinkInterval) clearInterval(this.cursorBlinkInterval);
 
-            this.cursorInterval = setInterval(() => {
-                if (this.cursorGlobalAlphaDirectionBack) {
-                    this.cursorGlobalAlpha -= 0.1;
-                    if (this.cursorGlobalAlpha <= 0) {
-                        this.cursorGlobalAlphaDirectionBack = false;
-                        this.cursorGlobalAlpha = 0;
+            this.cursorBlinkInterval = setInterval(() => {
+                if (this.isCursorFadingOut) {
+                    this.cursorOpacity -= 0.1;
+                    if (this.cursorOpacity <= 0) {
+                        this.isCursorFadingOut = false;
+                        this.cursorOpacity = 0;
                     }
                 } else {
-                    this.cursorGlobalAlpha += 0.1;
-                    if (this.cursorGlobalAlpha >= 1) {
-                        this.cursorGlobalAlphaDirectionBack = true;
-                        this.cursorGlobalAlpha = 1;
+                    this.cursorOpacity += 0.1;
+                    if (this.cursorOpacity >= 1) {
+                        this.isCursorFadingOut = true;
+                        this.cursorOpacity = 1;
                     }
                 }
             }, 22.5);
         }
 
-        const hasSelection = (this.selection[0] > 0 || this.selection[1] > 0);
-        this._hiddenInput.focus();
-        this._hiddenInput.selectionStart = hasSelection ? this.selection[0] : this.cursorPos;
-        this._hiddenInput.selectionEnd = hasSelection ? this.selection[1] : this.cursorPos;
+        const hasSelection = (this.selectionRange[0] > 0 || this.selectionRange[1] > 0);
+        this.hiddenInput.focus();
+        this.hiddenInput.selectionStart = hasSelection ? this.selectionRange[0] : this.cursorPosition;
+        this.hiddenInput.selectionEnd = hasSelection ? this.selectionRange[1] : this.cursorPosition;
     }
 
     public blur() {
-        this.onblur(this);
+        this.onBlur(this);
 
-        if (this.cursorInterval) {
-            clearInterval(this.cursorInterval);
+        if (this.cursorBlinkInterval) {
+            clearInterval(this.cursorBlinkInterval);
         }
-        this.hasFocus = false;
-        this.cursorGlobalAlpha = 0;
-        this.cursorGlobalAlphaDirectionBack = false;
-        this.selection = [0, 0];
-        this._hiddenInput.blur();
 
-        if (this.value === '') {
-            this.value = this.placeHolder;
+        this.isFocused = false;
+        this.cursorOpacity = 0;
+        this.isCursorFadingOut = false;
+        this.selectionRange = [0, 0];
+        this.hiddenInput.blur();
+
+        if (this.value === "") {
+            this.value = this.placeholder;
         }
     }
 
     private keydown(e: KeyboardEvent, self: this) {
         const keyCode = e.which;
 
-        if (this.readonly || !this.hasFocus) {
+        if (this.isReadOnly || !this.isFocused) {
             e.preventDefault();
 
             return;
@@ -607,12 +614,12 @@ export default class TextInput extends Component {
         if (keyCode === 13) {
             e.preventDefault();
 
-            this.onsubmit(e, self);
+            this.onSubmit(e, self);
         } else if (keyCode === 9) {
             e.preventDefault();
 
             if (inputs.length > 1) {
-                const next = (inputs[this._inputsIndex + 1]) ? this._inputsIndex + 1 : 0;
+                const next = (inputs[this.inputIndex + 1]) ? this.inputIndex + 1 : 0;
                 self.blur();
                 setTimeout(function () {
                     inputs[next].focus();
@@ -622,14 +629,14 @@ export default class TextInput extends Component {
 
         // Use rAF to fix input lag
         requestAnimationFrame(() => {
-            this.value = this._hiddenInput.value;
-            this.cursorPos = this._hiddenInput.selectionStart;
-            this.selection = [
-                this._hiddenInput.selectionStart,
-                this._hiddenInput.selectionEnd,
+            this.value = this.hiddenInput.value;
+            this.cursorPosition = this.hiddenInput.selectionStart;
+            this.selectionRange = [
+                this.hiddenInput.selectionStart,
+                this.hiddenInput.selectionEnd,
             ];
 
-            this.onkeydown(e, self);
+            this.onKeyDown(e, self);
         });
     }
 
@@ -638,7 +645,7 @@ export default class TextInput extends Component {
 
         this.updateCursorStyle(isOver);
 
-        if (this.hasFocus && this.selectionStart >= 0) {
+        if (this.isFocused && this.selectionStart >= 0) {
             let curPos = this.clickPos(x, y);
 
             if (!isOver) {
@@ -652,8 +659,8 @@ export default class TextInput extends Component {
             const start = Math.min(this.selectionStart, curPos),
                 end = Math.max(this.selectionStart, curPos);
 
-            if (this.selection[0] !== start || this.selection[1] !== end) {
-                this.selection = [start, end];
+            if (this.selectionRange[0] !== start || this.selectionRange[1] !== end) {
+                this.selectionRange = [start, end];
             }
         }
     }
@@ -661,7 +668,7 @@ export default class TextInput extends Component {
     private mousedown(e: MouseEvent, self: this) {
         const x = this.context.mouseX, y = this.context.mouseY, isOver = this.overInput(x, y);
 
-        if (this.hasFocus && !isOver) {
+        if (this.isFocused && !isOver) {
             self.blur();
 
             return;
@@ -669,7 +676,7 @@ export default class TextInput extends Component {
 
         // Focus if over
         if (isOver) {
-            this.hasFocus = true;
+            this.isFocused = true;
 
             self.focus(this.clickPos(x, y));
             this.selectionStart = this.clickPos(x, y);
@@ -682,18 +689,18 @@ export default class TextInput extends Component {
         const x = this.context.mouseX, y = this.context.mouseY;
 
         const isSelection = this.clickPos(x, y) !== this.selectionStart;
-        if (this.hasFocus && this.selectionStart >= 0 && isSelection) {
-            this.selectionUpdated = true;
+        if (this.isFocused && this.selectionStart >= 0 && isSelection) {
+            this.isSelectionUpdated = true;
         }
 
         // Refocus element again
-        if (this.hasFocus) self.focus(this.clickPos(x, y));
+        if (this.isFocused) self.focus(this.clickPos(x, y));
 
         delete this.selectionStart;
     }
 
     private drawTextBox(fn: () => void) {
-        const ctx = this._ctx, w = this.w, h = this.h, bw = this.borderWidth;
+        const ctx = this.ctx, w = this.w, h = this.h, bw = this.borderWidth;
 
         ctx.fillStyle = this.backgroundColor;
         ctx.beginPath();
@@ -706,7 +713,7 @@ export default class TextInput extends Component {
     private clipText(value: string = undefined) {
         value = (typeof value === 'undefined') ? this.value : value;
 
-        const padding = this.padding + this.borderWidth;
+        const padding = this.paddingSize + this.borderWidth;
         const availableWidth = this.w - (padding * 2);
         const textWidth = this.textWidth(value);
 
@@ -717,7 +724,7 @@ export default class TextInput extends Component {
         let startPos = 0;
         let endPos = value.length;
         let currentWidth = 0;
-        const cursorOffset = this.textWidth(value.substring(0, this.cursorPos));
+        const cursorOffset = this.textWidth(value.substring(0, this.cursorPosition));
 
         if (cursorOffset > availableWidth) {
             for (let i = 0; i < value.length; i++) {
@@ -742,7 +749,7 @@ export default class TextInput extends Component {
     }
 
     private textWidth(text: string) {
-        const ctx = this._ctx;
+        const ctx = this.ctx;
 
         ctx.font = this.fontStyle + ' ' + this.fontWeight + ' ' + this.fontSize + 'px ' + this.fontFamily;
         ctx.textAlign = 'left';
@@ -755,9 +762,9 @@ export default class TextInput extends Component {
     private selectText(range: [number, number] = undefined) {
         range = range || [0, this.value.length];
 
-        this.selection = <[number, number]>range.slice();
-        this._hiddenInput.selectionStart = range[0];
-        this._hiddenInput.selectionEnd = range[1];
+        this.selectionRange = <[number, number]>range.slice();
+        this.hiddenInput.selectionStart = range[0];
+        this.hiddenInput.selectionEnd = range[1];
     }
 
     private overInput(x: number, y: number) {
@@ -773,7 +780,7 @@ export default class TextInput extends Component {
         const text = this.clipText();
         const pos = text.length;
 
-        const relativeX = x - (this.x + this.padding + this.borderWidth);
+        const relativeX = x - (this.x + this.paddingSize + this.borderWidth);
 
         const allTextWidth = this.textWidth(text);
 

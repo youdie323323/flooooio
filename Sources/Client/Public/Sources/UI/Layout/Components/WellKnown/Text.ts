@@ -49,6 +49,7 @@ export default class Text extends Component<ClipboardEvents> {
 
             if (computedIsCopyable) {
                 this.context.canvas.style.cursor = "pointer";
+                
                 isHovered = true;
             }
         });
@@ -58,6 +59,7 @@ export default class Text extends Component<ClipboardEvents> {
 
             if (computedIsCopyable) {
                 this.context.canvas.style.cursor = "default";
+
                 isHovered = false;
             }
         });

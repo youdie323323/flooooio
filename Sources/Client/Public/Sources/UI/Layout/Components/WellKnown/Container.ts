@@ -378,16 +378,16 @@ export class StaticTranslucentPanelContainer<Child extends Components = Componen
             });
         }
 
-        return Layout.layout(
+        return this.doClamp(Layout.layout(
             Object.assign(
                 {
                     w: maxW,
                     h: maxH,
                 },
                 Component.computePointerLike(this.layoutOptions),
-            ),
+            ) satisfies LayoutOptions,
             lc,
-        );
+        ));
     }
 
     override render(ctx: CanvasRenderingContext2D): void {

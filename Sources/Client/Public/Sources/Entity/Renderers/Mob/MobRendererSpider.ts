@@ -32,14 +32,15 @@ function createCurve(angle: number, direction: number, offset: number = 6): void
     });
 }
 
-createCurve((Math.PI / 180) * 45, 1);
+createCurve((Math.PI / 180) * 40, 1);
 createCurve((Math.PI / 180) * 75, 1, 3);
 createCurve((Math.PI / 180) * 105, -1, 3);
-createCurve((Math.PI / 180) * 135, -1);
-createCurve((-Math.PI / 180) * 45, -1);
+createCurve((Math.PI / 180) * 140, -1);
+
+createCurve((-Math.PI / 180) * 40, -1);
 createCurve((-Math.PI / 180) * 75, -1, 3);
 createCurve((-Math.PI / 180) * 105, 1, 3);
-createCurve((-Math.PI / 180) * 135, 1);
+createCurve((-Math.PI / 180) * 140, 1);
 
 export default class MobRendererSpider extends AbstractMobRenderer {
     override render(context: RenderingContext<Mob>): void {
@@ -69,7 +70,7 @@ export default class MobRendererSpider extends AbstractMobRenderer {
 
                 ctx.save();
 
-                ctx.rotate(curve.dir * Math.sin(entity.moveCounter + i) * 0.15);
+                ctx.rotate(curve.dir * Math.sin(entity.moveCounter + i) * 0.2);
                 ctx.beginPath();
                 ctx.moveTo(...curve.start);
                 ctx.quadraticCurveTo(...curve.curve);

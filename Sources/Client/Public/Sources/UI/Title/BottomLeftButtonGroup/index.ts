@@ -28,6 +28,7 @@ export const createTitleBottomLeftToolTippedButton = <T extends typeof Button | 
         ],
         positionOffset,
         position,
+        true,
     );
 };
 

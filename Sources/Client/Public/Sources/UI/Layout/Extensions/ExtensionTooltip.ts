@@ -12,8 +12,8 @@ export default function Tooltip<T extends ExtensionConstructor>(
     contentComponents: Array<Components>,
     positionOffset: number,
     anchorPosition: TooltipAnchorPosition,
+    hideIfOverlap: MaybePointerLike<boolean>,
     cornerRadius: MaybePointerLike<number> = 3,
-    hideIfOverlap: MaybePointerLike<boolean> = true,
 ) {
     abstract class MixedBase extends Base {
         private static readonly TOOLTIP_FADE_ANIMATION_CONFIG = {
