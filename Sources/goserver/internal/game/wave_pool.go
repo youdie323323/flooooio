@@ -47,20 +47,23 @@ type WavePool struct {
 	mobPool    *xsync.MapOf[EntityId, *Mob]
 	petalPool  *xsync.MapOf[EntityId, *Petal]
 
+	Ms *WaveMobSpawner
+
 	eliminatedEntityIDs []uint32
 
 	lightningBounces [][][2]float64
-
-	Ms *WaveMobSpawner
 
 	updateTicker *time.Ticker
 	frameCount   *xsync.Counter
 
 	SpatialHash *SpatialHash
 
-	isDisposing atomic.Bool
+	wasDisposed atomic.Bool
 
-	wasEnded atomic.Bool
+	hasBeenEnded atomic.Bool
+
+	// commandQueue is command queue to run command with atomic.
+	commandQueue chan func()
 
 	Wd *WaveData
 
@@ -78,16 +81,18 @@ func NewWavePool(wr *WaveRoom, wd *WaveData) *WavePool {
 		mobPool:    xsync.NewMapOf[EntityId, *Mob](),
 		petalPool:  xsync.NewMapOf[EntityId, *Petal](),
 
+		Ms: spawner,
+
 		eliminatedEntityIDs: make([]uint32, 0),
 
 		lightningBounces: make([][][2]float64, 0),
-
-		Ms: spawner,
 
 		updateTicker: nil,
 		frameCount:   xsync.NewCounter(),
 
 		SpatialHash: NewSpatialHash(spatialHashGridSize),
+
+		commandQueue: make(chan func(), 8),
 
 		Wd: wd,
 
@@ -133,7 +138,7 @@ func (wp *WavePool) EndWave() {
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
 
-	wp.wasEnded.Store(true)
+	wp.hasBeenEnded.Store(true)
 }
 
 // Dispose completely remove all values from memory.
@@ -141,12 +146,24 @@ func (wp *WavePool) Dispose() {
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
 
-	wp.isDisposing.Store(true)
+	wp.wasDisposed.Store(true)
 
 	if wp.updateTicker != nil {
 		wp.updateTicker.Stop()
 		wp.updateTicker = nil
 	}
+
+	// Execute all pending commands
+	for {
+		select {
+		case cmd := <-wp.commandQueue:
+			cmd()
+
+		default:
+			goto done
+		}
+	}
+done:
 
 	wp.playerPool.Range(func(id EntityId, player *Player) bool {
 		player.Dispose()
@@ -222,13 +239,26 @@ func (wp *WavePool) startUpdate() {
 }
 
 func (wp *WavePool) update() {
-	if wp.isDisposing.Load() {
+	if wp.wasDisposed.Load() {
 		return
 	}
 
-	// Commentout this because update not called from multiple goroutine
+	// Comment out this because update not called from multiple goroutine
 	// wp.mu.Lock()
 	// defer wp.mu.Unlock()
+
+	// Execute all commands
+	for {
+		select {
+		case cmd := <-wp.commandQueue:
+			cmd()
+
+		default:
+			// Channel is empty, leave loop
+			goto done
+		}
+	}
+done:
 
 	wp.frameCount.Add(1)
 
@@ -278,7 +308,7 @@ func (wp *WavePool) updateEntities() {
 }
 
 func (wp *WavePool) updateWaveData() {
-	if wp.wasEnded.Load() {
+	if wp.hasBeenEnded.Load() {
 		return
 	}
 
@@ -301,7 +331,16 @@ func (wp *WavePool) updateWaveData() {
 
 			if ok {
 				if slices.Contains(LinkableMobs, sm.MobType) {
-					wp.LinkedMobSegmentation(sm.MobType, sm.Rarity, randX, randY, sm.CentiBodies)
+					wp.LinkedMobSegmentation(
+						sm.MobType,
+
+						sm.Rarity,
+
+						randX,
+						randY,
+
+						sm.CentiBodies,
+					)
 				} else {
 					wp.GenerateMob(
 						sm.MobType,
@@ -491,7 +530,7 @@ func (wp *WavePool) createUpdatePacket() []byte {
 
 	{ // Wave is ended or not
 		var y byte = 0
-		if wp.wasEnded.Load() {
+		if wp.hasBeenEnded.Load() {
 			y = 1
 		}
 
@@ -675,7 +714,7 @@ func (wp *WavePool) createUpdatePacket() []byte {
 }
 
 func (wp *WavePool) GeneratePlayer(
-	sp *StaticPlayer[StaticPlayerPetalSlots],
+	sp *StaticPlayer[StaticPetalSlots],
 
 	x float64,
 	y float64,
@@ -732,7 +771,7 @@ func (wp *WavePool) GeneratePlayer(
 }
 
 func (wp *WavePool) SafeGeneratePlayer(
-	sp *StaticPlayer[StaticPlayerPetalSlots],
+	sp *StaticPlayer[StaticPetalSlots],
 
 	x float64,
 	y float64,
@@ -1445,16 +1484,19 @@ func (wp *WavePool) HandleChatMessage(wPId EntityId, chatMsg string) {
 			return
 		}
 
-		// Run the command
-		err = ctx.Run(&Context{
-			Operator: player,
-
-			Wp: wp,
-		})
-		if err != nil {
-			wp.UnicastChatReceivPacket(wPId, err.Error())
-
-			return
+		// Inqueue command run func to queue
+		select {
+		case wp.commandQueue <- func() {
+			err = ctx.Run(&Context{
+				Operator: player,
+				Wp:       wp,
+			})
+			if err != nil {
+				wp.UnicastChatReceivPacket(wPId, err.Error())
+			}
+		}:
+		default:
+			wp.UnicastChatReceivPacket(wPId, "Command queue is full or unavailable")
 		}
 	} else {
 		hash := sha256.New()

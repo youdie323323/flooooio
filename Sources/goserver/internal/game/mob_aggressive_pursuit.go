@@ -21,17 +21,20 @@ func FindNearestEntity(me Node, entities []Node) Node {
 		return nil
 	}
 
+	meX := me.GetX()
+	meY := me.GetY()
+
 	// TODO: this should be nil
 	nearest := entities[0]
 	for _, current := range entities[1:] {
 		distanceToCurrent := math.Hypot(
-			current.GetX()-me.GetX(),
-			current.GetY()-me.GetY(),
+			current.GetX()-meX,
+			current.GetY()-meY,
 		)
 
 		distanceToNearest := math.Hypot(
-			nearest.GetX()-me.GetX(),
-			nearest.GetY()-me.GetY(),
+			nearest.GetX()-meX,
+			nearest.GetY()-meY,
 		)
 
 		if distanceToCurrent < distanceToNearest {
@@ -47,13 +50,16 @@ func FindNearestEntityWithLimitedDistance(me Node, entities []Node, maxDistance 
 		return nil
 	}
 
+	meX := me.GetX()
+	meY := me.GetY()
+
 	var nearest Node
 	nearestDistance := maxDistance
 
 	for _, current := range entities {
 		distanceToCurrent := math.Hypot(
-			current.GetX()-me.GetX(),
-			current.GetY()-me.GetY(),
+			current.GetX()-meX,
+			current.GetY()-meY,
 		)
 
 		if distanceToCurrent <= maxDistance && (nearest == nil || distanceToCurrent < nearestDistance) {
@@ -249,7 +255,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 			distance := math.Hypot(dx, dy)
 
 			// If distance is close, we can just use TurnAngleToTarget
-			if distance <= 100 {
+			if distance <= mRadius {
 				m.Angle = TurnAngleToTarget(m.Angle, dx, dy)
 			} else {
 				predicted := predictInterceptionAngle(dx, dy, m.TargetEntity, missileSpeed)

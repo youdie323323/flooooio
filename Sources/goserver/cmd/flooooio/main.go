@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
-	"math/rand/v2"
 	"net/http"
 	"slices"
 
@@ -32,65 +31,39 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	surface := []game.StaticPetal{
-		{
-			Type:   native.PetalTypeFang,
-			Rarity: native.RarityUltra,
-		},
-		{
-			Type:   native.PetalTypeLightning,
-			Rarity: native.RarityUltra,
-		},
-		{
-			Type:   native.PetalTypeClaw,
-			Rarity: native.RarityUltra,
-		},
-		{
-			Type:   native.PetalTypeFang,
-			Rarity: native.RarityUltra,
-		},
-		{
-			Type:   native.PetalTypeLightning,
-			Rarity: native.RarityUltra,
-		},
-		{
-			Type:   native.PetalTypeClaw,
-			Rarity: native.RarityUltra,
-		},
-		{
-			Type:   native.PetalTypeFang,
-			Rarity: native.RarityUltra,
-		},
-		{
-			Type:   native.PetalTypeLightning,
-			Rarity: native.RarityUltra,
-		},
-		{
-			Type:   native.PetalTypeClaw,
-			Rarity: native.RarityUltra,
-		},
-		{
-			Type:   native.PetalTypeFaster,
-			Rarity: native.RarityUltra,
-		},
-	}
-
-	rand.Shuffle(len(surface), func(i, j int) {
-		surface[i], surface[j] = surface[j], surface[i]
-	})
-
 	// Init user data
 	pd := &game.PlayerData{
 		WrPId: nil,
 		WPId:  nil,
 
-		Sp: &game.StaticPlayer[game.StaticPlayerPetalSlots]{
+		Sp: &game.StaticPlayer[game.StaticPetalSlots]{
 			Name: "mesamura",
-			Slots: game.StaticPlayerPetalSlots{
-				Surface: surface,
+			Slots: game.StaticPetalSlots{
+				Surface: []game.StaticPetal{
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeStick,
+						Rarity: native.RarityUltra,
+					},
+				},
 				Bottom: []game.StaticPetal{
 					{
-						Type:   native.PetalTypeYinYang,
+						Type:   native.PetalTypeEggBeetle,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeEggBeetle,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeEggBeetle,
 						Rarity: native.RarityUltra,
 					},
 				},

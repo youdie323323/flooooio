@@ -15,7 +15,7 @@ type Player struct {
 
 	PlayerPrivileges
 
-	StaticPlayer[PlayerDynamicPetalSlots]
+	StaticPlayer[DynamicPetalSlots]
 
 	// commandQueue is command queue of player.
 	commandQueue chan PlayerCommand
@@ -52,7 +52,7 @@ type PlayerPrivileges struct {
 	NoClip bool
 }
 
-type PlayerDynamicPetalSlots struct {
+type DynamicPetalSlots struct {
 	Surface []DynamicPetal
 	Bottom  []DynamicPetal
 
@@ -60,7 +60,7 @@ type PlayerDynamicPetalSlots struct {
 	UsageCooldownGrid  [][]time.Time
 }
 
-// IsCollidable determine if player is collidable to any collidables.
+// IsCollidable determine if player is collidable with any collidables.
 // Using isDead here could allow users to cross the boundary.
 func (p *Player) IsCollidable() bool {
 	return !p.NoClip
@@ -134,19 +134,7 @@ func (c *SwapPetalCommand) Execute(wp *WavePool, p *Player) {
 					continue
 				}
 
-				// Remove petal itself
-				if !petal.WasEliminated(wp) {
-					wp.SafeRemovePetal(*petal.Id)
-				}
-
-				// Remove summoned mob
-				if petal.SummonedPets != nil {
-					for _, p := range petal.SummonedPets {
-						if !p.WasEliminated(wp) {
-							wp.SafeRemovePetal(*p.Id)
-						}
-					}
-				}
+				petal.CompletelyRemove(wp)
 			}
 		}
 
@@ -160,12 +148,12 @@ func (p *Player) UpdateMovement(angle uint8, magnitude uint8) {
 	p.commandQueue <- &MovementCommand{angle, magnitude}
 }
 
-// ChangeMood change the mood.
+// ChangeMood changes the mood.
 func (p *Player) ChangeMood(m native.Mood) {
 	p.commandQueue <- &MoodCommand{m}
 }
 
-// SwapPetal swap the petal.
+// SwapPetal swaps the petal.
 func (p *Player) SwapPetal(
 	wp *WavePool,
 
@@ -265,7 +253,7 @@ const PlayerSize = 15
 func NewPlayer(
 	id *EntityId,
 
-	sp *StaticPlayer[StaticPlayerPetalSlots],
+	sp *StaticPlayer[StaticPetalSlots],
 
 	x float64,
 	y float64,
@@ -286,10 +274,10 @@ func NewPlayer(
 			NoClip: false,
 		},
 
-		StaticPlayer: StaticPlayer[PlayerDynamicPetalSlots]{
+		StaticPlayer: StaticPlayer[DynamicPetalSlots]{
 			Name: sp.Name,
 
-			Slots: PlayerDynamicPetalSlots{
+			Slots: DynamicPetalSlots{
 				Surface: nil,
 				Bottom:  nil,
 

@@ -49,3 +49,19 @@ func (p *Petal) SafeForceEliminate(wp *WavePool) {
 
 	p.Mu.Unlock()
 }
+
+func (p *Petal) CompletelyRemove(wp *WavePool) {
+	// Remove petal itself
+	if !p.WasEliminated(wp) {
+		p.ForceEliminate(wp)
+	}
+
+	// Remove summoned mob
+	if p.SummonedPets != nil {
+		for _, p := range p.SummonedPets {
+			if p != nil && !p.WasEliminated(wp) {
+				p.ForceEliminate(wp)
+			}
+		}
+	}
+}

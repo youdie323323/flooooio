@@ -131,8 +131,8 @@ func IsClusterPetal(petal DynamicPetal) bool {
 	return len(petal) > 1
 }
 
-// StaticPlayerPetalSlots contains surface and bottom slots.
-type StaticPlayerPetalSlots struct {
+// StaticPetalSlots contains surface and bottom slots.
+type StaticPetalSlots struct {
 	Surface []StaticPetal
 	Bottom  []StaticPetal
 }

@@ -33,13 +33,13 @@ export default class MobRendererJellyfish extends AbstractMobRenderer {
                     ? 500
                     : Date.now();
 
+            const tentacleMoveWave = Math.sin(tentacleAngle + tentacleT / 500);
+
             ctx.save();
 
             ctx.rotate(tentacleAngle);
             ctx.translate(17.5, 0);
             ctx.moveTo(0, 0);
-
-            const tentacleMoveWave = Math.sin(tentacleAngle + tentacleT / 500);
             ctx.rotate(tentacleMoveWave * 0.5);
             ctx.quadraticCurveTo(4, tentacleMoveWave * -2, 14, 0);
 

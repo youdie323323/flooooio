@@ -21,9 +21,9 @@ export default class MobRendererSandstorm extends AbstractMobRenderer {
                 ? 0
                 : entity.sandstormAngle++;
 
-        const outerColor = (entity.isPet ? "#cb979c" : "#D5C7A6") satisfies ColorCode;
-        const middleColor = (entity.isPet ? "#b18687" : "#BFB295") satisfies ColorCode;
-        const innerColor = (entity.isPet ? "#9b7477" : "#A99E84") satisfies ColorCode;
+        const outerColor = this.calculateDamageEffectColor(context, (entity.isPet ? "#cb979c" : "#D5C7A6") satisfies ColorCode);
+        const middleColor = this.calculateDamageEffectColor(context, (entity.isPet ? "#b18687" : "#BFB295") satisfies ColorCode);
+        const innerColor = this.calculateDamageEffectColor(context, (entity.isPet ? "#9b7477" : "#A99E84") satisfies ColorCode);
 
         ctx.lineJoin = "round";
         ctx.lineWidth = 6;
@@ -35,7 +35,7 @@ export default class MobRendererSandstorm extends AbstractMobRenderer {
         ctx.rotate(Math.PI / 4);
         ctx.scale(-0.95, 0.95);
 
-        ctx.fillStyle = ctx.strokeStyle = this.calculateDamageEffectColor(context, outerColor);
+        ctx.fillStyle = ctx.strokeStyle = outerColor;
         ctx.beginPath();
         ctx.moveTo(28, 0);
         ctx.lineTo(14, 24.24871253967285);
@@ -53,7 +53,7 @@ export default class MobRendererSandstorm extends AbstractMobRenderer {
 
         ctx.rotate(i * -0.03);
 
-        ctx.fillStyle = ctx.strokeStyle = this.calculateDamageEffectColor(context, middleColor);
+        ctx.fillStyle = ctx.strokeStyle = middleColor;
         ctx.beginPath();
         ctx.moveTo(18, 0);
         ctx.lineTo(9, 15.588458061218262);
@@ -71,7 +71,7 @@ export default class MobRendererSandstorm extends AbstractMobRenderer {
 
         ctx.rotate(i * 0.04);
 
-        ctx.fillStyle = ctx.strokeStyle = this.calculateDamageEffectColor(context, innerColor);
+        ctx.fillStyle = ctx.strokeStyle = innerColor;
         ctx.beginPath();
         ctx.moveTo(8, 0);
         ctx.lineTo(4, 6.928203582763672);
