@@ -49,7 +49,7 @@ func (p *Player) PlayerPetalConsume(wp *WavePool) {
 				continue
 			}
 
-			if !slices.Contains(UsageReloadPetalTypes, petal.Type) {
+			if !slices.Contains(UsablePetalTypes, petal.Type) {
 				continue
 			}
 

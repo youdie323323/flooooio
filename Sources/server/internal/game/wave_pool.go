@@ -16,6 +16,7 @@ import (
 
 	"flooooio/internal/native"
 	"flooooio/internal/network"
+	"flooooio/internal/collision"
 
 	"github.com/gorilla/websocket"
 	"github.com/puzpuzpuz/xsync/v3"
@@ -56,7 +57,7 @@ type WavePool struct {
 	updateTicker *time.Ticker
 	frameCount   *xsync.Counter
 
-	SpatialHash *SpatialHash
+	SpatialHash *collision.SpatialHash
 
 	wasDisposed atomic.Bool
 
@@ -90,7 +91,7 @@ func NewWavePool(wr *WaveRoom, wd *WaveData) *WavePool {
 		updateTicker: nil,
 		frameCount:   xsync.NewCounter(),
 
-		SpatialHash: NewSpatialHash(spatialHashGridSize),
+		SpatialHash: collision.NewSpatialHash(spatialHashGridSize),
 
 		commandQueue: make(chan func(), 8),
 
@@ -719,7 +720,7 @@ func (wp *WavePool) GeneratePlayer(
 	x float64,
 	y float64,
 ) *Player {
-	id := RandomId()
+	id := GetRandomId()
 	if _, ok := wp.playerPool.Load(id); ok {
 		return wp.GeneratePlayer(
 			sp,
@@ -851,12 +852,12 @@ func (wp *WavePool) GenerateMob(
 
 	petMaster *Player,
 
-	connectingSegment Node,
+	connectingSegment collision.Node,
 	isFirstSegment bool,
 
 	missileMaster *Mob,
 ) *Mob {
-	id := RandomId()
+	id := GetRandomId()
 	if _, ok := wp.mobPool.Load(id); ok {
 		return wp.GenerateMob(
 			mType,
@@ -910,7 +911,7 @@ func (wp *WavePool) SafeGenerateMob(
 
 	petMaster *Player,
 
-	connectingSegment Node,
+	connectingSegment collision.Node,
 	isFirstSegment bool,
 
 	missileMaster *Mob,
@@ -1008,7 +1009,7 @@ func (wp *WavePool) LinkedMobSegmentation(
 	// Arc
 	segmentDistance := (mc.Radius * 2) * (size / mc.Fraction)
 
-	var prevSegment Node = nil
+	var prevSegment collision.Node = nil
 
 	for i := range bodyCount + 1 {
 		radius := float64(i) * segmentDistance
@@ -1069,7 +1070,7 @@ func (wp *WavePool) GeneratePetal(
 
 	isDummy bool,
 ) *Petal {
-	id := RandomId()
+	id := GetRandomId()
 	if _, ok := wp.petalPool.Load(id); ok {
 		return wp.GeneratePetal(
 			pType,
@@ -1190,7 +1191,7 @@ func (wp *WavePool) SafeGetPetalsWithCondition(condition func(*Petal) bool) []*P
 	return wp.GetPetalsWithCondition(condition)
 }
 
-func (wp *WavePool) getMobLightningBounceTargets(bouncedIds []*EntityId) []Node {
+func (wp *WavePool) getMobLightningBounceTargets(bouncedIds []*EntityId) []collision.Node {
 	playerTargets := wp.GetPlayersWithCondition(func(targetPlayer *Player) bool {
 		return !slices.Contains(bouncedIds, targetPlayer.Id)
 	})
@@ -1203,7 +1204,7 @@ func (wp *WavePool) getMobLightningBounceTargets(bouncedIds []*EntityId) []Node 
 	lenPlayerTargets := len(playerTargets)
 	lenMobTargets := len(mobTargets)
 
-	nodeTargets := make([]Node, lenPlayerTargets+lenMobTargets)
+	nodeTargets := make([]collision.Node, lenPlayerTargets+lenMobTargets)
 
 	for i, player := range playerTargets {
 		nodeTargets[i] = player
@@ -1218,7 +1219,7 @@ func (wp *WavePool) getMobLightningBounceTargets(bouncedIds []*EntityId) []Node 
 
 // MobDoLightningBounce performs lightning bounce effect between players and pets from enemy (mob) side.
 // hitEntity is the initially struck entity.
-func (wp *WavePool) MobDoLightningBounce(jellyfish *Mob, hitEntity Node) {
+func (wp *WavePool) MobDoLightningBounce(jellyfish *Mob, hitEntity collision.Node) {
 	mobExtra := native.MobProfiles[jellyfish.Type].StatFromRarity(jellyfish.Rarity).Extra
 
 	maxBounces, ok := mobExtra["bounces"].(float64)
@@ -1241,7 +1242,7 @@ func (wp *WavePool) MobDoLightningBounce(jellyfish *Mob, hitEntity Node) {
 
 	bouncedIds := make([]*EntityId, 0, maxBouncesInt)
 
-	var targetNode Node = hitEntity
+	var targetNode collision.Node = hitEntity
 
 Loop:
 	for range maxBouncesInt {
@@ -1252,7 +1253,7 @@ Loop:
 
 				bouncedIds = append(bouncedIds, targetEntity.Id)
 
-				playerMaxHealth := targetEntity.MaxHealth()
+				playerMaxHealth := targetEntity.GetMaxHealth()
 
 				targetEntity.Health -= lightningDamage / playerMaxHealth
 
@@ -1275,7 +1276,7 @@ Loop:
 
 				bouncedIds = append(bouncedIds, targetEntity.Id)
 
-				mobMaxHealth := targetEntity.MaxHealth()
+				mobMaxHealth := targetEntity.GetMaxHealth()
 
 				targetEntity.Health -= lightningDamage / mobMaxHealth
 
@@ -1286,7 +1287,7 @@ Loop:
 
 				// Distance is radius * 1.5
 				// TODO: this should very very expanded
-				targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, targetEntity.Radius()*3)
+				targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, targetEntity.CalculateRadius()*3)
 				if targetNode == nil {
 					break Loop
 				}
@@ -1327,7 +1328,7 @@ func (wp *WavePool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 
 	bouncedIds := make([]*EntityId, 0, maxBouncesInt)
 
-	var targetNode Node = hitMob
+	var targetNode collision.Node = hitMob
 
 	for range maxBouncesInt {
 		targetMob, ok := targetNode.(*Mob)
@@ -1344,7 +1345,7 @@ func (wp *WavePool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 
 		bouncedIds = append(bouncedIds, targetMob.Id)
 
-		mobMaxHealth := targetMob.MaxHealth()
+		mobMaxHealth := targetMob.GetMaxHealth()
 
 		targetMob.Health -= lightningDamage / mobMaxHealth
 
@@ -1354,14 +1355,14 @@ func (wp *WavePool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 			return !slices.Contains(bouncedIds, targetMob.Id) && targetMob.PetMaster == nil
 		})
 
-		nodeTargets := make([]Node, len(mobTargets))
+		nodeTargets := make([]collision.Node, len(mobTargets))
 		for i, mob := range mobTargets {
 			nodeTargets[i] = mob
 		}
 
 		// Distance is radius * 1.5
 		// TODO: this should very very expanded
-		targetNode = FindNearestEntityWithLimitedDistance(targetNode, nodeTargets, targetMob.Radius()*3)
+		targetNode = FindNearestEntityWithLimitedDistance(targetNode, nodeTargets, targetMob.CalculateRadius()*3)
 		if targetNode == nil {
 			break
 		}
@@ -1406,7 +1407,7 @@ func (wp *WavePool) staticPetalToDynamicPetal(
 	return dp
 }
 
-func (wp *WavePool) BroadcastChatReceivPacket(msg string) {
+func (wp *WavePool) createChatReceivPacket(msg string) []byte {
 	buf := make(
 		[]byte,
 		1+ // Opcode size
@@ -1426,6 +1427,12 @@ func (wp *WavePool) BroadcastChatReceivPacket(msg string) {
 		buf[at] = 0
 		at++
 	}
+
+	return buf
+}
+
+func (wp *WavePool) BroadcastChatReceivPacket(msg string) {
+	buf := wp.createChatReceivPacket(msg)
 
 	wp.playerPool.Range(func(id EntityId, player *Player) bool {
 		player.SafeWriteMessage(websocket.BinaryMessage, buf)
@@ -1434,31 +1441,8 @@ func (wp *WavePool) BroadcastChatReceivPacket(msg string) {
 	})
 }
 
-func (wp *WavePool) UnicastChatReceivPacket(wPId EntityId, msg string) {
-	player := wp.FindPlayer(wPId)
-	if player == nil {
-		return
-	}
-
-	buf := make(
-		[]byte,
-		1+ // Opcode size
-			4+ // Player id size
-			(len(msg)+1), // Length + null terminator
-	)
-	at := 0
-
-	buf[at] = network.ClientboundWaveChatReceiv
-	at++
-
-	{ // Write chat message
-		copy(buf[at:], []byte(msg))
-		at += len(msg)
-
-		// Write null terminator
-		buf[at] = 0
-		at++
-	}
+func (wp *WavePool) UnicastChatReceivPacket(player *Player, msg string) {
+	buf := wp.createChatReceivPacket(msg)
 
 	player.SafeWriteMessage(websocket.BinaryMessage, buf)
 }
@@ -1479,7 +1463,7 @@ func (wp *WavePool) HandleChatMessage(wPId EntityId, chatMsg string) {
 	if strings.HasPrefix(chatMsg, CommandPrefix) {
 		ctx, err := ParseCommand(chatMsg)
 		if err != nil {
-			wp.UnicastChatReceivPacket(wPId, err.Error())
+			wp.UnicastChatReceivPacket(player, err.Error())
 
 			return
 		}
@@ -1492,11 +1476,11 @@ func (wp *WavePool) HandleChatMessage(wPId EntityId, chatMsg string) {
 				Wp:       wp,
 			})
 			if err != nil {
-				wp.UnicastChatReceivPacket(wPId, err.Error())
+				wp.UnicastChatReceivPacket(player, err.Error())
 			}
 		}:
 		default:
-			wp.UnicastChatReceivPacket(wPId, "Command queue is full or unavailable")
+			wp.UnicastChatReceivPacket(player, "Command queue is full or unavailable")
 		}
 	} else {
 		hash := sha256.New()

@@ -1,4 +1,4 @@
-import type { AnimationConfigOf, ComponentCloser, ComponentOpener, Components, FakeSetVisibleObserverType, FakeSetVisibleToggleType, MaybePointerLike } from "../Components/Component";
+import type { AnimationConfigOf, ComponentCloser, ComponentOpener, Components, DummySetVisibleObserverType, DummySetVisibleToggleType, MaybePointerLike } from "../Components/Component";
 import { AnimationType, Component, OBSTRUCTION_AFFECTABLE } from "../Components/Component";
 import type { PartialSizeLayoutOptions } from "../Components/WellKnown/Container";
 import { StaticTranslucentPanelContainer } from "../Components/WellKnown/Container";
@@ -63,8 +63,8 @@ export default function Tooltip<T extends ExtensionConstructor>(
 
         private updateTooltipVisibility(isVisible: boolean): void {
             this.tooltipContainer.setVisible(
-                <FakeSetVisibleToggleType>isVisible,
-                <FakeSetVisibleObserverType><unknown>(this),
+                <DummySetVisibleToggleType>isVisible,
+                <DummySetVisibleObserverType><unknown>(this),
                 true,
                 AnimationType.FADE,
                 MixedBase.TOOLTIP_FADE_ANIMATION_CONFIG,

@@ -33,6 +33,8 @@ type cli struct {
 
 type yesNoBool bool
 
+var yesNoBoolType = reflect.TypeOf(yesNoBool(false))
+
 func (b *yesNoBool) Decode(ctx *kong.DecodeContext) error {
 	var value string
 	if err := ctx.Scan.PopValueInto("value", &value); err != nil {
@@ -62,10 +64,9 @@ func yesNoDecoder(value string) (bool, error) {
 	}
 }
 
-var yesNoBoolType = reflect.TypeOf(yesNoBool(false))
-
 func GetCliHelp(c cli) string {
 	t := reflect.TypeOf(c)
+	
 	var commands []string
 
 	for i := range t.NumField() {
@@ -87,6 +88,7 @@ func GetCliHelp(c cli) string {
 
 func GetCommandFormat(cmd any) string {
 	t := reflect.TypeOf(cmd)
+	
 	var result []string
 
 	for i := range t.NumField() {

@@ -1,7 +1,7 @@
 import { Rarity } from "../../../Native/Rarity";
 import { PetalType } from "../../../Native/Entity/EntityType";
 import Mob from "../../../Entity/Mob";
-import type { FakeSetVisibleToggleType, FakeSetVisibleObserverType, ComponentCloser } from "../../Layout/Components/Component";
+import type { DummySetVisibleToggleType, DummySetVisibleObserverType, ComponentCloser } from "../../Layout/Components/Component";
 import { AnimationType } from "../../Layout/Components/Component";
 import { Button } from "../../Layout/Components/WellKnown/Button";
 import type { AutomaticallySizedLayoutOptions } from "../../Layout/Components/WellKnown/Container";
@@ -52,8 +52,8 @@ export default class UITitleInventoryButton extends createTitleBottomLeftToolTip
 
             () => {
                 this.inventoryContainer.setVisible(
-                    <FakeSetVisibleToggleType>!this.inventoryContainer.desiredVisible,
-                    <FakeSetVisibleObserverType><unknown>(this),
+                    <DummySetVisibleToggleType>!this.inventoryContainer.desiredVisible,
+                    <DummySetVisibleObserverType><unknown>(this),
                     true,
                     AnimationType.SLIDE,
                     {

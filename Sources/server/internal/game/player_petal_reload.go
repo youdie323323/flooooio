@@ -7,7 +7,7 @@ import (
 	"flooooio/internal/native"
 )
 
-var UsageReloadPetalTypes = []native.PetalType{
+var UsablePetalTypes = []native.PetalType{
 	native.PetalTypeEggBeetle,
 	native.PetalTypeBubble,
 	native.PetalTypeStick,
@@ -104,7 +104,7 @@ func (p *Player) PlayerPetalReload(wp *WavePool) {
 				continue
 			}
 
-			if !slices.Contains(UsageReloadPetalTypes, pe.Type) {
+			if !slices.Contains(UsablePetalTypes, pe.Type) {
 				continue
 			}
 

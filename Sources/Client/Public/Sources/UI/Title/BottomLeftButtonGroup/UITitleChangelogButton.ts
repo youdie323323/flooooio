@@ -2,7 +2,7 @@ import { Button } from "../../Layout/Components/WellKnown/Button";
 import { SVGLogo } from "../../Layout/Components/WellKnown/Logo";
 import SCROLL_UNFURLED_SVG from "../Assets/scroll_unfurled.svg";
 import { CoordinatedStaticSpace, StaticScrollableContainer, StaticSpace, type AutomaticallySizedLayoutOptions, StaticPanelContainer } from "../../Layout/Components/WellKnown/Container";
-import type { FakeSetVisibleToggleType, FakeSetVisibleObserverType, ComponentCloser } from "../../Layout/Components/Component";
+import type { DummySetVisibleToggleType, DummySetVisibleObserverType, ComponentCloser } from "../../Layout/Components/Component";
 import { AnimationType } from "../../Layout/Components/Component";
 import { Centering } from "../../Layout/Extensions/ExtensionCentering";
 import UICloseButton from "../../Shared/UICloseButton";
@@ -47,8 +47,8 @@ export default class UITitleChangelogButton extends createTitleBottomLeftToolTip
 
             () => {
                 this.changelogContainer.setVisible(
-                    <FakeSetVisibleToggleType>!this.changelogContainer.desiredVisible,
-                    <FakeSetVisibleObserverType><unknown>(this),
+                    <DummySetVisibleToggleType>!this.changelogContainer.desiredVisible,
+                    <DummySetVisibleObserverType><unknown>(this),
                     true,
                     AnimationType.SLIDE,
                     {

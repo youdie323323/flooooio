@@ -10,7 +10,7 @@ import type { Rarity } from "../../Native/Rarity";
 import { Button } from "../Layout/Components/WellKnown/Button";
 import type { StaticAdheredClientboundHandlers } from "../../Websocket/Packet/PacketClientbound";
 import UICloseButton from "../Shared/UICloseButton";
-import type { AnimationConfigOf, ComponentCloser, FakeSetVisibleToggleType } from "../Layout/Components/Component";
+import type { AnimationConfigOf, ComponentCloser, DummySetVisibleToggleType } from "../Layout/Components/Component";
 import { AnimationType, renderPossibleComponent } from "../Layout/Components/Component";
 import { CoordinatedStaticSpace, StaticSpace, StaticTranslucentPanelContainer, StaticVContainer } from "../Layout/Components/WellKnown/Container";
 import { InlineRendering } from "../Layout/Extensions/ExtensionInlineRendering";

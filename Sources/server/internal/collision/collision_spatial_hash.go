@@ -1,4 +1,4 @@
-package game
+package collision
 
 import (
 	"math"
@@ -26,7 +26,7 @@ type SpatialHash struct {
 type nodeSet struct{ items sync.Map }
 
 // newNodeSet creates a new thread-safe node set.
-func newNodeSet() *nodeSet { return &nodeSet{} }
+func newNodeSet() *nodeSet { return new(nodeSet) }
 
 // Add adds a node to the set.
 func (s *nodeSet) Add(node Node) {

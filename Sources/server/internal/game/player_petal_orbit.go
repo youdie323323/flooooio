@@ -4,6 +4,7 @@ import (
 	"math"
 	"slices"
 
+	"flooooio/internal/collision"
 	"flooooio/internal/native"
 )
 
@@ -83,17 +84,17 @@ func doPetalSpin(
 	i int,
 	j int,
 ) {
-	var spinTargets []Node
+	var spinTargets []collision.Node
 
 	{
 		mobs := wp.GetMobsWithCondition(func(m *Mob) bool {
 			return m.IsEnemy() && math.Hypot(
 				m.X-pe.X,
 				m.Y-pe.Y,
-			) <= (m.Radius()*spinNearestSizeCoefficient)
+			) <= (m.CalculateRadius()*spinNearestSizeCoefficient)
 		})
 
-		spinTargets = make([]Node, len(mobs))
+		spinTargets = make([]collision.Node, len(mobs))
 		for i, mob := range mobs {
 			spinTargets[i] = mob
 		}
@@ -130,7 +131,7 @@ func doPetalSpin(
 
 		spinAngleIdx := calcTableIndex(pss[i][j])
 
-		mobToSpinDesiredSize := mobToSpin.Radius() * 1.1
+		mobToSpinDesiredSize := mobToSpin.CalculateRadius() * 1.1
 
 		targetX := mobToSpin.X + lazyCosTable[spinAngleIdx]*mobToSpinDesiredSize
 		targetY := mobToSpin.Y + lazySinTable[spinAngleIdx]*mobToSpinDesiredSize
@@ -237,7 +238,7 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool) {
 		}
 
 		var springForce float64
-		if slices.Contains(UsageReloadPetalTypes, firstPetal.Type) {
+		if slices.Contains(UsablePetalTypes, firstPetal.Type) {
 			springForce = (40 - p.OrbitPetalRadii[i]) * radiusSpringStrength
 		} else {
 			springForce = (targetRadius - p.OrbitPetalRadii[i]) * radiusSpringStrength

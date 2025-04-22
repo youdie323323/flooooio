@@ -2,7 +2,7 @@ import type { ColorCode } from "../../../../Utils/Color";
 import { darkened, DARKENED_BASE } from "../../../../Utils/Color";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
-import type { Components, MaybePointerLike, AnimationConfigOf, AnimationType, ComponentOpener, ComponentCloser, FakeSetVisibleToggleType, FakeSetVisibleObserverType } from "../Component";
+import type { Components, MaybePointerLike, AnimationConfigOf, AnimationType, ComponentOpener, ComponentCloser, DummySetVisibleToggleType, DummySetVisibleObserverType, DummySetVisibleParameterType } from "../Component";
 import { CENTERING, Component, OBSTRUCTION_AFFECTABLE, renderPossibleComponent, renderPossibleComponents } from "../Component";
 
 type Optional<T, K extends keyof T> = Partial<Pick<T, K>> & Omit<T, K>;
@@ -98,15 +98,14 @@ export abstract class AbstractStaticContainer<T extends SelectableStaticContaine
         animationType?: T,
         animationConfig: AnimationConfigOf<T> = {},
     ): void {
-        // Sorry
-        (super.setVisible as (...args: ReadonlyArray<any>) => {})(...arguments);
+        super.setVisible(...(arguments as unknown as DummySetVisibleParameterType));
 
         // Post-process for component-binded component
 
         const setChildrenVisible = () => {
             this.children.forEach(child => {
                 // Dont animate it, container animation can affected to children
-                child.setVisible(<FakeSetVisibleToggleType>toggle, <FakeSetVisibleObserverType>openerOrCloser, false);
+                child.setVisible(<DummySetVisibleToggleType>toggle, <DummySetVisibleObserverType>openerOrCloser, false);
             });
         };
 
@@ -378,7 +377,7 @@ export class StaticTranslucentPanelContainer<Child extends Components = Componen
             });
         }
 
-        return this.doClamp(Layout.layout(
+        return Layout.layout(
             Object.assign(
                 {
                     w: maxW,
@@ -387,7 +386,7 @@ export class StaticTranslucentPanelContainer<Child extends Components = Componen
                 Component.computePointerLike(this.layoutOptions),
             ) satisfies LayoutOptions,
             lc,
-        ));
+        );
     }
 
     override render(ctx: CanvasRenderingContext2D): void {

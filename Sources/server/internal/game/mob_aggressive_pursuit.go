@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"flooooio/internal/native"
+	"flooooio/internal/collision"
 )
 
 const (
@@ -16,7 +17,7 @@ const (
 )
 
 // FindNearestEntity finds the nearest entity from a slice of entities.
-func FindNearestEntity(me Node, entities []Node) Node {
+func FindNearestEntity(me collision.Node, entities []collision.Node) collision.Node {
 	if len(entities) == 0 {
 		return nil
 	}
@@ -45,7 +46,7 @@ func FindNearestEntity(me Node, entities []Node) Node {
 	return nearest
 }
 
-func FindNearestEntityWithLimitedDistance(me Node, entities []Node, maxDistance float64) Node {
+func FindNearestEntityWithLimitedDistance(me collision.Node, entities []collision.Node, maxDistance float64) collision.Node {
 	if len(entities) == 0 {
 		return nil
 	}
@@ -53,7 +54,7 @@ func FindNearestEntityWithLimitedDistance(me Node, entities []Node, maxDistance 
 	meX := me.GetX()
 	meY := me.GetY()
 
-	var nearest Node
+	var nearest collision.Node
 	nearestDistance := maxDistance
 
 	for _, current := range entities {
@@ -89,7 +90,7 @@ func TurnAngleToTarget(thisAngle, dx, dy float64) float64 {
 }
 
 // predictInterceptionAngle calculates the angle to hit a moving target with a missile.
-func predictInterceptionAngle(dx, dy float64, target Node, missileSpeed float64) *float64 {
+func predictInterceptionAngle(dx, dy float64, target collision.Node, missileSpeed float64) *float64 {
 	// Get target speed vector (Magnitude/255 * cos/sin(Angle))
 	targetRad := angleToRadian(target.GetAngle())
 	targetSpeed := target.GetMagnitude() / 255
@@ -112,11 +113,11 @@ func predictInterceptionAngle(dx, dy float64, target Node, missileSpeed float64)
 		return nil
 	}
 
-	sqrtd := math.Sqrt(d)
+	rootd := math.Sqrt(d)
 
 	// Use the smallest positive solution
-	t1 := (-b + sqrtd) / (2 * a)
-	t2 := (-b - sqrtd) / (2 * a)
+	t1 := (-b + rootd) / (2 * a)
+	t2 := (-b - rootd) / (2 * a)
 	t := math.Min(t1, t2)
 
 	if t < 0 {
@@ -142,23 +143,23 @@ func predictInterceptionAngle(dx, dy float64, target Node, missileSpeed float64)
 const mobDetectionRange = 15.
 
 func (m *Mob) detectRange() float64 {
-	return mobDetectionRange * m.Radius()
+	return mobDetectionRange * m.CalculateRadius()
 }
 
 func (m *Mob) loseRange() float64 {
-	return (mobDetectionRange * 2) * m.Radius()
+	return (mobDetectionRange * 2) * m.CalculateRadius()
 }
 
 // GetTrackingTargets returns target nodes to track.
-func (m *Mob) GetTrackingTargets(wp *WavePool) []Node {
-	var targets []Node
+func (m *Mob) GetTrackingTargets(wp *WavePool) []collision.Node {
+	var targets []collision.Node
 
 	if !m.IsEnemy() {
 		mobs := wp.GetMobsWithCondition(func(fm *Mob) bool {
 			return fm.Id != m.Id && fm.PetMaster == nil && !slices.Contains(ProjectileMobTypes, fm.Type)
 		})
 
-		targets = make([]Node, len(mobs))
+		targets = make([]collision.Node, len(mobs))
 		for i, mob := range mobs {
 			targets[i] = mob
 		}
@@ -167,7 +168,7 @@ func (m *Mob) GetTrackingTargets(wp *WavePool) []Node {
 			return !p.IsDead
 		})
 
-		targets = make([]Node, len(players))
+		targets = make([]collision.Node, len(players))
 		for i, player := range players {
 			targets[i] = player
 		}
@@ -176,7 +177,7 @@ func (m *Mob) GetTrackingTargets(wp *WavePool) []Node {
 	return targets
 }
 
-var missileSpeed = Speed(native.MobTypeMissile)
+var missileSpeed = SpeedOf(native.MobTypeMissile)
 
 func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 	// If body, dont do anything
@@ -213,7 +214,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 		distanceToTarget = math.Hypot(dx, dy)
 	}
 
-	isStop := m.TargetEntity != nil && (m.Radius()*5) > distanceToTarget
+	isStop := m.TargetEntity != nil && (m.CalculateRadius()*5) > distanceToTarget
 
 	shouldTurnToTarget := true
 
@@ -245,7 +246,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 
 			angleRad := angleToRadian(m.Angle)
 
-			mRadius := m.Radius()
+			mRadius := m.CalculateRadius()
 
 			shootX := m.X + math.Cos(angleRad)*mRadius
 			shootY := m.Y + math.Sin(angleRad)*mRadius
@@ -285,7 +286,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 					m,
 				)
 
-				missile.Magnitude = Speed(missile.Type) * 255
+				missile.Magnitude = SpeedOf(missile.Type) * 255
 				missile.Angle = m.Angle
 
 				m.HornetLastMissileShoot = now
@@ -306,7 +307,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 		{
 			m.Angle = math.Mod(m.Angle+generateValleyDistribution(-25, 25), 255)
 
-			m.Magnitude = Speed(m.Type) * 255 * (1. + (15.-1.)*math.Pow(rand.Float64(), 2))
+			m.Magnitude = SpeedOf(m.Type) * 255 * (1. + (15.-1.)*math.Pow(rand.Float64(), 2))
 		}
 
 	case native.PassiveBehavior:
@@ -316,7 +317,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 
 	case native.AggressiveBehavior:
 		{
-			var targetEntity Node
+			var targetEntity collision.Node
 			if m.TargetEntity != nil {
 				targetEntity = m.TargetEntity
 			} else {
@@ -340,7 +341,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 					)
 				}
 
-				m.Magnitude = Speed(m.Type) * 255
+				m.Magnitude = SpeedOf(m.Type) * 255
 
 				m.TargetEntity = targetEntity
 			}
@@ -348,7 +349,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 
 	case native.CautionBehavior:
 		{
-			var targetEntity Node
+			var targetEntity collision.Node
 			if m.TargetEntity != nil {
 				targetEntity = m.TargetEntity
 			} else {
@@ -376,7 +377,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 				if isStop {
 					magnitude = 0
 				} else {
-					magnitude = Speed(m.Type) * 255
+					magnitude = SpeedOf(m.Type) * 255
 				}
 
 				m.Magnitude = magnitude
@@ -399,7 +400,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 					)
 				}
 
-				m.Magnitude = Speed(m.Type) * 255
+				m.Magnitude = SpeedOf(m.Type) * 255
 
 				m.TargetEntity = m.LastAttackedEntity
 			}

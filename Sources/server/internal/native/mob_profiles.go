@@ -59,9 +59,10 @@ func (d MobData) StatFromRarity(r Rarity) MobStat {
 
 	case RarityUltra:
 		return d.Ultra
-	}
 
-	panic("MobData.StatFromRarity: invalid rarity")
+	default:
+		return d.Common
+	}
 }
 
 var MobProfiles map[MobType]MobData

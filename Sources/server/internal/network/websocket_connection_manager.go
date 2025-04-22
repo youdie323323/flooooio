@@ -11,9 +11,7 @@ type ConnectionManager[T any] struct {
 }
 
 func NewConnectionManager[T any]() *ConnectionManager[T] {
-	return &ConnectionManager[T]{
-		users: xsync.NewMapOf[*websocket.Conn, T](),
-	}
+	return &ConnectionManager[T]{xsync.NewMapOf[*websocket.Conn, T]()}
 }
 
 func (cm *ConnectionManager[T]) AddUser(conn *websocket.Conn, data T) {

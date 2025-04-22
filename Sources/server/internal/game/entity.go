@@ -4,6 +4,8 @@ import (
 	"math"
 	"math/rand/v2"
 	"sync"
+
+	"flooooio/internal/collision"
 )
 
 type EntityId = uint32
@@ -32,13 +34,13 @@ type Entity struct {
 	Mu sync.RWMutex
 }
 
-// RandomAngle returns random angle of entity.
-func RandomAngle() float64 {
+// GetRandomAngle returns random angle of entity.
+func GetRandomAngle() float64 {
 	return rand.Float64() * 255
 }
 
-// RandomId returns random id.
-func RandomId() uint32 {
+// GetRandomId returns random id.
+func GetRandomId() uint32 {
 	return rand.Uint32()
 }
 
@@ -57,7 +59,7 @@ func NewEntity(
 		Y: y,
 
 		Magnitude: 0,
-		Angle:     RandomAngle(),
+		Angle:     GetRandomAngle(),
 
 		Size: size,
 
@@ -136,7 +138,7 @@ func (e *Entity) GetAngle() float64 {
 }
 
 // IsDeadNode determine if Node is dead.
-func IsDeadNode(wp *WavePool, n Node) bool {
+func IsDeadNode(wp *WavePool, n collision.Node) bool {
 	switch e := n.(type) {
 	case *Petal:
 	case *Mob:

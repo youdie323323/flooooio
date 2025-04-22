@@ -3,7 +3,7 @@ interface EasingFunction {
 }
 
 interface EasingFunctions {
-    [key: PropertyKey]: EasingFunction;
+    [key: string]: EasingFunction;
 }
 
 const TAU = Math.PI * 2;
@@ -50,7 +50,7 @@ class Easing {
             Math.sin((elapsed * duration - s) * TAU / period) + change + start;
     }
 
-    static readonly functions: EasingFunctions = {
+    public static readonly functions: EasingFunctions = {
         linear: (t, b, c, d) => c * (t / d) + b,
 
         // Quadratic
@@ -144,7 +144,7 @@ class Easing {
 
             return Easing.functions.easeOutElastic(t * 2 - d, b + c / 2, c / 2, d);
         },
-    };
+    } as const satisfies EasingFunctions;
 }
 
 export default Easing.functions;

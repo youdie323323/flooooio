@@ -59,6 +59,7 @@ export default class Interpolator {
     public setValue(newValue: number): void {
         if (typeof this.oldValue === "number") {
             if (this.currentValue === newValue) return;
+            
             this.oldValue = this.currentValue;
         } else {
             this.oldValue = newValue;

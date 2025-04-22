@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"flooooio/internal/native"
+	"flooooio/internal/collision"
 )
 
 type Mob struct {
@@ -14,9 +15,9 @@ type Mob struct {
 
 	Rarity native.Rarity
 
-	TargetEntity Node
+	TargetEntity collision.Node
 
-	LastAttackedEntity Node
+	LastAttackedEntity collision.Node
 
 	PetMaster        *Player
 	PetGoingToMaster bool
@@ -29,7 +30,7 @@ type Mob struct {
 	// ConnectingSegment represents connected segment.
 	// Using collision.Node here because its not possible to Mob refer itself.
 	// Use type assertion.
-	ConnectingSegment Node
+	ConnectingSegment collision.Node
 	IsFirstSegment    bool
 
 	// JellyfishLastBounce is last time lightning bounced from jellyfish.
@@ -45,21 +46,21 @@ type Mob struct {
 	IsSpecialMoving      bool
 }
 
-// Speed return speed within mob.
-func Speed(mType native.MobType) float64 {
+// SpeedOf return speed within mob.
+func SpeedOf(mType native.MobType) float64 {
 	return MobSpeed[mType]
 }
 
-// Radius return radius (display size).
-func (m *Mob) Radius() float64 {
+// CalculateRadius return radius (display size).
+func (m *Mob) CalculateRadius() float64 {
 	profile := native.MobProfiles[m.Type]
 	collision := profile.Collision
 
 	return collision.Radius * (m.Size / collision.Fraction)
 }
 
-// MaxHealth calculates max hp of mob.
-func (m *Mob) MaxHealth() float64 {
+// GetMaxHealth calculates max hp of mob.
+func (m *Mob) GetMaxHealth() float64 {
 	profile := native.MobProfiles[m.Type]
 
 	return profile.StatFromRarity(m.Rarity).Health
@@ -127,7 +128,7 @@ func NewMob(
 
 	petMaster *Player,
 
-	connectingSegment Node,
+	connectingSegment collision.Node,
 	isFirstSegment bool,
 
 	missileMaster *Mob,

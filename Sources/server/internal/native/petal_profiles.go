@@ -61,9 +61,10 @@ func (d PetalData) StatFromRarity(r Rarity) PetalStat {
 
 	case RarityUltra:
 		return d.Ultra
-	}
 
-	panic("PetalData.StatFromRarity: invalid rarity")
+	default:
+		return d.Common
+	}
 }
 
 var PetalProfiles map[PetalType]PetalData

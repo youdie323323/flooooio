@@ -3,7 +3,7 @@ export type FlooooIoDefaultSettingKeys =
     | "movement_helper";
 
 export default class SettingStorage {
-    private static readonly PREFIX = "flooooio_" as string;
+    private static readonly PREFIX = "flooooio_" as const;
     private static readonly DEFAULT_SETTINGS = {
         keyboard_control: false,
         movement_helper: false,

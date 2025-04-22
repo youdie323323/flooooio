@@ -11,7 +11,7 @@ func (p *Petal) PetalCoordinateBoundary(wp *WavePool) {
 
 	mapRadius := float64(wp.Wd.MapRadius)
 
-	desiredMapRadius := mapRadius - p.Radius()
+	desiredMapRadius := mapRadius - p.CalculateRadius()
 
 	dx := p.X - float64(mapRadius)
 	dy := p.Y - float64(mapRadius)

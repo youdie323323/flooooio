@@ -1,9 +1,7 @@
-package game
+package collision
 
 import (
 	"math"
-
-	"flooooio/internal/native"
 )
 
 type Circle struct {
@@ -31,8 +29,4 @@ func ComputeCirclePush(c0, c1 Circle) (float64, float64, bool) {
 	ny := dy / distance
 
 	return nx * delta, ny * delta, true
-}
-
-func CalculateSearchRadius(collision native.EntityCollision, size float64) float64 {
-	return (2 * collision.Radius) * (size / collision.Fraction)
 }

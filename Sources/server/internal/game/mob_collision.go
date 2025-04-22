@@ -4,6 +4,7 @@ import (
 	"slices"
 
 	"flooooio/internal/native"
+	"flooooio/internal/collision"
 )
 
 const (
@@ -19,7 +20,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 
 	collision0 := profile0.Collision
 
-	mMaxHealth := m.MaxHealth()
+	mMaxHealth := m.GetMaxHealth()
 	mDamage := profile0.StatFromRarity(m.Rarity).GetDamage()
 
 	mTraversed := TraverseMobSegments(wp, m)
@@ -30,13 +31,13 @@ func (m *Mob) MobCollision(wp *WavePool) {
 
 	mIsEnemy := m.IsEnemy()
 
-	c0 := Circle{X: m.X, Y: m.Y, R: m.Radius()}
+	c0 := collision.Circle{X: m.X, Y: m.Y, R: m.CalculateRadius()}
 
 	searchRadius := CalculateSearchRadius(collision0, m.Size)
 
 	nearby := wp.SpatialHash.Search(m.X, m.Y, searchRadius)
 
-	nearby.Range(func(_ uint32, ni Node) bool {
+	nearby.Range(func(_ uint32, ni collision.Node) bool {
 		switch nearEntity := ni.(type) {
 		// Mob -> Mob
 		case *Mob:
@@ -69,9 +70,9 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					}
 				}
 
-				c1 := Circle{X: nearEntity.X, Y: nearEntity.Y, R: nearEntity.Radius()}
+				c1 := collision.Circle{X: nearEntity.X, Y: nearEntity.Y, R: nearEntity.CalculateRadius()}
 
-				px, py, ok := ComputeCirclePush(c0, c1)
+				px, py, ok := collision.ComputeCirclePush(c0, c1)
 				if ok {
 					m.X -= px * mobToMobPushMultiplier
 					m.Y -= py * mobToMobPushMultiplier
@@ -92,7 +93,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					{ // Damage
 						profile1 := native.MobProfiles[nearEntity.Type]
 
-						nearEntityMaxHealth := nearEntity.MaxHealth()
+						nearEntityMaxHealth := nearEntity.GetMaxHealth()
 						nearEntityDamage := profile1.StatFromRarity(nearEntity.Rarity).GetDamage()
 
 						m.Health -= nearEntityDamage / mMaxHealth
@@ -126,9 +127,9 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					return true
 				}
 
-				c1 := Circle{X: nearEntity.X, Y: nearEntity.Y, R: nearEntity.Radius()}
+				c1 := collision.Circle{X: nearEntity.X, Y: nearEntity.Y, R: nearEntity.CalculateRadius()}
 
-				px, py, ok := ComputeCirclePush(c0, c1)
+				px, py, ok := collision.ComputeCirclePush(c0, c1)
 				if ok {
 					if !nearEntity.SpinningOnMob {
 						m.X -= px * 0.1
@@ -142,7 +143,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					{ // Damage
 						nearEntityStat := native.PetalProfiles[nearEntity.Type].StatFromRarity(nearEntity.Rarity)
 
-						nearEntityMaxHealth := nearEntity.MaxHealth()
+						nearEntityMaxHealth := nearEntity.GetMaxHealth()
 						nearEntityDamage := nearEntityStat.GetDamage()
 
 						m.Health -= nearEntityDamage / mMaxHealth
@@ -182,9 +183,9 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					return true
 				}
 
-				c1 := Circle{X: nearEntity.X, Y: nearEntity.Y, R: nearEntity.Size}
+				c1 := collision.Circle{X: nearEntity.X, Y: nearEntity.Y, R: nearEntity.Size}
 
-				px, py, ok := ComputeCirclePush(c0, c1)
+				px, py, ok := collision.ComputeCirclePush(c0, c1)
 				if ok {
 					m.X -= px
 					m.Y -= py
@@ -193,7 +194,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					nearEntity.Y += py * 5
 
 					{ // Damage
-						nearEntityMaxHealth := nearEntity.MaxHealth()
+						nearEntityMaxHealth := nearEntity.GetMaxHealth()
 
 						m.Health -= nearEntity.BodyDamage / mMaxHealth
 						nearEntity.Health -= mDamage / nearEntityMaxHealth
@@ -225,7 +226,7 @@ func doFangLifesteal(fang *Petal, stat native.PetalStat, damage float64) {
 		return
 	}
 
-	masterMaxHP := master.MaxHealth()
+	masterMaxHP := master.GetMaxHealth()
 	healAmount := damage * (healDamaged / 100)
 
 	master.Health = min(1, master.Health+(healAmount/masterMaxHP))

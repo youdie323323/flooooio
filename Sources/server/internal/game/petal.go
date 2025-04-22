@@ -26,16 +26,16 @@ type Petal struct {
 	LastVelocityApplied time.Time
 }
 
-// Radius return radius (display size).
-func (p *Petal) Radius() float64 {
+// CalculateRadius return radius (display size).
+func (p *Petal) CalculateRadius() float64 {
 	profile := native.PetalProfiles[p.Type]
 	collision := profile.Collision
 
 	return collision.Radius * (p.Size / collision.Fraction)
 }
 
-// MaxHealth calculates max hp of petal.
-func (p *Petal) MaxHealth() float64 {
+// GetMaxHealth calculates max hp of petal.
+func (p *Petal) GetMaxHealth() float64 {
 	profile := native.PetalProfiles[p.Type]
 
 	return profile.StatFromRarity(p.Rarity).Health
@@ -115,7 +115,7 @@ func (p *Petal) Dispose() {
 	p.Master = nil
 }
 
-// StaticPetal represents static data of Mob.
+// StaticPetal represents static data of Petal.
 type StaticPetal struct {
 	Type   native.PetalType
 	Rarity native.Rarity

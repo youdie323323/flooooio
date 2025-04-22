@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"flooooio/internal/native"
+	"flooooio/internal/collision"
 
 	"github.com/gorilla/websocket"
 )
@@ -29,7 +30,7 @@ type Player struct {
 	IsDead bool
 
 	// player_dead_camera.go struct field definitions
-	DeadCameraTarget Node
+	DeadCameraTarget collision.Node
 
 	LastDeadCameraUpdate time.Time
 
@@ -74,8 +75,8 @@ func calculatePlayerHp(level float64) float64 {
 	return (100 * 200) * math.Pow(1.02, math.Max(level, minHpLevel)-1)
 }
 
-// MaxHealth calculates max hp of player.
-func (p *Player) MaxHealth() float64 {
+// GetMaxHealth calculates max hp of player.
+func (p *Player) GetMaxHealth() float64 {
 	return calculatePlayerHp(100)
 }
 

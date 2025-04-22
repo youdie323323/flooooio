@@ -16,7 +16,7 @@ func (m *Mob) MobCoordinateBoundary(wp *WavePool) {
 	if slices.Contains(ProjectileMobTypes, m.Type) {
 		mapRadius := float64(wp.Wd.MapRadius)
 
-		desiredMapRadius := mapRadius - m.Radius()
+		desiredMapRadius := mapRadius - m.CalculateRadius()
 
 		dx := m.X - float64(mapRadius)
 		dy := m.Y - float64(mapRadius)
@@ -30,7 +30,7 @@ func (m *Mob) MobCoordinateBoundary(wp *WavePool) {
 
 	mapRadius := float64(wp.Wd.MapRadius)
 
-	desiredMapRadius := mapRadius - m.Radius()
+	desiredMapRadius := mapRadius - m.CalculateRadius()
 
 	dx := m.X - float64(mapRadius)
 	dy := m.Y - float64(mapRadius)

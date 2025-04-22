@@ -2,10 +2,11 @@ package game
 
 import (
 	"time"
+	"flooooio/internal/collision"
 )
 
-func getCameraTargets(wp *WavePool) []Node {
-	var cameraTargets []Node
+func getCameraTargets(wp *WavePool) []collision.Node {
+	var cameraTargets []collision.Node
 
 	{ // Add camera targets
 		// Or just, all mobs
@@ -15,7 +16,7 @@ func getCameraTargets(wp *WavePool) []Node {
 		mobsLen := len(mobs)
 		playersLen := len(players)
 
-		cameraTargets = make([]Node, mobsLen+playersLen)
+		cameraTargets = make([]collision.Node, mobsLen+playersLen)
 
 		for i, mob := range mobs {
 			cameraTargets[i] = mob

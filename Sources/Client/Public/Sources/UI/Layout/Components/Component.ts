@@ -64,10 +64,16 @@ export type ComponentCloser = Components & { [observerBrand]: typeof closerBrand
  * Used to be avoid compilation error.
  * Set visible cant accept "boolean" value because overload are true | false.
  */
-export type FakeSetVisibleToggleType = false;
+export type DummySetVisibleToggleType = false;
 
 // If toggle is false, this should be ComponentCloser
-export type FakeSetVisibleObserverType = ComponentCloser;
+export type DummySetVisibleObserverType = ComponentCloser;
+
+export type DummySetVisibleParameterType = [
+    DummySetVisibleToggleType,
+    DummySetVisibleObserverType,
+    false,
+];
 
 type DeepReadonly<T> = {
     readonly [K in keyof T]: T[K] extends object ? DeepReadonly<T[K]> : T[K];
@@ -219,10 +225,6 @@ export interface ComponentSymbol {
     [OBSTRUCTION_AFFECTABLE]?: boolean;
     [RENDERED_LAST]?: boolean;
     [CENTERING]?: boolean;
-}
-
-function clamp(value: number, min: number, max: number): number {
-    return Math.min(Math.max(value, min), max);
 }
 
 /**
@@ -403,22 +405,6 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
         this.layoutCache.set(cacheKey, result);
 
         return result;
-    }
-
-    /**
-     * Clamp layout result in viewport.
-     */
-    protected doClamp(lr: LayoutResult): LayoutResult {
-        const { width, height } = this.context.canvas;
-        const { w, h, x, y } = lr;
-
-        return {
-            x: clamp(x, 0, width - w),
-            y: clamp(y, 0, height - h),
-            
-            w,
-            h,
-        };
     }
 
     protected static readonly CACHE_KEY_DELIMITER: string = "_";
@@ -703,9 +689,9 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
 
         // Set visibility with reversed animation
         this.setVisible(
-            <FakeSetVisibleToggleType>!currentState,
+            <DummySetVisibleToggleType>!currentState,
             // Closer
-            <FakeSetVisibleObserverType>openerOrCloser,
+            <DummySetVisibleObserverType>openerOrCloser,
             true,
             lastAnimationType,
             lastAnimationConfig,

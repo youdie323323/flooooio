@@ -24,5 +24,6 @@
     "Playground/**/*",
     "eslint.config.mjs",
     "esbuild.mjs",
+    "build/statics/client.js",
   ]
 }

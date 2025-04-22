@@ -2,7 +2,7 @@ import type { ButtonCallback } from "../../Layout/Components/WellKnown/Button";
 import { Button } from "../../Layout/Components/WellKnown/Button";
 import { createTitleBottomLeftToolTippedButton, BOTTOM_LEFT_TOOLTIPPED_BUTTON_SIZE } from ".";
 import { CoordinatedStaticSpace, type AutomaticallySizedLayoutOptions, StaticPanelContainer } from "../../Layout/Components/WellKnown/Container";
-import type { FakeSetVisibleToggleType, FakeSetVisibleObserverType, ComponentCloser } from "../../Layout/Components/Component";
+import type { DummySetVisibleToggleType, DummySetVisibleObserverType, ComponentCloser } from "../../Layout/Components/Component";
 import { AnimationType } from "../../Layout/Components/Component";
 import UICloseButton from "../../Shared/UICloseButton";
 import Text from "../../Layout/Components/WellKnown/Text";
@@ -31,8 +31,8 @@ export default class UITitleSettingButton extends createTitleBottomLeftToolTippe
 
             () => {
                 this.settingContainer.setVisible(
-                    <FakeSetVisibleToggleType>!this.settingContainer.desiredVisible,
-                    <FakeSetVisibleObserverType><unknown>(this),
+                    <DummySetVisibleToggleType>!this.settingContainer.desiredVisible,
+                    <DummySetVisibleObserverType><unknown>(this),
                     true,
                     AnimationType.SLIDE,
                     {
@@ -212,8 +212,8 @@ export default class UITitleSettingButton extends createTitleBottomLeftToolTippe
                 );
 
                 creditContainer.setVisible(
-                    <FakeSetVisibleToggleType>true,
-                    <FakeSetVisibleObserverType><unknown>creditsButton,
+                    <DummySetVisibleToggleType>true,
+                    <DummySetVisibleObserverType><unknown>creditsButton,
                     true,
                     AnimationType.SLIDE,
                     {

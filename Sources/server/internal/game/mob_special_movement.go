@@ -35,14 +35,14 @@ func (m *Mob) MobSpecialMovement(wp *WavePool) {
 				dy := m.PetMaster.Y - m.Y
 				distanceToParent := math.Hypot(dx, dy)
 
-				if distanceToParent > m.Radius()*5 {
+				if distanceToParent > m.CalculateRadius()*5 {
 					m.Angle = TurnAngleToTarget(
 						m.Angle,
 						dx,
 						dy,
 					)
 
-					m.Magnitude = Speed(m.Type) * 255
+					m.Magnitude = SpeedOf(m.Type) * 255
 
 					m.PetGoingToMaster = true
 				} else {
@@ -74,7 +74,7 @@ func (m *Mob) MobSpecialMovement(wp *WavePool) {
 
 	if m.TargetEntity == nil {
 		if m.RotationCounter >= 500 {
-			m.Angle = RandomAngle()
+			m.Angle = GetRandomAngle()
 
 			m.RotationCounter = 0
 		}
@@ -87,7 +87,7 @@ func (m *Mob) MobSpecialMovement(wp *WavePool) {
 
 				m.IsSpecialMoving = false
 			} else {
-				m.Magnitude = math.Sin(m.SpecialMovementTimer * math.Pi) * (Speed(m.Type) * 255)
+				m.Magnitude = math.Sin(m.SpecialMovementTimer*math.Pi) * (SpeedOf(m.Type) * 255)
 
 				m.SpecialMovementTimer += movementDuration
 			}

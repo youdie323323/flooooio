@@ -37,14 +37,11 @@ interface TextInputOptions {
     onBlur?: (self: TextInput) => void;
 }
 
-const inputs: Array<TextInput> = new Array();
-
 export default class TextInput extends Component {
     // Core properties
     private text: string;
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D | null;
-    private inputIndex: number;
     private hiddenInput: HTMLInputElement;
 
     // Style properties
@@ -115,7 +112,7 @@ export default class TextInput extends Component {
         this.paddingSize = options.paddingSize >= 0 ? options.paddingSize : 5;
         this.borderWidth = options.borderWidth >= 0 ? options.borderWidth : 1;
         this.borderColor = options.borderColor || '#959595';
-        this.borderRadius = options.borderRadius >= 0 ? options.borderRadius : 3;
+        this.borderRadius = options.borderRadius >= 0 ? options.borderRadius : 1;
         this.highlightColor = options.highlightColor || '#909090';
 
         // Initialize input state
@@ -217,9 +214,6 @@ export default class TextInput extends Component {
         this.on("onBlur", () => {
             this.canvas.style.cursor = "default";
         });
-
-        inputs.push(this);
-        this.inputIndex = inputs.length - 1;
     }
 
     // Define getter/setter for text
@@ -304,7 +298,7 @@ export default class TextInput extends Component {
     }
 
     private renderEmptyUnfocusedState() {
-        const { ctx: ctx, h } = this;
+        const { ctx, h } = this;
 
         this.setupTextContext(true);
         this.drawBackgroundOverlay();
@@ -332,7 +326,7 @@ export default class TextInput extends Component {
     }
 
     private setupTextContext(reduced = false) {
-        const { ctx: ctx } = this;
+        const { ctx } = this;
 
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
@@ -347,13 +341,13 @@ export default class TextInput extends Component {
     }
 
     private drawBorder() {
-        const { ctx: ctx, w, h, borderRadius: br } = this;
+        const { ctx, w, h, borderRadius } = this;
 
         if (this.borderWidth <= 0) return;
 
         ctx.fillStyle = this.borderColor;
         ctx.beginPath();
-        ctx.roundRect(0, 0, w, h, br);
+        ctx.roundRect(0, 0, w, h, borderRadius);
         ctx.fill();
 
         ctx.shadowOffsetX = 0;
@@ -375,7 +369,7 @@ export default class TextInput extends Component {
     }
 
     private clearShadow() {
-        const { ctx: ctx } = this;
+        const { ctx } = this;
 
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
@@ -383,7 +377,7 @@ export default class TextInput extends Component {
     }
 
     private renderSelection(text: string) {
-        const { ctx: ctx, h } = this;
+        const { ctx, h } = this;
 
         const paddingBorder = this.paddingSize + this.borderWidth;
         const selectWidth = this.textWidth(text.substring(this.selectionRange[0], this.selectionRange[1]));
@@ -483,18 +477,13 @@ export default class TextInput extends Component {
     }
 
     private renderNormalChar(char: string, x: number, fillStyle: string) {
-        const { ctx: ctx } = this;
+        const { ctx } = this;
 
         ctx.fillStyle = fillStyle;
         ctx.fillText(char, x, 0);
     }
 
     override destroy() {
-        const index = inputs.indexOf(this);
-        if (index != -1) {
-            inputs.splice(index, 1);
-        }
-
         if (this.isFocused) this.blur();
 
         this.canvas.removeEventListener("mousemove", this.mouseMoveHandler);
@@ -508,22 +497,15 @@ export default class TextInput extends Component {
 
     private updateCursorStyle(e: boolean): void {
         if (e) {
-            this.canvas.style.cursor = this.isFocused
-                ? "text"
-                : "pointer";
+            this.canvas.style.cursor =
+                this.isFocused
+                    ? "text"
+                    : "pointer";
         }
     }
 
     public focus(pos: number = undefined) {
-        if (!this.isFocused) {
-            this.onFocus(this);
-
-            for (let i = 0; i < inputs.length; i++) {
-                if (inputs[i].isFocused) {
-                    inputs[i].blur();
-                }
-            }
-        }
+        if (!this.isFocused) this.onFocus(this);
 
         if (!this.isSelectionUpdated) {
             this.selectionRange = [0, 0];
@@ -615,16 +597,6 @@ export default class TextInput extends Component {
             e.preventDefault();
 
             this.onSubmit(e, self);
-        } else if (keyCode === 9) {
-            e.preventDefault();
-
-            if (inputs.length > 1) {
-                const next = (inputs[this.inputIndex + 1]) ? this.inputIndex + 1 : 0;
-                self.blur();
-                setTimeout(function () {
-                    inputs[next].focus();
-                }, 10);
-            }
         }
 
         // Use rAF to fix input lag
@@ -700,11 +672,11 @@ export default class TextInput extends Component {
     }
 
     private drawTextBox(fn: () => void) {
-        const ctx = this.ctx, w = this.w, h = this.h, bw = this.borderWidth;
+        const ctx = this.ctx, w = this.w, h = this.h, bw = this.borderWidth, br = this.borderRadius / 2;
 
         ctx.fillStyle = this.backgroundColor;
         ctx.beginPath();
-        ctx.roundRect(bw, bw, w - bw * 2, h - bw * 2, 0.1);
+        ctx.roundRect(bw, bw, w - bw * 2, h - bw * 2, br);
         ctx.fill();
 
         fn();

@@ -2,7 +2,7 @@ import Mob from "../../Entity/Mob";
 import { Rarity } from "../../Native/Rarity";
 import { PETAL_TYPES } from "../../Native/Entity/EntityType";
 import { renderEntity } from "../../Entity/Renderers/RendererRenderingLink";
-import type { ComponentCloser, ComponentOpener, Components, FakeSetVisibleToggleType } from "../Layout/Components/Component";
+import type { ComponentCloser, ComponentOpener, Components, DummySetVisibleToggleType } from "../Layout/Components/Component";
 import { AnimationType } from "../Layout/Components/Component";
 import type { AnyStaticContainer } from "../Layout/Components/WellKnown/Container";
 import { StaticPanelContainer, CoordinatedStaticSpace, StaticHContainer, StaticSpace } from "../Layout/Components/WellKnown/Container";
@@ -185,7 +185,7 @@ export default class UITitle extends AbstractUI {
         },
         [Clientbound.WAVE_STARTED]: (reader: BinaryReader): void => {
             this.squadMenuContainer.setVisible(false, null, true, AnimationType.ZOOM, {
-                defaultDurationOverride: 100,
+                defaultDurationOverride: 250,
             });
 
             uiCtx.switchUI("game");
@@ -406,7 +406,6 @@ export default class UITitle extends AbstractUI {
                     showPlaceholderWhenUnfocused: false,
 
                     borderColor: "#000000",
-                    borderRadius: 2,
                     borderWidth: 2.5,
                     maxLength: 80,
 
@@ -433,7 +432,7 @@ export default class UITitle extends AbstractUI {
                     alignFromCenterY: true,
                 },
 
-                4,
+                2,
 
                 3,
                 1,
@@ -441,6 +440,7 @@ export default class UITitle extends AbstractUI {
                 [
                     new Text(
                         { y: 2 },
+
                         "Ready",
                         16,
                     ),
@@ -449,6 +449,7 @@ export default class UITitle extends AbstractUI {
                             w: 40,
                             h: 40,
                         },
+
                         (ctx: CanvasRenderingContext2D) => {
                             ctx.fillStyle = "black";
                             ctx.globalAlpha = DARKENED_BASE;
@@ -467,7 +468,7 @@ export default class UITitle extends AbstractUI {
                         clientWebsocket.packetServerbound.sendWaveRoomFindPublic(this.biome);
 
                         this.squadMenuContainer.setVisible(true, <ComponentOpener><unknown>readyButton, true, AnimationType.ZOOM, {
-                            defaultDurationOverride: 100,
+                            defaultDurationOverride: 250,
                         });
 
                         this.statusTextRef = SquadContainerStatusText.CREATING;
@@ -497,7 +498,7 @@ export default class UITitle extends AbstractUI {
                     alignFromCenterY: true,
                 },
 
-                4,
+                2,
 
                 3,
                 1,
@@ -530,7 +531,7 @@ export default class UITitle extends AbstractUI {
                     clientWebsocket.packetServerbound.sendWaveRoomCreate(this.biome);
 
                     this.squadMenuContainer.setVisible(true, <ComponentOpener><unknown>squadButton, true, AnimationType.ZOOM, {
-                        defaultDurationOverride: 100,
+                        defaultDurationOverride: 250,
                     });
 
                     this.statusTextRef = SquadContainerStatusText.CREATING;
@@ -671,7 +672,7 @@ export default class UITitle extends AbstractUI {
 
                     () => {
                         this.squadMenuContainer.setVisible(false, <ComponentCloser><unknown>squadMenuCloser, true, AnimationType.ZOOM, {
-                            defaultDurationOverride: 100,
+                            defaultDurationOverride: 250,
                         });
 
                         readyToggle = false;
@@ -755,7 +756,6 @@ export default class UITitle extends AbstractUI {
                         showPlaceholderWhenUnfocused: false,
 
                         borderColor: "#000000",
-                        borderRadius: 2,
                         borderWidth: 2,
                         maxLength: 20,
 
@@ -928,6 +928,7 @@ export default class UITitle extends AbstractUI {
                         x: 140,
                         y: 3,
                     },
+                    
                     "Squad",
                     14,
                 ),
@@ -1068,9 +1069,9 @@ export default class UITitle extends AbstractUI {
     }
 
     public toggleShowStatusText(toggle: boolean): void {
-        if (this.statusText.visible !== toggle) this.statusText.setVisible(<FakeSetVisibleToggleType>toggle, null, false);
+        if (this.statusText.visible !== toggle) this.statusText.setVisible(<DummySetVisibleToggleType>toggle, null, false);
 
-        if (this.playerProfileContainer.visible !== !toggle) this.playerProfileContainer.setVisible(<FakeSetVisibleToggleType>!toggle, null, false);
-        if (this.codeText.visible !== !toggle) this.codeText.setVisible(<FakeSetVisibleToggleType>!toggle, null, false);
+        if (this.playerProfileContainer.visible !== !toggle) this.playerProfileContainer.setVisible(<DummySetVisibleToggleType>!toggle, null, false);
+        if (this.codeText.visible !== !toggle) this.codeText.setVisible(<DummySetVisibleToggleType>!toggle, null, false);
     }
 }
