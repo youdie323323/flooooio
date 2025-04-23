@@ -6,7 +6,7 @@ import type { ComponentCloser, ComponentOpener, Components, DummySetVisibleToggl
 import { AnimationType } from "../Layout/Components/Component";
 import type { AnyStaticContainer } from "../Layout/Components/WellKnown/Container";
 import { StaticPanelContainer, CoordinatedStaticSpace, StaticHContainer, StaticSpace } from "../Layout/Components/WellKnown/Container";
-import Text from "../Layout/Components/WellKnown/Text";
+import StaticText from "../Layout/Components/WellKnown/StaticText";
 import TextInput from "../Layout/Components/WellKnown/TextInput";
 import Toggle from "../Layout/Components/WellKnown/Toggle";
 import Collidable from "../Layout/Extensions/ExtensionCollidable";
@@ -118,8 +118,8 @@ export default class UITitle extends AbstractUI {
 
     private lastBackgroundEntitySpawn: number;
 
-    private connectingText: Text;
-    private loggingInText: Text;
+    private connectingText: StaticText;
+    private loggingInText: StaticText;
     private onLoadedComponents: Components[];
 
     // Make this public to close this from networking
@@ -127,12 +127,12 @@ export default class UITitle extends AbstractUI {
 
     private publicToggle: Toggle;
 
-    private statusText: Text;
+    private statusText: StaticText;
     private statusTextRef: SquadContainerStatusText;
 
     private playerProfileContainer: AnyStaticContainer;
 
-    private codeText: Text;
+    private codeText: StaticText;
 
     // Wave informations
 
@@ -254,7 +254,7 @@ export default class UITitle extends AbstractUI {
                     Button,
 
                     [
-                        new Text(
+                        new StaticText(
                             { y: 5 },
 
                             "Link your Discord account to save your progress!",
@@ -292,7 +292,7 @@ export default class UITitle extends AbstractUI {
                             0.7,
                         ),
 
-                        new Text(
+                        new StaticText(
                             {
                                 x: 7,
                                 y: 4,
@@ -317,7 +317,7 @@ export default class UITitle extends AbstractUI {
 
         {
             // Text
-            const connectingText = this.connectingText = new (Collidable(Text, "up"))(
+            const connectingText = this.connectingText = new (Collidable(StaticText, "up"))(
                 {
                     x: -(200 / 2),
                     y: (-(40 / 2)) - 5,
@@ -329,7 +329,7 @@ export default class UITitle extends AbstractUI {
                 32,
             );
 
-            const loggingInText = this.loggingInText = new (Collidable(Text, "down"))(
+            const loggingInText = this.loggingInText = new (Collidable(StaticText, "down"))(
                 {
                     x: -(200 / 2),
                     y: (-(40 / 2)) - 5,
@@ -352,7 +352,7 @@ export default class UITitle extends AbstractUI {
             this.addComponent(this.loggingInText);
         }
 
-        const gameNameText = new (Collidable(Text))(
+        const gameNameText = new (Collidable(StaticText))(
             {
                 x: -(250 / 2),
                 y: (-(80 / 2)) - 40,
@@ -369,7 +369,7 @@ export default class UITitle extends AbstractUI {
         {
             this.onLoadedComponents = [];
 
-            const nameInputDescription = new (Collidable(Text))(
+            const nameInputDescription = new (Collidable(StaticText))(
                 {
                     x: -108,
                     y: (-(50 / 2)) - 10,
@@ -438,7 +438,7 @@ export default class UITitle extends AbstractUI {
                 1,
 
                 [
-                    new Text(
+                    new StaticText(
                         { y: 2 },
 
                         "Ready",
@@ -504,7 +504,7 @@ export default class UITitle extends AbstractUI {
                 1,
 
                 [
-                    new Text(
+                    new StaticText(
                         { y: 2 },
 
                         "Squad",
@@ -562,7 +562,7 @@ export default class UITitle extends AbstractUI {
                     1,
 
                     [
-                        new Text(
+                        new StaticText(
                             {},
                             biomeName,
                             10,
@@ -636,7 +636,7 @@ export default class UITitle extends AbstractUI {
 
                 4,
             ).addChildren(
-                (this.statusText = new Text(
+                (this.statusText = new StaticText(
                     {
                         x: 162,
                         y: 110,
@@ -701,7 +701,7 @@ export default class UITitle extends AbstractUI {
                             : WaveRoomVisibleState.PRIVATE,
                     ),
                 )),
-                new Text(
+                new StaticText(
                     {
                         x: 26,
                         y: 26,
@@ -711,7 +711,7 @@ export default class UITitle extends AbstractUI {
                     10,
                 ),
 
-                new Text(
+                new StaticText(
                     () => ({
                         x: 75,
                         y: 31,
@@ -776,7 +776,7 @@ export default class UITitle extends AbstractUI {
                     1,
 
                     [
-                        new Text(
+                        new StaticText(
                             {
                                 x: 7,
                                 y: 1,
@@ -806,7 +806,7 @@ export default class UITitle extends AbstractUI {
                     1,
 
                     [
-                        new Text(
+                        new StaticText(
                             {
                                 x: 3,
                                 y: 1,
@@ -836,7 +836,7 @@ export default class UITitle extends AbstractUI {
                     1,
 
                     [
-                        new Text(
+                        new StaticText(
                             {
                                 x: 5,
                                 y: 1,
@@ -862,11 +862,11 @@ export default class UITitle extends AbstractUI {
 
                     const codeText = new (
                         Tooltip(
-                            Text,
+                            StaticText,
 
                             [
                                 new CoordinatedStaticSpace(1, 1, 0, 0),
-                                new Text(
+                                new StaticText(
                                     {
                                         x: 1,
                                         y: 3,
@@ -923,7 +923,7 @@ export default class UITitle extends AbstractUI {
                     return codeText;
                 })(),
 
-                new Text(
+                new StaticText(
                     {
                         x: 140,
                         y: 3,

@@ -2,7 +2,7 @@ import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
 import type { MaybePointerLike } from "../Component";
 import { Component } from "../Component";
-import { calculateStrokeWidth } from "./Text";
+import { calculateStrokeWidth } from "./StaticText";
 
 interface TextInputOptions {
     // Core properties

@@ -5,7 +5,7 @@ import { CoordinatedStaticSpace, type AutomaticallySizedLayoutOptions, StaticPan
 import type { DummySetVisibleToggleType, DummySetVisibleObserverType, ComponentCloser } from "../../Layout/Components/Component";
 import { AnimationType } from "../../Layout/Components/Component";
 import UICloseButton from "../../Shared/UICloseButton";
-import Text from "../../Layout/Components/WellKnown/Text";
+import StaticText from "../../Layout/Components/WellKnown/StaticText";
 import UISettingButton from "../../Shared/UISettingButton";
 import type { FlooooIoDefaultSettingKeys } from "../../../Utils/SettingStorage";
 import SettingStorage from "../../../Utils/SettingStorage";
@@ -70,7 +70,7 @@ export default class UITitleSettingButton extends createTitleBottomLeftToolTippe
     private createSettingContainer(creditContainer: ReturnType<typeof UITitleSettingButton["prototype"]["createCreditContainer"]>): StaticPanelContainer {
         const makeSettingComponents = (y: number, storageKey: FlooooIoDefaultSettingKeys, description: string): [
             Toggle,
-            Text,
+            StaticText,
         ] => {
             const settingToggle = new Toggle(
                 {
@@ -92,7 +92,7 @@ export default class UITitleSettingButton extends createTitleBottomLeftToolTippe
             return [
                 settingToggle,
 
-                new Text(
+                new StaticText(
                     {
                         x: 26 - .5,
                         y: y + 1 + .5,
@@ -125,7 +125,7 @@ export default class UITitleSettingButton extends createTitleBottomLeftToolTippe
                 1,
 
                 [
-                    new Text(
+                    new StaticText(
                         () => ({
                             x: 45,
                             y: 1,
@@ -183,7 +183,7 @@ export default class UITitleSettingButton extends createTitleBottomLeftToolTippe
                 },
             )),
 
-            new Text(
+            new StaticText(
                 {
                     x: 44,
                     y: 4,
@@ -266,7 +266,7 @@ export default class UITitleSettingButton extends createTitleBottomLeftToolTippe
                 },
             )),
 
-            new Text(
+            new StaticText(
                 {
                     x: 62.5,
                     y: 4,
@@ -277,7 +277,7 @@ export default class UITitleSettingButton extends createTitleBottomLeftToolTippe
             ),
 
             // Yaaaaaaaaaaaaaaaaaaaaay
-            new Text(
+            new StaticText(
                 {
                     x: 6 + .5,
                     y: 35,
@@ -289,7 +289,7 @@ export default class UITitleSettingButton extends createTitleBottomLeftToolTippe
                 "left",
                 130,
             ),
-            new Text(
+            new StaticText(
                 {
                     x: 2 - .5,
                     y: 77.5,
@@ -300,7 +300,7 @@ export default class UITitleSettingButton extends createTitleBottomLeftToolTippe
             ),
 
             // Icon credits
-            new Text(
+            new StaticText(
                 {
                     x: 6,
                     y: 100,
@@ -313,7 +313,7 @@ export default class UITitleSettingButton extends createTitleBottomLeftToolTippe
                 180,
             ),
 
-            new Text(
+            new StaticText(
                 {
                     x: 6,
                     y: 140,

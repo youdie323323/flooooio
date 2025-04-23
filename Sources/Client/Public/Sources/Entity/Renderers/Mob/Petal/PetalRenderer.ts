@@ -13,24 +13,26 @@ export default abstract class AbstractPetalRenderer extends AbstractMobRenderer 
 
     protected drawBasicLike(
         context: RenderingContext<Mob>,
-        fill: ColorCode,
-        stroke: ColorCode,
+        fraction: number,
+        strokeWidth: number,
+        fillColor: ColorCode,
+        strokeColor: ColorCode,
     ): void {
         const { ctx, entity } = context;
 
         // Change angle
         ctx.rotate(entity.angle);
 
-        const scale = entity.size / 20;
+        const scale = entity.size / fraction;
         ctx.scale(scale, scale);
 
-        ctx.lineWidth = 6;
+        ctx.lineWidth = strokeWidth;
 
         ctx.beginPath();
-        ctx.arc(0, 0, 14, 0, TAU);
-        ctx.fillStyle = this.calculateDamageEffectColor(context, fill);
+        ctx.arc(0, 0, 15, 0, TAU);
+        ctx.fillStyle = this.calculateDamageEffectColor(context, fillColor);
         ctx.fill();
-        ctx.strokeStyle = this.calculateDamageEffectColor(context, stroke);
+        ctx.strokeStyle = this.calculateDamageEffectColor(context, strokeColor);
         ctx.stroke();
     }
 }

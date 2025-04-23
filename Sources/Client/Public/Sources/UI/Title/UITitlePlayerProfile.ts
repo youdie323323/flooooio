@@ -6,7 +6,7 @@ import { DARKENED_BASE } from "../../Utils/Color";
 import type { MaybePointerLike } from "../Layout/Components/Component";
 import { Component, OBSTRUCTION_AFFECTABLE } from "../Layout/Components/Component";
 import { AbstractDynamicLayoutable } from "../Layout/Components/ComponentDynamicLayoutable";
-import { calculateStrokeWidth } from "../Layout/Components/WellKnown/Text";
+import { calculateStrokeWidth } from "../Layout/Components/WellKnown/StaticText";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../Layout/Layout";
 import Layout from "../Layout/Layout";
 import type { WaveRoomPlayerInformation } from "./UITitle";

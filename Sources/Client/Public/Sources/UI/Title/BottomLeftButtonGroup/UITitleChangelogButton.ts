@@ -6,7 +6,7 @@ import type { DummySetVisibleToggleType, DummySetVisibleObserverType, ComponentC
 import { AnimationType } from "../../Layout/Components/Component";
 import { Centering } from "../../Layout/Extensions/ExtensionCentering";
 import UICloseButton from "../../Shared/UICloseButton";
-import Text from "../../Layout/Components/WellKnown/Text";
+import StaticText from "../../Layout/Components/WellKnown/StaticText";
 import { createTitleBottomLeftToolTippedButton, BOTTOM_LEFT_TOOLTIPPED_BUTTON_SIZE, dynamicJoinArray } from ".";
 
 export default class UITitleChangelogButton extends createTitleBottomLeftToolTippedButton(
@@ -114,7 +114,7 @@ export default class UITitleChangelogButton extends createTitleBottomLeftToolTip
 
             new CoordinatedStaticSpace(15, 15, 313.5, 0),
 
-            new Text(
+            new StaticText(
                 {
                     x: 118,
                     y: 4,
@@ -137,7 +137,7 @@ export default class UITitleChangelogButton extends createTitleBottomLeftToolTip
                 75,
             ).addChildren(
                 ...dynamicJoinArray(
-                    Array.from({ length: 50 }, () => new (Centering(Text))(
+                    Array.from({ length: 50 }, () => new (Centering(StaticText))(
                         {},
 
                         "Older changelog entries not available",

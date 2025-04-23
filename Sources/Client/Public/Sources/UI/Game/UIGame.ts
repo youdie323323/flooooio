@@ -4,7 +4,7 @@ import { renderEntity } from "../../Entity/Renderers/RendererRenderingLink";
 import { interpolate } from "../../Utils/Interpolator";
 import AbstractUI, { uiScaleFactor } from "../UI";
 import SettingStorage from "../../Utils/SettingStorage";
-import Text, { calculateStrokeWidth } from "../Layout/Components/WellKnown/Text";
+import StaticText from "../Layout/Components/WellKnown/StaticText";
 import TextInput from "../Layout/Components/WellKnown/TextInput";
 import type { Rarity } from "../../Native/Rarity";
 import { Button } from "../Layout/Components/WellKnown/Button";
@@ -506,7 +506,7 @@ export default class UIGame extends AbstractUI {
 
             lines.split("\n").forEach(message => {                
                 this.chatContainer.addChildren(
-                    new Text(
+                    new StaticText(
                         {
                             y: 2,
                         },
@@ -704,7 +704,7 @@ export default class UIGame extends AbstractUI {
                 alignFromCenterX: true,
             }),
         ).addChildren(
-            new (Centering(Text))(
+            new (Centering(StaticText))(
                 {},
 
                 () => BIOME_DISPLAY_NAME[this.biome],
@@ -774,7 +774,7 @@ export default class UIGame extends AbstractUI {
 
                 false,
             ).addChildren(
-                new (Centering(Text))(
+                new (Centering(StaticText))(
                     {},
                     "You were destroyed by:",
                     12.2,
@@ -782,7 +782,7 @@ export default class UIGame extends AbstractUI {
 
                 new StaticSpace(2, 2),
 
-                new (Centering(Text))(
+                new (Centering(StaticText))(
                     {},
                     "Poison",
                     16.1,
@@ -802,7 +802,7 @@ export default class UIGame extends AbstractUI {
                     1,
 
                     [
-                        new Text(
+                        new StaticText(
                             {
                                 x: 3,
                                 y: 2,
@@ -831,7 +831,7 @@ export default class UIGame extends AbstractUI {
 
                 new StaticSpace(0, 4),
 
-                new (Centering(Text))(
+                new (Centering(StaticText))(
                     {},
 
                     "(or press enter)",
@@ -856,7 +856,7 @@ export default class UIGame extends AbstractUI {
 
                 false,
             ).addChildren(
-                new (Centering(Text))(
+                new (Centering(StaticText))(
                     {},
 
                     "GAME OVER",
@@ -878,7 +878,7 @@ export default class UIGame extends AbstractUI {
                     1,
 
                     [
-                        new Text(
+                        new StaticText(
                             {
                                 x: 3,
                                 y: 2,
@@ -895,7 +895,7 @@ export default class UIGame extends AbstractUI {
                     true,
                 ),
                 new StaticSpace(0, 4),
-                new (Centering(Text))(
+                new (Centering(StaticText))(
                     {},
 
                     "(or press enter)",
@@ -920,7 +920,7 @@ export default class UIGame extends AbstractUI {
 
                 2,
             ).addChildren(
-                new Text(
+                new StaticText(
                     { y: 3 },
 
                     "You will respawn next wave",

@@ -7,7 +7,7 @@ import type { Layoutable } from "./ComponentLayoutable";
 import { type AnyStaticContainer, type StaticSpace } from "./WellKnown/Container";
 import type Gauge from "./WellKnown/Gauge";
 import type { Logo } from "./WellKnown/Logo";
-import type Text from "./WellKnown/Text";
+import type StaticText from "./WellKnown/StaticText";
 import type TextInput from "./WellKnown/TextInput";
 import type Toggle from "./WellKnown/Toggle";
 import type { EventMap } from 'strict-event-emitter';
@@ -32,7 +32,7 @@ export type Components =
         // | CoordinatedStaticSpace
         // Button extending StaticHContainer, so no need to list here
         // | Button
-        | Text
+        | StaticText
         | TextInput
         | Toggle
         | Logo

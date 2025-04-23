@@ -1,6 +1,6 @@
 import type { TooltipAnchorPosition } from "../../Layout/Extensions/ExtensionTooltip";
 import Tooltip from "../../Layout/Extensions/ExtensionTooltip";
-import Text from "../../Layout/Components/WellKnown/Text";
+import StaticText from "../../Layout/Components/WellKnown/StaticText";
 import type UISettingButton from "../../Shared/UISettingButton";
 import type { Button } from "../../Layout/Components/WellKnown/Button";
 import { CoordinatedStaticSpace } from "../../Layout/Components/WellKnown/Container";
@@ -18,7 +18,7 @@ export const createTitleBottomLeftToolTippedButton = <T extends typeof Button | 
         ctor,
 
         [
-            new Text(
+            new StaticText(
                 { y: 5 },
                 
                 description,

@@ -22,7 +22,7 @@ async function watch() {
         outfile:
             obfuscateEnabled
                 ? prebuildedFileName
-                : "./build/statics/client.js",
+                : "./Sources/server/static/client.js",
         legalComments: "none",
         tsconfig: "./tsconfig.json",
         loader: { ".svg": "text" },
@@ -67,7 +67,7 @@ async function watch() {
                                 hexadecimalNumbers: false,
                                 deadCode: false,
                             }).then(result => {
-                                writeFileSync("./build/statics/client.js", result.code);
+                                writeFileSync(".h/Sources/server/static/client.js", result.code);
                                 rm(prebuildedFileName, () => { });
 
                                 console.log('Ofsucated');

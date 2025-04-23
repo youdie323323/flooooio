@@ -7,6 +7,6 @@ export default class PetalRendererBasic extends AbstractPetalRenderer {
         // Non-recursive renderer
         // super.render(context);
 
-        this.drawBasicLike(context, "#ffffff", "#cfcfcf");
+        this.drawBasicLike(context, 15, 5, "#ffffff", "#cfcfcf");
     }
 }

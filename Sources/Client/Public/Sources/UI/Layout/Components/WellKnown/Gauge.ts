@@ -4,7 +4,7 @@ import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
 import type { MaybePointerLike } from "../Component";
 import { Component, OBSTRUCTION_AFFECTABLE } from "../Component";
-import { calculateStrokeWidth } from "./Text";
+import { calculateStrokeWidth } from "./StaticText";
 
 export type GaugeSource = Readonly<{
     value: number;

@@ -11,7 +11,7 @@ import { Centering } from "../../Layout/Extensions/ExtensionCentering";
 import UICloseButton from "../../Shared/UICloseButton";
 import UIDraggableMobIcon from "../../Shared/UIDraggableMobIcon";
 import { createTitleBottomLeftToolTippedButton, BOTTOM_LEFT_TOOLTIPPED_BUTTON_SIZE, dynamicJoinArray } from ".";
-import Text from "../../Layout/Components/WellKnown/Text";
+import StaticText from "../../Layout/Components/WellKnown/StaticText";
 import SWAP_BAG_SVG from "../Assets/swap_bag.svg";
 
 export default class UITitleInventoryButton extends createTitleBottomLeftToolTippedButton(
@@ -117,7 +117,7 @@ export default class UITitleInventoryButton extends createTitleBottomLeftToolTip
 
             new CoordinatedStaticSpace(15, 15, 245.5, 0),
 
-            new Text(
+            new StaticText(
                 {
                     x: 88,
                     y: 4,
@@ -127,7 +127,7 @@ export default class UITitleInventoryButton extends createTitleBottomLeftToolTip
                 16,
             ),
 
-            new Text(
+            new StaticText(
                 {
                     x: 50,
                     y: 40,

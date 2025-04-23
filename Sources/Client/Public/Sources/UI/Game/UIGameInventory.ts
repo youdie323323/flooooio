@@ -2,7 +2,7 @@ import type { Components, MaybePointerLike } from "../Layout/Components/Componen
 import type { AutomaticallySizedLayoutOptions } from "../Layout/Components/WellKnown/Container";
 import { StaticSpace, StaticVContainer, StaticHContainer } from "../Layout/Components/WellKnown/Container";
 import UIPetalPlaceholder from "../Shared/UIPetalPlaceholder";
-import Text from "../Layout/Components/WellKnown/Text";
+import StaticText from "../Layout/Components/WellKnown/StaticText";
 import { Centering } from "../Layout/Extensions/ExtensionCentering";
 
 export default class UIGameInventory extends StaticVContainer {
@@ -25,7 +25,7 @@ export default class UIGameInventory extends StaticVContainer {
                             .addChildren(
                                 new (Centering(UIPetalPlaceholder))({}, placeholderSize),
                                 new StaticSpace(0, 5),
-                                new (Centering(Text))({}, `[${(i + 1) % 10}]`, 8),
+                                new (Centering(StaticText))({}, `[${(i + 1) % 10}]`, 8),
                             )
                         : new UIPetalPlaceholder({}, placeholderSize),
                 );
