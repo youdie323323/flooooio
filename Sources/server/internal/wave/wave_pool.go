@@ -1191,32 +1191,6 @@ func (wp *WavePool) SafeGetPetalsWithCondition(condition func(*Petal) bool) []*P
 	return wp.GetPetalsWithCondition(condition)
 }
 
-func (wp *WavePool) getMobLightningBounceTargets(bouncedIds []*EntityId) []collision.Node {
-	playerTargets := wp.GetPlayersWithCondition(func(targetPlayer *Player) bool {
-		return !slices.Contains(bouncedIds, targetPlayer.Id)
-	})
-
-	// Target pets
-	mobTargets := wp.GetMobsWithCondition(func(targetMob *Mob) bool {
-		return !slices.Contains(bouncedIds, targetMob.Id) && targetMob.PetMaster != nil
-	})
-
-	lenPlayerTargets := len(playerTargets)
-	lenMobTargets := len(mobTargets)
-
-	nodeTargets := make([]collision.Node, lenPlayerTargets+lenMobTargets)
-
-	for i, player := range playerTargets {
-		nodeTargets[i] = player
-	}
-
-	for i, mob := range mobTargets {
-		nodeTargets[lenPlayerTargets+i] = mob
-	}
-
-	return nodeTargets
-}
-
 // MobDoLightningBounce performs lightning bounce effect between players and pets from enemy (mob) side.
 // hitEntity is the initially struck entity.
 func (wp *WavePool) MobDoLightningBounce(jellyfish *Mob, hitEntity collision.Node) {
@@ -1257,7 +1231,7 @@ Loop:
 
 				targetEntity.Health -= lightningDamage / playerMaxHealth
 
-				bounceTargets := wp.getMobLightningBounceTargets(bouncedIds)
+				bounceTargets := jellyfish.GetLightningBounceTargets(wp, bouncedIds)
 
 				targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, targetEntity.Size*10)
 				if targetNode == nil {
@@ -1283,11 +1257,9 @@ Loop:
 				// Or just dont?
 				targetEntity.LastAttackedEntity = jellyfish
 
-				bounceTargets := wp.getMobLightningBounceTargets(bouncedIds)
+				bounceTargets := jellyfish.GetLightningBounceTargets(wp, bouncedIds)
 
-				// Distance is radius * 1.5
-				// TODO: this should very very expanded
-				targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, targetEntity.CalculateRadius()*3)
+				targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, targetEntity.CalculateRadius()*5)
 				if targetNode == nil {
 					break Loop
 				}
@@ -1351,18 +1323,9 @@ func (wp *WavePool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 
 		targetMob.LastAttackedEntity = lightning.Master
 
-		mobTargets := wp.GetMobsWithCondition(func(targetMob *Mob) bool {
-			return !slices.Contains(bouncedIds, targetMob.Id) && targetMob.PetMaster == nil
-		})
+		bounceTargets := lightning.GetLightningBounceTargets(wp, bouncedIds)
 
-		nodeTargets := make([]collision.Node, len(mobTargets))
-		for i, mob := range mobTargets {
-			nodeTargets[i] = mob
-		}
-
-		// Distance is radius * 1.5
-		// TODO: this should very very expanded
-		targetNode = FindNearestEntityWithLimitedDistance(targetNode, nodeTargets, targetMob.CalculateRadius()*3)
+		targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, targetMob.CalculateRadius()*3)
 		if targetNode == nil {
 			break
 		}

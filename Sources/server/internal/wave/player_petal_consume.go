@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	bubbleBounceForce         = 20.
-	bubbleVelocityAttenuation = .8
+	bubbleBounceForce = 25.
 
 	yggdrasilPushForce = 10.
 )
@@ -24,9 +23,6 @@ func (p *Player) PlayerPetalConsume(wp *WavePool) {
 	if p.IsDead {
 		return
 	}
-
-	p.BubbleVelocity[0] *= bubbleVelocityAttenuation
-	p.BubbleVelocity[1] *= bubbleVelocityAttenuation
 
 	isSad := p.Mood.IsSet(native.MoodSad)
 
@@ -149,8 +145,8 @@ func (p *Player) PlayerPetalConsume(wp *WavePool) {
 					distance := math.Hypot(dx, dy)
 
 					if distance > 0 {
-						totalForceX += dx / distance
-						totalForceY += dy / distance
+						totalForceX += dx / distance * bubbleBounceForce
+						totalForceY += dy / distance * bubbleBounceForce
 					}
 				}
 			}
@@ -160,9 +156,6 @@ func (p *Player) PlayerPetalConsume(wp *WavePool) {
 		}
 	}
 
-	p.BubbleVelocity[0] += totalForceX
-	p.BubbleVelocity[1] += totalForceY
-
-	p.X += p.BubbleVelocity[0] * bubbleBounceForce
-	p.Y += p.BubbleVelocity[1] * bubbleBounceForce
+	p.Velocity[0] += totalForceX
+	p.Velocity[1] += totalForceY
 }

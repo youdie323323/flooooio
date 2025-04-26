@@ -153,6 +153,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 						switch nearEntity.Type {
 						case native.PetalTypeFang:
 							doFangLifesteal(nearEntity, nearEntityStat, nearEntityDamage)
+
 						case native.PetalTypeLightning:
 							wp.PetalDoLightningBounce(nearEntity, m)
 						}
@@ -190,8 +191,8 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					m.X -= px
 					m.Y -= py
 
-					nearEntity.X += px * 5
-					nearEntity.Y += py * 5
+					nearEntity.Velocity[0] += px * 3
+					nearEntity.Velocity[1] += py * 3
 
 					{ // Damage
 						nearEntityMaxHealth := nearEntity.GetMaxHealth()

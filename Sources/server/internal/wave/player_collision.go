@@ -10,6 +10,8 @@ var PlayerCollision = native.EntityCollision{
 	Radius:   25,
 }
 
+const playerToPlayerKnockbackForce = 2.5
+
 func (p *Player) PlayerCollision(wp *WavePool) {
 	// Dont collide when dead/uncollidable
 	if p.IsDead || !p.IsCollidable() {
@@ -41,11 +43,11 @@ func (p *Player) PlayerCollision(wp *WavePool) {
 
 		px, py, ok := collision.ComputeCirclePush(c0, c1)
 		if ok {
-			p.X -= px * 1.25
-			p.Y -= py * 1.25
+			p.Velocity[0] -= px * playerToPlayerKnockbackForce
+			p.Velocity[1] -= py * playerToPlayerKnockbackForce
 
-			np.X += px * 1.25
-			np.Y += py * 1.25
+			np.Velocity[0] += px * playerToPlayerKnockbackForce
+			np.Velocity[1] += py * playerToPlayerKnockbackForce
 		}
 
 		return true

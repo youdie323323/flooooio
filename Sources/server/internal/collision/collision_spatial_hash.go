@@ -118,10 +118,8 @@ func (sh *SpatialHash) Search(x, y, radius float64) *xsync.MapOf[uint32, Node] {
 			if bucket, ok := sh.buckets.Load(key); ok {
 				wg.Add(1)
 
-				go func(b *nodeSet) {
-					defer wg.Done()
-
-					b.ForEach(func(node Node) {
+				go func(ns *nodeSet) {
+					ns.ForEach(func(node Node) {
 						dx := node.GetX() - x
 						dy := node.GetY() - y
 
@@ -129,6 +127,8 @@ func (sh *SpatialHash) Search(x, y, radius float64) *xsync.MapOf[uint32, Node] {
 							result.Store(node.GetID(), node)
 						}
 					})
+
+					wg.Done()
 				}(bucket)
 			}
 		}

@@ -45,9 +45,6 @@ type Player struct {
 	OrbitPetalRadii       []float64
 	OrbitRadiusVelocities []float64
 	OrbitPetalSpins       [][]float64
-
-	// player_petal_consume.go struct field definitions
-	BubbleVelocity [2]float64
 }
 
 type PlayerPrivileges struct {
@@ -75,7 +72,7 @@ const minHpLevel = 75.
 // calculatePlayerHp calculate hp by level.
 // 100 * x, x is upgrade.
 func calculatePlayerHp(level float64) float64 {
-	return (100 * 200) * math.Pow(1.02, math.Max(level, minHpLevel)-1)
+	return (100 * 20000) * math.Pow(1.02, math.Max(level, minHpLevel)-1)
 }
 
 // GetMaxHealth calculates max hp of player.
@@ -100,7 +97,7 @@ type SwapPetalCommand struct {
 	At int
 }
 
-const PlayerSpeedMultiplier = .6
+const PlayerSpeedMultiplier = .8
 
 func (c *MovementCommand) Execute(_ *WavePool, p *Player) {
 	if p.IsDead {
@@ -331,8 +328,6 @@ func NewPlayer(
 		OrbitPetalRadii:       nil,
 		OrbitRadiusVelocities: nil,
 		OrbitPetalSpins:       nil,
-
-		BubbleVelocity: [2]float64{0, 0},
 	}
 }
 

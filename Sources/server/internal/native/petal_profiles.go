@@ -12,11 +12,11 @@ type PetalI18n struct {
 }
 
 type PetalStat struct {
-	Damage      float64 `json:"damage"`
-	Health      float64 `json:"health"`
-	PetalReload float64 `json:"petalReload"`
+	Damage      float64  `json:"damage"`
+	Health      float64  `json:"health"`
+	PetalReload float64  `json:"petalReload"`
 	UsageReload *float64 `json:"usageReload,omitempty"`
-	Count       int     `json:"count"`
+	Count       int      `json:"count"`
 
 	Extra map[string]any `json:"extra,omitempty"`
 }

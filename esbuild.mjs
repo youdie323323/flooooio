@@ -67,7 +67,7 @@ async function watch() {
                                 hexadecimalNumbers: false,
                                 deadCode: false,
                             }).then(result => {
-                                writeFileSync(".h/Sources/server/static/client.js", result.code);
+                                writeFileSync("./Sources/server/static/client.js", result.code);
                                 rm(prebuildedFileName, () => { });
 
                                 console.log('Ofsucated');

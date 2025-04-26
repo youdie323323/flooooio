@@ -78,6 +78,52 @@ func (m *Mob) IsEnemy() bool {
 	return m.PetMaster == nil && (!mIsProjectile || (mIsProjectile && m.IsEnemyMissile()))
 }
 
+// Ensure mob satisfies LightningEmitter
+var _ LightningEmitter = (*Mob)(nil) 
+
+// GetLightningBounceTargets returns targets to bounce.
+func (m *Mob) GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node {
+	if m.PetMaster == nil {
+		playerTargets := wp.GetPlayersWithCondition(func(targetPlayer *Player) bool {
+			return !slices.Contains(bouncedIds, targetPlayer.Id)
+		})
+
+		// Target pets
+		mobTargets := wp.GetMobsWithCondition(func(targetMob *Mob) bool {
+			return !slices.Contains(bouncedIds, targetMob.Id) && targetMob.PetMaster != nil
+		})
+
+		lenPlayerTargets := len(playerTargets)
+		lenMobTargets := len(mobTargets)
+
+		nodeTargets := make([]collision.Node, lenPlayerTargets+lenMobTargets)
+
+		for i, player := range playerTargets {
+			nodeTargets[i] = player
+		}
+
+		for i, mob := range mobTargets {
+			nodeTargets[lenPlayerTargets+i] = mob
+		}
+
+		return nodeTargets
+	} else {
+		mobTargets := wp.GetMobsWithCondition(func(targetMob *Mob) bool {
+			return !slices.Contains(bouncedIds, targetMob.Id) && targetMob.PetMaster == nil
+		})
+
+		lenMobTargets := len(mobTargets)
+
+		nodeTargets := make([]collision.Node, lenMobTargets)
+
+		for i, mob := range mobTargets {
+			nodeTargets[i] = mob
+		}
+
+		return nodeTargets
+	}
+}
+
 // WasEliminated determine if mob is eliminated.
 // This method exists because struct pointer mob reference doesnt nil'ed when removed.
 func (m *Mob) WasEliminated(wp *WavePool) bool {
@@ -201,7 +247,7 @@ var MobSpeed = map[native.MobType]float64{
 	native.MobTypeLadybugShiny: 2,
 
 	native.MobTypeStarfish:  2.8,
-	native.MobTypeJellyfish: 0.5,
+	native.MobTypeJellyfish: 1,
 	native.MobTypeBubble:    0,
 	native.MobTypeSponge:    0,
 	native.MobTypeShell:     0,

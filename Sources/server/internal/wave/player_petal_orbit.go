@@ -145,7 +145,7 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool) {
 	p.OrbitHistoryX[p.OrbitHistoryIndex] = p.X
 	p.OrbitHistoryY[p.OrbitHistoryIndex] = p.Y
 
-	historyTargetIdx := (p.OrbitHistoryIndex + 8) % HistorySize
+	historyTargetIdx := (p.OrbitHistoryIndex + 6) % HistorySize
 
 	targetX := p.OrbitHistoryX[historyTargetIdx]
 	targetY := p.OrbitHistoryY[historyTargetIdx]

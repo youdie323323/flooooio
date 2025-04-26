@@ -41,7 +41,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Slots: wave.StaticPetalSlots{
 				Surface: []wave.StaticPetal{
 					{
-						Type:   native.PetalTypeBasic,
+						Type:   native.PetalTypeBubble,
 						Rarity: native.RarityUltra,
 					},
 					{
@@ -58,10 +58,6 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 					},
 					{
 						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeFaster,
 						Rarity: native.RarityUltra,
 					},
 				},

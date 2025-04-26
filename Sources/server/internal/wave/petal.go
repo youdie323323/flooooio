@@ -1,8 +1,10 @@
 package wave
 
 import (
+	"slices"
 	"time"
 
+	"flooooio/internal/collision"
 	"flooooio/internal/native"
 )
 
@@ -45,6 +47,23 @@ func (p *Petal) GetMaxHealth() float64 {
 // This method exists because struct pointer petal reference doesnt nil'ed when removed.
 func (p *Petal) WasEliminated(wp *WavePool) bool {
 	return wp.FindPetal(*p.Id) == nil
+}
+
+// Ensure petal satisfies LightningEmitter
+var _ LightningEmitter = (*Petal)(nil) 
+
+// GetLightningBounceTargets returns targets to bounce.
+func (p *Petal) GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node {
+	mobTargets := wp.GetMobsWithCondition(func(targetMob *Mob) bool {
+		return !slices.Contains(bouncedIds, targetMob.Id) && targetMob.PetMaster == nil
+	})
+
+	nodeTargets := make([]collision.Node, len(mobTargets))
+	for i, mob := range mobTargets {
+		nodeTargets[i] = mob
+	}
+
+	return nodeTargets
 }
 
 const PetalSize = 6

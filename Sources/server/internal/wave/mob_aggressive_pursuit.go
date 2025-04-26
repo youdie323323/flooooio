@@ -16,6 +16,24 @@ const (
 	hornetMissileShootMS = 2000
 )
 
+const (
+	hornetCautionRadius    = 5
+	jellyfishCautionRadius = 3
+)
+
+type JudgementFunc = func(m *Mob, distanceToTarget float64) bool
+
+var cautionBehaviorStopJudger = map[native.MobType]JudgementFunc{
+	native.MobTypeHornet:    createCautionJudger(hornetCautionRadius),
+	native.MobTypeJellyfish: createCautionJudger(jellyfishCautionRadius),
+}
+
+func createCautionJudger(radiusMultiplier float64) JudgementFunc {
+	return func(m *Mob, distanceToTarget float64) bool {
+		return m.TargetEntity != nil && (m.CalculateRadius()*radiusMultiplier) > distanceToTarget
+	}
+}
+
 // FindNearestEntity finds the nearest entity from a slice of entities.
 func FindNearestEntity(me collision.Node, entities []collision.Node) collision.Node {
 	if len(entities) == 0 {
@@ -121,9 +139,9 @@ func predictInterceptionAngleMob(dx, dy float64, m *Mob, missileSpeed float64) *
 	return &angle
 }
 
-const avgFactor = (1 - PlayerMovementFriction*PlayerMovementFriction) / (2 * (1 - PlayerMovementFriction))
+const averageFactor = (1 - PlayerMovementMu*PlayerMovementMu) / (2 * (1 - PlayerMovementMu))
 
-// predictInterceptionAngleForPlayer calculates the angle to hit a player target with a missile.
+// predictInterceptionAnglePlayer calculates the angle to hit a player target with a missile.
 // Player movement uses velocity with friction instead of direct angle-based movement.
 func predictInterceptionAnglePlayer(dx, dy float64, p *Player, missileSpeed float64) *float64 {
 	// Use current velocity instead of angle-based speed
@@ -137,8 +155,8 @@ func predictInterceptionAnglePlayer(dx, dy float64, p *Player, missileSpeed floa
 
 	// Simplified approach: use average velocity over the prediction period
 	// Average velocity considering friction decay
-	vtx *= avgFactor
-	vty *= avgFactor
+	vtx *= averageFactor
+	vty *= averageFactor
 
 	relSpeedSq := missileSpeed*missileSpeed - (vtx*vtx + vty*vty)
 	posSq := dx*dx + dy*dy
@@ -166,11 +184,11 @@ func predictInterceptionAnglePlayer(dx, dy float64, p *Player, missileSpeed floa
 
 const mobDetectionRange = 15.
 
-func (m *Mob) detectRange() float64 {
+func (m *Mob) calculateDetectRange() float64 {
 	return mobDetectionRange * m.CalculateRadius()
 }
 
-func (m *Mob) loseRange() float64 {
+func (m *Mob) calculateLoseRange() float64 {
 	return (mobDetectionRange * 2) * m.CalculateRadius()
 }
 
@@ -238,7 +256,12 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 		distanceToTarget = math.Hypot(dx, dy)
 	}
 
-	isStop := m.TargetEntity != nil && (m.CalculateRadius()*5) > distanceToTarget
+	var isStop bool = false
+
+	judgementFunc, ok := cautionBehaviorStopJudger[m.Type]
+	if ok {
+		isStop = judgementFunc(m, distanceToTarget)
+	}
 
 	shouldTurnToTarget := true
 
@@ -332,7 +355,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 	}
 
 	// Lose target
-	if distanceToTarget > m.loseRange() {
+	if distanceToTarget > m.calculateLoseRange() {
 		m.TargetEntity = nil
 	}
 
@@ -369,7 +392,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 			dy := targetEntity.GetY() - m.Y
 			distance := math.Hypot(dx, dy)
 
-			if m.detectRange() > distance {
+			if m.calculateDetectRange() > distance {
 				if shouldTurnToTarget {
 					m.Angle = TurnAngleToTarget(
 						m.Angle,
@@ -401,7 +424,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 			dy := targetEntity.GetY() - m.Y
 			distance := math.Hypot(dx, dy)
 
-			if m.detectRange() > distance {
+			if m.calculateDetectRange() > distance {
 				if shouldTurnToTarget {
 					m.Angle = TurnAngleToTarget(
 						m.Angle,

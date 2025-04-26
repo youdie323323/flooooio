@@ -68,6 +68,11 @@ func NewEntity(
 	}
 }
 
+// LightningEmitter is lightning emitter (like jellyfish, lightning)
+type LightningEmitter interface {
+    GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node
+}
+
 const Tau = math.Pi * 2
 
 // GetRandomSafeCoordinate generates a random safe position
