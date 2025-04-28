@@ -2,8 +2,6 @@ package wave
 
 import (
 	"math"
-
-	"flooooio/internal/native"
 )
 
 // TraverseMobSegments traverse mob segments and return final segment.
@@ -36,18 +34,15 @@ func (m *Mob) MobBodyConnection(wp *WavePool) {
 	dx := m.ConnectingSegment.GetX() - m.X
 	dy := m.ConnectingSegment.GetY() - m.Y
 
-	mc := native.MobProfiles[m.Type].Collision
-
-	// Arc
-	segmentDistance := (mc.Radius * 2) * (m.Size / mc.Fraction)
+	segmentDia := m.CalculateRadius() * 2
 
 	currentDistance := math.Hypot(dx, dy)
 
-	if currentDistance > segmentDistance {
+	if currentDistance > segmentDia {
 		m.Magnitude = 0
 		m.Angle = math.Mod((math.Atan2(dy, dx)/Tau)*255+255, 255)
 
-		ratio := (currentDistance - segmentDistance) / currentDistance
+		ratio := (currentDistance - segmentDia) / currentDistance
 		m.X += dx * ratio
 		m.Y += dy * ratio
 	}
