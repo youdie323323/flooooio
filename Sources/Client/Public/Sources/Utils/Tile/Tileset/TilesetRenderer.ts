@@ -113,7 +113,7 @@ export default class TilesetRenderer {
     private renderTile(
         ctx: CanvasRenderingContext2D,
 
-        tileset: OffscreenCanvas,
+        tile: OffscreenCanvas,
 
         x: number,
         y: number,
@@ -126,7 +126,7 @@ export default class TilesetRenderer {
         padding: number = 1 / 3,
     ) {
         ctx.drawImage(
-            tileset,
+            tile,
             x, y,
             size + padding,
             size + padding,

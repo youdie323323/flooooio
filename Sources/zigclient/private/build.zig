@@ -16,6 +16,7 @@ pub fn build(b: *std.Build) void {
         .strip = true,
     });
 
+    exe.export_memory = true;
     exe.import_table = true;
     exe.entry = .disabled;
     exe.rdynamic = true;

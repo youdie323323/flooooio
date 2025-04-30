@@ -1,3 +1,5 @@
+import { Canvg, presets } from "canvg";
+
 type WasmExports = {
     memory: WebAssembly.Memory;
 
@@ -5,13 +7,12 @@ type WasmExports = {
 };
 
 (async function () {
-    const canvasContexts: Array<CanvasRenderingContext2D> = new Array();
+    const canvasContexts: Array<CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D> = new Array();
 
     const releasedPathIds: Array<number> = new Array();
     const paths: Array<Path2D> = new Array();
 
     const wasmModule = await WebAssembly.compileStreaming(fetch("./client.wasm"));
-    const memory = new WebAssembly.Memory({ initial: 256 });
 
     const textDecoder = new TextDecoder();
 
@@ -28,7 +29,7 @@ type WasmExports = {
         return new Uint8Array(wasmMemory.buffer, ptr, len);
     };
 
-    const table = new WebAssembly.Table({ initial: 2, element: "anyfunc" });
+    const table = new WebAssembly.Table({ element: "anyfunc", initial: 14 });
 
     const {
         exports: {
@@ -38,9 +39,10 @@ type WasmExports = {
         },
     } = await WebAssembly.instantiate(wasmModule, {
         env: {
-            memory,
             __indirect_function_table: table,
             requestAnimationFrame: (callbackPtr: number) => requestAnimationFrame(table.get(callbackPtr)),
+            setTimeout: (callbackPtr: number, ms: number) => setTimeout(table.get(callbackPtr), ms),
+            setInterval: (callbackPtr: number, ms: number) => setInterval(table.get(callbackPtr), ms),
             _throwError(ptr: number, length: number): never {
                 const errorMsg = decodeString(ptr, length);
                 throw new Error(errorMsg);
@@ -86,6 +88,7 @@ type WasmExports = {
             },
         },
 
+        // Canvas api
         0: {
             // Begin canvas api
 
@@ -97,10 +100,9 @@ type WasmExports = {
                 const ctx = canvas.getContext("2d");
                 if (!ctx) throw new Error("Failed to get 2D context");
 
-                const contextId = canvasContexts.length;
                 canvasContexts.push(ctx);
 
-                return contextId;
+                return canvasContexts.length - 1;
             },
 
             1: (ptr: number, length: number): number => {
@@ -117,131 +119,156 @@ type WasmExports = {
                 return canvasContexts.length - 1;
             },
 
-            2: (contextId: number): void => {
-                canvasContexts[contextId].save();
+            2: (ptr: number, length: number, width: number, height: number): number => {
+                const svg = decodeString(ptr, length);
+
+                const tempCanvas = document.createElement("canvas");
+                tempCanvas.width = width;
+                tempCanvas.height = height;
+                
+                const tempCtx = tempCanvas.getContext("2d");
+                if (!tempCtx) throw new Error("Failed to get 2D context");
+
+                Canvg.fromString(tempCtx, svg, presets.offscreen()).render();
+
+                canvasContexts.push(tempCtx);
+
+                return canvasContexts.length - 1;
             },
 
             3: (contextId: number): void => {
+                canvasContexts[contextId].save();
+            },
+
+            4: (contextId: number): void => {
                 canvasContexts[contextId].restore();
             },
 
-            4: (contextId: number, x: number, y: number): void => {
+            5: (contextId: number, x: number, y: number): void => {
                 canvasContexts[contextId].translate(x, y);
             },
 
-            5: (contextId: number, x: number, y: number): void => {
+            6: (contextId: number, x: number, y: number): void => {
                 canvasContexts[contextId].scale(x, y);
             },
 
-            6: (contextId: number, angle: number): void => {
+            7: (contextId: number, angle: number): void => {
                 canvasContexts[contextId].rotate(angle);
             },
 
-            7: (contextId: number): void => {
+            8: (contextId: number): void => {
                 canvasContexts[contextId].beginPath();
             },
 
-            8: (contextId: number): void => {
+            9: (contextId: number): void => {
                 canvasContexts[contextId].closePath();
             },
 
-            9: (contextId: number, x: number, y: number): void => {
+            10: (contextId: number, x: number, y: number): void => {
                 canvasContexts[contextId].moveTo(x, y);
             },
 
-            10: (contextId: number, x: number, y: number): void => {
+            11: (contextId: number, x: number, y: number): void => {
                 canvasContexts[contextId].lineTo(x, y);
             },
 
-            11: (contextId: number, ptr: number, length: number): void => {
+            12: (contextId: number, ptr: number, length: number): void => {
                 canvasContexts[contextId].font = decodeString(ptr, length);
             },
 
-            12: (contextId: number, ptr: number, len: number): void => {
+            13: (contextId: number, ptr: number, len: number): void => {
                 canvasContexts[contextId].fillStyle = decodeString(ptr, len);
             },
 
-            13: (contextId: number, ptr: number, len: number, x: number, y: number): void => {
+            14: (contextId: number, ptr: number, len: number, x: number, y: number): void => {
                 canvasContexts[contextId].fillText(decodeString(ptr, len), x, y);
             },
 
-            14: (contextId: number): void => {
+            15: (contextId: number): void => {
                 canvasContexts[contextId].fill();
             },
 
-            15: (contextId: number, pathId: number, isNonZero: number): void => {
+            16: (contextId: number, pathId: number, isNonZero: number): void => {
                 canvasContexts[contextId].fill(paths[pathId], isNonZero ? "nonzero" : "evenodd");
             },
 
-            16: (contextId: number): void => {
+            17: (contextId: number): void => {
                 canvasContexts[contextId].stroke();
             },
 
-            17: (contextId: number, pathId: number): void => {
+            18: (contextId: number, pathId: number): void => {
                 canvasContexts[contextId].stroke(paths[pathId]);
             },
 
-            18: (contextId: number): void => {
+            19: (contextId: number): void => {
                 canvasContexts[contextId].clip();
             },
 
-            19: (contextId: number, pathId: number): void => {
+            20: (contextId: number, pathId: number): void => {
                 canvasContexts[contextId].clip(paths[pathId]);
             },
 
-            20: (contextId: number, width: number): void => {
+            21: (contextId: number, width: number): void => {
                 canvasContexts[contextId].lineWidth = width;
             },
 
-            21: (contextId: number, ptr: number, len: number): void => {
+            22: (contextId: number, ptr: number, len: number): void => {
                 canvasContexts[contextId].lineCap = decodeString(ptr, len) as CanvasLineCap;
             },
 
-            22: (contextId: number, ptr: number, len: number): void => {
+            23: (contextId: number, ptr: number, len: number): void => {
                 canvasContexts[contextId].strokeStyle = decodeString(ptr, len);
             },
 
-            23: (contextId: number, ptr: number, len: number, x: number, y: number): void => {
+            24: (contextId: number, ptr: number, len: number, x: number, y: number): void => {
                 canvasContexts[contextId].strokeText(decodeString(ptr, len), x, y);
             },
 
-            24: (contextId: number, x: number, y: number, radius: number, startAngle: number, endAngle: number, counterclockwise: boolean): void => {
+            25: (contextId: number, x: number, y: number, radius: number, startAngle: number, endAngle: number, counterclockwise: boolean): void => {
                 canvasContexts[contextId].arc(x, y, radius, startAngle, endAngle, counterclockwise);
             },
 
-            25: (contextId: number, x: number, y: number, width: number, height: number): void => {
+            26: (contextId: number, x: number, y: number, width: number, height: number): void => {
                 canvasContexts[contextId].rect(x, y, width, height);
             },
 
-            26: (contextId: number, x: number, y: number, width: number, height: number): void => {
+            27: (contextId: number, x: number, y: number, width: number, height: number): void => {
                 canvasContexts[contextId].clearRect(x, y, width, height);
             },
 
-            27: (contextId: number, x: number, y: number, width: number, height: number): void => {
+            28: (contextId: number, x: number, y: number, width: number, height: number): void => {
                 canvasContexts[contextId].fillRect(x, y, width, height);
             },
 
-            28: (contextId: number, x: number, y: number, width: number, height: number): void => {
+            29: (contextId: number, x: number, y: number, width: number, height: number): void => {
                 canvasContexts[contextId].strokeRect(x, y, width, height);
             },
 
-            29: (contextId: number, ptr: number, len: number): void => {
+            30: (contextId: number, ptr: number, len: number): void => {
                 canvasContexts[contextId].textAlign = decodeString(ptr, len) as CanvasTextAlign;
             },
 
-            30: (contextId: number, ptr: number, len: number): void => {
+            31: (contextId: number, ptr: number, len: number): void => {
                 canvasContexts[contextId].textBaseline = decodeString(ptr, len) as CanvasTextBaseline;
             },
 
-            31: (contextId: number, cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number): void => {
+            32: (contextId: number, cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number): void => {
                 canvasContexts[contextId].bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
             },
 
-            32: (contextId: number, cpx: number, cpy: number, x: number, y: number): void => {
+            33: (contextId: number, cpx: number, cpy: number, x: number, y: number): void => {
                 canvasContexts[contextId].quadraticCurveTo(cpx, cpy, x, y);
             },
 
-            33: (contextId: number): void => {
+            34: (dstContextId: number, sourceContextId: number, dx: number, dy: number) => {
+                canvasContexts[dstContextId].drawImage(canvasContexts[sourceContextId].canvas, dx, dy);
+            },
+
+            35: (dstContextId: number, sourceContextId: number, dx: number, dy: number, dWidth: number, dHeight: number) => {
+                canvasContexts[dstContextId].drawImage(canvasContexts[sourceContextId].canvas, dx, dy, dWidth, dHeight);
+            },
+
+            36: (contextId: number): void => {
                 const context = canvasContexts[contextId];
                 const canvas = context.canvas;
 
@@ -252,13 +279,13 @@ type WasmExports = {
 
             // Begin path2d api
 
-            34: (pathIdToRelease: number) => {
+            37: (pathIdToRelease: number) => {
                 releasedPathIds.push(pathIdToRelease);
 
                 paths[pathIdToRelease] = null;
             },
 
-            35: () => {
+            38: () => {
                 const newPath = new Path2D;
                 if (0 < releasedPathIds.length) {
                     const reusePathId = releasedPathIds.pop();
@@ -273,29 +300,76 @@ type WasmExports = {
                 return paths.length - 1;
             },
 
-            36: (pathId: number, x: number, y: number) => {
+            39: (pathId: number, x: number, y: number) => {
                 paths[pathId].moveTo(x, y);
             },
 
-            37: (pathId: number, x: number, y: number) => {
+            40: (pathId: number, x: number, y: number) => {
                 paths[pathId].lineTo(x, y);
             },
 
-            38: (pathId: number, cpx: number, cpy: number, x: number, y: number) => {
+            41: (pathId: number, cpx: number, cpy: number, x: number, y: number) => {
                 paths[pathId].quadraticCurveTo(cpx, cpy, x, y);
             },
 
-            39: (pathId: number, cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number) => {
+            42: (pathId: number, cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number) => {
                 paths[pathId].bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
             },
 
-            40: (pathId: number) => {
+            43: (pathId: number) => {
                 paths[pathId].closePath();
             },
 
             // End path2d api
         },
+
+        // EventTarget api
+        1: {
+            0: (elementIdPtr: number, elementIdLength: number, eventTypePtr: number, eventTypeLength: number, callbackPtr: number): void => {
+                const elementId = decodeString(elementIdPtr, elementIdLength);
+                const eventType = decodeString(eventTypePtr, eventTypeLength);
+
+                const element = elementId ? document.getElementById(elementId) : window;
+                if (!element) throw new Error("Could not find element");
+
+                element.addEventListener(eventType, table.get(callbackPtr));
+            },
+
+            1: (elementIdPtr: number, elementIdLength: number, eventTypePtr: number, eventTypeLength: number, callbackPtr: number): void => {
+                const elementId = decodeString(elementIdPtr, elementIdLength);
+                const eventType = decodeString(eventTypePtr, eventTypeLength);
+
+                const element = elementId ? document.getElementById(elementId) : window;
+                if (!element) throw new Error("Could not find element");
+
+                element.removeEventListener(eventType, table.get(callbackPtr));
+            },
+
+            2: (elementIdPtr: number, elementIdLength: number, keyPtr: number, keyLength: number, value: number): void => {
+                const elementId = decodeString(elementIdPtr, elementIdLength);
+                const key = decodeString(keyPtr, keyLength);
+
+                const element = document.getElementById(elementId);
+                if (!element) throw new Error("Could not find element");
+
+                element[key] = value;
+            },
+
+            3: (elementIdPtr: number, elementIdLength: number, keyPtr: number, keyLength: number): number => {
+                const elementId = decodeString(elementIdPtr, elementIdLength);
+                const key = decodeString(keyPtr, keyLength);
+
+                const element = document.getElementById(elementId);
+                if (!element) throw new Error("Could not find element");
+
+                return Number(element[key]);
+            },
+        },
     }) as { exports: WasmExports };
 
-    init();
+    if (document.readyState === "loading") {
+        addEventListener("DOMContentLoaded", init);
+    } else {
+        init();
+    }
 })();
