@@ -72,6 +72,7 @@ const init = async () => {
         if (dy < 0.0125) {
             dy = 0.0125;
         }
+        
         if (dy > 1) {
             dy = 1;
         }
