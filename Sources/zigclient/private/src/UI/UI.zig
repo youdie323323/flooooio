@@ -1,16 +1,17 @@
 const std = @import("std");
-const CanvasRenderingContext2D = @import("../Dom/Canvas/CanvasRenderingContext2D.zig");
+const CanvasContext = @import("../Dom/Canvas/CanvasContext.zig");
 const Component = @import("./Layout/Components/Component.zig");
+const Color = @import("../Dom/Color.zig");
 const UI = @This();
 
-ctx: CanvasRenderingContext2D,
+ctx: CanvasContext,
 components: std.ArrayList(Component),
 mouseX: f64 = 0,
 mouseY: f64 = 0,
 hoveredComponent: ?*Component = null,
 clickedComponent: ?*Component = null,
 
-pub fn init(ctx: CanvasRenderingContext2D) UI {
+pub fn init(ctx: CanvasContext) UI {
     return .{
         .ctx = ctx,
         .components = std.ArrayList(Component).init(std.heap.page_allocator),
@@ -43,8 +44,9 @@ pub fn render(self: *UI) void {
     // Render all components
     for (self.components.items) |component| {
         if (component.isVisible) {
-            self.ctx.fillStyle("black");
-            self.ctx.fillRect(component.x, component.y, component.width, component.height);
+            self.ctx.fillColor(comptime Color.fromHex("000000"));
+            self.ctx.rect(component.x, component.y, component.width, component.height);
+            self.ctx.fill();
         }
     }
 }
