@@ -2,9 +2,8 @@ const std = @import("std");
 const builtin = std.builtin;
 const math = std.math;
 const allocator = std.heap.page_allocator;
-const Color = @import("./Dom/Color.zig");
 
-const EventTarget = @import("./Dom/EventTarget.zig");
+const dom = @import("./Dom/Event.zig");
 
 const requestAnimationFrame = @import("./Dom/animationFrame.zig").requestAnimationFrame;
 
@@ -22,17 +21,17 @@ var current_ui: UI = undefined;
 
 var tile_map: TileMap = undefined;
 
-fn onMouseMove() void {
-    EventTarget.setProperty("canvas", "width", EventTarget.getProperty("canvas", "clientWidth"));
-    EventTarget.setProperty("canvas", "height", EventTarget.getProperty("canvas", "clientHeight"));
+fn onResize(event: *const dom.Event) callconv(.C) void {
+    const output = std.fmt.allocPrint(allocator, "{}", .{event}) catch unreachable;
+    defer allocator.free(output);
+    
+    std.io.getStdOut().writeAll(output) catch unreachable;
 }
 
 export fn init() void {
     std.debug.print("init()", .{});
 
-    onMouseMove();
-
-    EventTarget.addEventListener("", "resize", onMouseMove);
+    dom.addGlobalEventListener(.window, .resize, onResize);
 
     ctx = CanvasContext.getCanvasContextFromElement("canvas", false);
 
@@ -43,25 +42,27 @@ export fn init() void {
     ctx_svg.drawSvg(
         \\<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 256 256">
         \\    <path fill="#E0D1AF" d="M0,0h256v256H0V0z"/>
-        \\    <polyline fill="#D7C9A8" points="127.4,217.2 107.8,226.2 116.6,246 136.4,237.2 127.4,217.2 "/>
-        \\    <polyline fill="#D7C9A8" points="215.8,222 218.2,200.2 196.4,198 194.2,219.8 215.8,222 "/>
-        \\    <polyline fill="#D7C9A8" points="61.2,51.4 59,73 80.6,75.2 82.8,53.6 61.2,51.4 "/>
-        \\    <polyline fill="#D7C9A8" points="118.4,34.8 115,13.4 93.6,16.8 97,38.2 118.4,34.8 "/>
-        \\    <polygon fill="#D7C9A8" points="184.6,26.2 167,13.4 154.2,31.2 172,43.8 "/>
+        \\    <polyline fill="#D7C9A8" points="84.2,214.9 76.4,235.1 96.5,243.1 104.6,223 84.2,214.9 "/>
+        \\    <polyline fill="#D7C9A8" points="226.2,171.7 215.4,152.6 196.4,163.6 207.3,182.6 226.2,171.7 "/>
+        \\    <polyline fill="#D7C9A8" points="19.8,81.8 36.3,96 50.4,79.6 34,65.4 19.8,81.8 "/>
+        \\    <polyline fill="#D7C9A8" points="111.4,55 93.6,67.4 106,85.2 123.8,72.8 111.4,55 "/>
+        \\    <polygon fill="#D7C9A8" points="104.6,14.9 82.8,14.7 82.7,36.6 104.5,36.5 "/>
         \\    <path fill="#ECDCB8" d="M256,256v-91c-18.7,24.2-27.9,61.2-39.2,91H256"/>
         \\    <path fill="#ECDCB8" d="M29.8,29.2C33,18.9,36.7,9.2,41,0H0v92.6C14.3,73.5,23.5,53.3,29.8,29.2"/>
-        \\    <path fill="#ECDCB8" d="M216.8,0c-21.7,48.5-71.6,86.2-118.3,98.3S23.7,131,0,165v91h41c23.9-52.5,68.7-90,117.3-99.1 s75.4-34.8,97.7-64.3V0H216.8"/>
-        \\    <polyline fill="#F3E2BE" points="53.6,153.4 36.2,140.8 23.4,158.2 41,171 53.6,153.4 "/>
-        \\    <polyline fill="#F3E2BE" points="52.8,181.4 34.4,187.8 40.6,206.2 59,200 52.8,181.4 "/>
-        \\    <polyline fill="#F3E2BE" points="220.8,83.8 235.8,68 220,53 205,68.8 220.8,83.8 "/>
-        \\    <polyline fill="#F3E2BE" points="188.8,99.2 181,119.6 201.6,127.6 209.2,107 188.8,99.2 "/>
-        \\    <polygon fill="#F3E2BE" points="140.2,120.8 154,137.6 171,123.8 157,107 "/>
+        \\    <path fill="#ECDCB8" d="M216.8,0C195.1,48.5,158,105.2,98.5,98.3S23.7,131,0,165v91h41c23.9-52.5,51.4-81,117.3-99.1 s75.4-34.8,97.7-64.3V0H216.8"/>
+        \\    <polyline fill="#F3E2BE" points="74.7,150 53.8,145.3 48.9,166.4 70.2,171.1 74.7,150 "/>
+        \\    <polyline fill="#F3E2BE" points="27.4,213.1 12.9,226.1 25.7,240.7 40.3,227.9 27.4,213.1 "/>
+        \\    <polyline fill="#F3E2BE" points="245.9,75.8 233.4,58 215.6,70.4 228.1,88.3 245.9,75.8 "/>
+        \\    <polyline fill="#F3E2BE" points="175.1,107.1 184.3,126.9 204.4,117.6 194.8,97.8 175.1,107.1 "/>
+        \\    <polygon fill="#F3E2BE" points="117.1,133.1 138.5,137 142.5,115.5 121,111.7 "/>
+        \\    <polyline fill="#D7C9A8" points="177.6,25.3 161.7,10.1 146.7,26.1 162.6,41.1 177.6,25.3 "/>
+        \\    <polyline fill="#D7C9A8" points="159.6,204.5 148.8,223.2 167.4,234.3 178.5,215.7 159.6,204.5 "/>
         \\</svg>
     );
 
     tile_map = TileMap.init(allocator, .{
-        .tile_size = 128 * 4,
-        .chunk_border = @splat(2),
+        .tile_size = comptime 128 * 4,
+        .chunk_border = comptime @splat(2),
         .layers = &[_]TileMap.TileMapLayer{
             TileMap.TileMapLayer{
                 .tiles = &[_]CanvasContext{ctx_svg},
@@ -70,6 +71,11 @@ export fn init() void {
                     &[_]u8{ 0, 0 },
                 },
             },
+        },
+        .debug = .{
+            .show_chunk_borders = true,
+            .show_origin = true,
+            .show_tile_borders = true,
         },
     }) catch |err| {
         std.debug.print("Error: {}", .{err});
@@ -88,7 +94,7 @@ export fn init() void {
     std.debug.print("{d}", .{Zoop.getField(psuperman, "age", u16).*});
     std.debug.print("{s}", .{psuperman.super.name});
 
-   draw(1);
+    draw(1);
 }
 
 var i: f64 = 0;
@@ -109,23 +115,6 @@ fn draw(_: f64) callconv(.C) void {
         position,
         1,
     );
-
-    ctx.save();
-
-    ctx.scale(1, 1);
-
-    ctx.translate(
-        -position[0] + screen[0] / 2,
-        -position[1] + screen[1] / 2,
-    );
-
-    ctx.fillColor(comptime Color.fromHex("ff0000"));
-    
-    ctx.beginPath();
-    ctx.arc(0, 0, 5, 0, math.tau, false);
-    ctx.fill();
-
-    ctx.restore();
 
     i += 0.005;
 

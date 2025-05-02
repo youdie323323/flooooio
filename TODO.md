@@ -1,2 +1,0 @@
- - Separate files of Shared folder into game folder
- - Remove utils folder

@@ -2,7 +2,7 @@
 const std = @import("std");
 const Path2D = @import("Path2D.zig");
 const bindgen = @import("../Bindgen/lib.zig");
-const Color = @import("../Color.zig");
+const Color = @import("./Color.zig");
 const CanvasContext = @This();
 
 pub const ContextId = u16;
@@ -169,8 +169,8 @@ pub inline fn setCenterToTextAlign(self: CanvasContext) void {
     @"40"(self.id);
 }
 
-pub inline fn setTextAlign(self: CanvasContext, a: []const u8) void {
-    @"41"(self.id, a.ptr, a.len);
+pub inline fn setTextAlign(self: CanvasContext, @"align": []const u8) void {
+    @"41"(self.id, @"align".ptr, @"align".len);
 }
 
 pub inline fn setButtToLineCap(self: CanvasContext) void {

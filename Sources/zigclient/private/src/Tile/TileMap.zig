@@ -3,7 +3,7 @@ const math = std.math;
 const Allocator = std.mem.Allocator;
 const CanvasContext = @import("../Dom/Canvas/CanvasContext.zig");
 const LruCache = @import("../zig-caches/lru/LruCache.zig").LruCache;
-const Color = @import("../Dom/Color.zig");
+const Color = @import("../Dom/Canvas/Color.zig");
 const TileMap = @This();
 
 pub const Vector2 = @Vector(2, f32);
@@ -26,16 +26,23 @@ pub const TileMapLayer = struct {
     data: []const []const u8,
 };
 
+pub const TileMapDebugOptions = struct {
+    show_origin: bool = false,
+    show_chunk_borders: bool = false,
+    show_tile_borders: bool = false,
+};
+
 pub const TileMapOptions = struct {
     clamp_position_to_bounds: bool = false,
     tile_size: u32 = 16,
     layers: []const TileMapLayer,
-    chunk_size: Vector2 = Vector2{ 4, 3 },
+    chunk_size: @Vector(2, u8) = .{ 4, 3 },
     chunk_border: Vector2 = @splat(1),
     chunk_buffer_max_items: u32 = 64,
     min_scale: ?f32 = null,
     max_scale: ?f32 = null,
     bounds: ?Bounds = null,
+    debug: ?TileMapDebugOptions = null,
 };
 
 inline fn hashVector(vec: Vector2) u64 {
@@ -132,12 +139,15 @@ inline fn drawChunk(
     _: *TileMap,
     ctx: CanvasContext,
     chunk: Chunk,
+    size: Vector2,
     position: Vector2,
 ) void {
-    ctx.copyCanvas(
+    ctx.copyCanvasScaled(
         chunk,
         position[0],
         position[1],
+        size[0] + 1,
+        size[1] + 1,
     );
 }
 
@@ -152,7 +162,7 @@ pub fn draw(
 
     const chunk_border = options.chunk_border;
 
-    const chunk_size = options.chunk_size;
+    const chunk_size: Vector2 = @floatFromInt(options.chunk_size);
 
     const tile_size: f32 = @floatFromInt(options.tile_size);
 
@@ -190,17 +200,22 @@ pub fn draw(
     } else {
         actual_position = position;
     }
-    
+
     const screen_center_chunk: Vector2 = @floor(actual_position / absolute_chunk_size_vector);
 
-    const half_screen_size_in_chunks: Vector2 = @ceil((halfone_scalar_vector * screen) / (actual_scale_vector * absolute_chunk_size_vector));
+    const half_screen_size_in_chunks: Vector2 = @ceil(
+        // Original calculation: (screen / (actual_scale_vector * absolute_chunk_size_vector)) * halfone_scalar_vector
+        (halfone_scalar_vector * screen) / (actual_scale_vector * absolute_chunk_size_vector),
+    );
 
     const top_left_chunk: Vector2 = (screen_center_chunk - half_screen_size_in_chunks) - chunk_border;
     const bottom_right_chunk: Vector2 = (screen_center_chunk + half_screen_size_in_chunks) + chunk_border;
 
-    const translate_position: Vector2 = (-actual_position) + half_screen_scaled;
+    const translate_position: Vector2 = half_screen_scaled - actual_position;
 
     ctx.save();
+
+    ctx.setImageSmoothingEnabled(false);
 
     ctx.scale(actual_scale, actual_scale);
     ctx.translate(
@@ -217,12 +232,12 @@ pub fn draw(
                 y_chunk,
             };
 
-            const chunk_absolute_position = chunk_position * absolute_chunk_size_vector;
+            const absolute_chunk_position = chunk_position * absolute_chunk_size_vector;
 
             const chunk_hash = hashVector(chunk_position);
 
             if (self.chunk_buffer.get(chunk_hash)) |chunk| {
-                self.drawChunk(ctx, chunk, chunk_absolute_position);
+                self.drawChunk(ctx, chunk, absolute_chunk_size_vector, absolute_chunk_position);
             } else {
                 const chunk = self.generateChunk(
                     chunk_position,
@@ -233,10 +248,121 @@ pub fn draw(
 
                 _ = self.chunk_buffer.put(chunk_hash, chunk);
 
-                self.drawChunk(ctx, chunk, chunk_absolute_position);
+                self.drawChunk(ctx, chunk, absolute_chunk_size_vector, absolute_chunk_position);
+            }
+        }
+    }
+
+    if (self.options.debug) |debug| {
+        if (debug.show_tile_borders) {
+            const top_left_tile = @floor((screen_center_chunk - half_screen_size_in_chunks - one_scalar_vector) * chunk_size);
+            const bottom_right_tile = @ceil((screen_center_chunk + half_screen_size_in_chunks + one_scalar_vector) * chunk_size);
+
+            ctx.strokeColor(comptime Color.fromHex("ffa500")); // orange
+            ctx.setLineWidth(2);
+
+            var y: f32 = top_left_tile[1];
+            while (y < bottom_right_tile[1]) : (y += 1) {
+                const start = Vector2{
+                    actual_position[0] - screen[0] / (actual_scale * 2),
+                    y * tile_size,
+                };
+                const end = Vector2{
+                    actual_position[0] + screen[0] / (actual_scale * 2),
+                    y * tile_size,
+                };
+
+                drawLine(ctx, start, end);
+            }
+
+            var x: f32 = top_left_tile[0];
+            while (x < bottom_right_tile[0]) : (x += 1) {
+                const start = Vector2{
+                    x * tile_size,
+                    actual_position[1] - screen[1] / (actual_scale * 2),
+                };
+                const end = Vector2{
+                    x * tile_size,
+                    actual_position[1] + screen[1] / (actual_scale * 2),
+                };
+
+                drawLine(ctx, start, end);
+            }
+        }
+
+        if (debug.show_chunk_borders) {
+            ctx.strokeColor(comptime Color.fromHex("ffff00")); // yellow
+            ctx.setLineWidth(4);
+
+            var y: f32 = top_left_chunk[1];
+            while (y < bottom_right_chunk[1]) : (y += 1) {
+                const start = Vector2{
+                    actual_position[0] - screen[0] / (actual_scale * 2),
+                    y * absolute_chunk_size_vector[1],
+                };
+                const end = Vector2{
+                    actual_position[0] + screen[0] / (actual_scale * 2),
+                    y * absolute_chunk_size_vector[1],
+                };
+
+                drawLine(ctx, start, end);
+            }
+
+            var x: f32 = top_left_chunk[0];
+            while (x < bottom_right_chunk[0]) : (x += 1) {
+                const start = Vector2{
+                    x * absolute_chunk_size_vector[0],
+                    actual_position[1] - screen[1] / (actual_scale * 2),
+                };
+                const end = Vector2{
+                    x * absolute_chunk_size_vector[0],
+                    actual_position[1] + screen[1] / (actual_scale * 2),
+                };
+
+                drawLine(ctx, start, end);
+            }
+        }
+
+        if (debug.show_origin) {
+            const in_view = pointInBounds(
+                zero_vector,
+                top_left_chunk,
+                bottom_right_chunk,
+            );
+
+            if (in_view) {
+                drawCross(ctx, zero_vector, 20);
             }
         }
     }
 
     ctx.restore();
+}
+
+fn drawLine(ctx: CanvasContext, start: Vector2, end: Vector2) void {
+    ctx.beginPath();
+    ctx.moveTo(start[0], start[1]);
+    ctx.lineTo(end[0], end[1]);
+    ctx.stroke();
+}
+
+fn drawCross(ctx: CanvasContext, position: Vector2, size: f32) void {
+    const half_size = @ceil(size / 2);
+
+    ctx.strokeColor(comptime Color.fromHex("00ffff")); // cyan
+    ctx.setLineWidth(2);
+
+    ctx.beginPath();
+    ctx.moveTo(position[0] - half_size, position[1] - half_size);
+    ctx.lineTo(position[0] + half_size, position[1] + half_size);
+    ctx.moveTo(position[0] - half_size, position[1] + half_size);
+    ctx.lineTo(position[0] + half_size, position[1] - half_size);
+    ctx.stroke();
+}
+
+fn pointInBounds(point: Vector2, top_left: Vector2, bottom_right: Vector2) bool {
+    return point[0] >= top_left[0] and
+        point[1] >= top_left[1] and
+        point[0] < bottom_right[0] and
+        point[1] < bottom_right[1];
 }

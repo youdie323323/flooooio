@@ -49,7 +49,7 @@ export const calculateWaveLength = (x: number) => Math.max(60, x ** 0.2 * 18.928
 
 interface LightningBounce {
     points: Array<[number, number]>;
-    a: number;
+    t: number;
 
     path?: Path2D;
 }
@@ -485,7 +485,7 @@ export default class UIGame extends AbstractUI {
 
                     const bounce: LightningBounce = {
                         points: [],
-                        a: 1,
+                        t: 1,
                     };
 
                     for (let j = 0; j < positionsCount; j++) {
@@ -1147,15 +1147,15 @@ export default class UIGame extends AbstractUI {
                 for (let i = lightningBounces.length - 1; i >= 0; i--) {
                     const bounce = lightningBounces[i];
 
-                    bounce.a -= deltaTime / 500;
-                    if (bounce.a <= 0) {
+                    bounce.t -= deltaTime / 500;
+                    if (bounce.t <= 0) {
                         lightningBounces.splice(i, 1);
 
                         continue;
                     }
 
-                    ctx.lineWidth = bounce.a * 4;
-                    ctx.globalAlpha = bounce.a;
+                    ctx.lineWidth = bounce.t * 4;
+                    ctx.globalAlpha = bounce.t;
 
                     ctx.stroke(bounce.path);
                 }

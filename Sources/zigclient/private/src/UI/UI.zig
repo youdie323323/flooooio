@@ -1,7 +1,7 @@
 const std = @import("std");
 const CanvasContext = @import("../Dom/Canvas/CanvasContext.zig");
 const Component = @import("./Layout/Components/Component.zig");
-const Color = @import("../Dom/Color.zig");
+const Color = @import("../Dom/Canvas/Color.zig");
 const UI = @This();
 
 ctx: CanvasContext,
