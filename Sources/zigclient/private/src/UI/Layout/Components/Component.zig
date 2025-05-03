@@ -3,9 +3,9 @@ const Component = @This();
 
 x: f32 = 0,
 y: f32 = 0,
-width: f32 = 0,
-height: f32 = 0,
-isVisible: bool = true,
+w: f32 = 0,
+h: f32 = 0,
+is_visible: bool = true,
 
 pub fn init() Component {
     return .{};
@@ -19,12 +19,12 @@ pub fn setY(self: *Component, y: f32) void {
     self.y = y;
 }
 
-pub fn setWidth(self: *Component, width: f32) void {
-    self.width = width;
+pub fn setW(self: *Component, w: f32) void {
+    self.w = w;
 }
 
-pub fn setHeight(self: *Component, height: f32) void {
-    self.height = height;
+pub fn setH(self: *Component, h: f32) void {
+    self.h = h;
 }
 
 pub fn destroy(_: *Component) void {}

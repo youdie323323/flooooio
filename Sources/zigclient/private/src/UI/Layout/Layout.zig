@@ -2,7 +2,7 @@ const std = @import("std");
 const Layout = @This();
 
 const NumberOrPercentage = union(enum) {
-    number: f64,
+    number: f32,
     percentage: []const u8,
 };
 
@@ -13,84 +13,90 @@ const LayoutOptions = struct {
     w: NumberOrPercentage,
     h: NumberOrPercentage,
 
-    invertXCoordinate: bool = false,
-    invertYCoordinate: bool = false,
+    invert_x_coordinate: bool = false,
+    invert_y_coordinate: bool = false,
 
-    alignFromCenterX: bool = false,
-    alignFromCenterY: bool = false,
+    align_from_center_x: bool = false,
+    align_from_center_y: bool = false,
 };
 
 const LayoutContext = struct {
-    containerWidth: f64,
-    containerHeight: f64,
+    container_w: f32,
+    container_h: f32,
 
-    originX: f64 = 0,
-    originY: f64 = 0,
+    origin_x: f32 = 0,
+    origin_y: f32 = 0,
 };
 
 const LayoutResult = struct {
-    x: f64,
-    y: f64,
-    w: f64,
-    h: f64,
+    x: f32,
+    y: f32,
+    w: f32,
+    h: f32,
 };
 
-fn parseSize(size: NumberOrPercentage, containerSize: f64) f64 {
+fn parseSize(size: NumberOrPercentage, container_size: f32) f32 {
     return switch (size) {
         .number => |n| n,
         .percentage => |p| blk: {
-            const percentage = std.fmt.parseFloat(f64, p) catch 0;
-            break :blk (percentage / 100.0) * containerSize;
+            const percentage = std.fmt.parseFloat(f32, p) catch 0;
+            break :blk (percentage / 100.0) * container_size;
         },
     };
 }
 
 pub fn layout(options: LayoutOptions, context: LayoutContext) LayoutResult {
-    const w = parseSize(options.w, context.containerWidth);
-    const h = parseSize(options.h, context.containerHeight);
+    const w = parseSize(options.w, context.container_w);
+    const h = parseSize(options.h, context.container_h);
 
-    var x: f64 = 0;
-    var y: f64 = 0;
+    var x: f32 = 0;
+    var y: f32 = 0;
 
     // Handle X coordinate
-    if (options.x) |xVal| {
-        switch (xVal) {
+    if (options.x) |x_val| {
+        switch (x_val) {
             .percentage => |p| {
-                x = parseSize(.{ .percentage = p }, context.containerWidth);
+                x = parseSize(.{ .percentage = p }, context.container_w);
             },
+            
             .number => |n| {
                 x = n;
-                if (options.invertXCoordinate) {
-                    x = context.containerWidth - x;
+
+                if (options.invert_x_coordinate) {
+                    x = context.container_w - x;
                 }
-                if (options.alignFromCenterX) {
-                    x = (context.containerWidth / 2) + x;
+
+                if (options.align_from_center_x) {
+                    x = (context.container_w / 2) + x;
                 }
             },
         }
     }
 
     // Handle Y coordinate
-    if (options.y) |yVal| {
-        switch (yVal) {
+    if (options.y) |y_val| {
+        switch (y_val) {
             .percentage => |p| {
-                y = parseSize(.{ .percentage = p }, context.containerHeight);
+                y = parseSize(.{ .percentage = p }, context.container_h);
             },
+
             .number => |n| {
                 y = n;
-                if (options.invertYCoordinate) {
-                    y = context.containerHeight - y;
+
+                if (options.invert_y_coordinate) {
+                    y = context.container_h - y;
                 }
-                if (options.alignFromCenterY) {
-                    y = (context.containerHeight / 2) + y;
+
+                if (options.align_from_center_y) {
+                    y = (context.container_h / 2) + y;
                 }
             },
         }
     }
 
     return LayoutResult{
-        .x = x + context.originX,
-        .y = y + context.originY,
+        .x = x + context.origin_x,
+        .y = y + context.origin_y,
         .w = w,
         .h = h,
     };

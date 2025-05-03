@@ -1,20 +1,21 @@
 const std = @import("std");
-const CanvasContext = @import("../Dom/Canvas/CanvasContext.zig");
+const CanvasContext = @import("../Interop/Canvas/CanvasContext.zig");
 const Component = @import("./Layout/Components/Component.zig");
-const Color = @import("../Dom/Canvas/Color.zig");
+const Color = @import("../Interop/Canvas/Color.zig");
+const Allocator = std.mem.Allocator;
 const UI = @This();
 
 ctx: CanvasContext,
 components: std.ArrayList(Component),
-mouseX: f64 = 0,
-mouseY: f64 = 0,
-hoveredComponent: ?*Component = null,
-clickedComponent: ?*Component = null,
+mouse_x: f32 = 0,
+mouse_y: f32 = 0,
+hovered_component: ?*Component = null,
+clicked_component: ?*Component = null,
 
-pub fn init(ctx: CanvasContext) UI {
+pub fn init(allocator: Allocator, ctx: CanvasContext) UI {
     return .{
         .ctx = ctx,
-        .components = std.ArrayList(Component).init(std.heap.page_allocator),
+        .components = std.ArrayList(Component).init(allocator),
     };
 }
 
@@ -32,9 +33,9 @@ pub fn removeComponent(self: *UI, component: Component) void {
     }
 }
 
-fn isPointInComponent(_: *UI, x: f64, y: f64, component: *Component) bool {
-    return x >= component.x and x <= component.x + component.width and
-        y >= component.y and y <= component.y + component.height;
+fn isPointInComponent(x: f32, y: f32, component: *Component) bool {
+    return x >= component.x and x <= component.x + component.w and
+        y >= component.y and y <= component.y + component.h;
 }
 
 pub fn render(self: *UI) void {
@@ -43,9 +44,9 @@ pub fn render(self: *UI) void {
 
     // Render all components
     for (self.components.items) |component| {
-        if (component.isVisible) {
+        if (component.is_visible) {
             self.ctx.fillColor(comptime Color.fromHex("000000"));
-            self.ctx.rect(component.x, component.y, component.width, component.height);
+            self.ctx.rect(component.x, component.y, component.w, component.h);
             self.ctx.fill();
         }
     }

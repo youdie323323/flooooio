@@ -90,11 +90,15 @@ pub inline fn strokeRect(self: CanvasContext, w: f32, h: f32) void {
 }
 
 pub inline fn fillColor(self: CanvasContext, color: Color) void {
-    @"21"(self.id, color.r, color.g, color.b);
+    const r, const g, const b = color.rgb;
+
+    @"21"(self.id, r, g, b);
 }
 
 pub inline fn strokeColor(self: CanvasContext, color: Color) void {
-    @"22"(self.id, color.r, color.g, color.b);
+    const r, const g, const b = color.rgb;
+
+    @"22"(self.id, r, g, b);
 }
 
 pub inline fn setGlobalAlpha(self: CanvasContext, alpha: f32) void {
@@ -130,11 +134,11 @@ pub inline fn bezierCurveTo(self: CanvasContext, cp1x: f32, cp1y: f32, cp2x: f32
 }
 
 pub inline fn arc(self: CanvasContext, x: f32, y: f32, radius: f32, startAngle: f32, endAngle: f32, counterclockwise: bool) void {
-    @"31"(self.id, x, y, radius, startAngle, endAngle, @intFromBool(counterclockwise));
+    @"31"(self.id, x, y, radius, startAngle, endAngle, comptime @intFromBool(counterclockwise));
 }
 
 pub inline fn ellipse(self: CanvasContext, x: f32, y: f32, radiusX: f32, radiusY: f32, rotation: f32, startAngle: f32, endAngle: f32, counterclockwise: bool) void {
-    @"32"(self.id, x, y, radiusX, radiusY, rotation, startAngle, endAngle, @intFromBool(counterclockwise));
+    @"32"(self.id, x, y, radiusX, radiusY, rotation, startAngle, endAngle, comptime @intFromBool(counterclockwise));
 }
 
 pub inline fn setLineWidth(self: CanvasContext, width: f32) void {
@@ -227,6 +231,10 @@ pub inline fn setMultiplyToGlobalCompositeOperation(self: CanvasContext) void {
 
 pub inline fn setImageSmoothingEnabled(self: CanvasContext, comptime smoothing: bool) void {
     @"55"(self.id, comptime @intFromBool(smoothing));
+}
+
+pub inline fn setSize(self: CanvasContext, w: u16, h: u16) void {
+    @"56"(self.id, w, h);
 }
 
 /// Creates the context.
@@ -341,15 +349,17 @@ extern "0" fn @"53"(context_id: ContextId) void;
 extern "0" fn @"54"(context_id: ContextId) void;
 /// Sets imageSmoothingEnabled on context.
 extern "0" fn @"55"(context_id: ContextId, smoothing: u8) void;
+/// Sets width and height to canvas.
+extern "0" fn @"56"(context_id: ContextId, w: u16, h: u16) void;
 
 pub inline fn createCanvasContext(width: f32, height: f32, comptime is_discardable: bool) CanvasContext {
-    const context_id = @"0"(width, height, @intFromBool(is_discardable));
+    const context_id = @"0"(width, height, comptime @intFromBool(is_discardable));
 
     return CanvasContext.init(context_id);
 }
 
 pub inline fn getCanvasContextFromElement(comptime id: []const u8, comptime alpha: bool) CanvasContext {
-    const context_id = @"1"(id.ptr, id.len, @intFromBool(alpha));
+    const context_id = @"1"(id.ptr, id.len, comptime @intFromBool(alpha));
 
     return CanvasContext.init(context_id);
 }

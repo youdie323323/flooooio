@@ -1,6 +1,7 @@
 import type WebAssemblyPseudoModule from "./WebAssemblyPseudoModule";
 import { Canvg, presets } from "canvg";
 import type { PseudoModuleFactory, PseudoModuleFactoryArguments } from "./WebAssemblyPseudoModule";
+import { table } from "../Application";
 
 const contexts: Array<CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D> = new Array();
 const destroyedContextIds: Array<number> = new Array();
@@ -378,17 +379,25 @@ export const createContextApiPseudoModule = ((...[, { decodeString }]: PseudoMod
                 contexts[contextId].imageSmoothingEnabled = !!smoothing;
             },
 
+            56: (contextId: number, w: number, h: number) => {
+                const canvas = contexts[contextId].canvas;
+
+                canvas.width = w;
+                canvas.height = h;
+            },
+
+
             // End canvas api
 
             // Begin path2d api
 
-            56: (pathIdToRelease: number) => {
+            57: (pathIdToRelease: number) => {
                 destroyedPathIds.push(pathIdToRelease);
 
                 paths[pathIdToRelease] = null;
             },
 
-            57: () => {
+            58: () => {
                 const newPath = new Path2D;
                 if (0 < destroyedPathIds.length) {
                     const reusePathId = destroyedPathIds.pop();
@@ -403,27 +412,29 @@ export const createContextApiPseudoModule = ((...[, { decodeString }]: PseudoMod
                 return paths.length - 1;
             },
 
-            58: (pathId: number, x: number, y: number) => {
+            59: (pathId: number, x: number, y: number) => {
                 paths[pathId].moveTo(x, y);
             },
 
-            59: (pathId: number, x: number, y: number) => {
+            60: (pathId: number, x: number, y: number) => {
                 paths[pathId].lineTo(x, y);
             },
 
-            60: (pathId: number, cpx: number, cpy: number, x: number, y: number) => {
+            61: (pathId: number, cpx: number, cpy: number, x: number, y: number) => {
                 paths[pathId].quadraticCurveTo(cpx, cpy, x, y);
             },
 
-            61: (pathId: number, cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number) => {
+            62: (pathId: number, cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number) => {
                 paths[pathId].bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
             },
 
-            62: (pathId: number) => {
+            63: (pathId: number) => {
                 paths[pathId].closePath();
             },
 
             // End path2d api
+
+            64: (callbackPtr: number) => requestAnimationFrame(table.get(callbackPtr)),
         },
     } as const satisfies WebAssemblyPseudoModule;
 }) satisfies PseudoModuleFactory;

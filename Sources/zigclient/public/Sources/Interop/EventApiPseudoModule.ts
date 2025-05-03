@@ -1,3 +1,4 @@
+import { table } from "../Application";
 import type WebAssemblyPseudoModule from "./WebAssemblyPseudoModule";
 import type { PseudoModuleFactory, PseudoModuleFactoryArguments } from "./WebAssemblyPseudoModule";
 
@@ -32,12 +33,18 @@ const ZIG_EVENT_TYPE_TO_EVENT_TYPE = {
     [ZigEventType.WHEEL]: "wheel",
 } as const satisfies Record<ZigEventType, string>;
 
+type Entries<T> = (keyof T extends infer U ? U extends keyof T ? [U, T[U]] : never : never)[];
+
+function getEntries<T extends Record<PropertyKey, PropertyKey>>(obj: T): Entries<T> {
+    return Object.entries(obj) as Entries<T>;
+}
+
 const swapKeyValue = <K extends PropertyKey, V extends PropertyKey>(
     object: Record<K, V>,
 ): Record<V, K> =>
-    Object.entries(object)
+    getEntries(object)
         .reduce((swapped, [key, value]) => (
-            { ...swapped, [value as PropertyKey]: key }
+            { ...swapped, [value as V]: key }
         ), {} as Record<V, K>);
 
 const EVENT_TYPE_TO_ZIG_EVENT_TYPE = swapKeyValue(ZIG_EVENT_TYPE_TO_EVENT_TYPE);
@@ -103,7 +110,7 @@ function createWasmEvent(e: Event): ZigEvent {
     return event;
 }
 
-function getModifiers(e: MouseEvent | KeyboardEvent): number {
+function getModifiers(e: KeyboardEvent | MouseEvent | TouchEvent): number {
     let modifiers = 0;
 
     if (e.shiftKey) modifiers |= 1;
@@ -126,7 +133,7 @@ function getMouseButton(button: number): ZigMouseButton {
     }
 }
 
-export const createEventApiPseudoModule = ((...[{ table }, { decodeString }]: PseudoModuleFactoryArguments): WebAssemblyPseudoModule => {
+export const createEventApiPseudoModule = ((...[, { decodeString }]: PseudoModuleFactoryArguments): WebAssemblyPseudoModule => {
     return {
         moduleName: "1",
         moduleImports: {

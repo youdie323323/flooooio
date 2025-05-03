@@ -64,7 +64,7 @@ export interface TitleRenderingOptions extends RenderingConfig {
     translateY: number;
 }
 
-export default class TilesetRenderer {
+export default class TileRenderer {
     static async prepareTileset(
         biome: keyof typeof BIOME_SVG_TILESET,
     ): Promise<Tileset> {

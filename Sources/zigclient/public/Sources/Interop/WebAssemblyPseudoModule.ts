@@ -8,7 +8,8 @@ export type PseudoModuleFactory = (...arg: PseudoModuleFactoryArguments) => WebA
 export type PseudoModuleFactoryArguments = [
     // Direct WASM values
     {
-        table: WebAssembly.Table;
+        // This can passed if imported table from JS side, but currently exporting table from wasm
+        // table: WebAssembly.Table;
     },
     // Utility functions
     {

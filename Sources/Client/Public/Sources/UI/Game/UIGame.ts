@@ -19,7 +19,7 @@ import UIGameInventory from "./UIGameInventory";
 import { Centering } from "../Layout/Extensions/ExtensionCentering";
 import Gauge from "../Layout/Components/WellKnown/Gauge";
 import UIGameOtherPlayerStatus from "./UIGameOtherPlayerStatus";
-import TilesetRenderer, { BIOME_TILESETS } from "../../Utils/Tile/Tileset/TilesetRenderer";
+import TileRenderer, { BIOME_TILESETS } from "../../Utils/Tile/Tileset/TilesetRenderer";
 import UIGamePlayerStatuses from "./UIGamePlayerStatuses";
 import { MoodFlags } from "../../Native/Entity/Player/PlayerMood";
 import { clientWebsocket, deltaTime, antennaScaleFactor, uiCtx } from "../../../../Main";
@@ -109,7 +109,7 @@ export default class UIGame extends AbstractUI {
     private static readonly DEAD_BACKGROUND_TARGET_OPACITY = 0.3 as const;
     private static readonly DEAD_BACKGROUND_FADE_DURATION = 0.3 as const;
 
-    private tilesetRenderer: TilesetRenderer = new TilesetRenderer();
+    private tilesetRenderer: TileRenderer = new TileRenderer();
 
     private players: Map<number, Player> = new Map();
     private mobs: Map<number, Mob> = new Map();

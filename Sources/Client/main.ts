@@ -2,7 +2,7 @@ import type { Biome } from "./Public/Sources/Native/Biome";
 import { uiScaleFactor } from "./Public/Sources/UI/UI";
 import UIContext from "./Public/Sources/UI/UIContext";
 import CameraController from "./Public/Sources/Utils/CameraController";
-import TilesetRenderer, { BIOME_SVG_TILESET, BIOME_TILESETS } from "./Public/Sources/Utils/Tile/Tileset/TilesetRenderer";
+import TileRenderer, { BIOME_SVG_TILESET, BIOME_TILESETS } from "./Public/Sources/Utils/Tile/Tileset/TilesetRenderer";
 import ClientWebsocket from "./Public/Sources/Websocket/ClientWebsocket";
 
 export let lastTimestamp = Date.now();
@@ -24,7 +24,7 @@ const init = async () => {
     // Generate tilesets beforehand so no need to generate them multiple times
     for (const biome in BIOME_SVG_TILESET) {
         const parsedBiome = parseInt(biome) as Biome;
-        BIOME_TILESETS.set(parsedBiome, await TilesetRenderer.prepareTileset(parsedBiome));
+        BIOME_TILESETS.set(parsedBiome, await TileRenderer.prepareTileset(parsedBiome));
     }
 
     document.body.removeChild(document.querySelector("#status-container"));

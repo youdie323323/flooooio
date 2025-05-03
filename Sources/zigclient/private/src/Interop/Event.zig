@@ -1,6 +1,5 @@
 const std = @import("std");
 const bindgen = @import("./Bindgen/lib.zig");
-const ManagedIndex = @import("./ManagedIndex.zig").ManagedIndex;
 
 pub const EventType = enum(u32) {
     drag,
@@ -49,8 +48,8 @@ pub const GlobalEventTargetType = enum(u8) {
 
 /// Various browser window related information.
 pub const WindowInfo = extern struct {
-    innerWidth: u16,
-    innerHeight: u16,
+    inner_width: u16,
+    inner_height: u16,
     /// Horizontal scroll offset in fractional CSS pixels.
     scrollX: f32,
     /// Vertical scroll offset in fractional CSS pixels.
@@ -81,7 +80,7 @@ pub const DragEvent = extern struct {
     /// If non-zero, data that is being dragged during a drag & drop operation can
     /// be obtained via various DnD related API calls (only available when called
     /// from event handler).
-    isDataTransfer: u8 = 0,
+    is_data_transfer: u8 = 0,
     /// Encoded bitmask of currently pressed modifier keys, see `KeyModifier` enum.
     modifiers: u8 = 0,
     /// Encoded bitmask of all currently pressed mouse buttons, see `MouseButton` enum.
@@ -156,7 +155,7 @@ pub const PointerEvent = extern struct {
     /// The clockwise rotation of the pointer (e.g. pen stylus) around its major
     /// axis in degrees, with a value in the range 0 to 359.
     twist: u16 = 0,
-    pointerType: PointerType,
+    pointer_type: PointerType,
     /// Non-zero if event's pointer is the primary pointer (in a multitouch scenario).
     isPrimary: u8,
     /// Encoded bitmask of currently pressed modifier keys, see `KeyModifier` enum.
@@ -239,7 +238,7 @@ pub const Event = extern struct {
 };
 
 /// Event listener function. Takes an event.
-pub const EventListener = *const fn (event: *const Event) callconv(.C) void;
+pub const EventListener = *const fn (event: *const Event) callconv(.c) void;
 
 pub const EventListenerId = u16;
 

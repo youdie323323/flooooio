@@ -1,9 +1,9 @@
 const std = @import("std");
 const math = std.math;
 const Allocator = std.mem.Allocator;
-const CanvasContext = @import("../Dom/Canvas/CanvasContext.zig");
-const LruCache = @import("../zig-caches/lru/LruCache.zig").LruCache;
-const Color = @import("../Dom/Canvas/Color.zig");
+const CanvasContext = @import("../Interop/Canvas/CanvasContext.zig");
+const S3fifo = @import("../zig-caches/S3fifo.zig").S3fifo;
+const Color = @import("../Interop/Canvas/Color.zig");
 const TileMap = @This();
 
 pub const Vector2 = @Vector(2, f32);
@@ -54,7 +54,7 @@ inline fn hashVector(vec: Vector2) u64 {
 
 const Chunk = CanvasContext;
 
-const ChunkBuffer = LruCache(.non_locking, u64, Chunk);
+const ChunkBuffer = S3fifo(u64, Chunk);
 
 options: TileMapOptions,
 chunk_buffer: ChunkBuffer,
@@ -62,7 +62,7 @@ chunk_buffer: ChunkBuffer,
 pub fn init(allocator: Allocator, options: TileMapOptions) !TileMap {
     return .{
         .options = options,
-        .chunk_buffer = try ChunkBuffer.init(allocator, options.chunk_buffer_max_items),
+        .chunk_buffer = ChunkBuffer.init(allocator, options.chunk_buffer_max_items),
     };
 }
 
@@ -190,8 +190,8 @@ pub fn draw(
     if (options.clamp_position_to_bounds) {
         if (options.bounds) |bounds| {
             const tile_size_scaled: Vector2 = tile_size_vector / actual_scale_vector;
-            const min_position: Vector2 = bounds.top_left * tile_size_scaled + half_screen_scaled;
-            const max_position: Vector2 = bounds.bottom_right * tile_size_scaled - half_screen_scaled;
+            const min_position: Vector2 = @mulAdd(Vector2, bounds.top_left, tile_size_scaled, half_screen_scaled);
+            const max_position: Vector2 = @mulAdd(Vector2, bounds.bottom_right, tile_size_scaled, -half_screen_scaled);
 
             actual_position = math.clamp(position, min_position, max_position);
         } else {
@@ -246,7 +246,7 @@ pub fn draw(
                     chunk_size,
                 ) catch continue;
 
-                _ = self.chunk_buffer.put(chunk_hash, chunk);
+                self.chunk_buffer.insert(chunk_hash, chunk) catch unreachable;
 
                 self.drawChunk(ctx, chunk, absolute_chunk_size_vector, absolute_chunk_position);
             }

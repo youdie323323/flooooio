@@ -23,7 +23,7 @@ pub fn build(b: *std.Build) void {
     });
 
     exe.export_memory = true;
-    exe.import_table = true;
+    exe.export_table = true;
     exe.entry = .disabled;
     exe.rdynamic = true;
 

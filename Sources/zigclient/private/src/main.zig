@@ -1,18 +1,38 @@
 const std = @import("std");
 const builtin = std.builtin;
 const math = std.math;
-const allocator = std.heap.page_allocator;
 
-const dom = @import("./Dom/Event.zig");
+// Use fba for block auto-memory growing
+var buffer: [4096]u8 = undefined;
+var fba = std.heap.FixedBufferAllocator.init(&buffer);
+const allocator = fba.allocator();
 
-const requestAnimationFrame = @import("./Dom/animationFrame.zig").requestAnimationFrame;
+// Exports alloc and free
 
-const CanvasContext = @import("./Dom/Canvas/CanvasContext.zig");
-const Path2D = @import("./Dom/Canvas/Path2D.zig");
+pub export fn alloc(n: usize) [*]u8 {
+    const slice = allocator.alloc(u8, n) catch unreachable;
+
+    return slice.ptr;
+}
+
+pub export fn free(ptr: [*]u8, n: usize) void {
+    const slice = ptr[0..n];
+    
+    allocator.free(slice);
+}
+
+const event = @import("./Interop/Event.zig");
+const dom = @import("./Interop/Dom.zig");
+const WebSocket = @import("./Interop/WebSocket.zig");
+
+const Entity = @import("./Entity/Entity.zig");
+
+const requestAnimationFrame = @import("./Interop/animationFrame.zig").requestAnimationFrame;
+
+const CanvasContext = @import("./Interop/Canvas/CanvasContext.zig");
+const Path2D = @import("./Interop/Canvas/Path2D.zig");
 
 const UI = @import("./UI/UI.zig");
-
-const Zoop = @import("./Zoop.zig");
 
 const TileMap = @import("./Tile/TileMap.zig");
 
@@ -21,21 +41,26 @@ var current_ui: UI = undefined;
 
 var tile_map: TileMap = undefined;
 
-fn onResize(event: *const dom.Event) callconv(.C) void {
-    const output = std.fmt.allocPrint(allocator, "{}", .{event}) catch unreachable;
-    defer allocator.free(output);
-    
-    std.io.getStdOut().writeAll(output) catch unreachable;
+var ws: WebSocket = undefined;
+
+fn onResize(_: *const event.Event) callconv(.c) void {
+    ctx.setSize(dom.getScreenWidth(), dom.getScreenHeight());
 }
 
-export fn init() void {
-    std.debug.print("init()", .{});
+export fn main() void {
+    std.debug.print("main()", .{});
+    
+    var e = Entity.init(0, 0, 0, 0, 0, 0);
 
-    dom.addGlobalEventListener(.window, .resize, onResize);
+    e.update();
+
+    ws = WebSocket.connect("ws://localhost:8080/ws");
+
+    event.addGlobalEventListener(.window, .resize, onResize);
 
     ctx = CanvasContext.getCanvasContextFromElement("canvas", false);
 
-    current_ui = UI.init(ctx);
+    current_ui = UI.init(allocator, ctx);
 
     var ctx_svg = CanvasContext.createCanvasContext(256 * 4, 256 * 4, false);
 
@@ -66,7 +91,7 @@ export fn init() void {
         .layers = &[_]TileMap.TileMapLayer{
             TileMap.TileMapLayer{
                 .tiles = &[_]CanvasContext{ctx_svg},
-                .data = &[_][]const u8{
+                .data = comptime &[_][]const u8{
                     &[_]u8{ 0, 0 },
                     &[_]u8{ 0, 0 },
                 },
@@ -77,29 +102,14 @@ export fn init() void {
             .show_origin = true,
             .show_tile_borders = true,
         },
-    }) catch |err| {
-        std.debug.print("Error: {}", .{err});
+    }) catch unreachable;
 
-        return;
-    };
-
-    const psuperman = Zoop.new(allocator, SuperMan, null) catch |err| {
-        std.debug.print("Error: {}", .{err});
-
-        return;
-    };
-    psuperman.super.setName("super");
-
-    std.debug.print("{d}", .{Zoop.getField(psuperman, "age", u8).*});
-    std.debug.print("{d}", .{Zoop.getField(psuperman, "age", u16).*});
-    std.debug.print("{s}", .{psuperman.super.name});
-
-    draw(1);
+    draw(-1);
 }
 
-var i: f64 = 0;
+var i: f32 = 0;
 
-fn draw(_: f64) callconv(.C) void {
+fn draw(_: f64) callconv(.c) void {
     ctx.save();
 
     current_ui.render();
@@ -122,37 +132,3 @@ fn draw(_: f64) callconv(.C) void {
 
     _ = requestAnimationFrame(draw);
 }
-
-// Define a class Human
-pub const Human = struct {
-    // The first field of the zoop class must be aligned to `zoop.alignment`
-    name: []const u8 align(Zoop.alignment),
-    age: u8 = 30,
-
-    // If there is no cleanup work, can skip define `deinit`
-    pub fn deinit(self: *Human) void {
-        self.name = "";
-    }
-
-    pub fn getName(self: *const Human) []const u8 {
-        return self.name;
-    }
-
-    pub fn setName(self: *Human, name: []const u8) void {
-        self.name = name;
-    }
-};
-
-pub const SuperMan = struct {
-    super: Human align(Zoop.alignment),
-    // SuperMan can live a long time, u8 can't satisfy it, we use u16
-    age: u16 = 9999,
-
-    pub fn getAge(self: *SuperMan) u16 {
-        return self.age;
-    }
-
-    pub fn setAge(self: *SuperMan, age: u16) void {
-        self.age = age;
-    }
-};
