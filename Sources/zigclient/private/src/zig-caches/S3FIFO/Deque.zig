@@ -276,11 +276,11 @@ pub fn Deque(comptime T: type) type {
             @memcpy(self.buf[dest .. dest + length], self.buf[src .. src + length]);
         }
 
-        inline fn wrapAdd(self: Self, idx: usize, addend: usize) usize {
+        inline fn wrapAdd(self: Self, idx: usize, comptime addend: usize) usize {
             return wrapIndex(idx +% addend, self.cap());
         }
 
-        inline fn wrapSub(self: Self, idx: usize, subtrahend: usize) usize {
+        inline fn wrapSub(self: Self, idx: usize, comptime subtrahend: usize) usize {
             return wrapIndex(idx -% subtrahend, self.cap());
         }
     };

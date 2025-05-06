@@ -13,7 +13,7 @@ pub inline fn init(id: ContextId) CanvasContext {
     return .{ .id = id };
 }
 
-pub inline fn drawSvg(self: CanvasContext, svg: []const u8) void {
+pub inline fn drawSVG(self: CanvasContext, svg: []const u8) void {
     @"2"(self.id, svg.ptr, svg.len);
 }
 

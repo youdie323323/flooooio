@@ -84,7 +84,7 @@ pub fn deinit(self: *TileMap) void {
     self.pending_destruction.deinit();
 }
 
-fn generateChunk(
+inline fn generateChunk(
     self: *TileMap,
     chunk_position: Vector2,
     absolute_chunk_position: Vector2,
@@ -94,19 +94,19 @@ fn generateChunk(
 ) Chunk {
     const options = self.options;
 
-    const chunk_ctx = CanvasContext.createCanvasContext(
+    const chunk_ctx: Chunk = CanvasContext.createCanvasContext(
         absolute_chunk_size[0],
         absolute_chunk_size[1],
         false,
     );
 
-    const tile_size_w, const tile_size_h = tile_size;
+    const tile_size_w: f32, const tile_size_h: f32 = tile_size;
 
     const top_left_tile: Vector2 = chunk_position * chunk_size;
     const bottom_right_tile: Vector2 = top_left_tile + chunk_size - one_vector;
 
-    const top_left_tile_x, const top_left_tile_y = top_left_tile;
-    const bottom_right_tile_x, const bottom_right_tile_y = bottom_right_tile;
+    const top_left_tile_x: f32, const top_left_tile_y: f32 = top_left_tile;
+    const bottom_right_tile_x: f32, const bottom_right_tile_y: f32 = bottom_right_tile;
 
     const bounds_top_left = if (options.bounds) |b| b.top_left else zero_vector;
 
@@ -136,13 +136,13 @@ fn generateChunk(
                 // const tile_data: usize = @intCast(data_row[data_cell_index]);
                 // if (tile_data >= tiles.len) continue;
 
-                const tile_absolute_position =
+                const tile_absolute_position_x: f32, const tile_absolute_position_y: f32 =
                     @mulAdd(Vector2, tile_position, tile_size, -absolute_chunk_position);
 
                 chunk_ctx.copyCanvasScaled(
                     tiles[0], // tiles[tile_data],
-                    tile_absolute_position[0],
-                    tile_absolute_position[1],
+                    tile_absolute_position_x,
+                    tile_absolute_position_y,
                     tile_size_w,
                     tile_size_h,
                 );
@@ -172,7 +172,7 @@ pub fn draw(
     screen: Vector2,
     position: Vector2,
     scale: f32,
-) void {
+) anyerror!void {
     const options = self.options;
 
     const tile_size: Vector2 = @floatFromInt(options.tile_size);
@@ -181,12 +181,12 @@ pub fn draw(
 
     const chunk_border: Vector2 = @floatFromInt(options.chunk_border);
 
-    const scale_bound = options.scale_bound;
+    const scale_bound_lower: f32, const scale_bound_upper: f32 = options.scale_bound;
 
     // tile_size and chunk_size are u16 vector, so this vector is actually integer vector
     const absolute_chunk_size: Vector2 = tile_size * chunk_size;
 
-    const actual_scale = math.clamp(scale, scale_bound[0], scale_bound[1]);
+    const actual_scale: f32 = math.clamp(scale, scale_bound_lower, scale_bound_upper);
     const actual_scale_vector: Vector2 = @splat(actual_scale);
     const actual_scale_vector_2mul: Vector2 = actual_scale_vector * two_vector;
 
@@ -200,7 +200,7 @@ pub fn draw(
         break :block math.clamp(position, min_position, max_position);
     } else position);
 
-    const screen_center_chunk: Vector2 = @floor(actual_position / absolute_chunk_size);
+    const screen_center_chunk: Vector2 = @divFloor(actual_position, absolute_chunk_size);
 
     const half_screen_size_in_chunks: Vector2 = @ceil(
         // Original calculation: (screen / (actual_scale_vector * absolute_chunk_size_vector)) * halfone_scalar_vector
@@ -208,29 +208,29 @@ pub fn draw(
     );
 
     // screen_center_chunk is floor'ed, half_screen_size_in_chunks is ceil'ed, chunk_border is u16 vector
-    // so top_left_chunk, bottom_right_chunk can be UsizeVector2
-    const top_left_chunk: Vector2 = (screen_center_chunk - half_screen_size_in_chunks) - chunk_border;
-    const bottom_right_chunk: Vector2 = (screen_center_chunk + half_screen_size_in_chunks) + chunk_border;
+    // so top_left_chunk, bottom_right_chunk is integer vector
+    const top_left_chunk_x: f32, const top_left_chunk_y: f32 = (screen_center_chunk - half_screen_size_in_chunks) - chunk_border;
+    const bottom_right_chunk_x: f32, const bottom_right_chunk_y: f32 = (screen_center_chunk + half_screen_size_in_chunks) + chunk_border;
 
     // Using round here because of:
     // https://stackoverflow.com/questions/9942209/unwanted-lines-appearing-in-html5-canvas-using-tiles
     // I̶ ̶d̶i̶d̶ ̶t̶h̶i̶s̶ ̶t̶o̶ ̶a̶b̶s̶o̶l̶u̶t̶e̶_̶c̶h̶u̶n̶k̶_̶p̶o̶s̶i̶t̶i̶o̶n̶ ̶t̶o̶o̶
     // half_screen_scaled and actual_position is actually integer vector,
     // so no need to round
-    const translate_position: Vector2 = half_screen_scaled - actual_position;
+    const translate_position_x: f32, const translate_position_y: f32 = half_screen_scaled - actual_position;
 
     ctx.save();
 
     ctx.setImageSmoothingEnabled(false);
 
-    ctx.scale(actual_scale, actual_scale);
-    ctx.translate(
-        translate_position[0],
-        translate_position[1],
+    ctx.scale(
+        actual_scale,
+        actual_scale,
     );
-
-    const top_left_chunk_x, const top_left_chunk_y = top_left_chunk;
-    const bottom_right_chunk_x, const bottom_right_chunk_y = bottom_right_chunk;
+    ctx.translate(
+        translate_position_x,
+        translate_position_y,
+    );
 
     var y_chunk: f32 = top_left_chunk_y;
     while (y_chunk < bottom_right_chunk_y) : (y_chunk += 1) {
@@ -254,7 +254,7 @@ pub fn draw(
                     chunk_size,
                 );
 
-                self.chunk_cache.insert(chunk_hash, chunk) catch unreachable;
+                try self.chunk_cache.insert(chunk_hash, chunk);
 
                 self.drawChunk(ctx, chunk, absolute_chunk_position);
             }
