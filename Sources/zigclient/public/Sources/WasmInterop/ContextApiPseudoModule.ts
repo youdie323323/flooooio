@@ -1,7 +1,7 @@
 import type WebAssemblyPseudoModule from "./WebAssemblyPseudoModule";
 import { Canvg, presets } from "canvg";
 import type { PseudoModuleFactory, PseudoModuleFactoryArguments } from "./WebAssemblyPseudoModule";
-import { table } from "../Application";
+import { HEAPU16, HEAPU32, table } from "../Application";
 
 const contexts: Array<CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D> = new Array();
 const destroyedContextIds: Array<number> = new Array();
@@ -80,6 +80,8 @@ function toHexCharCode(nibble: number) {
     }
 }
 
+const PRESET_OFFSCREEN = presets.offscreen();
+
 export const createContextApiPseudoModule = ((...[, { decodeString }]: PseudoModuleFactoryArguments): WebAssemblyPseudoModule => {
     return {
         moduleName: "0",
@@ -87,16 +89,14 @@ export const createContextApiPseudoModule = ((...[, { decodeString }]: PseudoMod
             // Begin canvas api
 
             0: (w: number, h: number, isDiscardable: Uint1): number => {
-                const canvas = document.createElement("canvas");
-                canvas.width = w;
-                canvas.height = h;
+                const canvas = new OffscreenCanvas(w, h);
 
                 const ctx = canvas.getContext("2d", {
                     storage:
                         isDiscardable
                             ? "discardable"
                             : "persistent",
-                }) as CanvasRenderingContext2D | null;
+                }) as OffscreenCanvasRenderingContext2D | null;
                 if (!ctx) throw new Error("Failed to get 2D context");
 
                 let contextId: number;
@@ -135,7 +135,7 @@ export const createContextApiPseudoModule = ((...[, { decodeString }]: PseudoMod
                 Canvg.fromString(
                     contexts[contextId],
                     decodeString(ptr, len),
-                    presets.offscreen(),
+                    PRESET_OFFSCREEN,
                 ).render(),
 
             3: (contextId: number): void => {
@@ -386,18 +386,24 @@ export const createContextApiPseudoModule = ((...[, { decodeString }]: PseudoMod
                 canvas.height = h;
             },
 
+            57: (contextId: number, wPtr: number, hPtr: number) => {
+                const canvas = contexts[contextId].canvas;
+
+                HEAPU16[wPtr >> 1] = canvas.width;
+                HEAPU16[hPtr >> 1] = canvas.height;
+            },
 
             // End canvas api
 
             // Begin path2d api
 
-            57: (pathIdToRelease: number) => {
+            58: (pathIdToRelease: number) => {
                 destroyedPathIds.push(pathIdToRelease);
 
                 paths[pathIdToRelease] = null;
             },
 
-            58: () => {
+            59: () => {
                 const newPath = new Path2D;
                 if (0 < destroyedPathIds.length) {
                     const reusePathId = destroyedPathIds.pop();
@@ -412,29 +418,29 @@ export const createContextApiPseudoModule = ((...[, { decodeString }]: PseudoMod
                 return paths.length - 1;
             },
 
-            59: (pathId: number, x: number, y: number) => {
+            60: (pathId: number, x: number, y: number) => {
                 paths[pathId].moveTo(x, y);
             },
 
-            60: (pathId: number, x: number, y: number) => {
+            61: (pathId: number, x: number, y: number) => {
                 paths[pathId].lineTo(x, y);
             },
 
-            61: (pathId: number, cpx: number, cpy: number, x: number, y: number) => {
+            62: (pathId: number, cpx: number, cpy: number, x: number, y: number) => {
                 paths[pathId].quadraticCurveTo(cpx, cpy, x, y);
             },
 
-            62: (pathId: number, cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number) => {
+            63: (pathId: number, cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number) => {
                 paths[pathId].bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
             },
 
-            63: (pathId: number) => {
+            64: (pathId: number) => {
                 paths[pathId].closePath();
             },
 
             // End path2d api
 
-            64: (callbackPtr: number) => requestAnimationFrame(table.get(callbackPtr)),
+            65: (callbackPtr: number) => requestAnimationFrame(table.get(callbackPtr)),
         },
     } as const satisfies WebAssemblyPseudoModule;
 }) satisfies PseudoModuleFactory;

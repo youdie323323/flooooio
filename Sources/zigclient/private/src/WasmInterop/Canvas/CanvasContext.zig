@@ -237,6 +237,15 @@ pub inline fn setSize(self: CanvasContext, w: u16, h: u16) void {
     @"56"(self.id, w, h);
 }
 
+pub inline fn getSize(self: CanvasContext) @Vector(2, u16) {
+    var width: u16 = undefined;
+    var height: u16 = undefined;
+
+    @"57"(self.id, &width, &height);
+
+    return .{ width, height };
+}
+
 /// Creates the context.
 extern "0" fn @"0"(width: f32, height: f32, is_discardable: u8) ContextId;
 /// Get context by element id.
@@ -351,6 +360,8 @@ extern "0" fn @"54"(context_id: ContextId) void;
 extern "0" fn @"55"(context_id: ContextId, smoothing: u8) void;
 /// Sets width and height to canvas.
 extern "0" fn @"56"(context_id: ContextId, w: u16, h: u16) void;
+/// Get width and height of canvas.
+extern "0" fn @"57"(context_id: ContextId, w_addr: *u16, h_addr: *u16) void;
 
 pub inline fn createCanvasContext(width: f32, height: f32, comptime is_discardable: bool) CanvasContext {
     const context_id = @"0"(width, height, comptime @intFromBool(is_discardable));

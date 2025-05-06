@@ -3,27 +3,30 @@
 //! S3FIFO improves cache hit ratio noticeably compared to LRU.
 
 const std = @import("std");
-const AtomicU8 = std.atomic.Value(u8);
 const Allocator = std.mem.Allocator;
 const DoublyLinkedList = std.DoublyLinkedList;
+const Deque = @import("Deque.zig").Deque;
 
 /// Maximum frequency limit for an entry in the cache.
-const max_freq: u8 = 3;
+const unused_max_freq: u2 = 3;
 
-pub fn S3fifo(comptime K: type, comptime V: type) type {
+pub fn S3FIFO(
+    comptime K: type,
+    comptime V: type,
+    comptime Context: type,
+    /// Optional callback function for node eviction.
+    comptime on_evict: ?fn (Context, K, V) void,
+) type {
     return struct {
         const Small = DoublyLinkedList(Entry);
         const Main = DoublyLinkedList(Entry);
-        const Ghost = DoublyLinkedList(K);
-
-        const StringKeyHashMap = std.StringArrayHashMap(*Node);
-        const NonStringKeyHashMap = std.AutoArrayHashMap(K, *Node);
+        const Ghost = Deque(K);
 
         const Entries =
             if (K == []const u8)
-                StringKeyHashMap
+                std.StringArrayHashMap(*Node)
             else
-                NonStringKeyHashMap;
+                std.AutoArrayHashMap(K, *Node);
 
         allocator: Allocator,
         /// Small queue for entries with low frequency.
@@ -36,63 +39,42 @@ pub fn S3fifo(comptime K: type, comptime V: type) type {
         entries: Entries,
         max_cache_size: usize,
         max_main_size: usize,
-        len: usize,
+        context: Context,
 
         const Self = @This();
 
         /// Represents an entry in the cache.
-        pub const Entry = struct {
-            key: K,
-            value: V,
+        const Entry = struct {
+            key: K align(@alignOf(K)),
+            value: V align(@alignOf(V)),
             /// Frequency of access of this entry.
-            feq: AtomicU8,
-
-            const Self = @This();
-
-            /// Creates a new entry with the given key and value.
-            pub inline fn init(key: K, val: V) Entry {
-                return Entry{
-                    .key = key,
-                    .value = val,
-                    .feq = AtomicU8.init(0),
-                };
-            }
+            freq: u2 align(1) = 0,
         };
 
-        const Node = Main.Node;
-
-        const GhostNode = Ghost.Node;
-
-        inline fn initNode(self: *Self, key: K, val: V) error{OutOfMemory}!*Node {
-            self.len += 1;
-
-            const node = try self.allocator.create(Node);
-
-            node.* = .{ .data = Entry.init(key, val) };
-
-            return node;
-        }
+        const Node = DoublyLinkedList(Entry).Node;
 
         inline fn deinitNode(self: *Self, node: *Node) void {
-            self.len -= 1;
-
             self.allocator.destroy(node);
         }
 
         /// Creates a new cache with the given maximum size.
-        pub fn init(allocator: Allocator, max_cache_size: usize) Self {
+        pub fn init(
+            allocator: Allocator,
+            max_cache_size: usize,
+            context: Context,
+        ) Allocator.Error!Self {
             const max_small_size = max_cache_size / 10;
             const max_main_size = max_cache_size - max_small_size;
 
             return Self{
                 .allocator = allocator,
-                .small = DoublyLinkedList(Entry){},
-                .main = DoublyLinkedList(Entry){},
-                .ghost = DoublyLinkedList(K){},
+                .small = Small{},
+                .main = Main{},
+                .ghost = try Ghost.init(allocator),
                 .entries = Entries.init(allocator),
                 .max_cache_size = max_cache_size,
                 .max_main_size = max_main_size,
-                .len = 0,
+                .context = context,
             };
         }
 
@@ -101,13 +83,11 @@ pub fn S3fifo(comptime K: type, comptime V: type) type {
                 self.deinitNode(node);
             }
 
-            while (self.ghost.pop()) |node| : (self.len -= 1) {
-                self.allocator.destroy(node);
-            }
-
             while (self.main.pop()) |node| {
                 self.deinitNode(node);
             }
+
+            self.ghost.deinit();
 
             self.entries.deinit();
         }
@@ -115,21 +95,21 @@ pub fn S3fifo(comptime K: type, comptime V: type) type {
         /// Returns a reference to the value of the given key if it exists in the cache.
         pub fn get(self: *Self, key: K) ?V {
             if (self.entries.get(key)) |node| {
-                const freq = @min(node.data.feq.load(.seq_cst) + 1, max_freq);
-
-                node.data.feq.store(freq, .seq_cst);
+                node.data.freq = node.data.freq +% 1;
 
                 return node.data.value;
-            } else {
-                return null;
             }
+
+            return null;
         }
 
         /// Inserts a new entry with the given key and value into the cache.
-        pub fn insert(self: *Self, key: K, value: V) error{OutOfMemory}!void {
+        pub fn insert(self: *Self, key: K, value: V) Allocator.Error!void {
             try self.evict();
 
-            const node = try self.initNode(key, value);
+            const node = try self.allocator.create(Node);
+
+            node.* = .{ .data = .{ .key = key, .value = value } };
 
             if (self.entries.contains(key)) {
                 self.main.append(node);
@@ -141,29 +121,23 @@ pub fn S3fifo(comptime K: type, comptime V: type) type {
         }
 
         inline fn insertMain(self: *Self, tail: *Node) void {
-            self.len += 1;
-
             self.main.prepend(tail);
         }
 
-        inline fn insertGhost(self: *Self, tail: *Node) !void {
-            if (self.ghost.len >= self.max_main_size) {
-                const key = self.ghost.popFirst().?;
+        inline fn insertGhost(self: *Self, tail: *Node) Allocator.Error!void {
+            if (self.ghost.len() >= self.max_main_size) {
+                const key = self.ghost.popFront().?;
 
-                self.allocator.destroy(key);
-
-                _ = self.entries.swapRemove(key.data);
-
-                self.len -= 1;
+                _ = self.entries.swapRemove(key);
             }
 
-            const node = try self.allocator.create(GhostNode);
+            try self.ghost.pushBack(tail.data.key);
+        }
 
-            node.* = .{ .data = tail.data.key };
-
-            self.ghost.append(node);
-
-            self.len += 1;
+        inline fn notifyEviction(self: *Self, node: *Node) void {
+            if (comptime on_evict) |T| {
+                T(self.context, node.data.key, node.data.value);
+            }
         }
 
         inline fn evict(self: *Self) !void {
@@ -176,35 +150,55 @@ pub fn S3fifo(comptime K: type, comptime V: type) type {
             }
         }
 
-        inline fn evictMain(self: *Self) void {
-            while (self.main.popFirst()) |tail| {
-                const freq = tail.data.feq.load(.seq_cst);
-                if (freq > 0) {
-                    tail.data.feq.store(freq - 1, .seq_cst);
-
-                    self.main.append(tail);
-                } else {
-                    _ = self.entries.swapRemove(tail.data.key);
-                    
-                    self.deinitNode(tail);
-
-                    break;
-                }
-            }
-        }
-
         inline fn evictSmall(self: *Self) !void {
-            while (self.small.popFirst()) |tail| {
-                if (tail.data.feq.load(.seq_cst) > 1) {
+            while (self.small.pop()) |tail| {
+                const freq = tail.data.freq;
+                if (freq > 1) {
                     self.insertMain(tail);
                 } else {
                     try self.insertGhost(tail);
 
+                    self.notifyEviction(tail);
                     self.deinitNode(tail);
 
                     break;
                 }
             }
         }
+
+        inline fn evictMain(self: *Self) void {
+            if (self.main.first) |first| {
+                const freq = first.data.freq;
+                if (freq > 0) {
+                    // Move to end without allocation
+                    self.main.remove(first);
+                    self.main.append(first);
+
+                    first.data.freq = freq - 1;
+                } else {
+                    self.main.remove(first);
+
+                    _ = self.entries.swapRemove(first.data.key);
+
+                    self.notifyEviction(first);
+                    self.deinitNode(first);
+                }
+            }
+        }
     };
+}
+
+test S3FIFO {
+    var cache = S3FIFO(u32, u32, null).init(std.testing.allocator, 64) catch unreachable;
+    defer cache.deinit();
+
+    const start = std.time.nanoTimestamp();
+    var i: u32 = 0;
+    while (i < 1000000) : (i += 1) {
+        _ = cache.get(i % 500);
+    }
+    const end = std.time.nanoTimestamp();
+    const elapsed_ns: f64 = @floatFromInt(end - start);
+    const time_per_get = elapsed_ns / 1000000;
+    std.debug.print("Time per get: {d:.2}ns\n", .{time_per_get});
 }

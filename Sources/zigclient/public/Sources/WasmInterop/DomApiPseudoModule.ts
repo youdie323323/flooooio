@@ -8,6 +8,8 @@ export const createDomApiPseudoModule = ((...[]: PseudoModuleFactoryArguments): 
         moduleImports: {
             0: () => document.documentElement.clientWidth || window.innerWidth,
             1: () => document.documentElement.clientHeight || window.innerHeight,
+            
+            2: () => devicePixelRatio,
         },
     } as const satisfies WebAssemblyPseudoModule;
 }) satisfies PseudoModuleFactory;

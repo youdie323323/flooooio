@@ -17,20 +17,20 @@ pub export fn alloc(n: usize) [*]u8 {
 
 pub export fn free(ptr: [*]u8, n: usize) void {
     const slice = ptr[0..n];
-    
+
     allocator.free(slice);
 }
 
-const event = @import("./Interop/Event.zig");
-const dom = @import("./Interop/Dom.zig");
-const WebSocket = @import("./Interop/WebSocket.zig");
+const event = @import("./WasmInterop/Event.zig");
+const dom = @import("./WasmInterop/Dom.zig");
+const WebSocket = @import("./WasmInterop/WebSocket.zig");
 
 const Entity = @import("./Entity/Entity.zig");
 
-const requestAnimationFrame = @import("./Interop/animationFrame.zig").requestAnimationFrame;
+const requestAnimationFrame = @import("./WasmInterop/animationFrame.zig").requestAnimationFrame;
 
-const CanvasContext = @import("./Interop/Canvas/CanvasContext.zig");
-const Path2D = @import("./Interop/Canvas/Path2D.zig");
+const CanvasContext = @import("./WasmInterop/Canvas/CanvasContext.zig");
+const Path2D = @import("./WasmInterop/Canvas/Path2D.zig");
 
 const UI = @import("./UI/UI.zig");
 
@@ -43,26 +43,37 @@ var tile_map: TileMap = undefined;
 
 var ws: WebSocket = undefined;
 
-fn onResize(_: *const event.Event) callconv(.c) void {
-    ctx.setSize(dom.getScreenWidth(), dom.getScreenHeight());
+fn onResize(_: ?*const event.Event) callconv(.c) void {
+    const dpr = dom.devicePixelRatio();
+    const w = @as(f32, @floatFromInt(dom.clientWidth())) * dpr;
+    const h = @as(f32, @floatFromInt(dom.clientHeight())) * dpr;
+
+    ctx.setSize(
+        @intFromFloat(w),
+        @intFromFloat(h),
+    );
+}
+
+fn onWheel(_: ?*const event.Event) callconv(.c) void {
+    scale = if (scale == 1) 0.1 else 1;
 }
 
 export fn main() void {
     std.debug.print("main()", .{});
-    
-    var e = Entity.init(0, 0, 0, 0, 0, 0);
-
-    e.update();
 
     ws = WebSocket.connect("ws://localhost:8080/ws");
 
+    ctx = CanvasContext.getCanvasContextFromElement("canvas", false);
+
+    onResize(null);
+
     event.addGlobalEventListener(.window, .resize, onResize);
 
-    ctx = CanvasContext.getCanvasContextFromElement("canvas", false);
+    event.addGlobalEventListener(.window, .wheel, onWheel);
 
     current_ui = UI.init(allocator, ctx);
 
-    var ctx_svg = CanvasContext.createCanvasContext(256 * 4, 256 * 4, false);
+    const ctx_svg = CanvasContext.createCanvasContext(256 * 4, 256 * 4, false);
 
     ctx_svg.drawSvg(
         \\<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 256 256">
@@ -86,21 +97,16 @@ export fn main() void {
     );
 
     tile_map = TileMap.init(allocator, .{
-        .tile_size = comptime 128 * 4,
-        .chunk_border = comptime @splat(2),
-        .layers = &[_]TileMap.TileMapLayer{
-            TileMap.TileMapLayer{
-                .tiles = &[_]CanvasContext{ctx_svg},
-                .data = comptime &[_][]const u8{
-                    &[_]u8{ 0, 0 },
-                    &[_]u8{ 0, 0 },
+        .tile_size = @splat(512),
+        .chunk_border = @splat(0),
+        .layers = &.{
+            .{
+                .tiles = &.{ctx_svg},
+                .data = &.{
+                    &.{ 0, 0 },
+                    &.{ 0, 0 },
                 },
             },
-        },
-        .debug = .{
-            .show_chunk_borders = true,
-            .show_origin = true,
-            .show_tile_borders = true,
         },
     }) catch unreachable;
 
@@ -109,26 +115,28 @@ export fn main() void {
 
 var i: f32 = 0;
 
+var scale: f32 = 1;
+
 fn draw(_: f64) callconv(.c) void {
+    const sin_i = @as(f32, @floatCast(@abs(@sin(i))));
+
+    const screen: TileMap.Vector2 = @floatFromInt(ctx.getSize());
+    const position = TileMap.Vector2{ sin_i * 2000, sin_i * 2000 };
+
     ctx.save();
 
     current_ui.render();
-
-    const sin_i = @as(f32, @floatCast(@sin(i)));
-
-    const screen = TileMap.Vector2{ 3440, 1351 };
-    const position = TileMap.Vector2{ sin_i * 500, sin_i * 500 };
 
     tile_map.draw(
         ctx,
         screen,
         position,
-        1,
+        scale,
     );
 
-    i += 0.005;
-
     ctx.restore();
+
+    i += 0.002;
 
     _ = requestAnimationFrame(draw);
 }

@@ -238,7 +238,7 @@ pub const Event = extern struct {
 };
 
 /// Event listener function. Takes an event.
-pub const EventListener = *const fn (event: *const Event) callconv(.c) void;
+pub const EventListener = *const fn (event: ?*const Event) callconv(.c) void;
 
 pub const EventListenerId = u16;
 

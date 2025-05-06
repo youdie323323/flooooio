@@ -40,39 +40,42 @@ pub inline fn send(self: WebSocket, data: []const u8) bool {
     return @"4"(self.id, data.ptr, data.len) != 0;
 }
 
-pub const MessageEvent = struct { event_type: EventType, data: []const u8, len: usize };
+pub const MessageEvent = struct {
+    event_type: EventType,
+    data: ?[]const u8,
+};
 
-/// Polls for the next WebSocket event
-pub inline fn poll(socket_id: WebSocketId) MessageEvent {
-    var addr: u32 = undefined;
-    var len: i32 = undefined;
+/// Polls for the next WebSocket event.
+pub inline fn poll(socket_id: WebSocketId) ?MessageEvent {
+    var data_addr: u32 = undefined;
+    var data_len: i32 = undefined;
 
-    const event_type_raw = @"5"(socket_id, &addr, &len);
+    const event_type_raw = @"5"(socket_id, &data_addr, &data_len);
+    if (event_type_raw == 0) return null;
 
-    const len_usized: usize = @intCast(len);
+    if (data_addr == 0 or data_len == 0) {
+        return .{
+            .event_type = @enumFromInt(event_type_raw),
+            .data = null,
+        };
+    }
 
     return .{
         .event_type = @enumFromInt(event_type_raw),
-        .data = @as([*]const u8, @ptrFromInt(addr))[0..len_usized],
-        .len = len_usized,
+        .data = @as([*]const u8, @ptrFromInt(data_addr))[0..@intCast(data_len)],
     };
 }
 
-export fn checkWs(socket_id: WebSocketId) void {
-    const event = poll(socket_id);
-
-    std.debug.print("{}", .{event.event_type});
-
-    switch (event.event_type) {
-        .message => {
-            // Free a message memory
-            const data = event.data;
-
-            main.free(@constCast(data.ptr), data.len);
-        },
-        .open, .@"error", .close => {
-            std.debug.print("Not message", .{});
-        },
+export fn pollHandle(socket_id: WebSocketId) void {
+    if (poll(socket_id)) |event| {
+        switch (event.event_type) {
+            .message => {
+                if (event.data) |data| main.free(@constCast(data.ptr), data.len);
+            },
+            .open, .@"error", .close => {
+                std.debug.print("Not message", .{});
+            },
+        }
     }
 }
 
@@ -87,4 +90,4 @@ extern "3" fn @"3"(socket_id: WebSocketId) bool;
 /// Sends data through WebSocket.
 extern "3" fn @"4"(socket_id: WebSocketId, pointer: [*]const u8, length: u32) u8;
 /// Polls for WebSocket events.
-extern "3" fn @"5"(socket_id: WebSocketId, addr_ptr: *u32, len_ptr: *i32) u8;
+extern "3" fn @"5"(socket_id: WebSocketId, data_addr_ptr: *u32, data_len_ptr: *i32) u8;

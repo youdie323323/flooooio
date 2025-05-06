@@ -1,9 +1,9 @@
-import type { PseudoModuleFactoryArguments } from "./Interop/WebAssemblyPseudoModule";
-import { createDomApiPseudoModule } from "./Interop/DomApiPseudoModule";
-import { createEventApiPseudoModule } from "./Interop/EventApiPseudoModule";
-import { createContextApiPseudoModule } from "./Interop/ContextApiPseudoModule";
+import type { PseudoModuleFactoryArguments } from "./WasmInterop/WebAssemblyPseudoModule";
+import { createDomApiPseudoModule } from "./WasmInterop/DomApiPseudoModule";
+import { createEventApiPseudoModule } from "./WasmInterop/EventApiPseudoModule";
+import { createContextApiPseudoModule } from "./WasmInterop/ContextApiPseudoModule";
 import FontDetect from "./Util/FontDetect";
-import { createWebSocketApiPseudoModule } from "./Interop/WebSocketApiPseudoModule";
+import { createWebSocketApiPseudoModule } from "./WasmInterop/WebSocketApiPseudoModule";
 
 type WasmExports = {
     memory: WebAssembly.Memory;
@@ -15,7 +15,7 @@ type WasmExports = {
     alloc: (n: number) => number;
     // Free a memory at ptr
     free: (ptr: number, n: number) => void;
-    checkWs: (socketId: number) => void;
+    pollHandle: (socketId: number) => void;
 };
 
 const WASM_PATH = "./client.wasm";
@@ -46,7 +46,7 @@ export let table: WebAssembly.Table;
 
 export let alloc: WasmExports["alloc"];
 export let free: WasmExports["free"];
-export let checkWs: WasmExports["checkWs"];
+export let pollHandle: WasmExports["pollHandle"];
 
 type FlooooWebassemblyInstance = Omit<WebAssembly.Instance, "exports"> & { exports: WasmExports };
 
@@ -126,7 +126,7 @@ function ensureFontsLoaded() {
     function initializeModule(instance: FlooooWebassemblyInstance) {
         Module.asm = instance.exports;
 
-        const { memory: { buffer }, __indirect_function_table, main, alloc: wasmAlloc, free: wasmFree, checkWs: wasmCheckWs } = Module.asm;
+        const { memory: { buffer }, __indirect_function_table, main, alloc: wasmAlloc, free: wasmFree, pollHandle: wasmPollHandle } = Module.asm;
 
         Module.HEAP8 = HEAP8 = new Int8Array(buffer);
         Module.HEAP16 = HEAP16 = new Int16Array(buffer);
@@ -141,7 +141,7 @@ function ensureFontsLoaded() {
 
         alloc = wasmAlloc;
         free = wasmFree;
-        checkWs = wasmCheckWs;
+        pollHandle = wasmPollHandle;
 
         if (document.readyState === "loading") {
             addEventListener("DOMContentLoaded", main);

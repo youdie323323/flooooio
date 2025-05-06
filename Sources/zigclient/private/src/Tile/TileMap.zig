@@ -1,20 +1,32 @@
 const std = @import("std");
 const math = std.math;
 const Allocator = std.mem.Allocator;
-const CanvasContext = @import("../Interop/Canvas/CanvasContext.zig");
-const S3fifo = @import("../zig-caches/S3fifo.zig").S3fifo;
-const Color = @import("../Interop/Canvas/Color.zig");
+const CanvasContext = @import("../WasmInterop/Canvas/CanvasContext.zig");
+const S3FIFO = @import("../zig-caches/S3FIFO/S3FIFO.zig").S3FIFO;
+const Color = @import("../WasmInterop/Canvas/Color.zig");
+const Deque = @import("../zig-caches/S3FIFO/Deque.zig").Deque;
 const TileMap = @This();
 
 pub const Vector2 = @Vector(2, f32);
 
+inline fn szudzikPair(x: f32, y: f32) i64 {
+    return @intFromFloat(
+        if (x >= y)
+            @mulAdd(f32, x, x, x + y)
+        else
+            @mulAdd(f32, y, y, x),
+    );
+}
+
+const U16Vector2 = @Vector(2, u16);
+
 const zero_vector: Vector2 = @splat(0);
 
-const halfone_scalar_vector: Vector2 = @splat(0.5);
+const halfone_vector: Vector2 = @splat(0.5);
 
-const one_scalar_vector: Vector2 = @splat(1);
+const one_vector: Vector2 = @splat(1);
 
-const two_scalar_vector: Vector2 = @splat(2);
+const two_vector: Vector2 = @splat(2);
 
 pub const Bounds = struct {
     top_left: Vector2,
@@ -26,82 +38,89 @@ pub const TileMapLayer = struct {
     data: []const []const u8,
 };
 
-pub const TileMapDebugOptions = struct {
-    show_origin: bool = false,
-    show_chunk_borders: bool = false,
-    show_tile_borders: bool = false,
-};
-
 pub const TileMapOptions = struct {
-    clamp_position_to_bounds: bool = false,
-    tile_size: u32 = 16,
+    tile_size: U16Vector2 = @splat(16),
+    chunk_size: U16Vector2 = .{ 4, 3 },
+    chunk_border: U16Vector2 = @splat(1),
+    chunk_max_cache_size: u32 = 64,
     layers: []const TileMapLayer,
-    chunk_size: @Vector(2, u8) = .{ 4, 3 },
-    chunk_border: Vector2 = @splat(1),
-    chunk_buffer_max_items: u32 = 64,
-    min_scale: ?f32 = null,
-    max_scale: ?f32 = null,
     bounds: ?Bounds = null,
-    debug: ?TileMapDebugOptions = null,
+    scale_bound: Vector2 = .{ -math.inf(f32), math.inf(f32) },
 };
-
-inline fn hashVector(vec: Vector2) u64 {
-    const x = @as(u32, @intFromFloat(vec[0]));
-    const y = @as(u32, @intFromFloat(vec[1]));
-
-    return (@as(u64, x) << 32) | y;
-}
 
 const Chunk = CanvasContext;
 
-const ChunkBuffer = S3fifo(u64, Chunk);
+const ChunkCacheKey = i64;
 
-options: TileMapOptions,
-chunk_buffer: ChunkBuffer,
+const ChunkCache = S3FIFO(ChunkCacheKey, Chunk, *TileMap, onChunkEvict);
 
-pub fn init(allocator: Allocator, options: TileMapOptions) !TileMap {
-    return .{
-        .options = options,
-        .chunk_buffer = ChunkBuffer.init(allocator, options.chunk_buffer_max_items),
+const ChunkList = Deque(Chunk);
+
+fn onChunkEvict(self: *TileMap, _: ChunkCacheKey, chunk: Chunk) void {
+    self.pending_destruction.pushBack(chunk) catch {
+        // Force destroy if not enough memory
+        chunk.destroy();
     };
 }
 
-pub fn deinit(self: *TileMap) void {
-    self.chunk_buffer.deinit();
+options: TileMapOptions,
+chunk_cache: ChunkCache,
+pending_destruction: ChunkList,
+
+pub fn init(allocator: Allocator, options: TileMapOptions) Allocator.Error!TileMap {
+    var tile_map = TileMap{
+        .options = options,
+        .chunk_cache = undefined,
+        .pending_destruction = try ChunkList.init(allocator),
+    };
+
+    tile_map.chunk_cache = try ChunkCache.init(allocator, options.chunk_max_cache_size, &tile_map);
+
+    return tile_map;
 }
 
-inline fn generateChunk(
+pub fn deinit(self: *TileMap) void {
+    self.chunk_cache.deinit();
+    self.pending_destruction.deinit();
+}
+
+fn generateChunk(
     self: *TileMap,
     chunk_position: Vector2,
-    absolute_chunk_size_vector: Vector2,
-    tile_size_vector: Vector2,
-    chunk_size_vector: Vector2,
-) !Chunk {
+    absolute_chunk_position: Vector2,
+    absolute_chunk_size: Vector2,
+    tile_size: Vector2,
+    chunk_size: Vector2,
+) Chunk {
     const options = self.options;
 
-    const chunk_ctx: Chunk = CanvasContext.createCanvasContext(
-        absolute_chunk_size_vector[0],
-        absolute_chunk_size_vector[1],
+    const chunk_ctx = CanvasContext.createCanvasContext(
+        absolute_chunk_size[0],
+        absolute_chunk_size[1],
         false,
     );
 
-    const top_left_tile: Vector2 = chunk_position * chunk_size_vector;
-    const bottom_right_tile: Vector2 = top_left_tile + chunk_size_vector - one_scalar_vector;
+    const tile_size_w, const tile_size_h = tile_size;
+
+    const top_left_tile: Vector2 = chunk_position * chunk_size;
+    const bottom_right_tile: Vector2 = top_left_tile + chunk_size - one_vector;
+
+    const top_left_tile_x, const top_left_tile_y = top_left_tile;
+    const bottom_right_tile_x, const bottom_right_tile_y = bottom_right_tile;
 
     const bounds_top_left = if (options.bounds) |b| b.top_left else zero_vector;
+
+    chunk_ctx.setImageSmoothingEnabled(false);
 
     for (options.layers) |layer| {
         // const data = layer.data;
         const tiles = layer.tiles;
 
-        var y_tile: f32 = top_left_tile[1];
-        while (y_tile <= bottom_right_tile[1]) : (y_tile += 1) {
-            var x_tile: f32 = top_left_tile[0];
-            while (x_tile <= bottom_right_tile[0]) : (x_tile += 1) {
-                const tile_position = Vector2{
-                    x_tile,
-                    y_tile,
-                };
+        var y_tile: f32 = top_left_tile_y;
+        while (y_tile <= bottom_right_tile_y) : (y_tile += 1) {
+            var x_tile: f32 = top_left_tile_x;
+            while (x_tile <= bottom_right_tile_x) : (x_tile += 1) {
+                const tile_position = Vector2{ x_tile, y_tile };
 
                 const tile_data_position: Vector2 = tile_position - bounds_top_left;
                 if (tile_data_position[0] < 0 or tile_data_position[1] < 0) continue;
@@ -117,16 +136,15 @@ inline fn generateChunk(
                 // const tile_data: usize = @intCast(data_row[data_cell_index]);
                 // if (tile_data >= tiles.len) continue;
 
-                const tile_absolute_position: Vector2 =
-                    (tile_position * tile_size_vector) -
-                    (chunk_position * absolute_chunk_size_vector);
+                const tile_absolute_position =
+                    @mulAdd(Vector2, tile_position, tile_size, -absolute_chunk_position);
 
                 chunk_ctx.copyCanvasScaled(
                     tiles[0], // tiles[tile_data],
                     tile_absolute_position[0],
                     tile_absolute_position[1],
-                    tile_size_vector[0],
-                    tile_size_vector[1],
+                    tile_size_w,
+                    tile_size_h,
                 );
             }
         }
@@ -139,15 +157,12 @@ inline fn drawChunk(
     _: *TileMap,
     ctx: CanvasContext,
     chunk: Chunk,
-    size: Vector2,
     position: Vector2,
 ) void {
-    ctx.copyCanvasScaled(
+    ctx.copyCanvas(
         chunk,
         position[0],
         position[1],
-        size[0] + 1,
-        size[1] + 1,
     );
 }
 
@@ -160,57 +175,48 @@ pub fn draw(
 ) void {
     const options = self.options;
 
-    const chunk_border = options.chunk_border;
+    const tile_size: Vector2 = @floatFromInt(options.tile_size);
 
     const chunk_size: Vector2 = @floatFromInt(options.chunk_size);
 
-    const tile_size: f32 = @floatFromInt(options.tile_size);
+    const chunk_border: Vector2 = @floatFromInt(options.chunk_border);
 
-    const tile_size_vector: Vector2 = @splat(tile_size);
+    const scale_bound = options.scale_bound;
 
-    const absolute_chunk_size_vector: Vector2 = tile_size_vector * chunk_size;
+    // tile_size and chunk_size are u16 vector, so this vector is actually integer vector
+    const absolute_chunk_size: Vector2 = tile_size * chunk_size;
 
-    var actual_scale = scale;
-
-    if (options.min_scale) |ms| {
-        actual_scale = @max(actual_scale, ms);
-    }
-
-    if (options.max_scale) |ms| {
-        actual_scale = @min(actual_scale, ms);
-    }
-
+    const actual_scale = math.clamp(scale, scale_bound[0], scale_bound[1]);
     const actual_scale_vector: Vector2 = @splat(actual_scale);
-    const actual_scale_vector_2mul: Vector2 = actual_scale_vector * two_scalar_vector;
+    const actual_scale_vector_2mul: Vector2 = actual_scale_vector * two_vector;
 
     const half_screen_scaled: Vector2 = @ceil(screen / actual_scale_vector_2mul);
 
-    var actual_position: Vector2 = undefined;
+    const actual_position: Vector2 = @round(if (options.bounds) |bounds| block: {
+        const tile_size_scaled: Vector2 = tile_size / actual_scale_vector;
+        const min_position = @mulAdd(Vector2, bounds.top_left, tile_size_scaled, half_screen_scaled);
+        const max_position = @mulAdd(Vector2, bounds.bottom_right, tile_size_scaled, -half_screen_scaled);
 
-    if (options.clamp_position_to_bounds) {
-        if (options.bounds) |bounds| {
-            const tile_size_scaled: Vector2 = tile_size_vector / actual_scale_vector;
-            const min_position: Vector2 = @mulAdd(Vector2, bounds.top_left, tile_size_scaled, half_screen_scaled);
-            const max_position: Vector2 = @mulAdd(Vector2, bounds.bottom_right, tile_size_scaled, -half_screen_scaled);
+        break :block math.clamp(position, min_position, max_position);
+    } else position);
 
-            actual_position = math.clamp(position, min_position, max_position);
-        } else {
-            actual_position = position;
-        }
-    } else {
-        actual_position = position;
-    }
-
-    const screen_center_chunk: Vector2 = @floor(actual_position / absolute_chunk_size_vector);
+    const screen_center_chunk: Vector2 = @floor(actual_position / absolute_chunk_size);
 
     const half_screen_size_in_chunks: Vector2 = @ceil(
         // Original calculation: (screen / (actual_scale_vector * absolute_chunk_size_vector)) * halfone_scalar_vector
-        (halfone_scalar_vector * screen) / (actual_scale_vector * absolute_chunk_size_vector),
+        (halfone_vector * screen) / (actual_scale_vector * absolute_chunk_size),
     );
 
+    // screen_center_chunk is floor'ed, half_screen_size_in_chunks is ceil'ed, chunk_border is u16 vector
+    // so top_left_chunk, bottom_right_chunk can be UsizeVector2
     const top_left_chunk: Vector2 = (screen_center_chunk - half_screen_size_in_chunks) - chunk_border;
     const bottom_right_chunk: Vector2 = (screen_center_chunk + half_screen_size_in_chunks) + chunk_border;
 
+    // Using round here because of:
+    // https://stackoverflow.com/questions/9942209/unwanted-lines-appearing-in-html5-canvas-using-tiles
+    // I̶ ̶d̶i̶d̶ ̶t̶h̶i̶s̶ ̶t̶o̶ ̶a̶b̶s̶o̶l̶u̶t̶e̶_̶c̶h̶u̶n̶k̶_̶p̶o̶s̶i̶t̶i̶o̶n̶ ̶t̶o̶o̶
+    // half_screen_scaled and actual_position is actually integer vector,
+    // so no need to round
     const translate_position: Vector2 = half_screen_scaled - actual_position;
 
     ctx.save();
@@ -223,146 +229,40 @@ pub fn draw(
         translate_position[1],
     );
 
-    var y_chunk: f32 = top_left_chunk[1];
-    while (y_chunk < bottom_right_chunk[1]) : (y_chunk += 1) {
-        var x_chunk: f32 = top_left_chunk[0];
-        while (x_chunk < bottom_right_chunk[0]) : (x_chunk += 1) {
-            const chunk_position = Vector2{
-                x_chunk,
-                y_chunk,
-            };
+    const top_left_chunk_x, const top_left_chunk_y = top_left_chunk;
+    const bottom_right_chunk_x, const bottom_right_chunk_y = bottom_right_chunk;
 
-            const absolute_chunk_position = chunk_position * absolute_chunk_size_vector;
+    var y_chunk: f32 = top_left_chunk_y;
+    while (y_chunk < bottom_right_chunk_y) : (y_chunk += 1) {
+        var x_chunk: f32 = top_left_chunk_x;
+        while (x_chunk < bottom_right_chunk_x) : (x_chunk += 1) {
+            const chunk_position = Vector2{ x_chunk, y_chunk };
 
-            const chunk_hash = hashVector(chunk_position);
+            const chunk_hash = szudzikPair(x_chunk, y_chunk);
 
-            if (self.chunk_buffer.get(chunk_hash)) |chunk| {
-                self.drawChunk(ctx, chunk, absolute_chunk_size_vector, absolute_chunk_position);
-            } else {
+            // chunk_position and absolute_chunk_size_vector is actually integer vector, so no need to round
+            const absolute_chunk_position: Vector2 = chunk_position * absolute_chunk_size;
+
+            if (self.chunk_cache.get(chunk_hash)) |chunk|
+                self.drawChunk(ctx, chunk, absolute_chunk_position)
+            else {
                 const chunk = self.generateChunk(
                     chunk_position,
-                    absolute_chunk_size_vector,
-                    tile_size_vector,
+                    absolute_chunk_position,
+                    absolute_chunk_size,
+                    tile_size,
                     chunk_size,
-                ) catch continue;
+                );
 
-                self.chunk_buffer.insert(chunk_hash, chunk) catch unreachable;
+                self.chunk_cache.insert(chunk_hash, chunk) catch unreachable;
 
-                self.drawChunk(ctx, chunk, absolute_chunk_size_vector, absolute_chunk_position);
-            }
-        }
-    }
-
-    if (self.options.debug) |debug| {
-        if (debug.show_tile_borders) {
-            const top_left_tile = @floor((screen_center_chunk - half_screen_size_in_chunks - one_scalar_vector) * chunk_size);
-            const bottom_right_tile = @ceil((screen_center_chunk + half_screen_size_in_chunks + one_scalar_vector) * chunk_size);
-
-            ctx.strokeColor(comptime Color.fromHex("ffa500")); // orange
-            ctx.setLineWidth(2);
-
-            var y: f32 = top_left_tile[1];
-            while (y < bottom_right_tile[1]) : (y += 1) {
-                const start = Vector2{
-                    actual_position[0] - screen[0] / (actual_scale * 2),
-                    y * tile_size,
-                };
-                const end = Vector2{
-                    actual_position[0] + screen[0] / (actual_scale * 2),
-                    y * tile_size,
-                };
-
-                drawLine(ctx, start, end);
-            }
-
-            var x: f32 = top_left_tile[0];
-            while (x < bottom_right_tile[0]) : (x += 1) {
-                const start = Vector2{
-                    x * tile_size,
-                    actual_position[1] - screen[1] / (actual_scale * 2),
-                };
-                const end = Vector2{
-                    x * tile_size,
-                    actual_position[1] + screen[1] / (actual_scale * 2),
-                };
-
-                drawLine(ctx, start, end);
-            }
-        }
-
-        if (debug.show_chunk_borders) {
-            ctx.strokeColor(comptime Color.fromHex("ffff00")); // yellow
-            ctx.setLineWidth(4);
-
-            var y: f32 = top_left_chunk[1];
-            while (y < bottom_right_chunk[1]) : (y += 1) {
-                const start = Vector2{
-                    actual_position[0] - screen[0] / (actual_scale * 2),
-                    y * absolute_chunk_size_vector[1],
-                };
-                const end = Vector2{
-                    actual_position[0] + screen[0] / (actual_scale * 2),
-                    y * absolute_chunk_size_vector[1],
-                };
-
-                drawLine(ctx, start, end);
-            }
-
-            var x: f32 = top_left_chunk[0];
-            while (x < bottom_right_chunk[0]) : (x += 1) {
-                const start = Vector2{
-                    x * absolute_chunk_size_vector[0],
-                    actual_position[1] - screen[1] / (actual_scale * 2),
-                };
-                const end = Vector2{
-                    x * absolute_chunk_size_vector[0],
-                    actual_position[1] + screen[1] / (actual_scale * 2),
-                };
-
-                drawLine(ctx, start, end);
-            }
-        }
-
-        if (debug.show_origin) {
-            const in_view = pointInBounds(
-                zero_vector,
-                top_left_chunk,
-                bottom_right_chunk,
-            );
-
-            if (in_view) {
-                drawCross(ctx, zero_vector, 20);
+                self.drawChunk(ctx, chunk, absolute_chunk_position);
             }
         }
     }
 
     ctx.restore();
-}
 
-fn drawLine(ctx: CanvasContext, start: Vector2, end: Vector2) void {
-    ctx.beginPath();
-    ctx.moveTo(start[0], start[1]);
-    ctx.lineTo(end[0], end[1]);
-    ctx.stroke();
-}
-
-fn drawCross(ctx: CanvasContext, position: Vector2, size: f32) void {
-    const half_size = @ceil(size / 2);
-
-    ctx.strokeColor(comptime Color.fromHex("00ffff")); // cyan
-    ctx.setLineWidth(2);
-
-    ctx.beginPath();
-    ctx.moveTo(position[0] - half_size, position[1] - half_size);
-    ctx.lineTo(position[0] + half_size, position[1] + half_size);
-    ctx.moveTo(position[0] - half_size, position[1] + half_size);
-    ctx.lineTo(position[0] + half_size, position[1] - half_size);
-    ctx.stroke();
-}
-
-fn pointInBounds(point: Vector2, top_left: Vector2, bottom_right: Vector2) bool {
-    return point[0] >= top_left[0] and
-        point[1] >= top_left[1] and
-        point[0] < bottom_right[0] and
-        point[1] < bottom_right[1];
+    // Destroy all pending chunks
+    while (self.pending_destruction.popBack()) |chunk| chunk.destroy();
 }

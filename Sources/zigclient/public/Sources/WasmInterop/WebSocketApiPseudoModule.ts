@@ -1,6 +1,6 @@
 import type WebAssemblyPseudoModule from "./WebAssemblyPseudoModule";
 import type { PseudoModuleFactory, PseudoModuleFactoryArguments } from "./WebAssemblyPseudoModule";
-import { alloc, checkWs, free, HEAP32, HEAP8, HEAPU32 } from "../Application";
+import { alloc, pollHandle, free, HEAP32, HEAP8, HEAPU32 } from "../Application";
 
 const enum EventType {
     MESSAGE = 1,
@@ -50,19 +50,19 @@ export const createWebSocketApiPseudoModule = ((...[, { decodeString }]: PseudoM
                 socket.onopen = function () {
                     socket.th.push([EventType.OPEN, 0, 0]);
 
-                    checkWs(socketId);
+                    pollHandle(socketId);
                 };
 
                 socket.onerror = function () {
                     socket.th.push([EventType.ERROR, 0, 0]);
 
-                    checkWs(socketId);
+                    pollHandle(socketId);
                 };
 
                 socket.onclose = function () {
                     socket.th.push([EventType.CLOSE, 0, 0]);
 
-                    checkWs(socketId);
+                    pollHandle(socketId);
                 };
 
                 socket.onmessage = function (e: MessageEvent) {
@@ -72,7 +72,7 @@ export const createWebSocketApiPseudoModule = ((...[, { decodeString }]: PseudoM
                     HEAP8.set(data, addr);
                     socket.th.push([EventType.MESSAGE, addr, data.length]);
 
-                    checkWs(socketId);
+                    pollHandle(socketId);
                 };
 
                 for (let i = 0; i < sockets.length; i++)
@@ -127,6 +127,7 @@ export const createWebSocketApiPseudoModule = ((...[, { decodeString }]: PseudoM
                 if (0 == socket.th.length) return 0;
 
                 const query = socket.th.shift();
+                
                 HEAPU32[addrPtr >> 2] = query[1];
                 HEAP32[lenPtr >> 2] = query[2];
 

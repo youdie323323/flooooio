@@ -14,11 +14,11 @@ pub fn build(b: *std.Build) void {
             .root_source_file = b.path("src/main.zig"),
             .target = target,
             .optimize = .ReleaseFast,
-            .single_threaded = true,
-            .strip = true,
-            .unwind_tables = .none,
-            .stack_protector = false,
-            .pic = false,
+            // .single_threaded = true,
+            // .strip = true,
+            // .unwind_tables = .none,
+            // .stack_protector = false,
+            // .pic = false,
         }),
     });
 

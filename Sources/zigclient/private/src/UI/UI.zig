@@ -1,7 +1,7 @@
 const std = @import("std");
-const CanvasContext = @import("../Interop/Canvas/CanvasContext.zig");
+const CanvasContext = @import("../WasmInterop/Canvas/CanvasContext.zig");
 const Component = @import("./Layout/Components/Component.zig");
-const Color = @import("../Interop/Canvas/Color.zig");
+const Color = @import("../WasmInterop/Canvas/Color.zig");
 const Allocator = std.mem.Allocator;
 const UI = @This();
 
@@ -45,7 +45,7 @@ pub fn render(self: *UI) void {
     // Render all components
     for (self.components.items) |component| {
         if (component.is_visible) {
-            self.ctx.fillColor(comptime Color.fromHex("000000"));
+            self.ctx.fillColor(comptime Color.fromCSSColorName("mintcream").lightened(0.1));
             self.ctx.rect(component.x, component.y, component.w, component.h);
             self.ctx.fill();
         }
