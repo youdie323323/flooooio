@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	applyMS = 50
+	fasterRagingApplyMS = 50
 )
 
 func (p *Petal) PetalFasterRaging(wp *WavePool) {
@@ -19,7 +19,7 @@ func (p *Petal) PetalFasterRaging(wp *WavePool) {
 
 	now := time.Now()
 
-	if now.Sub(p.LastVelocityApplied) >= applyMS*time.Millisecond {
+	if now.Sub(p.LastVelocityApplied) >= fasterRagingApplyMS*time.Millisecond {
 		p.AddRandomVelocity(rand.Float64() * 6)
 
 		p.LastVelocityApplied = now

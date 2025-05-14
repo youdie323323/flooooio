@@ -1,9 +1,9 @@
 const std = @import("std");
 const math = std.math;
 const Allocator = std.mem.Allocator;
-const CanvasContext = @import("../WasmInterop/Canvas/CanvasContext.zig");
+const CanvasContext = @import("../WebassemblyInterop/Canvas/CanvasContext.zig");
 const S3FIFO = @import("../zig-caches/S3FIFO/S3FIFO.zig").S3FIFO;
-const Color = @import("../WasmInterop/Canvas/Color.zig");
+const Color = @import("../WebassemblyInterop/Canvas/Color.zig");
 const Deque = @import("../zig-caches/S3FIFO/Deque.zig").Deque;
 const TileMap = @This();
 

@@ -23,15 +23,15 @@ const (
 
 type JudgementFunc = func(m *Mob, distanceToTarget float64) bool
 
-var cautionBehaviorStopJudger = map[native.MobType]JudgementFunc{
-	native.MobTypeHornet:    createCautionJudger(hornetCautionRadius),
-	native.MobTypeJellyfish: createCautionJudger(jellyfishCautionRadius),
-}
-
 func createCautionJudger(radiusMultiplier float64) JudgementFunc {
 	return func(m *Mob, distanceToTarget float64) bool {
 		return m.TargetEntity != nil && (m.CalculateRadius()*radiusMultiplier) > distanceToTarget
 	}
+}
+
+var cautionBehaviorStopJudger = map[native.MobType]JudgementFunc{
+	native.MobTypeHornet:    createCautionJudger(hornetCautionRadius),
+	native.MobTypeJellyfish: createCautionJudger(jellyfishCautionRadius),
 }
 
 // FindNearestEntity finds the nearest entity from a slice of entities.

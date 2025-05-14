@@ -104,6 +104,7 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
         };
         this.touchstart = (event: TouchEvent) => {
             event.preventDefault();
+            
             if (event.touches.length > 1) return;
 
             const touch = event.touches[0];
@@ -456,6 +457,7 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
         if (event.button === 0) {
             if (this.clickedComponent) {
                 const { mouseX, mouseY } = this;
+                
                 if (this.isComponentInteractableAtPosition(this.clickedComponent, mouseX, mouseY)) {
                     this.clickedComponent.emit("onUp");
                     this.clickedComponent.emit("onClick");

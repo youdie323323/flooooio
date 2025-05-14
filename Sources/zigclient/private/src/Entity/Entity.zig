@@ -8,9 +8,7 @@ var delta_time: f32 = 0.0;
 const Vector2 = @Vector(2, f32);
 
 inline fn calculateAngleDistance(start_angle: f32, end_angle: f32) f32 {
-    const angle_diff = @mod(end_angle - start_angle, math.tau);
-
-    return @mod(angle_diff * 2, math.tau) - angle_diff;
+    return @mod(end_angle - start_angle, math.tau) - math.pi;
 }
 
 inline fn interpolateAngle(start_angle: f32, end_angle: f32, progress: f32) f32 {
@@ -55,9 +53,9 @@ move_counter: f32,
 hp_alpha: f32,
 
 pub fn init(id: u32, x: f32, y: f32, angle: f32, size: f32, health: f32) Entity {
-    const initial_pos = Vector2{ x, y };
+    const initial_pos: Vector2 = .{ x, y };
 
-    return Entity{
+    return .{
         .id = id,
 
         .t = 0,
@@ -70,7 +68,7 @@ pub fn init(id: u32, x: f32, y: f32, angle: f32, size: f32, health: f32) Entity 
         .old_pos = initial_pos,
         .next_pos = initial_pos,
 
-        .eye_pos = Vector2{ 1, 0 },
+        .eye_pos = .{ 1, 0 },
 
         .angle = angle,
         .next_angle = angle,
@@ -94,16 +92,12 @@ pub fn init(id: u32, x: f32, y: f32, angle: f32, size: f32, health: f32) Entity 
 }
 
 pub fn update(self: *Entity) void {
-    if (self.is_dead) {
-        self.dead_t += delta_time / 200;
-    }
+    if (self.is_dead) self.dead_t += delta_time / 200;
 
     if (self.hurt_t > 0) {
         self.hurt_t -= delta_time / 150;
 
-        if (self.hurt_t < 0) {
-            self.hurt_t = 0;
-        }
+        if (self.hurt_t < 0) self.hurt_t = 0;
     }
 
     self.update_t += delta_time / 100;
@@ -116,31 +110,28 @@ pub fn update(self: *Entity) void {
     self.size = self.old_size + (self.next_size - self.old_size) * self.t;
 
     const eye_time_factor = @min(1, delta_time / 100);
-    const target_eye = Vector2{ @cos(self.next_angle), @sin(self.next_angle) };
+    const target_eye: Vector2 = .{ @cos(self.next_angle), @sin(self.next_angle) };
     const eye_factor: Vector2 = @splat(eye_time_factor);
 
     self.eye_pos += (target_eye - self.eye_pos) * eye_factor;
 
     self.angle = interpolateAngle(self.old_angle, self.next_angle, self.t);
 
-    const diff = self.pos - self.next_pos;
-    const dist = math.hypot(diff[0], diff[1]);
+    {
+        const diff_x, const diff_y = self.pos - self.next_pos;
+        const dist = math.hypot(diff_x, diff_y);
 
-    self.move_counter += dist / 50 * delta_time / 18;
+        self.move_counter += dist / 50 * delta_time / 18;
+    }
+
+    if (self.health < 1) self.hp_alpha = smoothInterpolate(self.hp_alpha, 1, 200);
 
     if (self.red_health_timer > 0) {
         self.red_health_timer -= delta_time / 600;
 
-        if (self.red_health_timer < 0) {
-            self.red_health_timer = 0;
-        }
+        if (self.red_health_timer < 0) self.red_health_timer = 0;
     }
 
-    if (self.health < 1) {
-        self.hp_alpha = smoothInterpolate(self.hp_alpha, 1, 200);
-    }
-
-    if (self.red_health_timer == 0) {
+    if (self.red_health_timer == 0)
         self.red_health += (self.health - self.red_health) * @min(1, delta_time / 200);
-    }
 }

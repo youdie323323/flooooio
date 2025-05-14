@@ -4,7 +4,7 @@ import type { LayoutContext, LayoutResult } from "../Layout";
 import LayoutCache from "../LayoutCache";
 import type { DynamicLayoutable } from "./ComponentDynamicLayoutable";
 import type { Layoutable } from "./ComponentLayoutable";
-import { type AnyStaticContainer, type StaticSpace } from "./WellKnown/Container";
+import type { AnyStaticContainer, StaticSpace } from "./WellKnown/Container";
 import type Gauge from "./WellKnown/Gauge";
 import type { Logo } from "./WellKnown/Logo";
 import type StaticText from "./WellKnown/StaticText";
@@ -49,13 +49,13 @@ export type Components =
 
 export type ComponentsConstructor = new (...args: ReadonlyArray<any>) => Components;
 
-const observerBrand = Symbol("observerBrand");
+const OBSERVER_BRAND = Symbol("observerBrand");
 
-declare const openerBrand: unique symbol;
-export type ComponentOpener = Components & { [observerBrand]: typeof openerBrand };
+declare const OPENER_BRAND: unique symbol;
+export type ComponentOpener = Components & { [OBSERVER_BRAND]: typeof OPENER_BRAND };
 
-declare const closerBrand: unique symbol;
-export type ComponentCloser = Components & { [observerBrand]: typeof closerBrand };
+declare const CLOSER_BRAND: unique symbol;
+export type ComponentCloser = Components & { [OBSERVER_BRAND]: typeof CLOSER_BRAND };
 
 /**
  * Fake type to be asserted to toggle value of setVisible first parameter.

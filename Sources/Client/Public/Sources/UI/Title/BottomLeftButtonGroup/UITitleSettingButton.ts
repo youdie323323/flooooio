@@ -52,14 +52,12 @@ export default class UITitleSettingButton extends createTitleBottomLeftToolTippe
             this.settingContainer = this.createSettingContainer(this.creditContainer);
 
             { // Add credit container
-                // Initialize as hidden
                 this.creditContainer.setVisible(false, null, false);
 
                 this.context.addComponent(this.creditContainer);
             }
 
             { // Add setting container
-                // Initialize as hidden
                 this.settingContainer.setVisible(false, null, false);
 
                 this.context.addComponent(this.settingContainer);
@@ -68,7 +66,7 @@ export default class UITitleSettingButton extends createTitleBottomLeftToolTippe
     }
 
     private createSettingContainer(creditContainer: ReturnType<typeof UITitleSettingButton["prototype"]["createCreditContainer"]>): StaticPanelContainer {
-        const makeSettingComponents = (y: number, storageKey: FlooooIoDefaultSettingKeys, description: string): [
+        const makeSettingRow = (y: number, settingKey: FlooooIoDefaultSettingKeys, description: string): [
             Toggle,
             StaticText,
         ] => {
@@ -79,15 +77,15 @@ export default class UITitleSettingButton extends createTitleBottomLeftToolTippe
                     w: 17,
                     h: 17,
                 },
-                
+
                 (t: boolean): void => {
                     settingToggle.setToggle(t);
 
-                    SettingStorage.set(storageKey, t);
+                    SettingStorage.set(settingKey, t);
                 },
             )
                 // Load existed setting
-                .setToggle(SettingStorage.get(storageKey));
+                .setToggle(SettingStorage.get(settingKey));
 
             return [
                 settingToggle,
@@ -194,10 +192,10 @@ export default class UITitleSettingButton extends createTitleBottomLeftToolTippe
             ),
 
             // Keyboard movement
-            ...makeSettingComponents(40, "keyboard_control", "Keyboard movement"),
+            ...makeSettingRow(40, "keyboard_control", "Keyboard movement"),
 
             // Movement helper
-            ...makeSettingComponents(40 + 30, "movement_helper", "Movement helper"),
+            ...makeSettingRow(40 + 30, "movement_helper", "Movement helper"),
 
             (creditsButton = makeSettingGameUnrelatedButton(40 + 30 + 30, "Credits", () => {
                 settingContainer.setVisible(

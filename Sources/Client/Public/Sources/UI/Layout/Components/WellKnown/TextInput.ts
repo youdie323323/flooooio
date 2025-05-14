@@ -514,6 +514,7 @@ export default class TextInput extends Component {
         }
 
         this.isFocused = true;
+        
         if (this.isReadOnly) {
             this.hiddenInput.readOnly = true;
         } else {
@@ -534,12 +535,14 @@ export default class TextInput extends Component {
             this.cursorBlinkInterval = setInterval(() => {
                 if (this.isCursorFadingOut) {
                     this.cursorOpacity -= 0.1;
+
                     if (this.cursorOpacity <= 0) {
                         this.isCursorFadingOut = false;
                         this.cursorOpacity = 0;
                     }
                 } else {
                     this.cursorOpacity += 0.1;
+
                     if (this.cursorOpacity >= 1) {
                         this.isCursorFadingOut = true;
                         this.cursorOpacity = 1;
@@ -689,9 +692,7 @@ export default class TextInput extends Component {
         const availableWidth = this.w - (padding * 2);
         const textWidth = this.textWidth(value);
 
-        if (textWidth <= availableWidth) {
-            return value;
-        }
+        if (textWidth <= availableWidth) return value;
 
         let startPos = 0;
         let endPos = value.length;
@@ -703,6 +704,7 @@ export default class TextInput extends Component {
                 currentWidth += this.textWidth(value[i]);
                 if (currentWidth + padding > cursorOffset - availableWidth + padding * 2) {
                     startPos = i;
+
                     break;
                 }
             }
@@ -713,6 +715,7 @@ export default class TextInput extends Component {
             currentWidth += this.textWidth(value[i]);
             if (currentWidth > availableWidth) {
                 endPos = i;
+
                 break;
             }
         }

@@ -1,21 +1,21 @@
-import type { PseudoModuleFactoryArguments } from "./WasmInterop/WebAssemblyPseudoModule";
-import { createDomApiPseudoModule } from "./WasmInterop/DomApiPseudoModule";
-import { createEventApiPseudoModule } from "./WasmInterop/EventApiPseudoModule";
-import { createContextApiPseudoModule } from "./WasmInterop/ContextApiPseudoModule";
-import FontDetect from "./Util/FontDetect";
-import { createWebSocketApiPseudoModule } from "./WasmInterop/WebSocketApiPseudoModule";
+import type { PseudoModuleFactoryArguments } from "./WebassemblyInterop/PseudoModules/WebAssemblyPseudoModule";
+import { createDomApiPseudoModule } from "./WebassemblyInterop/PseudoModules/DomApiPseudoModule";
+import { createEventApiPseudoModule } from "./WebassemblyInterop/PseudoModules/EventApiPseudoModule";
+import { createContextApiPseudoModule } from "./WebassemblyInterop/PseudoModules/ContextApiPseudoModule";
+import FontDetect from "./Utils/FontDetect";
+import { createWebSocketApiPseudoModule } from "./WebassemblyInterop/PseudoModules/WebSocketApiPseudoModule";
 
 type WasmExports = {
     memory: WebAssembly.Memory;
     __indirect_function_table: WebAssembly.Table;
 
-    main: () => void;
+    __main: () => void;
 
     // Allocates a memory with n items
-    alloc: (n: number) => number;
+    __alloc: (n: number) => number;
     // Free a memory at ptr
-    free: (ptr: number, n: number) => void;
-    pollHandle: (socketId: number) => void;
+    __free: (ptr: number, n: number) => void;
+    __pollHandle: (socketId: number) => void;
 };
 
 const WASM_PATH = "./client.wasm";
@@ -44,9 +44,9 @@ export let HEAPF64: Float64Array;
 
 export let table: WebAssembly.Table;
 
-export let alloc: WasmExports["alloc"];
-export let free: WasmExports["free"];
-export let pollHandle: WasmExports["pollHandle"];
+export let alloc: WasmExports["__alloc"];
+export let free: WasmExports["__free"];
+export let pollHandle: WasmExports["__pollHandle"];
 
 type FlooooWebassemblyInstance = Omit<WebAssembly.Instance, "exports"> & { exports: WasmExports };
 
@@ -108,6 +108,31 @@ function ensureFontsLoaded() {
 
                 return 0;
             },
+
+            args_get(argv_ptr: number, argv_buf_ptr: number): number { return 0; },
+            args_sizes_get(argc_ptr: number, argv_buf_size_ptr: number): number {
+                HEAP32[argc_ptr >> 2] = 0;
+                HEAP32[argv_buf_size_ptr >> 2] = 0;
+
+                return 0;
+            },
+
+            environ_get(environ_ptr: number, environ_buf_ptr: number): number { return 0; },
+            environ_sizes_get(environc_ptr: number, environ_buf_size_ptr: number): number {
+                HEAP32[environc_ptr >> 2] = 0;
+                HEAP32[environ_buf_size_ptr >> 2] = 0;
+
+                return 0;
+            },
+
+            fd_prestat_get(fd: number, prestat_ptr: number): number { return 28; }, // ENOSYS: function not implemented
+            fd_prestat_dir_name(fd: number, path_ptr: number, path_len: number): number { return 28; }, // ENOSYS
+
+            fd_read(fd: number, iovs_ptr: number, iovs_len: number, nread_ptr: number): number {
+                HEAP32[nread_ptr >> 2] = 0;
+
+                return 0;
+            },
         },
 
         // Canvas api
@@ -126,7 +151,14 @@ function ensureFontsLoaded() {
     function initializeModule(instance: FlooooWebassemblyInstance) {
         Module.asm = instance.exports;
 
-        const { memory: { buffer }, __indirect_function_table, main, alloc: wasmAlloc, free: wasmFree, pollHandle: wasmPollHandle } = Module.asm;
+        const {
+            memory: { buffer },
+            __indirect_function_table,
+            __main: main,
+            __alloc: wasmAlloc,
+            __free: wasmFree,
+            __pollHandle: wasmPollHandle,
+        } = Module.asm;
 
         Module.HEAP8 = HEAP8 = new Int8Array(buffer);
         Module.HEAP16 = HEAP16 = new Int16Array(buffer);

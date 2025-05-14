@@ -1,4 +1,3 @@
-const std = @import("std");
 const Component = @This();
 
 x: f32 = 0,

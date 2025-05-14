@@ -2,6 +2,25 @@ const std = @import("std");
 const builtin = std.builtin;
 const math = std.math;
 
+const event = @import("./WebassemblyInterop/Event.zig");
+const dom = @import("./WebassemblyInterop/Dom.zig");
+const WebSocket = @import("./WebassemblyInterop/WebSocket.zig");
+
+const Entity = @import("./Entity/Entity.zig");
+
+const requestAnimationFrame = @import("./WebassemblyInterop/animationFrame.zig").requestAnimationFrame;
+
+const CanvasContext = @import("./WebassemblyInterop/Canvas/CanvasContext.zig");
+const Path2D = @import("./WebassemblyInterop/Canvas/Path2D.zig");
+
+const UI = @import("./UI/UI.zig");
+
+const TileMap = @import("./Tile/TileMap.zig");
+
+const cpp = @cImport({
+    @cInclude("hello.h");
+});
+
 // Use fba for block auto-memory growing
 var buffer: [4096]u8 = undefined;
 var fba = std.heap.FixedBufferAllocator.init(&buffer);
@@ -9,32 +28,17 @@ const allocator = fba.allocator();
 
 // Exports alloc and free
 
-pub export fn alloc(n: usize) [*]u8 {
+pub export fn @"__alloc"(n: usize) [*]u8 {
     const slice = allocator.alloc(u8, n) catch unreachable;
 
     return slice.ptr;
 }
 
-pub export fn free(ptr: [*]u8, n: usize) void {
+pub export fn @"__free"(ptr: [*]u8, n: usize) void {
     const slice = ptr[0..n];
 
     allocator.free(slice);
 }
-
-const event = @import("./WasmInterop/Event.zig");
-const dom = @import("./WasmInterop/Dom.zig");
-const WebSocket = @import("./WasmInterop/WebSocket.zig");
-
-const Entity = @import("./Entity/Entity.zig");
-
-const requestAnimationFrame = @import("./WasmInterop/animationFrame.zig").requestAnimationFrame;
-
-const CanvasContext = @import("./WasmInterop/Canvas/CanvasContext.zig");
-const Path2D = @import("./WasmInterop/Canvas/Path2D.zig");
-
-const UI = @import("./UI/UI.zig");
-
-const TileMap = @import("./Tile/TileMap.zig");
 
 var ctx: CanvasContext = undefined;
 var current_ui: UI = undefined;
@@ -58,7 +62,9 @@ fn onWheel(_: ?*const event.Event) callconv(.c) void {
     scale -= 0.03;
 }
 
-export fn main() void {
+export fn @"__main"() void {
+    cpp.helloWorld();
+    
     std.debug.print("main()", .{});
 
     ws = WebSocket.connect("ws://localhost:8080/ws");
@@ -72,6 +78,9 @@ export fn main() void {
     event.addGlobalEventListener(.window, .wheel, onWheel);
 
     current_ui = UI.init(allocator, ctx);
+
+    var entity = Entity.init(1, 1, 1, 1, 1, 1);
+    entity.update();
 
     const tile_ctx = CanvasContext.createCanvasContext(256 * 4, 256 * 4, false);
 

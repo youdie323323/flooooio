@@ -7,12 +7,6 @@ import { StaticHContainer, StaticPanelContainer } from "./Container";
 
 export type ButtonCallback = () => void;
 
-/**
- * Abstract button class.
- * 
- * @remarks
- * When think of a normal button, can think of it as a combination of a StaticPanelContainer and a Text component.
- */
 export class Button extends StaticPanelContainer<StaticHContainer> {
     private static readonly INVALID_COLOR = "#aaaaa9" as const satisfies ColorCode;
 
