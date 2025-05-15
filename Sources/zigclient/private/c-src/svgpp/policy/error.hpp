@@ -244,7 +244,7 @@ struct raise_exception
     XMLElement const & element, ElementName const & name,
     typename boost::enable_if<typename detail::is_char_range<ElementName>::type>::type * = NULL)
   {
-    abort();
+    throw unknown_element_error(name) << boost::error_info<tag::error_info::xml_element, XMLElement>(element);
   }
 
   template<class XMLElement, class ElementName>
@@ -252,7 +252,7 @@ struct raise_exception
     XMLElement const & element, ElementName const &,
     typename boost::disable_if<typename detail::is_char_range<ElementName>::type>::type * = NULL)
   {
-    abort();
+    throw unknown_element_error() << boost::error_info<tag::error_info::xml_element, XMLElement>(element);
   }
 
   template<class XMLAttribute, class AttributeName>
@@ -264,7 +264,8 @@ struct raise_exception
     typename boost::enable_if<typename detail::is_char_range<AttributeName>::type>::type * = NULL)
   {
     if (namespace_id == detail::namespace_id::svg)
-      abort();
+      throw unknown_attribute_error(name) 
+        << boost::error_info<tag::error_info::xml_attribute, XMLAttribute>(attribute);
     else
       return true;
   }
@@ -278,7 +279,8 @@ struct raise_exception
     typename boost::disable_if<typename detail::is_char_range<AttributeName>::type>::type * = NULL)
   {
     if (namespace_id == detail::namespace_id::svg)
-      abort();
+      throw unknown_attribute_error() 
+        << boost::error_info<tag::error_info::xml_attribute, XMLAttribute>(attribute);
     else
       return true;
   }
@@ -290,7 +292,8 @@ struct raise_exception
     tag::source::css,
     typename boost::enable_if<typename detail::is_char_range<AttributeName>::type>::type * = NULL)
   {
-    abort();
+    throw unknown_css_property_error(name) 
+      << boost::error_info<tag::error_info::xml_attribute, XMLAttribute>(attribute);
   }
 
   template<class XMLAttribute, class AttributeName>
@@ -300,20 +303,21 @@ struct raise_exception
     tag::source::css,
     typename boost::disable_if<typename detail::is_char_range<AttributeName>::type>::type * = NULL)
   {
-    abort();
+    throw unknown_css_property_error() 
+      << boost::error_info<tag::error_info::xml_attribute, XMLAttribute>(attribute);
   }
 
   SVGPP_NORETURN static bool unexpected_attribute(Context const &, 
     detail::attribute_id id, tag::source::attribute)
   {
-    abort();
+    throw unexpected_attribute_error(attribute_name<char>::by_id(id));
   }
   
   template<class AttributeTag>
   SVGPP_NORETURN static bool required_attribute_not_found(Context const &, 
     AttributeTag)
   {
-    abort();
+    throw required_attribute_not_found_error(attribute_name<char>::get<AttributeTag>());
   }
 
   template<class AttributeTag, class AttributeValue>
@@ -325,20 +329,21 @@ struct raise_exception
           typename boost::range_iterator<AttributeValue>::type
         >::value_type
       >::type char_t;
-    abort();
+    throw invalid_value_error<char_t>(attribute_name<char>::get<AttributeTag>(), value);
   }
 
   template<class XMLElement>
   SVGPP_NORETURN static bool unexpected_element(Context const &, 
     XMLElement const & element)
   {
-    abort();
+    throw unexpected_element_error() 
+      << boost::error_info<tag::error_info::xml_element, XMLElement>(element);
   }
 
   template<class AttributeTag>
   SVGPP_NORETURN static bool negative_value(Context const &, AttributeTag)
   {
-    abort();
+    throw negative_value_error(attribute_name<char>::get<AttributeTag>());
   }
 
   typedef boost::exception intercepted_exception_type;
@@ -350,7 +355,7 @@ struct raise_exception
     typedef boost::error_info<tag::error_info::xml_element, XMLElement> error_info;
     if (boost::get_error_info<error_info>(e) == NULL)
       e << error_info(element);
-    abort();
+    throw;
   }
 };
 

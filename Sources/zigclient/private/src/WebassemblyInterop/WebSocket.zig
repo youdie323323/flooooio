@@ -66,11 +66,11 @@ pub inline fn poll(socket_id: WebSocketId) ?MessageEvent {
     };
 }
 
-export fn @"__pollHandle"(socket_id: WebSocketId) void {
+export fn pollHandle(socket_id: WebSocketId) void {
     if (poll(socket_id)) |event| {
         switch (event.event_type) {
             .message => {
-                if (event.data) |data| main.@"__free"(@constCast(data.ptr), data.len);
+                if (event.data) |data| main.free(@ptrCast(@alignCast(@constCast(data.ptr))));
             },
             .open, .@"error", .close => {
                 std.debug.print("Not message", .{});

@@ -12,10 +12,10 @@ type WasmExports = {
     __main: () => void;
 
     // Allocates a memory with n items
-    __alloc: (n: number) => number;
+    malloc: (size: number) => number;
     // Free a memory at ptr
-    __free: (ptr: number, n: number) => void;
-    __pollHandle: (socketId: number) => void;
+    free: (ptr: number) => void;
+    pollHandle: (socketId: number) => void;
 };
 
 const WASM_PATH = "./client.wasm";
@@ -44,9 +44,9 @@ export let HEAPF64: Float64Array;
 
 export let table: WebAssembly.Table;
 
-export let alloc: WasmExports["__alloc"];
-export let free: WasmExports["__free"];
-export let pollHandle: WasmExports["__pollHandle"];
+export let malloc: WasmExports["malloc"];
+export let free: WasmExports["free"];
+export let pollHandle: WasmExports["pollHandle"];
 
 type FlooooWebassemblyInstance = Omit<WebAssembly.Instance, "exports"> & { exports: WasmExports };
 
@@ -155,9 +155,9 @@ function ensureFontsLoaded() {
             memory: { buffer },
             __indirect_function_table,
             __main: main,
-            __alloc: wasmAlloc,
-            __free: wasmFree,
-            __pollHandle: wasmPollHandle,
+            malloc: wasmMalloc,
+            free: wasmFree,
+            pollHandle: wasmPollHandle,
         } = Module.asm;
 
         Module.HEAP8 = HEAP8 = new Int8Array(buffer);
@@ -171,7 +171,7 @@ function ensureFontsLoaded() {
 
         table = __indirect_function_table;
 
-        alloc = wasmAlloc;
+        malloc = wasmMalloc;
         free = wasmFree;
         pollHandle = wasmPollHandle;
 

@@ -15,7 +15,11 @@ pub fn build(b: *std.Build) !void {
             .root_source_file = b.path("src/main.zig"),
             .target = target,
             .optimize = .ReleaseFast,
+            .single_threaded = true,
             .strip = true,
+            .unwind_tables = .none,
+            .stack_protector = false,
+            .pic = false,
         }),
     });
 
@@ -23,13 +27,20 @@ pub fn build(b: *std.Build) !void {
     exe.export_table = true;
     exe.entry = .disabled;
     exe.rdynamic = true;
+    exe.want_lto = true;
 
     exe.linkLibCpp();
     exe.addIncludePath(b.path("c-src"));
     exe.addCSourceFile(.{
-        .file = b.path("c-src/hello.cpp"),
+        .file = b.path("c-src/parse_svg.cpp"),
         .flags = &.{
-            "-fno-exceptions",
+            "-s",
+            "-fno-stack-protector",
+            "-fno-pie",
+            "-fno-unwind-tables",
+            "-fno-asynchronous-unwind-tables",
+            "-Wl,--gc-sections",
+            "-Wl,--strip-all",
         },
     });
 

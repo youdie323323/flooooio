@@ -18,26 +18,37 @@ const UI = @import("./UI/UI.zig");
 const TileMap = @import("./Tile/TileMap.zig");
 
 const cpp = @cImport({
-    @cInclude("hello.h");
+    @cInclude("parse_svg.h");
 });
 
 // Use fba for block auto-memory growing
-var buffer: [4096]u8 = undefined;
+var buffer: [0x1000]u8 = undefined;
 var fba = std.heap.FixedBufferAllocator.init(&buffer);
 const allocator = fba.allocator();
 
-// Exports alloc and free
+// Setting up the free/alloc functions also overrides malloc and free in C
 
-pub export fn @"__alloc"(n: usize) [*]u8 {
-    const slice = allocator.alloc(u8, n) catch unreachable;
+const size_of_usize = @sizeOf(usize);
 
-    return slice.ptr;
+const align_of_usize = @alignOf(usize);
+
+pub export fn malloc(size: usize) ?*anyopaque {
+    const total_size = size_of_usize + size;
+    const ptr = allocator.alignedAlloc(u8, align_of_usize, total_size) catch {
+        // you should set errno here, auxiliary C function will work
+        return null;
+    };
+
+    @as(*usize, @ptrCast(ptr)).* = total_size;
+
+    return ptr.ptr + size_of_usize;
 }
 
-pub export fn @"__free"(ptr: [*]u8, n: usize) void {
-    const slice = ptr[0..n];
+pub export fn free(ptr: ?*align(size_of_usize) anyopaque) void {
+    const to_free = @as([*]align(size_of_usize) u8, @ptrCast(ptr.?)) - size_of_usize;
+    const total_size = @as(*usize, @ptrCast(to_free)).*;
 
-    allocator.free(slice);
+    allocator.free(to_free[0..total_size]);
 }
 
 var ctx: CanvasContext = undefined;
@@ -62,9 +73,9 @@ fn onWheel(_: ?*const event.Event) callconv(.c) void {
     scale -= 0.03;
 }
 
-export fn @"__main"() void {
-    cpp.helloWorld();
-    
+export fn __main() void {
+    cpp.parseSvg(@embedFile("./Tile/Tiles/grass_c_0.svg"));
+
     std.debug.print("main()", .{});
 
     ws = WebSocket.connect("ws://localhost:8080/ws");
@@ -84,7 +95,7 @@ export fn @"__main"() void {
 
     const tile_ctx = CanvasContext.createCanvasContext(256 * 4, 256 * 4, false);
 
-    tile_ctx.drawSVG(@embedFile("./Tile/Tiles/grass_c_0.svg"));
+    tile_ctx.drawSVG(@embedFile("./Tile/Tiles/desert_c_2.svg"));
 
     tile_map = TileMap.init(allocator, .{
         .tile_size = @splat(512),
@@ -100,7 +111,7 @@ export fn @"__main"() void {
         },
     }) catch unreachable;
 
-    draw(-1);
+    // draw(-1);
 }
 
 var i: f32 = 0;

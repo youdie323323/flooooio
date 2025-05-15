@@ -8,14 +8,9 @@
 #define BOOST_NO_EXCEPTIONS
 #define BOOST_EXCEPTION_DISABLE
 
-#include <boost/throw_exception.hpp>
-void boost::throw_exception(std::exception const & e) {
-  abort();
-}
-
 extern "C" {
   void * __cxa_allocate_exception(size_t) { abort(); }
-  void __cxa_throw(void *, std::type_info *, void (*/*dest*/)(void *)) { abort(); }
+  void __cxa_throw(void *, std::type_info *, void *(_LIBCXXABI_DTOR_FUNC *)(void *)) { abort(); }
 }
 
 #include <rapidxml_ns/rapidxml_ns.hpp>
@@ -28,56 +23,107 @@ typedef rapidxml_ns::xml_node<> const * xml_element_t;
 
 class Context
 {
-public:
-  void on_enter_element(tag::element::any)
-  {}
+public: 
+  template<class ElementTag>
+  void on_enter_element(ElementTag)
+  {
+    if (boost::is_same<ElementTag, tag::element::path>::value)
+    {
+      fprintf(stderr, "{\n\tconst path = new Path2D();\n");
+      fflush(stderr);
+    }
+  }
 
   void on_exit_element()
-  {}
+  { }
+
+  void set(tag::attribute::stroke_width, double val) 
+  {
+    fprintf(stderr, "ctx.lineWidth = %g;\n", val);
+    fflush(stderr);
+  }
 
   void transform_matrix(const boost::array<double, 6> & matrix)
-  {}
+  {
+    fprintf(stderr, "ctx.setTransform(%g, %g, %g, %g, %g, %g);\n",
+            matrix[0], matrix[1], matrix[2], 
+            matrix[3], matrix[4], matrix[5]);
+    fflush(stderr);
+  }
 
   void set_viewport(double viewport_x, double viewport_y, double viewport_width, double viewport_height)
-  {}
+  {
+    fprintf(stderr, "// viewport(%g, %g, %g, %g);\n",
+            viewport_x, viewport_y, viewport_width, viewport_height);
+    fflush(stderr);
+  }
 
   void set_viewbox_size(double viewbox_width, double viewbox_height)
-  {}
+  {
+    fprintf(stderr, "// viewBox(0, 0, %g, %g);\n",
+            viewbox_width, viewbox_height);
+    fflush(stderr);
+  }
 
   void disable_rendering()
-  {}
+  { }
 
   void path_move_to(double x, double y, tag::coordinate::absolute)
-  {}
+  {
+    fprintf(stderr, "path.moveTo(%g, %g);\n", x, y);
+    fflush(stderr);
+  }
 
   void path_line_to(double x, double y, tag::coordinate::absolute)
-  {}
+  {
+    fprintf(stderr, "path.lineTo(%g, %g);\n", x, y);
+    fflush(stderr);
+  }
 
   void path_cubic_bezier_to(
     double x1, double y1,
     double x2, double y2,
     double x, double y,
     tag::coordinate::absolute)
-  {}
+  {
+    fprintf(stderr, "path.bezierCurveTo(%g, %g, %g, %g, %g, %g);\n",
+            x1, y1, x2, y2, x, y);
+    fflush(stderr);
+  }
 
   void path_quadratic_bezier_to(
     double x1, double y1,
     double x, double y,
     tag::coordinate::absolute)
-  {}
+  {
+    fprintf(stderr, "path.quadraticCurveTo(%g, %g, %g, %g);\n",
+            x1, y1, x, y);
+    fflush(stderr);
+  }
 
   void path_elliptical_arc_to(
     double rx, double ry, double x_axis_rotation,
     bool large_arc_flag, bool sweep_flag,
     double x, double y,
     tag::coordinate::absolute)
-  {}
+  {
+    fprintf(stderr, "path.ellipse(%g, %g, %g, %g, %g, %d, %d);\n",
+            rx, ry, x_axis_rotation,
+            large_arc_flag ? 1 : 0, sweep_flag ? 1 : 0, x, y);
+    fflush(stderr);
+  }
 
   void path_close_subpath()
-  {}
+  {
+    fprintf(stderr, "path.closePath();\n");
+    fflush(stderr);
+  }
 
   void path_exit()
-  {}
+  {
+    fprintf(stderr, "ctx.fill(path);\n}\n");
+    fflush(stderr);
+  }
 };
 
 typedef 
@@ -106,7 +152,8 @@ typedef
       >
     >,
     boost::mpl::set<
-      tag::attribute::transform
+      tag::attribute::transform,
+      tag::attribute::stroke_width
     >::type,
     boost::mpl::insert<boost::mpl::_1, boost::mpl::_2>
   >::type processed_attributes_t;
@@ -121,27 +168,17 @@ void loadSvg(xml_element_t xml_root_element)
   >::load_document(xml_root_element, context);
 }
 
-extern "C" void helloWorld(void) {
-#define TEXT(x) #x
-  char text[] = 
-    TEXT(<svg xmlns="http://www.w3.org/2000/svg">)
-    TEXT( <g transform="translate(20,40)">)
-    TEXT(  <svg preserveAspectRatio="xMinYMin meet" viewBox="0 0 30 40" width="50" height="30">)
-    TEXT(   <rect x='.5' y='.5' width='29' height='39'/>)
-    TEXT(  </svg>)
-    TEXT( </g>)
-    TEXT(</svg>);
-
-  rapidxml_ns::xml_document<> doc;    // character type defaults to char
-  doc.parse<0>(text);  
+extern "C" void parseSvg(const char* svgText) {
+  rapidxml_ns::xml_document<> doc;    // Character type defaults to char
+  doc.parse<0>(const_cast<char*>(svgText));  // rapidxml requires non-const char*
   if (rapidxml_ns::xml_node<> * svg_element = doc.first_node("svg"))
   {
     loadSvg(svg_element);
   }
 }
 
-// wasi produces a reference to this in __main_void.c even though the linker
-// won't call it with .entry = .disabled
+// Wasi produces a reference to this in __main_void.c even though the linker
+// Won't call it with .entry = .disabled
 int main() {
   return 0;
 }

@@ -1,0 +1,1 @@
+void parseSvg(const char* svgText);

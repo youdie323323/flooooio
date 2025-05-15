@@ -1,0 +1,452 @@
+ ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+ 
+ 
+ { const path = new Path2D();
+
+ 
+ { const path = new Path2D();
+
+ path.moveTo(231.8, 122.8);
+
+ 
+ path.bezierCurveTo(232.4, 127.8, 229.1, 130.4, 224.4, 128.4);
+
+ 
+ path.bezierCurveTo(219.7, 126.4, 219.2, 122.3, 223.2, 119.2);
+
+ 
+ path.bezierCurveTo(227.3, 116.2, 231.2, 117.8, 231.8, 122.8);
+
+ 
+ 
+ path.closePath();
+
+ 
+ ctx.fill(path); }
+
+ 
+ { const path = new Path2D();
+
+ path.moveTo(171, 104.9);
+
+ 
+ path.bezierCurveTo(169.4, 110.2, 165, 111.2, 161.3, 107.2);
+
+ 
+ path.lineTo(148.8, 94);
+
+ 
+ path.bezierCurveTo(145, 90, 146.3, 85.7, 151.7, 84.4);
+
+ 
+ path.lineTo(169.4, 80.2);
+
+ 
+ path.bezierCurveTo(174.8, 78.9, 177.8, 82.2, 176.3, 87.5);
+
+ 
+ path.lineTo(171, 104.9);
+
+ 
+ 
+ path.closePath();
+
+ 
+ ctx.fill(path); }
+
+ 
+ { const path = new Path2D();
+
+ path.moveTo(53.7, 52.9);
+
+ 
+ path.bezierCurveTo(55.7, 58, 52.9, 61.5, 47.5, 60.7);
+
+ 
+ path.lineTo(22.6, 57);
+
+ 
+ path.bezierCurveTo(17.2, 56.2, 15.5, 52, 19, 47.7);
+
+ 
+ path.lineTo(34.7, 28.1);
+
+ 
+ path.bezierCurveTo(38.1, 23.8, 42.6, 24.5, 44.6, 29.6);
+
+ 
+ path.lineTo(53.7, 52.9);
+
+ 
+ 
+ path.closePath();
+
+ 
+ ctx.fill(path); }
+
+ 
+ { const path = new Path2D();
+
+ path.moveTo(219.1, 34.7);
+
+ 
+ path.bezierCurveTo(217, 39.1, 213.1, 39.5, 210.3, 35.5);
+
+ 
+ path.bezierCurveTo(207.5, 31.5, 209.2, 27.9, 214, 27.5);
+
+ 
+ path.bezierCurveTo(218.9, 27, 221.2, 30.2, 219.1, 34.7);
+
+ 
+ 
+ path.closePath();
+
+ 
+ ctx.fill(path); }
+
+ 
+ { const path = new Path2D();
+
+ path.moveTo(187.1, 195.2);
+
+ 
+ path.bezierCurveTo(184.1, 199.8, 179.6, 199.5, 177.1, 194.6);
+
+ 
+ path.lineTo(173.6, 187.6);
+
+ 
+ path.bezierCurveTo(171.1, 182.7, 173.6, 178.9, 179.1, 179.3);
+
+ 
+ path.lineTo(186.9, 179.8);
+
+ 
+ path.bezierCurveTo(192.4, 180.1, 194.4, 184.1, 191.4, 188.7);
+
+ 
+ path.lineTo(187.1, 195.2);
+
+ 
+ 
+ path.closePath();
+
+ 
+ ctx.fill(path); }
+
+ 
+ { const path = new Path2D();
+
+ path.moveTo(52.2, 238.2);
+
+ 
+ path.bezierCurveTo(50.6, 243.5, 46.2, 244.5, 42.5, 240.5);
+
+ 
+ path.lineTo(31.5, 228.9);
+
+ 
+ path.bezierCurveTo(27.7, 224.9, 29, 220.6, 34.4, 219.3);
+
+ 
+ path.lineTo(50, 215.6);
+
+ 
+ path.bezierCurveTo(55.4, 214.3, 58.4, 217.6, 56.9, 222.9);
+
+ 
+ path.lineTo(52.2, 238.2);
+
+ 
+ 
+ path.closePath();
+
+ 
+ ctx.fill(path); }
+
+ 
+ { const path = new Path2D();
+
+ path.moveTo(65.3, 167);
+
+ 
+ path.bezierCurveTo(68.2, 171.1, 66.4, 174.8, 61.5, 175.3);
+
+ 
+ path.bezierCurveTo(56.6, 175.8, 54.1, 172.4, 56.3, 167.8);
+
+ 
+ path.bezierCurveTo(58.3, 163.2, 62.4, 162.9, 65.3, 167);
+
+ 
+ 
+ path.closePath();
+
+ 
+ ctx.fill(path); }
+
+ 
+ { const path = new Path2D();
+
+ path.moveTo(123.5, 144);
+
+ 
+ path.bezierCurveTo(123.5, 149.5, 119.6, 151.8, 114.8, 149);
+
+ 
+ path.lineTo(109.7, 146);
+
+ 
+ path.bezierCurveTo(104.9, 143.2, 104.9, 138.8, 109.7, 136);
+
+ 
+ path.lineTo(114.8, 133);
+
+ 
+ path.bezierCurveTo(119.6, 130.2, 123.5, 132.5, 123.5, 138);
+
+ 
+ path.lineTo(123.5, 144);
+
+ 
+ 
+ path.closePath();
+
+ 
+ ctx.fill(path); }
+
+ 
+ { const path = new Path2D();
+
+ path.moveTo(110.5, 189.9);
+
+ 
+ path.bezierCurveTo(109.7, 195.3, 105.5, 197, 101.2, 193.5);
+
+ 
+ path.lineTo(98.2, 191.1);
+
+ 
+ path.bezierCurveTo(93.9, 187.7, 94.6, 183.2, 99.7, 181.2);
+
+ 
+ path.lineTo(103.2, 179.8);
+
+ 
+ path.bezierCurveTo(108.3, 177.8, 111.8, 180.6, 111, 186.1);
+
+ 
+ path.lineTo(110.5, 189.9);
+
+ 
+ 
+ path.closePath();
+
+ 
+ ctx.fill(path); }
+
+ 
+ { const path = new Path2D();
+
+ path.moveTo(34.5, 194.8);
+
+ 
+ path.bezierCurveTo(32.3, 198.6, 28.7, 198.6, 26.5, 194.8);
+
+ 
+ path.bezierCurveTo(24.3, 191, 26.1, 187.9, 30.5, 187.9);
+
+ 
+ path.bezierCurveTo(34.9, 187.9, 36.7, 191, 34.5, 194.8);
+
+ 
+ 
+ path.closePath();
+
+ 
+ ctx.fill(path); }
+
+ 
+ { const path = new Path2D();
+
+ path.moveTo(37.7, 112.7);
+
+ 
+ path.bezierCurveTo(39.9, 117.1, 37.7, 120.5, 32.7, 120.2);
+
+ 
+ path.bezierCurveTo(27.7, 119.9, 25.9, 116.3, 28.7, 112.1);
+
+ 
+ path.bezierCurveTo(31.4, 108, 35.4, 108.2, 37.7, 112.7);
+
+ 
+ 
+ path.closePath();
+
+ 
+ ctx.fill(path); }
+
+ 
+ { const path = new Path2D();
+
+ path.moveTo(96.2, 102.6);
+
+ 
+ path.bezierCurveTo(90.9, 101.3, 89.6, 97, 93.4, 93);
+
+ 
+ path.lineTo(97.7, 88.5);
+
+ 
+ path.bezierCurveTo(101.5, 84.5, 105.9, 85.6, 107.4, 90.9);
+
+ 
+ path.lineTo(109.1, 96.9);
+
+ 
+ path.bezierCurveTo(110.6, 102.2, 107.5, 105.4, 102.2, 104.1);
+
+ 
+ path.lineTo(96.2, 102.6);
+
+ 
+ 
+ path.closePath();
+
+ 
+ ctx.fill(path); }
+
+ 
+ { const path = new Path2D();
+
+ path.moveTo(230, 79.7);
+
+ 
+ path.bezierCurveTo(229.7, 85.2, 225.7, 87.2, 221.1, 84.3);
+
+ 
+ path.lineTo(220.4, 83.8);
+
+ 
+ path.bezierCurveTo(215.8, 80.8, 216, 76.3, 220.9, 73.8);
+
+ 
+ path.lineTo(221.7, 73.4);
+
+ 
+ path.bezierCurveTo(226.6, 70.9, 230.4, 73.3, 230.1, 78.8);
+
+ 
+ path.lineTo(230, 79.7);
+
+ 
+ 
+ path.closePath();
+
+ 
+ ctx.fill(path); }
+
+ 
+ { const path = new Path2D();
+
+ path.moveTo(120.9, 49.2);
+
+ 
+ path.bezierCurveTo(115.6, 50.6, 112.4, 47.4, 113.8, 42.1);
+
+ 
+ path.lineTo(116.1, 33.6);
+
+ 
+ path.bezierCurveTo(117.5, 28.3, 121.9, 27.1, 125.8, 31);
+
+ 
+ path.lineTo(132, 37.2);
+
+ 
+ path.bezierCurveTo(135.9, 41.1, 134.7, 45.4, 129.4, 46.9);
+
+ 
+ path.lineTo(120.9, 49.2);
+
+ 
+ 
+ path.closePath();
+
+ 
+ ctx.fill(path); }
+
+ 
+ { const path = new Path2D();
+
+ path.moveTo(222.4, 217.5);
+
+ 
+ path.bezierCurveTo(223.1, 223, 219.5, 225.7, 214.4, 223.5);
+
+ 
+ path.lineTo(209.9, 221.6);
+
+ 
+ path.bezierCurveTo(204.8, 219.5, 204.3, 215, 208.6, 211.7);
+
+ 
+ path.lineTo(212.5, 208.7);
+
+ 
+ path.bezierCurveTo(216.9, 205.4, 221, 207.1, 221.7, 212.6);
+
+ 
+ path.lineTo(222.4, 217.5);
+
+ 
+ 
+ path.closePath();
+
+ 
+ ctx.fill(path); }
+
+ 
+ { const path = new Path2D();
+
+ path.moveTo(179.4, 154.2);
+
+ 
+ path.bezierCurveTo(174.4, 153.7, 172.7, 149.9, 175.7, 145.9);
+
+ 
+ path.bezierCurveTo(178.7, 141.9, 182.7, 142.3, 184.8, 146.9);
+
+ 
+ path.bezierCurveTo(186.9, 151.5, 184.4, 154.8, 179.4, 154.2);
+
+ 
+ 
+ path.closePath();
+
+ 
+ ctx.fill(path); }
+
+ 
+ { const path = new Path2D();
+
+ path.moveTo(134.4, 225.6);
+
+ 
+ path.bezierCurveTo(134.7, 230.8, 131.2, 233.1, 126.6, 230.8);
+
+ 
+ path.bezierCurveTo(122, 228.5, 121.7, 224.3, 126, 221.4);
+
+ 
+ path.bezierCurveTo(130.3, 218.6, 134.1, 220.5, 134.4, 225.6);
+
+ 
+ 
+ path.closePath();
+
+ 
+ ctx.fill(path); }
