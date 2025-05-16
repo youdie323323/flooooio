@@ -97,7 +97,7 @@ type SwapPetalCommand struct {
 	At int
 }
 
-const PlayerSpeedMultiplier = .8
+const PlayerSpeedMultiplier = .4
 
 func (c *MovementCommand) Execute(_ *WavePool, p *Player) {
 	if p.IsDead {

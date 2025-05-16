@@ -398,9 +398,7 @@ export default class UITitle extends AbstractUI {
                     text: "",
 
                     fontSize: 15,
-                    fontFamily: 'Ubuntu',
                     textColor: '#212121',
-                    fontWeight: 'bold',
 
                     placeholder: '',
                     showPlaceholderWhenUnfocused: false,
@@ -748,9 +746,7 @@ export default class UITitle extends AbstractUI {
                         text: "",
 
                         fontSize: 10,
-                        fontFamily: 'Ubuntu',
                         textColor: '#212121',
-                        fontWeight: 'bold',
 
                         placeholder: '',
                         showPlaceholderWhenUnfocused: false,

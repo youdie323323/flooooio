@@ -11,13 +11,13 @@ export interface TransitionConfig {
     isComplete: (canvas: HTMLCanvasElement, radius: number) => boolean;
 }
 
-export default class UserInterfaceSceneTransition {
+export default class UISceneTransition {
     private readonly ctx: CanvasRenderingContext2D;
 
     private static readonly STROKE_WIDTH = 5;
-    private static readonly STROKE_COLOR = '#000000';
+    private static readonly STROKE_COLOR = "#000000";
 
-    private readonly TRANSITION_CONFIGS = {
+    private static readonly TRANSITION_CONFIGS = {
         title: {
             initialRadius: (canvas) => Math.max(((canvas.height / uiScaleFactor) / 2) + 100, ((canvas.width / uiScaleFactor) / 2) + 100),
             radiusChange: (current) => current - (0.3 + current / 40),
@@ -33,17 +33,17 @@ export default class UserInterfaceSceneTransition {
     private radius: number;
 
     constructor(private readonly canvas: HTMLCanvasElement) {
-        this.ctx = canvas.getContext('2d');
+        this.ctx = canvas.getContext("2d");
         this.radius = -1;
     }
 
     public start(type: UIType): void {
-        const config = this.TRANSITION_CONFIGS[type];
+        const config = UISceneTransition.TRANSITION_CONFIGS[type];
         this.radius = config.initialRadius(this.canvas);
     }
 
     public update(type: UIType): boolean {
-        const config = this.TRANSITION_CONFIGS[type];
+        const config = UISceneTransition.TRANSITION_CONFIGS[type];
         this.radius = config.radiusChange(this.radius);
 
         return config.isComplete(this.canvas, this.radius);
@@ -58,8 +58,10 @@ export default class UserInterfaceSceneTransition {
         innerUI?.render();
 
         this.ctx.save();
+
         this.clipCircle();
         outerUI?.render();
+        
         this.ctx.restore();
 
         this.drawTransitionBorder();
@@ -79,7 +81,7 @@ export default class UserInterfaceSceneTransition {
             TAU,
         );
 
-        this.ctx.clip('evenodd');
+        this.ctx.clip("evenodd");
     }
 
     private drawTransitionBorder(): void {
@@ -96,8 +98,8 @@ export default class UserInterfaceSceneTransition {
             0,
             TAU,
         );
-        this.ctx.lineWidth = UserInterfaceSceneTransition.STROKE_WIDTH;
-        this.ctx.strokeStyle = UserInterfaceSceneTransition.STROKE_COLOR;
+        this.ctx.lineWidth = UISceneTransition.STROKE_WIDTH;
+        this.ctx.strokeStyle = UISceneTransition.STROKE_COLOR;
         this.ctx.stroke();
 
         this.ctx.restore();

@@ -1,9 +1,9 @@
-import type { PseudoModuleFactoryArguments } from "./WebassemblyInterop/PseudoModules/WebAssemblyPseudoModule";
-import { createDomApiPseudoModule } from "./WebassemblyInterop/PseudoModules/DomApiPseudoModule";
-import { createEventApiPseudoModule } from "./WebassemblyInterop/PseudoModules/EventApiPseudoModule";
-import { createContextApiPseudoModule } from "./WebassemblyInterop/PseudoModules/ContextApiPseudoModule";
+import type { PseudoModuleFactoryArguments } from "./WebAssembly/Interop/PseudoModules/WebAssemblyPseudoModule";
+import { createDomApiPseudoModule } from "./WebAssembly/Interop/PseudoModules/DomApiPseudoModule";
+import { createEventApiPseudoModule } from "./WebAssembly/Interop/PseudoModules/EventApiPseudoModule";
+import { createContextApiPseudoModule } from "./WebAssembly/Interop/PseudoModules/ContextApiPseudoModule";
 import FontDetect from "./Utils/FontDetect";
-import { createWebSocketApiPseudoModule } from "./WebassemblyInterop/PseudoModules/WebSocketApiPseudoModule";
+import { createWebSocketApiPseudoModule } from "./WebAssembly/Interop/PseudoModules/WebSocketApiPseudoModule";
 
 type WasmExports = {
     memory: WebAssembly.Memory;
@@ -77,6 +77,15 @@ function ensureFontsLoaded() {
     const domApiPseudoModule = createDomApiPseudoModule(...pseudoModuleFactoryArguments);
     const webSocketApiPseudoModule = createWebSocketApiPseudoModule(...pseudoModuleFactoryArguments);
 
+    let stdout: string = "";
+
+    const stdoutWrite = (src: string) => {
+        stdout += src;
+
+        for (let i: number; -1 !== (i = stdout.indexOf('\n')); stdout = stdout.slice(i + 1))
+            console.log(stdout.slice(0, i));
+    };
+
     const importObject = {
         wasi_snapshot_preview1: {
             fd_write(fd: number, iovs_ptr: number, iovs_len: number, nwritten_ptr: number): number {
@@ -90,7 +99,7 @@ function ensureFontsLoaded() {
 
                     nwritten += len;
 
-                    console.log(decodeString(ptr, len));
+                    stdoutWrite(decodeString(ptr, len));
                 }
 
                 HEAPU32[nwritten_ptr >> 2] = nwritten;

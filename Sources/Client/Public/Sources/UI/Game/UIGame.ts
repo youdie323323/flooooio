@@ -951,9 +951,7 @@ export default class UIGame extends AbstractUI {
                     text: "",
 
                     fontSize: 11,
-                    fontFamily: 'Ubuntu',
                     textColor: '#212121',
-                    fontWeight: 'bold',
 
                     placeholder: '',
                     placeholderUnfocused: "Press [ENTER] or click here to chat",

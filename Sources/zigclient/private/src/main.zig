@@ -2,16 +2,16 @@ const std = @import("std");
 const builtin = std.builtin;
 const math = std.math;
 
-const event = @import("./WebassemblyInterop/Event.zig");
-const dom = @import("./WebassemblyInterop/Dom.zig");
-const WebSocket = @import("./WebassemblyInterop/WebSocket.zig");
+const event = @import("./WebAssembly/Interop/Event.zig");
+const dom = @import("./WebAssembly/Interop/Dom.zig");
+const WebSocket = @import("./WebAssembly/Interop/WebSocket.zig");
 
 const Entity = @import("./Entity/Entity.zig");
 
-const requestAnimationFrame = @import("./WebassemblyInterop/animationFrame.zig").requestAnimationFrame;
+const requestAnimationFrame = @import("./WebAssembly/Interop/animationFrame.zig").requestAnimationFrame;
 
-const CanvasContext = @import("./WebassemblyInterop/Canvas/CanvasContext.zig");
-const Path2D = @import("./WebassemblyInterop/Canvas/Path2D.zig");
+const CanvasContext = @import("./WebAssembly/Interop/Canvas/CanvasContext.zig");
+const Path2D = @import("./WebAssembly/Interop/Canvas/Path2D.zig");
 
 const UI = @import("./UI/UI.zig");
 

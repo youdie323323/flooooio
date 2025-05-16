@@ -1,7 +1,7 @@
 import type WebAssemblyPseudoModule from "./WebAssemblyPseudoModule";
 import { Canvg, presets } from "canvg";
 import type { PseudoModuleFactory, PseudoModuleFactoryArguments } from "./WebAssemblyPseudoModule";
-import { HEAPU16, HEAPU32, table } from "../../Application";
+import { HEAPU16, table } from "../../../Application";
 
 const contexts: Array<CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D> = new Array();
 const destroyedContextIds: Array<number> = new Array();

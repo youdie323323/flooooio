@@ -1,10 +1,10 @@
 const std = @import("std");
 const math = std.math;
 const Allocator = std.mem.Allocator;
-const CanvasContext = @import("../WebassemblyInterop/Canvas/CanvasContext.zig");
-const S3FIFO = @import("../zig-caches/S3FIFO/S3FIFO.zig").S3FIFO;
-const Color = @import("../WebassemblyInterop/Canvas/Color.zig");
-const Deque = @import("../zig-caches/S3FIFO/Deque.zig").Deque;
+const CanvasContext = @import("../WebAssembly/Interop/Canvas/CanvasContext.zig");
+const S3FIFO = @import("./S3FIFO/S3FIFO.zig").S3FIFO;
+const Color = @import("../WebAssembly/Interop/Canvas/Color.zig");
+const Deque = @import("./S3FIFO/Deque.zig").Deque;
 const TileMap = @This();
 
 pub const Vector2 = @Vector(2, f32);

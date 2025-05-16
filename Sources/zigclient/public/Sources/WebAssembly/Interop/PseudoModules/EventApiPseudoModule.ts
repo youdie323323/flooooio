@@ -1,4 +1,4 @@
-import { table } from "../../Application";
+import { table } from "../../../Application";
 import type WebAssemblyPseudoModule from "./WebAssemblyPseudoModule";
 import type { PseudoModuleFactory, PseudoModuleFactoryArguments } from "./WebAssemblyPseudoModule";
 

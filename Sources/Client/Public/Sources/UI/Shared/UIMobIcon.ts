@@ -7,6 +7,7 @@ import { RARITY_COLOR } from "../../Native/Rarity";
 import { CanvasLogo } from "../Layout/Components/WellKnown/Logo";
 import { renderEntity } from "../../Entity/Renderers/RendererRenderingLink";
 import type { LayoutOptions } from "../Layout/Layout";
+import { setGameFont } from "../Layout/Components/WellKnown/StaticText";
 
 export default class UIMobIcon extends StaticPanelContainer {
     private static readonly ICON_MOB_ANGLE: number = -3 * Math.PI / 4;
@@ -102,13 +103,14 @@ export default class UIMobIcon extends StaticPanelContainer {
 
         ctx.rotate((30 * Math.PI) / 180);
 
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        ctx.textBaseline = 'middle';
-        ctx.textAlign = 'center';
-        ctx.strokeStyle = '#000000';
-        ctx.fillStyle = "white";
-        ctx.font = "7px Ubuntu";
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "center";
+
+        ctx.fillStyle = "#ffffff";
+        setGameFont(ctx, 7);
+
         ctx.strokeText("x" + amount, 0, 0);
         ctx.fillText("x" + amount, 0, 0);
     }

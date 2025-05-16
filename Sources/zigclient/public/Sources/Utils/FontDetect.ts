@@ -3,9 +3,6 @@ export default class FontDetect {
     private static span: HTMLSpanElement | null = null;
     private static readonly fallbackFonts: string[] = ["serif", "sans-serif", "monospace", "cursive", "fantasy"];
 
-    private constructor() {
-    }
-
     public static init(): void {
         if (FontDetect.wasInitialized === true) {
             return;
@@ -14,7 +11,7 @@ export default class FontDetect {
         FontDetect.wasInitialized = true;
 
         const body = document.body;
-        const firstChild = document.body.firstChild;
+        const { firstChild } = body;
 
         const div = document.createElement("div");
         div.id = "fontdetectHelper";
@@ -88,18 +85,15 @@ export default class FontDetect {
         let wThisFont = 0;
         let wPrevFont = 0;
 
-        if (FontDetect.wasInitialized === false) {
-            FontDetect.init();
-        }
+        if (FontDetect.wasInitialized === false) FontDetect.init();
 
-        if (!FontDetect.span) {
-            return false;
-        }
+        if (!FontDetect.span) return false;
 
         FontDetect.span.innerText = innerText || "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
         for (let ix = 0; ix < FontDetect.fallbackFonts.length; ix++) {
             FontDetect.span.style.fontFamily = `${cssFontName},${FontDetect.fallbackFonts[ix]}`;
+
             wThisFont = FontDetect.span.offsetWidth;
             if (ix > 0 && wThisFont !== wPrevFont) {
                 return false;

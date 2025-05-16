@@ -1,14 +1,14 @@
 import UIGame from "./Game/UIGame";
 import UITitle from "./Title/UITitle";
 import type AbstractUI from "./UI";
-import UserInterfaceSceneTransition from "./UISceneTransition";
+import UISceneTransition from "./UISceneTransition";
 
 export type UIType = 'game' | 'title';
 
 export type RealUICtor = UIGame | UITitle;
 
 export default class UIContext {
-    private readonly transition: UserInterfaceSceneTransition;
+    private readonly transition: UISceneTransition;
     public isTransitioning: boolean;
 
     public currentCtx: AbstractUI | null;
@@ -18,7 +18,7 @@ export default class UIContext {
         this.currentCtx = new UITitle(canvas);
         this.previousCtx = null;
 
-        this.transition = new UserInterfaceSceneTransition(canvas);
+        this.transition = new UISceneTransition(canvas);
         this.isTransitioning = false;
     }
 

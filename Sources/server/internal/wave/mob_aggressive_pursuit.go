@@ -91,6 +91,10 @@ func FindNearestEntityWithLimitedDistance(me collision.Node, entities []collisio
 
 const angleFactor = 40.5845104884 // 255/(2*PI)
 
+const angleInterpolationFactor = .03
+
+const tau = 2 * math.Pi
+
 // TurnAngleToTarget calculates interpolated angle to target.
 func TurnAngleToTarget(thisAngle, dx, dy float64) float64 {
 	targetAngle := math.Mod(math.Atan2(dy, dx)*angleFactor, 255)
@@ -103,11 +107,23 @@ func TurnAngleToTarget(thisAngle, dx, dy float64) float64 {
 		angleDiff += 255
 	}
 
-	return math.Mod(normalizedAngle+angleDiff*0.1+255, 255)
+	return math.Mod(normalizedAngle+angleDiff*angleInterpolationFactor+255, 255)
+}
+
+func normalizeAngle(angle float64) float64 {
+	angle = math.Mod(angle, tau)
+
+	if angle > math.Pi {
+		angle -= tau
+	} else if angle < -math.Pi {
+		angle += tau
+	}
+
+	return angle
 }
 
 // predictInterceptionAngleMob calculates the angle to hit a moving mob with a missile.
-func predictInterceptionAngleMob(dx, dy float64, m *Mob, missileSpeed float64) *float64 {
+func predictInterceptionAngleMob(dx, dy float64, m *Mob, missileSpeed float64, currentAngle float64) *float64 {
 	// Calculate target's speed vector
 	targetRad := angleToRadian(m.Angle)
 
@@ -115,6 +131,15 @@ func predictInterceptionAngleMob(dx, dy float64, m *Mob, missileSpeed float64) *
 
 	vtx := math.Cos(targetRad) * targetSpeed
 	vty := math.Sin(targetRad) * targetSpeed
+
+	currentRad := currentAngle / angleFactor
+
+	targetAngle := math.Atan2(dy, dx)
+	angleDiff := math.Abs(normalizeAngle(targetAngle - currentRad))
+	interpolationTime := 2 /* - log(0.01) */ / angleInterpolationFactor
+	if angleDiff > 1e-3 {
+		interpolationTime *= (1 - math.Exp(-angleInterpolationFactor*angleDiff))
+	}
 
 	relSpeedSq := missileSpeed*missileSpeed - (vtx*vtx + vty*vty)
 	posSq := dx*dx + dy*dy
@@ -130,20 +155,21 @@ func predictInterceptionAngleMob(dx, dy float64, m *Mob, missileSpeed float64) *
 		return nil
 	}
 
-	xf := dx + vtx*t
-	yf := dy + vty*t
+	totalTime := t + interpolationTime
+	xf := dx + vtx*totalTime
+	yf := dy + vty*totalTime
 
 	// Convert to 255 scale angle
-	angle := math.Mod(math.Atan2(yf, xf)*angleFactor, 255)
+	interpolatedAngle := TurnAngleToTarget(currentAngle, xf, yf)
 
-	return &angle
+	return &interpolatedAngle
 }
 
 const averageFactor = (1 - PlayerMovementMu*PlayerMovementMu) / (2 * (1 - PlayerMovementMu))
 
 // predictInterceptionAnglePlayer calculates the angle to hit a player target with a missile.
 // Player movement uses velocity with friction instead of direct angle-based movement.
-func predictInterceptionAnglePlayer(dx, dy float64, p *Player, missileSpeed float64) *float64 {
+func predictInterceptionAnglePlayer(dx, dy float64, p *Player, missileSpeed float64, currentAngle float64) *float64 {
 	// Use current velocity instead of angle-based speed
 	vtx := p.Velocity[0]
 	vty := p.Velocity[1]
@@ -157,6 +183,15 @@ func predictInterceptionAnglePlayer(dx, dy float64, p *Player, missileSpeed floa
 	// Average velocity considering friction decay
 	vtx *= averageFactor
 	vty *= averageFactor
+
+	currentRad := currentAngle / angleFactor
+
+	targetAngle := math.Atan2(dy, dx)
+	angleDiff := math.Abs(normalizeAngle(targetAngle - currentRad))
+	interpolationTime := 2 /* - log(0.01) */ / angleInterpolationFactor
+	if angleDiff > 1e-3 {
+		interpolationTime *= (1 - math.Exp(-angleInterpolationFactor*angleDiff))
+	}
 
 	relSpeedSq := missileSpeed*missileSpeed - (vtx*vtx + vty*vty)
 	posSq := dx*dx + dy*dy
@@ -173,13 +208,14 @@ func predictInterceptionAnglePlayer(dx, dy float64, p *Player, missileSpeed floa
 	}
 
 	// Predict final position using average velocity
-	xf := dx + vtx*t
-	yf := dy + vty*t
+	totalTime := t + interpolationTime
+	xf := dx + vtx*totalTime
+	yf := dy + vty*totalTime
 
 	// Convert to 255 scale angle
-	angle := math.Mod(math.Atan2(yf, xf)*angleFactor, 255)
+	interpolatedAngle := TurnAngleToTarget(currentAngle, xf, yf)
 
-	return &angle
+	return &interpolatedAngle
 }
 
 const mobDetectionRange = 15.
@@ -311,12 +347,12 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 				switch e := m.TargetEntity.(type) {
 				case *Mob:
 					{
-						predicted = predictInterceptionAngleMob(dx, dy, e, missileSpeed)
+						predicted = predictInterceptionAngleMob(dx, dy, e, missileSpeed, m.Angle)
 					}
 
 				case *Player:
 					{
-						predicted = predictInterceptionAnglePlayer(dx, dy, e, missileSpeed)
+						predicted = predictInterceptionAnglePlayer(dx, dy, e, missileSpeed, m.Angle)
 					}
 				}
 

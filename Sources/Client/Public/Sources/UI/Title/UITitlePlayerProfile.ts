@@ -6,7 +6,7 @@ import { DARKENED_BASE } from "../../Utils/Color";
 import type { MaybePointerLike } from "../Layout/Components/Component";
 import { Component, OBSTRUCTION_AFFECTABLE } from "../Layout/Components/Component";
 import { AbstractDynamicLayoutable } from "../Layout/Components/ComponentDynamicLayoutable";
-import { calculateStrokeWidth } from "../Layout/Components/WellKnown/StaticText";
+import { calculateStrokeWidth, setGameFont } from "../Layout/Components/WellKnown/StaticText";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../Layout/Layout";
 import Layout from "../Layout/Layout";
 import type { WaveRoomPlayerInformation } from "./UITitle";
@@ -89,9 +89,7 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
             ctx.textAlign = "center";
 
             ctx.fillStyle = "white";
-            ctx.strokeStyle = '#000000';
-            ctx.font = `${10}px Ubuntu`;
-            ctx.lineWidth = calculateStrokeWidth(10);
+            setGameFont(ctx, 10);
 
             ctx.strokeText("Empty", 0, 0);
             ctx.fillText("Empty", 0, 0);
@@ -107,9 +105,7 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
                 ctx.textAlign = "center";
 
                 ctx.fillStyle = "white";
-                ctx.strokeStyle = '#000000';
-                ctx.font = `${10}px Ubuntu`;
-                ctx.lineWidth = calculateStrokeWidth(10);
+                setGameFont(ctx, 10);
 
                 this.drawScaledText(ctx, computedName, 0, 0, this.w * 0.9);
 
@@ -132,9 +128,7 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
                 ctx.textAlign = "center";
 
                 ctx.fillStyle = "white";
-                ctx.strokeStyle = '#000000';
-                ctx.font = `${8}px Ubuntu`;
-                ctx.lineWidth = calculateStrokeWidth(8);
+                setGameFont(ctx, 8);
 
                 ctx.strokeText("(you)", 0, 0);
                 ctx.fillText("(you)", 0, 0);
@@ -155,9 +149,7 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
                 ctx.textAlign = "center";
 
                 ctx.fillStyle = "#70fc68";
-                ctx.strokeStyle = '#000000';
-                ctx.font = `${11}px Ubuntu`;
-                ctx.lineWidth = calculateStrokeWidth(11);
+                setGameFont(ctx, 11);
 
                 ctx.strokeText("Ready", 0, 0);
                 ctx.fillText("Ready", 0, 0);

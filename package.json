@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "Florr.io-like game",
   "scripts": {
-    "build:client": "tsc --noEmit & node esbuild.mjs",
+    "build:client:public": "cd Sources/zigclient/public && esbuild Sources/Application.ts --bundle --minify --legal-comments=none --allow-overwrite --outfile=../../server/static/client.js",
+    "build:client:private": "cd Sources/zigclient/private && zig build",
+    "build:client:public:legacy": "tsc --noEmit & node esbuild.mjs",
     "build:server": "cd Sources/server && go build -ldflags=\"-s -w\" -trimpath internal/cmd/flooooio/main.go",
     "start:server": "cd Sources/server && go run internal/cmd/flooooio/main.go"
   },
@@ -11,26 +13,21 @@
     "@basementuniverse/utils": "^1.7.0",
     "@basementuniverse/vec": "^2.2.2",
     "@stylistic/eslint-plugin": "^4.1.0",
-    "@types/express": "^5.0.0",
-    "@types/node-schedule": "^2.1.7",
     "canvg": "^4.0.3",
     "dotenv": "^16.4.7",
     "esbuild": "0.24.0",
     "eslint-import-resolver-typescript": "^3.7.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-tsdoc": "^0.4.0",
-    "express": "^4.21.2",
     "globals": "^15.13.0",
     "inquirer": "^12.2.0",
     "js-confuser": "^2.0.0",
     "lru_map": "^0.4.1",
     "mnemonist": "^0.40.3",
-    "node-schedule": "^2.1.1",
     "stackblur-canvas": "^2.7.0",
     "strict-event-emitter": "^0.5.1",
     "svgo": "^3.3.2",
     "typescript-eslint": "^8.18.0",
-    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.51.0",
     "ws": "^8.18.0"
   }
 }

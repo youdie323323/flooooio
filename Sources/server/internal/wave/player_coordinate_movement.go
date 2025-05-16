@@ -1,7 +1,7 @@
 package wave
 
 const (
-	PlayerMovementMu = .8
+	PlayerMovementMu = .9
 )
 
 func (p *Player) PlayerCoordinateMovement(wp *WavePool) {

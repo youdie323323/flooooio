@@ -15,7 +15,6 @@ interface TextInputOptions {
     fontFamily?: string;
     textColor?: string;
     fontWeight?: string;
-    fontStyle?: string;
     isReadOnly?: boolean;
     maxLength?: number;
     paddingSize?: number;
@@ -49,7 +48,6 @@ export default class TextInput extends Component {
     public fontFamily: string;
     public textColor: string;
     public fontWeight: string;
-    public fontStyle: string;
     public placeHolderColor: string;
     public backgroundColor: string | CanvasGradient | CanvasPattern;
     public paddingSize: number;
@@ -98,22 +96,21 @@ export default class TextInput extends Component {
 
         // Initialize core properties
         this.canvas = options.canvas;
-        this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
+        this.ctx = this.canvas ? this.canvas.getContext("2d") : null;
         this.value = options.text || "";
 
         // Initialize style properties
         this.fontSize = options.fontSize || 14;
-        this.fontFamily = options.fontFamily || 'Arial';
-        this.textColor = options.textColor || '#000';
-        this.fontWeight = options.fontWeight || 'normal';
-        this.fontStyle = options.fontStyle || 'normal';
-        this.placeHolderColor = options.placeholderColor || '#bfbebd';
-        this.backgroundColor = options.backgroundColor || '#fff';
+        this.fontFamily = options.fontFamily || "Ubuntu";
+        this.textColor = options.textColor || "#000";
+        this.fontWeight = options.fontWeight || "bold";
+        this.placeHolderColor = options.placeholderColor || "#bfbebd";
+        this.backgroundColor = options.backgroundColor || "#fff";
         this.paddingSize = options.paddingSize >= 0 ? options.paddingSize : 5;
         this.borderWidth = options.borderWidth >= 0 ? options.borderWidth : 1;
-        this.borderColor = options.borderColor || '#959595';
+        this.borderColor = options.borderColor || "#959595";
         this.borderRadius = options.borderRadius >= 0 ? options.borderRadius : 1;
-        this.highlightColor = options.highlightColor || '#909090';
+        this.highlightColor = options.highlightColor || "#909090";
 
         // Initialize input state
         this.isReadOnly = options.isReadOnly || false;
@@ -127,8 +124,8 @@ export default class TextInput extends Component {
         this.selectionRange = [0, 0];
 
         // Initialize placeholder properties
-        this.placeholder = options.placeholder || '';
-        this.placeholderUnfocused = options.placeholderUnfocused || '';
+        this.placeholder = options.placeholder || "";
+        this.placeholderUnfocused = options.placeholderUnfocused || "";
         this.showPlaceholderWhenUnfocused = options.showPlaceholderWhenUnfocused || false;
 
         // Initialize event handlers
@@ -139,7 +136,7 @@ export default class TextInput extends Component {
         this.onBlur = options.onBlur || function () { };
 
         if (this.canvas) {
-            this.canvas.addEventListener('mousemove', this.mouseMoveHandler = (e: MouseEvent) => {
+            this.canvas.addEventListener("mousemove", this.mouseMoveHandler = (e: MouseEvent) => {
                 if (!this.visible) {
                     return;
                 }
@@ -147,7 +144,7 @@ export default class TextInput extends Component {
                 this.mousemove(e, this);
             });
 
-            this.canvas.addEventListener('mousedown', this.mouseDownHandler = (e: MouseEvent) => {
+            this.canvas.addEventListener("mousedown", this.mouseDownHandler = (e: MouseEvent) => {
                 if (!this.visible) {
                     return;
                 }
@@ -155,7 +152,7 @@ export default class TextInput extends Component {
                 this.mousedown(e, this);
             });
 
-            this.canvas.addEventListener('mouseup', this.mouseUpHandler = (e: MouseEvent) => {
+            this.canvas.addEventListener("mouseup", this.mouseUpHandler = (e: MouseEvent) => {
                 if (!this.visible) {
                     return;
                 }
@@ -164,14 +161,14 @@ export default class TextInput extends Component {
             });
         }
 
-        this.hiddenInput = document.createElement('input');
-        this.hiddenInput.type = 'text';
-        this.hiddenInput.style.position = 'absolute';
+        this.hiddenInput = document.createElement("input");
+        this.hiddenInput.type = "text";
+        this.hiddenInput.style.position = "absolute";
         this.hiddenInput.style.opacity = "0";
-        this.hiddenInput.style.pointerEvents = 'none';
+        this.hiddenInput.style.pointerEvents = "none";
         this.hiddenInput.style.zIndex = "0";
 
-        this.hiddenInput.style.transform = 'scale(0)';
+        this.hiddenInput.style.transform = "scale(0)";
 
         if (this.maxLength) {
             this.hiddenInput.maxLength = this.maxLength;
@@ -181,7 +178,7 @@ export default class TextInput extends Component {
 
         this.hiddenInput.value = this.value;
 
-        this.hiddenInput.addEventListener('keydown', (e: KeyboardEvent) => {
+        this.hiddenInput.addEventListener("keydown", (e: KeyboardEvent) => {
             if (!this.visible) {
                 return;
             }
@@ -288,7 +285,7 @@ export default class TextInput extends Component {
         this.drawBackgroundOverlay();
 
         ctx.fillStyle = "#000000";
-        ctx.strokeStyle = '#ffffff';
+        ctx.strokeStyle = "#ffffff";
         ctx.lineWidth = calculateStrokeWidth(this.fontSize);
 
         ctx.translate(this.paddingSize + this.borderWidth, h / 2);
@@ -304,7 +301,7 @@ export default class TextInput extends Component {
         this.drawBackgroundOverlay();
 
         ctx.fillStyle = "#ffffff";
-        ctx.strokeStyle = '#000000';
+        ctx.strokeStyle = "#000000";
         ctx.lineWidth = calculateStrokeWidth(this.fontSize);
 
         ctx.translate(this.paddingSize + this.borderWidth, h / 2);
@@ -328,11 +325,11 @@ export default class TextInput extends Component {
     private setupTextContext(reduced = false) {
         const { ctx } = this;
 
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        ctx.font = `${this.fontStyle} ${this.fontWeight} ${this.fontSize - (reduced ? 1 : 0)}px ${this.fontFamily}`;
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.font = `${this.fontWeight} ${this.fontSize - (reduced ? 1 : 0)}px ${this.fontFamily}`;
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
     }
 
     private renderTextInput(text: string) {
@@ -468,7 +465,7 @@ export default class TextInput extends Component {
     private renderSelectedChar(char: string, x: number) {
         const { ctx: ctx } = this;
 
-        ctx.strokeStyle = '#000000';
+        ctx.strokeStyle = "#000000";
         ctx.fillStyle = "#ffffff";
         ctx.lineWidth = calculateStrokeWidth(this.fontSize);
 
@@ -514,7 +511,7 @@ export default class TextInput extends Component {
         }
 
         this.isFocused = true;
-        
+
         if (this.isReadOnly) {
             this.hiddenInput.readOnly = true;
         } else {
@@ -686,7 +683,7 @@ export default class TextInput extends Component {
     }
 
     private clipText(value: string = undefined) {
-        value = (typeof value === 'undefined') ? this.value : value;
+        value = (typeof value === "undefined") ? this.value : value;
 
         const padding = this.paddingSize + this.borderWidth;
         const availableWidth = this.w - (padding * 2);
@@ -724,12 +721,12 @@ export default class TextInput extends Component {
     }
 
     private textWidth(text: string) {
-        const ctx = this.ctx;
+        const { ctx } = this;
 
-        ctx.font = this.fontStyle + ' ' + this.fontWeight + ' ' + this.fontSize + 'px ' + this.fontFamily;
-        ctx.textAlign = 'left';
+        ctx.font = `${this.fontWeight} ${this.fontSize}px ${this.fontFamily}`;
+        ctx.textAlign = "left";
         // Disable font kerning so 1++ length doesnt have wrong precision
-        ctx.fontKerning = 'none';
+        ctx.fontKerning = "none";
 
         return ctx.measureText(text).width;
     }

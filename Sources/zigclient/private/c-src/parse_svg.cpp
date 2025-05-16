@@ -29,100 +29,87 @@ public:
   {
     if (boost::is_same<ElementTag, tag::element::path>::value)
     {
-      fprintf(stderr, "{\n\tconst path = new Path2D();\n");
-      fflush(stderr);
+      std::ios_base::Init init;
+      std::cout << "{\n\tconst path = new Path2D();" << std::endl;
     }
   }
 
-  void on_exit_element()
-  { }
+  void on_exit_element() { }
 
   void set(tag::attribute::stroke_width, double val) 
   {
-    fprintf(stderr, "ctx.lineWidth = %g;\n", val);
-    fflush(stderr);
+    std::ios_base::Init init;
+    std::cout << "ctx.lineWidth = " << val << ";" << std::endl;
   }
 
   void transform_matrix(const boost::array<double, 6> & matrix)
   {
-    fprintf(stderr, "ctx.setTransform(%g, %g, %g, %g, %g, %g);\n",
-            matrix[0], matrix[1], matrix[2], 
-            matrix[3], matrix[4], matrix[5]);
-    fflush(stderr);
+    std::ios_base::Init init;
+    std::cout << "ctx.setTransform(" 
+              << matrix[0] << ", " << matrix[1] << ", " << matrix[2] << ", "
+              << matrix[3] << ", " << matrix[4] << ", " << matrix[5] << ");" << std::endl;
   }
 
   void set_viewport(double viewport_x, double viewport_y, double viewport_width, double viewport_height)
   {
-    fprintf(stderr, "// viewport(%g, %g, %g, %g);\n",
-            viewport_x, viewport_y, viewport_width, viewport_height);
-    fflush(stderr);
+    std::ios_base::Init init;
+    std::cout << "// viewport(" << viewport_x << ", " << viewport_y 
+              << ", " << viewport_width << ", " << viewport_height << ");" << std::endl;
   }
 
   void set_viewbox_size(double viewbox_width, double viewbox_height)
   {
-    fprintf(stderr, "// viewBox(0, 0, %g, %g);\n",
-            viewbox_width, viewbox_height);
-    fflush(stderr);
+    std::ios_base::Init init;
+    std::cout << "// viewBox(0, 0, " << viewbox_width << ", " << viewbox_height << ");" << std::endl;
   }
 
-  void disable_rendering()
-  { }
+  void disable_rendering() { }
 
   void path_move_to(double x, double y, tag::coordinate::absolute)
   {
-    fprintf(stderr, "path.moveTo(%g, %g);\n", x, y);
-    fflush(stderr);
+    std::ios_base::Init init;
+    std::cout << "path.moveTo(" << x << ", " << y << ");" << std::endl;
   }
 
   void path_line_to(double x, double y, tag::coordinate::absolute)
   {
-    fprintf(stderr, "path.lineTo(%g, %g);\n", x, y);
-    fflush(stderr);
+    std::ios_base::Init init;
+    std::cout << "path.lineTo(" << x << ", " << y << ");" << std::endl;
   }
 
-  void path_cubic_bezier_to(
-    double x1, double y1,
-    double x2, double y2,
-    double x, double y,
-    tag::coordinate::absolute)
+  void path_cubic_bezier_to(double x1, double y1, double x2, double y2, double x, double y, tag::coordinate::absolute)
   {
-    fprintf(stderr, "path.bezierCurveTo(%g, %g, %g, %g, %g, %g);\n",
-            x1, y1, x2, y2, x, y);
-    fflush(stderr);
+    std::ios_base::Init init;
+    std::cout << "path.bezierCurveTo(" 
+              << x1 << ", " << y1 << ", " << x2 << ", " << y2 << ", " << x << ", " << y << ");" << std::endl;
   }
 
-  void path_quadratic_bezier_to(
-    double x1, double y1,
-    double x, double y,
-    tag::coordinate::absolute)
+  void path_quadratic_bezier_to(double x1, double y1, double x, double y, tag::coordinate::absolute)
   {
-    fprintf(stderr, "path.quadraticCurveTo(%g, %g, %g, %g);\n",
-            x1, y1, x, y);
-    fflush(stderr);
+    std::ios_base::Init init;
+    std::cout << "path.quadraticCurveTo(" 
+              << x1 << ", " << y1 << ", " << x << ", " << y << ");" << std::endl;
   }
 
-  void path_elliptical_arc_to(
-    double rx, double ry, double x_axis_rotation,
-    bool large_arc_flag, bool sweep_flag,
-    double x, double y,
-    tag::coordinate::absolute)
+  void path_elliptical_arc_to(double rx, double ry, double x_axis_rotation, bool large_arc_flag, bool sweep_flag, double x, double y, tag::coordinate::absolute)
   {
-    fprintf(stderr, "path.ellipse(%g, %g, %g, %g, %g, %d, %d);\n",
-            rx, ry, x_axis_rotation,
-            large_arc_flag ? 1 : 0, sweep_flag ? 1 : 0, x, y);
-    fflush(stderr);
+    std::ios_base::Init init;
+    std::cout << "path.ellipse(" 
+              << rx << ", " << ry << ", " << x_axis_rotation << ", "
+              << (large_arc_flag ? 1 : 0) << ", " << (sweep_flag ? 1 : 0) << ", "
+              << x << ", " << y << ");" << std::endl;
   }
 
   void path_close_subpath()
   {
-    fprintf(stderr, "path.closePath();\n");
-    fflush(stderr);
+    std::ios_base::Init init;
+    std::cout << "path.closePath();" << std::endl;
   }
 
   void path_exit()
   {
-    fprintf(stderr, "ctx.fill(path);\n}\n");
-    fflush(stderr);
+    std::ios_base::Init init;
+    std::cout << "ctx.fill(path);\n}" << std::endl;
   }
 };
 

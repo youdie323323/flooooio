@@ -10,6 +10,12 @@ export const calculateStrokeWidth = memo((fontSize: number): number => {
     return fontSize / 8.333333830038736;
 });
 
+export const setGameFont = (ctx: CanvasRenderingContext2D, fontSize: number): void => {
+    ctx.strokeStyle = "#000000";
+    ctx.font = fontSize + "px Ubuntu";
+    ctx.lineWidth = calculateStrokeWidth(fontSize);
+};
+
 export type ClipboardEvents = {
     "onCopySucceed": [];
     "onCopyFailed": [];
@@ -49,7 +55,7 @@ export default class StaticText extends Component<ClipboardEvents> {
 
             if (computedIsCopyable) {
                 this.context.canvas.style.cursor = "pointer";
-                
+
                 isHovered = true;
             }
         });
@@ -114,7 +120,8 @@ export default class StaticText extends Component<ClipboardEvents> {
         ctx.save();
 
         ctx.textAlign = computedTextAlign;
-        ctx.font = `${computedFontSize}px Ubuntu`;
+
+        setGameFont(ctx, computedFontSize);
 
         const { LINE_HEIGHT_MULTIPLIER, TEXT_WIDTH_OFFSET } = StaticText;
 
@@ -197,9 +204,7 @@ export default class StaticText extends Component<ClipboardEvents> {
         ctx.textAlign = computedTextAlign;
 
         ctx.fillStyle = computedFillStyle;
-        ctx.strokeStyle = "#000000";
-        ctx.font = `${computedFontSize}px Ubuntu`;
-        ctx.lineWidth = calculateStrokeWidth(computedFontSize);
+        setGameFont(ctx, computedFontSize);
 
         let x = this.x;
         switch (computedTextAlign) {

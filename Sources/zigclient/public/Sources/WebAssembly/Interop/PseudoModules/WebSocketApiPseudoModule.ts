@@ -1,6 +1,6 @@
 import type WebAssemblyPseudoModule from "./WebAssemblyPseudoModule";
 import type { PseudoModuleFactory, PseudoModuleFactoryArguments } from "./WebAssemblyPseudoModule";
-import { malloc, pollHandle, free, HEAP32, HEAP8, HEAPU32 } from "../../Application";
+import { malloc, pollHandle, free, HEAP32, HEAP8, HEAPU32 } from "../../../Application";
 
 const enum EventType {
     MESSAGE = 1,
@@ -110,7 +110,7 @@ export const createWebSocketApiPseudoModule = ((...[, { decodeString }]: PseudoM
 
                 try {
                     socket.send(HEAP8.subarray(ptr, ptr + len));
-                } catch (d) {
+                } catch (e) {
                     return 0;
                 }
 

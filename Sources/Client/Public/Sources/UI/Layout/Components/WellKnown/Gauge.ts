@@ -4,7 +4,7 @@ import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
 import type { MaybePointerLike } from "../Component";
 import { Component, OBSTRUCTION_AFFECTABLE } from "../Component";
-import { calculateStrokeWidth } from "./StaticText";
+import { calculateStrokeWidth, setGameFont } from "./StaticText";
 
 export type GaugeSource = Readonly<{
     value: number;
@@ -137,9 +137,7 @@ export default class Gauge extends Component {
             ctx.textAlign = "center";
 
             ctx.fillStyle = "white";
-            ctx.strokeStyle = "#000000";
-            ctx.font = `${fontSize}px Ubuntu`;
-            ctx.lineWidth = calculateStrokeWidth(fontSize);
+            setGameFont(ctx, fontSize);
 
             const x = (this.w + computedGaugeWidthPadding) / 2,
                 y = this.h / 2;

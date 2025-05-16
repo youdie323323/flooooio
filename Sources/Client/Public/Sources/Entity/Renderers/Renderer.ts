@@ -10,6 +10,7 @@ import type { ColorCode } from "../../Utils/Color";
 import { memo } from "../../Utils/Memoize";
 import { isPetal } from "../Petal";
 import { MobType, PetalType } from "../../Native/Entity/EntityType";
+import { setGameFont } from "../../UI/Layout/Components/WellKnown/StaticText";
 
 const hexToRgb = memo((hexColor: ColorCode) => {
     return [
@@ -105,12 +106,11 @@ export default class Renderer<T extends Entity> {
             ctx.translate(0, -(entity.size + 10));
             ctx.scale(0.2, 0.2);
 
-            ctx.font = "4em Ubuntu";
-            ctx.textBaseline = 'middle';
-            ctx.textAlign = 'center';
-            ctx.lineWidth = 8;
-            ctx.strokeStyle = '#000000';
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "center";
+
             ctx.fillStyle = "#ffffff";
+            setGameFont(ctx, 8);
 
             ctx.strokeText(entity.name, 0, 0);
             ctx.fillText(entity.name, 0, 0);
