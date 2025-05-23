@@ -176,7 +176,7 @@ func predictInterceptionAnglePlayer(dx, dy float64, p *Player, missileSpeed floa
 
 	// Calculate future position considering friction
 	// We need to solve quadratic equation for interception time
-	// Position = initialPos + velocity * (1-friction^t)/(1-friction)
+	// p = p_{initial} + v * (1-f^t)/(1-f)
 	// This is complex to solve exactly, so we'll use an approximation
 
 	// Simplified approach: use average velocity over the prediction period

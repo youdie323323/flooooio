@@ -1,0 +1,74 @@
+const std = @import("std");
+const testing = std.testing;
+pub const CStringPointer = [*:0]u8;
+pub const ConstCStringPointer = [*:0]const u8;
+
+/// Alias for `*anyopaque`
+pub const OpaquePointer = *anyopaque;
+pub const ConstOpaquePointer = *const anyopaque;
+
+// Use fba for block auto-memory growing
+var buffer: [0x1000]u8 = undefined;
+var fba = std.heap.FixedBufferAllocator.init(&buffer);
+pub const allocator = fba.allocator();
+
+// Setting up the free/alloc functions also overrides malloc and free in C
+
+const size_of_usize = @sizeOf(usize);
+
+const align_of_usize = @alignOf(usize);
+
+pub const MemoryPointer = *align(size_of_usize) anyopaque;
+
+pub export fn malloc(size: usize) MemoryPointer {
+    const total_size = size + size_of_usize;
+    const ptr = allocator.alignedAlloc(u8, align_of_usize, total_size) catch {
+        // You should set errno here, auxiliary C function will work
+        unreachable;
+    };
+
+    @as(*usize, @ptrCast(ptr)).* = total_size;
+
+    return ptr.ptr + size_of_usize;
+}
+
+pub export fn free(ptr: MemoryPointer) void {
+    const to_free = @as([*]align(size_of_usize) u8, @ptrCast(ptr)) - size_of_usize;
+    const total_size = @as(*usize, @ptrCast(to_free)).*;
+
+    allocator.free(to_free[0..total_size]);
+}
+
+pub fn allocCString(slice: []const u8) MemoryPointer {
+    return @ptrCast(@alignCast(allocator.dupeZ(u8, slice) catch unreachable));
+}
+
+test "malloc/free benchmark" {
+    const sizes = [_]usize{ 8, 64, 512, 4096, 16384 };
+    const iterations = 10000;
+
+    std.debug.print("\nRunning malloc/free benchmark ({d} iterations each):\n", .{iterations});
+
+    for (sizes) |size| {
+        var i: usize = 0;
+
+        var timer = try std.time.Timer.start();
+
+        while (i < iterations) : (i += 1) {
+            const ptr = malloc(size);
+            defer free(ptr);
+
+            const slice = @as([*]u8, @ptrCast(ptr))[0..size];
+            @memset(slice, 0xAA);
+        }
+
+        const elapsed = timer.read();
+        const avg_ns = @as(f64, @floatFromInt(elapsed)) / @as(f64, @floatFromInt(iterations));
+
+        std.debug.print("Size: {d:>6} bytes | Total: {d:>10}ns | Avg: {d:>10.2}ns\n", .{
+            size,
+            elapsed,
+            avg_ns,
+        });
+    }
+}

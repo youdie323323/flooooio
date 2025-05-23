@@ -1,501 +1,541 @@
 type MethodKeys<T> = Extract<keyof T, { [K in keyof T]: T[K] extends Function ? K : never }[keyof T]>;
 
-type OverloadProps<TOverload> = Pick<TOverload, keyof TOverload>;
+type ContextProperties = Exclude<keyof CanvasRenderingContext2D, MethodKeys<CanvasRenderingContext2D>>;
 
-type OverloadUnionRecursive<TOverload, TPartialOverload = unknown> = TOverload extends (
-    ...args: infer TArgs
-) => infer TReturn
+type PropertyValues = {
+    [K in ContextProperties]: CanvasRenderingContext2D[K]
+}[ContextProperties];
+
+type AnyFunction = (...args: Array<any>) => any;
+
+type OverloadProps<Overload> = Pick<Overload, keyof Overload>;
+
+type OverloadUnionRecursive<Overload, PartialOverload = unknown> = Overload extends (
+    ...args: infer Args
+) => infer Return
     ? // Prevent infinite recursion by stopping recursion when TPartialOverload
     // has accumulated all of the TOverload signatures
-    TPartialOverload extends TOverload
-    ? never
-    :
+    PartialOverload extends Overload ? never :
     | OverloadUnionRecursive<
-        TPartialOverload & TOverload,
-        TPartialOverload & ((...args: TArgs) => TReturn) & OverloadProps<TOverload>
+        PartialOverload & Overload,
+        PartialOverload & ((...args: Args) => Return) & OverloadProps<Overload>
     >
-    | ((...args: TArgs) => TReturn)
+    | ((...args: Args) => Return)
     : never;
 
-type OverloadUnion<TOverload extends (...args: any[]) => any> = Exclude<
+type OverloadUnion<Overload extends AnyFunction> = Exclude<
     OverloadUnionRecursive<
         // The "() => never" signature must be hoisted to the "front" of the
         // intersection, for two reasons: a) because recursion stops when it is
         // encountered, and b) it seems to prevent the collapse of subsequent
         // "compatible" signatures (eg. "() => void" into "(a?: 1) => void"),
         // which gives a direct conversion to a union
-        (() => never) & TOverload
+        (() => never) & Overload
     >,
-    TOverload extends () => never ? never : () => never
+    Overload extends () => never ? never : () => never
 >;
 
 // Inferring a union of parameter tuples or return types is now possible
-type OverloadParameters<T extends (...args: any[]) => any> = Parameters<OverloadUnion<T>>;
-type OverloadReturnType<T extends (...args: any[]) => any> = ReturnType<OverloadUnion<T>>;
+type OverloadParameters<T extends AnyFunction> = Parameters<OverloadUnion<T>>;
+type OverloadReturnType<T extends AnyFunction> = ReturnType<OverloadUnion<T>>;
 
 export type GetContextMethodParameters<T extends MethodKeys<CanvasRenderingContext2D>> = OverloadParameters<CanvasRenderingContext2D[T]>;
 
 export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingContext2D {
-    private pseudoCode: string[] = [];
+    private pseudoCode: Array<string> = new Array();
 
     constructor(private context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D) { }
 
-    public generatePseudoCode(): string {
-        return this.pseudoCode.join("\n");
-    }
-
-    private toCallableContextOverloadMethod<T extends (...args: any[]) => any>(
-        m: T
-    ): (...args: OverloadParameters<T>) => OverloadReturnType<T> {
+    private toCallableContextOverloadMethod<T extends AnyFunction>(m: T): (...args: OverloadParameters<T>) => OverloadReturnType<T> {
         return m.bind(this.context);
     }
 
-    private processArgs<
+    private toProcessedArguments<
         T extends MethodKeys<CanvasRenderingContext2D>,
         U extends GetContextMethodParameters<T> = GetContextMethodParameters<T>,
     >(methodName: T, args: U): U {
-        const formattedArgs = args.map(arg => window.path2DInformation.has(arg) ?
-            `(function(){
-                const path = new Path2D();
-                ${window.path2DInformation.get(arg).pseudoCode.join("\n")}
-                return path;
-            })()` :
-            JSON.stringify(arg)
+        type Arg = GetContextMethodParameters<T>[number];
+
+        const formattedArgs = args.map((arg: Arg) => {
+            if (arg instanceof Path2D && window.pathReferences.has(arg)) {
+                return `(function(){
+                            const path = new Path2D();
+
+                            ${window.pathReferences.get(arg).pseudoCode.join("\n")}
+
+                            return path;
+                        })()`;
+            }
+
+            return JSON.stringify(arg);
+        },
         ).join(", ");
 
         this.pseudoCode.push(`ctx.${methodName}(${formattedArgs});`);
 
-        return args.map(arg => {
+        return args.map((arg: Arg) => {
             // Arg is proxied path2d, proceed to get original instance
-            if (window.path2DInformation.has(arg)) {
-                return window.path2DInformation.get(arg).originalInstance;
+            if (arg instanceof Path2D && window.pathReferences.has(arg)) {
+                return window.pathReferences.get(arg).originalPath;
             }
 
             return arg;
         }) as U;
     }
 
-    private logSetter(prop: string, value: any) {
+    private logSet(prop: string, value: PropertyValues) {
         this.pseudoCode.push(`ctx.${prop} = ${JSON.stringify(value)};`);
     }
 
-    set fontKerning(value) {
-        this.logSetter("fontKerning", value);
+    public generatePseudoCode(): string {
+        return this.pseudoCode.join("\n");
+    }
+
+    public set fontKerning(value) {
+        this.logSet("fontKerning", value);
 
         this.context.fontKerning = value;
     }
+
     get fontKerning() {
         return this.context.fontKerning;
     }
 
-    set fontStretch(value) {
-        this.logSetter("fontStretch", value);
+    public set fontStretch(value) {
+        this.logSet("fontStretch", value);
 
         this.context.fontStretch = value;
     }
-    get fontStretch() {
+
+    public get fontStretch() {
         return this.context.fontStretch;
     }
 
-    set fontVariantCaps(value) {
-        this.logSetter("fontVariantCaps", value);
+    public set fontVariantCaps(value) {
+        this.logSet("fontVariantCaps", value);
 
         this.context.fontVariantCaps = value;
     }
-    get fontVariantCaps() {
+
+    public get fontVariantCaps() {
         return this.context.fontVariantCaps;
     }
 
-    set letterSpacing(value) {
-        this.logSetter("letterSpacing", value);
+    public set letterSpacing(value) {
+        this.logSet("letterSpacing", value);
 
         this.context.letterSpacing = value;
     }
-    get letterSpacing() {
+
+    public get letterSpacing() {
         return this.context.letterSpacing;
     }
 
-    set textRendering(value) {
-        this.logSetter("textRendering", value);
+    public set textRendering(value) {
+        this.logSet("textRendering", value);
 
         this.context.textRendering = value;
     }
-    get textRendering() {
+
+    public get textRendering() {
         return this.context.textRendering;
     }
 
-    set wordSpacing(value) {
-        this.logSetter("wordSpacing", value);
+    public set wordSpacing(value) {
+        this.logSet("wordSpacing", value);
 
         this.context.wordSpacing = value;
     }
-    get wordSpacing() {
+
+    public get wordSpacing() {
         return this.context.wordSpacing;
     }
 
-    get canvas() {
-        return <HTMLCanvasElement>this.context.canvas;
+    public get canvas() {
+        return <HTMLCanvasElement>(this.context.canvas);
     }
 
-    set direction(value) {
-        this.logSetter("direction", value);
+    public set direction(value) {
+        this.logSet("direction", value);
 
         this.context.direction = value;
     }
-    get direction() {
+
+    public get direction() {
         return this.context.direction;
     }
 
-    set fillStyle(value) {
-        this.logSetter("fillStyle", value);
+    public set fillStyle(value) {
+        this.logSet("fillStyle", value);
 
         this.context.fillStyle = value;
     }
-    get fillStyle() {
+
+    public get fillStyle() {
         return this.context.fillStyle;
     }
 
-    set filter(value) {
-        this.logSetter("filter", value);
+    public set filter(value) {
+        this.logSet("filter", value);
 
         this.context.filter = value;
     }
-    get filter() {
+
+    public get filter() {
         return this.context.filter;
     }
 
-    set font(value) {
-        this.logSetter("font", value);
+    public set font(value) {
+        this.logSet("font", value);
 
         this.context.font = value;
     }
-    get font() {
+
+    public get font() {
         return this.context.font;
     }
 
-    set globalAlpha(value) {
-        this.logSetter("globalAlpha", value);
+    public set globalAlpha(value) {
+        this.logSet("globalAlpha", value);
 
         this.context.globalAlpha = value;
     }
-    get globalAlpha() {
+
+    public get globalAlpha() {
         return this.context.globalAlpha;
     }
 
-    set globalCompositeOperation(value) {
-        this.logSetter("globalCompositeOperation", value);
+    public set globalCompositeOperation(value) {
+        this.logSet("globalCompositeOperation", value);
 
         this.context.globalCompositeOperation = value;
     }
-    get globalCompositeOperation() {
+
+    public get globalCompositeOperation() {
         return this.context.globalCompositeOperation;
     }
 
-    set imageSmoothingEnabled(value) {
-        this.logSetter("imageSmoothingEnabled", value);
+    public set imageSmoothingEnabled(value) {
+        this.logSet("imageSmoothingEnabled", value);
 
         this.context.imageSmoothingEnabled = value;
     }
-    get imageSmoothingEnabled() {
+
+    public get imageSmoothingEnabled() {
         return this.context.imageSmoothingEnabled;
     }
 
-    set imageSmoothingQuality(value) {
-        this.logSetter("imageSmoothingQuality", value);
+    public set imageSmoothingQuality(value) {
+        this.logSet("imageSmoothingQuality", value);
 
         this.context.imageSmoothingQuality = value;
     }
-    get imageSmoothingQuality() {
+
+    public get imageSmoothingQuality() {
         return this.context.imageSmoothingQuality;
     }
 
-    set lineCap(value) {
-        this.logSetter("lineCap", value);
+    public set lineCap(value) {
+        this.logSet("lineCap", value);
 
         this.context.lineCap = value;
     }
-    get lineCap() {
+
+    public get lineCap() {
         return this.context.lineCap;
     }
 
-    set lineDashOffset(value) {
-        this.logSetter("lineDashOffset", value);
+    public set lineDashOffset(value) {
+        this.logSet("lineDashOffset", value);
 
         this.context.lineDashOffset = value;
     }
-    get lineDashOffset() {
+
+    public get lineDashOffset() {
         return this.context.lineDashOffset;
     }
 
-    set lineJoin(value) {
-        this.logSetter("lineJoin", value);
+    public set lineJoin(value) {
+        this.logSet("lineJoin", value);
 
         this.context.lineJoin = value;
     }
-    get lineJoin() {
+
+    public get lineJoin() {
         return this.context.lineJoin;
     }
 
-    set lineWidth(value) {
-        this.logSetter("lineWidth", value);
+    public set lineWidth(value) {
+        this.logSet("lineWidth", value);
 
         this.context.lineWidth = value;
     }
-    get lineWidth() {
+
+    public get lineWidth() {
         return this.context.lineWidth;
     }
 
-    set miterLimit(value) {
-        this.logSetter("miterLimit", value);
+    public set miterLimit(value) {
+        this.logSet("miterLimit", value);
 
         this.context.miterLimit = value;
     }
-    get miterLimit() {
+
+    public get miterLimit() {
         return this.context.miterLimit;
     }
 
-    set shadowBlur(value) {
-        this.logSetter("shadowBlur", value);
+    public set shadowBlur(value) {
+        this.logSet("shadowBlur", value);
 
         this.context.shadowBlur = value;
     }
-    get shadowBlur() {
+
+    public get shadowBlur() {
         return this.context.shadowBlur;
     }
 
-    set shadowColor(value) {
-        this.logSetter("shadowColor", value);
+    public set shadowColor(value) {
+        this.logSet("shadowColor", value);
 
         this.context.shadowColor = value;
     }
-    get shadowColor() {
+
+    public get shadowColor() {
         return this.context.shadowColor;
     }
 
-    set shadowOffsetX(value) {
-        this.logSetter("shadowOffsetX", value);
+    public set shadowOffsetX(value) {
+        this.logSet("shadowOffsetX", value);
 
         this.context.shadowOffsetX = value;
     }
-    get shadowOffsetX() {
+
+    public get shadowOffsetX() {
         return this.context.shadowOffsetX;
     }
 
-    set shadowOffsetY(value) {
-        this.logSetter("shadowOffsetY", value);
+    public set shadowOffsetY(value) {
+        this.logSet("shadowOffsetY", value);
 
         this.context.shadowOffsetY = value;
     }
-    get shadowOffsetY() {
+
+    public get shadowOffsetY() {
         return this.context.shadowOffsetY;
     }
 
-    set strokeStyle(value) {
-        this.logSetter("strokeStyle", value);
+    public set strokeStyle(value) {
+        this.logSet("strokeStyle", value);
 
         this.context.strokeStyle = value;
     }
-    get strokeStyle() {
+
+    public get strokeStyle() {
         return this.context.strokeStyle;
     }
 
-    set textAlign(value) {
-        this.logSetter("textAlign", value);
+    public set textAlign(value) {
+        this.logSet("textAlign", value);
 
         this.context.textAlign = value;
     }
-    get textAlign() {
+
+    public get textAlign() {
         return this.context.textAlign;
     }
 
-    set textBaseline(value) {
-        this.logSetter("textBaseline", value);
+    public set textBaseline(value) {
+        this.logSet("textBaseline", value);
 
         this.context.textBaseline = value;
     }
-    get textBaseline() {
+
+    public get textBaseline() {
         return this.context.textBaseline;
     }
 
-    getContextAttributes(...args: GetContextMethodParameters<"getContextAttributes">) {
+    public getContextAttributes(...args: GetContextMethodParameters<"getContextAttributes">) {
         // apwuifhwa98h!J!UIPHGFUGFHa moment
-        return this.context["getContextAttributes"](...this.processArgs("getContextAttributes", args));
+        return (this.context as CanvasRenderingContext2D).getContextAttributes(...this.toProcessedArguments("getContextAttributes", args));
     }
 
-    createConicGradient(...args: GetContextMethodParameters<"createConicGradient">) {
-        return this.context.createConicGradient(...this.processArgs("createConicGradient", args));
+    public createConicGradient(...args: GetContextMethodParameters<"createConicGradient">) {
+        return this.context.createConicGradient(...this.toProcessedArguments("createConicGradient", args));
     }
 
-    roundRect(...args: GetContextMethodParameters<"roundRect">) {
-        this.toCallableContextOverloadMethod(this.context.roundRect)(...this.processArgs("roundRect", args));
+    public roundRect(...args: GetContextMethodParameters<"roundRect">) {
+        this.toCallableContextOverloadMethod(this.context.roundRect)(...this.toProcessedArguments("roundRect", args));
     }
 
-    isContextLost(...args: GetContextMethodParameters<"isContextLost">) {
-        return this.context.isContextLost(...this.processArgs("isContextLost", args));
+    public isContextLost(...args: GetContextMethodParameters<"isContextLost">) {
+        return this.context.isContextLost(...this.toProcessedArguments("isContextLost", args));
     }
 
-    reset(...args: GetContextMethodParameters<"reset">) {
-        this.context.reset(...this.processArgs("reset", args));
+    public reset(...args: GetContextMethodParameters<"reset">) {
+        this.context.reset(...this.toProcessedArguments("reset", args));
     }
 
-    getTransform(...args: GetContextMethodParameters<"getTransform">) {
-        return this.context.getTransform(...this.processArgs("getTransform", args));
+    public getTransform(...args: GetContextMethodParameters<"getTransform">) {
+        return this.context.getTransform(...this.toProcessedArguments("getTransform", args));
     }
 
-    arc(...args: GetContextMethodParameters<"arc">) {
-        this.context.arc(...this.processArgs("arc", args));
+    public arc(...args: GetContextMethodParameters<"arc">) {
+        this.context.arc(...this.toProcessedArguments("arc", args));
     }
 
-    arcTo(...args: GetContextMethodParameters<"arcTo">) {
-        this.context.arcTo(...this.processArgs("arcTo", args));
+    public arcTo(...args: GetContextMethodParameters<"arcTo">) {
+        this.context.arcTo(...this.toProcessedArguments("arcTo", args));
     }
 
-    beginPath(...args: GetContextMethodParameters<"beginPath">) {
-        this.context.beginPath(...this.processArgs("beginPath", args));
+    public beginPath(...args: GetContextMethodParameters<"beginPath">) {
+        this.context.beginPath(...this.toProcessedArguments("beginPath", args));
     }
 
-    bezierCurveTo(...args: GetContextMethodParameters<"bezierCurveTo">) {
-        this.context.bezierCurveTo(...this.processArgs("bezierCurveTo", args));
+    public bezierCurveTo(...args: GetContextMethodParameters<"bezierCurveTo">) {
+        this.context.bezierCurveTo(...this.toProcessedArguments("bezierCurveTo", args));
     }
 
-    clearRect(...args: GetContextMethodParameters<"clearRect">) {
-        this.context.clearRect(...this.processArgs("clearRect", args));
+    public clearRect(...args: GetContextMethodParameters<"clearRect">) {
+        this.context.clearRect(...this.toProcessedArguments("clearRect", args));
     }
 
-    clip(...args: GetContextMethodParameters<"clip">) {
-        this.toCallableContextOverloadMethod(this.context.clip)(...this.processArgs("clip", args));
+    public clip(...args: GetContextMethodParameters<"clip">) {
+        this.toCallableContextOverloadMethod(this.context.clip)(...this.toProcessedArguments("clip", args));
     }
 
-    closePath(...args: GetContextMethodParameters<"closePath">) {
-        this.context.closePath(...this.processArgs("closePath", args));
+    public closePath(...args: GetContextMethodParameters<"closePath">) {
+        this.context.closePath(...this.toProcessedArguments("closePath", args));
     }
 
-    createImageData(...args: GetContextMethodParameters<"createImageData">) {
-        return this.toCallableContextOverloadMethod(this.context.createImageData)(...this.processArgs("createImageData", args));
+    public createImageData(...args: GetContextMethodParameters<"createImageData">) {
+        return this.toCallableContextOverloadMethod(this.context.createImageData)(...this.toProcessedArguments("createImageData", args));
     }
 
-    createLinearGradient(...args: GetContextMethodParameters<"createLinearGradient">) {
-        return this.context.createLinearGradient(...this.processArgs("createLinearGradient", args));
+    public createLinearGradient(...args: GetContextMethodParameters<"createLinearGradient">) {
+        return this.context.createLinearGradient(...this.toProcessedArguments("createLinearGradient", args));
     }
 
-    createPattern(...args: GetContextMethodParameters<"createPattern">) {
-        return this.context.createPattern(...this.processArgs("createPattern", args));
+    public createPattern(...args: GetContextMethodParameters<"createPattern">) {
+        return this.context.createPattern(...this.toProcessedArguments("createPattern", args));
     }
 
-    createRadialGradient(...args: GetContextMethodParameters<"createRadialGradient">) {
-        return this.context.createRadialGradient(...this.processArgs("createRadialGradient", args));
+    public createRadialGradient(...args: GetContextMethodParameters<"createRadialGradient">) {
+        return this.context.createRadialGradient(...this.toProcessedArguments("createRadialGradient", args));
     }
 
-    drawFocusIfNeeded(...args: GetContextMethodParameters<"drawFocusIfNeeded">) {
+    public drawFocusIfNeeded(...args: GetContextMethodParameters<"drawFocusIfNeeded">) {
         // apwuifhwa98h!J!UIPHGFUGFHa js prototype belike moment
-        this.toCallableContextOverloadMethod(this.context["drawFocusIfNeeded"])(...this.processArgs("drawFocusIfNeeded", args));
+        this.toCallableContextOverloadMethod(
+            (this.context as CanvasRenderingContext2D).drawFocusIfNeeded,
+        )(...this.toProcessedArguments("drawFocusIfNeeded", args));
     }
 
-    drawImage(...args: GetContextMethodParameters<"drawImage">) {
-        this.toCallableContextOverloadMethod(this.context.drawImage)(...this.processArgs("drawImage", args));
+    public drawImage(...args: GetContextMethodParameters<"drawImage">) {
+        this.toCallableContextOverloadMethod(this.context.drawImage)(...this.toProcessedArguments("drawImage", args));
     }
 
-    ellipse(...args: GetContextMethodParameters<"ellipse">) {
-        this.context.ellipse(...this.processArgs("ellipse", args));
+    public ellipse(...args: GetContextMethodParameters<"ellipse">) {
+        this.context.ellipse(...this.toProcessedArguments("ellipse", args));
     }
 
-    fill(...args: GetContextMethodParameters<"fill">) {
-        this.toCallableContextOverloadMethod(this.context.fill)(...this.processArgs("fill", args));
+    public fill(...args: GetContextMethodParameters<"fill">) {
+        this.toCallableContextOverloadMethod(this.context.fill)(...this.toProcessedArguments("fill", args));
     }
 
-    fillRect(...args: GetContextMethodParameters<"fillRect">) {
-        this.context.fillRect(...this.processArgs("fillRect", args));
+    public fillRect(...args: GetContextMethodParameters<"fillRect">) {
+        this.context.fillRect(...this.toProcessedArguments("fillRect", args));
     }
 
-    fillText(...args: GetContextMethodParameters<"fillText">) {
-        this.context.fillText(...this.processArgs("fillText", args));
+    public fillText(...args: GetContextMethodParameters<"fillText">) {
+        this.context.fillText(...this.toProcessedArguments("fillText", args));
     }
 
-    getImageData(...args: GetContextMethodParameters<"getImageData">) {
-        return this.context.getImageData(...this.processArgs("getImageData", args));
+    public getImageData(...args: GetContextMethodParameters<"getImageData">) {
+        return this.context.getImageData(...this.toProcessedArguments("getImageData", args));
     }
 
-    getLineDash(...args: GetContextMethodParameters<"getLineDash">) {
-        return this.context.getLineDash(...this.processArgs("getLineDash", args));
+    public getLineDash(...args: GetContextMethodParameters<"getLineDash">) {
+        return this.context.getLineDash(...this.toProcessedArguments("getLineDash", args));
     }
 
-    isPointInPath(...args: GetContextMethodParameters<"isPointInPath">) {
-        return this.toCallableContextOverloadMethod(this.context.isPointInPath)(...this.processArgs("isPointInPath", args));
+    public isPointInPath(...args: GetContextMethodParameters<"isPointInPath">) {
+        return this.toCallableContextOverloadMethod(this.context.isPointInPath)(...this.toProcessedArguments("isPointInPath", args));
     }
 
-    isPointInStroke(...args: GetContextMethodParameters<"isPointInStroke">) {
-        return this.toCallableContextOverloadMethod(this.context.isPointInStroke)(...this.processArgs("isPointInStroke", args));
+    public isPointInStroke(...args: GetContextMethodParameters<"isPointInStroke">) {
+        return this.toCallableContextOverloadMethod(this.context.isPointInStroke)(...this.toProcessedArguments("isPointInStroke", args));
     }
 
-    lineTo(...args: GetContextMethodParameters<"lineTo">) {
-        this.context.lineTo(...this.processArgs("lineTo", args));
+    public lineTo(...args: GetContextMethodParameters<"lineTo">) {
+        this.context.lineTo(...this.toProcessedArguments("lineTo", args));
     }
 
-    measureText(...args: GetContextMethodParameters<"measureText">) {
-        return this.context.measureText(...this.processArgs("measureText", args));
+    public measureText(...args: GetContextMethodParameters<"measureText">) {
+        return this.context.measureText(...this.toProcessedArguments("measureText", args));
     }
 
-    moveTo(...args: GetContextMethodParameters<"moveTo">) {
-        this.context.moveTo(...this.processArgs("moveTo", args));
+    public moveTo(...args: GetContextMethodParameters<"moveTo">) {
+        this.context.moveTo(...this.toProcessedArguments("moveTo", args));
     }
 
-    putImageData(...args: GetContextMethodParameters<"putImageData">) {
-        this.toCallableContextOverloadMethod(this.context.putImageData)(...this.processArgs("putImageData", args));
+    public putImageData(...args: GetContextMethodParameters<"putImageData">) {
+        this.toCallableContextOverloadMethod(this.context.putImageData)(...this.toProcessedArguments("putImageData", args));
     }
 
-    quadraticCurveTo(...args: GetContextMethodParameters<"quadraticCurveTo">) {
-        this.context.quadraticCurveTo(...this.processArgs("quadraticCurveTo", args));
+    public quadraticCurveTo(...args: GetContextMethodParameters<"quadraticCurveTo">) {
+        this.context.quadraticCurveTo(...this.toProcessedArguments("quadraticCurveTo", args));
     }
 
-    rect(...args: GetContextMethodParameters<"quadraticCurveTo">) {
-        this.context.rect(...this.processArgs("rect", args));
+    public rect(...args: GetContextMethodParameters<"quadraticCurveTo">) {
+        this.context.rect(...this.toProcessedArguments("rect", args));
     }
 
-    resetTransform(...args: GetContextMethodParameters<"resetTransform">) {
-        this.context.resetTransform(...this.processArgs("resetTransform", args));
+    public resetTransform(...args: GetContextMethodParameters<"resetTransform">) {
+        this.context.resetTransform(...this.toProcessedArguments("resetTransform", args));
     }
 
-    restore(...args: GetContextMethodParameters<"restore">) {
-        this.context.restore(...this.processArgs("restore", args));
+    public restore(...args: GetContextMethodParameters<"restore">) {
+        this.context.restore(...this.toProcessedArguments("restore", args));
     }
 
-    rotate(...args: GetContextMethodParameters<"rotate">) {
-        this.context.rotate(...this.processArgs("rotate", args));
+    public rotate(...args: GetContextMethodParameters<"rotate">) {
+        this.context.rotate(...this.toProcessedArguments("rotate", args));
     }
 
-    save(...args: GetContextMethodParameters<"save">) {
-        this.context.save(...this.processArgs("save", args));
+    public save(...args: GetContextMethodParameters<"save">) {
+        this.context.save(...this.toProcessedArguments("save", args));
     }
 
-    scale(...args: GetContextMethodParameters<"scale">) {
-        this.context.scale(...this.processArgs("scale", args));
+    public scale(...args: GetContextMethodParameters<"scale">) {
+        this.context.scale(...this.toProcessedArguments("scale", args));
     }
 
-    setLineDash(...args: GetContextMethodParameters<"setLineDash">) {
-        this.toCallableContextOverloadMethod(this.context.setLineDash)(...this.processArgs("setLineDash", args));
+    public setLineDash(...args: GetContextMethodParameters<"setLineDash">) {
+        this.toCallableContextOverloadMethod(this.context.setLineDash)(...this.toProcessedArguments("setLineDash", args));
     }
 
-    setTransform(...args: GetContextMethodParameters<"setTransform">) {
-        this.toCallableContextOverloadMethod(this.context.setTransform)(...this.processArgs("setTransform", args));
+    public setTransform(...args: GetContextMethodParameters<"setTransform">) {
+        this.toCallableContextOverloadMethod(this.context.setTransform)(...this.toProcessedArguments("setTransform", args));
     }
 
-    stroke(...args: GetContextMethodParameters<"stroke">) {
-        this.toCallableContextOverloadMethod(this.context.stroke)(...this.processArgs("stroke", args));
+    public stroke(...args: GetContextMethodParameters<"stroke">) {
+        this.toCallableContextOverloadMethod(this.context.stroke)(...this.toProcessedArguments("stroke", args));
     }
 
-    strokeRect(...args: GetContextMethodParameters<"strokeRect">) {
-        this.context.strokeRect(...this.processArgs("strokeRect", args));
+    public strokeRect(...args: GetContextMethodParameters<"strokeRect">) {
+        this.context.strokeRect(...this.toProcessedArguments("strokeRect", args));
     }
 
-    strokeText(...args: GetContextMethodParameters<"strokeText">) {
-        this.context.strokeText(...this.processArgs("strokeText", args));
+    public strokeText(...args: GetContextMethodParameters<"strokeText">) {
+        this.context.strokeText(...this.toProcessedArguments("strokeText", args));
     }
 
-    transform(...args: GetContextMethodParameters<"transform">) {
-        this.context.transform(...this.processArgs("transform", args));
+    public transform(...args: GetContextMethodParameters<"transform">) {
+        this.context.transform(...this.toProcessedArguments("transform", args));
     }
 
-    translate(...args: GetContextMethodParameters<"translate">) {
-        this.context.translate(...this.processArgs("translate", args));
+    public translate(...args: GetContextMethodParameters<"translate">) {
+        this.context.translate(...this.toProcessedArguments("translate", args));
     }
 }

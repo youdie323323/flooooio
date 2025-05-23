@@ -5,6 +5,7 @@ const (
 	ServerboundWaveChangeMove byte = iota
 	ServerboundWaveChangeMood
 	ServerboundWaveSwapPetal
+	
 	ServerboundWaveChat
 
 	ServerboundWaveRoomCreate
@@ -17,6 +18,6 @@ const (
 	ServerboundWaveRoomChangeVisible
 	ServerboundWaveRoomChangeName
 
-	ServerboundWaveRoomLeave
 	ServerboundWaveLeave
+	ServerboundWaveRoomLeave
 )

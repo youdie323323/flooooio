@@ -20,8 +20,8 @@
   },
   "include": [
     "Sources/Shared/**/*",
-    "Sources/Client/**/*",
-    "Sources/zigclient/public/**/*",
+    "Sources/Client/public/**/*",
+    "Sources/LegacyClient/**/*",
     "Sources/server/static/client.js",
     "Playground/**/*",
     "eslint.config.mjs",

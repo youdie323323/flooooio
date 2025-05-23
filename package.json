@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Florr.io-like game",
   "scripts": {
-    "build:client:public": "cd Sources/zigclient/public && esbuild Sources/Application.ts --bundle --minify --legal-comments=none --allow-overwrite --outfile=../../server/static/client.js",
-    "build:client:private": "cd Sources/zigclient/private && zig build",
+    "build:client:public": "cd Sources/Client/public && esbuild Sources/Application.ts --bundle --minify --legal-comments=none --allow-overwrite --outfile=../../server/static/client.js",
+    "build:client:private": "cd Sources/Client/private && zig build",
     "build:client:public:legacy": "tsc --noEmit & node esbuild.mjs",
     "build:server": "cd Sources/server && go build -ldflags=\"-s -w\" -trimpath internal/cmd/flooooio/main.go",
     "start:server": "cd Sources/server && go run internal/cmd/flooooio/main.go"

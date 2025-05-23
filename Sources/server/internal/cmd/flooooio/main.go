@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
 	"slices"
+	"unsafe"
 
 	"flooooio/internal/native"
 	"flooooio/internal/network"
@@ -127,13 +129,13 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func readString(buf []byte, at int) (string, int) {
-	end := at
-	for end < len(buf) && buf[end] != 0 {
-		end++
+func readCString(buf []byte, at int) (string, int) {
+	end := at + bytes.IndexByte(buf[at:], 0)
+	if end < at {
+		end = len(buf)
 	}
 
-	return string(buf[at:end]), end + 1
+	return unsafe.String(&buf[at], end-at), end + 1
 }
 
 func handleMessage(pd *wave.PlayerData, message []byte) {
@@ -262,7 +264,7 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 			}
 
 			var chatMsg string
-			chatMsg, at = readString(message, at)
+			chatMsg, at = readCString(message, at)
 
 			wr.WavePool.HandleChatMessage(*pd.WPId, chatMsg)
 		}
@@ -297,7 +299,7 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 			}
 
 			var maybeCode string
-			maybeCode, at = readString(message, at)
+			maybeCode, at = readCString(message, at)
 			if !wave.IsWaveRoomCode(maybeCode) {
 				return
 			}
@@ -392,7 +394,7 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 			}
 
 			var name string
-			name, at = readString(message, at)
+			name, at = readCString(message, at)
 
 			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
