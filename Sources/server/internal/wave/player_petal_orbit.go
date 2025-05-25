@@ -1,11 +1,12 @@
 package wave
 
 import (
-	"math"
 	"slices"
 
 	"flooooio/internal/collision"
 	"flooooio/internal/native"
+
+	"github.com/chewxy/math32"
 )
 
 const (
@@ -15,15 +16,16 @@ const (
 )
 
 var (
-	lazyCosTable = make([]float64, precalcSize)
-	lazySinTable = make([]float64, precalcSize)
+	lazyCosTable = make([]float32, precalcSize)
+	lazySinTable = make([]float32, precalcSize)
 )
 
 func init() {
 	for i := range precalcSize {
-		angle := (float64(i) * Tau) / precalcSize
-		lazyCosTable[i] = math.Cos(angle)
-		lazySinTable[i] = math.Sin(angle)
+		angle := (float32(i) * Tau) / precalcSize
+
+		lazyCosTable[i] = math32.Cos(angle)
+		lazySinTable[i] = math32.Sin(angle)
 	}
 }
 
@@ -40,27 +42,27 @@ const (
 	spinAngleCoefficient       = 10.0
 )
 
-func calcTableIndex(i float64) int {
-	return int(math.Mod(math.Mod(i, Tau)+Tau, Tau) * float64(precalcSize) / Tau)
+func calcTableIndex(i float32) int {
+	return int(math32.Mod(math32.Mod(i, Tau)+Tau, Tau) * float32(precalcSize) / Tau)
 }
 
 func calculateRotationDelta(
-	ts float64,
+	ts float32,
 
-	cw float64,
-) float64 {
-	return (ts * cw) / WaveUpdateFPS
+	cw float32,
+) float32 {
+	return (ts * cw) / float32(WaveUpdateFPS)
 }
 
 func doPetalOrbit(
 	p *Petal,
 
-	tx float64,
-	ty float64,
+	tx float32,
+	ty float32,
 
-	hr float64,
+	hr float32,
 
-	ang float64,
+	ang float32,
 ) {
 	angleIdx := calcTableIndex(ang)
 
@@ -80,7 +82,7 @@ func doPetalSpin(
 
 	pe *Petal,
 
-	pss [][]float64,
+	pss [][]float32,
 	i int,
 	j int,
 ) {
@@ -88,7 +90,7 @@ func doPetalSpin(
 
 	{
 		mobs := wp.GetMobsWithCondition(func(m *Mob) bool {
-			return m.IsEnemy() && math.Hypot(
+			return m.IsEnemy() && math32.Hypot(
 				m.X-pe.X,
 				m.Y-pe.Y,
 			) <= (m.CalculateRadius()*spinNearestSizeCoefficient)
@@ -114,19 +116,19 @@ func doPetalSpin(
 
 	if pe.SpinningOnMob {
 		if !wasSpinning {
-			targetAngle := math.Atan2(
+			targetAngle := math32.Atan2(
 				pe.Y-mobToSpin.Y,
 				pe.X-mobToSpin.X,
 			)
 
 			angleDiff := targetAngle - pss[i][j]
 
-			angleDiff = math.Mod(math.Mod(angleDiff, Tau)+Tau, Tau)
-			if angleDiff > math.Pi {
+			angleDiff = math32.Mod(math32.Mod(angleDiff, Tau)+Tau, Tau)
+			if angleDiff > math32.Pi {
 				angleDiff -= Tau
 			}
 
-			pss[i][j] = math.Mod(pss[i][j]+angleDiff, Tau)
+			pss[i][j] = math32.Mod(pss[i][j]+angleDiff, Tau)
 		}
 
 		spinAngleIdx := calcTableIndex(pss[i][j])
@@ -156,23 +158,24 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool) {
 	surfaceLen := len(surface)
 
 	if p.OrbitPetalRadii == nil {
-		p.OrbitPetalRadii = make([]float64, surfaceLen)
+		p.OrbitPetalRadii = make([]float32, surfaceLen)
 		for i := range p.OrbitPetalRadii {
 			p.OrbitPetalRadii[i] = 40
 		}
 
-		p.OrbitRadiusVelocities = make([]float64, surfaceLen)
+		p.OrbitRadiusVelocities = make([]float32, surfaceLen)
 
-		p.OrbitPetalSpins = make([][]float64, surfaceLen)
+		p.OrbitPetalSpins = make([][]float32, surfaceLen)
 		for i := range p.OrbitPetalSpins {
-			p.OrbitPetalSpins[i] = make([]float64, PetalMaxClusterAmount)
+			p.OrbitPetalSpins[i] = make([]float32, PetalMaxClusterAmount)
 		}
 	}
 
 	isAngry := p.Mood.IsSet(native.MoodAngry)
 	isSad := p.Mood.IsSet(native.MoodSad)
 
-	numYinYang := 0.
+	var numYinYang float32 = 0.
+
 	for _, v := range surface {
 		if v == nil {
 			continue
@@ -186,28 +189,30 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool) {
 	// Basically, every 2 yin yangs adds 1 ring
 	// Yin yang changes the number of petals per ring by diving it by floor(num yin yang / 2) + 1
 
-	numRings := math.Floor(numYinYang/2) + 1
+	numRings := math32.Floor(numYinYang/2) + 1
 
-	var clockwise float64
-	if math.Mod(numYinYang, 2) == 0 {
+	var clockwise float32
+
+	if math32.Mod(numYinYang, 2) == 0 {
 		clockwise = 1
 	} else {
 		clockwise = -1
 	}
 
-	realLength := float64(len(surface))
+	realLength := float32(len(surface))
 
-	realLength = math.Ceil(realLength / numRings)
+	realLength = math32.Ceil(realLength / numRings)
 
-	currAngleIdx := 0.
+	var currAngleIdx float32 = 0.
 
-	totalSpeed := defaultRotateSpeed
+	var totalSpeed float32 = defaultRotateSpeed
 
 	spinRotationDelta := calculateRotationDelta(defaultRotateSpeed*spinAngleCoefficient, clockwise)
 
-	var targetRadius float64
+	var targetRadius float32
+	
 	if isAngry {
-		targetRadius = 90
+		targetRadius = 80
 	} else {
 		if isSad {
 			targetRadius = 25
@@ -231,13 +236,14 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool) {
 		firstPetalStat := native.PetalProfiles[firstPetal.Type].StatFromRarity(firstPetal.Rarity)
 
 		if firstPetal.Type == native.PetalTypeFaster {
-			rad, ok := firstPetalStat.Extra["rad"].(float64)
+			rad, ok := firstPetalStat.Extra["rad"]
 			if ok {
 				totalSpeed += rad
 			}
 		}
 
-		var springForce float64
+		var springForce float32
+
 		if slices.Contains(UsablePetalTypes, firstPetal.Type) {
 			springForce = (40 - p.OrbitPetalRadii[i]) * radiusSpringStrength
 		} else {
@@ -247,12 +253,12 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool) {
 		p.OrbitRadiusVelocities[i] = p.OrbitRadiusVelocities[i]*radiusFriction + springForce
 		p.OrbitPetalRadii[i] += p.OrbitRadiusVelocities[i]
 
-		ringIdx := math.Floor(currAngleIdx / realLength)
+		ringIdx := math32.Floor(currAngleIdx / realLength)
 		rad := p.OrbitPetalRadii[i] * (1 + (ringIdx * 0.5))
 
 		multipliedRotation := p.OrbitRotation * (1 + ((ringIdx - (numRings - 1)) * 0.1))
 
-		baseAngle := Tau*math.Mod(currAngleIdx, realLength)/realLength + multipliedRotation
+		baseAngle := Tau*math32.Mod(currAngleIdx, realLength)/realLength + multipliedRotation
 		currAngleIdx++
 
 		if IsClusterPetal(petals) {
@@ -271,7 +277,7 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool) {
 				}
 
 				// Bit faster than normal orbit
-				petalAngle := Tau*float64(j)/float64(len(petals)) + multipliedRotation*1.3
+				petalAngle := Tau*float32(j)/float32(len(petals)) + multipliedRotation*1.3
 
 				doPetalOrbit(
 					petal,
@@ -339,7 +345,7 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool) {
 	p.OrbitRotation += rotationDelta
 
 	// Limit in the tau
-	if math.Abs(p.OrbitRotation) >= math.MaxFloat64 {
-		p.OrbitRotation = math.Mod(p.OrbitRotation, Tau)
+	if math32.Abs(p.OrbitRotation) >= math32.MaxFloat32 {
+		p.OrbitRotation = math32.Mod(p.OrbitRotation, Tau)
 	}
 }

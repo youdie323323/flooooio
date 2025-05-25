@@ -105,11 +105,11 @@ export default class TextInput extends Component {
         this.textColor = options.textColor || "#000";
         this.fontWeight = options.fontWeight || "bold";
         this.placeHolderColor = options.placeholderColor || "#bfbebd";
-        this.backgroundColor = options.backgroundColor || "#fff";
+        this.backgroundColor = options.backgroundColor || "#eeeeee";
         this.paddingSize = options.paddingSize >= 0 ? options.paddingSize : 5;
-        this.borderWidth = options.borderWidth >= 0 ? options.borderWidth : 1;
+        this.borderWidth = options.borderWidth >= 0 ? options.borderWidth : 3;
         this.borderColor = options.borderColor || "#959595";
-        this.borderRadius = options.borderRadius >= 0 ? options.borderRadius : 1;
+        this.borderRadius = options.borderRadius >= 0 ? options.borderRadius : 0.5;
         this.highlightColor = options.highlightColor || "#909090";
 
         // Initialize input state
@@ -280,7 +280,7 @@ export default class TextInput extends Component {
     }
 
     private renderFilledUnfocusedState(text: string) {
-        const { ctx: ctx, h } = this;
+        const { ctx, h } = this;
 
         this.drawBackgroundOverlay();
 
@@ -311,14 +311,16 @@ export default class TextInput extends Component {
     }
 
     private drawBackgroundOverlay() {
-        const { ctx: ctx, w, h, borderRadius: br } = this;
-
+        const { ctx, w, h, borderRadius: br } = this;
+ 
         ctx.save();
+
         ctx.globalAlpha = 0.4;
         ctx.fillStyle = "#000000";
         ctx.beginPath();
         ctx.roundRect(0, 0, w, h, br);
         ctx.fill();
+
         ctx.restore();
     }
 
@@ -675,6 +677,7 @@ export default class TextInput extends Component {
         const ctx = this.ctx, w = this.w, h = this.h, bw = this.borderWidth, br = this.borderRadius / 2;
 
         ctx.fillStyle = this.backgroundColor;
+
         ctx.beginPath();
         ctx.roundRect(bw, bw, w - bw * 2, h - bw * 2, br);
         ctx.fill();

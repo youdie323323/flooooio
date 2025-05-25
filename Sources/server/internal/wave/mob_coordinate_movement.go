@@ -1,7 +1,7 @@
 package wave
 
 import (
-	"math"
+	"github.com/chewxy/math32"
 )
 
 func (m *Mob) MobCoordinateMovement(wp *WavePool) {
@@ -9,7 +9,7 @@ func (m *Mob) MobCoordinateMovement(wp *WavePool) {
 		rad := angleToRadian(m.Angle)
 		speed := m.Magnitude / 255.
 
-		m.X += math.Cos(rad) * speed
-		m.Y += math.Sin(rad) * speed
+		m.X += math32.Cos(rad) * speed
+		m.Y += math32.Sin(rad) * speed
 	}
 }

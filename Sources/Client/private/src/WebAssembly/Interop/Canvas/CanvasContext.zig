@@ -14,12 +14,12 @@ pub inline fn init(id: Id) CanvasContext {
     return .{ .id = id };
 }
 
-pub inline fn drawSVG(self: CanvasContext, svg: []const u8) void {
-    @"2"(self.id, svg.ptr, svg.len);
+pub inline fn deinit(self: CanvasContext) void {
+    @"3"(self.id);
 }
 
-pub inline fn destroy(self: CanvasContext) void {
-    @"3"(self.id);
+pub inline fn drawSVG(self: CanvasContext, svg: []const u8) void {
+    @"2"(self.id, svg.ptr, svg.len);
 }
 
 pub inline fn save(self: CanvasContext) void {

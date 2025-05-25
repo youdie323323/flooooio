@@ -1,20 +1,19 @@
 package wave
 
-import "math"
+import "github.com/chewxy/math32"
 
-func generateSinWaveTable(sampleRate int) []float64 {
-	samples := make([]float64, sampleRate)
+func generateSinWaveTable(sampleRate int) []float32 {
+	samples := make([]float32, sampleRate)
 
 	for i := range sampleRate {
-		y := math.Sin(float64(i) / float64(sampleRate) * Tau)
-		samples[i] = y
+		samples[i] = math32.Sin(float32(i) / float32(sampleRate) * Tau)
 	}
 
 	return samples
 }
 
 type SinusoidalWave struct {
-	table []float64
+	table []float32
 }
 
 func NewSinusoidalWave(sampleRate int) *SinusoidalWave {
@@ -23,8 +22,9 @@ func NewSinusoidalWave(sampleRate int) *SinusoidalWave {
 	}
 }
 
-func (w *SinusoidalWave) At(t int) float64 {
+func (w *SinusoidalWave) At(t int) float32 {
 	index := t % len(w.table)
+
 	return w.table[index]
 }
 

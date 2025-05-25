@@ -39,7 +39,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		WPId:  nil,
 
 		Sp: &wave.StaticPlayer[wave.StaticPetalSlots]{
-			Name: "mesamura",
+			Name: "Mesabla!? Messa bla bla!?",
 			Slots: wave.StaticPetalSlots{
 				Surface: []wave.StaticPetal{
 					{
@@ -47,31 +47,39 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 						Rarity: native.RarityUltra,
 					},
 					{
-						Type:   native.PetalTypeBasic,
+						Type:   native.PetalTypeFang,
 						Rarity: native.RarityUltra,
 					},
 					{
-						Type:   native.PetalTypeBasic,
+						Type:   native.PetalTypeClaw,
 						Rarity: native.RarityUltra,
 					},
 					{
-						Type:   native.PetalTypeBasic,
+						Type:   native.PetalTypeLightning,
 						Rarity: native.RarityUltra,
 					},
 					{
-						Type:   native.PetalTypeBasic,
+						Type:   native.PetalTypeFang,
 						Rarity: native.RarityUltra,
 					},
 					{
-						Type:   native.PetalTypeBasic,
+						Type:   native.PetalTypeClaw,
 						Rarity: native.RarityUltra,
 					},
 					{
-						Type:   native.PetalTypeBasic,
+						Type:   native.PetalTypeLightning,
 						Rarity: native.RarityUltra,
 					},
 					{
-						Type:   native.PetalTypeBasic,
+						Type:   native.PetalTypeFang,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeClaw,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeLightning,
 						Rarity: native.RarityUltra,
 					},
 				},

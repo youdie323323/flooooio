@@ -1,10 +1,10 @@
 package wave
 
 import (
-	"math"
 	"slices"
 
 	"flooooio/internal/native"
+	"github.com/chewxy/math32"
 )
 
 const movementDuration = 1. / 150.
@@ -33,7 +33,7 @@ func (m *Mob) MobSpecialMovement(wp *WavePool) {
 			{
 				dx := m.PetMaster.X - m.X
 				dy := m.PetMaster.Y - m.Y
-				distanceToParent := math.Hypot(dx, dy)
+				distanceToParent := math32.Hypot(dx, dy)
 
 				if distanceToParent > m.CalculateRadius()*5 {
 					m.Angle = TurnAngleToTarget(
@@ -63,7 +63,7 @@ func (m *Mob) MobSpecialMovement(wp *WavePool) {
 	}
 
 	if m.ShouldShakeAngle() {
-		shakeMultiplier := 1.
+		var shakeMultiplier float32 = 1.
 		if m.TargetEntity != nil {
 			shakeMultiplier = 2.
 		}
@@ -87,7 +87,7 @@ func (m *Mob) MobSpecialMovement(wp *WavePool) {
 
 				m.IsSpecialMoving = false
 			} else {
-				m.Magnitude = math.Sin(m.SpecialMovementTimer*math.Pi) * (SpeedOf(m.Type) * 255)
+				m.Magnitude = math32.Sin(m.SpecialMovementTimer*math32.Pi) * (SpeedOf(m.Type) * 255)
 
 				m.SpecialMovementTimer += movementDuration
 			}

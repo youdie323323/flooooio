@@ -19,6 +19,8 @@ export default class Mob extends Entity {
      */
     public sandstormAngle: number = 0;
 
+    public connectedSegments: Set<Mob> = new Set();
+
     constructor(
         id: number,
 
@@ -28,7 +30,7 @@ export default class Mob extends Entity {
         angle: number,
 
         size: number,
-        
+
         health: number,
 
         readonly type: MobType | PetalType,
@@ -37,7 +39,22 @@ export default class Mob extends Entity {
         readonly isPet: boolean,
 
         readonly isFirstSegment: boolean,
+
+        public connectingSegment: Mob | null,
     ) {
         super(id, x, y, angle, size, health);
+    }
+
+    public get beakAngle(): number {
+        return Math.sin(this.totalT) * 0.1;
+    }
+
+    public static traverseSegments(m: Mob): Mob {
+        const { connectingSegment } = m;
+        if (connectingSegment) {
+            return this.traverseSegments(connectingSegment);
+        }
+
+        return m;
     }
 }

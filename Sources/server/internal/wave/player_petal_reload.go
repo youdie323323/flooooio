@@ -60,7 +60,7 @@ func (p *Player) PlayerPetalReload(wp *WavePool) {
 				now := time.Now()
 
 				if peReloadCooldown[j].IsZero() {
-					peReloadCooldown[j] = now.Add(time.Duration(native.PetalProfiles[pe.Type].StatFromRarity(pe.Rarity).PetalReload * float64(time.Second)))
+					peReloadCooldown[j] = now.Add(time.Duration(native.PetalProfiles[pe.Type].StatFromRarity(pe.Rarity).PetalReload * float32(time.Second)))
 				} else if now.After(peReloadCooldown[j]) || now.Equal(peReloadCooldown[j]) {
 					// If cooldown elapsed
 
@@ -122,7 +122,7 @@ func (p *Player) PlayerPetalReload(wp *WavePool) {
 						continue
 					}
 
-					peUsageCooldown[j] = now.Add(time.Duration(*usageReload * float64(time.Second)))
+					peUsageCooldown[j] = now.Add(time.Duration(*usageReload * float32(time.Second)))
 				}
 			}
 		}

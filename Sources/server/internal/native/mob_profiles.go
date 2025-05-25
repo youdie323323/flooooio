@@ -12,20 +12,22 @@ type MobI18n struct {
 }
 
 type MobStat struct {
-	BodyDamage float64        `json:"bodyDamage"`
-	Health     float64        `json:"health"`
-	Extra      map[string]any `json:"extra,omitempty"`
+	BodyDamage float32 `json:"bodyDamage"`
+	Health     float32 `json:"health"`
+
+	// Maybe this should bee any but ok now
+	Extra map[string]float32 `json:"extra,omitempty"`
 }
 
 // GetDamage returns damage within MobStat.
-func (s MobStat) GetDamage() float64 {
+func (s MobStat) GetDamage() float32 {
 	return s.BodyDamage
 }
 
 type MobData struct {
 	EntityData[MobI18n]
 
-	BaseSize float64 `json:"baseSize"`
+	BaseSize float32 `json:"baseSize"`
 
 	// Bit fancy... :(
 	Common    MobStat `json:"0"`

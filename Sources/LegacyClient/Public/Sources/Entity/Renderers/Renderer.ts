@@ -31,25 +31,6 @@ export default class Renderer<T extends Entity> {
 
         ctx.translate(x, y);
 
-        {
-            using _ = this.guard(ctx);
-
-            ctx.beginPath();
-
-            ctx.moveTo(0, 0);
-
-            const lineLength = context.entity.size * 1.5;
-            ctx.lineTo(
-                Math.cos(angle) * lineLength,
-                Math.sin(angle) * lineLength,
-            );
-            
-            ctx.strokeStyle = "#ffffff";
-            ctx.lineWidth = 2;
-
-            ctx.stroke();
-        }
-
         if (!isSpecimen) {
             this.applyDeathAnimation(context);
 

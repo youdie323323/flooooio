@@ -1,11 +1,12 @@
 package wave
 
 import (
-	"math"
 	"math/rand/v2"
 	"time"
 
 	"flooooio/internal/native"
+
+	"github.com/chewxy/math32"
 )
 
 const (
@@ -20,15 +21,15 @@ func (p *Petal) PetalFasterRaging(wp *WavePool) {
 	now := time.Now()
 
 	if now.Sub(p.LastVelocityApplied) >= fasterRagingApplyMS*time.Millisecond {
-		p.AddRandomVelocity(rand.Float64() * 6)
+		p.AddRandomVelocity(rand.Float32() * 6)
 
 		p.LastVelocityApplied = now
 	}
 }
 
-func (p *Petal) AddRandomVelocity(speed float64) {
-	angle := rand.Float64() * 2 * math.Pi
+func (p *Petal) AddRandomVelocity(speed float32) {
+	angle := rand.Float32() * 2 * math32.Pi
 
-	p.Velocity[0] += speed * math.Cos(angle)
-	p.Velocity[1] += speed * math.Sin(angle)
+	p.Velocity[0] += speed * math32.Cos(angle)
+	p.Velocity[1] += speed * math32.Sin(angle)
 }

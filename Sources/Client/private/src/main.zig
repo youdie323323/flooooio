@@ -83,7 +83,7 @@ export fn main() c_int {
         },
     }) catch unreachable;
 
-    // draw(-1);
+    draw(-1);
 
     return 0;
 }

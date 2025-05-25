@@ -8,3 +8,5 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/puzpuzpuz/xsync/v3 v3.5.1
 )
+
+require github.com/chewxy/math32 v1.11.1

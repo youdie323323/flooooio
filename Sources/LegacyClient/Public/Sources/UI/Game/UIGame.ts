@@ -175,9 +175,9 @@ export default class UIGame extends AbstractUI {
             { // Wave informations
                 const waveProgress = reader.readUInt16();
 
-                const waveProgressTimer = reader.readFloat64();
+                const waveProgressTimer = reader.readFloat32();
 
-                const waveProgressRedGageTimer = reader.readFloat64();
+                const waveProgressRedGageTimer = reader.readFloat32();
 
                 const waveEnded = reader.readBoolean();
 
@@ -204,14 +204,14 @@ export default class UIGame extends AbstractUI {
                 for (let i = 0; i < playerCount; i++) {
                     const playerId = reader.readUInt32();
 
-                    const playerX = reader.readFloat64();
-                    const playerY = reader.readFloat64();
+                    const playerX = reader.readFloat32();
+                    const playerY = reader.readFloat32();
 
-                    const playerAngle = angleToRad(reader.readFloat64());
+                    const playerAngle = angleToRad(reader.readFloat32());
 
-                    const playerHealth = reader.readFloat64();
+                    const playerHealth = reader.readFloat32();
 
-                    const playerSize = reader.readFloat64();
+                    const playerSize = reader.readFloat32();
 
                     const playerMood = reader.readUInt8();
 
@@ -291,14 +291,14 @@ export default class UIGame extends AbstractUI {
                 for (let i = 0; i < mobCount; i++) {
                     const mobId = reader.readUInt32();
 
-                    const mobX = reader.readFloat64();
-                    const mobY = reader.readFloat64();
+                    const mobX = reader.readFloat32();
+                    const mobY = reader.readFloat32();
 
-                    const mobAngle = angleToRad(reader.readFloat64());
+                    const mobAngle = angleToRad(reader.readFloat32());
 
-                    const mobHealth = reader.readFloat64();
+                    const mobHealth = reader.readFloat32();
 
-                    const mobSize = reader.readFloat64();
+                    const mobSize = reader.readFloat32();
 
                     const mobType = reader.readUInt8();
 
@@ -308,9 +308,18 @@ export default class UIGame extends AbstractUI {
                     const bFlags = reader.readUInt8();
 
                     const mobIsPet = Boolean(bFlags & 1),
-                        mobIsFirstSegment = Boolean(bFlags & 2);
+                        mobIsFirstSegment = Boolean(bFlags & 2),
+                        mobHasConnectingSegment = Boolean(bFlags & 4);
 
-                    const mob = this.mobs.get(mobId);
+                    let mobConnectingSegment: Mob = null;
+
+                    if (mobHasConnectingSegment) {
+                        const connectingSegmentModId = reader.readUInt32();
+
+                        mobConnectingSegment = this.mobs.get(connectingSegmentModId);
+                    }
+
+                    let mob = this.mobs.get(mobId);
                     if (mob) {
                         mob.nx = mobX;
                         mob.ny = mobY;
@@ -319,12 +328,16 @@ export default class UIGame extends AbstractUI {
 
                         mob.nSize = mobSize;
 
+                        mob.connectingSegment = mobConnectingSegment;
+
                         { // Update health properties
+                            const targetMob = Mob.traverseSegments(mob);
+
                             if (mobHealth < mob.nHealth) {
-                                mob.redHealthTimer = 1;
-                                mob.hurtT = 1;
+                                targetMob.redHealthTimer = 1;
+                                targetMob.hurtT = 1;
                             } else if (mobHealth > mob.nHealth) {
-                                mob.redHealthTimer = 0;
+                                targetMob.redHealthTimer = 0;
                             }
 
                             mob.nHealth = mobHealth;
@@ -341,7 +354,7 @@ export default class UIGame extends AbstractUI {
 
                         mob.updateT = 0;
                     } else {
-                        const mobInstance = new Mob(
+                        mob = new Mob(
                             mobId,
 
                             mobX,
@@ -359,13 +372,19 @@ export default class UIGame extends AbstractUI {
                             mobIsPet,
 
                             mobIsFirstSegment,
+
+                            mobConnectingSegment,
                         );
 
-                        if (this.waveMobIcons.isIconableMobInstance(mobInstance)) {
-                            this.waveMobIcons.addMobIcon(mobInstance);
+                        if (this.waveMobIcons.isIconableMobInstance(mob)) {
+                            this.waveMobIcons.addMobIcon(mob);
                         }
 
-                        this.mobs.set(mobId, mobInstance);
+                        this.mobs.set(mobId, mob);
+                    }
+
+                    if (mobConnectingSegment && !mobConnectingSegment.connectedSegments.has(mob)) {
+                        mobConnectingSegment.connectedSegments.add(mob);
                     }
                 }
             }
@@ -376,14 +395,14 @@ export default class UIGame extends AbstractUI {
                 for (let i = 0; i < petalCount; i++) {
                     const petalId = reader.readUInt32();
 
-                    const petalX = reader.readFloat64();
-                    const petalY = reader.readFloat64();
+                    const petalX = reader.readFloat32();
+                    const petalY = reader.readFloat32();
 
-                    const petalAngle = angleToRad(reader.readFloat64());
+                    const petalAngle = angleToRad(reader.readFloat32());
 
-                    const petalHealth = reader.readFloat64();
+                    const petalHealth = reader.readFloat32();
 
-                    const petalSize = reader.readFloat64();
+                    const petalSize = reader.readFloat32();
 
                     const petalType = reader.readUInt8();
 
@@ -439,6 +458,8 @@ export default class UIGame extends AbstractUI {
                             false,
 
                             false,
+
+                            null,
                         ));
                     }
                 }
@@ -489,8 +510,8 @@ export default class UIGame extends AbstractUI {
                     };
 
                     for (let j = 0; j < positionsCount; j++) {
-                        const x = reader.readFloat64();
-                        const y = reader.readFloat64();
+                        const x = reader.readFloat32();
+                        const y = reader.readFloat32();
 
                         bounce.points.push([x, y]);
                     }
@@ -504,13 +525,13 @@ export default class UIGame extends AbstractUI {
         [Clientbound.WAVE_CHAT_RECEIV]: (reader: BinaryReader): void => {
             const lines = reader.readString();
 
-            lines.split("\n").forEach(message => {                
+            lines.split("\n").forEach(message => {
                 this.chatContainer.addChildren(
                     new StaticText(
                         {
                             y: 2,
                         },
-    
+
                         message,
                         10,
                     ),
@@ -1053,6 +1074,12 @@ export default class UIGame extends AbstractUI {
                     }
 
                     this.mobs.delete(k);
+
+                    this.mobs.forEach((innerMob, k) => {
+                        if (innerMob.connectedSegments.has(mob)) innerMob.connectedSegments.delete(mob);
+                    });
+
+                    if (mob.connectingSegment) mob.connectingSegment = null;
                 }
             });
 

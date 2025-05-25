@@ -61,21 +61,23 @@ pub fn WebSocket(comptime Context: type) type {
         }
 
         /// Closes and destroys the WebSocket connection.
-        pub inline fn destroy(self: *Self) void {
+        pub inline fn deinit(self: *Self) void {
             @"2"(self.id);
 
             mem.allocator.destroy(self);
 
             _ = websocket_instances.remove(self.id);
+
+            self.* = undefined;
         }
 
         /// Returns true if the WebSocket is ready for communication.
-        pub inline fn isReady(self: *Self) bool {
+        pub inline fn isReady(self: Self) bool {
             return @"3"(self.id);
         }
 
         /// Sends binary data through the WebSocket.
-        pub inline fn send(self: *Self, data: []const u8) !bool {
+        pub inline fn send(self: Self, data: []const u8) !bool {
             // This could slow the code
             // if (!self.isReady()) {
             //     return error.WebSocketNotReady;

@@ -1,9 +1,10 @@
 package wave
 
 import (
-	"math"
 	"math/rand/v2"
 	"sync"
+
+	"github.com/chewxy/math32"
 
 	"flooooio/internal/collision"
 )
@@ -15,28 +16,28 @@ type Entity struct {
 	Id *EntityId
 
 	// X is x-pos of entity.
-	X float64
+	X float32
 	// Y is y-pos of entity.
-	Y float64
+	Y float32
 
 	// Magnitude is size of movement.
-	Magnitude float64
+	Magnitude float32
 	// Angle is angle of movement.
-	Angle float64
+	Angle float32
 
 	// Size is size of entity.
-	Size float64
+	Size float32
 
 	// Health is health of entity.
 	// Range will be [0, 1] float range.
-	Health float64
+	Health float32
 
 	Mu sync.RWMutex
 }
 
 // GetRandomAngle returns random angle of entity.
-func GetRandomAngle() float64 {
-	return rand.Float64() * 255
+func GetRandomAngle() float32 {
+	return rand.Float32() * 255
 }
 
 // GetRandomId returns random id.
@@ -47,10 +48,10 @@ func GetRandomId() uint32 {
 func NewEntity(
 	id *EntityId,
 
-	x float64,
-	y float64,
+	x float32,
+	y float32,
 
-	size float64,
+	size float32,
 ) Entity {
 	return Entity{
 		Id: id,
@@ -70,21 +71,21 @@ func NewEntity(
 
 // LightningEmitter is lightning emitter (like jellyfish, lightning)
 type LightningEmitter interface {
-    GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node
+	GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node
 }
 
-const Tau = math.Pi * 2
+const Tau = math32.Pi * 2
 
 // GetRandomSafeCoordinate generates a random safe position
-func GetRandomSafeCoordinate(mapRadius float64, safetyDistance float64, clients []*Player) (float64, float64, bool) {
+func GetRandomSafeCoordinate(mapRadius float32, safetyDistance float32, clients []*Player) (float32, float32, bool) {
 	const maxAttempts = 100
 
 	for range maxAttempts {
-		angle := rand.Float64() * Tau
-		distance := rand.Float64() * (mapRadius - safetyDistance)
+		angle := rand.Float32() * Tau
+		distance := rand.Float32() * (mapRadius - safetyDistance)
 
-		x := mapRadius + math.Cos(angle)*distance
-		y := mapRadius + math.Sin(angle)*distance
+		x := mapRadius + math32.Cos(angle)*distance
+		y := mapRadius + math32.Sin(angle)*distance
 
 		isSafe := true
 
@@ -92,7 +93,7 @@ func GetRandomSafeCoordinate(mapRadius float64, safetyDistance float64, clients 
 		for _, client := range clients {
 			dx := client.X - x
 			dy := client.Y - y
-			distanceToClient := math.Hypot(dx, dy)
+			distanceToClient := math32.Hypot(dx, dy)
 
 			if distanceToClient < safetyDistance+client.Size {
 				isSafe = false
@@ -110,23 +111,23 @@ func GetRandomSafeCoordinate(mapRadius float64, safetyDistance float64, clients 
 }
 
 // GetRandomCoordinate generates a random position
-func GetRandomCoordinate(centerX, centerY, spawnRadius float64) (float64, float64) {
-	angle := rand.Float64() * Tau
-	distance := (0.5 + rand.Float64()*0.5) * spawnRadius
+func GetRandomCoordinate(centerX, centerY, spawnRadius float32) (float32, float32) {
+	angle := rand.Float32() * Tau
+	distance := (0.5 + rand.Float32()*0.5) * spawnRadius
 
-	x := centerX + math.Cos(angle)*distance
-	y := centerY + math.Sin(angle)*distance
+	x := centerX + math32.Cos(angle)*distance
+	y := centerY + math32.Sin(angle)*distance
 
 	return x, y
 }
 
 // Methods that satisfy spatial hash's Node.
 
-func (e *Entity) GetX() float64 {
+func (e *Entity) GetX() float32 {
 	return e.X
 }
 
-func (e *Entity) GetY() float64 {
+func (e *Entity) GetY() float32 {
 	return e.Y
 }
 
@@ -134,11 +135,11 @@ func (e *Entity) GetID() uint32 {
 	return *e.Id
 }
 
-func (e *Entity) GetMagnitude() float64 {
+func (e *Entity) GetMagnitude() float32 {
 	return e.Magnitude
 }
 
-func (e *Entity) GetAngle() float64 {
+func (e *Entity) GetAngle() float32 {
 	return e.Angle
 }
 

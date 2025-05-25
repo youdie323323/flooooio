@@ -1,6 +1,7 @@
 package wave
 
 import (
+	"cmp"
 	"slices"
 
 	"flooooio/internal/collision"
@@ -10,6 +11,13 @@ import (
 const (
 	mobToMobPushMultiplier = 0.5
 )
+
+const maxMobToPlayerVelocity = 30.0
+
+// Clamp returns f clamped to [low, high]
+func Clamp[T cmp.Ordered](f, low, high T) T {
+	return min(max(f, low), high)
+}
 
 func (m *Mob) MobCollision(wp *WavePool) {
 	if m.WasEliminated(wp) {
@@ -191,8 +199,8 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					m.X -= px
 					m.Y -= py
 
-					nearEntity.Velocity[0] += px * 3
-					nearEntity.Velocity[1] += py * 3
+					nearEntity.Velocity[0] += Clamp(px * 2, -maxMobToPlayerVelocity, maxMobToPlayerVelocity)
+					nearEntity.Velocity[1] += Clamp(py * 2, -maxMobToPlayerVelocity, maxMobToPlayerVelocity)
 
 					{ // Damage
 						nearEntityMaxHealth := nearEntity.GetMaxHealth()
@@ -212,12 +220,12 @@ func (m *Mob) MobCollision(wp *WavePool) {
 	})
 }
 
-func doFangLifesteal(fang *Petal, stat native.PetalStat, damage float64) {
+func doFangLifesteal(fang *Petal, stat native.PetalStat, damage float32) {
 	if fang.Master == nil {
 		return
 	}
 
-	healDamaged, ok := stat.Extra["damageHealed"].(float64)
+	healDamaged, ok := stat.Extra["damageHealed"]
 	if !ok {
 		return
 	}

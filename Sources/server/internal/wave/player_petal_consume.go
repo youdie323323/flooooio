@@ -1,11 +1,12 @@
 package wave
 
 import (
-	"math"
 	"slices"
 	"time"
 
 	"flooooio/internal/native"
+
+	"github.com/chewxy/math32"
 )
 
 const (
@@ -26,8 +27,8 @@ func (p *Player) PlayerPetalConsume(wp *WavePool) {
 
 	isSad := p.Mood.IsSet(native.MoodSad)
 
-	totalForceX := 0.
-	totalForceY := 0.
+	var totalForceX float32 = 0.
+	var totalForceY float32 = 0.
 
 	usageCooldownGrid := p.Slots.UsageCooldownGrid
 
@@ -95,7 +96,7 @@ func (p *Player) PlayerPetalConsume(wp *WavePool) {
 						dx := petal.X - p.X
 						dy := petal.Y - p.Y
 
-						distance := math.Hypot(dx, dy)
+						distance := math32.Hypot(dx, dy)
 
 						if distance > 0 {
 							dirX := dx / distance
@@ -142,7 +143,7 @@ func (p *Player) PlayerPetalConsume(wp *WavePool) {
 					dx := p.X - petal.X
 					dy := p.Y - petal.Y
 
-					distance := math.Hypot(dx, dy)
+					distance := math32.Hypot(dx, dy)
 
 					if distance > 0 {
 						totalForceX += dx / distance * bubbleBounceForce

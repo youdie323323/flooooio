@@ -1,5 +1,5 @@
 import type { AutomaticallySizedLayoutOptions } from "../Layout/Components/WellKnown/Container";
-import Gauge, { entityHealthGaugeSources } from "../Layout/Components/WellKnown/Gauge";
+import Gauge, { healthGaugeSources } from "../Layout/Components/WellKnown/Gauge";
 import type Player from "../../Entity/Player";
 import { renderEntity } from "../../Entity/Renderers/RendererRenderingLink";
 
@@ -33,7 +33,7 @@ export default class UIGameOtherPlayerStatus extends Gauge {
                 h: 22 * OTHER_PLAYER_SIZE_COEFF,
             },
 
-            entityHealthGaugeSources(player),
+            healthGaugeSources(player),
             14,
             () => player.name,
         );

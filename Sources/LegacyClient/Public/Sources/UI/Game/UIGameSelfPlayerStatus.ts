@@ -1,5 +1,5 @@
 import type { AutomaticallySizedLayoutOptions } from "../Layout/Components/WellKnown/Container";
-import Gauge, { entityHealthGaugeSources } from "../Layout/Components/WellKnown/Gauge";
+import Gauge, { healthGaugeSources } from "../Layout/Components/WellKnown/Gauge";
 import type Player from "../../Entity/Player";
 import { renderEntity } from "../../Entity/Renderers/RendererRenderingLink";
 import { RARITY_COLOR, Rarity } from "../../Native/Rarity";
@@ -30,7 +30,7 @@ export default class UIGameSelfPlayerStatus extends Gauge {
                 h: 22,
             },
 
-            entityHealthGaugeSources(player),
+            healthGaugeSources(player),
             20,
             () => player.name,
         );

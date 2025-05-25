@@ -126,7 +126,9 @@ pub fn init(client: *ClientWebSocket) ServerBound {
     };
 }
 
-pub fn deinit(_: ServerBound) void {}
+pub fn deinit(self: *ServerBound) void {
+    self.* = undefined;
+}
 
 inline fn calculateNormalizedAngle(angle: f32) f32 {
     const normalized = @mod(angle, math.tau);
@@ -139,7 +141,7 @@ pub fn writeCString(stream: anytype, text: []const u8) !void {
     try stream.writeByte(0);
 }
 
-var shared_buffer: [1024]u8 = undefined;
+var shared_stringable_buffer: [1024]u8 = undefined;
 
 pub inline fn send(self: ServerBound, buf: []const u8) !void {
     _ = try self.client.socket.send(buf);
@@ -167,7 +169,7 @@ pub fn sendWaveSwapPetal(self: ServerBound, index: u8) !void {
 }
 
 pub fn sendWaveChat(self: ServerBound, message: []const u8) !void {
-    var fbs = io.fixedBufferStream(&shared_buffer);
+    var fbs = io.fixedBufferStream(&shared_stringable_buffer);
     var stream = fbs.writer();
 
     try stream.writeByte(@intFromEnum(Opcode.ServerBound.wave_send_chat));
@@ -183,7 +185,7 @@ pub fn sendWaveRoomCreate(self: ServerBound, biome: u8) !void {
 }
 
 pub fn sendWaveRoomJoin(self: ServerBound, code: []const u8) !void {
-    var fbs = io.fixedBufferStream(&shared_buffer);
+    var fbs = io.fixedBufferStream(&shared_stringable_buffer);
     var stream = fbs.writer();
 
     try stream.writeByte(@intFromEnum(Opcode.ServerBound.wave_room_join));
@@ -211,7 +213,7 @@ pub fn sendWaveRoomChangeVisible(self: ServerBound, state: u8) !void {
 }
 
 pub fn sendWaveRoomChangeName(self: ServerBound, name: []const u8) !void {
-    var fbs = io.fixedBufferStream(&shared_buffer);
+    var fbs = io.fixedBufferStream(&shared_stringable_buffer);
     var stream = fbs.writer();
 
     try stream.writeByte(@intFromEnum(Opcode.ServerBound.wave_room_change_name));

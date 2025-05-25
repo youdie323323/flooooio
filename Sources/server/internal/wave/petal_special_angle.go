@@ -1,9 +1,9 @@
 package wave
 
 import (
-	"math"
-
 	"flooooio/internal/native"
+
+	"github.com/chewxy/math32"
 )
 
 func (p *Petal) PetalSpecialAngle(wp *WavePool) {
@@ -24,5 +24,5 @@ func (p *Petal) PetalSpecialAngle(wp *WavePool) {
 		}
 	}
 
-	p.Angle = math.Mod(p.Angle, 255)
+	p.Angle = math32.Mod(p.Angle, 255)
 }

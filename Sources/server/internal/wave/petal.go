@@ -22,14 +22,14 @@ type Petal struct {
 
 	SpinningOnMob bool
 
-	Velocity [2]float64
+	Velocity [2]float32
 
 	// petal_faster_raging.go struct field definitions
 	LastVelocityApplied time.Time
 }
 
 // CalculateRadius return radius (display size).
-func (p *Petal) CalculateRadius() float64 {
+func (p *Petal) CalculateRadius() float32 {
 	profile := native.PetalProfiles[p.Type]
 	collision := profile.Collision
 
@@ -37,7 +37,7 @@ func (p *Petal) CalculateRadius() float64 {
 }
 
 // GetMaxHealth calculates max hp of petal.
-func (p *Petal) GetMaxHealth() float64 {
+func (p *Petal) GetMaxHealth() float32 {
 	profile := native.PetalProfiles[p.Type]
 
 	return profile.StatFromRarity(p.Rarity).Health
@@ -76,8 +76,8 @@ func NewPetal(
 
 	rarity native.Rarity,
 
-	x float64,
-	y float64,
+	x float32,
+	y float32,
 
 	master *Player,
 ) *Petal {
@@ -102,7 +102,7 @@ func NewPetal(
 
 		SpinningOnMob: false,
 
-		Velocity: [2]float64{0, 0},
+		Velocity: [2]float32{0, 0},
 
 		LastVelocityApplied: time.Time{},
 	}

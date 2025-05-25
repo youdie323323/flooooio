@@ -574,6 +574,37 @@
         }
     },
     "14": {
+        "2": {
+            "health": 2362.5,
+            "bodyDamage": 90
+        },
+        "3": {
+            "health": 9450,
+            "bodyDamage": 270
+        },
+        "4": {
+            "health": 70875,
+            "bodyDamage": 810
+        },
+        "5": {
+            "health": 425250,
+            "bodyDamage": 2430
+        },
+        "6": {
+            "health": 12775000,
+            "bodyDamage": 7290
+        },
+        "baseSize": 15,
+        "i18n": {
+            "name": "Leech",
+            "description": "Slurp slurp."
+        },
+        "collision": {
+            "fraction": 20,
+            "radius": 12.5
+        }
+    },
+    "15": {
         "0": {
             "health": 25,
             "bodyDamage": 10
@@ -612,7 +643,7 @@
             "radius": 40
         }
     },
-    "15": {
+    "16": {
         "0": {
             "health": 25,
             "bodyDamage": 10
@@ -651,7 +682,7 @@
             "radius": 40
         }
     },
-    "16": {
+    "17": {
         "0": {
             "health": 25,
             "bodyDamage": 10
@@ -690,7 +721,7 @@
             "radius": 40
         }
     },
-    "17": {
+    "18": {
         "0": {
             "health": 25,
             "bodyDamage": 10

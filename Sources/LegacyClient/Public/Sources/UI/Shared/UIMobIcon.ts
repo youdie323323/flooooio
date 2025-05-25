@@ -29,7 +29,7 @@ export default class UIMobIcon extends StaticPanelContainer {
             // No getSkinColor() interpolated color
             if (property === "hurtT") return 0;
 
-            // No dynamic rendering
+            // No dynamic moving rendering
             if (property === "moveCounter") return 0;
 
             // No sandstorm angle move
@@ -37,6 +37,9 @@ export default class UIMobIcon extends StaticPanelContainer {
 
             // No dynamic leg distance
             if (property === "legD") return UIMobIcon.ICON_MOB_LEG_DISTANCE;
+
+            // Important: override beakAngle directly to remove redudant cos calculation
+            if (property === "beakAngle") return 0;
 
             return Reflect.get(target, property, receiver);
         },
@@ -99,9 +102,9 @@ export default class UIMobIcon extends StaticPanelContainer {
 
         if (amount === 1) return;
 
-        ctx.translate(cw - 7, -ch + 8);
+        ctx.translate(cw - 8, -ch + 7);
 
-        ctx.rotate((30 * Math.PI) / 180);
+        ctx.rotate((20 * Math.PI) / 180);
 
         ctx.lineJoin = "round";
         ctx.lineCap = "round";
@@ -109,10 +112,12 @@ export default class UIMobIcon extends StaticPanelContainer {
         ctx.textAlign = "center";
 
         ctx.fillStyle = "#ffffff";
-        setGameFont(ctx, 7);
+        setGameFont(ctx, 8);
 
-        ctx.strokeText("x" + amount, 0, 0);
-        ctx.fillText("x" + amount, 0, 0);
+        const amountString = "x" + amount;
+
+        ctx.strokeText(amountString, 0, 0);
+        ctx.fillText(amountString, 0, 0);
     }
 
     override destroy(): void {

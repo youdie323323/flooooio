@@ -18,30 +18,6 @@ pub fn S3FIFO(
     comptime on_evict: ?fn (Context, K, V) void,
 ) type {
     return struct {
-        const Small = DoublyLinkedList(Entry);
-        const Main = DoublyLinkedList(Entry);
-        const Ghost = Deque(K);
-
-        const Entries =
-            if (K == []const u8)
-                std.StringArrayHashMap(*Node)
-            else
-                std.AutoArrayHashMap(K, *Node);
-
-        allocator: Allocator,
-        ctx: Context,
-
-        /// Small queue for entries with low frequency.
-        small: Small,
-        /// Main queue for entries with high frequency.
-        main: Main,
-        /// Ghost queue for evicted entries.
-        ghost: Ghost,
-        /// Map of all entries for quick access.
-        entries: Entries,
-        max_cache_size: usize,
-        max_main_size: usize,
-
         const Self = @This();
 
         /// Represents an entry in the cache.
@@ -52,11 +28,53 @@ pub fn S3FIFO(
             freq: u2 align(1) = 0,
         };
 
-        const Node = DoublyLinkedList(Entry).Node;
+        const GhostEntry = std.meta.Tuple(&[_]type{ K, u2 });
+
+        const GeneralPurposeList = DoublyLinkedList(Entry);
+
+        const Small = GeneralPurposeList;
+        const Main = GeneralPurposeList;
+        const Ghost = Deque(GhostEntry);
+
+        const Node = GeneralPurposeList.Node;
+
+        inline fn initNode(self: *Self, key: K, value: V) !*Node {
+            const node = try self.allocator.create(Node);
+
+            node.* = .{
+                .data = .{
+                    .key = key,
+                    .value = value,
+                },
+            };
+
+            return node;
+        }
 
         inline fn deinitNode(self: *Self, node: *Node) void {
             self.allocator.destroy(node);
         }
+
+        const Entries =
+            if (K == []const u8)
+                std.StringArrayHashMap(*Node)
+            else
+                std.AutoArrayHashMap(K, *Node);
+
+        allocator: Allocator,
+        ctx: Context,
+
+        /// Map of all entries for quick access.
+        entries: Entries,
+        /// Small queue for entries with low frequency.
+        small: Small,
+        /// Main queue for entries with high frequency.
+        main: Main,
+        /// Ghost queue for evicted entries.
+        ghost: Ghost,
+
+        max_cache_size: usize,
+        max_main_size: usize,
 
         /// Creates a new cache with the given maximum size.
         pub fn init(
@@ -67,14 +85,15 @@ pub fn S3FIFO(
             const max_small_size = max_cache_size / 10;
             const max_main_size = max_cache_size - max_small_size;
 
-            return Self{
+            return .{
                 .allocator = allocator,
                 .ctx = ctx,
 
+                .entries = Entries.init(allocator),
                 .small = Small{},
                 .main = Main{},
                 .ghost = try Ghost.init(allocator),
-                .entries = Entries.init(allocator),
+
                 .max_cache_size = max_cache_size,
                 .max_main_size = max_main_size,
             };
@@ -109,9 +128,7 @@ pub fn S3FIFO(
         pub fn insert(self: *Self, key: K, value: V) Allocator.Error!void {
             try self.evict();
 
-            const node = try self.allocator.create(Node);
-
-            node.* = .{ .data = .{ .key = key, .value = value } };
+            const node = try self.initNode(key, value);
 
             if (self.entries.contains(key)) {
                 self.main.append(node);
@@ -123,17 +140,20 @@ pub fn S3FIFO(
         }
 
         inline fn insertMain(self: *Self, tail: *Node) void {
+            tail.data.freq = 0;
+
             self.main.prepend(tail);
         }
 
         inline fn insertGhost(self: *Self, tail: *Node) Allocator.Error!void {
-            if (self.ghost.len() >= self.max_main_size) {
-                const key = self.ghost.popFront().?;
-
-                _ = self.entries.swapRemove(key);
+            if (self.ghost.len() == self.max_main_size) {
+                const key, const freq = self.ghost.popBack().?;
+                if (freq < 0) {
+                    _ = self.entries.swapRemove(key);
+                }
             }
 
-            try self.ghost.pushBack(tail.data.key);
+            try self.ghost.pushFront(.{ tail.data.key, tail.data.freq });
         }
 
         inline fn notifyEviction(self: *Self, node: *Node) void {
@@ -142,8 +162,9 @@ pub fn S3FIFO(
             }
         }
 
+        // Ensure there is at least one location free for a new item.
         inline fn evict(self: *Self) !void {
-            if (self.small.len + self.main.len >= self.max_cache_size) {
+            while (self.small.len + self.main.len >= self.max_cache_size) {
                 if (self.main.len >= self.max_main_size or self.small.len == 0) {
                     self.evictMain();
                 } else {
@@ -154,13 +175,13 @@ pub fn S3FIFO(
 
         inline fn evictSmall(self: *Self) !void {
             while (self.small.pop()) |tail| {
-                const freq = tail.data.freq;
-                if (freq > 1) {
+                if (tail.data.freq > 0) {
                     self.insertMain(tail);
                 } else {
                     try self.insertGhost(tail);
 
                     self.notifyEviction(tail);
+
                     self.deinitNode(tail);
 
                     break;
@@ -169,21 +190,17 @@ pub fn S3FIFO(
         }
 
         inline fn evictMain(self: *Self) void {
-            if (self.main.first) |first| {
-                const freq = first.data.freq;
-                if (freq > 0) {
-                    // Move to end without allocation
-                    self.main.remove(first);
-                    self.main.append(first);
+            while (self.main.pop()) |tail| {
+                if (tail.data.freq > 0) {
+                    tail.data.freq -= 1;
 
-                    first.data.freq = freq - 1;
+                    self.main.prepend(tail);
                 } else {
-                    self.main.remove(first);
+                    _ = self.entries.swapRemove(tail.data.key);
 
-                    _ = self.entries.swapRemove(first.data.key);
+                    self.notifyEviction(tail);
 
-                    self.notifyEviction(first);
-                    self.deinitNode(first);
+                    self.deinitNode(tail);
                 }
             }
         }

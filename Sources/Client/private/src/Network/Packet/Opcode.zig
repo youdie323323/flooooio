@@ -41,7 +41,11 @@ pub const ClientBoundConnectionKickReason = enum(u8) {
     cheat_detected,
 };
 
-pub const display_kick_reason = std.StaticStringMap([]const u8).initComptime(.{
-    .{ "outdated_client", "Outdated client" },
-    .{ "cheat_detected", "Cheat detected" },
+const display_kick_reason = std.StaticStringMap([]const u8).initComptime(.{
+    .{ @tagName(ClientBoundConnectionKickReason.outdated_client), "Outdated client" },
+    .{ @tagName(ClientBoundConnectionKickReason.cheat_detected), "Cheat detected" },
 });
+
+pub inline fn getDisplayKickReason(reason: ClientBoundConnectionKickReason) ?[]const u8 {
+    return display_kick_reason.get(@tagName(reason));
+}

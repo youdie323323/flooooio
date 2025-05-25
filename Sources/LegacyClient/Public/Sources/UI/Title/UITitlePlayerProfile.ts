@@ -64,8 +64,7 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
 
         ctx.translate(this.x, this.y);
 
-        // Frame
-        {
+        { // Frame
             ctx.save();
 
             ctx.lineWidth = 4;

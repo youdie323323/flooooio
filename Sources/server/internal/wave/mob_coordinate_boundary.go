@@ -1,10 +1,11 @@
 package wave
 
 import (
-	"math"
 	"slices"
 
 	"flooooio/internal/native"
+
+	"github.com/chewxy/math32"
 )
 
 var ProjectileMobTypes = []native.MobType{
@@ -14,31 +15,31 @@ var ProjectileMobTypes = []native.MobType{
 func (m *Mob) MobCoordinateBoundary(wp *WavePool) {
 	// Eliminate if missile above desiredMapRadius * 1.5
 	if slices.Contains(ProjectileMobTypes, m.Type) {
-		mapRadius := float64(wp.Wd.MapRadius)
+		mapRadius := float32(wp.Wd.MapRadius)
 
 		desiredMapRadius := mapRadius - m.CalculateRadius()
 
-		dx := m.X - float64(mapRadius)
-		dy := m.Y - float64(mapRadius)
+		dx := m.X - mapRadius
+		dy := m.Y - mapRadius
 
-		if math.Hypot(dx, dy) > desiredMapRadius*1.5 {
+		if math32.Hypot(dx, dy) > desiredMapRadius*1.5 {
 			m.ForceEliminate(wp)
 		}
 
 		return
 	}
 
-	mapRadius := float64(wp.Wd.MapRadius)
+	mapRadius := float32(wp.Wd.MapRadius)
 
 	desiredMapRadius := mapRadius - m.CalculateRadius()
 
-	dx := m.X - float64(mapRadius)
-	dy := m.Y - float64(mapRadius)
+	dx := m.X - mapRadius
+	dy := m.Y - mapRadius
 
-	if math.Hypot(dx, dy) > desiredMapRadius {
-		collisionAngle := math.Atan2(dy, dx)
+	if math32.Hypot(dx, dy) > desiredMapRadius {
+		collisionAngle := math32.Atan2(dy, dx)
 
-		m.X = mapRadius + math.Cos(collisionAngle)*desiredMapRadius
-		m.Y = mapRadius + math.Sin(collisionAngle)*desiredMapRadius
+		m.X = mapRadius + math32.Cos(collisionAngle)*desiredMapRadius
+		m.Y = mapRadius + math32.Sin(collisionAngle)*desiredMapRadius
 	}
 }

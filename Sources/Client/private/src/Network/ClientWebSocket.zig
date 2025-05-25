@@ -17,7 +17,6 @@ allocator: mem.Allocator,
 socket: *OwnContextWebSocket = undefined,
 packet_handler: ClientBound,
 packet_writer: ServerBound,
-is_destroyed: bool = false,
 
 prng: std.Random.DefaultPrng,
 
@@ -127,26 +126,18 @@ pub fn connect(self: *ClientWebSocket, host: []const u8) !void {
         prev_fuzzing_timer = Timer.setInterval(tryFuzz, 50);
     }
 
-    self.socket.on_close = onClose;
     self.socket.on_message = onMessage;
 }
 
-pub fn destroy(self: *ClientWebSocket) void {
-    if (self.is_destroyed) return;
-
-    self.is_destroyed = true;
-
-    self.socket.destroy();
+pub fn deinit(self: *ClientWebSocket) void {
+    self.socket.deinit();
 
     self.packet_handler.deinit();
     self.packet_writer.deinit();
 
     self.allocator.destroy(self);
-}
 
-fn onClose(ws: *OwnContextWebSocket) void {
-    // Unintended close, reconnect
-    if (!ws.ctx.is_destroyed) {}
+    self.* = undefined;
 }
 
 fn onMessage(ws: *OwnContextWebSocket, data: []const u8) void {

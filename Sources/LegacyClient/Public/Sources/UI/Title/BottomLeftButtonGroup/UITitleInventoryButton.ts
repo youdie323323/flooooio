@@ -173,6 +173,8 @@ export default class UITitleInventoryButton extends createTitleBottomLeftToolTip
                                         false,
 
                                         false,
+
+                                        null,
                                     ),
 
                                     1,

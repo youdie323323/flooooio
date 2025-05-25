@@ -58,8 +58,8 @@ const ChunkList = Deque(Chunk);
 
 fn onChunkEvict(self: *TileMap, _: ChunkCacheKey, chunk: Chunk) void {
     self.pending_destruction.pushBack(chunk) catch {
-        // Force destroy if not enough memory
-        chunk.destroy();
+        // Force deinit if not enough memory
+        chunk.deinit();
     };
 }
 
@@ -82,10 +82,12 @@ pub fn init(allocator: Allocator, options: TileMapOptions) Allocator.Error!TileM
 pub fn deinit(self: *TileMap) void {
     self.chunk_cache.deinit();
     self.pending_destruction.deinit();
+
+    self.* = undefined;
 }
 
 inline fn generateChunk(
-    self: *TileMap,
+    self: TileMap,
     chunk_position: Vector2,
     absolute_chunk_position: Vector2,
     absolute_chunk_size: Vector2,
@@ -103,9 +105,9 @@ inline fn generateChunk(
     const tile_size_w: f32, const tile_size_h: f32 = tile_size;
 
     const top_left_tile: Vector2 = chunk_position * chunk_size;
-    const bottom_right_tile: Vector2 = top_left_tile + chunk_size - one_vector;
-
     const top_left_tile_x: f32, const top_left_tile_y: f32 = top_left_tile;
+
+    const bottom_right_tile: Vector2 = top_left_tile + chunk_size - one_vector;
     const bottom_right_tile_x: f32, const bottom_right_tile_y: f32 = bottom_right_tile;
 
     const bounds_top_left = if (options.bounds) |b| b.top_left else zero_vector;
@@ -154,7 +156,7 @@ inline fn generateChunk(
 }
 
 inline fn drawChunk(
-    _: *TileMap,
+    _: TileMap,
     ctx: CanvasContext,
     chunk: Chunk,
     position: Vector2,
@@ -265,6 +267,6 @@ pub fn draw(
 
     ctx.restore();
 
-    // Destroy all pending chunks
-    while (self.pending_destruction.popBack()) |chunk| chunk.destroy();
+    // Deinit all pending chunks
+    while (self.pending_destruction.popBack()) |chunk| chunk.deinit();
 }

@@ -4,7 +4,7 @@ const math = std.math;
 // TODO
 var delta_time: f32 = 0.0;
 
-pub fn Entity(comptime T: type) type {
+pub fn Entity() type {
     return struct {
         const Self = @This();
         const Vector2 = @Vector(2, f32);
@@ -20,8 +20,6 @@ pub fn Entity(comptime T: type) type {
         inline fn smoothInterpolate(current: f32, target: f32, duration: f32) f32 {
             return current + (target - current) * @min(1, delta_time / duration);
         }
-
-        base: T,
 
         id: u32,
 
@@ -56,12 +54,10 @@ pub fn Entity(comptime T: type) type {
         move_counter: f32,
         hp_alpha: f32,
 
-        pub fn init(base: T, id: u32, x: f32, y: f32, angle: f32, size: f32, health: f32) Self {
+        pub fn init(id: u32, x: f32, y: f32, angle: f32, size: f32, health: f32) Self {
             const initial_pos: Vector2 = .{ x, y };
 
             return .{
-                .base = base,
-
                 .id = id,
 
                 .t = 0,

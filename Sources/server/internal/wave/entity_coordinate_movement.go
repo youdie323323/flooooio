@@ -1,5 +1,5 @@
 package wave
 
-func angleToRadian(angle float64) float64 {
+func angleToRadian(angle float32) float32 {
 	return angle / 255 * Tau
 }

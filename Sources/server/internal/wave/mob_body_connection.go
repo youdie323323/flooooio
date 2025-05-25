@@ -1,7 +1,7 @@
 package wave
 
 import (
-	"math"
+	"github.com/chewxy/math32"
 )
 
 // TraverseMobSegments traverse mob segments and return final segment.
@@ -36,11 +36,11 @@ func (m *Mob) MobBodyConnection(wp *WavePool) {
 
 	segmentDia := m.CalculateRadius() * 2
 
-	currentDistance := math.Hypot(dx, dy)
+	currentDistance := math32.Hypot(dx, dy)
 
 	if currentDistance > segmentDia {
 		m.Magnitude = 0
-		m.Angle = math.Mod((math.Atan2(dy, dx)/Tau)*255+255, 255)
+		m.Angle = math32.Mod((math32.Atan2(dy, dx)/Tau)*255+255, 255)
 
 		ratio := (currentDistance - segmentDia) / currentDistance
 		m.X += dx * ratio

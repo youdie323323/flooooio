@@ -5,7 +5,7 @@ import { renderEntity } from "../../Entity/Renderers/RendererRenderingLink";
 import type { ComponentCloser, ComponentOpener, Components, DummySetVisibleToggleType } from "../Layout/Components/Component";
 import { AnimationType } from "../Layout/Components/Component";
 import type { AnyStaticContainer } from "../Layout/Components/WellKnown/Container";
-import { StaticPanelContainer, CoordinatedStaticSpace, StaticHContainer, StaticSpace } from "../Layout/Components/WellKnown/Container";
+import { StaticPanelContainer, CoordinatedStaticSpace, StaticHContainer, StaticSpace, StaticVContainer } from "../Layout/Components/WellKnown/Container";
 import StaticText from "../Layout/Components/WellKnown/StaticText";
 import TextInput from "../Layout/Components/WellKnown/TextInput";
 import Toggle from "../Layout/Components/WellKnown/Toggle";
@@ -33,6 +33,9 @@ import { DARKENED_BASE } from "../../Utils/Color";
 import type BinaryReader from "../../Websocket/Binary/ReadWriter/Reader/BinaryReader";
 import { Clientbound } from "../../Websocket/Packet/PacketOpcode";
 import { Biome } from "../../Native/Biome";
+import UITitleInventory from "./UITitleInventory";
+import Gauge, { GAUGE_XP_BACKGROUND_COLOR_CODE, xpGaugeSources } from "../Layout/Components/WellKnown/Gauge";
+import { Centering } from "../Layout/Extensions/ExtensionCentering";
 
 const TAU = Math.PI * 2;
 
@@ -184,9 +187,7 @@ export default class UITitle extends AbstractUI {
             this.biome = reader.readUInt8() satisfies Biome;
         },
         [Clientbound.WAVE_STARTED]: (reader: BinaryReader): void => {
-            this.squadMenuContainer.setVisible(false, null, true, AnimationType.ZOOM, {
-                defaultDurationOverride: 250,
-            });
+            this.setVisibleSquadMenuContainer(false);
 
             uiCtx.switchUI("game");
 
@@ -315,8 +316,7 @@ export default class UITitle extends AbstractUI {
             }
         }
 
-        {
-            // Text
+        { // Texts
             const connectingText = this.connectingText = new (Collidable(StaticText, "up"))(
                 {
                     x: -(200 / 2),
@@ -404,7 +404,6 @@ export default class UITitle extends AbstractUI {
                     showPlaceholderWhenUnfocused: false,
 
                     borderColor: "#000000",
-                    borderWidth: 2.5,
                     maxLength: 80,
 
                     paddingSize: 1,
@@ -465,9 +464,7 @@ export default class UITitle extends AbstractUI {
                     if (this.squadMenuContainer.visible === false) {
                         clientWebsocket.packetServerbound.sendWaveRoomFindPublic(this.biome);
 
-                        this.squadMenuContainer.setVisible(true, <ComponentOpener><unknown>readyButton, true, AnimationType.ZOOM, {
-                            defaultDurationOverride: 250,
-                        });
+                        this.setVisibleSquadMenuContainer(true);
 
                         this.statusTextRef = SquadContainerStatusText.CREATING;
 
@@ -487,10 +484,10 @@ export default class UITitle extends AbstractUI {
 
             const squadButton = new Button(
                 {
-                    x: (-(100 / 2)) + 140 + 13,
+                    x: (-(100 / 2)) + 140 + 12,
                     y: (-(50 / 2)) + 20 + 17,
                     w: 63,
-                    h: 18,
+                    h: 16,
 
                     alignFromCenterX: true,
                     alignFromCenterY: true,
@@ -498,12 +495,12 @@ export default class UITitle extends AbstractUI {
 
                 2,
 
-                3,
+                3.4,
                 1,
 
                 [
                     new StaticText(
-                        { y: 2 },
+                        { y: 1 },
 
                         "Squad",
                         13,
@@ -518,7 +515,7 @@ export default class UITitle extends AbstractUI {
                             ctx.fillStyle = "black";
                             ctx.globalAlpha = DARKENED_BASE;
 
-                            drawRoundedPolygon(ctx, 5, (squadButton.h / 2) - 3, 10 - 1, 90, 40, 4);
+                            drawRoundedPolygon(ctx, 5, (squadButton.h / 2) - 3.5, 10 - 1.5, 90, 40, 4);
 
                             ctx.fill();
                         },
@@ -528,9 +525,7 @@ export default class UITitle extends AbstractUI {
                 () => {
                     clientWebsocket.packetServerbound.sendWaveRoomCreate(this.biome);
 
-                    this.squadMenuContainer.setVisible(true, <ComponentOpener><unknown>squadButton, true, AnimationType.ZOOM, {
-                        defaultDurationOverride: 250,
-                    });
+                    this.setVisibleSquadMenuContainer(true);
 
                     this.statusTextRef = SquadContainerStatusText.CREATING;
 
@@ -556,7 +551,7 @@ export default class UITitle extends AbstractUI {
 
                     3,
 
-                    3,
+                    3.4,
                     1,
 
                     [
@@ -578,7 +573,7 @@ export default class UITitle extends AbstractUI {
             const biomeSwitcher = new StaticHContainer(
                 {
                     x: -144,
-                    y: (-(50 / 2)) + 20 + 15,
+                    y: (-(50 / 2)) + 20 + 17,
 
                     alignFromCenterX: true,
                     alignFromCenterY: true,
@@ -670,9 +665,7 @@ export default class UITitle extends AbstractUI {
                     10,
 
                     () => {
-                        this.squadMenuContainer.setVisible(false, <ComponentCloser><unknown>squadMenuCloser, true, AnimationType.ZOOM, {
-                            defaultDurationOverride: 250,
-                        });
+                        this.setVisibleSquadMenuContainer(false);
 
                         readyToggle = false;
 
@@ -753,7 +746,7 @@ export default class UITitle extends AbstractUI {
                         showPlaceholderWhenUnfocused: false,
 
                         borderColor: "#000000",
-                        borderWidth: 2,
+                        borderWidth: 2.2,
                         maxLength: 20,
 
                         paddingSize: 1,
@@ -925,23 +918,55 @@ export default class UITitle extends AbstractUI {
                         x: 140,
                         y: 3,
                     },
-                    
+
                     "Squad",
                     14,
                 ),
             );
+
+            const xpBarAndInventory = new (Collidable(StaticVContainer, "down"))(
+                () => ({
+                    x: -(xpBarAndInventory.w / 2),
+                    y: 50 - 8,
+
+                    alignFromCenterX: true,
+                    alignFromCenterY: true,
+                }),
+
+                false,
+            )
+                .addChildren(
+                    new StaticSpace(0, 8),
+                    new (Centering(Gauge))(
+                        {
+                            w: 200,
+                            h: 25,
+                        },
+
+                        xpGaugeSources(),
+                        0,
+                        "Lvl 191945450721 Flower",
+                        0.4,
+                        GAUGE_XP_BACKGROUND_COLOR_CODE,
+                        false,
+                    ),
+                    new StaticSpace(0, 15),
+                    new (Centering(UITitleInventory))({}),
+                );
 
             this.onLoadedComponents.push(nameInputDescription);
             this.onLoadedComponents.push(nameInput);
             this.onLoadedComponents.push(readyButton);
             this.onLoadedComponents.push(squadButton);
             this.onLoadedComponents.push(biomeSwitcher);
+            this.onLoadedComponents.push(xpBarAndInventory);
 
             nameInputDescription.setVisible(false, null, false);
             nameInput.setVisible(false, null, false);
             readyButton.setVisible(false, null, false);
             squadButton.setVisible(false, null, false);
             biomeSwitcher.setVisible(false, null, false);
+            xpBarAndInventory.setVisible(false, null, false);
             this.squadMenuContainer.setVisible(false, null, false);
 
             this.addComponents(
@@ -950,6 +975,7 @@ export default class UITitle extends AbstractUI {
                 readyButton,
                 squadButton,
                 biomeSwitcher,
+                xpBarAndInventory,
                 this.squadMenuContainer,
             );
 
@@ -958,6 +984,8 @@ export default class UITitle extends AbstractUI {
 
             nameInput.addCollidableComponents(this.squadMenuContainer);
             readyButton.addCollidableComponents(this.squadMenuContainer);
+
+            xpBarAndInventory.addCollidableComponents(this.squadMenuContainer);
 
             this.toggleShowStatusText(true);
         }
@@ -990,15 +1018,24 @@ export default class UITitle extends AbstractUI {
 
             const backgroundEntity = new Mob(
                 -1,
+
                 1,
                 randomFloat(-100, (this.canvas.height / uiScaleFactor) + 100),
+
                 1,
+
                 1,
+
                 1,
+
                 backgroundEntityType,
                 Rarity.COMMON,
+
                 false,
+
                 false,
+
+                null,
             ) as BackgroundMob;
 
             if (isPetal(backgroundEntityType)) {
@@ -1035,6 +1072,7 @@ export default class UITitle extends AbstractUI {
         if (this.waveRoomVisible !== this.prevWaveRoomVisible) {
             this.publicToggle.setToggle(this.waveRoomVisible === WaveRoomVisibleState.PUBLIC);
         }
+        
         this.prevWaveRoomVisible = this.waveRoomVisible;
 
         if (this.waveRoomPlayerInformations.length) {
@@ -1058,17 +1096,23 @@ export default class UITitle extends AbstractUI {
         document.onmouseout = null;
     }
 
-    public resetWaveState() {
+    private resetWaveState() {
         this.waveRoomPlayerInformations = [];
         this.waveRoomCode = null;
         this.waveRoomVisible = WaveRoomVisibleState.PRIVATE;
         this.waveRoomState = WaveRoomState.WAITING;
     }
 
-    public toggleShowStatusText(toggle: boolean): void {
+    private toggleShowStatusText(toggle: boolean): void {
         if (this.statusText.visible !== toggle) this.statusText.setVisible(<DummySetVisibleToggleType>toggle, null, false);
 
         if (this.playerProfileContainer.visible !== !toggle) this.playerProfileContainer.setVisible(<DummySetVisibleToggleType>!toggle, null, false);
         if (this.codeText.visible !== !toggle) this.codeText.setVisible(<DummySetVisibleToggleType>!toggle, null, false);
+    }
+
+    private setVisibleSquadMenuContainer(toggle: boolean): void {
+        this.squadMenuContainer.setVisible(<DummySetVisibleToggleType>toggle, null, true, AnimationType.ZOOM, {
+            defaultDurationOverride: 300,
+        });
     }
 }

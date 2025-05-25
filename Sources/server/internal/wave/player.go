@@ -1,7 +1,6 @@
 package wave
 
 import (
-	"math"
 	"sync"
 	"time"
 
@@ -9,6 +8,8 @@ import (
 	"flooooio/internal/native"
 
 	"github.com/gorilla/websocket"
+
+	"github.com/chewxy/math32"
 )
 
 type Player struct {
@@ -21,7 +22,7 @@ type Player struct {
 	// commandQueue is command queue of player.
 	commandQueue chan PlayerCommand
 
-	BodyDamage float64
+	BodyDamage float32
 
 	// Mood a current mood of player.
 	// If you want to read/write, use Mu.
@@ -29,8 +30,8 @@ type Player struct {
 
 	IsDead bool
 
-	Accel    [2]float64
-	Velocity [2]float64
+	Accel    [2]float32
+	Velocity [2]float32
 
 	// player_dead_camera.go struct field definitions
 	DeadCameraTarget collision.Node
@@ -38,13 +39,13 @@ type Player struct {
 	LastDeadCameraUpdate time.Time
 
 	// player_petal_orbit.go struct field definitions
-	OrbitRotation         float64
+	OrbitRotation         float32
 	OrbitHistoryIndex     int
-	OrbitHistoryX         []float64
-	OrbitHistoryY         []float64
-	OrbitPetalRadii       []float64
-	OrbitRadiusVelocities []float64
-	OrbitPetalSpins       [][]float64
+	OrbitHistoryX         []float32
+	OrbitHistoryY         []float32
+	OrbitPetalRadii       []float32
+	OrbitRadiusVelocities []float32
+	OrbitPetalSpins       [][]float32
 }
 
 type PlayerPrivileges struct {
@@ -71,12 +72,12 @@ const minHpLevel = 75.
 
 // calculatePlayerHp calculate hp by level.
 // 100 * x, x is upgrade.
-func calculatePlayerHp(level float64) float64 {
-	return (100 * 20000) * math.Pow(1.02, math.Max(level, minHpLevel)-1)
+func calculatePlayerHp(level float32) float32 {
+	return (100 * 20000) * math32.Pow(1.02, max(level, minHpLevel)-1)
 }
 
 // GetMaxHealth calculates max hp of player.
-func (p *Player) GetMaxHealth() float64 {
+func (p *Player) GetMaxHealth() float32 {
 	return calculatePlayerHp(100)
 }
 
@@ -97,21 +98,21 @@ type SwapPetalCommand struct {
 	At int
 }
 
-const PlayerSpeedMultiplier = .4
+const PlayerSpeedMultiplier = .5
 
 func (c *MovementCommand) Execute(_ *WavePool, p *Player) {
 	if p.IsDead {
 		return
 	}
 
-	p.Angle = float64(c.Angle)
-	p.Magnitude = float64(c.Magnitude) * PlayerSpeedMultiplier
+	p.Angle = float32(c.Angle)
+	p.Magnitude = float32(c.Magnitude) * PlayerSpeedMultiplier
 
 	speed := p.Magnitude / 255.
 	rad := angleToRadian(p.Angle)
 
-	accelX := math.Cos(rad) * speed
-	accelY := math.Sin(rad) * speed
+	accelX := math32.Cos(rad) * speed
+	accelY := math32.Sin(rad) * speed
 
 	p.Accel[0] = accelX
 	p.Accel[1] = accelY
@@ -273,8 +274,8 @@ func NewPlayer(
 
 	sp *StaticPlayer[StaticPetalSlots],
 
-	x float64,
-	y float64,
+	x float32,
+	y float32,
 ) *Player {
 	return &Player{
 		Entity: NewEntity(
@@ -314,8 +315,8 @@ func NewPlayer(
 
 		IsDead: false,
 
-		Accel:    [2]float64{0, 0},
-		Velocity: [2]float64{0, 0},
+		Accel:    [2]float32{0, 0},
+		Velocity: [2]float32{0, 0},
 
 		DeadCameraTarget: nil,
 
@@ -323,8 +324,8 @@ func NewPlayer(
 
 		OrbitRotation:         0,
 		OrbitHistoryIndex:     0,
-		OrbitHistoryX:         make([]float64, HistorySize),
-		OrbitHistoryY:         make([]float64, HistorySize),
+		OrbitHistoryX:         make([]float32, HistorySize),
+		OrbitHistoryY:         make([]float32, HistorySize),
 		OrbitPetalRadii:       nil,
 		OrbitRadiusVelocities: nil,
 		OrbitPetalSpins:       nil,

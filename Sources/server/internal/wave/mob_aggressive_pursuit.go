@@ -1,13 +1,14 @@
 package wave
 
 import (
-	"math"
 	"math/rand/v2"
 	"slices"
 	"time"
 
 	"flooooio/internal/collision"
 	"flooooio/internal/native"
+
+	"github.com/chewxy/math32"
 )
 
 const (
@@ -21,10 +22,10 @@ const (
 	jellyfishCautionRadius = 3
 )
 
-type JudgementFunc = func(m *Mob, distanceToTarget float64) bool
+type JudgementFunc = func(m *Mob, distanceToTarget float32) bool
 
-func createCautionJudger(radiusMultiplier float64) JudgementFunc {
-	return func(m *Mob, distanceToTarget float64) bool {
+func createCautionJudger(radiusMultiplier float32) JudgementFunc {
+	return func(m *Mob, distanceToTarget float32) bool {
 		return m.TargetEntity != nil && (m.CalculateRadius()*radiusMultiplier) > distanceToTarget
 	}
 }
@@ -45,12 +46,12 @@ func FindNearestEntity(me collision.Node, entities []collision.Node) collision.N
 
 	nearest := entities[0]
 	for _, current := range entities[1:] {
-		distanceToCurrent := math.Hypot(
+		distanceToCurrent := math32.Hypot(
 			current.GetX()-meX,
 			current.GetY()-meY,
 		)
 
-		distanceToNearest := math.Hypot(
+		distanceToNearest := math32.Hypot(
 			nearest.GetX()-meX,
 			nearest.GetY()-meY,
 		)
@@ -63,7 +64,7 @@ func FindNearestEntity(me collision.Node, entities []collision.Node) collision.N
 	return nearest
 }
 
-func FindNearestEntityWithLimitedDistance(me collision.Node, entities []collision.Node, maxDistance float64) collision.Node {
+func FindNearestEntityWithLimitedDistance(me collision.Node, entities []collision.Node, maxDistance float32) collision.Node {
 	if len(entities) == 0 {
 		return nil
 	}
@@ -75,7 +76,7 @@ func FindNearestEntityWithLimitedDistance(me collision.Node, entities []collisio
 	nearestDistance := maxDistance
 
 	for _, current := range entities {
-		distanceToCurrent := math.Hypot(
+		distanceToCurrent := math32.Hypot(
 			current.GetX()-meX,
 			current.GetY()-meY,
 		)
@@ -89,16 +90,14 @@ func FindNearestEntityWithLimitedDistance(me collision.Node, entities []collisio
 	return nearest
 }
 
-const angleFactor = 40.5845104884 // 255/(2*PI)
+const angleFactor = 255 / Tau // 255/(2*PI)
 
-const angleInterpolationFactor = .03
-
-const tau = 2 * math.Pi
+const angleInterpolationFactor = .05
 
 // TurnAngleToTarget calculates interpolated angle to target.
-func TurnAngleToTarget(thisAngle, dx, dy float64) float64 {
-	targetAngle := math.Mod(math.Atan2(dy, dx)*angleFactor, 255)
-	normalizedAngle := math.Mod(math.Mod(thisAngle, 255)+255, 255)
+func TurnAngleToTarget(thisAngle, dx, dy float32) float32 {
+	targetAngle := math32.Mod(math32.Atan2(dy, dx)*angleFactor, 255)
+	normalizedAngle := math32.Mod(math32.Mod(thisAngle, 255)+255, 255)
 	angleDiff := targetAngle - normalizedAngle
 
 	if angleDiff > 127.5 {
@@ -107,38 +106,29 @@ func TurnAngleToTarget(thisAngle, dx, dy float64) float64 {
 		angleDiff += 255
 	}
 
-	return math.Mod(normalizedAngle+angleDiff*angleInterpolationFactor+255, 255)
+	return math32.Mod(normalizedAngle+angleDiff*angleInterpolationFactor+255, 255)
 }
 
-func normalizeAngle(angle float64) float64 {
-	angle = math.Mod(angle, tau)
+func normalizeAngle(angle float32) float32 {
+	angle = math32.Mod(angle, Tau)
 
-	if angle > math.Pi {
-		angle -= tau
-	} else if angle < -math.Pi {
-		angle += tau
+	if angle > math32.Pi {
+		angle -= Tau
+	} else if angle < -math32.Pi {
+		angle += Tau
 	}
 
 	return angle
 }
 
-// predictInterceptionAngleMob calculates the angle to hit a moving mob with a missile.
-func predictInterceptionAngleMob(dx, dy float64, m *Mob, missileSpeed float64, currentAngle float64) *float64 {
-	// Calculate target's speed vector
-	targetRad := angleToRadian(m.Angle)
-
-	targetSpeed := m.Magnitude / 255
-
-	vtx := math.Cos(targetRad) * targetSpeed
-	vty := math.Sin(targetRad) * targetSpeed
-
+func generalPurposePredictInterception(dx, dy, vtx, vty, currentAngle float32) *float32 {
+	targetAngle := math32.Atan2(dy, dx)
 	currentRad := currentAngle / angleFactor
+	angleDiff := math32.Abs(normalizeAngle(targetAngle - currentRad))
 
-	targetAngle := math.Atan2(dy, dx)
-	angleDiff := math.Abs(normalizeAngle(targetAngle - currentRad))
-	interpolationTime := 2 /* - log(0.01) */ / angleInterpolationFactor
+	var interpolationTime float32 = 2 /* - log(0.01) */ / angleInterpolationFactor
 	if angleDiff > 1e-3 {
-		interpolationTime *= (1 - math.Exp(-angleInterpolationFactor*angleDiff))
+		interpolationTime *= (1 - math32.Exp(-angleInterpolationFactor*angleDiff))
 	}
 
 	relSpeedSq := missileSpeed*missileSpeed - (vtx*vtx + vty*vty)
@@ -150,59 +140,7 @@ func predictInterceptionAngleMob(dx, dy float64, m *Mob, missileSpeed float64, c
 		return nil
 	}
 
-	t := (dotProd + math.Sqrt(d)) / relSpeedSq
-	if t < 0 {
-		return nil
-	}
-
-	totalTime := t + interpolationTime
-	xf := dx + vtx*totalTime
-	yf := dy + vty*totalTime
-
-	// Convert to 255 scale angle
-	interpolatedAngle := TurnAngleToTarget(currentAngle, xf, yf)
-
-	return &interpolatedAngle
-}
-
-const averageFactor = (1 - PlayerMovementMu*PlayerMovementMu) / (2 * (1 - PlayerMovementMu))
-
-// predictInterceptionAnglePlayer calculates the angle to hit a player target with a missile.
-// Player movement uses velocity with friction instead of direct angle-based movement.
-func predictInterceptionAnglePlayer(dx, dy float64, p *Player, missileSpeed float64, currentAngle float64) *float64 {
-	// Use current velocity instead of angle-based speed
-	vtx := p.Velocity[0]
-	vty := p.Velocity[1]
-
-	// Calculate future position considering friction
-	// We need to solve quadratic equation for interception time
-	// p = p_{initial} + v * (1-f^t)/(1-f)
-	// This is complex to solve exactly, so we'll use an approximation
-
-	// Simplified approach: use average velocity over the prediction period
-	// Average velocity considering friction decay
-	vtx *= averageFactor
-	vty *= averageFactor
-
-	currentRad := currentAngle / angleFactor
-
-	targetAngle := math.Atan2(dy, dx)
-	angleDiff := math.Abs(normalizeAngle(targetAngle - currentRad))
-	interpolationTime := 2 /* - log(0.01) */ / angleInterpolationFactor
-	if angleDiff > 1e-3 {
-		interpolationTime *= (1 - math.Exp(-angleInterpolationFactor*angleDiff))
-	}
-
-	relSpeedSq := missileSpeed*missileSpeed - (vtx*vtx + vty*vty)
-	posSq := dx*dx + dy*dy
-	dotProd := dx*vtx + dy*vty
-
-	d := dotProd*dotProd + relSpeedSq*posSq
-	if d < 0 {
-		return nil
-	}
-
-	t := (dotProd + math.Sqrt(d)) / relSpeedSq
+	t := (dotProd + math32.Sqrt(d)) / relSpeedSq
 	if t < 0 {
 		return nil
 	}
@@ -212,19 +150,40 @@ func predictInterceptionAnglePlayer(dx, dy float64, p *Player, missileSpeed floa
 	xf := dx + vtx*totalTime
 	yf := dy + vty*totalTime
 
-	// Convert to 255 scale angle
 	interpolatedAngle := TurnAngleToTarget(currentAngle, xf, yf)
 
 	return &interpolatedAngle
 }
 
+// predictInterceptionAngleMob calculates the angle to hit a moving mob with a missile.
+func predictInterceptionAngleMob(dx, dy float32, m *Mob, currentAngle float32) *float32 {
+	// Calculate target's speed vector
+	targetRad := angleToRadian(m.Angle)
+
+	targetSpeed := m.Magnitude / 255
+
+	vtx := math32.Cos(targetRad) * targetSpeed
+	vty := math32.Sin(targetRad) * targetSpeed
+
+	return generalPurposePredictInterception(dx, dy, vtx, vty, currentAngle)
+}
+
+// predictInterceptionAnglePlayer calculates the angle to hit a player target with a missile.
+// Player movement uses velocity with friction instead of direct angle-based movement.
+func predictInterceptionAnglePlayer(dx, dy float32, p *Player, currentAngle float32) *float32 {
+	vtx := p.Velocity[0] + p.Accel[0]
+	vty := p.Velocity[1] + p.Accel[1]
+
+	return generalPurposePredictInterception(dx, dy, vtx, vty, currentAngle)
+}
+
 const mobDetectionRange = 15.
 
-func (m *Mob) calculateDetectRange() float64 {
+func (m *Mob) calculateDetectRange() float32 {
 	return mobDetectionRange * m.CalculateRadius()
 }
 
-func (m *Mob) calculateLoseRange() float64 {
+func (m *Mob) calculateLoseRange() float32 {
 	return (mobDetectionRange * 2) * m.CalculateRadius()
 }
 
@@ -284,12 +243,13 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 		m.LastAttackedEntity = nil
 	}
 
-	distanceToTarget := 0.
+	var distanceToTarget float32 = 0.
+
 	if m.TargetEntity != nil {
 		dx := m.TargetEntity.GetX() - m.X
 		dy := m.TargetEntity.GetY() - m.Y
 
-		distanceToTarget = math.Hypot(dx, dy)
+		distanceToTarget = math32.Hypot(dx, dy)
 	}
 
 	var isStop bool = false
@@ -331,28 +291,28 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 
 			mRadius := m.CalculateRadius()
 
-			shootX := m.X + math.Cos(angleRad)*mRadius
-			shootY := m.Y + math.Sin(angleRad)*mRadius
+			shootX := m.X + math32.Cos(angleRad)*mRadius
+			shootY := m.Y + math32.Sin(angleRad)*mRadius
 
 			dx := m.TargetEntity.GetX() - shootX
 			dy := m.TargetEntity.GetY() - shootY
-			distance := math.Hypot(dx, dy)
+			distance := math32.Hypot(dx, dy)
 
 			// If distance is close, we can just use TurnAngleToTarget
 			if distance <= mRadius {
 				m.Angle = TurnAngleToTarget(m.Angle, dx, dy)
 			} else {
-				var predicted *float64 = nil
+				var predicted *float32 = nil
 
 				switch e := m.TargetEntity.(type) {
 				case *Mob:
 					{
-						predicted = predictInterceptionAngleMob(dx, dy, e, missileSpeed, m.Angle)
+						predicted = predictInterceptionAngleMob(dx, dy, e, m.Angle)
 					}
 
 				case *Player:
 					{
-						predicted = predictInterceptionAnglePlayer(dx, dy, e, missileSpeed, m.Angle)
+						predicted = predictInterceptionAnglePlayer(dx, dy, e, m.Angle)
 					}
 				}
 
@@ -401,9 +361,9 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 
 	case native.ChaoticBehavior:
 		{
-			m.Angle = math.Mod(m.Angle+generateValleyDistribution(-25, 25), 255)
+			m.Angle = math32.Mod(m.Angle+generateValleyDistribution(-25, 25), 255)
 
-			m.Magnitude = SpeedOf(m.Type) * 255 * (1. + (15.-1.)*math.Pow(rand.Float64(), 2))
+			m.Magnitude = SpeedOf(m.Type) * 255 * (1. + (15.-1.)*math32.Pow(rand.Float32(), 2))
 		}
 
 	case native.PassiveBehavior:
@@ -426,7 +386,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 
 			dx := targetEntity.GetX() - m.X
 			dy := targetEntity.GetY() - m.Y
-			distance := math.Hypot(dx, dy)
+			distance := math32.Hypot(dx, dy)
 
 			if m.calculateDetectRange() > distance {
 				if shouldTurnToTarget {
@@ -458,7 +418,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 
 			dx := targetEntity.GetX() - m.X
 			dy := targetEntity.GetY() - m.Y
-			distance := math.Hypot(dx, dy)
+			distance := math32.Hypot(dx, dy)
 
 			if m.calculateDetectRange() > distance {
 				if shouldTurnToTarget {
@@ -469,7 +429,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 					)
 				}
 
-				var magnitude float64
+				var magnitude float32
 				if isStop {
 					magnitude = 0
 				} else {
@@ -504,13 +464,13 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 	}
 }
 
-func generateValleyDistribution(min, max float64) float64 {
+func generateValleyDistribution(min, max float32) float32 {
 	for {
-		x := min + rand.Float64()*(max-min)
+		x := min + rand.Float32()*(max-min)
 
-		probability := math.Abs(x) / max
+		probability := math32.Abs(x) / max
 
-		if rand.Float64() < probability {
+		if rand.Float32() < probability {
 			return x
 		}
 	}

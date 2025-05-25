@@ -29,7 +29,7 @@ const init = async () => {
 
     document.body.removeChild(document.querySelector("#status-container"));
 
-    const canvas = document.querySelector<HTMLCanvasElement>('#canvas');
+    const canvas = document.querySelector<HTMLCanvasElement>("#canvas");
 
     const ctx: CanvasRenderingContext2D = canvas.getContext("2d", { alpha: false });
 
@@ -83,6 +83,7 @@ const init = async () => {
     canvas.addEventListener("wheel", X => {
         const E = X.deltaY * -0.0005 * (cameraController.zoom * 4);
         const e = cameraController.zoom + E;
+        
         cameraController.zoom = limitDelta(e);
     });
 
@@ -110,7 +111,7 @@ addEventListener("contextmenu", e => e.preventDefault());
 // TODO: do this only game ui
 addEventListener("beforeunload", e => e.preventDefault());
 
-if (document.readyState === 'loading') {
+if (document.readyState === "loading") {
     addEventListener("DOMContentLoaded", init);
 } else {
     init();

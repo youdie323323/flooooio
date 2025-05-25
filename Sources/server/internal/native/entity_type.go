@@ -21,6 +21,7 @@ const (
 	MobTypeSponge
 	MobTypeShell
 	MobTypeCrab
+	MobTypeLeech
 
 	MobTypeCentipede
 	MobTypeCentipedeEvil

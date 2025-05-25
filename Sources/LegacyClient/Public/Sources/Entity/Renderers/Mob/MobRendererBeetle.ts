@@ -40,11 +40,13 @@ export default class MobRendererBeetle extends AbstractMobRenderer {
 
             ctx.fillStyle = ctx.strokeStyle = "#333333";
 
+            const { beakAngle } = entity;
+
             for (let dir = -1; dir <= 1; dir += 2) {
                 ctx.save();
 
-                ctx.translate(30, dir * 12);
-                ctx.rotate(Math.sin(entity.moveCounter * 1.24) * 0.1 * dir);
+                ctx.translate(30, dir * 10);
+                ctx.rotate(beakAngle * dir);
                 ctx.beginPath();
                 ctx.moveTo(0, dir * 7);
                 ctx.quadraticCurveTo(25, dir * 16, 40, 0);
@@ -67,7 +69,7 @@ export default class MobRendererBeetle extends AbstractMobRenderer {
 
             ctx.fillStyle = this.calculateDamageEffectColor(context, skinColor);
             ctx.fill(beetleBodyPath);
-            
+
             // Arc points are same color with this
             ctx.fillStyle = ctx.strokeStyle = this.calculateDamageEffectColor(context, darkened(skinColor, DARKENED_BASE));
             ctx.stroke(beetleBodyPath);
@@ -78,14 +80,18 @@ export default class MobRendererBeetle extends AbstractMobRenderer {
 
             // Draw center line
             ctx.beginPath();
+
             ctx.moveTo(-21, 0);
             ctx.quadraticCurveTo(0, -3, 21, 0);
+
             ctx.lineCap = "round";
+
             ctx.stroke();
 
             const arcPoints = [[-17, -12], [17, -12], [0, -15]];
 
             ctx.beginPath();
+
             for (let i = 0; i < 2; i++) {
                 const relative = i === 1 ? 1 : -1;
                 for (let j = 0; j < arcPoints.length; j++) {
@@ -95,6 +101,7 @@ export default class MobRendererBeetle extends AbstractMobRenderer {
                     ctx.arc(x, y, 5, 0, TAU);
                 }
             }
+
             ctx.fill();
 
             ctx.fill();

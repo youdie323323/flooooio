@@ -14,6 +14,7 @@ var LinkableMobs = []native.MobType{
 	native.MobTypeCentipede,
 	native.MobTypeCentipedeDesert,
 	native.MobTypeCentipedeEvil,
+	native.MobTypeLeech,
 }
 
 type MobSpawnRule struct {
@@ -21,7 +22,7 @@ type MobSpawnRule struct {
 	Weight     int
 }
 
-var MobSpawnRules = map[native.Biome]map[native.MobType]MobSpawnRule{
+var mobSpawnRules = map[native.Biome]map[native.MobType]MobSpawnRule{
 	native.BiomeGarden: {
 		native.MobTypeBee:    {SpawnAfter: 1, Weight: 50},
 		native.MobTypeSpider: {SpawnAfter: 3, Weight: 50},
@@ -46,10 +47,11 @@ var MobSpawnRules = map[native.Biome]map[native.MobType]MobSpawnRule{
 		native.MobTypeSponge:    {SpawnAfter: 1, Weight: 1},
 		native.MobTypeShell:     {SpawnAfter: 1, Weight: 1},
 		native.MobTypeCrab:      {SpawnAfter: 2, Weight: 1},
+		native.MobTypeLeech:     {SpawnAfter: 4, Weight: 1},
 	},
 }
 
-var WaveSpawnEndAt = map[native.Rarity]uint16{
+var waveSpawnEndAt = map[native.Rarity]uint16{
 	native.RarityCommon:    20,
 	native.RarityUnusual:   30,
 	native.RarityRare:      40,
@@ -58,7 +60,7 @@ var WaveSpawnEndAt = map[native.Rarity]uint16{
 	native.RarityMythic:    200,
 }
 
-var RelativeRarity = []float64{
+var relativeRarity = []float64{
 	60000, // Common
 	15000, // Unusual
 	2500,  // Rare
@@ -71,22 +73,25 @@ var RelativeRarity = []float64{
 var rarityTable []float64
 
 func init() {
-	rarityTable = make([]float64, len(RelativeRarity))
+	rarityTable = make([]float64, len(relativeRarity))
 	totalWeight := 0.0
-	for _, weight := range RelativeRarity {
+	for _, weight := range relativeRarity {
 		totalWeight += weight
 	}
 
 	acc := 0.0
 	for i := range rarityTable {
 		rarityTable[i] = acc / totalWeight
-		acc += RelativeRarity[i]
+
+		acc += relativeRarity[i]
 	}
 }
 
 func secureRandom() float64 {
 	var buf [8]byte
+
 	crand.Read(buf[:])
+
 	return float64(binary.LittleEndian.Uint64(buf[:])) / (1 << 64)
 }
 
@@ -94,7 +99,7 @@ func getRandomMobType(difficulty uint16, biome native.Biome) native.MobType {
 	totalWeight := 0
 
 	// First pass: calculate total weight
-	for _, rule := range MobSpawnRules[biome] {
+	for _, rule := range mobSpawnRules[biome] {
 		if rule.SpawnAfter <= difficulty {
 			totalWeight += rule.Weight
 		}
@@ -102,7 +107,7 @@ func getRandomMobType(difficulty uint16, biome native.Biome) native.MobType {
 
 	// Second pass: select mob
 	random := secureRandom() * float64(totalWeight)
-	for mobType, rule := range MobSpawnRules[biome] {
+	for mobType, rule := range mobSpawnRules[biome] {
 		if rule.SpawnAfter <= difficulty {
 			random -= float64(rule.Weight)
 
@@ -134,6 +139,7 @@ func getRandomRarityWithRolls(n float64) native.Rarity {
 
 func pickRandomRarity(difficulty uint16, luck float64) native.Rarity {
 	r := getRandomRarityWithRolls(math.Pow(1.3, float64(difficulty)) * luck)
+
 	if r >= native.RarityUltra {
 		r = native.RarityMythic
 	}
@@ -142,9 +148,9 @@ func pickRandomRarity(difficulty uint16, luck float64) native.Rarity {
 }
 
 type StaticMob struct {
-	MobType     native.MobType
-	Rarity      native.Rarity
-	CentiBodies int
+	MobType       native.MobType
+	Rarity        native.Rarity
+	SegmentBodies int
 }
 
 type WaveMobSpawner struct {
@@ -176,22 +182,22 @@ func (s *WaveMobSpawner) DetermineStaticMobData(data *WaveData) *StaticMob {
 			mobType := getRandomMobType(data.Progress, data.Biome)
 			spawnRarity := pickRandomRarity(data.Progress, 1+0)
 
-			for rarity, maxWave := range WaveSpawnEndAt {
+			for rarity, maxWave := range waveSpawnEndAt {
 				if data.Progress > maxWave && spawnRarity == rarity {
 					spawnRarity = native.Rarity(min(int(spawnRarity)+1, int(native.RarityMythic)))
 				}
 			}
 
-			centiBodies := -1
+			segmentBodies := -1
 
 			if slices.Contains(LinkableMobs, mobType) {
-				centiBodies = 9
+				segmentBodies = 9
 			}
 
 			s.spawnList.PushBack(&StaticMob{
-				MobType:     mobType,
-				Rarity:      spawnRarity,
-				CentiBodies: centiBodies,
+				MobType:       mobType,
+				Rarity:        spawnRarity,
+				SegmentBodies: segmentBodies,
 			})
 
 			pointsToUse--
@@ -208,8 +214,9 @@ func (s *WaveMobSpawner) DetermineStaticMobData(data *WaveData) *StaticMob {
 
 		sm := element.Value.(*StaticMob)
 
-		for i := 0; i < sm.CentiBodies && s.spawnList.Len() > 0; i++ {
+		for i := 0; i < sm.SegmentBodies && s.spawnList.Len() > 0; i++ {
 			element = s.spawnList.Front()
+
 			s.spawnList.Remove(element)
 		}
 
@@ -218,6 +225,8 @@ func (s *WaveMobSpawner) DetermineStaticMobData(data *WaveData) *StaticMob {
 		return nil
 	}
 }
+
+// TODO: make these types float32
 
 func flatTopGaussian(x, A, mu, w, sigma1, sigma2 float64) float64 {
 	const baseline = 1.0

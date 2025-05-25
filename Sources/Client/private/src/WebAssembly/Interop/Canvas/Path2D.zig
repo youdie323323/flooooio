@@ -6,14 +6,14 @@ pub const PathId = u32;
 
 id: PathId,
 
-pub inline fn deinit(self: Path2D) void {
-    @"58"(self.id);
-}
-
 pub inline fn init() Path2D {
     const path_id = @"59"();
 
     return .{ .id = path_id };
+}
+
+pub inline fn deinit(self: Path2D) void {
+    @"58"(self.id);
 }
 
 pub inline fn moveTo(self: Path2D, x: f32, y: f32) void {

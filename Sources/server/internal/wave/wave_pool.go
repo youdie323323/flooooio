@@ -20,24 +20,28 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/puzpuzpuz/xsync/v3"
+
+	"github.com/chewxy/math32"
 )
 
 const (
 	spatialHashGridSize = 1024
 
 	WaveUpdateFPS = 60
+
+	DeltaT = 1 / WaveUpdateFPS
 )
 
-func calculateWaveLength(x float64) float64 {
-	return max(60, math.Pow(x, 0.2)*18.9287+30)
+func calculateWaveLength(x float32) float32 {
+	return max(60, math32.Pow(x, 0.2)*18.9287+30)
 }
 
 type WaveData struct {
 	Biome native.Biome
 
 	Progress         uint16
-	ProgressTimer    float64
-	ProgressRedTimer float64
+	ProgressTimer    float32
+	ProgressRedTimer float32
 	ProgressIsRed    bool
 
 	MapRadius uint16
@@ -52,7 +56,7 @@ type WavePool struct {
 
 	eliminatedEntityIDs []uint32
 
-	lightningBounces [][][2]float64
+	lightningBounces [][][2]float32
 
 	updateTicker *time.Ticker
 	frameCount   *xsync.Counter
@@ -86,7 +90,7 @@ func NewWavePool(wr *WaveRoom, wd *WaveData) *WavePool {
 
 		eliminatedEntityIDs: make([]uint32, 0),
 
-		lightningBounces: make([][][2]float64, 0),
+		lightningBounces: make([][][2]float32, 0),
 
 		updateTicker: nil,
 		frameCount:   xsync.NewCounter(),
@@ -117,7 +121,7 @@ func (wp *WavePool) StartWave(candidates WaveRoomCandidates) {
 
 	for _, c := range candidates {
 		if pd, ok := ConnManager.GetUser(c.Conn); ok {
-			mapRadius := float64(wp.Wd.MapRadius)
+			mapRadius := float32(wp.Wd.MapRadius)
 
 			randX, randY := GetRandomCoordinate(mapRadius, mapRadius, mapRadius)
 
@@ -325,7 +329,7 @@ func (wp *WavePool) updateWaveData() {
 		sm := wp.Ms.DetermineStaticMobData(wp.Wd)
 		if sm != nil {
 			randX, randY, ok := GetRandomSafeCoordinate(
-				float64(wp.Wd.MapRadius),
+				float32(wp.Wd.MapRadius),
 				300,
 				wp.GetPlayersWithCondition(func(p *Player) bool { return !p.IsDead }),
 			)
@@ -340,7 +344,7 @@ func (wp *WavePool) updateWaveData() {
 						randX,
 						randY,
 
-						sm.CentiBodies,
+						sm.SegmentBodies,
 					)
 				} else {
 					wp.GenerateMob(
@@ -363,7 +367,7 @@ func (wp *WavePool) updateWaveData() {
 		}
 	}
 
-	waveLength := calculateWaveLength(float64(wp.Wd.Progress))
+	waveLength := calculateWaveLength(float32(wp.Wd.Progress))
 
 	if wp.Wd.ProgressTimer >= waveLength {
 		mobCount := len(wp.GetMobsWithCondition(func(m *Mob) bool {
@@ -372,7 +376,7 @@ func (wp *WavePool) updateWaveData() {
 
 		if !(wp.Wd.ProgressRedTimer >= waveLength) && mobCount > 4 {
 			wp.Wd.ProgressIsRed = true
-			wp.Wd.ProgressRedTimer = math.Min(
+			wp.Wd.ProgressRedTimer = min(
 				waveLength,
 				wp.Wd.ProgressRedTimer+0.016,
 			)
@@ -391,7 +395,7 @@ func (wp *WavePool) updateWaveData() {
 			wp.Ms.Next(wp.Wd)
 		}
 	} else {
-		wp.Wd.ProgressTimer = math.Min(
+		wp.Wd.ProgressTimer = min(
 			waveLength,
 			wp.Wd.ProgressTimer+0.016,
 		)
@@ -413,9 +417,9 @@ func (wp *WavePool) calculateUpdatePacketSize() int {
 		// Wave progress
 		2 +
 		// Wave progress timer
-		8 +
+		4 +
 		// Wave progress red timer
-		8 +
+		4 +
 		// Wave ended
 		1 +
 		// Map radius
@@ -428,15 +432,15 @@ func (wp *WavePool) calculateUpdatePacketSize() int {
 			// String length is dynamically changeable, so we can do is just loop
 			size += 4 + // Id
 				// X
-				8 +
+				4 +
 				// Y
-				8 +
+				4 +
 				// Angle
-				8 +
+				4 +
 				// Health
-				8 +
+				4 +
 				// Size
-				8 +
+				4 +
 				// Mood
 				1 +
 				// Name length, null terminator
@@ -453,21 +457,29 @@ func (wp *WavePool) calculateUpdatePacketSize() int {
 		size += 2
 		size += wp.mobPool.Size() * (4 + // Id
 			// X
-			8 +
+			4 +
 			// Y
-			8 +
+			4 +
 			// Angle
-			8 +
+			4 +
 			// Health
-			8 +
+			4 +
 			// Size
-			8 +
+			4 +
 			// Type
 			1 +
 			// Rarity
 			1 +
 			// Boolean flags
 			1)
+
+		wp.mobPool.Range(func(id EntityId, mob *Mob) bool {
+			if mob.ConnectingSegment != nil {
+				size += 4
+			}
+
+			return true
+		})
 	}
 
 	{ // Add petal packet size
@@ -475,15 +487,15 @@ func (wp *WavePool) calculateUpdatePacketSize() int {
 		size += 2
 		size += wp.petalPool.Size() * (4 + // Id
 			// X
-			8 +
+			4 +
 			// Y
-			8 +
+			4 +
 			// Angle
-			8 +
+			4 +
 			// Health
-			8 +
+			4 +
 			// Size
-			8 +
+			4 +
 			// Type
 			1 +
 			// Rarity
@@ -503,8 +515,8 @@ func (wp *WavePool) calculateUpdatePacketSize() int {
 		for _, points := range wp.lightningBounces {
 			// Points count
 			size += 2
-			// Each point has X and Y coordinates (float64)
-			size += len(points) * (8 + 8)
+			// Each point has X and Y coordinates (float32)
+			size += len(points) * (4 + 4)
 		}
 	}
 
@@ -523,11 +535,11 @@ func (wp *WavePool) createUpdatePacket() []byte {
 	binary.LittleEndian.PutUint16(buf[at:], wp.Wd.Progress)
 	at += 2
 
-	binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(wp.Wd.ProgressTimer))
-	at += 8
+	binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(wp.Wd.ProgressTimer))
+	at += 4
 
-	binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(wp.Wd.ProgressRedTimer))
-	at += 8
+	binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(wp.Wd.ProgressRedTimer))
+	at += 4
 
 	{ // Wave is ended or not
 		var y byte = 0
@@ -552,19 +564,19 @@ func (wp *WavePool) createUpdatePacket() []byte {
 			binary.LittleEndian.PutUint32(buf[at:], id)
 			at += 4
 
-			binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(player.X))
-			at += 8
-			binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(player.Y))
-			at += 8
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(player.X))
+			at += 4
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(player.Y))
+			at += 4
 
-			binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(player.Angle))
-			at += 8
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(player.Angle))
+			at += 4
 
-			binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(player.Health))
-			at += 8
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(player.Health))
+			at += 4
 
-			binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(player.Size))
-			at += 8
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(player.Size))
+			at += 4
 
 			buf[at] = byte(player.Mood)
 			at++
@@ -607,19 +619,19 @@ func (wp *WavePool) createUpdatePacket() []byte {
 			binary.LittleEndian.PutUint32(buf[at:], id)
 			at += 4
 
-			binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(mob.X))
-			at += 8
-			binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(mob.Y))
-			at += 8
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(mob.X))
+			at += 4
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(mob.Y))
+			at += 4
 
-			binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(mob.Angle))
-			at += 8
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(mob.Angle))
+			at += 4
 
-			binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(mob.Health))
-			at += 8
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(mob.Health))
+			at += 4
 
-			binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(mob.Size))
-			at += 8
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(mob.Size))
+			at += 4
 
 			buf[at] = mob.Type
 			at++
@@ -639,8 +651,20 @@ func (wp *WavePool) createUpdatePacket() []byte {
 				bFlags |= 2
 			}
 
+			writeConnectingSegmentId := mob.ConnectingSegment != nil
+
+			// Mob has connecting segment, or not
+			if writeConnectingSegmentId {
+				bFlags |= 4
+			}
+
 			buf[at] = bFlags
 			at++
+
+			if writeConnectingSegmentId {
+				binary.LittleEndian.PutUint32(buf[at:], mob.ConnectingSegment.GetID())
+				at += 4
+			}
 
 			return true
 		})
@@ -654,19 +678,19 @@ func (wp *WavePool) createUpdatePacket() []byte {
 			binary.LittleEndian.PutUint32(buf[at:], id)
 			at += 4
 
-			binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(petal.X))
-			at += 8
-			binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(petal.Y))
-			at += 8
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(petal.X))
+			at += 4
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(petal.Y))
+			at += 4
 
-			binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(petal.Angle))
-			at += 8
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(petal.Angle))
+			at += 4
 
-			binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(petal.Health))
-			at += 8
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(petal.Health))
+			at += 4
 
-			binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(petal.Size))
-			at += 8
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(petal.Size))
+			at += 4
 
 			buf[at] = petal.Type
 			at++
@@ -699,10 +723,10 @@ func (wp *WavePool) createUpdatePacket() []byte {
 			at += 2
 
 			for _, point := range points {
-				binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(point[0]))
-				at += 8
-				binary.LittleEndian.PutUint64(buf[at:], math.Float64bits(point[1]))
-				at += 8
+				binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(point[0]))
+				at += 4
+				binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(point[1]))
+				at += 4
 			}
 		}
 
@@ -717,8 +741,8 @@ func (wp *WavePool) createUpdatePacket() []byte {
 func (wp *WavePool) GeneratePlayer(
 	sp *StaticPlayer[StaticPetalSlots],
 
-	x float64,
-	y float64,
+	x float32,
+	y float32,
 ) *Player {
 	id := GetRandomId()
 	if _, ok := wp.playerPool.Load(id); ok {
@@ -774,8 +798,8 @@ func (wp *WavePool) GeneratePlayer(
 func (wp *WavePool) SafeGeneratePlayer(
 	sp *StaticPlayer[StaticPetalSlots],
 
-	x float64,
-	y float64,
+	x float32,
+	y float32,
 ) *Player {
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
@@ -847,8 +871,8 @@ func (wp *WavePool) GenerateMob(
 
 	rarity native.Rarity,
 
-	x float64,
-	y float64,
+	x float32,
+	y float32,
 
 	petMaster *Player,
 
@@ -906,8 +930,8 @@ func (wp *WavePool) SafeGenerateMob(
 
 	rarity native.Rarity,
 
-	x float64,
-	y float64,
+	x float32,
+	y float32,
 
 	petMaster *Player,
 
@@ -995,8 +1019,8 @@ func (wp *WavePool) LinkedMobSegmentation(
 
 	rarity native.Rarity,
 
-	x float64,
-	y float64,
+	x float32,
+	y float32,
 
 	bodyCount int,
 ) {
@@ -1012,7 +1036,7 @@ func (wp *WavePool) LinkedMobSegmentation(
 	var prevSegment collision.Node = nil
 
 	for i := range bodyCount + 1 {
-		radius := float64(i) * segmentDistance
+		radius := float32(i) * segmentDistance
 
 		prevSegment = wp.GenerateMob(
 			mType,
@@ -1038,8 +1062,8 @@ func (wp *WavePool) SafeLinkedMobSegmentation(
 
 	rarity native.Rarity,
 
-	x float64,
-	y float64,
+	x float32,
+	y float32,
 
 	bodyCount int,
 ) {
@@ -1063,8 +1087,8 @@ func (wp *WavePool) GeneratePetal(
 
 	rarity native.Rarity,
 
-	x float64,
-	y float64,
+	x float32,
+	y float32,
 
 	master *Player,
 
@@ -1113,8 +1137,8 @@ func (wp *WavePool) SafeGeneratePetal(
 
 	rarity native.Rarity,
 
-	x float64,
-	y float64,
+	x float32,
+	y float32,
 
 	master *Player,
 
@@ -1196,23 +1220,23 @@ func (wp *WavePool) SafeGetPetalsWithCondition(condition func(*Petal) bool) []*P
 func (wp *WavePool) MobDoLightningBounce(jellyfish *Mob, hitEntity collision.Node) {
 	mobExtra := native.MobProfiles[jellyfish.Type].StatFromRarity(jellyfish.Rarity).Extra
 
-	maxBounces, ok := mobExtra["bounces"].(float64)
+	maxBounces, ok := mobExtra["bounces"]
 	if !ok {
 		return
 	}
 
-	lightningDamage, ok := mobExtra["lightning"].(float64)
+	lightningDamage, ok := mobExtra["lightning"]
 	if !ok {
 		return
 	}
 
 	maxBouncesInt := int(maxBounces)
 
-	bouncePoints := make([][2]float64, 0, maxBouncesInt+1)
+	bouncePoints := make([][2]float32, 0, maxBouncesInt+1)
 
 	// Make it looks like shooted from jellyfish
 	// TODO: check if len(bouncePoints) > 0 and prepend after bounce done
-	bouncePoints = append(bouncePoints, [2]float64{jellyfish.X, jellyfish.Y})
+	bouncePoints = append(bouncePoints, [2]float32{jellyfish.X, jellyfish.Y})
 
 	bouncedIds := make([]*EntityId, 0, maxBouncesInt)
 
@@ -1223,7 +1247,7 @@ Loop:
 		switch targetEntity := targetNode.(type) {
 		case *Player:
 			{
-				bouncePoints = append(bouncePoints, [2]float64{targetEntity.X, targetEntity.Y})
+				bouncePoints = append(bouncePoints, [2]float32{targetEntity.X, targetEntity.Y})
 
 				bouncedIds = append(bouncedIds, targetEntity.Id)
 
@@ -1246,7 +1270,7 @@ Loop:
 					break Loop
 				}
 
-				bouncePoints = append(bouncePoints, [2]float64{targetEntity.X, targetEntity.Y})
+				bouncePoints = append(bouncePoints, [2]float32{targetEntity.X, targetEntity.Y})
 
 				bouncedIds = append(bouncedIds, targetEntity.Id)
 
@@ -1284,19 +1308,19 @@ Loop:
 func (wp *WavePool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 	petalExtra := native.PetalProfiles[lightning.Type].StatFromRarity(lightning.Rarity).Extra
 
-	maxBounces, ok := petalExtra["bounces"].(float64)
+	maxBounces, ok := petalExtra["bounces"]
 	if !ok {
 		return
 	}
 
-	lightningDamage, ok := petalExtra["lightning"].(float64)
+	lightningDamage, ok := petalExtra["lightning"]
 	if !ok {
 		return
 	}
 
 	maxBouncesInt := int(maxBounces)
 
-	bouncePoints := make([][2]float64, 0, maxBouncesInt)
+	bouncePoints := make([][2]float32, 0, maxBouncesInt)
 
 	bouncedIds := make([]*EntityId, 0, maxBouncesInt)
 
@@ -1313,7 +1337,7 @@ func (wp *WavePool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 			break
 		}
 
-		bouncePoints = append(bouncePoints, [2]float64{targetMob.X, targetMob.Y})
+		bouncePoints = append(bouncePoints, [2]float32{targetMob.X, targetMob.Y})
 
 		bouncedIds = append(bouncedIds, targetMob.Id)
 

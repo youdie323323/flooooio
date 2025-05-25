@@ -31,6 +31,8 @@ export default class UIPetalPlaceholder extends StaticPanelContainer {
     }
 
     override render(ctx: CanvasRenderingContext2D): void {
+        ctx.globalAlpha = 0.9;
+
         super.render(ctx);
     
         if (this.embeddedPetal) {

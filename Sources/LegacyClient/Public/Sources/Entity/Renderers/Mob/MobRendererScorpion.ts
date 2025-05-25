@@ -111,13 +111,12 @@ export default class MobRendererScorpion extends AbstractMobRenderer {
             ctx.translate(84 - 64, 67.80140686035156 - 64);
             ctx.scale(0.6628867661928461, 0.6628867198043205);
 
-            // TODO: this is not movement counter
-            const sinMoveCounter = Math.sin(entity.moveCounter * 1.6) * 0.1;
+            const { beakAngle } = entity;
 
             {
                 ctx.save();
 
-                ctx.rotate(sinMoveCounter);
+                ctx.rotate(beakAngle);
                 ctx.translate(0, -2);
 
                 ctx.beginPath();
@@ -134,7 +133,7 @@ export default class MobRendererScorpion extends AbstractMobRenderer {
             {
                 ctx.save();
 
-                ctx.rotate(-sinMoveCounter);
+                ctx.rotate(-beakAngle);
                 ctx.translate(0, 2);
 
                 ctx.beginPath();
@@ -167,10 +166,8 @@ export default class MobRendererScorpion extends AbstractMobRenderer {
                 ctx.beginPath();
 
                 for (let i = 0; i < 8; i++) {
-                    let dir = (0.25 + i % 4 / 3 * 0.4) * Math.PI + Math.sin(i + entity.moveCounter * 1.3) * 0.2;
-                    if (i >= 4) {
-                        dir *= -1;
-                    }
+                    const dir = ((0.25 + (i % 4) * 0.14) * Math.PI + Math.sin(i + entity.moveCounter * 0.75) * 0.2) *
+                        (i < 4 ? 1 : -1);
 
                     ctx.moveTo(0, 0);
                     ctx.lineTo(Math.cos(dir) * LEG_LENGTH, Math.sin(dir) * LEG_LENGTH);

@@ -13,6 +13,7 @@ const HandlerMap = std.AutoHashMap(Opcode.ClientBound, Handler);
 
 client: *ClientWebSocket,
 handlers: HandlerMap,
+default_handlers: HandlerMap,
 
 pub fn init(
     allocator: mem.Allocator,
@@ -21,11 +22,15 @@ pub fn init(
     return .{
         .client = client,
         .handlers = HandlerMap.init(allocator),
+        .default_handlers = HandlerMap.init(allocator),
     };
 }
 
-pub fn deinit(self: ClientBound) void {
+pub fn deinit(self: *ClientBound) void {
     self.handlers.deinit();
+    self.default_handlers.deinit();
+    
+    self.* = undefined;
 }
 
 pub fn read(self: ClientBound, data: []const u8) !void {
@@ -34,15 +39,27 @@ pub fn read(self: ClientBound, data: []const u8) !void {
 
     const packet_type = try stream.readEnum(Opcode.ClientBound, .little);
 
-    if (self.handlers.get(packet_type)) |handler| {
+    if (self.handlers.get(packet_type) orelse self.default_handlers.get(packet_type)) |handler| {
         try handler(&stream);
     } else {
         std.log.warn("Unhandled packet type: {}", .{packet_type});
     }
 }
 
-fn registerDefaultHandlers(self: ClientBound) mem.Allocator.Error!void {
-    try self.handlers.put(.connection_kicked, handleConnectionKick);
+pub fn putHandler(
+    self: *ClientBound,
+    opcode: Opcode.ClientBound,
+    handler: Handler,
+) !void {
+    try self.handlers.put(opcode, handler);
+}
+
+pub fn clearHandlers(self: *ClientBound) void {
+    self.handlers.clearRetainingCapacity();
+}
+
+fn registerDefaultHandlers(self: *ClientBound) mem.Allocator.Error!void {
+    try self.default_handlers.put(.connection_kicked, handleConnectionKick);
 }
 
 fn handleConnectionKick(stream: *Reader) !void {

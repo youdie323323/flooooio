@@ -1,4 +1,5 @@
 import type Entity from "../../../../Entity/Entity";
+import type Player from "../../../../Entity/Player";
 import type { ColorCode } from "../../../../Utils/Color";
 import type { LayoutContext, LayoutOptions, LayoutResult } from "../../Layout";
 import Layout from "../../Layout";
@@ -16,7 +17,7 @@ export type GaugeSource = Readonly<{
     lowBehavior?: "lineWidth" | "fade";
 }>;
 
-export type GaugeSources<G> = MaybePointerLike<ReadonlyArray<G>>;
+export type GaugeSources = MaybePointerLike<ReadonlyArray<GaugeSource>>;
 
 export default class Gauge extends Component {
     public override[OBSTRUCTION_AFFECTABLE]: boolean = false;
@@ -29,9 +30,12 @@ export default class Gauge extends Component {
     constructor(
         protected readonly layoutOptions: MaybePointerLike<LayoutOptions>,
 
-        protected readonly gaugeSources: GaugeSources<GaugeSource>,
+        protected readonly gaugeSources: GaugeSources,
         protected readonly gaugeWidthPadding: MaybePointerLike<number> = 0,
         protected readonly gaugeText: MaybePointerLike<string> | null = null,
+        protected readonly gaugeCoeff: MaybePointerLike<number> = 0.65,
+        protected readonly gaugeBackground: MaybePointerLike<ColorCode> = "#000000",
+        protected readonly gaugeTransparent: MaybePointerLike<boolean> = true,
     ) {
         super();
 
@@ -70,6 +74,9 @@ export default class Gauge extends Component {
         const computedGaugeSources = Component.computePointerLike(this.gaugeSources);
         const computedGaugeWidthPadding = Component.computePointerLike(this.gaugeWidthPadding);
         const computedGaugeText = Component.computePointerLike(this.gaugeText);
+        const computedGaugeBackground = Component.computePointerLike(this.gaugeBackground);
+        const computedGaugeTransparent = Component.computePointerLike(this.gaugeTransparent);
+        const computedGaugeCoeff = Component.computePointerLike(this.gaugeCoeff);
 
         const lineWidth = this.h;
 
@@ -77,7 +84,7 @@ export default class Gauge extends Component {
 
         ctx.lineCap = "round";
 
-        ctx.globalAlpha = 0.9;
+        if (computedGaugeTransparent) ctx.globalAlpha = 0.9;
 
         const centerHeight = this.h - (lineWidth / 2);
 
@@ -85,7 +92,7 @@ export default class Gauge extends Component {
             ctx.save();
 
             ctx.lineWidth = lineWidth;
-            ctx.strokeStyle = "black";
+            ctx.strokeStyle = computedGaugeBackground;
 
             ctx.beginPath();
             ctx.lineTo(0, centerHeight);
@@ -98,12 +105,12 @@ export default class Gauge extends Component {
         { // Draw gauge sources
             ctx.save();
 
-            computedGaugeSources.forEach(({ maxValue, thickness: heightCoeff, color, lowBehavior }, index) => {
+            computedGaugeSources.forEach(({ maxValue, thickness, color, lowBehavior }, index) => {
                 const currentValue = this.currentValues[index];
                 if (currentValue > 0) {
                     const normalizedValue = currentValue / maxValue;
 
-                    ctx.lineWidth = lineWidth * heightCoeff;
+                    ctx.lineWidth = lineWidth * thickness;
 
                     if (lowBehavior) {
                         if (lowBehavior === "fade") {
@@ -129,7 +136,7 @@ export default class Gauge extends Component {
         if (computedGaugeText) {
             ctx.save();
 
-            const fontSize = this.h * 0.65;
+            const fontSize = this.h * computedGaugeCoeff;
 
             ctx.lineJoin = "round";
             ctx.lineCap = "round";
@@ -165,7 +172,9 @@ export default class Gauge extends Component {
     }
 }
 
-export function entityHealthGaugeSources(entity: Entity): GaugeSources<GaugeSource> {
+// Define these as class?
+
+export function healthGaugeSources(entity: Entity): GaugeSources {
     return () => [
         { // Red health
             value: entity.redHealth,
@@ -184,6 +193,22 @@ export function entityHealthGaugeSources(entity: Entity): GaugeSources<GaugeSour
             thickness: 0.75,
 
             color: "#6dd24a",
+            lowBehavior: "fade",
+        },
+    ];
+}
+
+export const GAUGE_XP_BACKGROUND_COLOR_CODE = "#333333" as const satisfies ColorCode;
+
+export function xpGaugeSources(): GaugeSources {
+    return () => [
+        { // Xp
+            value: 14,
+            maxValue: 200,
+
+            thickness: 0.8,
+
+            color: "#e4ed61",
             lowBehavior: "fade",
         },
     ];

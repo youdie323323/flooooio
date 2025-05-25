@@ -41,11 +41,11 @@ pub fn Deque(comptime T: type) type {
         ///
         /// Deinitialize with `deinit`.
         pub fn initCapacity(allocator: Allocator, capacity: usize) Allocator.Error!Self {
-            const effective_cap =
+            const effective_capacity =
                 math.ceilPowerOfTwo(usize, @max(capacity +| 1, minimum_capacity + 1)) catch
                     math.ceilPowerOfTwoAssert(usize, initial_capacity + 1);
 
-            const buf = try allocator.alloc(T, effective_cap);
+            const buf = try allocator.alloc(T, effective_capacity);
 
             return .{
                 .allocator = allocator,

@@ -1,4 +1,5 @@
 import { deltaTime } from "../../../Main";
+import Mob from "./Mob";
 
 const TAU = Math.PI * 2;
 
@@ -42,6 +43,12 @@ export default abstract class Entity {
     public moveCounter: number;
     public hpAlpha: number;
 
+    /**
+     * @remarks
+     * This is like moveCounter but always increased constantly.
+     */
+    public totalT: number;
+
     constructor(
         readonly id: number,
 
@@ -66,7 +73,7 @@ export default abstract class Entity {
         this.hurtT = 0;
         this.deadT = 0;
         this.isDead = false;
-        this.moveCounter = 0;
+        this.moveCounter = this.totalT = 0;
         this.hpAlpha = 1;
     }
 
@@ -77,6 +84,7 @@ export default abstract class Entity {
 
         if (this.hurtT > 0) {
             this.hurtT -= deltaTime / 150;
+            
             if (this.hurtT < 0) {
                 this.hurtT = 0;
             }
@@ -92,9 +100,11 @@ export default abstract class Entity {
         const eyeTimeFactor = Math.min(1, deltaTime / 100);
         this.eyeX += (Math.cos(this.nAngle) - this.eyeX) * eyeTimeFactor;
         this.eyeY += (Math.sin(this.nAngle) - this.eyeY) * eyeTimeFactor;
-
+        
         this.angle = interpolateAngle(this.oAngle, this.nAngle, this.t);
-        this.moveCounter += Math.hypot(this.x - this.nx, this.y - this.ny) / 50 * deltaTime / 18;
+
+        this.moveCounter += (Math.hypot(this.x - this.nx, this.y - this.ny) * deltaTime) / 900;
+        this.totalT += deltaTime / 40;
 
         if (this.redHealthTimer > 0) {
             this.redHealthTimer -= deltaTime / 600;

@@ -42,17 +42,17 @@ type Mob struct {
 	// mob_special_movement.go struct field definitions
 	SineWaveIndex        int
 	RotationCounter      int
-	SpecialMovementTimer float64
+	SpecialMovementTimer float32
 	IsSpecialMoving      bool
 }
 
 // SpeedOf statically return speed within mob.
-func SpeedOf(mType native.MobType) float64 {
+func SpeedOf(mType native.MobType) float32 {
 	return MobSpeed[mType]
 }
 
 // CalculateRadius return radius (display size).
-func (m *Mob) CalculateRadius() float64 {
+func (m *Mob) CalculateRadius() float32 {
 	profile := native.MobProfiles[m.Type]
 	collision := profile.Collision
 
@@ -60,7 +60,7 @@ func (m *Mob) CalculateRadius() float64 {
 }
 
 // GetMaxHealth calculates max hp of mob.
-func (m *Mob) GetMaxHealth() float64 {
+func (m *Mob) GetMaxHealth() float32 {
 	profile := native.MobProfiles[m.Type]
 
 	return profile.StatFromRarity(m.Rarity).Health
@@ -169,8 +169,8 @@ func NewMob(
 
 	rarity native.Rarity,
 
-	x float64,
-	y float64,
+	x float32,
+	y float32,
 
 	petMaster *Player,
 
@@ -221,11 +221,11 @@ func NewMob(
 	}
 }
 
-func CalculateMobSize(profile native.MobData, rarity native.Rarity) float64 {
+func CalculateMobSize(profile native.MobData, rarity native.Rarity) float32 {
 	return profile.BaseSize * MobSizeFactor[rarity]
 }
 
-var MobSizeFactor = map[native.Rarity]float64{
+var MobSizeFactor = map[native.Rarity]float32{
 	native.RarityCommon:    1.0,
 	native.RarityUnusual:   1.2,
 	native.RarityRare:      1.5,
@@ -235,7 +235,7 @@ var MobSizeFactor = map[native.Rarity]float64{
 	native.RarityUltra:     8.1,
 }
 
-var MobSpeed = map[native.MobType]float64{
+var MobSpeed = map[native.MobType]float32{
 	native.MobTypeBee:    2.8,
 	native.MobTypeSpider: 5,
 	native.MobTypeHornet: 3,
@@ -243,7 +243,7 @@ var MobSpeed = map[native.MobType]float64{
 	native.MobTypeBeetle:       2.8,
 	native.MobTypeSandstorm:    2,
 	native.MobTypeCactus:       0,
-	native.MobTypeScorpion:     3,
+	native.MobTypeScorpion:     4,
 	native.MobTypeLadybugShiny: 2,
 
 	native.MobTypeStarfish:  2.8,
@@ -252,6 +252,7 @@ var MobSpeed = map[native.MobType]float64{
 	native.MobTypeSponge:    0,
 	native.MobTypeShell:     0,
 	native.MobTypeCrab:      4,
+	native.MobTypeLeech:      10,
 
 	native.MobTypeCentipede:       2.8,
 	native.MobTypeCentipedeEvil:   3.2,

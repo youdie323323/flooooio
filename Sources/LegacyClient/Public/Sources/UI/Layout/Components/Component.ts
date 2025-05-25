@@ -246,8 +246,14 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
 
     private static readonly ANIMATION_EASING_FUNCTIONS = {
         [AnimationType.ZOOM]: {
-            in: function easeOutExpo(x: number): number {
-                return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+            in: function easeInOutExpo(x: number): number {
+                return x === 0
+                    ? 0
+                    : x === 1
+                        ? 1
+                        : x < 0.5
+                            ? Math.pow(2, 20 * x - 10) / 2
+                            : (2 - Math.pow(2, -20 * x + 10)) / 2;
             },
             out: function easeInExpo(x: number): number {
                 return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
@@ -486,6 +492,7 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
                     }
 
                     ctx.scale(progress, progress);
+
                     ctx.translate(-cx, -cy);
 
                     break;
