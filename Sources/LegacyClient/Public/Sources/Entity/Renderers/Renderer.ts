@@ -4,7 +4,7 @@ import Mob from "../Mob";
 import Player from "../Player";
 import type { RenderingContext } from "./RendererRenderingContext";
 import MOB_PROFILES from "../../../../../Shared/Native/mob_profiles.json";
-import { uiCtx } from "../../../../Main";
+import { uiCtx } from "../../../../Application";
 import type { MobData } from "../../../../Private/Sources/Entity/Mob/MobData";
 import type { ColorCode } from "../../Utils/Color";
 import { memo } from "../../Utils/Memoize";
@@ -23,6 +23,8 @@ const hexToRgb = memo((hexColor: ColorCode) => {
 const TARGET_COLOR = [255, 0, 0] as const;
 
 export default class Renderer<T extends Entity> {
+    private static readonly HP_BAR_MAX_WIDTH = 45 as const;
+
     /**
      * Render the entity.
      */
@@ -81,7 +83,7 @@ export default class Renderer<T extends Entity> {
      */
     protected applyDeathAnimation({ ctx, entity: { isDead, deadT } }: RenderingContext<T>) {
         if (isDead) {
-            const sinWavedDeadT = Math.sin(deadT * Math.PI / 2);
+            const sinWavedDeadT = Math.sin(deadT * Math.PI / 3);
 
             const scale = 1 + sinWavedDeadT;
 
@@ -91,7 +93,12 @@ export default class Renderer<T extends Entity> {
     }
 
     protected drawEntityStatus({ ctx, entity }: RenderingContext<T>) {
-        if (entity instanceof Mob && (isPetal(entity.type) || entity.type === MobType.MISSILE)) return;
+        if (entity instanceof Mob && (
+            isPetal(entity.type) ||
+            entity.type === MobType.MISSILE
+            // This condition is unrechable because leech body is always full hp and hp bar is not rendered
+            // (entity.type === MobType.LEECH && entity.connectingSegment)
+        )) return;
 
         if (entity.hpAlpha <= 0) return;
 
@@ -118,7 +125,7 @@ export default class Renderer<T extends Entity> {
             ctx.restore();
         }
 
-        const HP_BAR_MAX_WIDTH: number = 45;
+        const { HP_BAR_MAX_WIDTH } = Renderer;
 
         // Draw hp bar if health decreasing and living
         if (
@@ -126,10 +133,6 @@ export default class Renderer<T extends Entity> {
             1 > entity.health
         ) {
             ctx.save();
-
-            ctx.globalAlpha = entity.hpAlpha;
-            ctx.strokeStyle = "#222";
-            ctx.beginPath();
 
             let lineWidth: number;
 
@@ -149,13 +152,19 @@ export default class Renderer<T extends Entity> {
                 ctx.translate(-HP_BAR_MAX_WIDTH / 2, 25);
             }
 
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(HP_BAR_MAX_WIDTH, 0);
             ctx.lineCap = "round";
-            ctx.lineWidth = lineWidth;
-            ctx.strokeStyle = "#222";
-            ctx.stroke();
+            ctx.globalAlpha = entity.hpAlpha;
+
+            {
+                ctx.beginPath();
+
+                ctx.moveTo(0, 0);
+                ctx.lineTo(HP_BAR_MAX_WIDTH, 0);
+
+                ctx.lineWidth = lineWidth;
+                ctx.strokeStyle = "#222";
+                ctx.stroke();
+            }
 
             function setGlobalAlpha(hp: number) {
                 ctx.globalAlpha = hp < 0.05 ? hp / 0.05 : 1;
@@ -165,8 +174,10 @@ export default class Renderer<T extends Entity> {
                 setGlobalAlpha(entity.redHealth);
 
                 ctx.beginPath();
+
                 ctx.moveTo(0, 0);
                 ctx.lineTo(HP_BAR_MAX_WIDTH * entity.redHealth, 0);
+
                 ctx.lineWidth = lineWidth * 0.44;
                 ctx.strokeStyle = "#f22";
                 ctx.stroke();
@@ -176,8 +187,10 @@ export default class Renderer<T extends Entity> {
                 setGlobalAlpha(entity.health);
 
                 ctx.beginPath();
+
                 ctx.moveTo(0, 0);
                 ctx.lineTo(HP_BAR_MAX_WIDTH * entity.health, 0);
+
                 ctx.lineWidth = lineWidth * 0.66;
                 ctx.strokeStyle = "#75dd34";
                 ctx.stroke();

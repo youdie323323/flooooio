@@ -22,28 +22,34 @@ export default class MobRendererShell extends AbstractMobRenderer {
         ctx.lineWidth = 5;
         ctx.lineJoin = ctx.lineCap = "round";
 
-        { // Draw auricle
-            ctx.fillStyle = ctx.strokeStyle = this.calculateDamageEffectColor(context, "#CCB36D");
+        const bodyStrokeColor = this.calculateDamageEffectColor(context, "#CCB36D");
 
+        { // Draw auricle
             ctx.beginPath();
+
             ctx.moveTo(-20, -15);
             ctx.quadraticCurveTo(-15, 0, -20, 15);
             ctx.lineTo(0, 3);
             ctx.lineTo(0, -3);
+
             ctx.closePath();
+
+            ctx.fillStyle = ctx.strokeStyle = bodyStrokeColor;
             ctx.fill();
             ctx.stroke();
         }
 
         { // Draw body
-            ctx.fillStyle = this.calculateDamageEffectColor(context, "#FCDD86");
-
             ctx.beginPath();
+
             ctx.arc(0, 0, 30, -1.2566370964050293, 1.2566370964050293, false);
             ctx.quadraticCurveTo(0, 20, -15, 8);
             ctx.quadraticCurveTo(-20, 0, -15, -8);
             ctx.quadraticCurveTo(0, -20, 9.270508766174316, -28.531696319580078);
+            
             ctx.closePath();
+
+            ctx.fillStyle = this.calculateDamageEffectColor(context, "#FCDD86");
             ctx.fill();
             ctx.stroke();
         }

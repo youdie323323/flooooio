@@ -20,13 +20,10 @@ import type { StaticAdheredClientboundHandlers } from "../../Websocket/Packet/Pa
 import DISCORD_ICON_SVG from "./Assets/discord_icon.svg";
 import Tooltip from "../Layout/Extensions/ExtensionTooltip";
 import UITitleBottomLeftButtonGroup from "./BottomLeftButtonGroup/UITitleBottomLeftButtonGroup";
-import { createTitleBottomLeftToolTippedButton } from "./BottomLeftButtonGroup";
-import { BIOME_TILESETS } from "../../Utils/Tile/Tileset/TilesetRenderer";
-import TilesetWavedRenderer from "../../Utils/Tile/Tileset/TilesetWavedRenderer";
 import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../../Private/Sources/Wave/WaveRoom";
 import type { WaveRoomCode } from "../../../../Private/Sources/Wave/WaveRoomCode";
 import { isWaveRoomCode } from "../../../../Private/Sources/Wave/WaveRoomCode";
-import { uiCtx, clientWebsocket, deltaTime, cameraController } from "../../../../Main";
+import { uiCtx, clientWebsocket, deltaTime, cameraController } from "../../../../Application";
 import { isPetal } from "../../Entity/Petal";
 import type { ColorCode } from "../../Utils/Color";
 import { DARKENED_BASE } from "../../Utils/Color";
@@ -36,8 +33,10 @@ import { Biome } from "../../Native/Biome";
 import UITitleInventory from "./UITitleInventory";
 import Gauge, { GAUGE_XP_BACKGROUND_COLOR_CODE, xpGaugeSources } from "../Layout/Components/WellKnown/Gauge";
 import { Centering } from "../Layout/Extensions/ExtensionCentering";
+import { BIOME_TILESETS } from "../Shared/Tile/Tileset/TilesetRenderer";
+import TilesetWavedRenderer from "../Shared/Tile/Tileset/TilesetWavedRenderer";
 
-const TAU = Math.PI * 2;
+const TAU = 2 * Math.PI;
 
 function randomFloat(min: number, max: number) {
     return Math.random() * (max - min + 1) + min;
@@ -305,7 +304,7 @@ export default class UITitle extends AbstractUI {
 
                     () => {
                         const windowProxy = window.open("unko");
-                        windowProxy.document.write('まだ実装されてないわボケー');
+                        windowProxy.document.write("まだ実装されてないわボケー");
                     },
 
                     "#5865f2",
@@ -398,9 +397,9 @@ export default class UITitle extends AbstractUI {
                     text: "",
 
                     fontSize: 15,
-                    textColor: '#212121',
+                    textColor: "#212121",
 
-                    placeholder: '',
+                    placeholder: "",
                     showPlaceholderWhenUnfocused: false,
 
                     borderColor: "#000000",
@@ -740,9 +739,9 @@ export default class UITitle extends AbstractUI {
                         text: "",
 
                         fontSize: 10,
-                        textColor: '#212121',
+                        textColor: "#212121",
 
-                        placeholder: '',
+                        placeholder: "",
                         showPlaceholderWhenUnfocused: false,
 
                         borderColor: "#000000",

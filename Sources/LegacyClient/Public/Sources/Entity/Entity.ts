@@ -1,7 +1,7 @@
-import { deltaTime } from "../../../Main";
+import { deltaTime } from "../../../Application";
 import Mob from "./Mob";
 
-const TAU = Math.PI * 2;
+const TAU = 2 * Math.PI;
 
 function calculateAngleDistance(startAngle: number, endAngle: number) {
     const angleDiff = (endAngle - startAngle) % TAU;
@@ -79,7 +79,7 @@ export default abstract class Entity {
 
     public update() {
         if (this.isDead) {
-            this.deadT += deltaTime / 200;
+            this.deadT += deltaTime / 150;
         }
 
         if (this.hurtT > 0) {
@@ -108,6 +108,7 @@ export default abstract class Entity {
 
         if (this.redHealthTimer > 0) {
             this.redHealthTimer -= deltaTime / 600;
+            
             if (this.redHealthTimer < 0) {
                 this.redHealthTimer = 0;
             }

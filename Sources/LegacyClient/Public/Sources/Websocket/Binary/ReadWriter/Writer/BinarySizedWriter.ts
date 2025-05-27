@@ -109,9 +109,11 @@ export default class BinarySizedWriter {
         float32Array[0] = value;
 
         const bytes = byteArray.slice(0, 4);
+        
         for (let i = 0; i < 4; i++) {
             this._buffer[this._at + i] = bytes[i];
         }
+
         this._at += 4;
 
         return this;
@@ -121,9 +123,11 @@ export default class BinarySizedWriter {
         float64Array[0] = value;
 
         const bytes = byteArray.slice(0, 8);
+
         for (let i = 0; i < 8; i++) {
             this._buffer[this._at + i] = bytes[i];
         }
+
         this._at += 8;
 
         return this;
@@ -144,9 +148,11 @@ export default class BinarySizedWriter {
     public writeVarUInt64(value: bigint): this {
         do {
             let byte = 0x7fn & value;
+
             if (0x0n < (value >>= 0x7n)) {
                 byte |= 0x80n;
             }
+
             this.writeUInt8(Number(byte));
         } while (0x0n < value);
 
@@ -155,9 +161,11 @@ export default class BinarySizedWriter {
 
     public writeVarInt64(value: bigint): this {
         let encodedValue = 0x2n * value;
+
         if (value < 0) {
             encodedValue = -(0x2n * value + 0x1n);
         }
+
         this.writeVarUInt64(encodedValue);
 
         return this;

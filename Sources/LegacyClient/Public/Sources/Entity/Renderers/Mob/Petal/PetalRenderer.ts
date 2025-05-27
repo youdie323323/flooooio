@@ -3,7 +3,7 @@ import type Mob from "../../../Mob";
 import type { RenderingContext } from "../../RendererRenderingContext";
 import AbstractMobRenderer from "../MobRenderer";
 
-const TAU = Math.PI * 2;
+const TAU = 2 * Math.PI;
 
 export default abstract class AbstractPetalRenderer extends AbstractMobRenderer {
     override render(context: RenderingContext<Mob>): void {
@@ -29,10 +29,12 @@ export default abstract class AbstractPetalRenderer extends AbstractMobRenderer 
         ctx.lineWidth = strokeWidth;
 
         ctx.beginPath();
+
         ctx.arc(0, 0, 15, 0, TAU);
+
         ctx.fillStyle = this.calculateDamageEffectColor(context, fillColor);
-        ctx.fill();
         ctx.strokeStyle = this.calculateDamageEffectColor(context, strokeColor);
+        ctx.fill();
         ctx.stroke();
     }
 }

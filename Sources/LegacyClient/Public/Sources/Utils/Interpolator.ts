@@ -1,4 +1,4 @@
-import { deltaTime } from "../../../Main";
+import { deltaTime } from "../../../Application";
 import EASING_FUNCTIONS from "./EasingFunctions";
 
 interface InterpolationState {
@@ -22,11 +22,11 @@ export default class Interpolator {
     private interpolation: InterpolationState;
     private options: InterpolatorOptions;
     private oldValue: number | null;
-    private lastUpdatedAt: number | null;
     private currentValue: number;
 
     public get isInterpolating(): boolean {
         if (!this.interpolation.startTime) return false;
+
         const elapsedTime = Date.now() - this.interpolation.startTime;
 
         return elapsedTime <= this.options.duration;
@@ -34,7 +34,6 @@ export default class Interpolator {
 
     constructor(options: Partial<InterpolatorOptions> = {}) {
         this.oldValue = null;
-        this.lastUpdatedAt = null;
         this.currentValue = 0;
 
         this.interpolation = {
@@ -48,31 +47,32 @@ export default class Interpolator {
             duration: 1000,
             initValue: null,
             range: null,
+            
             ...options,
         };
 
         if (typeof this.options.initValue === "number") {
-            this.setValue(this.options.initValue);
+            this.value = this.options.initValue;
         }
     }
 
-    public setValue(newValue: number): void {
+    public set value(newValue: number) {
         if (typeof this.oldValue === "number") {
             if (this.currentValue === newValue) return;
-            
+
             this.oldValue = this.currentValue;
         } else {
             this.oldValue = newValue;
         }
 
         this.currentValue = newValue;
-        this.lastUpdatedAt = Date.now();
 
         const interpolatedValue = this.getInterpolatedValue();
         this.interpolation.startValue = this.oldValue;
 
         if (this.interpolation.startTime) {
             const elapsedTime = Date.now() - this.interpolation.startTime;
+
             if (elapsedTime < this.options.duration) {
                 this.interpolation.startValue = interpolatedValue;
             }
@@ -130,6 +130,7 @@ export default class Interpolator {
         deltaT = Math.max(0, Math.min(deltaT, this.options.duration));
 
         const valueChange = this.interpolation.endValue - this.interpolation.startValue;
+
         let interpolatedValue = EASING_FUNCTIONS[this.options.easingType](
             deltaT,
             this.interpolation.startValue,

@@ -3,7 +3,7 @@ import UITitle from "./Title/UITitle";
 import type AbstractUI from "./UI";
 import UISceneTransition from "./UISceneTransition";
 
-export type UIType = 'game' | 'title';
+export type UIType = "game" | "title";
 
 export type RealUICtor = UIGame | UITitle;
 
@@ -58,11 +58,11 @@ export default class UIContext {
 
     private createUI(mode: UIType): RealUICtor {
         switch (mode) {
-            case 'title': {
+            case "title": {
                 return new UITitle(this.canvas);
             }
 
-            case 'game': {
+            case "game": {
                 return new UIGame(this.canvas);
             }
         }

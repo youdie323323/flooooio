@@ -230,7 +230,7 @@
         },
         "collision": {
             "fraction": 30,
-            "radius": 35
+            "radius": 36
         }
     },
     "6": {
@@ -594,7 +594,7 @@
             "health": 12775000,
             "bodyDamage": 7290
         },
-        "baseSize": 15,
+        "baseSize": 12.5,
         "i18n": {
             "name": "Leech",
             "description": "Slurp slurp."

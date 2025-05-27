@@ -2,7 +2,7 @@ import type Mob from "../../Mob";
 import type { RenderingContext } from "../RendererRenderingContext";
 import AbstractMobRenderer from "./MobRenderer";
 
-const TAU = Math.PI * 2;
+const TAU = 2 * Math.PI;
 
 export default class MobRendererJellyfish extends AbstractMobRenderer {
     override render(context: RenderingContext<Mob>): void {
@@ -17,8 +17,9 @@ export default class MobRendererJellyfish extends AbstractMobRenderer {
         const scale = entity.size / 20;
         ctx.scale(scale, scale);
 
-        const oldGlobalAlpha = ctx.globalAlpha;
         ctx.strokeStyle = ctx.fillStyle = this.calculateDamageEffectColor(context, "#ffffff");
+
+        const oldGlobalAlpha = ctx.globalAlpha;
         ctx.globalAlpha = oldGlobalAlpha * 0.6;
 
         ctx.lineCap = "round";
@@ -38,6 +39,7 @@ export default class MobRendererJellyfish extends AbstractMobRenderer {
             ctx.save();
 
             ctx.rotate(tentacleAngle);
+            
             ctx.translate(17.5, 0);
             ctx.moveTo(0, 0);
             ctx.rotate(tentacleMoveWave * 0.5);

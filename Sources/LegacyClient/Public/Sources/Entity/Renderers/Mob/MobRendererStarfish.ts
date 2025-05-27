@@ -3,20 +3,21 @@ import type Mob from "../../Mob";
 import type { RenderingContext } from "../RendererRenderingContext";
 import AbstractMobRenderer from "./MobRenderer";
 
-const TAU = Math.PI * 2;
+const TAU = 2 * Math.PI;
 
 export default class MobRendererStarfish extends AbstractMobRenderer {
-    public static readonly STARFISH_LEG_AMOUNT = 5;
+    public static readonly STARFISH_LEG_AMOUNT = 5 as const;
 
-    public static readonly UNDESTROYED_LEG_DISTANCE = 175;
-    public static readonly DESTROYED_LEG_DISTANCE = 100;
+    public static readonly UNDESTROYED_LEG_DISTANCE = 175 as const;
+    public static readonly DESTROYED_LEG_DISTANCE = 100 as const;
 
-    private static readonly DISTANCE_LERP_FACTOR = 0.2;
+    private static readonly DISTANCE_LERP_FACTOR = 0.2 as const;
 
-    private static readonly SPOTS_PER_LEG = 3;
+    private static readonly SPOTS_PER_LEG = 3 as const;
 
     override render(context: RenderingContext<Mob>): void {
         const { ctx, entity, isSpecimen } = context;
+
         const { STARFISH_LEG_AMOUNT, UNDESTROYED_LEG_DISTANCE, DESTROYED_LEG_DISTANCE, DISTANCE_LERP_FACTOR, SPOTS_PER_LEG } = MobRendererStarfish;
 
         ctx.rotate(entity.angle);
@@ -32,12 +33,13 @@ export default class MobRendererStarfish extends AbstractMobRenderer {
         ctx.rotate(rotation);
 
         const legDistance = entity.legD;
+        
         const remainingLegAmount =
             isSpecimen
                 ? STARFISH_LEG_AMOUNT
                 : entity.isDead
                     ? 0
-                    : Math.floor(
+                    : Math.round(
                         // Use pure health value (0 ~ 1)
                         entity.nHealth *
                         STARFISH_LEG_AMOUNT,
@@ -49,12 +51,14 @@ export default class MobRendererStarfish extends AbstractMobRenderer {
             const midAngle = (i + 0.5) / STARFISH_LEG_AMOUNT * TAU;
             const endAngle = (i + 1) / STARFISH_LEG_AMOUNT * TAU;
 
-            legDistance[i] = legDistance[i] + (
+            const oldDistance = legDistance[i];
+
+            legDistance[i] = oldDistance + (
                 (
                     i < remainingLegAmount
                         ? UNDESTROYED_LEG_DISTANCE
                         : DESTROYED_LEG_DISTANCE
-                ) - legDistance[i]
+                ) - oldDistance
             ) * DISTANCE_LERP_FACTOR;
 
             const distance = legDistance[i];
@@ -70,8 +74,6 @@ export default class MobRendererStarfish extends AbstractMobRenderer {
                 Math.sin(endAngle) * distance,
             );
         }
-
-        ctx.closePath();
 
         ctx.lineCap = ctx.lineJoin = "round";
 
@@ -91,7 +93,7 @@ export default class MobRendererStarfish extends AbstractMobRenderer {
             const legRotation = i / STARFISH_LEG_AMOUNT * TAU;
 
             const numSpots =
-                lengthRatio === 1
+                lengthRatio > 0.9999
                     ? SPOTS_PER_LEG
                     : 1;
 

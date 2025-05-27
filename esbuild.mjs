@@ -14,7 +14,7 @@ async function build(isWatch) {
     });
 
     const ctx = await esbuild.context({
-        entryPoints: ["./Sources/LegacyClient/Main.ts"],
+        entryPoints: ["./Sources/LegacyClient/Application.ts"],
         bundle: true,
         minify: true,
         target: "es2022",

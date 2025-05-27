@@ -25,9 +25,9 @@ export function generateRandomWaveRoomCode(): WaveRoomCode {
 
 export function isWaveRoomCode(maybeCode: string): maybeCode is WaveRoomCode {
     if (maybeCode.length !== 10) return false;
-    if (maybeCode[3] !== '-') return false;
+    if (maybeCode[3] !== "-") return false;
 
-    const [prefix, suffix] = maybeCode.split('-');
+    const [prefix, suffix] = maybeCode.split("-");
 
     // Check if prefix is valid hex (3 characters)
     if (prefix.length !== 3 || !/^[0-9a-f]{3}$/.test(prefix)) return false;

@@ -1,18 +1,17 @@
-interface EasingFunction {
-    (elapsed: number, start: number, change: number, duration: number, overshoot?: number): number;
-}
+type EasingFunction =
+    (elapsed: number, start: number, change: number, duration: number, overshoot?: number) => number;
 
 interface EasingFunctions {
     [key: string]: EasingFunction;
 }
 
-const TAU = Math.PI * 2;
+const TAU = 2 * Math.PI;
 const OVERSHOOT = 3 / 40 * (3 + Math.cbrt(1187 - Math.sqrt(110) * 80) + Math.cbrt(1187 + Math.sqrt(110) * 80));
 
 class Easing {
     private static bounceOut(t: number, b: number, c: number, d: number): number {
         const ratio = t / d;
-        
+
         if (ratio < 1 / 2.75) {
             return c * (7.5625 * ratio * ratio) + b;
         }
@@ -36,13 +35,16 @@ class Easing {
 
     private static elastic(elapsed: number, start: number, change: number, duration: number, amplitude: number, period: number): number {
         if (elapsed === 0) return start;
+
         if ((elapsed /= duration) === 1) return start + change;
 
-        period = period || duration * 0.3;
+        period ||= duration * 0.3;
+
         let s = period / TAU * Math.asin(change / amplitude);
 
         if (amplitude < Math.abs(change)) {
             amplitude = change;
+
             s = period / 4;
         }
 
@@ -50,7 +52,7 @@ class Easing {
             Math.sin((elapsed * duration - s) * TAU / period) + change + start;
     }
 
-    public static readonly functions: EasingFunctions = {
+    public static readonly FUNCTIONS: EasingFunctions = {
         linear: (t, b, c, d) => c * (t / d) + b,
 
         // Quadratic
@@ -127,9 +129,9 @@ class Easing {
         easeInBounce: (t, b, c, d) => c - Easing.bounceOut(d - t, 0, c, d) + b,
         easeOutBounce: Easing.bounceOut,
         easeInOutBounce: (t, b, c, d) => {
-            if (t < d / 2) return Easing.functions.easeInBounce(t * 2, 0, c, d) * 0.5 + b;
+            if (t < d / 2) return Easing.FUNCTIONS.easeInBounce(t * 2, 0, c, d) * 0.5 + b;
 
-            return Easing.functions.easeOutBounce(t * 2 - d, 0, c, d) * 0.5 + c * 0.5 + b;
+            return Easing.FUNCTIONS.easeOutBounce(t * 2 - d, 0, c, d) * 0.5 + c * 0.5 + b;
         },
 
         // Elastic
@@ -139,12 +141,12 @@ class Easing {
         },
         easeInOutElastic: (t, b, c, d) => {
             if (t < d / 2) {
-                return Easing.functions.easeInElastic(t * 2, b, c / 2, d);
+                return Easing.FUNCTIONS.easeInElastic(t * 2, b, c / 2, d);
             }
 
-            return Easing.functions.easeOutElastic(t * 2 - d, b + c / 2, c / 2, d);
+            return Easing.FUNCTIONS.easeOutElastic(t * 2 - d, b + c / 2, c / 2, d);
         },
     } as const satisfies EasingFunctions;
 }
 
-export default Easing.functions;
+export default Easing.FUNCTIONS;

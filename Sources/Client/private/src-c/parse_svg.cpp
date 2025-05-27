@@ -153,7 +153,10 @@ void loadSvg(xml_element_t xml_root_element)
   document_traversal_t::load_document(xml_root_element, context);
 }
 
-extern "C" void parseSvg(const char* svgText) {
+extern "C" void parseSvg(const char* svgText, CanvasContext ctx) {
+  std::ios_base::Init init;
+  std::cout << ctx.id << std::endl;
+
   rapidxml_ns::xml_document<> doc;
   doc.parse<0>(const_cast<char*>(svgText));
   if (rapidxml_ns::xml_node<> * svg_element = doc.first_node("svg"))

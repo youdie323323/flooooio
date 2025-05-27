@@ -1,29 +1,54 @@
 const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d");
-const points = [
-    { x: 50, y: 50 },
-    { x: 180, y: 100 },
-    { x: 75, y: 120 },
-    { x: 40, y: 40 },
-];
 
-// move to the first point
-ctx.moveTo(points[0].x, points[0].y);
+ctx.scale(5, 5);
+ctx.translate(100, 100);
 
-for (var i = 1; i < points.length - 2; i++) {
-    const xc = (points[i].x + points[i + 1].x) / 2;
-    const yc = (points[i].y + points[i + 1].y) / 2;
+ctx.lineJoin = "round";
 
-    ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
-}
+ctx.save();
 
-console.log(points, points.length - 2, i);
+ctx.lineCap = "round";
+ctx.strokeStyle = "#292929";
+ctx.lineWidth = 4;
 
-// curve through the last two points
-ctx.quadraticCurveTo(
-    points[i].x,
-    points[i].y,
-    points[i + 1].x,
-    points[i + 1].y,
-);
+ctx.save();
+
+ctx.beginPath();
+
+ctx.translate(-35, -32);
+ctx.rotate(-1.6561946489531953);
+
+ctx.moveTo(0, -7);
+ctx.quadraticCurveTo(11, -10, 22, -5);
 ctx.stroke();
+
+ctx.beginPath();
+
+ctx.moveTo(0, 7);
+ctx.quadraticCurveTo(11, 10, 22, 5);
+
+ctx.stroke();
+
+ctx.restore();
+
+ctx.save();
+
+ctx.beginPath();
+
+ctx.rotate(-2.356194599949769);
+
+ctx.moveTo(50, 0);
+ctx.quadraticCurveTo(0, -30, -50, 0);
+
+ctx.lineWidth = 25;
+ctx.strokeStyle = "#292929";
+ctx.stroke();
+
+ctx.lineWidth = 15;
+ctx.strokeStyle = "#333333";
+ctx.stroke();
+
+ctx.restore();
+
+ctx.restore();

@@ -121,6 +121,7 @@ export default class BinaryReader {
 
     public readVarInt64(): bigint {
         let value = this.readVarUInt64();
+        
         if (0x1n & value) {
             value = -(value + 0x1n) / 0x2n;
         } else {

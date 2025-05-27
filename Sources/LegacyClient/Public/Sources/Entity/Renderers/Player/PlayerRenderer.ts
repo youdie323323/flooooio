@@ -3,26 +3,28 @@ import type Player from "../../Player";
 import type { RenderingContext } from "../RendererRenderingContext";
 
 export default class AbstractPlayerRenderer extends Renderer<Player> {
+    private static readonly DEAD_EYE_LENGTH = 4 as const;
+
     override render(context: RenderingContext<Player>): void {
         // Non-recursive renderer
         // super.render(context);
     }
 
     protected drawDeadEyes({ ctx }: RenderingContext<Player>, eyeX: number, eyeY: number) {
-        const OFFSET = 4;
+        const { DEAD_EYE_LENGTH } = AbstractPlayerRenderer;
+
+        ctx.lineCap = "round";
 
         ctx.lineWidth = 3;
-        ctx.lineCap = "round";
         ctx.strokeStyle = "#000000";
 
         ctx.beginPath();
 
-        ctx.moveTo(eyeX - OFFSET, eyeY - OFFSET);
-        ctx.lineTo(eyeX + OFFSET, eyeY + OFFSET);
-        ctx.moveTo(eyeX + OFFSET, eyeY - OFFSET);
-        ctx.lineTo(eyeX - OFFSET, eyeY + OFFSET);
-        ctx.stroke();
+        ctx.moveTo(eyeX - DEAD_EYE_LENGTH, eyeY - DEAD_EYE_LENGTH);
+        ctx.lineTo(eyeX + DEAD_EYE_LENGTH, eyeY + DEAD_EYE_LENGTH);
+        ctx.moveTo(eyeX + DEAD_EYE_LENGTH, eyeY - DEAD_EYE_LENGTH);
+        ctx.lineTo(eyeX - DEAD_EYE_LENGTH, eyeY + DEAD_EYE_LENGTH);
 
-        ctx.closePath();
+        ctx.stroke();
     }
 }

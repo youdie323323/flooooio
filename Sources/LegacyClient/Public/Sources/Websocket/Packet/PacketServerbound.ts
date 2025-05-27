@@ -4,7 +4,7 @@ import BinaryWriter from "../Binary/ReadWriter/Writer/BinaryWriter";
 import type ClientWebsocket from "../ClientWebsocket";
 import { Serverbound } from "./PacketOpcode";
 
-const TAU = Math.PI * 2;
+const TAU = 2 * Math.PI;
 
 function getNormalizedAngle(angle: number): number {
     angle %= TAU;

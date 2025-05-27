@@ -16,7 +16,7 @@ export const levelPerXp = (xp: number) => {
 };
 
 type Tuple<T, N extends number, R extends T[] = []> =
-    R['length'] extends N ? R : Tuple<T, N, [...R, T]>;
+    R["length"] extends N ? R : Tuple<T, N, [...R, T]>;
 
 // Lazy constant for computeLootChance
 
@@ -50,8 +50,10 @@ export const rarityTable = (() => {
     const totalWeight = RELATIVE_RARITY.reduce((a, b) => a + b, 0);
 
     let acc = 0;
+
     for (let i = 0; i < table.length; i++) {
         table[i] = acc / totalWeight;
+        
         acc += RELATIVE_RARITY[i];
     }
 

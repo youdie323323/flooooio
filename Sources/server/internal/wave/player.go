@@ -263,6 +263,7 @@ func (p *Player) Dispose() {
 	for i := range p.OrbitPetalSpins {
 		p.OrbitPetalSpins[i] = nil
 	}
+	
 	p.OrbitPetalSpins = nil
 }
 

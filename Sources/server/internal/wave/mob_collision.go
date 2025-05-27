@@ -14,7 +14,7 @@ const (
 
 const maxMobToPlayerVelocity = 30.0
 
-// Clamp returns f clamped to [low, high]
+// Clamp returns f clamped to [low, high].
 func Clamp[T cmp.Ordered](f, low, high T) T {
 	return min(max(f, low), high)
 }
@@ -28,7 +28,12 @@ func (m *Mob) MobCollision(wp *WavePool) {
 
 	collision0 := profile0.Collision
 
-	mMaxHealth := m.GetMaxHealth()
+	mToDamage := m.GetMobToDamage(wp)
+
+	// Hmm health should only used mMobToDamage?
+	// NOTE: yea because mMaxHealth is used as
+	// mMobToDamage.Health -= somedamage / mMaxHealth
+	mMaxHealth := mToDamage.GetMaxHealth()
 	mDamage := profile0.StatFromRarity(m.Rarity).GetDamage()
 
 	mTraversed := TraverseMobSegments(wp, m)
@@ -104,12 +109,13 @@ func (m *Mob) MobCollision(wp *WavePool) {
 						nearEntityMaxHealth := nearEntity.GetMaxHealth()
 						nearEntityDamage := profile1.StatFromRarity(nearEntity.Rarity).GetDamage()
 
-						m.Health -= nearEntityDamage / mMaxHealth
+						mToDamage.Health -= nearEntityDamage / mMaxHealth
 						nearEntity.Health -= mDamage / nearEntityMaxHealth
 
 						{ // Set LastAttackedEntity
 							// TODO: this algorithm might collide like: mob1 -> mob2, mob2 -> mob1
 							// So maybe its possible to do multiple hit once one frame
+							// To avoid this we need to return sufficient amount collision in ComputeCirclePush
 
 							if nearEntity.PetMaster != nil {
 								mTraversed.LastAttackedEntity = nearEntity.PetMaster
@@ -154,13 +160,13 @@ func (m *Mob) MobCollision(wp *WavePool) {
 						nearEntityMaxHealth := nearEntity.GetMaxHealth()
 						nearEntityDamage := nearEntityStat.GetDamage()
 
-						m.Health -= nearEntityDamage / mMaxHealth
+						mToDamage.Health -= nearEntityDamage / mMaxHealth
 						nearEntity.Health -= mDamage / nearEntityMaxHealth
 
 						// Petal specials
 						switch nearEntity.Type {
 						case native.PetalTypeFang:
-							doFangLifesteal(nearEntity, nearEntityStat, nearEntityDamage)
+							fangDoLifesteal(nearEntity, nearEntityStat, nearEntityDamage)
 
 						case native.PetalTypeLightning:
 							wp.PetalDoLightningBounce(nearEntity, m)
@@ -199,13 +205,13 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					m.X -= px
 					m.Y -= py
 
-					nearEntity.Velocity[0] += Clamp(px * 2, -maxMobToPlayerVelocity, maxMobToPlayerVelocity)
-					nearEntity.Velocity[1] += Clamp(py * 2, -maxMobToPlayerVelocity, maxMobToPlayerVelocity)
+					nearEntity.Velocity[0] += Clamp(px*2, -maxMobToPlayerVelocity, maxMobToPlayerVelocity)
+					nearEntity.Velocity[1] += Clamp(py*2, -maxMobToPlayerVelocity, maxMobToPlayerVelocity)
 
 					{ // Damage
 						nearEntityMaxHealth := nearEntity.GetMaxHealth()
 
-						m.Health -= nearEntity.BodyDamage / mMaxHealth
+						mToDamage.Health -= nearEntity.BodyDamage / mMaxHealth
 						nearEntity.Health -= mDamage / nearEntityMaxHealth
 
 						{ // Set LastAttackedEntity
@@ -220,7 +226,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 	})
 }
 
-func doFangLifesteal(fang *Petal, stat native.PetalStat, damage float32) {
+func fangDoLifesteal(fang *Petal, stat native.PetalStat, damage float32) {
 	if fang.Master == nil {
 		return
 	}

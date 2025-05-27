@@ -15,11 +15,11 @@ import OCEAN_0 from "./Tiles/ocean_c_0.svg";
 import OCEAN_1 from "./Tiles/ocean_c_1.svg";
 import OCEAN_2 from "./Tiles/ocean_c_2.svg";
 import OCEAN_3 from "./Tiles/ocean_c_3.svg";
-import { uiScaleFactor } from "../../../UI/UI";
-import { antennaScaleFactor } from "../../../../../Main";
-import { Biome } from "../../../Native/Biome";
+import { antennaScaleFactor } from "../../../../../../Application";
+import { Biome } from "../../../../Native/Biome";
+import { uiScaleFactor } from "../../../UI";
 
-const TAU = Math.PI * 2;
+const TAU = 2 * Math.PI;
 
 // Retrived from florr map viewer (florr-io-map-viewer.glitch.me)
 export const BIOME_SVG_TILESET = {
@@ -147,7 +147,7 @@ export default class TileRenderer {
         ctx.save();
 
         ctx.lineWidth = (width + height) * 5 * antennaScaleFactor;
-        ctx.strokeStyle = 'black';
+        ctx.strokeStyle = "black";
         ctx.globalAlpha = 0.14;
 
         ctx.beginPath();
@@ -175,7 +175,7 @@ export default class TileRenderer {
         const ctx = canvas.getContext("2d");
         const { width, height } = this.getScaledDimensions(canvas);
 
-        const gridSize = radius / 100;
+        const gridSize = radius / 80;
         const scaledTilesetSize = tileSize * antennaScaleFactor;
 
         const centerX = (radius - playerX) * antennaScaleFactor + width / 2;

@@ -132,9 +132,11 @@ export default class BinaryWriter {
     public writeVarUInt64(value: bigint): this {
         do {
             let byte = 0x7fn & value;
+            
             if (0x0n < (value >>= 0x7n)) {
                 byte |= 0x80n;
             }
+
             this.writeUInt8(Number(byte));
         } while (0x0n < value);
 
@@ -143,9 +145,11 @@ export default class BinaryWriter {
 
     public writeVarInt64(value: bigint): this {
         let encodedValue = 0x2n * value;
+
         if (value < 0) {
             encodedValue = -(0x2n * value + 0x1n);
         }
+
         this.writeVarUInt64(encodedValue);
 
         return this;

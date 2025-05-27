@@ -3,7 +3,7 @@ import { uiScaleFactor } from "./UI";
 import type { UIType } from "./UIContext";
 import UITitle from "./Title/UITitle";
 
-const TAU = Math.PI * 2;
+const TAU = 2 * Math.PI;
 
 export interface TransitionConfig {
     initialRadius: (canvas: HTMLCanvasElement) => number;

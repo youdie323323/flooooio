@@ -252,7 +252,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 		distanceToTarget = math32.Hypot(dx, dy)
 	}
 
-	var isStop bool = false
+	isStop := false
 
 	judgementFunc, ok := cautionBehaviorStopJudger[m.Type]
 	if ok {
@@ -355,7 +355,9 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 		m.TargetEntity = nil
 	}
 
-	switch native.EachMobBehaviorDefinition[m.Type] {
+	behavior := native.EachMobBehaviorDefinition[m.Type]
+
+	switch behavior {
 	case native.VoidBehavior:
 		return
 
@@ -363,7 +365,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 		{
 			m.Angle = math32.Mod(m.Angle+generateValleyDistribution(-25, 25), 255)
 
-			m.Magnitude = SpeedOf(m.Type) * 255 * (1. + (15.-1.)*math32.Pow(rand.Float32(), 2))
+			m.Magnitude = SpeedOf(m.Type) * 255 * (1. + (30.-1.)*rand.Float32())
 		}
 
 	case native.PassiveBehavior:
@@ -374,14 +376,16 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 	case native.AggressiveBehavior:
 		{
 			var targetEntity collision.Node
+
 			if m.TargetEntity != nil {
 				targetEntity = m.TargetEntity
+			} else if m.LastAttackedEntity != nil {
+				targetEntity = m.LastAttackedEntity
 			} else {
 				targetEntity = FindNearestEntity(m, m.GetTrackingTargets(wp))
-			}
-
-			if targetEntity == nil {
-				return
+				if targetEntity == nil {
+					return
+				}
 			}
 
 			dx := targetEntity.GetX() - m.X
@@ -406,14 +410,16 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 	case native.CautionBehavior:
 		{
 			var targetEntity collision.Node
+
 			if m.TargetEntity != nil {
 				targetEntity = m.TargetEntity
+			} else if m.LastAttackedEntity != nil {
+				targetEntity = m.LastAttackedEntity
 			} else {
 				targetEntity = FindNearestEntity(m, m.GetTrackingTargets(wp))
-			}
-
-			if targetEntity == nil {
-				return
+				if targetEntity == nil {
+					return
+				}
 			}
 
 			dx := targetEntity.GetX() - m.X

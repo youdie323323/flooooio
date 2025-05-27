@@ -3,7 +3,7 @@ import type Mob from "../../Mob";
 import type { RenderingContext } from "../RendererRenderingContext";
 import AbstractMobRenderer from "./MobRenderer";
 
-const TAU = Math.PI * 2;
+const TAU = 2 * Math.PI;
 
 function createBeetleBodyPath() {
     const path = new Path2D();
@@ -21,6 +21,8 @@ function createBeetleBodyPath() {
 const beetleBodyPath = createBeetleBodyPath();
 
 export default class MobRendererBeetle extends AbstractMobRenderer {
+    private static readonly ARC_POINTS = [[-17, -12], [17, -12], [0, -15]] as const satisfies Array<[number, number]>;
+
     override render(context: RenderingContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);
@@ -47,11 +49,13 @@ export default class MobRendererBeetle extends AbstractMobRenderer {
 
                 ctx.translate(30, dir * 10);
                 ctx.rotate(beakAngle * dir);
+
                 ctx.beginPath();
+
                 ctx.moveTo(0, dir * 7);
                 ctx.quadraticCurveTo(25, dir * 16, 40, 0);
                 ctx.quadraticCurveTo(20, dir * 6, 0, 0);
-                ctx.closePath();
+
                 ctx.fill();
                 ctx.stroke();
 
@@ -84,25 +88,18 @@ export default class MobRendererBeetle extends AbstractMobRenderer {
             ctx.moveTo(-21, 0);
             ctx.quadraticCurveTo(0, -3, 21, 0);
 
-            ctx.lineCap = "round";
-
             ctx.stroke();
-
-            const arcPoints = [[-17, -12], [17, -12], [0, -15]];
 
             ctx.beginPath();
 
-            for (let i = 0; i < 2; i++) {
-                const relative = i === 1 ? 1 : -1;
-                for (let j = 0; j < arcPoints.length; j++) {
-                    let [x, y] = arcPoints[j];
-                    y *= relative;
+            for (let dir = -1; dir <= 1; dir += 2) {
+                MobRendererBeetle.ARC_POINTS.forEach(([x, y]) => {
+                    y *= dir;
+
                     ctx.moveTo(x, y);
                     ctx.arc(x, y, 5, 0, TAU);
-                }
+                });
             }
-
-            ctx.fill();
 
             ctx.fill();
         }

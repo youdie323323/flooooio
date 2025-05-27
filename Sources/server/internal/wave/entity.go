@@ -147,6 +147,8 @@ func (e *Entity) GetAngle() float32 {
 func IsDeadNode(wp *WavePool, n collision.Node) bool {
 	switch e := n.(type) {
 	case *Petal:
+		return e.WasEliminated(wp)
+		
 	case *Mob:
 		return e.WasEliminated(wp)
 

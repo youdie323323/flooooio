@@ -23,7 +23,7 @@ export const darkened = memo((color: ColorCode, strength: number): ColorCode => 
     g = Math.floor(g * (1 - strength));
     b = Math.floor(b * (1 - strength));
 
-    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}` satisfies ColorCode;
+    return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}` satisfies ColorCode;
 });
 
 /**
@@ -41,5 +41,5 @@ export const lightened = memo((color: ColorCode, strength: number): ColorCode =>
     g = Math.min(255, Math.floor(g * (1 + strength)));
     b = Math.min(255, Math.floor(b * (1 + strength)));
     
-    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}` satisfies ColorCode;
+    return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}` satisfies ColorCode;
 });

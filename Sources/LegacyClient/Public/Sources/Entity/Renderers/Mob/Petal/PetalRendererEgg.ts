@@ -2,7 +2,7 @@ import type Mob from "../../../Mob";
 import type { RenderingContext } from "../../RendererRenderingContext";
 import AbstractPetalRenderer from "./PetalRenderer";
 
-const TAU = Math.PI * 2;
+const TAU = 2 * Math.PI;
 
 export default class PetalRendererEgg extends AbstractPetalRenderer {
     override render(context: RenderingContext<Mob>): void {
@@ -20,10 +20,12 @@ export default class PetalRendererEgg extends AbstractPetalRenderer {
         ctx.lineWidth = 6;
 
         ctx.beginPath();
+        
         ctx.ellipse(0, 0, 30, 40, 0, 0, TAU);
+
         ctx.fillStyle = this.calculateDamageEffectColor(context, "#fff0b8");
-        ctx.fill();
         ctx.strokeStyle = this.calculateDamageEffectColor(context, "#cfc295");
+        ctx.fill();
         ctx.stroke();
     }
 }

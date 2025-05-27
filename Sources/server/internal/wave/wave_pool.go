@@ -155,6 +155,7 @@ func (wp *WavePool) Dispose() {
 
 	if wp.updateTicker != nil {
 		wp.updateTicker.Stop()
+
 		wp.updateTicker = nil
 	}
 
@@ -171,17 +172,17 @@ func (wp *WavePool) Dispose() {
 done:
 
 	wp.playerPool.Range(func(id EntityId, player *Player) bool {
-		player.Dispose()
+		wp.RemovePlayer(id)
 
 		return true
 	})
 	wp.mobPool.Range(func(id EntityId, mob *Mob) bool {
-		mob.Dispose()
+		wp.RemoveMob(id)
 
 		return true
 	})
 	wp.petalPool.Range(func(id EntityId, petal *Petal) bool {
-		petal.Dispose()
+		wp.RemovePetal(id)
 
 		return true
 	})
@@ -473,8 +474,8 @@ func (wp *WavePool) calculateUpdatePacketSize() int {
 			// Boolean flags
 			1)
 
-		wp.mobPool.Range(func(id EntityId, mob *Mob) bool {
-			if mob.ConnectingSegment != nil {
+		wp.mobPool.Range(func(id EntityId, m *Mob) bool {
+			if m.HasConnectingSegment(wp) {
 				size += 4
 			}
 
@@ -558,32 +559,32 @@ func (wp *WavePool) createUpdatePacket() []byte {
 		binary.LittleEndian.PutUint16(buf[at:], uint16(wp.playerPool.Size()))
 		at += 2
 
-		wp.playerPool.Range(func(id EntityId, player *Player) bool {
-			player.Mu.RLock()
+		wp.playerPool.Range(func(id EntityId, p *Player) bool {
+			p.Mu.RLock()
 
 			binary.LittleEndian.PutUint32(buf[at:], id)
 			at += 4
 
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(player.X))
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p.X))
 			at += 4
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(player.Y))
-			at += 4
-
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(player.Angle))
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p.Y))
 			at += 4
 
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(player.Health))
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p.Angle))
 			at += 4
 
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(player.Size))
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p.Health))
 			at += 4
 
-			buf[at] = byte(player.Mood)
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p.Size))
+			at += 4
+
+			buf[at] = byte(p.Mood)
 			at++
 
 			{ // Write name
-				copy(buf[at:], []byte(player.Name))
-				at += len(player.Name)
+				copy(buf[at:], []byte(p.Name))
+				at += len(p.Name)
 
 				// Write null terminator
 				buf[at] = 0
@@ -593,19 +594,19 @@ func (wp *WavePool) createUpdatePacket() []byte {
 			var bFlags uint8 = 0
 
 			// Player is dead, or not
-			if player.IsDead {
+			if p.IsDead {
 				bFlags |= 1
 			}
 
 			// Player is developer, or not
-			if player.IsDev {
+			if p.IsDev {
 				bFlags |= 2
 			}
 
 			buf[at] = bFlags
 			at++
 
-			player.Mu.RUnlock()
+			p.Mu.RUnlock()
 
 			return true
 		})
@@ -615,54 +616,54 @@ func (wp *WavePool) createUpdatePacket() []byte {
 		binary.LittleEndian.PutUint16(buf[at:], uint16(wp.mobPool.Size()))
 		at += 2
 
-		wp.mobPool.Range(func(id EntityId, mob *Mob) bool {
+		wp.mobPool.Range(func(id EntityId, m *Mob) bool {
 			binary.LittleEndian.PutUint32(buf[at:], id)
 			at += 4
 
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(mob.X))
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(m.X))
 			at += 4
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(mob.Y))
-			at += 4
-
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(mob.Angle))
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(m.Y))
 			at += 4
 
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(mob.Health))
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(m.Angle))
 			at += 4
 
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(mob.Size))
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(m.Health))
 			at += 4
 
-			buf[at] = mob.Type
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(m.Size))
+			at += 4
+
+			buf[at] = m.Type
 			at++
 
-			buf[at] = mob.Rarity
+			buf[at] = m.Rarity
 			at++
 
 			var bFlags uint8 = 0
 
 			// Mob is pet, or not
-			if !mob.IsEnemy() {
+			if !m.IsEnemy() {
 				bFlags |= 1
 			}
 
 			// Mob is first segment, or not
-			if mob.IsFirstSegment {
+			if m.IsFirstSegment {
 				bFlags |= 2
 			}
 
-			writeConnectingSegmentId := mob.ConnectingSegment != nil
+			hasConnectingSegment := m.HasConnectingSegment(wp)
 
 			// Mob has connecting segment, or not
-			if writeConnectingSegmentId {
+			if hasConnectingSegment {
 				bFlags |= 4
 			}
 
 			buf[at] = bFlags
 			at++
 
-			if writeConnectingSegmentId {
-				binary.LittleEndian.PutUint32(buf[at:], mob.ConnectingSegment.GetID())
+			if hasConnectingSegment {
+				binary.LittleEndian.PutUint32(buf[at:], m.ConnectingSegment.GetID())
 				at += 4
 			}
 
@@ -674,28 +675,28 @@ func (wp *WavePool) createUpdatePacket() []byte {
 		binary.LittleEndian.PutUint16(buf[at:], uint16(wp.petalPool.Size()))
 		at += 2
 
-		wp.petalPool.Range(func(id EntityId, petal *Petal) bool {
+		wp.petalPool.Range(func(id EntityId, p *Petal) bool {
 			binary.LittleEndian.PutUint32(buf[at:], id)
 			at += 4
 
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(petal.X))
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p.X))
 			at += 4
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(petal.Y))
-			at += 4
-
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(petal.Angle))
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p.Y))
 			at += 4
 
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(petal.Health))
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p.Angle))
 			at += 4
 
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(petal.Size))
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p.Health))
 			at += 4
 
-			buf[at] = petal.Type
+			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p.Size))
+			at += 4
+
+			buf[at] = p.Type
 			at++
 
-			buf[at] = petal.Rarity
+			buf[at] = p.Rarity
 			at++
 
 			return true
@@ -1274,16 +1275,20 @@ Loop:
 
 				bouncedIds = append(bouncedIds, targetEntity.Id)
 
-				mobMaxHealth := targetEntity.GetMaxHealth()
+				{
+					targetEntityToDamage := targetEntity.GetMobToDamage(wp)
 
-				targetEntity.Health -= lightningDamage / mobMaxHealth
+					mobMaxHealth := targetEntityToDamage.GetMaxHealth()
 
-				// Or just dont?
-				targetEntity.LastAttackedEntity = jellyfish
+					targetEntityToDamage.Health -= lightningDamage / mobMaxHealth
+
+					// Or just dont?
+					targetEntityToDamage.LastAttackedEntity = jellyfish
+				}
 
 				bounceTargets := jellyfish.GetLightningBounceTargets(wp, bouncedIds)
 
-				targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, targetEntity.CalculateRadius()*5)
+				targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, targetEntity.CalculateRadius()*2*2)
 				if targetNode == nil {
 					break Loop
 				}
@@ -1341,15 +1346,19 @@ func (wp *WavePool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 
 		bouncedIds = append(bouncedIds, targetMob.Id)
 
-		mobMaxHealth := targetMob.GetMaxHealth()
+		{
+			targetMobToDamage := targetMob.GetMobToDamage(wp)
 
-		targetMob.Health -= lightningDamage / mobMaxHealth
+			targetMobMaxHealth := targetMobToDamage.GetMaxHealth()
 
-		targetMob.LastAttackedEntity = lightning.Master
+			targetMobToDamage.Health -= lightningDamage / targetMobMaxHealth
+
+			targetMobToDamage.LastAttackedEntity = lightning.Master
+		}
 
 		bounceTargets := lightning.GetLightningBounceTargets(wp, bouncedIds)
 
-		targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, targetMob.CalculateRadius()*3)
+		targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, targetMob.CalculateRadius()*2*2)
 		if targetNode == nil {
 			break
 		}
@@ -1466,6 +1475,7 @@ func (wp *WavePool) HandleChatMessage(wPId EntityId, chatMsg string) {
 				wp.UnicastChatReceivPacket(player, err.Error())
 			}
 		}:
+
 		default:
 			wp.UnicastChatReceivPacket(player, "Command queue is full or unavailable")
 		}
@@ -1476,7 +1486,7 @@ func (wp *WavePool) HandleChatMessage(wPId EntityId, chatMsg string) {
 		}
 
 		if os.Getenv("TOGGLE_DEV_SALT") == hex.EncodeToString(hash.Sum(nil)) {
-			player.IsDev = true
+			player.IsDev = !player.IsDev
 
 			// Dont forgot this lol
 			return

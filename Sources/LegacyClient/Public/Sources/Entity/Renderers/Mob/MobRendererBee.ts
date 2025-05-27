@@ -4,7 +4,7 @@ import type Mob from "../../Mob";
 import type { RenderingContext } from "../RendererRenderingContext";
 import AbstractMobRenderer from "./MobRenderer";
 
-const TAU = Math.PI * 2;
+const TAU = 2 * Math.PI;
 
 export default class MobRendererBee extends AbstractMobRenderer {
     override render(context: RenderingContext<Mob>): void {
@@ -27,21 +27,26 @@ export default class MobRendererBee extends AbstractMobRenderer {
         ctx.lineWidth = 5;
 
         { // Stinger
-            ctx.fillStyle = "#333333";
+            ctx.fillStyle = bcolor;
             ctx.strokeStyle = this.calculateDamageEffectColor(context, darkened("#333333", DARKENED_BASE));
 
             ctx.beginPath();
+
             ctx.moveTo(-37, 0);
             ctx.lineTo(-25, -9);
             ctx.lineTo(-25, 9);
+
             ctx.closePath();
+            
             ctx.fill();
             ctx.stroke();
         }
 
         // Body
         ctx.beginPath();
+
         ctx.ellipse(0, 0, 30, 20, 0, 0, TAU);
+        
         ctx.fillStyle = fcolor;
         ctx.fill();
 
@@ -49,6 +54,7 @@ export default class MobRendererBee extends AbstractMobRenderer {
             using _guard = this.guard(ctx);
 
             ctx.clip();
+
             ctx.fillStyle = bcolor;
             ctx.fillRect(10, -20, 10, 40);
             ctx.fillRect(-10, -20, 10, 40);
@@ -57,7 +63,9 @@ export default class MobRendererBee extends AbstractMobRenderer {
 
         // Body outline
         ctx.beginPath();
+
         ctx.ellipse(0, 0, 30, 20, 0, 0, TAU);
+
         ctx.strokeStyle = scolor;
         ctx.stroke();
 

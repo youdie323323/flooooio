@@ -1,5 +1,5 @@
 import { decodeMood } from "../Native/Entity/Player/PlayerMood";
-import { deltaTime } from "../../../Main";
+import { deltaTime } from "../../../Application";
 import Entity from "./Entity";
 
 // @UseRenderer(RendererFlower)

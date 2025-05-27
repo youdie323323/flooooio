@@ -1,8 +1,8 @@
 import type { Biome } from "./Public/Sources/Native/Biome";
+import TileRenderer, { BIOME_SVG_TILESET, BIOME_TILESETS } from "./Public/Sources/UI/Shared/Tile/Tileset/TilesetRenderer";
 import { uiScaleFactor } from "./Public/Sources/UI/UI";
 import UIContext from "./Public/Sources/UI/UIContext";
 import CameraController from "./Public/Sources/Utils/CameraController";
-import TileRenderer, { BIOME_SVG_TILESET, BIOME_TILESETS } from "./Public/Sources/Utils/Tile/Tileset/TilesetRenderer";
 import ClientWebsocket from "./Public/Sources/Websocket/ClientWebsocket";
 
 export let lastTimestamp = Date.now();

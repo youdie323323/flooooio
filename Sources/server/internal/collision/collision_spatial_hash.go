@@ -1,13 +1,14 @@
 package collision
 
 import (
-	"github.com/chewxy/math32"
 	"sync"
+
+	"github.com/chewxy/math32"
 
 	"github.com/puzpuzpuz/xsync/v3"
 )
 
-// Node represents an object with x,y coordinates.
+// Node represents an interface entity.
 type Node interface {
 	GetX() float32
 	GetY() float32

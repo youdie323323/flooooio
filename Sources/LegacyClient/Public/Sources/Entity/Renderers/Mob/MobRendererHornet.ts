@@ -172,9 +172,8 @@ export default class MobRendererHornet extends AbstractMobRenderer {
             for (let dir = -1; dir <= 1; dir += 2) {
                 ctx.save();
 
-                ctx.translate(25, 5 * dir);
-                ctx.rotate(TAU * dir);
-                ctx.scale(1, 1 * dir);
+                ctx.translate(25, dir * 5);
+                ctx.scale(1, dir);
 
                 ctx.fill(antennae, "evenodd");
 

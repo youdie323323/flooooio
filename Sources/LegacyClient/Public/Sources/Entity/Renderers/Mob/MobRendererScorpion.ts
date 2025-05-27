@@ -180,11 +180,13 @@ export default class MobRendererScorpion extends AbstractMobRenderer {
 
             { // Body
                 ctx.beginPath();
+
                 ctx.moveTo(0, -30);
                 ctx.quadraticCurveTo(40, -20, 40, 0);
                 ctx.quadraticCurveTo(40, 20, 0, 30);
                 ctx.quadraticCurveTo(-40, 35, -40, 0);
                 ctx.quadraticCurveTo(-40, -35, 0, -30);
+                
                 ctx.closePath();
 
                 ctx.fillStyle = this.calculateDamageEffectColor(context, "#C69A2D");

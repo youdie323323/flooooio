@@ -39,25 +39,25 @@ type OverloadUnion<Overload extends AnyFunction> = Exclude<
 type OverloadParameters<T extends AnyFunction> = Parameters<OverloadUnion<T>>;
 type OverloadReturnType<T extends AnyFunction> = ReturnType<OverloadUnion<T>>;
 
-export type GetContextMethodParameters<T extends MethodKeys<CanvasRenderingContext2D>> = OverloadParameters<CanvasRenderingContext2D[T]>;
+type CallableOverloadMethod<T extends AnyFunction> = (...args: OverloadParameters<T>) => OverloadReturnType<T>;
 
-export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingContext2D {
+type GetContextMethodParameters<T extends MethodKeys<CanvasRenderingContext2D>> = OverloadParameters<CanvasRenderingContext2D[T]>;
+
+export default class InterceptingCanvasRenderingContext2D implements CanvasRenderingContext2D {
     private pseudoCode: Array<string> = new Array();
 
     constructor(private context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D) { }
 
-    private toCallableContextOverloadMethod<T extends AnyFunction>(m: T): (...args: OverloadParameters<T>) => OverloadReturnType<T> {
-        return m.bind(this.context);
+    private toCallableContextOverloadMethod<T extends AnyFunction>(method: T): CallableOverloadMethod<T> {
+        return method.bind(this.context);
     }
 
     private toProcessedArguments<
         T extends MethodKeys<CanvasRenderingContext2D>,
         U extends GetContextMethodParameters<T> = GetContextMethodParameters<T>,
     >(methodName: T, args: U): U {
-        type Arg = GetContextMethodParameters<T>[number];
-
-        const formattedArgs = args.map((arg: Arg) => {
-            if (arg instanceof Path2D && window.pathReferences.has(arg)) {
+        const formattedArgs = args.map((arg: any) => {
+            if (window.pathReferences.has(arg)) {
                 return `(function(){
                             const path = new Path2D();
 
@@ -68,14 +68,13 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
             }
 
             return JSON.stringify(arg);
-        },
-        ).join(", ");
+        }).join(", ");
 
         this.pseudoCode.push(`ctx.${methodName}(${formattedArgs});`);
 
-        return args.map((arg: Arg) => {
+        return args.map((arg: any) => {
             // Arg is proxied path2d, proceed to get original instance
-            if (arg instanceof Path2D && window.pathReferences.has(arg)) {
+            if (window.pathReferences.has(arg)) {
                 return window.pathReferences.get(arg).originalPath;
             }
 
@@ -83,8 +82,8 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
         }) as U;
     }
 
-    private logSet(prop: string, value: PropertyValues) {
-        this.pseudoCode.push(`ctx.${prop} = ${JSON.stringify(value)};`);
+    private pushSetProperty(property: string, value: PropertyValues) {
+        this.pseudoCode.push(`ctx.${property} = ${JSON.stringify(value)};`);
     }
 
     public generatePseudoCode(): string {
@@ -92,7 +91,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set fontKerning(value) {
-        this.logSet("fontKerning", value);
+        this.pushSetProperty("fontKerning", value);
 
         this.context.fontKerning = value;
     }
@@ -102,7 +101,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set fontStretch(value) {
-        this.logSet("fontStretch", value);
+        this.pushSetProperty("fontStretch", value);
 
         this.context.fontStretch = value;
     }
@@ -112,7 +111,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set fontVariantCaps(value) {
-        this.logSet("fontVariantCaps", value);
+        this.pushSetProperty("fontVariantCaps", value);
 
         this.context.fontVariantCaps = value;
     }
@@ -122,7 +121,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set letterSpacing(value) {
-        this.logSet("letterSpacing", value);
+        this.pushSetProperty("letterSpacing", value);
 
         this.context.letterSpacing = value;
     }
@@ -132,7 +131,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set textRendering(value) {
-        this.logSet("textRendering", value);
+        this.pushSetProperty("textRendering", value);
 
         this.context.textRendering = value;
     }
@@ -142,7 +141,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set wordSpacing(value) {
-        this.logSet("wordSpacing", value);
+        this.pushSetProperty("wordSpacing", value);
 
         this.context.wordSpacing = value;
     }
@@ -156,7 +155,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set direction(value) {
-        this.logSet("direction", value);
+        this.pushSetProperty("direction", value);
 
         this.context.direction = value;
     }
@@ -166,7 +165,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set fillStyle(value) {
-        this.logSet("fillStyle", value);
+        this.pushSetProperty("fillStyle", value);
 
         this.context.fillStyle = value;
     }
@@ -176,7 +175,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set filter(value) {
-        this.logSet("filter", value);
+        this.pushSetProperty("filter", value);
 
         this.context.filter = value;
     }
@@ -186,7 +185,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set font(value) {
-        this.logSet("font", value);
+        this.pushSetProperty("font", value);
 
         this.context.font = value;
     }
@@ -196,7 +195,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set globalAlpha(value) {
-        this.logSet("globalAlpha", value);
+        this.pushSetProperty("globalAlpha", value);
 
         this.context.globalAlpha = value;
     }
@@ -206,7 +205,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set globalCompositeOperation(value) {
-        this.logSet("globalCompositeOperation", value);
+        this.pushSetProperty("globalCompositeOperation", value);
 
         this.context.globalCompositeOperation = value;
     }
@@ -216,7 +215,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set imageSmoothingEnabled(value) {
-        this.logSet("imageSmoothingEnabled", value);
+        this.pushSetProperty("imageSmoothingEnabled", value);
 
         this.context.imageSmoothingEnabled = value;
     }
@@ -226,7 +225,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set imageSmoothingQuality(value) {
-        this.logSet("imageSmoothingQuality", value);
+        this.pushSetProperty("imageSmoothingQuality", value);
 
         this.context.imageSmoothingQuality = value;
     }
@@ -236,7 +235,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set lineCap(value) {
-        this.logSet("lineCap", value);
+        this.pushSetProperty("lineCap", value);
 
         this.context.lineCap = value;
     }
@@ -246,7 +245,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set lineDashOffset(value) {
-        this.logSet("lineDashOffset", value);
+        this.pushSetProperty("lineDashOffset", value);
 
         this.context.lineDashOffset = value;
     }
@@ -256,7 +255,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set lineJoin(value) {
-        this.logSet("lineJoin", value);
+        this.pushSetProperty("lineJoin", value);
 
         this.context.lineJoin = value;
     }
@@ -266,7 +265,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set lineWidth(value) {
-        this.logSet("lineWidth", value);
+        this.pushSetProperty("lineWidth", value);
 
         this.context.lineWidth = value;
     }
@@ -276,7 +275,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set miterLimit(value) {
-        this.logSet("miterLimit", value);
+        this.pushSetProperty("miterLimit", value);
 
         this.context.miterLimit = value;
     }
@@ -286,7 +285,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set shadowBlur(value) {
-        this.logSet("shadowBlur", value);
+        this.pushSetProperty("shadowBlur", value);
 
         this.context.shadowBlur = value;
     }
@@ -296,7 +295,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set shadowColor(value) {
-        this.logSet("shadowColor", value);
+        this.pushSetProperty("shadowColor", value);
 
         this.context.shadowColor = value;
     }
@@ -306,7 +305,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set shadowOffsetX(value) {
-        this.logSet("shadowOffsetX", value);
+        this.pushSetProperty("shadowOffsetX", value);
 
         this.context.shadowOffsetX = value;
     }
@@ -316,7 +315,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set shadowOffsetY(value) {
-        this.logSet("shadowOffsetY", value);
+        this.pushSetProperty("shadowOffsetY", value);
 
         this.context.shadowOffsetY = value;
     }
@@ -326,7 +325,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set strokeStyle(value) {
-        this.logSet("strokeStyle", value);
+        this.pushSetProperty("strokeStyle", value);
 
         this.context.strokeStyle = value;
     }
@@ -336,7 +335,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set textAlign(value) {
-        this.logSet("textAlign", value);
+        this.pushSetProperty("textAlign", value);
 
         this.context.textAlign = value;
     }
@@ -346,7 +345,7 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public set textBaseline(value) {
-        this.logSet("textBaseline", value);
+        this.pushSetProperty("textBaseline", value);
 
         this.context.textBaseline = value;
     }
@@ -356,8 +355,9 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public getContextAttributes(...args: GetContextMethodParameters<"getContextAttributes">) {
-        // apwuifhwa98h!J!UIPHGFUGFHa moment
-        return (this.context as CanvasRenderingContext2D).getContextAttributes(...this.toProcessedArguments("getContextAttributes", args));
+        return (
+            this.context as CanvasRenderingContext2D
+        ).getContextAttributes(...this.toProcessedArguments("getContextAttributes", args));
     }
 
     public createConicGradient(...args: GetContextMethodParameters<"createConicGradient">) {
@@ -425,7 +425,6 @@ export default class ProxiedCanvasRenderingContext2D implements CanvasRenderingC
     }
 
     public drawFocusIfNeeded(...args: GetContextMethodParameters<"drawFocusIfNeeded">) {
-        // apwuifhwa98h!J!UIPHGFUGFHa js prototype belike moment
         this.toCallableContextOverloadMethod(
             (this.context as CanvasRenderingContext2D).drawFocusIfNeeded,
         )(...this.toProcessedArguments("drawFocusIfNeeded", args));

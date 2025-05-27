@@ -456,7 +456,7 @@ const spongeSpots = (function () {
     return path;
 })();
 
-const TAU = Math.PI * 2;
+const TAU = 2 * Math.PI;
 
 export default class MobRendererSponge extends AbstractMobRenderer {
     override render(context: RenderingContext<Mob>): void {

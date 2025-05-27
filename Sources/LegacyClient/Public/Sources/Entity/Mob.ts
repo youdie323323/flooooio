@@ -33,12 +33,12 @@ export default class Mob extends Entity {
 
         health: number,
 
-        readonly type: MobType | PetalType,
-        readonly rarity: Rarity,
+        public readonly type: MobType | PetalType,
+        public readonly rarity: Rarity,
 
-        readonly isPet: boolean,
+        public readonly isPet: boolean,
 
-        readonly isFirstSegment: boolean,
+        public readonly isFirstSegment: boolean,
 
         public connectingSegment: Mob | null,
     ) {
@@ -51,7 +51,7 @@ export default class Mob extends Entity {
 
     public static traverseSegments(m: Mob): Mob {
         const { connectingSegment } = m;
-        if (connectingSegment) {
+        if (connectingSegment && !connectingSegment.isDead) {
             return this.traverseSegments(connectingSegment);
         }
 

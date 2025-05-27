@@ -1,4 +1,4 @@
-import { deltaTime } from "../../../../Main";
+import { deltaTime } from "../../../../Application";
 import { RENDERED_LAST } from "../Layout/Components/Component";
 import UIMobIcon from "./UIMobIcon";
 

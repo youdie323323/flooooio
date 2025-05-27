@@ -2,7 +2,7 @@ import type Mob from "../../Mob";
 import type { RenderingContext } from "../RendererRenderingContext";
 import AbstractMobRenderer from "./MobRenderer";
 
-const TAU = Math.PI * 2;
+const TAU = 2 * Math.PI;
 
 const LADYBUG_NUM_SPOTS = 3;
 
@@ -89,43 +89,55 @@ export default class MobRendererShinyLadybug extends AbstractMobRenderer {
         const scale = entity.size / 30;
         ctx.scale(scale, scale);
 
-        ctx.lineJoin = "round";
-
         const bodyColor = this.calculateDamageEffectColor(context, "#EBEB34");
         const bodyStrokeColor = this.calculateDamageEffectColor(context, "#0E0E0E");
         const bodyStrokeStrokeColor = this.calculateDamageEffectColor(context, "#111111");
 
-        ctx.fillStyle = bodyStrokeColor;
-        ctx.beginPath();
-        ctx.arc(15, 0, 18.5, 0, TAU, false);
-        ctx.fill();
+        ctx.lineJoin = "round";
 
-        ctx.fillStyle = bodyStrokeStrokeColor;
-        ctx.beginPath();
-        ctx.arc(15, 0, 11.5, 0, TAU, false);
-        ctx.fill();
+        {
+            ctx.beginPath();
+
+            ctx.arc(15, 0, 18.5, 0, TAU, false);
+
+            ctx.fillStyle = bodyStrokeColor;
+            ctx.fill();
+        }
+
+        {
+            ctx.beginPath();
+
+            ctx.arc(15, 0, 11.5, 0, TAU, false);
+
+            ctx.fillStyle = bodyStrokeStrokeColor;
+            ctx.fill();
+        }
 
         ctx.fillStyle = bodyColor;
         ctx.fill(shinyLadybugBody, "nonzero");
 
-        ctx.save();
-        ctx.clip(shinyLadybugBody);
+        {
+            ctx.save();
 
-        ctx.fillStyle = bodyStrokeStrokeColor;
-        ctx.strokeStyle = bodyStrokeColor;
+            ctx.clip(shinyLadybugBody);
 
-        for (let i = 0; i < LADYBUG_NUM_SPOTS; i++) {
-            const [rx, ry, rRadius] = seededRandom3(entity.id, i);
-            const x = (rx * 2 - 1) * LADYBUG_RADIUS;
-            const y = (ry * 2 - 1) * LADYBUG_RADIUS;
-            const radius = LADYBUG_MIN_SPOT_RADIUS + rRadius * (LADYBUG_MAX_SPOT_RADIUS - LADYBUG_MIN_SPOT_RADIUS);
+            ctx.fillStyle = bodyStrokeStrokeColor;
 
-            ctx.beginPath();
-            ctx.arc(x, y, radius, 0, TAU, false);
-            ctx.fill();
+            for (let i = 0; i < LADYBUG_NUM_SPOTS; i++) {
+                const [rx, ry, rRadius] = seededRandom3(entity.id, i);
+                const x = (rx * 2 - 1) * LADYBUG_RADIUS;
+                const y = (ry * 2 - 1) * LADYBUG_RADIUS;
+                const radius = LADYBUG_MIN_SPOT_RADIUS + rRadius * (LADYBUG_MAX_SPOT_RADIUS - LADYBUG_MIN_SPOT_RADIUS);
+
+                ctx.beginPath();
+                
+                ctx.arc(x, y, radius, 0, TAU, false);
+
+                ctx.fill();
+            }
+
+            ctx.restore();
         }
-
-        ctx.restore();
 
         ctx.fillStyle = this.calculateDamageEffectColor(context, "#BEBE2A");
         ctx.fill(shinyLadybugBodyStroke, "nonzero");

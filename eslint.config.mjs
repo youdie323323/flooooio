@@ -26,7 +26,7 @@ export default tseslint.config(
         plugins: {
             // Lints
             tsdoc,
-            '@typescript-eslint': tseslint.plugin,
+            "@typescript-eslint": tseslint.plugin,
 
             // Formats
             "@stylistic": stylistic,
@@ -37,8 +37,8 @@ export default tseslint.config(
             
             "tsdoc/syntax": ALERT_STYLE,
             
-            '@typescript-eslint/consistent-type-exports': 'error',
-            '@typescript-eslint/consistent-type-imports': 'error',
+            "@typescript-eslint/consistent-type-exports": "error",
+            "@typescript-eslint/consistent-type-imports": "error",
 
             // Formats
             "@stylistic/indent": [ALERT_STYLE, 4],

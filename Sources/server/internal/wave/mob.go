@@ -30,8 +30,9 @@ type Mob struct {
 	// ConnectingSegment represents connected segment.
 	// Use collision.Node here because its not possible to Mob refer itself.
 	// Use type assertion.
-	ConnectingSegment collision.Node
-	IsFirstSegment    bool
+	ConnectingSegment   collision.Node
+	ConnectedSegmentIds []*EntityId
+	IsFirstSegment      bool
 
 	// JellyfishLastBounce is last time lightning bounced from jellyfish.
 	JellyfishLastBounce time.Time
@@ -78,8 +79,29 @@ func (m *Mob) IsEnemy() bool {
 	return m.PetMaster == nil && (!mIsProjectile || (mIsProjectile && m.IsEnemyMissile()))
 }
 
+// HasConnectingSegment determinate if mob has connecting segment.
+func (m *Mob) HasConnectingSegment(wp *WavePool) bool {
+	return m.ConnectingSegment != nil && !IsDeadNode(wp, m.ConnectingSegment)
+}
+
+// GetMobToDamage returns mob to damage.
+func (m *Mob) GetMobToDamage(wp *WavePool) *Mob {
+	var toDamaged *Mob
+
+	switch m.Type {
+	case native.MobTypeLeech:
+		// Leech emit all damages into head leech entity
+		toDamaged = TraverseMobSegments(wp, m)
+
+	default:
+		toDamaged = m
+	}
+
+	return toDamaged
+}
+
 // Ensure mob satisfies LightningEmitter
-var _ LightningEmitter = (*Mob)(nil) 
+var _ LightningEmitter = (*Mob)(nil)
 
 // GetLightningBounceTargets returns targets to bounce.
 func (m *Mob) GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node {
@@ -159,6 +181,7 @@ func (m *Mob) Dispose() {
 	m.MissileMaster = nil
 
 	m.ConnectingSegment = nil
+	clear(m.ConnectedSegmentIds)
 }
 
 // NewMob return new mob instance.
@@ -181,7 +204,7 @@ func NewMob(
 ) *Mob {
 	profile := native.MobProfiles[mType]
 
-	return &Mob{
+	m := &Mob{
 		Entity: NewEntity(
 			id,
 
@@ -206,8 +229,9 @@ func NewMob(
 
 		StarfishRegeningHealth: false,
 
-		ConnectingSegment: connectingSegment,
-		IsFirstSegment:    isFirstSegment,
+		ConnectingSegment:   connectingSegment,
+		ConnectedSegmentIds: make([]*EntityId, 0),
+		IsFirstSegment:      isFirstSegment,
 
 		JellyfishLastBounce: time.Time{},
 
@@ -219,6 +243,13 @@ func NewMob(
 		SpecialMovementTimer: 0,
 		IsSpecialMoving:      false,
 	}
+
+	// We only want connected segment ids for mob (leech)
+	if v, ok := connectingSegment.(*Mob); ok {
+		v.ConnectedSegmentIds = append(v.ConnectedSegmentIds, m.Id)
+	}
+
+	return m
 }
 
 func CalculateMobSize(profile native.MobData, rarity native.Rarity) float32 {
@@ -232,7 +263,7 @@ var MobSizeFactor = map[native.Rarity]float32{
 	native.RarityEpic:      1.9,
 	native.RarityLegendary: 3.0,
 	native.RarityMythic:    5.0,
-	native.RarityUltra:     8.1,
+	native.RarityUltra:     8.0,
 }
 
 var MobSpeed = map[native.MobType]float32{
@@ -252,7 +283,7 @@ var MobSpeed = map[native.MobType]float32{
 	native.MobTypeSponge:    0,
 	native.MobTypeShell:     0,
 	native.MobTypeCrab:      4,
-	native.MobTypeLeech:      10,
+	native.MobTypeLeech:     10,
 
 	native.MobTypeCentipede:       2.8,
 	native.MobTypeCentipedeEvil:   3.2,

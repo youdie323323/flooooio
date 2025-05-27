@@ -28,7 +28,7 @@ var EachMobBehaviorDefinition = map[MobType]MobBehavior{
 	MobTypeSponge:    PassiveBehavior,
 	MobTypeShell:     PassiveBehavior,
 	MobTypeCrab:      AggressiveBehavior,
-	MobTypeLeech:      AggressiveBehavior,
+	MobTypeLeech:     AggressiveBehavior,
 
 	MobTypeCentipede:       VoidBehavior,
 	MobTypeCentipedeDesert: NeutralBehavior,

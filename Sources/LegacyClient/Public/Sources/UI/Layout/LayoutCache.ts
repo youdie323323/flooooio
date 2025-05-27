@@ -1,5 +1,5 @@
 import type { LayoutResult } from "./Layout";
-const LRUMap = require('mnemonist/lru-map');
+const LRUMap = require("mnemonist/lru-map");
 
 export default class LayoutCache {
     private cache = new LRUMap(64);

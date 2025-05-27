@@ -79,7 +79,7 @@ export default class MobRendererDispatcher extends Renderer<Mob> {
     override render(context: RenderingContext<Mob>): void {
         super.render(context);
 
-        const { ctx, entity } = context;
+        const { entity } = context;
 
         const renderer = MOB_RENDERERS[entity.type];
 

@@ -108,6 +108,8 @@ const cactusBodyStroke = (function () {
 })();
 
 export default class MobRendererCactus extends AbstractMobRenderer {
+    private static readonly CACTUS_VECTOR_LENGTH = 38.3971 as const;
+
     override render(context: RenderingContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);
@@ -123,124 +125,145 @@ export default class MobRendererCactus extends AbstractMobRenderer {
         ctx.lineJoin = "round";
 
         {
-            ctx.fillStyle = "#292929";
+            ctx.fillStyle = this.calculateDamageEffectColor(context, "#292929");
 
-            ctx.save();
+            /*
+            for (let i = 0; i < 10; i++) {
+                const angle = -Math.PI + (Math.PI / 5) * i;
 
-            ctx.translate(36.84709930419922 - 64, 36.847103118896484 - 64);
-            ctx.rotate(-2.356194599949769);
-            ctx.scale(0.7679999578592127, 0.7679999578592127);
+                const x = MobRendererCactus.CACTUS_VECTOR_LENGTH * Math.cos(angle);
+                const y = MobRendererCactus.CACTUS_VECTOR_LENGTH * Math.sin(angle);
 
-            ctx.fill(cactusSpine, "nonzero");
+                ctx.save();
 
-            ctx.restore();
+                ctx.translate(x, y);
+                ctx.rotate(angle);
 
-            ctx.save();
+                ctx.fill(cactusSpine, "nonzero");
 
-            ctx.translate(57.99291229248047 - 64, 26.072772979736328 - 64);
-            ctx.rotate(-1.727876073089609);
-            ctx.scale(0.7679999314763519, 0.7679999314763519);
+                ctx.restore();
+            }
+            */
 
-            ctx.fill(cactusSpine, "nonzero");
+            {
+                ctx.save();
 
-            ctx.restore();
+                ctx.translate(-38.3971, -4.702288561154084e-15);
+                ctx.rotate(-3.141592653589793);
 
-            ctx.save();
+                ctx.fill(cactusSpine, "nonzero");
 
-            ctx.translate(81.4332275390625 - 64, 29.78534698486328 - 64);
-            ctx.rotate(-1.0995575482314048);
-            ctx.scale(0.7679999769464505, 0.7679999769464505);
+                ctx.restore();
+            }
 
-            ctx.fill(cactusSpine, "nonzero");
+            {
+                ctx.save();
 
-            ctx.restore();
+                ctx.translate(-31.06390643471429, -22.569249110799326);
+                ctx.rotate(-2.5132741228718345);
 
-            ctx.save();
+                ctx.fill(cactusSpine, "nonzero");
 
-            ctx.translate(98.21464538574219 - 64, 46.5667610168457 - 64);
-            ctx.rotate(-0.47123902191012434);
-            ctx.scale(0.7679999383800523, 0.7679999383800523);
+                ctx.restore();
+            }
 
-            ctx.fill(cactusSpine, "nonzero");
+            {
+                ctx.save();
 
-            ctx.restore();
+                ctx.translate(-11.865356434714291, -36.517812161836645);
+                ctx.rotate(-1.8849555921538759);
 
-            ctx.save();
+                ctx.fill(cactusSpine, "nonzero");
 
-            ctx.translate(101.92723083496094 - 64, 70.007080078125 - 64);
-            ctx.rotate(0.1570795425170259);
-            ctx.scale(0.767999967036611, 0.767999967036611);
+                ctx.restore();
+            }
 
-            ctx.fill(cactusSpine, "nonzero");
+            {
+                ctx.save();
 
-            ctx.restore();
+                ctx.translate(11.865356434714295, -36.517812161836645);
+                ctx.rotate(-1.2566370614359172);
 
-            ctx.save();
+                ctx.fill(cactusSpine, "nonzero");
 
-            ctx.translate(91.15290069580078 - 64, 91.15289306640625 - 64);
-            ctx.rotate(0.7853980536400242);
-            ctx.scale(0.7679999578592127, 0.7679999578592127);
+                ctx.restore();
+            }
 
-            ctx.fill(cactusSpine, "nonzero");
+            {
+                ctx.save();
 
-            ctx.restore();
+                ctx.translate(31.063906434714298, -22.569249110799323);
+                ctx.rotate(-0.6283185307179586);
 
-            ctx.save();
+                ctx.fill(cactusSpine, "nonzero");
 
-            ctx.translate(70.00708770751953 - 64, 101.92723083496094 - 64);
-            ctx.rotate(1.4137165805001843);
-            ctx.scale(0.7679999314763519, 0.7679999314763519);
+                ctx.restore();
+            }
 
-            ctx.fill(cactusSpine, "nonzero");
+            {
+                ctx.save();
 
-            ctx.restore();
+                ctx.translate(38.3971, 0);
+                ctx.rotate(0);
 
-            ctx.save();
+                ctx.fill(cactusSpine, "nonzero");
 
-            ctx.translate(46.566768646240234 - 64, 98.21465301513672 - 64);
-            ctx.rotate(2.0420351053583885);
-            ctx.scale(0.7679999769464505, 0.7679999769464505);
+                ctx.restore();
+            }
 
-            ctx.fill(cactusSpine, "nonzero");
+            {
+                ctx.save();
 
-            ctx.restore();
+                ctx.translate(31.063906434714298, 22.569249110799323);
+                ctx.rotate(0.6283185307179586);
 
-            ctx.save();
+                ctx.fill(cactusSpine, "nonzero");
 
-            ctx.translate(29.785354614257812 - 64, 81.43324279785156 - 64);
-            ctx.rotate(2.670353631679669);
-            ctx.scale(0.7679999383800523, 0.7679999383800523);
+                ctx.restore();
+            }
 
-            ctx.fill(cactusSpine, "nonzero");
+            {
+                ctx.save();
 
-            ctx.restore();
+                ctx.translate(11.865356434714295, 36.517812161836645);
+                ctx.rotate(1.2566370614359172);
 
-            ctx.save();
+                ctx.fill(cactusSpine, "nonzero");
 
-            ctx.translate(26.072769165039062 - 64, 57.992919921875 - 64);
-            ctx.rotate(-2.984513111072767);
-            ctx.scale(0.767999967036611, 0.767999967036611);
+                ctx.restore();
+            }
 
-            ctx.fill(cactusSpine, "nonzero");
+            {
+                ctx.save();
 
-            ctx.restore();
+                ctx.translate(-11.865356434714291, 36.517812161836645);
+                ctx.rotate(1.8849555921538759);
+
+                ctx.fill(cactusSpine, "nonzero");
+
+                ctx.restore();
+            }
+
+            {
+                ctx.save();
+
+                ctx.translate(-31.06390643471429, 22.569249110799326);
+                ctx.rotate(2.5132741228718345);
+
+                ctx.fill(cactusSpine, "nonzero");
+
+                ctx.restore();
+            }
         }
 
         {
-            ctx.save();
+            ctx.scale(0.8, 0.8);
 
             ctx.fillStyle = this.calculateDamageEffectColor(context, "#32A852");
-
-            ctx.rotate(-2.356194599949769);
-            ctx.scale(0.7679999578592127, 0.7679999578592127);
-
             ctx.fill(cactusBody, "nonzero");
 
             ctx.fillStyle = this.calculateDamageEffectColor(context, "#288842");
-
             ctx.fill(cactusBodyStroke, "nonzero");
-
-            ctx.restore();
         }
     }
 }

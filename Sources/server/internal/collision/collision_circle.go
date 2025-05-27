@@ -16,7 +16,7 @@ func ComputeCirclePush(c0, c1 Circle) (float32, float32, bool) {
 	distance := math32.Hypot(dx, dy)
 
 	// If distance is zero, dx and dy will be NaN and cause errors
-	// So knockout them like ε-like value
+	// So knockout them with ε-like value
 	if distance == 0 {
 		return 1, 1, true
 	}
@@ -26,8 +26,9 @@ func ComputeCirclePush(c0, c1 Circle) (float32, float32, bool) {
 		return 0, 0, false
 	}
 
-	nx := dx / distance
-	ny := dy / distance
+	invDist := 1 / distance
+	nx := dx * invDist
+	ny := dy * invDist
 
 	return nx * delta, ny * delta, true
 }

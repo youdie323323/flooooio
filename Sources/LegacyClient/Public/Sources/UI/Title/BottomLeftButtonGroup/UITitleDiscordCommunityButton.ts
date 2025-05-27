@@ -41,7 +41,7 @@ export default class UITitleDiscordCommunityButton extends createTitleBottomLeft
 
             () => {
                 const windowProxy = window.open("unko");
-                windowProxy.document.write('まだ実装されてないわボケー');
+                windowProxy.document.write("まだ実装されてないわボケー");
             },
 
             "#5865f2",

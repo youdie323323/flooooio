@@ -19,7 +19,7 @@ export default class MobRendererSandstorm extends AbstractMobRenderer {
         const i =
             isSpecimen
                 ? 0
-                : entity.sandstormAngle++;
+                : entity.totalT * 5;
 
         const outerColor = this.calculateDamageEffectColor(context, (entity.isPet ? "#cb979c" : "#D5C7A6") satisfies ColorCode);
         const middleColor = this.calculateDamageEffectColor(context, (entity.isPet ? "#b18687" : "#BFB295") satisfies ColorCode);
@@ -28,61 +28,76 @@ export default class MobRendererSandstorm extends AbstractMobRenderer {
         ctx.lineJoin = "round";
         ctx.lineWidth = 6;
 
-        ctx.save();
+        {
+            ctx.save();
 
-        ctx.rotate(i * 0.02);
+            ctx.rotate(i * 0.02);
 
-        ctx.rotate(Math.PI / 4);
-        ctx.scale(-0.95, 0.95);
+            ctx.rotate(Math.PI / 4);
+            ctx.scale(-0.95, 0.95);
 
-        ctx.fillStyle = ctx.strokeStyle = outerColor;
-        ctx.beginPath();
-        ctx.moveTo(28, 0);
-        ctx.lineTo(14, 24.24871253967285);
-        ctx.lineTo(-14, 24.24871063232422);
-        ctx.lineTo(-28, 0);
-        ctx.lineTo(-14, -24.24871253967285);
-        ctx.lineTo(14, -24.24871253967285);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
+            ctx.beginPath();
 
-        ctx.restore();
+            ctx.moveTo(28, 0);
+            ctx.lineTo(14, 24.24871253967285);
+            ctx.lineTo(-14, 24.24871063232422);
+            ctx.lineTo(-28, 0);
+            ctx.lineTo(-14, -24.24871253967285);
+            ctx.lineTo(14, -24.24871253967285);
 
-        ctx.save();
+            ctx.closePath();
 
-        ctx.rotate(i * -0.03);
+            ctx.fillStyle = ctx.strokeStyle = outerColor;
+            ctx.fill();
+            ctx.stroke();
 
-        ctx.fillStyle = ctx.strokeStyle = middleColor;
-        ctx.beginPath();
-        ctx.moveTo(18, 0);
-        ctx.lineTo(9, 15.588458061218262);
-        ctx.lineTo(-9, 15.588457107543945);
-        ctx.lineTo(-18, 0);
-        ctx.lineTo(-9, -15.588458061218262);
-        ctx.lineTo(9, -15.588458061218262);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
+            ctx.restore();
+        }
 
-        ctx.restore();
+        {
+            ctx.save();
 
-        ctx.save();
+            ctx.rotate(i * -0.03);
 
-        ctx.rotate(i * 0.04);
+            ctx.beginPath();
 
-        ctx.fillStyle = ctx.strokeStyle = innerColor;
-        ctx.beginPath();
-        ctx.moveTo(8, 0);
-        ctx.lineTo(4, 6.928203582763672);
-        ctx.lineTo(-4, 6.928203105926514);
-        ctx.lineTo(-8, 0);
-        ctx.lineTo(-4, -6.928203582763672);
-        ctx.lineTo(4, -6.928203582763672);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
+            ctx.moveTo(18, 0);
+            ctx.lineTo(9, 15.588458061218262);
+            ctx.lineTo(-9, 15.588457107543945);
+            ctx.lineTo(-18, 0);
+            ctx.lineTo(-9, -15.588458061218262);
+            ctx.lineTo(9, -15.588458061218262);
 
-        ctx.restore();
+            ctx.closePath();
+
+            ctx.fillStyle = ctx.strokeStyle = middleColor;
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        {
+            ctx.save();
+
+            ctx.rotate(i * 0.04);
+
+            ctx.beginPath();
+            
+            ctx.moveTo(8, 0);
+            ctx.lineTo(4, 6.928203582763672);
+            ctx.lineTo(-4, 6.928203105926514);
+            ctx.lineTo(-8, 0);
+            ctx.lineTo(-4, -6.928203582763672);
+            ctx.lineTo(4, -6.928203582763672);
+
+            ctx.closePath();
+
+            ctx.fillStyle = ctx.strokeStyle = innerColor;
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.restore();
+        }
     }
 }

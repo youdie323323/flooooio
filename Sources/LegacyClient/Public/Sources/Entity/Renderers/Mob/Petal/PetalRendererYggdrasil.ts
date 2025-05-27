@@ -358,6 +358,7 @@ export default class PetalRendererYggdrasil extends AbstractPetalRenderer {
 
         ctx.fillStyle = "#886D35";
         ctx.fill(yggdrasilBody, "evenodd");
+        
         ctx.fillStyle = "#A88642";
         ctx.fill(yggdrasilBodyStroke, "evenodd");
     }

@@ -140,6 +140,7 @@ export default class PetalRendererLightning extends AbstractPetalRenderer {
 
         ctx.fillStyle = "#29F2E5";
         ctx.fill(lightningBody, "nonzero");
+        
         ctx.fillStyle = "#21C4B9";
         ctx.fill(lightningBodyStroke, "nonzero");
     }

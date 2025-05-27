@@ -2,7 +2,7 @@ import type Mob from "../../Mob";
 import type { RenderingContext } from "../RendererRenderingContext";
 import AbstractMobRenderer from "./MobRenderer";
 
-const TAU = Math.PI * 2;
+const TAU = 2 * Math.PI;
 
 interface CurveData {
     dir: number;
@@ -62,8 +62,8 @@ export default class MobRendererSpider extends AbstractMobRenderer {
         ctx.lineCap = "round";
 
         { // Legs
-            ctx.strokeStyle = this.calculateDamageEffectColor(context, "#323032");
             ctx.lineWidth = 10;
+            ctx.strokeStyle = this.calculateDamageEffectColor(context, "#323032");
 
             for (let i = 0; i < curves.length; i++) {
                 const curve = curves[i];
@@ -71,9 +71,12 @@ export default class MobRendererSpider extends AbstractMobRenderer {
                 ctx.save();
 
                 ctx.rotate(curve.dir * Math.sin(entity.moveCounter + i) * 0.2);
+
                 ctx.beginPath();
+
                 ctx.moveTo(...curve.start);
                 ctx.quadraticCurveTo(...curve.curve);
+
                 ctx.stroke();
 
                 ctx.restore();
@@ -81,14 +84,16 @@ export default class MobRendererSpider extends AbstractMobRenderer {
         }
 
         { // Body
+            ctx.lineWidth = 20;
             ctx.fillStyle = this.calculateDamageEffectColor(context, "#4f412e");
             ctx.strokeStyle = "rgba(0,0,0,0.15)";
-            ctx.lineWidth = 20;
 
             using _guard = this.guard(ctx);
 
             ctx.beginPath();
+
             ctx.arc(0, 0, 35, 0, TAU);
+            
             ctx.fill();
             ctx.clip();
             ctx.stroke();

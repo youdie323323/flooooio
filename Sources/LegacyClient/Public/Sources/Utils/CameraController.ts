@@ -12,7 +12,7 @@ export default class CameraController {
     }
 
     public set zoom(o) {
-        this._zoom.setValue(o);
+        this._zoom.value = o;
     }
 
     public get zoom() {

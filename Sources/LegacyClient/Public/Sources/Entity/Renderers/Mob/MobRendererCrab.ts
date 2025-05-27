@@ -134,8 +134,8 @@ export default class MobRendererCrab extends AbstractMobRenderer {
 
             for (let dir = -1; dir <= 1; dir += 2) {
                 for (let i = 0; i < 4; i++) {
-                    const legRotation = 0.15 * Math.sin(entity.moveCounter + dir + i * 2) + 0.15;
-                    const legDirection = i < 2 ? 1 : -1;
+                    const legRotation = 0.15 * Math.sin(entity.moveCounter + dir + 2 * i) + 0.15;
+                    const legDir = i < 2 ? 1 : -1;
 
                     ctx.save();
 
@@ -143,11 +143,12 @@ export default class MobRendererCrab extends AbstractMobRenderer {
 
                     ctx.translate(i / 5 * 20 - 5, 0);
 
-                    ctx.rotate(legRotation * legDirection);
+                    ctx.rotate(legRotation * legDir);
+
                     ctx.moveTo(0, 0);
                     ctx.translate(0, 25);
                     ctx.lineTo(0, 0);
-                    ctx.rotate(legDirection * 0.7 * (legRotation + 0.3));
+                    ctx.rotate(legDir * 0.7 * (legRotation + 0.3));
                     ctx.lineTo(0, 10);
 
                     ctx.restore();
@@ -161,13 +162,13 @@ export default class MobRendererCrab extends AbstractMobRenderer {
             ctx.fillStyle = ctx.strokeStyle = "#4D2621";
             ctx.lineWidth = 2;
 
-            const clawAngle = (Math.sin(entity.moveCounter * 2) * 0.5 + 0.5) * 0.3;
+            const clawAngle = 0.15 * Math.sin(entity.moveCounter * 2) + 0.15;
 
             for (let dir = -1; dir <= 1; dir += 2) {
                 ctx.save();
 
-                ctx.translate(12, -dir * 2);
-                ctx.scale(1, dir);
+                ctx.translate(12, dir * 2);
+                ctx.scale(1, -dir);
                 ctx.rotate(clawAngle);
 
                 ctx.fill(crabHand, "nonzero");

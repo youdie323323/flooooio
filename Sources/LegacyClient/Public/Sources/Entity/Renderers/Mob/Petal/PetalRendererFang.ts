@@ -91,6 +91,7 @@ export default class PetalRendererFang extends AbstractPetalRenderer {
 
         ctx.fillStyle = "#9C1010";
         ctx.fill(fangBody, "nonzero");
+        
         ctx.fillStyle = "#7E0D0D";
         ctx.fill(fangBodyStroke, "nonzero");
     }

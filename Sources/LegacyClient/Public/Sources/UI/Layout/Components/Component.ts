@@ -10,8 +10,8 @@ import type { Logo } from "./WellKnown/Logo";
 import type StaticText from "./WellKnown/StaticText";
 import type TextInput from "./WellKnown/TextInput";
 import type Toggle from "./WellKnown/Toggle";
-import type { EventMap } from 'strict-event-emitter';
-import { Emitter } from 'strict-event-emitter';
+import type { EventMap } from "strict-event-emitter";
+import { Emitter } from "strict-event-emitter";
 
 /**
  * Dynamic computable pointer-like of T.
@@ -301,7 +301,7 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
 
     public isAnimating: boolean = false;
 
-    // These are should not null'ed on animation done
+    // These are should not null"ed on animation done
 
     public animationType: AnimationType | null = null;
     public animationDirection: AnimationDirection | null = null;
@@ -314,7 +314,7 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
     public animationSlideOffsetSign: AnimationConfigs[AnimationType.SLIDE]["offsetSign"];
     public animationSlideFadeEffectEnabled: AnimationConfigs[AnimationType.SLIDE]["fadeEffectEnabled"];
 
-    // These can null'ed on animation done
+    // These can null"ed on animation done
 
     public animationStartTime: number | null = null;
 
@@ -539,7 +539,7 @@ export abstract class Component<const AdheredEvents extends EventMap = EventMap>
                         cy = this.y + this.h / 2;
 
                     ctx.translate(cx, cy);
-                    ctx.rotate(progress * Math.PI * 2);
+                    ctx.rotate(progress * 2 * Math.PI);
                     ctx.scale(progress, progress);
                     ctx.translate(-cx, -cy);
 

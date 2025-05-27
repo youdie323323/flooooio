@@ -84,6 +84,7 @@ export default class PetalRendererClaw extends AbstractPetalRenderer {
     
         ctx.fillStyle = "#4D2621";
         ctx.fill(clawBody, "nonzero");
+        
         ctx.fillStyle = "#3E1F1B";
         ctx.fill(clawBodyStroke, "nonzero");
     }

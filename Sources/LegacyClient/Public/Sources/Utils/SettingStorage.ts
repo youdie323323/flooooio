@@ -17,7 +17,7 @@ export default class SettingStorage {
         return value ? "Y" : "N";
     }
 
-    private static settingValueToBool(value: string | null): boolean {
+    private static settingValueToBool(value: string): boolean {
         return value === "Y";
     }
 
@@ -36,11 +36,13 @@ export default class SettingStorage {
 
     public static set(key: FlooooIoDefaultSettingKeys, value: boolean): void {
         const fullKey = this.getFullKey(key);
+
         localStorage.setItem(fullKey, this.boolToSettingValue(value));
     }
 
     public static remove(key: FlooooIoDefaultSettingKeys): void {
         const fullKey = this.getFullKey(key);
+
         localStorage.removeItem(fullKey);
     }
 
@@ -55,6 +57,7 @@ export default class SettingStorage {
             .filter(key => key.startsWith(this.PREFIX))
             .reduce((acc, key) => ({
                 ...acc,
+
                 [key.replace(this.PREFIX, "")]: this.settingValueToBool(localStorage.getItem(key)),
             }), SettingStorage.DEFAULT_SETTINGS);
     }

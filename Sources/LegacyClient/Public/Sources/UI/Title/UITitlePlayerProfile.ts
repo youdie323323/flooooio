@@ -82,9 +82,9 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
         ctx.translate(this.w / 2, this.h / 2);
 
         if (Component.computePointerLike(this.isEmpty)) {
-            ctx.lineJoin = 'round';
-            ctx.lineCap = 'round';
-            ctx.textBaseline = 'middle';
+            ctx.lineJoin = "round";
+            ctx.lineCap = "round";
+            ctx.textBaseline = "middle";
             ctx.textAlign = "center";
 
             ctx.fillStyle = "white";
@@ -98,9 +98,9 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
 
                 ctx.save();
 
-                ctx.lineJoin = 'round';
-                ctx.lineCap = 'round';
-                ctx.textBaseline = 'middle';
+                ctx.lineJoin = "round";
+                ctx.lineCap = "round";
+                ctx.textBaseline = "middle";
                 ctx.textAlign = "center";
 
                 ctx.fillStyle = "white";
@@ -121,9 +121,9 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
 
                 ctx.translate(0, 12);
 
-                ctx.lineJoin = 'round';
-                ctx.lineCap = 'round';
-                ctx.textBaseline = 'middle';
+                ctx.lineJoin = "round";
+                ctx.lineCap = "round";
+                ctx.textBaseline = "middle";
                 ctx.textAlign = "center";
 
                 ctx.fillStyle = "white";
@@ -142,9 +142,9 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
 
                 ctx.translate(0, 32);
 
-                ctx.lineJoin = 'round';
-                ctx.lineCap = 'round';
-                ctx.textBaseline = 'middle';
+                ctx.lineJoin = "round";
+                ctx.lineCap = "round";
+                ctx.textBaseline = "middle";
                 ctx.textAlign = "center";
 
                 ctx.fillStyle = "#70fc68";

@@ -18,15 +18,14 @@ import UIGameWaveMobIcons from "./UIGameWaveMobIcons";
 import UIGameInventory from "./UIGameInventory";
 import { Centering } from "../Layout/Extensions/ExtensionCentering";
 import Gauge from "../Layout/Components/WellKnown/Gauge";
-import UIGameOtherPlayerStatus from "./UIGameOtherPlayerStatus";
-import TileRenderer, { BIOME_TILESETS } from "../../Utils/Tile/Tileset/TilesetRenderer";
 import UIGamePlayerStatuses from "./UIGamePlayerStatuses";
 import { MoodFlags } from "../../Native/Entity/Player/PlayerMood";
-import { clientWebsocket, deltaTime, antennaScaleFactor, uiCtx } from "../../../../Main";
+import { clientWebsocket, deltaTime, antennaScaleFactor, uiCtx } from "../../../../Application";
 import { isPetal } from "../../Entity/Petal";
 import type BinaryReader from "../../Websocket/Binary/ReadWriter/Reader/BinaryReader";
 import { Clientbound } from "../../Websocket/Packet/PacketOpcode";
 import { Biome, BIOME_DISPLAY_NAME, BIOME_GAUGE_COLORS } from "../../Native/Biome";
+import TileRenderer, { BIOME_TILESETS } from "../Shared/Tile/Tileset/TilesetRenderer";
 
 let interpolatedMouseX = 0;
 let interpolatedMouseY = 0;
@@ -34,7 +33,7 @@ let interpolatedMouseY = 0;
 let mouseXOffset = 0;
 let mouseYOffset = 0;
 
-const TAU = Math.PI * 2;
+const TAU = 2 * Math.PI;
 
 function angleToRad(angle: number) {
     return angle / 255 * TAU;
@@ -78,22 +77,22 @@ function prepareLightningBouncePath({ points }: LightningBounce): Path2D {
     for (let i = 0; i < points.length - 1; i++) {
         const startPoint = points[i];
         const endPoint = points[i + 1];
-        const deltaX = endPoint[0] - startPoint[0];
-        const deltaY = endPoint[1] - startPoint[1];
-        const totalDistance = Math.hypot(deltaX, deltaY);
+        const dx = endPoint[0] - startPoint[0];
+        const dy = endPoint[1] - startPoint[1];
+        const totalDistance = Math.hypot(dx, dy);
 
         let currentDistance = 0;
 
         while (currentDistance < totalDistance) {
-            const JITTER_AMOUNT = 50;
+            const JITTER_AMOUNT = 25;
 
             const ratio = currentDistance / totalDistance;
             const jitterX = (Math.random() * 2 - 1) * JITTER_AMOUNT;
             const jitterY = (Math.random() * 2 - 1) * JITTER_AMOUNT;
 
             path.lineTo(
-                startPoint[0] + ratio * deltaX + jitterX,
-                startPoint[1] + ratio * deltaY + jitterY,
+                startPoint[0] + ratio * dx + jitterX,
+                startPoint[1] + ratio * dy + jitterY,
             );
 
             currentDistance += Math.random() * 40 + 30;
@@ -331,13 +330,13 @@ export default class UIGame extends AbstractUI {
                         mob.connectingSegment = mobConnectingSegment;
 
                         { // Update health properties
-                            const targetMob = Mob.traverseSegments(mob);
+                            const parentMob = Mob.traverseSegments(mob);
 
                             if (mobHealth < mob.nHealth) {
-                                targetMob.redHealthTimer = 1;
-                                targetMob.hurtT = 1;
+                                parentMob.redHealthTimer = 1;
+                                parentMob.hurtT = 1;
                             } else if (mobHealth > mob.nHealth) {
-                                targetMob.redHealthTimer = 0;
+                                parentMob.redHealthTimer = 0;
                             }
 
                             mob.nHealth = mobHealth;
@@ -972,9 +971,9 @@ export default class UIGame extends AbstractUI {
                     text: "",
 
                     fontSize: 11,
-                    textColor: '#212121',
+                    textColor: "#212121",
 
-                    placeholder: '',
+                    placeholder: "",
                     placeholderUnfocused: "Press [ENTER] or click here to chat",
                     showPlaceholderWhenUnfocused: true,
 
@@ -1034,7 +1033,7 @@ export default class UIGame extends AbstractUI {
             interpolatedMouseY = interpolate(interpolatedMouseY, mouseYOffset / antennaScaleFactor, 50);
         }
 
-        const canvas = this.canvas;
+        const { canvas } = this;
         const ctx = canvas.getContext("2d");
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1204,7 +1203,7 @@ export default class UIGame extends AbstractUI {
                 ctx.save();
 
                 ctx.globalAlpha = this.deadMenuBackgroundOpacity;
-                ctx.fillStyle = 'black';
+                ctx.fillStyle = "black";
                 ctx.fillRect(0, 0, widthRelative, heightRelative);
 
                 ctx.restore();
