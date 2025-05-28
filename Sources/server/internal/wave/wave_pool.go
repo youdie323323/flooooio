@@ -371,9 +371,7 @@ func (wp *WavePool) updateWaveData() {
 	waveLength := calculateWaveLength(float32(wp.Wd.Progress))
 
 	if wp.Wd.ProgressTimer >= waveLength {
-		mobCount := len(wp.GetMobsWithCondition(func(m *Mob) bool {
-			return m.PetMaster == nil
-		}))
+		mobCount := len(wp.GetMobsWithCondition(func(m *Mob) bool { return m.IsTrackableEnemy() }))
 
 		if !(wp.Wd.ProgressRedTimer >= waveLength) && mobCount > 4 {
 			wp.Wd.ProgressIsRed = true
@@ -643,7 +641,7 @@ func (wp *WavePool) createUpdatePacket() []byte {
 			var bFlags uint8 = 0
 
 			// Mob is pet, or not
-			if !m.IsEnemy() {
+			if !m.IsTrackableEnemy() {
 				bFlags |= 1
 			}
 
@@ -1288,7 +1286,7 @@ Loop:
 
 				bounceTargets := jellyfish.GetLightningBounceTargets(wp, bouncedIds)
 
-				targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, targetEntity.CalculateRadius()*2*2)
+				targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, 2*targetEntity.CalculateDiameter())
 				if targetNode == nil {
 					break Loop
 				}
@@ -1358,7 +1356,7 @@ func (wp *WavePool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 
 		bounceTargets := lightning.GetLightningBounceTargets(wp, bouncedIds)
 
-		targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, targetMob.CalculateRadius()*2*2)
+		targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, 2*targetMob.CalculateDiameter())
 		if targetNode == nil {
 			break
 		}

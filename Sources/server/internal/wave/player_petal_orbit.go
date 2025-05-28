@@ -90,7 +90,7 @@ func doPetalSpin(
 
 	{
 		mobs := wp.GetMobsWithCondition(func(m *Mob) bool {
-			return m.IsEnemy() && math32.Hypot(
+			return m.IsTrackableEnemy() && math32.Hypot(
 				m.X-pe.X,
 				m.Y-pe.Y,
 			) <= (m.CalculateRadius()*spinNearestSizeCoefficient)
@@ -210,7 +210,7 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool) {
 	spinRotationDelta := calculateRotationDelta(defaultRotateSpeed*spinAngleCoefficient, clockwise)
 
 	var targetRadius float32
-	
+
 	if isAngry {
 		targetRadius = 80
 	} else {

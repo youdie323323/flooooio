@@ -229,10 +229,10 @@ func (s *WaveMobSpawner) DetermineStaticMobData(data *WaveData) *StaticMob {
 // TODO: make these types float32
 
 func flatTopGaussian(x, A, mu, w, sigma1, sigma2 float64) float64 {
-	const baseline = 1.0
+	const baseline = 1
 
 	distance := math.Abs(x - mu)
-	halfWidth := w / 2.0
+	halfWidth := w / 2
 
 	if distance <= halfWidth {
 		return baseline + A

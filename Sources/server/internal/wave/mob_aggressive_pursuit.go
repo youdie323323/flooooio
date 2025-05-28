@@ -45,6 +45,7 @@ func FindNearestEntity(me collision.Node, entities []collision.Node) collision.N
 	meY := me.GetY()
 
 	nearest := entities[0]
+
 	for _, current := range entities[1:] {
 		distanceToCurrent := math32.Hypot(
 			current.GetX()-meX,
@@ -73,6 +74,7 @@ func FindNearestEntityWithLimitedDistance(me collision.Node, entities []collisio
 	meY := me.GetY()
 
 	var nearest collision.Node
+
 	nearestDistance := maxDistance
 
 	for _, current := range entities {
@@ -184,23 +186,14 @@ func (m *Mob) calculateDetectRange() float32 {
 }
 
 func (m *Mob) calculateLoseRange() float32 {
-	return (mobDetectionRange * 2) * m.CalculateRadius()
+	return 2 * mobDetectionRange * m.CalculateRadius()
 }
 
 // GetTrackingTargets returns target nodes to track.
 func (m *Mob) GetTrackingTargets(wp *WavePool) []collision.Node {
 	var targets []collision.Node
 
-	if !m.IsEnemy() {
-		mobs := wp.GetMobsWithCondition(func(fm *Mob) bool {
-			return fm.Id != m.Id && fm.PetMaster == nil && !slices.Contains(ProjectileMobTypes, fm.Type)
-		})
-
-		targets = make([]collision.Node, len(mobs))
-		for i, mob := range mobs {
-			targets[i] = mob
-		}
-	} else {
+	if m.IsTrackableEnemy() {
 		players := wp.GetPlayersWithCondition(func(p *Player) bool {
 			return !p.IsDead
 		})
@@ -208,6 +201,15 @@ func (m *Mob) GetTrackingTargets(wp *WavePool) []collision.Node {
 		targets = make([]collision.Node, len(players))
 		for i, player := range players {
 			targets[i] = player
+		}
+	} else {
+		mobs := wp.GetMobsWithCondition(func(fm *Mob) bool {
+			return fm.Id != m.Id && fm.IsTrackableEnemy()
+		})
+
+		targets = make([]collision.Node, len(mobs))
+		for i, mob := range mobs {
+			targets[i] = mob
 		}
 	}
 
@@ -296,6 +298,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 
 			dx := m.TargetEntity.GetX() - shootX
 			dy := m.TargetEntity.GetY() - shootY
+			
 			distance := math32.Hypot(dx, dy)
 
 			// If distance is close, we can just use TurnAngleToTarget
@@ -373,7 +376,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 			m.Magnitude = 0
 		}
 
-	case native.AggressiveBehavior:
+	case native.AggressiveBehavior, native.CautionBehavior:
 		{
 			var targetEntity collision.Node
 
@@ -382,79 +385,42 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 			} else if m.LastAttackedEntity != nil {
 				targetEntity = m.LastAttackedEntity
 			} else {
-				targetEntity = FindNearestEntity(m, m.GetTrackingTargets(wp))
+				targetEntity = FindNearestEntityWithLimitedDistance(m, m.GetTrackingTargets(wp), m.calculateDetectRange())
 				if targetEntity == nil {
 					return
 				}
 			}
 
-			dx := targetEntity.GetX() - m.X
-			dy := targetEntity.GetY() - m.Y
-			distance := math32.Hypot(dx, dy)
+			if shouldTurnToTarget {
+				dx := targetEntity.GetX() - m.X
+				dy := targetEntity.GetY() - m.Y
 
-			if m.calculateDetectRange() > distance {
-				if shouldTurnToTarget {
-					m.Angle = TurnAngleToTarget(
-						m.Angle,
-						dx,
-						dy,
-					)
-				}
-
-				m.Magnitude = SpeedOf(m.Type) * 255
-
-				m.TargetEntity = targetEntity
+				m.Angle = TurnAngleToTarget(
+					m.Angle,
+					dx,
+					dy,
+				)
 			}
-		}
 
-	case native.CautionBehavior:
-		{
-			var targetEntity collision.Node
-
-			if m.TargetEntity != nil {
-				targetEntity = m.TargetEntity
-			} else if m.LastAttackedEntity != nil {
-				targetEntity = m.LastAttackedEntity
+			var magnitude float32
+			if behavior == native.CautionBehavior && isStop {
+				magnitude = 0
 			} else {
-				targetEntity = FindNearestEntity(m, m.GetTrackingTargets(wp))
-				if targetEntity == nil {
-					return
-				}
+				magnitude = SpeedOf(m.Type) * 255
 			}
 
-			dx := targetEntity.GetX() - m.X
-			dy := targetEntity.GetY() - m.Y
-			distance := math32.Hypot(dx, dy)
+			m.Magnitude = magnitude
 
-			if m.calculateDetectRange() > distance {
-				if shouldTurnToTarget {
-					m.Angle = TurnAngleToTarget(
-						m.Angle,
-						dx,
-						dy,
-					)
-				}
-
-				var magnitude float32
-				if isStop {
-					magnitude = 0
-				} else {
-					magnitude = SpeedOf(m.Type) * 255
-				}
-
-				m.Magnitude = magnitude
-
-				m.TargetEntity = targetEntity
-			}
+			m.TargetEntity = targetEntity
 		}
 
 	case native.NeutralBehavior:
 		{
 			if m.LastAttackedEntity != nil {
-				dx := m.LastAttackedEntity.GetX() - m.X
-				dy := m.LastAttackedEntity.GetY() - m.Y
-
 				if shouldTurnToTarget {
+					dx := m.LastAttackedEntity.GetX() - m.X
+					dy := m.LastAttackedEntity.GetY() - m.Y
+
 					m.Angle = TurnAngleToTarget(
 						m.Angle,
 						dx,

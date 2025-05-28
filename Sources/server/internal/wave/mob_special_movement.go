@@ -4,6 +4,7 @@ import (
 	"slices"
 
 	"flooooio/internal/native"
+
 	"github.com/chewxy/math32"
 )
 
@@ -25,7 +26,7 @@ func (m *Mob) MobSpecialMovement(wp *WavePool) {
 		return
 	}
 
-	if m.PetMaster != nil && m.TargetEntity == nil {
+	if !m.IsTrackableEnemy() && m.TargetEntity == nil {
 		switch m.Type {
 		// Follows the player when the player moves away from this (pet) for a certain distance
 		// Dont follows if targetting other mob

@@ -34,15 +34,16 @@ func (m *Mob) MobBodyConnection(wp *WavePool) {
 	dx := m.ConnectingSegment.GetX() - m.X
 	dy := m.ConnectingSegment.GetY() - m.Y
 
-	segmentDia := m.CalculateRadius() * 2
-
 	currentDistance := math32.Hypot(dx, dy)
+
+	segmentDia := m.CalculateDiameter()
 
 	if currentDistance > segmentDia {
 		m.Magnitude = 0
 		m.Angle = math32.Mod((math32.Atan2(dy, dx)/Tau)*255+255, 255)
 
 		ratio := (currentDistance - segmentDia) / currentDistance
+		
 		m.X += dx * ratio
 		m.Y += dy * ratio
 	}

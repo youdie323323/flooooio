@@ -42,7 +42,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 
 	mIsEnemyMissile := m.IsEnemyMissile()
 
-	mIsEnemy := m.IsEnemy()
+	mIsEnemy := m.IsTrackableEnemy()
 
 	c0 := collision.Circle{X: m.X, Y: m.Y, R: m.CalculateRadius()}
 
@@ -67,7 +67,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 
 				nearEntityIsEnemyMissile := nearEntity.IsEnemyMissile()
 
-				nearEntityIsEnemy := nearEntity.IsEnemy()
+				nearEntityIsEnemy := nearEntity.IsTrackableEnemy()
 
 				{
 					// Enemy missile cant collide to enemy mob
@@ -106,18 +106,20 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					{ // Damage
 						profile1 := native.MobProfiles[nearEntity.Type]
 
-						nearEntityMaxHealth := nearEntity.GetMaxHealth()
+						nearEntityToDamage := nearEntity.GetMobToDamage(wp)
+
+						nearEntityMaxHealth := nearEntityToDamage.GetMaxHealth()
 						nearEntityDamage := profile1.StatFromRarity(nearEntity.Rarity).GetDamage()
 
 						mToDamage.Health -= nearEntityDamage / mMaxHealth
-						nearEntity.Health -= mDamage / nearEntityMaxHealth
+						nearEntityToDamage.Health -= mDamage / nearEntityMaxHealth
 
 						{ // Set LastAttackedEntity
 							// TODO: this algorithm might collide like: mob1 -> mob2, mob2 -> mob1
 							// So maybe its possible to do multiple hit once one frame
 							// To avoid this we need to return sufficient amount collision in ComputeCirclePush
 
-							if nearEntity.PetMaster != nil {
+							if !nearEntity.IsTrackableEnemy() {
 								mTraversed.LastAttackedEntity = nearEntity.PetMaster
 							}
 						}
@@ -132,7 +134,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 				}
 
 				// Petal doesnt damaged/knockbacked to pet
-				if m.PetMaster != nil {
+				if !m.IsTrackableEnemy() {
 					return true
 				}
 
@@ -189,7 +191,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 				}
 
 				// Dont damage/knockback to player
-				if m.PetMaster != nil {
+				if !m.IsTrackableEnemy() {
 					return true
 				}
 

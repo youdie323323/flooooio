@@ -60,6 +60,14 @@ func (m *Mob) CalculateRadius() float32 {
 	return collision.Radius * (m.Size / collision.Fraction)
 }
 
+// CalculateRadius return radius (display size).
+func (m *Mob) CalculateDiameter() float32 {
+	profile := native.MobProfiles[m.Type]
+	collision := profile.Collision
+
+	return collision.Radius * (m.Size / collision.Fraction)
+}
+
 // GetMaxHealth calculates max hp of mob.
 func (m *Mob) GetMaxHealth() float32 {
 	profile := native.MobProfiles[m.Type]
@@ -73,10 +81,14 @@ func (m *Mob) IsEnemyMissile() bool {
 }
 
 // IsEnemy determinate if mob is enemy from player side.
-func (m *Mob) IsEnemy() bool {
-	mIsProjectile := slices.Contains(ProjectileMobTypes, m.Type)
+func (m *Mob) IsTrackableEnemy() bool {
+    if m.PetMaster != nil {
+        return false
+    }
+    
+    mIsProjectile := slices.Contains(ProjectileMobTypes, m.Type)
 
-	return m.PetMaster == nil && (!mIsProjectile || (mIsProjectile && m.IsEnemyMissile()))
+    return !mIsProjectile || m.IsEnemyMissile()
 }
 
 // HasConnectingSegment determinate if mob has connecting segment.
@@ -112,7 +124,7 @@ func (m *Mob) GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []
 
 		// Target pets
 		mobTargets := wp.GetMobsWithCondition(func(targetMob *Mob) bool {
-			return !slices.Contains(bouncedIds, targetMob.Id) && targetMob.PetMaster != nil
+			return !slices.Contains(bouncedIds, targetMob.Id) && !targetMob.IsTrackableEnemy()
 		})
 
 		lenPlayerTargets := len(playerTargets)

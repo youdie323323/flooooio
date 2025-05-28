@@ -11,7 +11,7 @@ func getCameraTargets(wp *WavePool) []collision.Node {
 
 	{ // Add camera targets
 		// Or just, all mobs
-		mobs := wp.GetMobsWithCondition(func(m *Mob) bool { return m.IsEnemy() })
+		mobs := wp.GetMobsWithCondition(func(m *Mob) bool { return m.IsTrackableEnemy() })
 		players := wp.GetPlayersWithCondition(func(p2 *Player) bool { return !p2.IsDead })
 
 		mobsLen := len(mobs)

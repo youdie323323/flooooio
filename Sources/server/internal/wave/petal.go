@@ -50,12 +50,12 @@ func (p *Petal) WasEliminated(wp *WavePool) bool {
 }
 
 // Ensure petal satisfies LightningEmitter
-var _ LightningEmitter = (*Petal)(nil) 
+var _ LightningEmitter = (*Petal)(nil)
 
 // GetLightningBounceTargets returns targets to bounce.
 func (p *Petal) GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node {
 	mobTargets := wp.GetMobsWithCondition(func(targetMob *Mob) bool {
-		return !slices.Contains(bouncedIds, targetMob.Id) && targetMob.PetMaster == nil
+		return !slices.Contains(bouncedIds, targetMob.Id) && targetMob.IsTrackableEnemy()
 	})
 
 	nodeTargets := make([]collision.Node, len(mobTargets))
