@@ -57,7 +57,7 @@ export default class PlayerRendererNormal extends AbstractPlayerRenderer {
             ctx.moveTo(-7, -5);
             ctx.arc(-7 + eyeX * 2, -5 + eyeY * 3.5, 3.1, 0, TAU);
 
-            ctx.fillStyle = "#eee";
+            ctx.fillStyle = "#EEE";
             ctx.fill();
         }
 

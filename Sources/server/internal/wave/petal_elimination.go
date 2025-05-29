@@ -2,6 +2,7 @@ package wave
 
 import (
 	"slices"
+	"time"
 
 	"flooooio/internal/native"
 )
@@ -26,7 +27,7 @@ func (p *Petal) onEliminate(wp *WavePool) {
 	}
 }
 
-func (p *Petal) PetalElimination(wp *WavePool) {
+func (p *Petal) PetalElimination(wp *WavePool, _ time.Time) {
 	if !p.WasEliminated(wp) && 0 >= p.Health {
 		p.onEliminate(wp)
 	}

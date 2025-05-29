@@ -299,15 +299,15 @@ export class StaticPanelContainer<Child extends Components = Components> extends
             const computedColor = Component.computePointerLike(this.color);
             const computedRadii = Component.computePointerLike(this.rectRadii);
 
+            ctx.beginPath();
+
+            ctx.roundRect(this.x, this.y, this.w, this.h, computedRadii);
+
             ctx.lineWidth = this.getStrokeWidth();
             ctx.fillStyle = computedColor;
             ctx.strokeStyle = darkened(computedColor, DARKENED_BASE);
-
-            ctx.beginPath();
-            ctx.roundRect(this.x, this.y, this.w, this.h, computedRadii);
             ctx.fill();
             ctx.stroke();
-            ctx.closePath();
 
             ctx.restore();
         }
@@ -402,15 +402,15 @@ export class StaticTranslucentPanelContainer<Child extends Components = Componen
 
             const computedRadii = Component.computePointerLike(this.rectRadii);
 
+            ctx.beginPath();
+
+            ctx.roundRect(this.x, this.y, this.w, this.h, computedRadii);
+
             // 0.5 if globalAlpha is 1
             ctx.globalAlpha = alpha;
-
+            
             ctx.fillStyle = "black";
-
-            ctx.beginPath();
-            ctx.roundRect(this.x, this.y, this.w, this.h, computedRadii);
             ctx.fill();
-            ctx.closePath();
 
             ctx.restore();
         }
@@ -521,9 +521,11 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
 
                 if (computedSpacingOverride !== null) {
                     totalWidth = Math.max(totalWidth, currentX + childW);
+
                     currentX += (computedReverseRender ? -1 : 1) * computedSpacingOverride;
                 } else {
                     totalWidth = Math.max(totalWidth, currentX + childW);
+
                     currentX += (computedReverseRender ? -1 : 1) * childW;
                 }
             });
@@ -725,9 +727,11 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
 
                 if (computedSpacingOverride !== null) {
                     totalHeight = Math.max(totalHeight, currentY + childH);
+
                     currentY += (computedReverseRender ? -1 : 1) * computedSpacingOverride;
                 } else {
                     totalHeight = Math.max(totalHeight, currentY + childH);
+
                     currentY += (computedReverseRender ? -1 : 1) * childH;
                 }
             });
@@ -939,11 +943,11 @@ export class StaticScrollableContainer<Child extends Components = Components> ex
     }
 
     private handleMouseDown(e: MouseEvent): void {
-        const mouseX = this.context.mouseX;
-        const mouseY = this.context.mouseY;
+        const { mouseX, mouseY } = this.context;
 
         if (this.isPointInScrollBar(mouseX, mouseY)) {
             this.isDragging = true;
+
             this.lastMouseY = mouseY;
         }
     }
@@ -954,9 +958,11 @@ export class StaticScrollableContainer<Child extends Components = Components> ex
 
         if (isOverScrollBar && !this.wasPointed) {
             this.context.canvas.style.cursor = "pointer";
+
             this.wasPointed = true;
         } else if (!isOverScrollBar && this.wasPointed) {
             this.context.canvas.style.cursor = "default";
+
             this.wasPointed = false;
         }
     }
@@ -983,7 +989,8 @@ export class StaticScrollableContainer<Child extends Components = Components> ex
     }
 
     private handleScroll(e: WheelEvent): void {
-        this.targetScrollY = Math.max(0,
+        this.targetScrollY = Math.max(
+            0,
             Math.min(
                 this.contentHeight,
                 this.targetScrollY +
@@ -994,6 +1001,7 @@ export class StaticScrollableContainer<Child extends Components = Components> ex
                 ),
             ),
         );
+
         this.scrollYAlpha = StaticScrollableContainer.ON_SCROLLED_ALPHA;
     }
 
@@ -1048,7 +1056,9 @@ export class StaticScrollableContainer<Child extends Components = Components> ex
         ctx.save();
 
         ctx.beginPath();
+
         ctx.rect(this.x, this.y, this.w - this.scrollBarWidth, this.h);
+
         ctx.clip();
 
         if (this.children.length > 0) {
@@ -1089,9 +1099,9 @@ export class StaticScrollableContainer<Child extends Components = Components> ex
         ctx.restore();
 
         const metrics = this.scrollBarMetrics;
-        ctx.fillStyle = "black";
-        ctx.globalAlpha = 0.2;
+
         ctx.beginPath();
+
         ctx.roundRect(
             metrics.x,
             metrics.y,
@@ -1099,6 +1109,9 @@ export class StaticScrollableContainer<Child extends Components = Components> ex
             metrics.height,
             metrics.width / 2,
         );
+
+        ctx.globalAlpha = 0.2;
+        ctx.fillStyle = "black";
         ctx.fill();
     }
 }

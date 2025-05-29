@@ -29,7 +29,7 @@ const (
 
 	WaveUpdateFPS = 60
 
-	DeltaT = 1 / WaveUpdateFPS
+	DeltaT = 1. / WaveUpdateFPS
 )
 
 func calculateWaveLength(x float32) float32 {
@@ -166,22 +166,22 @@ func (wp *WavePool) Dispose() {
 			cmd()
 
 		default:
-			goto done
+			goto Done
 		}
 	}
-done:
+Done:
 
-	wp.playerPool.Range(func(id EntityId, player *Player) bool {
+	wp.playerPool.Range(func(id EntityId, _ *Player) bool {
 		wp.RemovePlayer(id)
 
 		return true
 	})
-	wp.mobPool.Range(func(id EntityId, mob *Mob) bool {
+	wp.mobPool.Range(func(id EntityId, _ *Mob) bool {
 		wp.RemoveMob(id)
 
 		return true
 	})
-	wp.petalPool.Range(func(id EntityId, petal *Petal) bool {
+	wp.petalPool.Range(func(id EntityId, _ *Petal) bool {
 		wp.RemovePetal(id)
 
 		return true
@@ -261,10 +261,10 @@ func (wp *WavePool) update() {
 
 		default:
 			// Channel is empty, leave loop
-			goto done
+			goto Done
 		}
 	}
-done:
+Done:
 
 	wp.frameCount.Add(1)
 
@@ -280,33 +280,36 @@ done:
 }
 
 func (wp *WavePool) updateEntities() {
-	wp.playerPool.Range(func(id EntityId, player *Player) bool {
-		player.OnUpdateTick(wp)
+	// Now include syscall and its bit cost, so we can call it once for every frame
+	now := time.Now()
+
+	wp.playerPool.Range(func(_ EntityId, player *Player) bool {
+		player.OnUpdateTick(wp, now)
 
 		return true
 	})
-	wp.mobPool.Range(func(id EntityId, mob *Mob) bool {
-		mob.OnUpdateTick(wp)
+	wp.mobPool.Range(func(_ EntityId, mob *Mob) bool {
+		mob.OnUpdateTick(wp, now)
 
 		return true
 	})
-	wp.petalPool.Range(func(id EntityId, petal *Petal) bool {
-		petal.OnUpdateTick(wp)
+	wp.petalPool.Range(func(_ EntityId, petal *Petal) bool {
+		petal.OnUpdateTick(wp, now)
 
 		return true
 	})
 
-	wp.playerPool.Range(func(id EntityId, player *Player) bool {
+	wp.playerPool.Range(func(_ EntityId, player *Player) bool {
 		wp.SpatialHash.Update(player)
 
 		return true
 	})
-	wp.mobPool.Range(func(id EntityId, mob *Mob) bool {
+	wp.mobPool.Range(func(_ EntityId, mob *Mob) bool {
 		wp.SpatialHash.Update(mob)
 
 		return true
 	})
-	wp.petalPool.Range(func(id EntityId, petal *Petal) bool {
+	wp.petalPool.Range(func(_ EntityId, petal *Petal) bool {
 		wp.SpatialHash.Update(petal)
 
 		return true
@@ -336,7 +339,7 @@ func (wp *WavePool) updateWaveData() {
 			)
 
 			if ok {
-				if slices.Contains(LinkableMobs, sm.MobType) {
+				if slices.Contains(LinkableMobTypes, sm.MobType) {
 					wp.LinkedMobSegmentation(
 						sm.MobType,
 
@@ -346,6 +349,10 @@ func (wp *WavePool) updateWaveData() {
 						randY,
 
 						sm.SegmentBodies,
+
+						nil,
+
+						nil,
 					)
 				} else {
 					wp.GenerateMob(
@@ -847,7 +854,7 @@ func (wp *WavePool) SafeFindPlayer(id EntityId) *Player {
 func (wp *WavePool) GetPlayersWithCondition(condition func(*Player) bool) []*Player {
 	filtered := make([]*Player, 0, wp.playerPool.Size())
 
-	wp.playerPool.Range(func(id EntityId, player *Player) bool {
+	wp.playerPool.Range(func(_ EntityId, player *Player) bool {
 		if condition(player) {
 			filtered = append(filtered, player)
 		}
@@ -995,7 +1002,7 @@ func (wp *WavePool) SafeFindMob(id EntityId) *Mob {
 func (wp *WavePool) GetMobsWithCondition(condition func(*Mob) bool) []*Mob {
 	filtered := make([]*Mob, 0, wp.mobPool.Size())
 
-	wp.mobPool.Range(func(id EntityId, mob *Mob) bool {
+	wp.mobPool.Range(func(_ EntityId, mob *Mob) bool {
 		if condition(mob) {
 			filtered = append(filtered, mob)
 		}
@@ -1022,6 +1029,10 @@ func (wp *WavePool) LinkedMobSegmentation(
 	y float32,
 
 	bodyCount int,
+
+	petMaster *Player,
+
+	missileMaster *Mob,
 ) {
 	profile := native.MobProfiles[mType]
 
@@ -1045,13 +1056,13 @@ func (wp *WavePool) LinkedMobSegmentation(
 			x+radius,
 			y+radius,
 
-			nil,
+			petMaster,
 
 			prevSegment,
 			// Head
 			i == 0,
 
-			nil,
+			missileMaster,
 		)
 	}
 }
@@ -1065,6 +1076,10 @@ func (wp *WavePool) SafeLinkedMobSegmentation(
 	y float32,
 
 	bodyCount int,
+
+	petMaster *Player,
+
+	missileMaster *Mob,
 ) {
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
@@ -1078,6 +1093,10 @@ func (wp *WavePool) SafeLinkedMobSegmentation(
 		y,
 
 		bodyCount,
+
+		petMaster,
+
+		missileMaster,
 	)
 }
 
@@ -1196,7 +1215,7 @@ func (wp *WavePool) SafeFindPetal(id EntityId) *Petal {
 func (wp *WavePool) GetPetalsWithCondition(condition func(*Petal) bool) []*Petal {
 	filtered := make([]*Petal, 0, wp.petalPool.Size())
 
-	wp.petalPool.Range(func(id EntityId, petal *Petal) bool {
+	wp.petalPool.Range(func(_ EntityId, petal *Petal) bool {
 		if condition(petal) {
 			filtered = append(filtered, petal)
 		}
@@ -1265,7 +1284,7 @@ Loop:
 		case *Mob:
 			{
 				// Missile is not electrical
-				if targetEntity.Type == native.MobTypeMissile {
+				if targetEntity.Type == native.MobTypeMissileProjectile {
 					break Loop
 				}
 
@@ -1336,7 +1355,7 @@ func (wp *WavePool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 		}
 
 		// Missile is not electrical
-		if targetMob.Type == native.MobTypeMissile {
+		if targetMob.Type == native.MobTypeMissileProjectile {
 			break
 		}
 

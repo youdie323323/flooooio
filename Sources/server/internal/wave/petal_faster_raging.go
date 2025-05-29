@@ -13,12 +13,10 @@ const (
 	fasterRagingApplyMS = 50
 )
 
-func (p *Petal) PetalFasterRaging(wp *WavePool) {
+func (p *Petal) PetalFasterRaging(wp *WavePool, now time.Time) {
 	if p.Type != native.PetalTypeFaster {
 		return
 	}
-
-	now := time.Now()
 
 	if now.Sub(p.LastVelocityApplied) >= fasterRagingApplyMS*time.Millisecond {
 		p.AddRandomVelocity(rand.Float32() * 6)
@@ -28,7 +26,7 @@ func (p *Petal) PetalFasterRaging(wp *WavePool) {
 }
 
 func (p *Petal) AddRandomVelocity(speed float32) {
-	angle := rand.Float32() * 2 * math32.Pi
+	angle := 2 * math32.Pi * rand.Float32()
 
 	p.Velocity[0] += speed * math32.Cos(angle)
 	p.Velocity[1] += speed * math32.Sin(angle)

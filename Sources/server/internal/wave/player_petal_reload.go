@@ -12,9 +12,10 @@ var UsablePetalTypes = []native.PetalType{
 	native.PetalTypeBubble,
 	native.PetalTypeStick,
 	native.PetalTypeYggdrasil,
+	native.PetalTypeWeb,
 }
 
-func (p *Player) PlayerPetalReload(wp *WavePool) {
+func (p *Player) PlayerPetalReload(wp *WavePool, now time.Time) {
 	if p.IsDead {
 		return
 	}
@@ -56,8 +57,6 @@ func (p *Player) PlayerPetalReload(wp *WavePool) {
 				}
 
 				peReloadCooldown := reloadCooldownGrid[i]
-
-				now := time.Now()
 
 				if peReloadCooldown[j].IsZero() {
 					peReloadCooldown[j] = now.Add(time.Duration(native.PetalProfiles[pe.Type].StatFromRarity(pe.Rarity).PetalReload * float32(time.Second)))
@@ -115,8 +114,6 @@ func (p *Player) PlayerPetalReload(wp *WavePool) {
 				peUsageCooldown[j] = time.Time{}
 			} else {
 				if peUsageCooldown[j].IsZero() {
-					now := time.Now()
-
 					usageReload := native.PetalProfiles[pe.Type].StatFromRarity(pe.Rarity).UsageReload
 					if usageReload == nil {
 						continue

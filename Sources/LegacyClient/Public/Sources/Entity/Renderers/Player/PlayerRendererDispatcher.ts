@@ -5,8 +5,8 @@ import PlayerRendererDev from "./PlayerRendererDev";
 import PlayerRendererNormal from "./PlayerRendererNormal";
 
 export default class PlayerRendererDispatcher extends Renderer<Player> {
-    private dev: PlayerRendererDev = new PlayerRendererDev();
-    private normal: PlayerRendererNormal = new PlayerRendererNormal();
+    private static readonly dev = new PlayerRendererDev();
+    private static readonly normal = new PlayerRendererNormal();
 
     override render(context: RenderingContext<Player>): void {
         super.render(context);
@@ -17,9 +17,9 @@ export default class PlayerRendererDispatcher extends Renderer<Player> {
         ctx.scale(scale, scale);
 
         if (entity.isDev) {
-            this.dev.render(context);
+            PlayerRendererDispatcher.dev.render(context);
         } else {
-            this.normal.render(context);
+            PlayerRendererDispatcher.normal.render(context);
         }
     }
 }

@@ -2,7 +2,6 @@ package wave
 
 import (
 	"math/rand/v2"
-	"slices"
 	"time"
 
 	"flooooio/internal/collision"
@@ -25,8 +24,10 @@ const (
 type JudgementFunc = func(m *Mob, distanceToTarget float32) bool
 
 func createCautionJudger(radiusMultiplier float32) JudgementFunc {
-	return func(m *Mob, distanceToTarget float32) bool {
-		return m.TargetEntity != nil && (m.CalculateRadius()*radiusMultiplier) > distanceToTarget
+	return func(m *Mob, distanceToTargetDot float32) bool {
+		cautionRad := m.CalculateRadius() * radiusMultiplier
+
+		return m.TargetEntity != nil && (cautionRad*cautionRad) > distanceToTargetDot
 	}
 }
 
@@ -46,18 +47,18 @@ func FindNearestEntity(me collision.Node, entities []collision.Node) collision.N
 
 	nearest := entities[0]
 
+	var dx, dy float32
+
 	for _, current := range entities[1:] {
-		distanceToCurrent := math32.Hypot(
-			current.GetX()-meX,
-			current.GetY()-meY,
-		)
+		dx = current.GetX() - meX
+		dy = current.GetY() - meY
+		distanceSqToCurrent := dx*dx + dy*dy
 
-		distanceToNearest := math32.Hypot(
-			nearest.GetX()-meX,
-			nearest.GetY()-meY,
-		)
+		dx = nearest.GetX() - meX
+		dy = nearest.GetY() - meY
+		distanceSqToNearest := dx*dx + dy*dy
 
-		if distanceToCurrent < distanceToNearest {
+		if distanceSqToCurrent < distanceSqToNearest {
 			nearest = current
 		}
 	}
@@ -75,17 +76,19 @@ func FindNearestEntityWithLimitedDistance(me collision.Node, entities []collisio
 
 	var nearest collision.Node
 
-	nearestDistance := maxDistance
+	maxDistanceSq := maxDistance * maxDistance
+	nearestDistanceSq := maxDistanceSq
+
+	var dx, dy, dot float32
 
 	for _, current := range entities {
-		distanceToCurrent := math32.Hypot(
-			current.GetX()-meX,
-			current.GetY()-meY,
-		)
+		dx = current.GetX() - meX
+		dy = current.GetY() - meY
+		dot = dx*dx + dy*dy
 
-		if distanceToCurrent <= maxDistance && (nearest == nil || distanceToCurrent < nearestDistance) {
+		if dot <= maxDistanceSq && (nearest == nil || dot < nearestDistanceSq) {
 			nearest = current
-			nearestDistance = distanceToCurrent
+			nearestDistanceSq = dot
 		}
 	}
 
@@ -96,19 +99,19 @@ const angleFactor = 255 / Tau // 255/(2*PI)
 
 const angleInterpolationFactor = .05
 
-// TurnAngleToTarget calculates interpolated angle to target.
-func TurnAngleToTarget(thisAngle, dx, dy float32) float32 {
-	targetAngle := math32.Mod(math32.Atan2(dy, dx)*angleFactor, 255)
-	normalizedAngle := math32.Mod(math32.Mod(thisAngle, 255)+255, 255)
-	angleDiff := targetAngle - normalizedAngle
+// CalculateInterpolatedAngleToTarget calculates interpolated angle to target.
+func CalculateInterpolatedAngleToTarget(thisAngle, dx, dy float32) float32 {
+	angleDiff := math32.Mod(math32.Atan2(dy, dx)*angleFactor, 255) - thisAngle
 
-	if angleDiff > 127.5 {
+	switch {
+	case angleDiff > 127.5:
 		angleDiff -= 255
-	} else if angleDiff < -127.5 {
+
+	case angleDiff < -127.5:
 		angleDiff += 255
 	}
 
-	return math32.Mod(normalizedAngle+angleDiff*angleInterpolationFactor+255, 255)
+	return math32.Mod(thisAngle+angleDiff*angleInterpolationFactor, 255)
 }
 
 func normalizeAngle(angle float32) float32 {
@@ -152,7 +155,7 @@ func generalPurposePredictInterception(dx, dy, vtx, vty, currentAngle float32) *
 	xf := dx + vtx*totalTime
 	yf := dy + vty*totalTime
 
-	interpolatedAngle := TurnAngleToTarget(currentAngle, xf, yf)
+	interpolatedAngle := CalculateInterpolatedAngleToTarget(currentAngle, xf, yf)
 
 	return &interpolatedAngle
 }
@@ -179,14 +182,12 @@ func predictInterceptionAnglePlayer(dx, dy float32, p *Player, currentAngle floa
 	return generalPurposePredictInterception(dx, dy, vtx, vty, currentAngle)
 }
 
-const mobDetectionRange = 15.
-
 func (m *Mob) calculateDetectRange() float32 {
-	return mobDetectionRange * m.CalculateRadius()
+	return 15 * m.CalculateDiameter()
 }
 
 func (m *Mob) calculateLoseRange() float32 {
-	return 2 * mobDetectionRange * m.CalculateRadius()
+	return 2 * m.calculateDetectRange()
 }
 
 // GetTrackingTargets returns target nodes to track.
@@ -204,7 +205,7 @@ func (m *Mob) GetTrackingTargets(wp *WavePool) []collision.Node {
 		}
 	} else {
 		mobs := wp.GetMobsWithCondition(func(fm *Mob) bool {
-			return fm.Id != m.Id && fm.IsTrackableEnemy()
+			return fm.Id != m.Id && fm.PetMaster == nil && !fm.IsProjectile()
 		})
 
 		targets = make([]collision.Node, len(mobs))
@@ -216,16 +217,16 @@ func (m *Mob) GetTrackingTargets(wp *WavePool) []collision.Node {
 	return targets
 }
 
-var missileSpeed = SpeedOf(native.MobTypeMissile)
+var missileSpeed = SpeedOf(native.MobTypeMissileProjectile)
 
-func (m *Mob) MobAggressivePursuit(wp *WavePool) {
+func (m *Mob) MobAggressivePursuit(wp *WavePool, now time.Time) {
 	// If body, dont do anything
 	if IsBody(wp, m) {
 		return
 	}
 
 	// If projectile mob, dont do anything
-	if slices.Contains(ProjectileMobTypes, m.Type) {
+	if m.IsProjectile() {
 		return
 	}
 
@@ -245,20 +246,27 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 		m.LastAttackedEntity = nil
 	}
 
-	var distanceToTarget float32 = 0.
+	var distanceToTargetDot float32 = 0.
 
 	if m.TargetEntity != nil {
 		dx := m.TargetEntity.GetX() - m.X
 		dy := m.TargetEntity.GetY() - m.Y
 
-		distanceToTarget = math32.Hypot(dx, dy)
+		distanceToTargetDot = dx*dx + dy*dy
 	}
 
-	isStop := false
+	loseRange := m.calculateLoseRange()
+
+	// Lose target
+	if distanceToTargetDot > loseRange*loseRange {
+		m.TargetEntity = nil
+	}
+
+	shouldStop := false
 
 	judgementFunc, ok := cautionBehaviorStopJudger[m.Type]
 	if ok {
-		isStop = judgementFunc(m, distanceToTarget)
+		shouldStop = judgementFunc(m, distanceToTargetDot)
 	}
 
 	shouldTurnToTarget := true
@@ -268,9 +276,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 	// Do lightning bounce to target
 	case native.MobTypeJellyfish:
 		{
-			if isStop {
-				now := time.Now()
-
+			if shouldStop {
 				if now.Sub(m.JellyfishLastBounce) >= jellyfishLightningShootMS*time.Millisecond {
 					// TODO: this only shoot to player, make it shoot able to mob & player
 					wp.MobDoLightningBounce(m, m.TargetEntity)
@@ -292,18 +298,17 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 			angleRad := angleToRadian(m.Angle)
 
 			mRadius := m.CalculateRadius()
+			mRadiusSq := mRadius * mRadius
 
 			shootX := m.X + math32.Cos(angleRad)*mRadius
 			shootY := m.Y + math32.Sin(angleRad)*mRadius
 
 			dx := m.TargetEntity.GetX() - shootX
 			dy := m.TargetEntity.GetY() - shootY
-			
-			distance := math32.Hypot(dx, dy)
 
-			// If distance is close, we can just use TurnAngleToTarget
-			if distance <= mRadius {
-				m.Angle = TurnAngleToTarget(m.Angle, dx, dy)
+			// If distance is close, we can just use CalculateInterpolatedAngleToTarget
+			if (dx*dx + dy*dy) <= mRadiusSq {
+				m.Angle = CalculateInterpolatedAngleToTarget(m.Angle, dx, dy)
 			} else {
 				var predicted *float32 = nil
 
@@ -322,15 +327,13 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 				if predicted != nil {
 					m.Angle = *predicted
 				} else {
-					m.Angle = TurnAngleToTarget(m.Angle, dx, dy)
+					m.Angle = CalculateInterpolatedAngleToTarget(m.Angle, dx, dy)
 				}
 			}
 
-			now := time.Now()
-
 			if now.Sub(m.HornetLastMissileShoot) >= hornetMissileShootMS*time.Millisecond {
 				missile := wp.GenerateMob(
-					native.MobTypeMissile,
+					native.MobTypeMissileProjectile,
 
 					m.Rarity,
 
@@ -353,15 +356,10 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 		}
 	}
 
-	// Lose target
-	if distanceToTarget > m.calculateLoseRange() {
-		m.TargetEntity = nil
-	}
-
-	behavior := native.EachMobBehaviorDefinition[m.Type]
+	behavior := native.EachMobBehaviorDefinition[m.Type][m.Rarity]
 
 	switch behavior {
-	case native.VoidBehavior:
+	case native.PassiveBehavior:
 		return
 
 	case native.ChaoticBehavior:
@@ -371,12 +369,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 			m.Magnitude = SpeedOf(m.Type) * 255 * (1. + (30.-1.)*rand.Float32())
 		}
 
-	case native.PassiveBehavior:
-		{
-			m.Magnitude = 0
-		}
-
-	case native.AggressiveBehavior, native.CautionBehavior:
+	case native.HostileBehavior:
 		{
 			var targetEntity collision.Node
 
@@ -395,7 +388,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 				dx := targetEntity.GetX() - m.X
 				dy := targetEntity.GetY() - m.Y
 
-				m.Angle = TurnAngleToTarget(
+				m.Angle = CalculateInterpolatedAngleToTarget(
 					m.Angle,
 					dx,
 					dy,
@@ -403,7 +396,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 			}
 
 			var magnitude float32
-			if behavior == native.CautionBehavior && isStop {
+			if shouldStop {
 				magnitude = 0
 			} else {
 				magnitude = SpeedOf(m.Type) * 255
@@ -421,7 +414,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool) {
 					dx := m.LastAttackedEntity.GetX() - m.X
 					dy := m.LastAttackedEntity.GetY() - m.Y
 
-					m.Angle = TurnAngleToTarget(
+					m.Angle = CalculateInterpolatedAngleToTarget(
 						m.Angle,
 						dx,
 						dy,

@@ -4,7 +4,7 @@ import type { Layoutable } from "./ComponentLayoutable";
 export const DYNAMIC_LAYOUTABLE: unique symbol = Symbol("dynamicLayoutable");
 
 /**
- * UI-definable layoutable.
+ * UI-define layoutable.
  */
 export interface DynamicLayoutable extends Layoutable { readonly [DYNAMIC_LAYOUTABLE]: true }
 

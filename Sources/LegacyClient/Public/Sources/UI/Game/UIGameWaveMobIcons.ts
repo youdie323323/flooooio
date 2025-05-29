@@ -141,6 +141,6 @@ export default class UIGameWaveMobIcons extends StaticHContainer<StaticVContaine
     }
 
     public isIconableMobInstance({ type, isPet }: Mob): boolean {
-        return !(isPetal(type) || isPet || type === MobType.MISSILE);
+        return !(isPetal(type) || isPet || type === MobType.MISSILE_PROJECTILE);
     }
 }

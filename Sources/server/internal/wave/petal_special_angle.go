@@ -2,11 +2,12 @@ package wave
 
 import (
 	"flooooio/internal/native"
+	"time"
 
 	"github.com/chewxy/math32"
 )
 
-func (p *Petal) PetalSpecialAngle(wp *WavePool) {
+func (p *Petal) PetalSpecialAngle(wp *WavePool, _ time.Time) {
 	if p.DetachedFromOrbit {
 		return
 	}

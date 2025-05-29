@@ -13,22 +13,27 @@ type Circle struct {
 func ComputeCirclePush(c0, c1 Circle) (float32, float32, bool) {
 	dx := c1.X - c0.X
 	dy := c1.Y - c0.Y
-	distance := math32.Hypot(dx, dy)
+
+	dot := dx*dx + dy*dy
 
 	// If distance is zero, dx and dy will be NaN and cause errors
 	// So knockout them with ε-like value
-	if distance == 0 {
+	if dot == 0 {
 		return 1, 1, true
 	}
 
-	delta := c0.R + c1.R - distance
-	if delta <= 0 {
+	radiusSum := c0.R + c1.R
+
+	if radiusSumSq := radiusSum * radiusSum; dot >= radiusSumSq {
 		return 0, 0, false
 	}
 
-	invDist := 1 / distance
-	nx := dx * invDist
-	ny := dy * invDist
+	distance := math32.Sqrt(dot)
+
+	delta := radiusSum - distance
+
+	nx := dx / distance
+	ny := dy / distance
 
 	return nx * delta, ny * delta, true
 }

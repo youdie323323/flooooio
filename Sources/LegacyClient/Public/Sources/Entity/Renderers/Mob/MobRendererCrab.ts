@@ -167,7 +167,7 @@ export default class MobRendererCrab extends AbstractMobRenderer {
             for (let dir = -1; dir <= 1; dir += 2) {
                 ctx.save();
 
-                ctx.translate(12, dir * 2);
+                ctx.translate(12, 2 * dir);
                 ctx.scale(1, -dir);
                 ctx.rotate(clawAngle);
 

@@ -1,8 +1,11 @@
 package wave
 
-import "flooooio/internal/native"
+import (
+	"flooooio/internal/native"
+	"time"
+)
 
-func (m *Mob) MobHealthRegen(wp *WavePool) {
+func (m *Mob) MobHealthRegen(wp *WavePool, _ time.Time) {
 	// Regen for starfish
 	if m.StarfishRegeningHealth || (m.Type == native.MobTypeStarfish && 0.5 >= m.Health) {
 		m.StarfishRegeningHealth = true
@@ -22,7 +25,7 @@ func (m *Mob) MobHealthRegen(wp *WavePool) {
 			dx := m.TargetEntity.GetX() - m.X
 			dy := m.TargetEntity.GetY() - m.Y
 
-			m.Angle = TurnAngleToTarget(
+			m.Angle = CalculateInterpolatedAngleToTarget(
 				m.Angle,
 				// Reverse angle
 				-dx,

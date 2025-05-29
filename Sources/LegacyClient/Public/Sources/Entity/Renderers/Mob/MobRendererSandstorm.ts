@@ -21,9 +21,9 @@ export default class MobRendererSandstorm extends AbstractMobRenderer {
                 ? 0
                 : entity.totalT * 5;
 
-        const outerColor = this.calculateDamageEffectColor(context, (entity.isPet ? "#cb979c" : "#D5C7A6") satisfies ColorCode);
-        const middleColor = this.calculateDamageEffectColor(context, (entity.isPet ? "#b18687" : "#BFB295") satisfies ColorCode);
-        const innerColor = this.calculateDamageEffectColor(context, (entity.isPet ? "#9b7477" : "#A99E84") satisfies ColorCode);
+        const outerColor = this.calculateDamageEffectColor(context, (entity.isPet ? "#cb979c" : "#e9d683") satisfies ColorCode);
+        const middleColor = this.calculateDamageEffectColor(context, (entity.isPet ? "#b18687" : "#e0c156") satisfies ColorCode);
+        const innerColor = this.calculateDamageEffectColor(context, (entity.isPet ? "#9b7477" : "#d2b130") satisfies ColorCode);
 
         ctx.lineJoin = "round";
         ctx.lineWidth = 6;

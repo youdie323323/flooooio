@@ -196,7 +196,7 @@ func RemovePlayerFromService(pd *PlayerData) {
 				player := wp.FindPlayer(*pd.WPId)
 
 				if player != nil {
-					DisposeBindings(wp, player)
+					ResetBindings(wp, player)
 
 					wp.RemovePlayer(*pd.WPId)
 

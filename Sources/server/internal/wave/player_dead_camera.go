@@ -33,7 +33,7 @@ func getCameraTargets(wp *WavePool) []collision.Node {
 
 const deadCameraSwitchAfterMS = 500
 
-func (p *Player) PlayerDeadCamera(wp *WavePool) {
+func (p *Player) PlayerDeadCamera(wp *WavePool, now time.Time) {
 	if !p.IsDead {
 		return
 	}
@@ -43,8 +43,6 @@ func (p *Player) PlayerDeadCamera(wp *WavePool) {
 	isFindable := p.DeadCameraTarget == nil || IsDeadNode(wp, p.DeadCameraTarget)
 
 	if isFindable {
-		now := time.Now()
-
 		if now.Sub(p.LastDeadCameraUpdate) >= deadCameraSwitchAfterMS*time.Millisecond {
 			p.DeadCameraTarget = FindNearestEntity(p, getCameraTargets(wp))
 

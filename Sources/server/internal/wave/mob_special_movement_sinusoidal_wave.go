@@ -2,7 +2,7 @@ package wave
 
 import "github.com/chewxy/math32"
 
-func generateSinWaveTable(sampleRate int) []float32 {
+func generateSinusoidalWaveTable(sampleRate int) []float32 {
 	samples := make([]float32, sampleRate)
 
 	for i := range sampleRate {
@@ -18,7 +18,7 @@ type SinusoidalWave struct {
 
 func NewSinusoidalWave(sampleRate int) *SinusoidalWave {
 	return &SinusoidalWave{
-		table: generateSinWaveTable(sampleRate),
+		table: generateSinusoidalWaveTable(sampleRate),
 	}
 }
 
@@ -28,4 +28,4 @@ func (w *SinusoidalWave) At(t int) float32 {
 	return w.table[index]
 }
 
-var SinusodialWave = NewSinusoidalWave(200)
+var BeeSinusoidalWave = NewSinusoidalWave(200)

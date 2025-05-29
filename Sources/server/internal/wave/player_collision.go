@@ -3,6 +3,7 @@ package wave
 import (
 	"flooooio/internal/collision"
 	"flooooio/internal/native"
+	"time"
 )
 
 var PlayerCollision = native.EntityCollision{
@@ -10,15 +11,23 @@ var PlayerCollision = native.EntityCollision{
 	Radius:   25,
 }
 
-const playerToPlayerKnockbackForce = 2.5
+const playerToPlayerKnockbackFactor = 2.5
 
-func (p *Player) PlayerCollision(wp *WavePool) {
+// Define reusable circle
+var (
+	c0player collision.Circle
+	c1player collision.Circle
+)
+
+func (p *Player) PlayerCollision(wp *WavePool, _ time.Time) {
 	// Dont collide when dead/uncollidable
 	if p.IsDead || !p.IsCollidable() {
 		return
 	}
 
-	c0 := collision.Circle{X: p.X, Y: p.Y, R: p.Size}
+	c0player.X = p.X
+	c0player.Y = p.Y
+	c0player.R = p.Size
 
 	searchRadius := CalculateSearchRadius(PlayerCollision, p.Size)
 
@@ -39,15 +48,17 @@ func (p *Player) PlayerCollision(wp *WavePool) {
 			return true
 		}
 
-		c1 := collision.Circle{X: np.X, Y: np.Y, R: np.Size}
+		c1player.X = np.X
+		c1player.Y = np.Y
+		c1player.R = np.Size
 
-		px, py, ok := collision.ComputeCirclePush(c0, c1)
+		px, py, ok := collision.ComputeCirclePush(c0player, c1player)
 		if ok {
-			p.Velocity[0] -= px * playerToPlayerKnockbackForce
-			p.Velocity[1] -= py * playerToPlayerKnockbackForce
+			p.Velocity[0] -= px * playerToPlayerKnockbackFactor
+			p.Velocity[1] -= py * playerToPlayerKnockbackFactor
 
-			np.Velocity[0] += px * playerToPlayerKnockbackForce
-			np.Velocity[1] += py * playerToPlayerKnockbackForce
+			np.Velocity[0] += px * playerToPlayerKnockbackFactor
+			np.Velocity[1] += py * playerToPlayerKnockbackFactor
 		}
 
 		return true

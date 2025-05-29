@@ -1107,7 +1107,7 @@ export default class UIGame extends AbstractUI {
             const y0 = selfPlayer.y - halfHeight;
             const y1 = selfPlayer.y + halfHeight;
 
-            const entitiesToDraw: (Mob | Player)[] = [];
+            const entitiesToDraw: Array<Mob | Player> = new Array();
 
             for (const [, mob] of this.mobs) {
                 if (!isPetal(mob.type)) {

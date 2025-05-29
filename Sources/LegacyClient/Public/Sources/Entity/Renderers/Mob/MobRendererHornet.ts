@@ -1,7 +1,7 @@
 import type Mob from "../../Mob";
 import type { RenderingContext } from "../RendererRenderingContext";
 import AbstractMobRenderer from "./MobRenderer";
-import { missileBody, missileBodyStroke } from "./MobRendererMissile";
+import { missileBody, missileBodyStroke } from "./Projectile/MobRendererMissileProjectile";
 
 const hornetBody = (function () {
     const path = new Path2D();

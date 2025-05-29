@@ -20,7 +20,7 @@ var summonTypeMapping = map[native.PetalType]native.MobType{
 	native.PetalTypeStick:     native.MobTypeSandstorm,
 }
 
-func (p *Player) PlayerPetalConsume(wp *WavePool) {
+func (p *Player) PlayerPetalConsume(wp *WavePool, now time.Time) {
 	if p.IsDead {
 		return
 	}
@@ -49,8 +49,6 @@ func (p *Player) PlayerPetalConsume(wp *WavePool) {
 			if !slices.Contains(UsablePetalTypes, petal.Type) {
 				continue
 			}
-
-			now := time.Now()
 
 			usageCooldown := usageCooldownGrid[i]
 
@@ -149,6 +147,58 @@ func (p *Player) PlayerPetalConsume(wp *WavePool) {
 						totalForceX += dx / distance * bubbleBounceForce
 						totalForceY += dy / distance * bubbleBounceForce
 					}
+				}
+
+			case native.PetalTypeWeb:
+				{
+					if petal.DetachedFromOrbit {
+						// Detached, use web if stop
+						if petal.Velocity[0] < VelocityEpsilon && petal.Velocity[1] < VelocityEpsilon {
+							wp.GenerateMob(
+								native.MobTypeWebProjectile,
+
+								petal.Rarity,
+
+								petal.X,
+								petal.Y,
+
+								// We dont need a web from the enemy side
+								// Web is only valid to mob
+								nil, // p,
+
+								nil,
+								false,
+
+								nil,
+							)
+
+							// Remove petal as it consumed
+							wp.RemovePetal(*petal.Id)
+						}
+
+						continue
+					}
+
+					if !isSad {
+						continue
+					}
+
+					// Already used web
+					if petal.DetachedFromOrbit {
+						continue
+					}
+
+					// Detach
+					petal.DetachedFromOrbit = true
+
+					dx := petal.X - p.X
+					dy := petal.Y - p.Y
+
+					// Calculate angle from player to petal
+					angle := math32.Atan2(dy, dx)
+
+					petal.Velocity[0] += 30 * math32.Cos(angle)
+					petal.Velocity[1] += 30 * math32.Sin(angle)
 				}
 			}
 

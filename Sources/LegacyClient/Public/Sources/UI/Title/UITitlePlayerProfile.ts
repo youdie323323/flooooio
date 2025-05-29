@@ -15,7 +15,7 @@ import UITitle from "./UITitle";
 export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
     public override[OBSTRUCTION_AFFECTABLE]: boolean = false;
 
-    private dummyPlayer: Player = new Player(
+    private static readonly dummyPlayer = new Player(
         -1,
 
         // The coordinate will transform, so we can just send transform value here
@@ -23,9 +23,13 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
         -28,
 
         10,
+
         15,
+
         0,
+
         MoodFlags.NORMAL,
+
         "",
     );
 
@@ -106,7 +110,7 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
                 ctx.fillStyle = "white";
                 setGameFont(ctx, 10);
 
-                this.drawScaledText(ctx, computedName, 0, 0, this.w * 0.9);
+                this.drawTextWithScale(ctx, computedName, 0, 0, this.w * 0.9);
 
                 ctx.restore();
             }
@@ -158,7 +162,7 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
 
             renderEntity({
                 ctx,
-                entity: this.dummyPlayer,
+                entity: UITitlePlayerProfile.dummyPlayer,
                 isSpecimen: true,
             });
         }
@@ -170,11 +174,9 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
         // To remove binded component completely, we need to access current context
         // But super.destory remove reference to context, so post-processing
         super.destroy();
-
-        this.dummyPlayer = null;
     }
 
-    private drawScaledText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number) {
+    private drawTextWithScale(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number) {
         const metrics = ctx.measureText(text);
         const actualWidth = metrics.width;
 

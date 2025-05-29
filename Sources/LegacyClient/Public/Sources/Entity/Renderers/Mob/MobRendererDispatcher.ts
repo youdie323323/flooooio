@@ -28,8 +28,11 @@ import PetalRendererFang from "./Petal/PetalRendererFang";
 import PetalRendererYggdrasil from "./Petal/PetalRendererYggdrasil";
 import MobRendererCrab from "./MobRendererCrab";
 import MobRendererHornet from "./MobRendererHornet";
-import MobRendererMissile from "./MobRendererMissile";
 import MobRendererLeech from "./MobRendererLeech";
+import PetalRendererWeb from "./Petal/PetalRendererWeb";
+import MobRendererMissileProjectile from "./Projectile/MobRendererMissileProjectile";
+import MobRendererWebProjectile from "./Projectile/MobRendererWebProjectile";
+import PetalRendererStinger from "./Petal/PetalRendererStinger";
 
 const centipedeRenderer = new MobRendererCentipede();
 
@@ -58,7 +61,8 @@ const MOB_RENDERERS = {
     [MobType.CENTIPEDE_DESERT]: centipedeRenderer,
     [MobType.CENTIPEDE_EVIL]: centipedeRenderer,
 
-    [MobType.MISSILE]: new MobRendererMissile,
+    [MobType.MISSILE_PROJECTILE]: new MobRendererMissileProjectile,
+    [MobType.WEB_PROJECTILE]: new MobRendererWebProjectile,
     
     // Petal
     
@@ -73,6 +77,8 @@ const MOB_RENDERERS = {
     [PetalType.CLAW]: new PetalRendererClaw,
     [PetalType.FANG]: new PetalRendererFang,
     [PetalType.YGGDRASIL]: new PetalRendererYggdrasil,
+    [PetalType.WEB]: new PetalRendererWeb,
+    [PetalType.STINGER]: new PetalRendererStinger,
 } as const satisfies Record<MobType | PetalType, Renderer<Mob>>;
 
 export default class MobRendererDispatcher extends Renderer<Mob> {

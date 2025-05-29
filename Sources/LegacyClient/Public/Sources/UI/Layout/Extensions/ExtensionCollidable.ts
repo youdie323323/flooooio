@@ -77,12 +77,14 @@ export default function Collidable<T extends ExtensionConstructor>(Base: T, dire
             this.filterCollidable(this.collidableComponents).forEach(component => {
                 if (this.isColliding(component)) {
                     this.resolveCollision(component);
+
                     hasCollision = true;
                 }
             });
 
             if (!hasCollision) {
                 this.targetYPos = this.initialYPos;
+                
                 this.isReturning = true;
             }
 
@@ -90,12 +92,14 @@ export default function Collidable<T extends ExtensionConstructor>(Base: T, dire
                 const speed = this.isReturning
                     ? MixedBase.RETURN_SPEED
                     : MixedBase.COLLISION_SPEED;
+
                 const deltaY = this.targetYPos - this.y;
 
                 this.y += deltaY * speed;
 
                 if (Math.abs(deltaY) < MixedBase.DEAD_ZONE) {
                     this.setY(this.targetYPos);
+
                     this.targetYPos = null;
                 }
             }

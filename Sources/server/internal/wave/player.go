@@ -181,7 +181,7 @@ func (p *Player) SwapPetal(
 	p.commandQueue <- &SwapPetalCommand{at}
 }
 
-func (p *Player) OnUpdateTick(wp *WavePool) {
+func (p *Player) OnUpdateTick(wp *WavePool, now time.Time) {
 	p.Mu.Lock()
 
 	// Execute all commands
@@ -189,22 +189,23 @@ func (p *Player) OnUpdateTick(wp *WavePool) {
 		select {
 		case cmd := <-p.commandQueue:
 			cmd.Execute(wp, p)
+
 		default:
 			// Channel is empty, leave loop
-			goto done
+			goto Done
 		}
 	}
-done:
+Done:
 
-	p.PlayerCoordinateMovement(wp)
-	p.PlayerCoordinateBoundary(wp)
-	p.PlayerElimination(wp)
-	p.PlayerCollision(wp)
+	p.PlayerCoordinateMovement(wp, now)
+	p.PlayerCoordinateBoundary(wp, now)
+	p.PlayerElimination(wp, now)
+	p.PlayerCollision(wp, now)
 
-	p.PlayerDeadCamera(wp)
-	p.PlayerPetalConsume(wp)
-	p.PlayerPetalReload(wp)
-	p.PlayerPetalOrbit(wp)
+	p.PlayerDeadCamera(wp, now)
+	p.PlayerPetalConsume(wp, now)
+	p.PlayerPetalReload(wp, now)
+	p.PlayerPetalOrbit(wp, now)
 
 	{ // Base onUpdateTick
 	}
@@ -263,7 +264,7 @@ func (p *Player) Dispose() {
 	for i := range p.OrbitPetalSpins {
 		p.OrbitPetalSpins[i] = nil
 	}
-	
+
 	p.OrbitPetalSpins = nil
 }
 

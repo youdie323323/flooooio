@@ -1,5 +1,6 @@
 import type { Rarity } from "../Native/Rarity";
-import type { MobType, PetalType } from "../Native/Entity/EntityType";
+import type { PetalType } from "../Native/Entity/EntityType";
+import { MobType } from "../Native/Entity/EntityType";
 import Entity from "./Entity";
 import MobRendererStarfish from "./Renderers/Mob/MobRendererStarfish";
 
@@ -42,7 +43,20 @@ export default class Mob extends Entity {
 
         public connectingSegment: Mob | null,
     ) {
-        super(id, x, y, angle, size, health);
+        super(
+            id,
+
+            x,
+            y,
+
+            angle,
+
+            type === MobType.WEB_PROJECTILE
+                ? 0
+                : size,
+
+            health,
+        );
     }
 
     public get beakAngle(): number {

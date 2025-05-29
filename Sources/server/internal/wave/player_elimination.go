@@ -32,7 +32,7 @@ func RevivePlayer(wp *WavePool, p *Player) {
 	}
 }
 
-func DisposeBindings(wp *WavePool, p *Player) {
+func ResetBindings(wp *WavePool, p *Player) {
 	// Remove all petals
 	for _, petals := range p.Slots.Surface {
 		if petals == nil {
@@ -58,7 +58,7 @@ func DisposeBindings(wp *WavePool, p *Player) {
 	p.Slots.UsageCooldownGrid = GeneratePetalCooldownGrid(len(p.Slots.Surface))
 }
 
-func (p *Player) PlayerElimination(wp *WavePool) {
+func (p *Player) PlayerElimination(wp *WavePool, now time.Time) {
 	if !p.IsDead && 0 >= p.Health {
 		p.IsDead = true
 
@@ -67,8 +67,8 @@ func (p *Player) PlayerElimination(wp *WavePool) {
 		// Stop move
 		p.Magnitude = 0
 
-		p.LastDeadCameraUpdate = time.Now()
+		p.LastDeadCameraUpdate = now
 
-		DisposeBindings(wp, p)
+		ResetBindings(wp, p)
 	}
 }

@@ -21,12 +21,13 @@ export const enum MobType {
     CENTIPEDE_EVIL,
     CENTIPEDE_DESERT,
 
-    MISSILE,
+    MISSILE_PROJECTILE,
+    WEB_PROJECTILE,
 }
 
 export const enum PetalType {
     // Dont forgot to update to last index every time adding the type
-    BASIC = MobType.MISSILE + 1,
+    BASIC = MobType.WEB_PROJECTILE + 1,
     FASTER,
     EGG_BEETLE,
     BUBBLE,
@@ -37,6 +38,8 @@ export const enum PetalType {
     CLAW,
     FANG,
     YGGDRASIL,
+    WEB,
+    STINGER,
 }
 
 export const PETAL_TYPES = [
@@ -51,4 +54,6 @@ export const PETAL_TYPES = [
     PetalType.CLAW,
     PetalType.FANG,
     PetalType.YGGDRASIL,
+    PetalType.WEB,
+    PetalType.STINGER,
 ] as const;

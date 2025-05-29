@@ -1,12 +1,14 @@
 package wave
 
 import (
+	"time"
+
 	"github.com/chewxy/math32"
 )
 
-const bounaryKnockback = 5
+const bounaryKnockback = 3
 
-func (p *Player) PlayerCoordinateBoundary(wp *WavePool) {
+func (p *Player) PlayerCoordinateBoundary(wp *WavePool, _ time.Time) {
 	// Dont if uncollidable
 	if !p.IsCollidable() {
 		return

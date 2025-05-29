@@ -95,7 +95,7 @@ export default abstract class Entity {
         this.x = this.ox + (this.nx - this.ox) * this.t;
         this.y = this.oy + (this.ny - this.oy) * this.t;
         this.health = this.oHealth + (this.nHealth - this.oHealth) * this.t;
-        this.size = this.oSize + (this.nSize - this.oSize) * this.t;
+        this.size = this.oSize + (this.nSize - this.oSize) * (this.t * 2);
 
         const eyeTimeFactor = Math.min(1, deltaTime / 100);
         this.eyeX += (Math.cos(this.nAngle) - this.eyeX) * eyeTimeFactor;

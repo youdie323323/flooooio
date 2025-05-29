@@ -2,7 +2,7 @@ package wave
 
 import (
 	"cmp"
-	"slices"
+	"time"
 
 	"flooooio/internal/collision"
 	"flooooio/internal/native"
@@ -10,19 +10,30 @@ import (
 
 const (
 	mobToMobPushMultiplier = 0.5
+
+	maxMobToPlayerVelocity = 30.0
+
+	webSlowPercent = (100. - 75.) / 100.
 )
 
-const maxMobToPlayerVelocity = 30.0
+// Define reusable circle
+var (
+	c0mob collision.Circle
+	c1mob collision.Circle
+)
 
 // Clamp returns f clamped to [low, high].
 func Clamp[T cmp.Ordered](f, low, high T) T {
 	return min(max(f, low), high)
 }
 
-func (m *Mob) MobCollision(wp *WavePool) {
+func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 	if m.WasEliminated(wp) {
 		return
 	}
+
+	// Turn back to original multiplier
+	m.MagnitudeMultiplier = 1
 
 	profile0 := native.MobProfiles[m.Type]
 
@@ -38,13 +49,19 @@ func (m *Mob) MobCollision(wp *WavePool) {
 
 	mTraversed := TraverseMobSegments(wp, m)
 
-	mIsProjectile := slices.Contains(ProjectileMobTypes, m.Type)
+	mIsProjectile := m.IsProjectile()
 
 	mIsEnemyMissile := m.IsEnemyMissile()
+	mIsNotEnemyMissile := !mIsEnemyMissile
 
-	mIsEnemy := m.IsTrackableEnemy()
+	mIsEnemy := m.IsEnemy()
+	mIsNotEnemy := !mIsEnemy
 
-	c0 := collision.Circle{X: m.X, Y: m.Y, R: m.CalculateRadius()}
+	mIsWeb := m.Type == native.MobTypeWebProjectile
+
+	c0mob.X = m.X
+	c0mob.Y = m.Y
+	c0mob.R = m.CalculateRadius()
 
 	searchRadius := CalculateSearchRadius(collision0, m.Size)
 
@@ -59,15 +76,26 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					return true
 				}
 
+				// Web only activated by m
+				if nearEntity.Type == native.MobTypeWebProjectile {
+					return true
+				}
+
 				if nearEntity.WasEliminated(wp) {
 					return true
 				}
 
-				nearEntityIsProjectile := slices.Contains(ProjectileMobTypes, nearEntity.Type)
+				// Adjacent segment should not collide eachother
+				if IsConnectedSegment(m, nearEntity) {
+					return true
+				}
+
+				nearEntityIsProjectile := nearEntity.IsProjectile()
 
 				nearEntityIsEnemyMissile := nearEntity.IsEnemyMissile()
 
-				nearEntityIsEnemy := nearEntity.IsTrackableEnemy()
+				nearEntityIsEnemy := nearEntity.IsEnemy()
+				nearEntityIsNotEnemy := !nearEntityIsEnemy
 
 				{
 					// Enemy missile cant collide to enemy mob
@@ -77,16 +105,26 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					}
 
 					// Friendly missile cant collide to friendly mob
-					if (mIsProjectile && !mIsEnemyMissile && !nearEntityIsEnemy) ||
-						(nearEntityIsProjectile && !nearEntityIsEnemyMissile && !mIsEnemy) {
+					if (mIsProjectile && mIsNotEnemyMissile && nearEntityIsNotEnemy) ||
+						(nearEntityIsProjectile && !nearEntityIsEnemyMissile && mIsNotEnemy) {
 						return true
 					}
 				}
 
-				c1 := collision.Circle{X: nearEntity.X, Y: nearEntity.Y, R: nearEntity.CalculateRadius()}
+				c1mob.X = nearEntity.X
+				c1mob.Y = nearEntity.Y
+				c1mob.R = nearEntity.CalculateRadius()
 
-				px, py, ok := collision.ComputeCirclePush(c0, c1)
+				px, py, ok := collision.ComputeCirclePush(c0mob, c1mob)
 				if ok {
+					// Web does nothing
+					// Slows mob which colliding
+					if mIsWeb {
+						nearEntity.MagnitudeMultiplier = webSlowPercent
+
+						return true
+					}
+
 					m.X -= px * mobToMobPushMultiplier
 					m.Y -= py * mobToMobPushMultiplier
 
@@ -99,7 +137,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 					}
 
 					// Pet doesnt damaged to other pet
-					if !mIsEnemy && !nearEntityIsEnemy {
+					if mIsNotEnemy && nearEntityIsNotEnemy {
 						return true
 					}
 
@@ -119,7 +157,7 @@ func (m *Mob) MobCollision(wp *WavePool) {
 							// So maybe its possible to do multiple hit once one frame
 							// To avoid this we need to return sufficient amount collision in ComputeCirclePush
 
-							if !nearEntity.IsTrackableEnemy() {
+							if !nearEntity.IsEnemy() {
 								mTraversed.LastAttackedEntity = nearEntity.PetMaster
 							}
 						}
@@ -129,23 +167,25 @@ func (m *Mob) MobCollision(wp *WavePool) {
 
 		case *Petal:
 			{
+				// Petal doesnt damaged/knockbacked to pet
+				if mIsNotEnemy {
+					return true
+				}
+
+				// Web not valid to petal
+				if mIsWeb {
+					return true
+				}
+
 				if nearEntity.WasEliminated(wp) {
 					return true
 				}
 
-				// Petal doesnt damaged/knockbacked to pet
-				if !m.IsTrackableEnemy() {
-					return true
-				}
+				c1mob.X = nearEntity.X
+				c1mob.Y = nearEntity.Y
+				c1mob.R = nearEntity.CalculateRadius()
 
-				// Dont collide if m is friendly mob
-				if !mIsEnemy {
-					return true
-				}
-
-				c1 := collision.Circle{X: nearEntity.X, Y: nearEntity.Y, R: nearEntity.CalculateRadius()}
-
-				px, py, ok := collision.ComputeCirclePush(c0, c1)
+				px, py, ok := collision.ComputeCirclePush(c0mob, c1mob)
 				if ok {
 					if !nearEntity.SpinningOnMob {
 						m.X -= px * 0.1
@@ -170,6 +210,9 @@ func (m *Mob) MobCollision(wp *WavePool) {
 						case native.PetalTypeFang:
 							fangDoLifesteal(nearEntity, nearEntityStat, nearEntityDamage)
 
+						case native.PetalTypeClaw:
+							clawTakeExtraDamage(nearEntity, nearEntityStat, mToDamage)
+
 						case native.PetalTypeLightning:
 							wp.PetalDoLightningBounce(nearEntity, m)
 						}
@@ -185,24 +228,26 @@ func (m *Mob) MobCollision(wp *WavePool) {
 
 		case *Player:
 			{
+				// Pet dont damage/knockback to player
+				if mIsNotEnemy {
+					return true
+				}
+
+				// Web not valid to player
+				if mIsWeb {
+					return true
+				}
+
 				// Dont collide to dead/uncollidable player
 				if nearEntity.IsDead || !nearEntity.IsCollidable() {
 					return true
 				}
 
-				// Dont damage/knockback to player
-				if !m.IsTrackableEnemy() {
-					return true
-				}
+				c1mob.X = nearEntity.X
+				c1mob.Y = nearEntity.Y
+				c1mob.R = nearEntity.Size
 
-				// Dont collide if m is friendly mob
-				if !mIsEnemy {
-					return true
-				}
-
-				c1 := collision.Circle{X: nearEntity.X, Y: nearEntity.Y, R: nearEntity.Size}
-
-				px, py, ok := collision.ComputeCirclePush(c0, c1)
+				px, py, ok := collision.ComputeCirclePush(c0mob, c1mob)
 				if ok {
 					m.X -= px
 					m.Y -= py
@@ -247,4 +292,30 @@ func fangDoLifesteal(fang *Petal, stat native.PetalStat, damage float32) {
 	healAmount := damage * (healDamaged / 100)
 
 	master.Health = min(1, master.Health+(healAmount/masterMaxHP))
+}
+
+const clawExtraDamagableHPPercent = 80. / 100.
+
+func clawTakeExtraDamage(claw *Petal, stat native.PetalStat, hitMob *Mob) {
+	if claw.Master == nil {
+		return
+	}
+
+	if hitMob.Health < clawExtraDamagableHPPercent {
+		return
+	}
+
+	percentDamage, ok := stat.Extra["percentDamage"]
+	if !ok {
+		return
+	}
+
+	limit, ok := stat.Extra["limit"]
+	if !ok {
+		return
+	}
+
+	maxHealth := hitMob.GetMaxHealth()
+
+	hitMob.Health -= min(hitMob.Health*(percentDamage/100), limit/maxHealth)
 }

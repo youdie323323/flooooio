@@ -1,10 +1,12 @@
 package wave
 
 import (
+	"time"
+
 	"github.com/chewxy/math32"
 )
 
-func (p *Petal) PetalCoordinateBoundary(wp *WavePool) {
+func (p *Petal) PetalCoordinateBoundary(wp *WavePool, _ time.Time) {
 	if !p.DetachedFromOrbit {
 		return
 	}

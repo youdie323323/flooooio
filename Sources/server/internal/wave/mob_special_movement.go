@@ -1,23 +1,22 @@
 package wave
 
 import (
-	"slices"
-
 	"flooooio/internal/native"
+	"time"
 
 	"github.com/chewxy/math32"
 )
 
 const movementDuration = 1. / 150.
 
-func (m *Mob) MobSpecialMovement(wp *WavePool) {
+func (m *Mob) MobSpecialMovement(wp *WavePool, _ time.Time) {
 	// Dont special movement when passive
-	if native.EachMobBehaviorDefinition[m.Type] == native.PassiveBehavior {
+	if native.EachMobBehaviorDefinition[m.Type][m.Rarity] == native.PassiveBehavior {
 		return
 	}
 
 	// If projectile mob, dont do anything
-	if slices.Contains(ProjectileMobTypes, m.Type) {
+	if m.IsProjectile() {
 		return
 	}
 
@@ -26,7 +25,7 @@ func (m *Mob) MobSpecialMovement(wp *WavePool) {
 		return
 	}
 
-	if !m.IsTrackableEnemy() && m.TargetEntity == nil {
+	if !m.IsEnemy() && m.TargetEntity == nil {
 		switch m.Type {
 		// Follows the player when the player moves away from this (pet) for a certain distance
 		// Dont follows if targetting other mob
@@ -37,7 +36,7 @@ func (m *Mob) MobSpecialMovement(wp *WavePool) {
 				distanceToParent := math32.Hypot(dx, dy)
 
 				if distanceToParent > m.CalculateRadius()*5 {
-					m.Angle = TurnAngleToTarget(
+					m.Angle = CalculateInterpolatedAngleToTarget(
 						m.Angle,
 						dx,
 						dy,
@@ -65,11 +64,12 @@ func (m *Mob) MobSpecialMovement(wp *WavePool) {
 
 	if m.ShouldShakeAngle() {
 		var shakeMultiplier float32 = 1.
+
 		if m.TargetEntity != nil {
 			shakeMultiplier = 2.
 		}
 
-		m.Angle += SinusodialWave.At(m.SineWaveIndex) * shakeMultiplier
+		m.Angle += BeeSinusoidalWave.At(m.SineWaveIndex) * shakeMultiplier
 		m.SineWaveIndex++
 	}
 

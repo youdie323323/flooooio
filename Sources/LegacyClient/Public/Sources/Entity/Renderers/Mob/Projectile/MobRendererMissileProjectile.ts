@@ -1,6 +1,6 @@
-import type Mob from "../../Mob";
-import type { RenderingContext } from "../RendererRenderingContext";
-import AbstractMobRenderer from "./MobRenderer";
+import type Mob from "../../../Mob";
+import type { RenderingContext } from "../../RendererRenderingContext";
+import AbstractMobRenderer from "../MobRenderer";
 
 export const missileBody = (function () {
     const path = new Path2D();
@@ -49,7 +49,7 @@ export const missileBodyStroke = (function () {
     return path;
 })();
 
-export default class MobRendererMissile extends AbstractMobRenderer {
+export default class MobRendererMissileProjectile extends AbstractMobRenderer {
     override render(context: RenderingContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);

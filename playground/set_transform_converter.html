@@ -55,7 +55,7 @@
         function convertTransform() {
             const input = document.getElementById("input").value;
 
-            const numbers = input.match(/-?\d+\.?\d*/g);
+            const numbers = input.match(/[+-]?(?:\d+\.?\d*|\.\d+)(?:(?:[eE][+-]?\d+)|(?:\*10\^[+-]?\d+))?/g);
             if (!numbers || numbers.length !== 6) {
                 document.getElementById("output").textContent = "Invalid input. Please check the format.";
 

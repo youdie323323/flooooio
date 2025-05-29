@@ -108,23 +108,19 @@ func NewPetal(
 	}
 }
 
-func (p *Petal) OnUpdateTick(wp *WavePool) {
+func (p *Petal) OnUpdateTick(wp *WavePool, now time.Time) {
 	p.Mu.Lock()
 
 	// Unneeded for petal
-	// m.EntityCoordinateMovement(wp)
+	// m.EntityCoordinateMovement(wp, now)
 
-	p.PetalCoordinateBoundary(wp)
-	p.PetalSpecialAngle(wp)
-	p.PetalFasterRaging(wp)
-	p.PetalElimination(wp)
+	p.PetalCoordinateBoundary(wp, now)
+	p.PetalSpecialAngle(wp, now)
+	p.PetalFasterRaging(wp, now)
+	p.PetalElimination(wp, now)
+	p.PetalCoordinateMovement(wp, now)
 
 	{ // Base onUpdateTick
-		p.Velocity[0] *= petalVelocityFriction
-		p.Velocity[1] *= petalVelocityFriction
-
-		p.X += p.Velocity[0]
-		p.Y += p.Velocity[1]
 	}
 
 	p.Mu.Unlock()

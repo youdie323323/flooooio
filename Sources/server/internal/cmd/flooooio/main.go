@@ -43,39 +43,39 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Slots: wave.StaticPetalSlots{
 				Surface: []wave.StaticPetal{
 					{
+						Type:   native.PetalTypeStinger,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeClaw,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeStinger,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeClaw,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeStinger,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeClaw,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeStinger,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeClaw,
+						Rarity: native.RarityUltra,
+					},
+					{
 						Type:   native.PetalTypeFaster,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeFang,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeLightning,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeClaw,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeFang,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeLightning,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeClaw,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeFang,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeLightning,
 						Rarity: native.RarityUltra,
 					},
 					{
@@ -85,23 +85,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 				},
 				Bottom: []wave.StaticPetal{
 					{
-						Type:   native.PetalTypeEggBeetle,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeEggBeetle,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeEggBeetle,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeEggBeetle,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeEggBeetle,
+						Type:   native.PetalTypeWeb,
 						Rarity: native.RarityUltra,
 					},
 				},

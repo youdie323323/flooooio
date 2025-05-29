@@ -104,8 +104,8 @@ export default class TextInput extends Component {
         this.fontFamily = options.fontFamily || "Ubuntu";
         this.textColor = options.textColor || "#000";
         this.fontWeight = options.fontWeight || "bold";
-        this.placeHolderColor = options.placeholderColor || "#bfbebd";
-        this.backgroundColor = options.backgroundColor || "#eeeeee";
+        this.placeHolderColor = options.placeholderColor || "#BFBEBD";
+        this.backgroundColor = options.backgroundColor || "#EEEEEE";
         this.paddingSize = options.paddingSize >= 0 ? options.paddingSize : 5;
         this.borderWidth = options.borderWidth >= 0 ? options.borderWidth : 3;
         this.borderColor = options.borderColor || "#959595";
@@ -226,11 +226,11 @@ export default class TextInput extends Component {
 
     // Override them to calc wh
     override setW(w: number) {
-        this.w = w + this.paddingSize * 2 + this.borderWidth * 2;
+        this.w = w + 2 * (this.paddingSize + this.borderWidth);
     }
 
     override setH(h: number) {
-        this.h = h + this.paddingSize * 2 + this.borderWidth * 2;
+        this.h = h + 2 * (this.paddingSize + this.borderWidth);
     }
 
     override layout(lc: LayoutContext): LayoutResult {
@@ -311,14 +311,14 @@ export default class TextInput extends Component {
     }
 
     private drawBackgroundOverlay() {
-        const { ctx, w, h, borderRadius: br } = this;
- 
+        const { ctx, w, h, borderRadius } = this;
+
         ctx.save();
 
         ctx.globalAlpha = 0.4;
         ctx.fillStyle = "#000000";
         ctx.beginPath();
-        ctx.roundRect(0, 0, w, h, br);
+        ctx.roundRect(0, 0, w, h, borderRadius);
         ctx.fill();
 
         ctx.restore();
@@ -344,9 +344,11 @@ export default class TextInput extends Component {
 
         if (this.borderWidth <= 0) return;
 
-        ctx.fillStyle = this.borderColor;
         ctx.beginPath();
+
         ctx.roundRect(0, 0, w, h, borderRadius);
+
+        ctx.fillStyle = this.borderColor;
         ctx.fill();
 
         ctx.shadowOffsetX = 0;
@@ -384,10 +386,10 @@ export default class TextInput extends Component {
         ctx.save();
 
         const selectOffset = this.textWidth(text.substring(0, this.selectionRange[0]));
-        ctx.fillStyle = this.highlightColor;
-
         const heightResized = h * 0.64;
         const WIDTH_OFFSET = 4;
+
+        ctx.fillStyle = this.highlightColor;
         ctx.fillRect(
             paddingBorder + selectOffset - (WIDTH_OFFSET / 2),
             (h - heightResized) / 2,
@@ -399,7 +401,7 @@ export default class TextInput extends Component {
     }
 
     private renderCursor(text: string) {
-        const { ctx: ctx, h } = this;
+        const { ctx, h } = this;
 
         const paddingBorder = this.paddingSize + this.borderWidth;
 
@@ -423,7 +425,7 @@ export default class TextInput extends Component {
 
         // Draw white cursor center
         const whiteWidth = CURSOR_WIDTH * 0.65;
-        ctx.fillStyle = "#ffffff";
+        ctx.fillStyle = "#FFFFFF";
         ctx.fillRect(
             (paddingBorder + cursorOffset + ((CURSOR_WIDTH - whiteWidth) / 2)) - 1,
             CURSOR_RELATIVE_HEIGHT / 2,
@@ -435,7 +437,7 @@ export default class TextInput extends Component {
     }
 
     private renderText(text: string) {
-        const { ctx: ctx, h } = this;
+        const { ctx, h } = this;
 
         this.setupTextContext();
 
@@ -445,10 +447,11 @@ export default class TextInput extends Component {
                 ? this.textColor
                 : this.placeHolderColor;
 
-        let textX = this.paddingSize + this.borderWidth;
         const textY = Math.round(h / 2);
 
         ctx.translate(0, textY);
+
+        let textX = this.paddingSize + this.borderWidth;
 
         for (let i = 0; i < displayText.length; i++) {
             const char = displayText[i];
@@ -465,10 +468,10 @@ export default class TextInput extends Component {
     }
 
     private renderSelectedChar(char: string, x: number) {
-        const { ctx: ctx } = this;
+        const { ctx } = this;
 
         ctx.strokeStyle = "#000000";
-        ctx.fillStyle = "#ffffff";
+        ctx.fillStyle = "#FFFFFF";
         ctx.lineWidth = calculateStrokeWidth(this.fontSize);
 
         ctx.strokeText(char, x, 0);
@@ -615,17 +618,18 @@ export default class TextInput extends Component {
     }
 
     private mousemove(e: MouseEvent, self: this) {
-        const x = this.context.mouseX, y = this.context.mouseY, isOver = this.overInput(x, y);
+        const { mouseX, mouseY } = this.context,
+            isOver = this.overInput(mouseX, mouseY);
 
         this.updateCursorStyle(isOver);
 
         if (this.isFocused && this.selectionStart >= 0) {
-            let curPos = this.clickPos(x, y);
+            let curPos = this.calculateClickPosition(mouseX);
 
             if (!isOver) {
-                if (x < self.x) {
+                if (mouseX < self.x) {
                     curPos = 0;
-                } else if (x > self.x + self.w) {
+                } else if (mouseX > self.x + self.w) {
                     curPos = this.value.length;
                 }
             }
@@ -640,7 +644,8 @@ export default class TextInput extends Component {
     }
 
     private mousedown(e: MouseEvent, self: this) {
-        const x = this.context.mouseX, y = this.context.mouseY, isOver = this.overInput(x, y);
+        const { mouseX, mouseY } = this.context,
+            isOver = this.overInput(mouseX, mouseY);
 
         if (this.isFocused && !isOver) {
             self.blur();
@@ -652,42 +657,53 @@ export default class TextInput extends Component {
         if (isOver) {
             this.isFocused = true;
 
-            self.focus(this.clickPos(x, y));
-            this.selectionStart = this.clickPos(x, y);
+            const clickPoisition = this.calculateClickPosition(mouseX);
+
+            self.focus(clickPoisition);
+
+            this.selectionStart = clickPoisition;
         }
 
         this.updateCursorStyle(isOver);
     }
 
     private mouseup(e: MouseEvent, self: this) {
-        const x = this.context.mouseX, y = this.context.mouseY;
+        const { mouseX } = this.context;
 
-        const isSelection = this.clickPos(x, y) !== this.selectionStart;
+        const clickPoisition = this.calculateClickPosition(mouseX);
+
+        const isSelection = clickPoisition !== this.selectionStart;
         if (this.isFocused && this.selectionStart >= 0 && isSelection) {
             this.isSelectionUpdated = true;
         }
 
         // Refocus element again
-        if (this.isFocused) self.focus(this.clickPos(x, y));
+        if (this.isFocused) self.focus(clickPoisition);
 
         delete this.selectionStart;
     }
 
     private drawTextBox(fn: () => void) {
-        const ctx = this.ctx, w = this.w, h = this.h, bw = this.borderWidth, br = this.borderRadius / 2;
+        const { ctx, w, h, borderWidth, borderRadius, backgroundColor } = this;
 
-        ctx.fillStyle = this.backgroundColor;
+        ctx.fillStyle = backgroundColor;
 
         ctx.beginPath();
-        ctx.roundRect(bw, bw, w - bw * 2, h - bw * 2, br);
+
+        ctx.roundRect(
+            borderWidth,
+            borderWidth,
+            w - borderWidth * 2,
+            h - borderWidth * 2,
+            borderRadius / 2,
+        );
+
         ctx.fill();
 
         fn();
     }
 
-    private clipText(value: string = undefined) {
-        value = (typeof value === "undefined") ? this.value : value;
-
+    private clipText(value: string = this.value) {
         const padding = this.paddingSize + this.borderWidth;
         const availableWidth = this.w - (padding * 2);
         const textWidth = this.textWidth(value);
@@ -702,6 +718,7 @@ export default class TextInput extends Component {
         if (cursorOffset > availableWidth) {
             for (let i = 0; i < value.length; i++) {
                 currentWidth += this.textWidth(value[i]);
+
                 if (currentWidth + padding > cursorOffset - availableWidth + padding * 2) {
                     startPos = i;
 
@@ -713,6 +730,7 @@ export default class TextInput extends Component {
         currentWidth = 0;
         for (let i = startPos; i < value.length; i++) {
             currentWidth += this.textWidth(value[i]);
+
             if (currentWidth > availableWidth) {
                 endPos = i;
 
@@ -724,9 +742,9 @@ export default class TextInput extends Component {
     }
 
     private textWidth(text: string) {
-        const { ctx } = this;
+        const { ctx, fontWeight, fontSize, fontFamily } = this;
 
-        ctx.font = `${this.fontWeight} ${this.fontSize}px ${this.fontFamily}`;
+        ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
         ctx.textAlign = "left";
         // Disable font kerning so 1++ length doesnt have wrong precision
         ctx.fontKerning = "none";
@@ -734,9 +752,7 @@ export default class TextInput extends Component {
         return ctx.measureText(text).width;
     }
 
-    private selectText(range: [number, number] = undefined) {
-        range = range || [0, this.value.length];
-
+    private selectText(range: [number, number] = [0, this.value.length]) {
         this.selectionRange = <[number, number]>range.slice();
         this.hiddenInput.selectionStart = range[0];
         this.hiddenInput.selectionEnd = range[1];
@@ -751,7 +767,7 @@ export default class TextInput extends Component {
         return xLeft && xRight && yTop && yBottom;
     }
 
-    private clickPos(x: number, y: number) {
+    private calculateClickPosition(x: number) {
         const text = this.clipText();
         const pos = text.length;
 

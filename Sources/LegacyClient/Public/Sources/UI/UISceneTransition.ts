@@ -61,7 +61,7 @@ export default class UISceneTransition {
 
         this.clipCircle();
         outerUI?.render();
-        
+
         this.ctx.restore();
 
         this.drawTransitionBorder();

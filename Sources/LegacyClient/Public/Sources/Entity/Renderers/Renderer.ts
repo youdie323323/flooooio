@@ -29,7 +29,7 @@ export default class Renderer<T extends Entity> {
      * Render the entity.
      */
     public render(context: RenderingContext<T>): void {
-        const { ctx, entity: { x, y, angle }, isSpecimen } = context;
+        const { ctx, entity: { x, y }, isSpecimen } = context;
 
         ctx.translate(x, y);
 
@@ -81,21 +81,29 @@ export default class Renderer<T extends Entity> {
     /**
      * Change scale and alpha if entity is dead.
      */
-    protected applyDeathAnimation({ ctx, entity: { isDead, deadT } }: RenderingContext<T>) {
+    protected applyDeathAnimation({ ctx, entity }: RenderingContext<T>) {
+        const { isDead, deadT } = entity;
+
         if (isDead) {
-            const sinWavedDeadT = Math.sin(deadT * Math.PI / 3);
+            const isLeech = entity instanceof Mob && entity.type === MobType.LEECH;
+
+            const sinWavedDeadT = Math.sin(deadT * Math.PI / (
+                isLeech
+                    ? 9
+                    : 3
+            ));
 
             const scale = 1 + sinWavedDeadT;
 
             ctx.scale(scale, scale);
-            ctx.globalAlpha *= 1 - sinWavedDeadT;
+            ctx.globalAlpha *= 1 - (isLeech ? 2 : 1) * sinWavedDeadT;
         }
     }
 
     protected drawEntityStatus({ ctx, entity }: RenderingContext<T>) {
         if (entity instanceof Mob && (
             isPetal(entity.type) ||
-            entity.type === MobType.MISSILE
+            entity.type === MobType.MISSILE_PROJECTILE
             // This condition is unrechable because leech body is always full hp and hp bar is not rendered
             // (entity.type === MobType.LEECH && entity.connectingSegment)
         )) return;
@@ -110,14 +118,13 @@ export default class Renderer<T extends Entity> {
         ) {
             ctx.save();
 
-            ctx.translate(0, -(entity.size + 10));
-            ctx.scale(0.2, 0.2);
+            ctx.translate(0, -entity.size - 10);
 
             ctx.textBaseline = "middle";
             ctx.textAlign = "center";
 
-            ctx.fillStyle = "#ffffff";
-            setGameFont(ctx, 8);
+            ctx.fillStyle = "#FFFFFF";
+            setGameFont(ctx, 12);
 
             ctx.strokeText(entity.name, 0, 0);
             ctx.fillText(entity.name, 0, 0);
@@ -146,7 +153,7 @@ export default class Renderer<T extends Entity> {
 
                 const { collision: { radius, fraction } }: MobData = MOB_PROFILES[entity.type];
 
-                const scale = ((radius * 2) * (entity.size / fraction)) / 30;
+                const scale = (entity.size * radius) / (15 * fraction);
 
                 ctx.scale(scale, scale);
                 ctx.translate(-HP_BAR_MAX_WIDTH / 2, 25);

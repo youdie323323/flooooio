@@ -17,6 +17,12 @@ type Mob struct {
 
 	TargetEntity collision.Node
 
+	MagnitudeMultiplier float32
+
+	// SigmaT is the time this mob has experienced so far.
+	// Represented in second.
+	SigmaT float32
+
 	LastAttackedEntity collision.Node
 
 	PetMaster        *Player
@@ -60,12 +66,9 @@ func (m *Mob) CalculateRadius() float32 {
 	return collision.Radius * (m.Size / collision.Fraction)
 }
 
-// CalculateRadius return radius (display size).
+// CalculateDiameter return diameter (display size).
 func (m *Mob) CalculateDiameter() float32 {
-	profile := native.MobProfiles[m.Type]
-	collision := profile.Collision
-
-	return collision.Radius * (m.Size / collision.Fraction)
+	return 2 * m.CalculateRadius()
 }
 
 // GetMaxHealth calculates max hp of mob.
@@ -77,18 +80,26 @@ func (m *Mob) GetMaxHealth() float32 {
 
 // IsEnemyMissile determinate if mob is enemy missile from player side.
 func (m *Mob) IsEnemyMissile() bool {
-	return m.MissileMaster != nil && m.MissileMaster.PetMaster == nil
+	return m.MissileMaster != nil && m.MissileMaster.PetMaster == nil /* Dont use IsEnemy here. Can make infinite loop */
 }
 
 // IsEnemy determinate if mob is enemy from player side.
-func (m *Mob) IsTrackableEnemy() bool {
-    if m.PetMaster != nil {
-        return false
-    }
-    
-    mIsProjectile := slices.Contains(ProjectileMobTypes, m.Type)
+func (m *Mob) IsEnemy() bool {
+	return m.PetMaster == nil
+}
 
-    return !mIsProjectile || m.IsEnemyMissile()
+// IsTrackableEnemy determinate if mob is enemy from player side, but its trackable.
+func (m *Mob) IsTrackableEnemy() bool {
+	if !m.IsEnemy() {
+		return false
+	}
+
+	return !m.IsProjectile() || m.IsEnemyMissile()
+}
+
+// IsProjectile determinate if mob is projectile.
+func (m *Mob) IsProjectile() bool {
+	return slices.Contains(ProjectileMobTypes, m.Type)
 }
 
 // HasConnectingSegment determinate if mob has connecting segment.
@@ -117,14 +128,14 @@ var _ LightningEmitter = (*Mob)(nil)
 
 // GetLightningBounceTargets returns targets to bounce.
 func (m *Mob) GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node {
-	if m.PetMaster == nil {
+	if m.IsEnemy() {
 		playerTargets := wp.GetPlayersWithCondition(func(targetPlayer *Player) bool {
 			return !slices.Contains(bouncedIds, targetPlayer.Id)
 		})
 
 		// Target pets
 		mobTargets := wp.GetMobsWithCondition(func(targetMob *Mob) bool {
-			return !slices.Contains(bouncedIds, targetMob.Id) && !targetMob.IsTrackableEnemy()
+			return !slices.Contains(bouncedIds, targetMob.Id) && !targetMob.IsEnemy()
 		})
 
 		lenPlayerTargets := len(playerTargets)
@@ -143,7 +154,7 @@ func (m *Mob) GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []
 		return nodeTargets
 	} else {
 		mobTargets := wp.GetMobsWithCondition(func(targetMob *Mob) bool {
-			return !slices.Contains(bouncedIds, targetMob.Id) && targetMob.PetMaster == nil
+			return !slices.Contains(bouncedIds, targetMob.Id) && targetMob.IsEnemy()
 		})
 
 		lenMobTargets := len(mobTargets)
@@ -164,20 +175,21 @@ func (m *Mob) WasEliminated(wp *WavePool) bool {
 	return wp.FindMob(*m.Id) == nil
 }
 
-func (m *Mob) OnUpdateTick(wp *WavePool) {
+func (m *Mob) OnUpdateTick(wp *WavePool, now time.Time) {
 	m.Mu.Lock()
 
-	m.MobCoordinateMovement(wp)
-	m.MobCoordinateBoundary(wp)
-	m.MobElimination(wp)
-	m.MobCollision(wp)
+	m.MobCoordinateMovement(wp, now)
+	m.MobCoordinateBoundary(wp, now)
+	m.MobElimination(wp, now)
+	m.MobCollision(wp, now)
 
-	m.MobBodyConnection(wp)
-	m.MobHealthRegen(wp)
-	m.MobAggressivePursuit(wp)
-	m.MobSpecialMovement(wp)
+	m.MobBodyConnection(wp, now)
+	m.MobHealthRegen(wp, now)
+	m.MobAggressivePursuit(wp, now)
+	m.MobSpecialMovement(wp, now)
 
 	{ // Base onUpdateTick
+		m.SigmaT += DeltaT
 	}
 
 	m.Mu.Unlock()
@@ -214,7 +226,20 @@ func NewMob(
 
 	missileMaster *Mob,
 ) *Mob {
+	// There is no way we can support ultra rarity mob
+	rarity = min(rarity, native.RarityMythic)
+
 	profile := native.MobProfiles[mType]
+
+	var size float32
+
+	switch mType {
+	case native.MobTypeWebProjectile:
+		size = native.PetalProfiles[native.PetalTypeWeb].StatFromRarity(rarity).Extra["radius"]
+
+	default:
+		size = CalculateMobSize(profile, rarity)
+	}
 
 	m := &Mob{
 		Entity: NewEntity(
@@ -223,7 +248,7 @@ func NewMob(
 			x,
 			y,
 
-			CalculateMobSize(profile, rarity),
+			size,
 		),
 
 		Type: mType,
@@ -231,6 +256,10 @@ func NewMob(
 		Rarity: rarity,
 
 		TargetEntity: nil,
+
+		MagnitudeMultiplier: 1,
+
+		SigmaT: 0,
 
 		LastAttackedEntity: nil,
 
@@ -295,11 +324,12 @@ var MobSpeed = map[native.MobType]float32{
 	native.MobTypeSponge:    0,
 	native.MobTypeShell:     0,
 	native.MobTypeCrab:      4,
-	native.MobTypeLeech:     10,
+	native.MobTypeLeech:     8,
 
 	native.MobTypeCentipede:       2.8,
 	native.MobTypeCentipedeEvil:   3.2,
 	native.MobTypeCentipedeDesert: 11.2,
 
-	native.MobTypeMissile: 10,
+	native.MobTypeMissileProjectile: 10,
+	native.MobTypeWebProjectile:     0,
 }

@@ -2,6 +2,7 @@ package wave
 
 import (
 	"slices"
+	"time"
 
 	"flooooio/internal/collision"
 	"flooooio/internal/native"
@@ -35,7 +36,6 @@ const (
 	radiusSpringStrength       = 0.4
 	radiusFriction             = 0.1
 	petalVelocityAcceleration  = 0.1
-	petalVelocityFriction      = 0.875
 	petalClusterRadius         = 6.0
 	spingInterpolationSpeed    = 0.6
 	spinNearestSizeCoefficient = 1.075
@@ -90,10 +90,17 @@ func doPetalSpin(
 
 	{
 		mobs := wp.GetMobsWithCondition(func(m *Mob) bool {
-			return m.IsTrackableEnemy() && math32.Hypot(
-				m.X-pe.X,
-				m.Y-pe.Y,
-			) <= (m.CalculateRadius()*spinNearestSizeCoefficient)
+			if !m.IsTrackableEnemy() {
+				return false
+			}
+
+			spinDetectRad := m.CalculateRadius() * spinNearestSizeCoefficient
+			spinDetectRadSq := spinDetectRad * spinDetectRad
+
+			dx := m.X - pe.X
+			dy := m.Y - pe.Y
+
+			return (dx*dx+dy*dy) <= spinDetectRadSq
 		})
 
 		spinTargets = make([]collision.Node, len(mobs))
@@ -143,7 +150,7 @@ func doPetalSpin(
 	}
 }
 
-func (p *Player) PlayerPetalOrbit(wp *WavePool) {
+func (p *Player) PlayerPetalOrbit(wp *WavePool, _ time.Time) {
 	p.OrbitHistoryX[p.OrbitHistoryIndex] = p.X
 	p.OrbitHistoryY[p.OrbitHistoryIndex] = p.Y
 
@@ -341,8 +348,7 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool) {
 		}
 	}
 
-	rotationDelta := calculateRotationDelta(totalSpeed, clockwise)
-	p.OrbitRotation += rotationDelta
+	p.OrbitRotation += calculateRotationDelta(totalSpeed, clockwise)
 
 	// Limit in the tau
 	if math32.Abs(p.OrbitRotation) >= math32.MaxFloat32 {

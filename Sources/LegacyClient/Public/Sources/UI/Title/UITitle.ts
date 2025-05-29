@@ -371,14 +371,14 @@ export default class UITitle extends AbstractUI {
             const nameInputDescription = new (Collidable(StaticText))(
                 {
                     x: -108,
-                    y: (-(50 / 2)) - 10,
+                    y: (-(50 / 2)) - 5,
 
                     alignFromCenterX: true,
                     alignFromCenterY: true,
                 },
 
                 "This pretty little flower is called...",
-                13,
+                12,
             );
 
             const nameInput = new (Collidable(TextInput))(

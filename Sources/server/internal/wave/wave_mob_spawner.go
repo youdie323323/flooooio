@@ -10,7 +10,7 @@ import (
 	"flooooio/internal/native"
 )
 
-var LinkableMobs = []native.MobType{
+var LinkableMobTypes = []native.MobType{
 	native.MobTypeCentipede,
 	native.MobTypeCentipedeDesert,
 	native.MobTypeCentipedeEvil,
@@ -173,7 +173,7 @@ func (s *WaveMobSpawner) Next(data *WaveData) {
 func (s *WaveMobSpawner) DetermineStaticMobData(data *WaveData) *StaticMob {
 	s.t++
 
-	const fps = 30 * 5
+	const fps = 50
 
 	if math.Mod(s.t, fps) == 0 {
 		pointsToUse := int(math.Round(s.gaussian(s.t / fps)))
@@ -190,7 +190,7 @@ func (s *WaveMobSpawner) DetermineStaticMobData(data *WaveData) *StaticMob {
 
 			segmentBodies := -1
 
-			if slices.Contains(LinkableMobs, mobType) {
+			if slices.Contains(LinkableMobTypes, mobType) {
 				segmentBodies = 9
 			}
 

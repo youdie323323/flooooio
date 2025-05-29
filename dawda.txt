@@ -1,0 +1,802 @@
+var MobProfiles map[MobType]MobData = map[MobType]MobData{
+    "0": {
+        "0": {
+            "health": 37.5,
+            "bodyDamage": 50,
+        },
+        "1": {
+            "health": 140.7,
+            "bodyDamage": 150,
+        },
+        "2": {
+            "health": 506.25,
+            "bodyDamage": 450,
+        },
+        "3": {
+            "health": 2025,
+            "bodyDamage": 1350,
+        },
+        "4": {
+            "health": 15187.5,
+            "bodyDamage": 4050,
+        },
+        "5": {
+            "health": 91125,
+            "bodyDamage": 12150,
+        },
+        "6": {
+            "health": 2737500,
+            "bodyDamage": 36450,
+        },
+        "baseSize": 30,
+        "i18n": {
+            "name": "Bee",
+            "description": "It stings. Don't touch it.",
+        },
+        "collision": {
+            "fraction": 30,
+            "radius": 25,
+        },
+    },
+    "1": {
+        "0": {
+            "health": 62.5,
+            "bodyDamage": 15,
+        },
+        "1": {
+            "health": 234.5,
+            "bodyDamage": 45,
+        },
+        "2": {
+            "health": 843.75,
+            "bodyDamage": 135,
+        },
+        "3": {
+            "health": 3375,
+            "bodyDamage": 405,
+        },
+        "4": {
+            "health": 25312.5,
+            "bodyDamage": 1215,
+        },
+        "5": {
+            "health": 151875,
+            "bodyDamage": 3645,
+        },
+        "6": {
+            "health": 4562500,
+            "bodyDamage": 10935,
+        },
+        "baseSize": 15,
+        "i18n": {
+            "name": "Spider",
+            "description": "Spooky.",
+        },
+        "collision": {
+            "fraction": 25,
+            "radius": 45,
+        },
+    },
+    "2": {
+        "0": {
+            "health": 62.5,
+            "bodyDamage": 50,
+        },
+        "1": {
+            "health": 234.5,
+            "bodyDamage": 150,
+        },
+        "2": {
+            "health": 843.75,
+            "bodyDamage": 450,
+        },
+        "3": {
+            "health": 3375,
+            "bodyDamage": 1350,
+        },
+        "4": {
+            "health": 25312.5,
+            "bodyDamage": 4050,
+        },
+        "5": {
+            "health": 151875,
+            "bodyDamage": 12150,
+        },
+        "6": {
+            "health": 4562500,
+            "bodyDamage": 36450,
+        },
+        "baseSize": 25,
+        "i18n": {
+            "name": "Hornet",
+            "description": "These aren't quite as nice as the little bees.",
+        },
+        "collision": {
+            "fraction": 25,
+            "radius": 20,
+        },
+    },
+    "3": {
+        "0": {
+            "health": 100,
+            "bodyDamage": 30,
+        },
+        "1": {
+            "health": 375.2,
+            "bodyDamage": 90,
+        },
+        "2": {
+            "health": 1350,
+            "bodyDamage": 270,
+        },
+        "3": {
+            "health": 5400,
+            "bodyDamage": 810,
+        },
+        "4": {
+            "health": 40500,
+            "bodyDamage": 2430,
+        },
+        "5": {
+            "health": 243000,
+            "bodyDamage": 7290,
+        },
+        "6": {
+            "health": 7300000,
+            "bodyDamage": 21870,
+        },
+        "baseSize": 30,
+        "i18n": {
+            "name": "Beetle",
+            "description": "It's hungry and flowers are its favorite meal.",
+        },
+        "collision": {
+            "fraction": 40,
+            "radius": 40,
+        },
+    },
+    "4": {
+        "0": {
+            "health": 125,
+            "bodyDamage": 40,
+        },
+        "1": {
+            "health": 469,
+            "bodyDamage": 120,
+        },
+        "2": {
+            "health": 1687.5,
+            "bodyDamage": 360,
+        },
+        "3": {
+            "health": 6750,
+            "bodyDamage": 1080,
+        },
+        "4": {
+            "health": 50625,
+            "bodyDamage": 3240,
+        },
+        "5": {
+            "health": 303750,
+            "bodyDamage": 9720,
+        },
+        "6": {
+            "health": 9125000,
+            "bodyDamage": 29160,
+        },
+        "baseSize": 30,
+        "i18n": {
+            "name": "Sandstorm",
+            "description": "Darude (1999)",
+        },
+        "collision": {
+            "fraction": 20,
+            "radius": 22,
+        },
+    },
+    "5": {
+        "0": {
+            "health": 75,
+            "bodyDamage": 5,
+        },
+        "1": {
+            "health": 281.4,
+            "bodyDamage": 15,
+        },
+        "2": {
+            "health": 1012.5,
+            "bodyDamage": 45,
+        },
+        "3": {
+            "health": 4050,
+            "bodyDamage": 135,
+        },
+        "4": {
+            "health": 30375,
+            "bodyDamage": 405,
+        },
+        "5": {
+            "health": 182250,
+            "bodyDamage": 1215,
+        },
+        "6": {
+            "health": 5475000,
+            "bodyDamage": 3654,
+        },
+        "baseSize": 30,
+        "i18n": {
+            "name": "Cactus",
+            "description": "Avoid touching it, it hurts",
+        },
+        "collision": {
+            "fraction": 30,
+            "radius": 36,
+        },
+    },
+    "6": {
+        "0": {
+            "health": 100,
+            "bodyDamage": 15,
+        },
+        "1": {
+            "health": 375.2,
+            "bodyDamage": 45,
+        },
+        "2": {
+            "health": 1350,
+            "bodyDamage": 135,
+        },
+        "3": {
+            "health": 5400,
+            "bodyDamage": 405,
+        },
+        "4": {
+            "health": 40500,
+            "bodyDamage": 1215,
+        },
+        "5": {
+            "health": 243000,
+            "bodyDamage": 3654,
+        },
+        "6": {
+            "health": 7300000,
+            "bodyDamage": 10935,
+        },
+        "baseSize": 30,
+        "i18n": {
+            "name": "Scorpion",
+            "description": "IT STINGS",
+        },
+        "collision": {
+            "fraction": 30,
+            "radius": 27.5,
+        },
+    },
+    "7": {
+        "0": {
+            "health": 87.5,
+            "bodyDamage": 10,
+        },
+        "1": {
+            "health": 328.3,
+            "bodyDamage": 30,
+        },
+        "2": {
+            "health": 1181.25,
+            "bodyDamage": 90,
+        },
+        "3": {
+            "health": 4725,
+            "bodyDamage": 270,
+        },
+        "4": {
+            "health": 35437.5,
+            "bodyDamage": 810,
+        },
+        "5": {
+            "health": 243000,
+            "bodyDamage": 2430,
+        },
+        "6": {
+            "health": 6387500,
+            "bodyDamage": 7290,
+        },
+        "baseSize": 30,
+        "i18n": {
+            "name": "Shiny Ladybug",
+            "description": "Shiny, cute and mostly harmless.",
+        },
+        "collision": {
+            "fraction": 30,
+            "radius": 30,
+        },
+    },
+    "8": {
+        "0": {
+            "health": 150,
+            "bodyDamage": 20,
+        },
+        "1": {
+            "health": 562.8,
+            "bodyDamage": 60,
+        },
+        "2": {
+            "health": 2025,
+            "bodyDamage": 180,
+        },
+        "3": {
+            "health": 8100,
+            "bodyDamage": 540,
+        },
+        "4": {
+            "health": 60750,
+            "bodyDamage": 1620,
+        },
+        "5": {
+            "health": 364500,
+            "bodyDamage": 4860,
+        },
+        "6": {
+            "health": 10950000,
+            "bodyDamage": 14580,
+        },
+        "baseSize": 20,
+        "i18n": {
+            "name": "Starfish",
+            "description": "His name is Patrick",
+        },
+        "collision": {
+            "fraction": 120,
+            "radius": 100,
+        },
+    },
+    "9": {
+        "0": {
+            "health": 125,
+            "bodyDamage": 25,
+            "extra": {
+                "lightning": 7,
+                "bounces": 2,
+            },
+        },
+        "1": {
+            "health": 469,
+            "bodyDamage": 75,
+            "extra": {
+                "lightning": 21,
+                "bounces": 3,
+            },
+        },
+        "2": {
+            "health": 1687.5,
+            "bodyDamage": 225,
+            "extra": {
+                "lightning": 63,
+                "bounces": 4,
+            },
+        },
+        "3": {
+            "health": 6750,
+            "bodyDamage": 675,
+            "extra": {
+                "lightning": 189,
+                "bounces": 5,
+            },
+        },
+        "4": {
+            "health": 50625,
+            "bodyDamage": 2025,
+            "extra": {
+                "lightning": 567,
+                "bounces": 6,
+            },
+        },
+        "5": {
+            "health": 303750,
+            "bodyDamage": 6075,
+            "extra": {
+                "lightning": 1701,
+                "bounces": 7,
+            },
+        },
+        "6": {
+            "health": 9125000,
+            "bodyDamage": 18225,
+            "extra": {
+                "lightning": 5103,
+                "bounces": 8,
+            },
+        },
+        "baseSize": 30,
+        "i18n": {
+            "name": "Jellyfish",
+            "description": "Makes the most delicious jam.",
+        },
+        "collision": {
+            "fraction": 20,
+            "radius": 20,
+        },
+    },
+    "10": {
+        "0": {
+            "health": 0.5,
+            "bodyDamage": 5,
+        },
+        "1": {
+            "health": 1.876,
+            "bodyDamage": 15,
+        },
+        "2": {
+            "health": 6.75,
+            "bodyDamage": 45,
+        },
+        "3": {
+            "health": 27,
+            "bodyDamage": 135,
+        },
+        "4": {
+            "health": 202.5,
+            "bodyDamage": 405,
+        },
+        "5": {
+            "health": 1215,
+            "bodyDamage": 1215,
+        },
+        "6": {
+            "health": 36500,
+            "bodyDamage": 3645,
+        },
+        "baseSize": 40,
+        "i18n": {
+            "name": "Bubble",
+            "description": "Pop",
+        },
+        "collision": {
+            "fraction": 20,
+            "radius": 20,
+        },
+    },
+    "11": {
+        "0": {
+            "health": 100,
+            "bodyDamage": 10,
+        },
+        "1": {
+            "health": 375.2,
+            "bodyDamage": 30,
+        },
+        "2": {
+            "health": 1350,
+            "bodyDamage": 90,
+        },
+        "3": {
+            "health": 5400,
+            "bodyDamage": 270,
+        },
+        "4": {
+            "health": 40500,
+            "bodyDamage": 810,
+        },
+        "5": {
+            "health": 243000,
+            "bodyDamage": 2430,
+        },
+        "6": {
+            "health": 7300000,
+            "bodyDamage": 7290,
+        },
+        "baseSize": 30,
+        "i18n": {
+            "name": "Sponge",
+            "description": "Bob",
+        },
+        "collision": {
+            "fraction": 25,
+            "radius": 35,
+        },
+    },
+    "12": {
+        "0": {
+            "health": 225,
+            "bodyDamage": 10,
+        },
+        "1": {
+            "health": 844.2,
+            "bodyDamage": 30,
+        },
+        "2": {
+            "health": 3037.5,
+            "bodyDamage": 90,
+        },
+        "3": {
+            "health": 12150,
+            "bodyDamage": 270,
+        },
+        "4": {
+            "health": 91125,
+            "bodyDamage": 810,
+        },
+        "5": {
+            "health": 546750,
+            "bodyDamage": 2430,
+        },
+        "6": {
+            "health": 16425000,
+            "bodyDamage": 7290,
+        },
+        "baseSize": 30,
+        "i18n": {
+            "name": "Shell",
+            "description": "Not an advertisement.",
+        },
+        "collision": {
+            "fraction": 20,
+            "radius": 30,
+        },
+    },
+    "13": {
+        "0": {
+            "health": 150,
+            "bodyDamage": 25,
+        },
+        "1": {
+            "health": 562.8,
+            "bodyDamage": 75,
+        },
+        "2": {
+            "health": 2025,
+            "bodyDamage": 225,
+        },
+        "3": {
+            "health": 8100,
+            "bodyDamage": 675,
+        },
+        "4": {
+            "health": 60750,
+            "bodyDamage": 2025,
+        },
+        "5": {
+            "health": 364500,
+            "bodyDamage": 6075,
+        },
+        "6": {
+            "health": 10950000,
+            "bodyDamage": 18225,
+        },
+        "baseSize": 30,
+        "i18n": {
+            "name": "Crab",
+            "description": "Mr. Crab",
+        },
+        "collision": {
+            "fraction": 25,
+            "radius": 20,
+        },
+    },
+    "14": {
+        "2": {
+            "health": 2362.5,
+            "bodyDamage": 90,
+        },
+        "3": {
+            "health": 9450,
+            "bodyDamage": 270,
+        },
+        "4": {
+            "health": 70875,
+            "bodyDamage": 810,
+        },
+        "5": {
+            "health": 425250,
+            "bodyDamage": 2430,
+        },
+        "6": {
+            "health": 12775000,
+            "bodyDamage": 7290,
+        },
+        "baseSize": 12.5,
+        "i18n": {
+            "name": "Leech",
+            "description": "Slurp slurp.",
+        },
+        "collision": {
+            "fraction": 20,
+            "radius": 12.5,
+        },
+    },
+    "15": {
+        "0": {
+            "health": 25,
+            "bodyDamage": 10,
+        },
+        "1": {
+            "health": 93.8,
+            "bodyDamage": 30,
+        },
+        "2": {
+            "health": 337.5,
+            "bodyDamage": 90,
+        },
+        "3": {
+            "health": 1350,
+            "bodyDamage": 270,
+        },
+        "4": {
+            "health": 10125,
+            "bodyDamage": 810,
+        },
+        "5": {
+            "health": 60750,
+            "bodyDamage": 2430,
+        },
+        "6": {
+            "health": 1825000,
+            "bodyDamage": 7290,
+        },
+        "baseSize": 40,
+        "i18n": {
+            "name": "Centipede",
+            "description": "It's just there doing its thing.",
+        },
+        "collision": {
+            "fraction": 40,
+            "radius": 40,
+        },
+    },
+    "16": {
+        "0": {
+            "health": 25,
+            "bodyDamage": 10,
+        },
+        "1": {
+            "health": 93.8,
+            "bodyDamage": 30,
+        },
+        "2": {
+            "health": 337.5,
+            "bodyDamage": 90,
+        },
+        "3": {
+            "health": 1350,
+            "bodyDamage": 270,
+        },
+        "4": {
+            "health": 10125,
+            "bodyDamage": 810,
+        },
+        "5": {
+            "health": 60750,
+            "bodyDamage": 2430,
+        },
+        "6": {
+            "health": 1825000,
+            "bodyDamage": 7290,
+        },
+        "baseSize": 40,
+        "i18n": {
+            "name": "Centipede",
+            "description": "This one loves flowers.",
+        },
+        "collision": {
+            "fraction": 40,
+            "radius": 40,
+        },
+    },
+    "17": {
+        "0": {
+            "health": 25,
+            "bodyDamage": 10,
+        },
+        "1": {
+            "health": 93.8,
+            "bodyDamage": 30,
+        },
+        "2": {
+            "health": 337.5,
+            "bodyDamage": 90,
+        },
+        "3": {
+            "health": 1350,
+            "bodyDamage": 270,
+        },
+        "4": {
+            "health": 10125,
+            "bodyDamage": 810,
+        },
+        "5": {
+            "health": 60750,
+            "bodyDamage": 2430,
+        },
+        "6": {
+            "health": 1825000,
+            "bodyDamage": 7290,
+        },
+        "baseSize": 40,
+        "i18n": {
+            "name": "Centipede",
+            "description": "Gotta go fast.",
+        },
+        "collision": {
+            "fraction": 40,
+            "radius": 40,
+        },
+    },
+    "18": {
+        "0": {
+            "health": 25,
+            "bodyDamage": 10,
+        },
+        "1": {
+            "health": 93.8,
+            "bodyDamage": 30,
+        },
+        "2": {
+            "health": 337.5,
+            "bodyDamage": 90,
+        },
+        "3": {
+            "health": 1350,
+            "bodyDamage": 270,
+        },
+        "4": {
+            "health": 10125,
+            "bodyDamage": 810,
+        },
+        "5": {
+            "health": 60750,
+            "bodyDamage": 2430,
+        },
+        "6": {
+            "health": 1825000,
+            "bodyDamage": 7290,
+        },
+        "baseSize": 25,
+        "i18n": {
+            "name": "Missile",
+            "description": "How did you see this?",
+        },
+        "collision": {
+            "fraction": 25,
+            "radius": 10,
+        },
+    },
+    "19": {
+        "0": {
+            "health": 1,
+            "bodyDamage": 0,
+        },
+        "1": {
+            "health": 1,
+            "bodyDamage": 0,
+        },
+        "2": {
+            "health": 1,
+            "bodyDamage": 0,
+        },
+        "3": {
+            "health": 1,
+            "bodyDamage": 0,
+        },
+        "4": {
+            "health": 1,
+            "bodyDamage": 0,
+        },
+        "5": {
+            "health": 1,
+            "bodyDamage": 0,
+        },
+        "6": {
+            "health": 1,
+            "bodyDamage": 0,
+        },
+        "baseSize": 0,
+        "i18n": {
+            "name": "Web",
+            "description": "How did you see this?",
+        },
+        "collision": {
+            "fraction": 60,
+            "radius": 50,
+        },
+    },
+}

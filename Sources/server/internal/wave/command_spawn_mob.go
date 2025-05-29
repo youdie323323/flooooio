@@ -1,6 +1,10 @@
 package wave
 
-import "flooooio/internal/native"
+import (
+	"slices"
+
+	"flooooio/internal/native"
+)
 
 type SpawnMobCmd struct {
 	Type    native.MobType `arg:"0" help:"type"`
@@ -18,22 +22,41 @@ func (sm *SpawnMobCmd) Run(ctx *Context) error {
 		petMaster = ctx.Operator
 	}
 
-	for range sm.Num {
-		ctx.Wp.GenerateMob(
-			sm.Type,
+	if slices.Contains(LinkableMobTypes, sm.Type) {
+		for range sm.Num {
+			ctx.Wp.LinkedMobSegmentation(
+				sm.Type,
 
-			sm.Rarity,
+				sm.Rarity,
 
-			ctx.Operator.X,
-			ctx.Operator.Y,
+				ctx.Operator.X,
+				ctx.Operator.Y,
 
-			petMaster,
+				9,
 
-			nil,
-			false,
+				petMaster,
 
-			nil,
-		)
+				nil,
+			)
+		}
+	} else {
+		for range sm.Num {
+			ctx.Wp.GenerateMob(
+				sm.Type,
+
+				sm.Rarity,
+
+				ctx.Operator.X,
+				ctx.Operator.Y,
+
+				petMaster,
+
+				nil,
+				false,
+
+				nil,
+			)
+		}
 	}
 
 	return nil

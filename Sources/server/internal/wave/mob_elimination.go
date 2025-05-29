@@ -2,16 +2,19 @@ package wave
 
 import (
 	"flooooio/internal/native"
+	"time"
 )
 
 func removeConnectedSegmentTraversal(wp *WavePool, m *Mob) {
 	for _, id := range m.ConnectedSegmentIds {
-		toDelete := wp.FindMob(*id)
-		if toDelete != nil {
-			// We want call this first because RemoveMob call Dispose and Dispose clear ConnectedSegmentIds
-			removeConnectedSegmentTraversal(wp, toDelete)
+		if id != nil {
+			toDelete := wp.FindMob(*id)
+			if toDelete != nil {
+				// We want call this first because RemoveMob call Dispose and Dispose clear ConnectedSegmentIds
+				removeConnectedSegmentTraversal(wp, toDelete)
 
-			wp.RemoveMob(*id)
+				wp.RemoveMob(*id)
+			}
 		}
 	}
 }
@@ -26,9 +29,19 @@ func (m *Mob) onEliminate(wp *WavePool) {
 	wp.RemoveMob(*m.Id)
 }
 
-func (m *Mob) MobElimination(wp *WavePool) {
+func (m *Mob) MobElimination(wp *WavePool, _ time.Time) {
+	// Destroy web projectile if reached time
+	if m.Type == native.MobTypeWebProjectile &&
+		native.PetalProfiles[native.PetalTypeWeb].StatFromRarity(m.Rarity).Extra["duration"] < m.SigmaT {
+		m.onEliminate(wp)
+
+		return
+	}
+
 	if !m.WasEliminated(wp) && 0 >= m.Health {
 		m.onEliminate(wp)
+
+		return
 	}
 }
 

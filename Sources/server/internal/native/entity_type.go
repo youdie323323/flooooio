@@ -27,8 +27,9 @@ const (
 	MobTypeCentipedeEvil
 	MobTypeCentipedeDesert
 
-	MobTypeMissile
-	
+	MobTypeMissileProjectile
+	MobTypeWebProjectile
+
 	PetalTypeBasic PetalType = iota
 	PetalTypeFaster
 	PetalTypeEggBeetle
@@ -40,6 +41,8 @@ const (
 	PetalTypeClaw
 	PetalTypeFang
 	PetalTypeYggdrasil
+	PetalTypeWeb
+	PetalTypeStinger
 )
 
 var MobTypeValues = []MobType{
@@ -63,8 +66,9 @@ var MobTypeValues = []MobType{
 	MobTypeCentipede,
 	MobTypeCentipedeEvil,
 	MobTypeCentipedeDesert,
-	
-	// MobTypeMissile,
+
+	// MobTypeMissileProjectile,
+	// MobTypeWebProjectile,
 }
 
 var PetalTypeValues = []PetalType{
@@ -78,4 +82,6 @@ var PetalTypeValues = []PetalType{
 	PetalTypeClaw,
 	PetalTypeFang,
 	PetalTypeYggdrasil,
+	PetalTypeWeb,
+	PetalTypeStinger,
 }
