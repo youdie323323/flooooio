@@ -540,6 +540,7 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
         return Layout.layout(
             {
                 ...Component.computePointerLike(this.layoutOptions),
+                
                 w: totalWidth,
                 h: maxHeight,
             },
@@ -608,6 +609,7 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
                     if (!this.childPositions.has(child)) {
                         this.childPositions.set(child, targetX);
                     }
+
                     const currentPosX = this.childPositions.get(child);
 
                     const newX = currentPosX + (targetX - currentPosX) * AbstractStaticChildLerpableContainer.POSITION_LERP_FACTOR;
@@ -814,6 +816,7 @@ export class StaticVContainer<Child extends Components = Components> extends Abs
                     if (!this.childPositions.has(child)) {
                         this.childPositions.set(child, targetY);
                     }
+
                     const currentPosY = this.childPositions.get(child);
 
                     const newY = currentPosY + (targetY - currentPosY) * AbstractStaticChildLerpableContainer.POSITION_LERP_FACTOR;

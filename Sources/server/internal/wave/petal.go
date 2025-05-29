@@ -130,11 +130,8 @@ func (p *Petal) Dispose() {
 	p.Master = nil
 }
 
-// StaticPetal represents static data of Petal.
-type StaticPetal struct {
-	Type   native.PetalType
-	Rarity native.Rarity
-}
+// StaticPetalData represents static data of Petal.
+type StaticPetalData = StaticEntityData[native.PetalType]
 
 const PetalMaxClusterAmount = 5
 
@@ -146,8 +143,8 @@ func IsClusterPetal(petal DynamicPetal) bool {
 	return len(petal) > 1
 }
 
-// StaticPetalSlots contains surface and bottom slots.
+// StaticPetalSlots contains surface and bottom static slots.
 type StaticPetalSlots struct {
-	Surface []StaticPetal
-	Bottom  []StaticPetal
+	Surface []StaticPetalData
+	Bottom  []StaticPetalData
 }

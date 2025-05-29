@@ -10,7 +10,7 @@ import (
 var UsablePetalTypes = []native.PetalType{
 	native.PetalTypeEggBeetle,
 	native.PetalTypeBubble,
-	native.PetalTypeStick,
+	native.PetalTypeMysteriousStick,
 	native.PetalTypeYggdrasil,
 	native.PetalTypeWeb,
 }
@@ -36,7 +36,7 @@ func (p *Player) PlayerPetalReload(wp *WavePool, now time.Time) {
 				continue
 			}
 
-			// Remove eliminated pets
+			// Remove summoned pet memory from summond pets instantly
 			for i, pet := range pe.SummonedPets {
 				if pet != nil && pet.WasEliminated(wp) {
 					pe.SummonedPets = slices.Delete(pe.SummonedPets, i, i+1)

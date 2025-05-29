@@ -7,6 +7,7 @@ import (
 	"github.com/chewxy/math32"
 
 	"flooooio/internal/collision"
+	"flooooio/internal/native"
 )
 
 type EntityId = uint32
@@ -33,6 +34,12 @@ type Entity struct {
 	Health float32
 
 	Mu sync.RWMutex
+}
+
+// StaticEntityData represents static data of Petal.
+type StaticEntityData[T ~uint8] struct {
+	Type   T
+	Rarity native.Rarity
 }
 
 // GetRandomAngle returns random angle of entity.
@@ -148,7 +155,7 @@ func IsDeadNode(wp *WavePool, n collision.Node) bool {
 	switch e := n.(type) {
 	case *Petal:
 		return e.WasEliminated(wp)
-		
+
 	case *Mob:
 		return e.WasEliminated(wp)
 

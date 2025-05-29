@@ -41,7 +41,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		Sp: &wave.StaticPlayer[wave.StaticPetalSlots]{
 			Name: "Mankoblablatrix",
 			Slots: wave.StaticPetalSlots{
-				Surface: []wave.StaticPetal{
+				Surface: []wave.StaticPetalData{
 					{
 						Type:   native.PetalTypeStinger,
 						Rarity: native.RarityUltra,
@@ -82,10 +82,58 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 						Type:   native.PetalTypeClaw,
 						Rarity: native.RarityUltra,
 					},
+					{
+						Type:   native.PetalTypeWing,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeWing,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeWing,
+						Rarity: native.RarityUltra,
+					},
 				},
-				Bottom: []wave.StaticPetal{
+				Bottom: []wave.StaticPetalData{
 					{
 						Type:   native.PetalTypeWeb,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeMysteriousStick,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeMysteriousStick,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeMysteriousStick,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeMysteriousStick,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeMysteriousStick,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeMysteriousStick,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeMysteriousStick,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeMysteriousStick,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeMysteriousStick,
 						Rarity: native.RarityUltra,
 					},
 				},
@@ -94,11 +142,11 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	wave.ConnManager.AddUser(conn, pd)
+	wave.ConnPool.AddUser(conn, pd)
 
 	// On close
 	defer func() {
-		wave.ConnManager.RemoveUser(conn)
+		wave.ConnPool.RemoveUser(conn)
 		_ = conn.Close()
 
 		wave.RemovePlayerFromService(pd)

@@ -19,6 +19,8 @@ type Player struct {
 
 	StaticPlayer[DynamicPetalSlots]
 
+	MagnitudeMultiplier float32
+
 	// commandQueue is command queue of player.
 	commandQueue chan PlayerCommand
 
@@ -68,12 +70,12 @@ func (p *Player) IsCollidable() bool {
 	return !p.NoClip
 }
 
-const minHpLevel = 75.
+const maxHpLevel = 75.
 
 // calculatePlayerHp calculate hp by level.
 // 100 * x, x is upgrade.
 func calculatePlayerHp(level float32) float32 {
-	return (100 * 20000) * math32.Pow(1.02, max(level, minHpLevel)-1)
+	return (100 * 0.1) * math32.Pow(1.02, max(level, maxHpLevel)-1)
 }
 
 // GetMaxHealth calculates max hp of player.
@@ -208,6 +210,7 @@ Done:
 	p.PlayerPetalOrbit(wp, now)
 
 	{ // Base onUpdateTick
+		p.MagnitudeMultiplier = 1
 	}
 
 	p.Mu.Unlock()
@@ -308,6 +311,8 @@ func NewPlayer(
 
 			Conn: sp.Conn,
 		},
+
+		MagnitudeMultiplier: 1,
 
 		commandQueue: make(chan PlayerCommand, 8),
 

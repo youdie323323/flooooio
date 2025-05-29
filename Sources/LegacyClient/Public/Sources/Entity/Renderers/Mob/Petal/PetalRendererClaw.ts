@@ -82,10 +82,10 @@ export default class PetalRendererClaw extends AbstractPetalRenderer {
 
         ctx.lineJoin = "round";
     
-        ctx.fillStyle = "#4D2621";
+        ctx.fillStyle = this.calculateDamageEffectColor(context, "#4D2621");
         ctx.fill(clawBody, "nonzero");
         
-        ctx.fillStyle = "#3E1F1B";
+        ctx.fillStyle = this.calculateDamageEffectColor(context, "#3E1F1B");
         ctx.fill(clawBodyStroke, "nonzero");
     }
 }

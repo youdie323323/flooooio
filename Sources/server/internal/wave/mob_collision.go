@@ -117,11 +117,14 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 
 				px, py, ok := collision.ComputeCirclePush(c0mob, c1mob)
 				if ok {
-					// Web does nothing
 					// Slows mob which colliding
 					if mIsWeb {
-						nearEntity.MagnitudeMultiplier = webSlowPercent
+						// TODO: enemy web not slows pets
+						if nearEntity.IsOrganismEnemy() && (mIsEnemy != nearEntityIsEnemy) {
+							nearEntity.MagnitudeMultiplier = webSlowPercent
+						}
 
+						// Web does nothing
 						return true
 					}
 
@@ -233,11 +236,6 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 					return true
 				}
 
-				// Web not valid to player
-				if mIsWeb {
-					return true
-				}
-
 				// Dont collide to dead/uncollidable player
 				if nearEntity.IsDead || !nearEntity.IsCollidable() {
 					return true
@@ -249,6 +247,14 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 
 				px, py, ok := collision.ComputeCirclePush(c0mob, c1mob)
 				if ok {
+					// Slows player which colliding
+					if mIsWeb {
+						nearEntity.MagnitudeMultiplier = webSlowPercent
+
+						// Web does nothing
+						return true
+					}
+
 					m.X -= px
 					m.Y -= py
 

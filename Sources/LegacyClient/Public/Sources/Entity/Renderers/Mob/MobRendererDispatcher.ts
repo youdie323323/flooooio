@@ -19,7 +19,7 @@ import MobRendererSandstorm from "./MobRendererSandstorm";
 import MobRendererCactus from "./MobRendererCactus";
 import MobRendererScorpion from "./MobRendererScorpion";
 import MobRendererShinyLadybug from "./MobRendererShinyLadybug";
-import PetalRendererStick from "./Petal/PetalRendererStick";
+import PetalRendererMysteriousStick from "./Petal/PetalRendererMysteriousStick";
 import MobRendererShell from "./MobRendererShell";
 import PetalRendererSand from "./Petal/PetalRendererSand";
 import PetalRendererLightning from "./Petal/PetalRendererLightning";
@@ -33,12 +33,13 @@ import PetalRendererWeb from "./Petal/PetalRendererWeb";
 import MobRendererMissileProjectile from "./Projectile/MobRendererMissileProjectile";
 import MobRendererWebProjectile from "./Projectile/MobRendererWebProjectile";
 import PetalRendererStinger from "./Petal/PetalRendererStinger";
+import PetalRendererWing from "./Petal/PetalRendererWing";
 
 const centipedeRenderer = new MobRendererCentipede();
 
 const MOB_RENDERERS = {
     // Mob
-    
+
     [MobType.SPIDER]: new MobRendererSpider,
     [MobType.BEE]: new MobRendererBee,
     [MobType.HORNET]: new MobRendererHornet,
@@ -63,15 +64,15 @@ const MOB_RENDERERS = {
 
     [MobType.MISSILE_PROJECTILE]: new MobRendererMissileProjectile,
     [MobType.WEB_PROJECTILE]: new MobRendererWebProjectile,
-    
+
     // Petal
-    
+
     [PetalType.BASIC]: new PetalRendererBasic,
     [PetalType.FASTER]: new PetalRendererFaster,
     [PetalType.BUBBLE]: new PetalRendererBubble,
     [PetalType.EGG_BEETLE]: new PetalRendererEgg,
     [PetalType.YIN_YANG]: new PetalRendererYinYang,
-    [PetalType.STICK]: new PetalRendererStick,
+    [PetalType.MYSTERIOUS_STICK]: new PetalRendererMysteriousStick,
     [PetalType.SAND]: new PetalRendererSand,
     [PetalType.LIGHTNING]: new PetalRendererLightning,
     [PetalType.CLAW]: new PetalRendererClaw,
@@ -79,6 +80,7 @@ const MOB_RENDERERS = {
     [PetalType.YGGDRASIL]: new PetalRendererYggdrasil,
     [PetalType.WEB]: new PetalRendererWeb,
     [PetalType.STINGER]: new PetalRendererStinger,
+    [PetalType.WING]: new PetalRendererWing,
 } as const satisfies Record<MobType | PetalType, Renderer<Mob>>;
 
 export default class MobRendererDispatcher extends Renderer<Mob> {

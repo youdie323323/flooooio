@@ -15,9 +15,25 @@ const (
 	yggdrasilPushForce = 10.
 )
 
-var summonTypeMapping = map[native.PetalType]native.MobType{
-	native.PetalTypeEggBeetle: native.MobTypeBeetle,
-	native.PetalTypeStick:     native.MobTypeSandstorm,
+var summonTypeMapping = map[native.PetalType]map[native.Rarity]StaticMobData{
+	native.PetalTypeEggBeetle: {
+		native.RarityCommon:    StaticMobData{native.MobTypeBeetle, native.RarityCommon},  // TODO: should be common baby ant
+		native.RarityUnusual:   StaticMobData{native.MobTypeBeetle, native.RarityUnusual}, // TODO: should be unusual worker ant
+		native.RarityRare:      StaticMobData{native.MobTypeBeetle, native.RarityUnusual}, // TODO: should be unusual solider ant
+		native.RarityEpic:      StaticMobData{native.MobTypeBeetle, native.RarityUnusual},
+		native.RarityLegendary: StaticMobData{native.MobTypeBeetle, native.RarityRare},
+		native.RarityMythic:    StaticMobData{native.MobTypeBeetle, native.RarityLegendary},
+		native.RarityUltra:     StaticMobData{native.MobTypeBeetle, native.RarityMythic},
+	},
+	native.PetalTypeMysteriousStick: {
+		native.RarityCommon:    StaticMobData{native.MobTypeSandstorm, native.RarityRare},
+		native.RarityUnusual:   StaticMobData{native.MobTypeSandstorm, native.RarityRare},
+		native.RarityRare:      StaticMobData{native.MobTypeSandstorm, native.RarityRare},
+		native.RarityEpic:      StaticMobData{native.MobTypeSandstorm, native.RarityRare},
+		native.RarityLegendary: StaticMobData{native.MobTypeSandstorm, native.RarityRare},
+		native.RarityMythic:    StaticMobData{native.MobTypeSandstorm, native.RarityRare},
+		native.RarityUltra:     StaticMobData{native.MobTypeSandstorm, native.RarityEpic},
+	},
 }
 
 func (p *Player) PlayerPetalConsume(wp *WavePool, now time.Time) {
@@ -62,11 +78,13 @@ func (p *Player) PlayerPetalConsume(wp *WavePool, now time.Time) {
 					// Remove petal as it consumed
 					wp.RemovePetal(*petal.Id)
 
+					smd := summonTypeMapping[petal.Type][petal.Rarity]
+
 					// Its not really multiple beetles because removing petal have usage cooldown resetted
 					petal.SummonedPets = append(petal.SummonedPets, wp.GenerateMob(
-						summonTypeMapping[petal.Type],
+						smd.Type,
 
-						max(native.RarityCommon, min(native.RarityMythic, petal.Rarity-1)),
+						smd.Rarity,
 
 						petal.X,
 						petal.Y,
@@ -108,25 +126,27 @@ func (p *Player) PlayerPetalConsume(wp *WavePool, now time.Time) {
 					// TODO: implement logic
 				}
 
-			case native.PetalTypeStick:
+			case native.PetalTypeMysteriousStick:
 				{
-					// TODO: add limit
+					if len(petal.SummonedPets) < 1 {
+						smd := summonTypeMapping[petal.Type][petal.Rarity]
 
-					petal.SummonedPets = append(petal.SummonedPets, wp.GenerateMob(
-						summonTypeMapping[petal.Type],
+						petal.SummonedPets = append(petal.SummonedPets, wp.GenerateMob(
+							smd.Type,
 
-						max(native.RarityCommon, min(native.RarityMythic, petal.Rarity-1)),
+							smd.Rarity,
 
-						petal.X,
-						petal.Y,
+							petal.X,
+							petal.Y,
 
-						p,
+							p,
 
-						nil,
-						false,
+							nil,
+							false,
 
-						nil,
-					))
+							nil,
+						))
+					}
 				}
 
 			case native.PetalTypeBubble:
@@ -162,9 +182,7 @@ func (p *Player) PlayerPetalConsume(wp *WavePool, now time.Time) {
 								petal.X,
 								petal.Y,
 
-								// We dont need a web from the enemy side
-								// Web is only valid to mob
-								nil, // p,
+								p,
 
 								nil,
 								false,

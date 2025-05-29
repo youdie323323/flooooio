@@ -194,7 +194,7 @@ func (m *Mob) calculateLoseRange() float32 {
 func (m *Mob) GetTrackingTargets(wp *WavePool) []collision.Node {
 	var targets []collision.Node
 
-	if m.IsTrackableEnemy() {
+	if m.IsEnemy() {
 		players := wp.GetPlayersWithCondition(func(p *Player) bool {
 			return !p.IsDead
 		})
@@ -205,7 +205,7 @@ func (m *Mob) GetTrackingTargets(wp *WavePool) []collision.Node {
 		}
 	} else {
 		mobs := wp.GetMobsWithCondition(func(fm *Mob) bool {
-			return fm.Id != m.Id && fm.PetMaster == nil && !fm.IsProjectile()
+			return fm.Id != m.Id && fm.IsEnemy() && !fm.IsProjectile()
 		})
 
 		targets = make([]collision.Node, len(mobs))
@@ -366,7 +366,7 @@ func (m *Mob) MobAggressivePursuit(wp *WavePool, now time.Time) {
 		{
 			m.Angle = math32.Mod(m.Angle+generateValleyDistribution(-25, 25), 255)
 
-			m.Magnitude = SpeedOf(m.Type) * 255 * (1. + (30.-1.)*rand.Float32())
+			m.Magnitude = SpeedOf(m.Type) * 255
 		}
 
 	case native.HostileBehavior:

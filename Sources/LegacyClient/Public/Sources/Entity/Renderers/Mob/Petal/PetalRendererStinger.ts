@@ -25,8 +25,8 @@ export default class PetalRendererStinger extends AbstractPetalRenderer {
 
         ctx.closePath();
 
-        ctx.fillStyle = "#333333";
-        ctx.strokeStyle = "#292929";
+        ctx.fillStyle = this.calculateDamageEffectColor(context, "#333333");
+        ctx.strokeStyle = this.calculateDamageEffectColor(context, "#292929");
         ctx.lineWidth = 3;
         ctx.fill();
         ctx.stroke();

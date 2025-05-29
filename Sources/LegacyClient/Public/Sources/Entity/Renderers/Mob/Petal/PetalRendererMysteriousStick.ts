@@ -76,7 +76,7 @@ const stickBody = (function () {
     return path;
 })();
 
-export default class PetalRendererStick extends AbstractPetalRenderer {
+export default class PetalRendererMysteriousStick extends AbstractPetalRenderer {
     override render(context: RenderingContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);

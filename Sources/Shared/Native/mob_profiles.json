@@ -32,6 +32,10 @@
     "5": {
       "health": 750,
       "bodyDamage": 125
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
     }
   },
   "1": {
@@ -67,6 +71,10 @@
     "5": {
       "health": 1250,
       "bodyDamage": 62.5
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
     }
   },
   "10": {
@@ -102,6 +110,10 @@
     "5": {
       "health": 250,
       "bodyDamage": 12.5
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
     }
   },
   "11": {
@@ -137,6 +149,10 @@
     "5": {
       "health": 2000,
       "bodyDamage": 25
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
     }
   },
   "12": {
@@ -172,6 +188,10 @@
     "5": {
       "health": 4500,
       "bodyDamage": 25
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
     }
   },
   "13": {
@@ -207,6 +227,10 @@
     "5": {
       "health": 4000,
       "bodyDamage": 62.5
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
     }
   },
   "14": {
@@ -260,6 +284,10 @@
       "extra": {
         "lifesteal": 17.5
       }
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
     }
   },
   "15": {
@@ -295,6 +323,10 @@
     "5": {
       "health": 2500,
       "bodyDamage": 25
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
     }
   },
   "16": {
@@ -330,6 +362,10 @@
     "5": {
       "health": 2500,
       "bodyDamage": 25
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
     }
   },
   "17": {
@@ -365,6 +401,10 @@
     "5": {
       "health": 2500,
       "bodyDamage": 25
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
     }
   },
   "18": {
@@ -400,6 +440,10 @@
     "5": {
       "health": 500,
       "bodyDamage": 25
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
     }
   },
   "19": {
@@ -433,6 +477,10 @@
       "bodyDamage": 0
     },
     "5": {
+      "health": 1,
+      "bodyDamage": 0
+    },
+    "6": {
       "health": 1,
       "bodyDamage": 0
     }
@@ -470,6 +518,10 @@
     "5": {
       "health": 2000,
       "bodyDamage": 125
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
     }
   },
   "3": {
@@ -505,6 +557,10 @@
     "5": {
       "health": 2000,
       "bodyDamage": 75
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
     }
   },
   "4": {
@@ -540,6 +596,10 @@
     "5": {
       "health": 2500,
       "bodyDamage": 100
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
     }
   },
   "5": {
@@ -575,6 +635,10 @@
     "5": {
       "health": 1500,
       "bodyDamage": 75
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
     }
   },
   "6": {
@@ -610,6 +674,10 @@
     "5": {
       "health": 3000,
       "bodyDamage": 25
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
     }
   },
   "7": {
@@ -645,6 +713,10 @@
     "5": {
       "health": 1750,
       "bodyDamage": 25
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
     }
   },
   "8": {
@@ -680,6 +752,10 @@
     "5": {
       "health": 3000,
       "bodyDamage": 50
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
     }
   },
   "9": {
@@ -739,6 +815,10 @@
         "bounces": 10,
         "lightning": 17.5
       }
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
     }
   }
 }

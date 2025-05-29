@@ -19,6 +19,11 @@ func (p *Petal) PetalSpecialAngle(wp *WavePool, _ time.Time) {
 			p.Angle = 0
 		}
 
+	case native.PetalTypeWing:
+		{
+			p.Angle += 5
+		}
+
 	default:
 		{
 			p.Angle += 0.3

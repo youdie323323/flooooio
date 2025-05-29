@@ -196,16 +196,21 @@ export default class MobRendererCrab extends AbstractMobRenderer {
                 ctx.lineWidth = 4;
 
                 ctx.beginPath();
+
                 ctx.moveTo(-10, 8);
                 ctx.quadraticCurveTo(0, 3, 10, 8);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(-10, -8);
-                ctx.quadraticCurveTo(0, -3, 10, -8);
+
                 ctx.stroke();
 
-                ctx.restore();
+                ctx.beginPath();
+
+                ctx.moveTo(-10, -8);
+                ctx.quadraticCurveTo(0, -3, 10, -8);
+
+                ctx.stroke();
             }
+
+            ctx.restore();
         }
     }
 }

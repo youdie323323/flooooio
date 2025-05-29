@@ -1,6 +1,7 @@
 package wave
 
 import (
+	"math"
 	"slices"
 	"time"
 
@@ -86,6 +87,11 @@ func doPetalSpin(
 	i int,
 	j int,
 ) {
+	// Ensure len > 0
+	if len(pss) < 1 {
+		return
+	}
+
 	var spinTargets []collision.Node
 
 	{
@@ -100,7 +106,7 @@ func doPetalSpin(
 			dx := m.X - pe.X
 			dy := m.Y - pe.Y
 
-			return (dx*dx+dy*dy) <= spinDetectRadSq
+			return (dx*dx + dy*dy) <= spinDetectRadSq
 		})
 
 		spinTargets = make([]collision.Node, len(mobs))
@@ -150,7 +156,7 @@ func doPetalSpin(
 	}
 }
 
-func (p *Player) PlayerPetalOrbit(wp *WavePool, _ time.Time) {
+func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 	p.OrbitHistoryX[p.OrbitHistoryIndex] = p.X
 	p.OrbitHistoryY[p.OrbitHistoryIndex] = p.Y
 
@@ -230,6 +236,8 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, _ time.Time) {
 
 	targetRadius += ((p.Size / PlayerSize) - 1) * PlayerCollision.Radius
 
+	wingAddition := float32(200 * math.Sin(math.Mod(float64(now.UnixMilli())/300, math.Pi)))
+
 	for i, petals := range surface {
 		if petals == nil {
 			continue
@@ -251,9 +259,14 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, _ time.Time) {
 
 		var springForce float32
 
-		if slices.Contains(UsablePetalTypes, firstPetal.Type) {
+		switch true {
+		case slices.Contains(UsablePetalTypes, firstPetal.Type):
 			springForce = (40 - p.OrbitPetalRadii[i]) * radiusSpringStrength
-		} else {
+
+		case isAngry && firstPetal.Type == native.PetalTypeWing:
+			springForce = (targetRadius + wingAddition - p.OrbitPetalRadii[i]) * radiusSpringStrength
+
+		default:
 			springForce = (targetRadius - p.OrbitPetalRadii[i]) * radiusSpringStrength
 		}
 

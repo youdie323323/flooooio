@@ -10,3 +10,5 @@ require (
 )
 
 require github.com/chewxy/math32 v1.11.1
+
+require github.com/colega/zeropool v0.0.0-20230505084239-6fb4a4f75381

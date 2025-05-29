@@ -138,10 +138,10 @@ export default class PetalRendererLightning extends AbstractPetalRenderer {
 
         ctx.lineJoin = "round";
 
-        ctx.fillStyle = "#29F2E5";
+        ctx.fillStyle = this.calculateDamageEffectColor(context, "#29F2E5");
         ctx.fill(lightningBody, "nonzero");
         
-        ctx.fillStyle = "#21C4B9";
+        ctx.fillStyle = this.calculateDamageEffectColor(context, "#21C4B9");
         ctx.fill(lightningBodyStroke, "nonzero");
     }
 }

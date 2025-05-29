@@ -1,8 +1,9 @@
 package wave
 
 import (
-	"flooooio/internal/native"
 	"time"
+
+	"flooooio/internal/native"
 )
 
 func removeConnectedSegmentTraversal(wp *WavePool, m *Mob) {

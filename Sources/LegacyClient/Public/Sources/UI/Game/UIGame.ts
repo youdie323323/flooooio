@@ -26,6 +26,7 @@ import type BinaryReader from "../../Websocket/Binary/ReadWriter/Reader/BinaryRe
 import { Clientbound } from "../../Websocket/Packet/PacketOpcode";
 import { Biome, BIOME_DISPLAY_NAME, BIOME_GAUGE_COLORS } from "../../Native/Biome";
 import TileRenderer, { BIOME_TILESETS } from "../Shared/Tile/Tileset/TilesetRenderer";
+import { MobType } from "../../Native/Entity/EntityType";
 
 let interpolatedMouseX = 0;
 let interpolatedMouseY = 0;
@@ -1097,54 +1098,77 @@ export default class UIGame extends AbstractUI {
         }
 
         { // Render players & mobs
-            const viewportWidth = (canvas.width / uiScaleFactor / antennaScaleFactor) + 500;
-            const viewportHeight = (canvas.height / uiScaleFactor / antennaScaleFactor) + 500;
-            const halfWidth = viewportWidth / 2;
-            const halfHeight = viewportHeight / 2;
+            const scaledWidth = canvas.width / (uiScaleFactor * antennaScaleFactor);
+            const scaledHeight = canvas.height / (uiScaleFactor * antennaScaleFactor);
+            const viewportWidth = scaledWidth + 500;
+            const viewportHeight = scaledHeight + 500;
+
+            const halfWidth = viewportWidth * 0.5;
+            const halfHeight = viewportHeight * 0.5;
 
             const x0 = selfPlayer.x - halfWidth;
             const x1 = selfPlayer.x + halfWidth;
             const y0 = selfPlayer.y - halfHeight;
             const y1 = selfPlayer.y + halfHeight;
 
-            const entitiesToDraw: Array<Mob | Player> = new Array();
+            const getEntitiesInViewport = () => {
+                const viewportEntities: Array<Mob | Player> = [];
 
-            for (const [, mob] of this.mobs) {
-                if (!isPetal(mob.type)) {
-                    if (
-                        mob.x >= x0 &&
-                        mob.x <= x1 &&
-                        mob.y >= y0 &&
-                        mob.y <= y1
-                    ) {
-                        entitiesToDraw.push(mob);
+                const isInViewport = (entity: Mob | Player) => (
+                    entity.x >= x0 &&
+                    entity.x <= x1 &&
+                    entity.y >= y0 &&
+                    entity.y <= y1
+                );
+
+                for (const [, mob] of this.mobs) {
+                    if (isInViewport(mob)) {
+                        if (isPetal(mob.type)) {
+                            viewportEntities.push(mob);
+                        } else if (mob.type === MobType.WEB_PROJECTILE) {
+                            viewportEntities.unshift(mob);
+                        } else {
+                            viewportEntities.push(mob);
+                        }
                     }
                 }
-            }
 
-            for (const [, petal] of this.mobs) {
-                if (isPetal(petal.type)) {
-                    if (
-                        petal.x >= x0 &&
-                        petal.x <= x1 &&
-                        petal.y >= y0 &&
-                        petal.y <= y1
-                    ) {
-                        entitiesToDraw.push(petal);
+                for (const [, player] of this.players) {
+                    if (isInViewport(player)) {
+                        viewportEntities.push(player);
                     }
                 }
-            }
 
-            for (const [, player] of this.players) {
-                if (
-                    player.x >= x0 &&
-                    player.x <= x1 &&
-                    player.y >= y0 &&
-                    player.y <= y1
-                ) {
-                    entitiesToDraw.push(player);
+                return viewportEntities;
+            };
+
+            const renderLightningBounces = () => {
+                const { lightningBounces } = this;
+                if (!lightningBounces.length) return;
+
+                ctx.strokeStyle = "#FFF";
+                ctx.lineCap = "round";
+
+                const dtScale = deltaTime / 500;
+                let i = lightningBounces.length;
+
+                while (i--) {
+                    const bounce = lightningBounces[i];
+                    bounce.t -= dtScale;
+
+                    if (bounce.t <= 0) {
+                        lightningBounces.splice(i, 1);
+
+                        continue;
+                    }
+
+                    ctx.globalAlpha = bounce.t;
+                    ctx.lineWidth = bounce.t * 4;
+                    ctx.stroke(bounce.path);
                 }
-            }
+            };
+
+            const entitiesToDraw = getEntitiesInViewport();
 
             ctx.save();
 
@@ -1153,39 +1177,10 @@ export default class UIGame extends AbstractUI {
             ctx.translate(-selfPlayer.x, -selfPlayer.y);
 
             for (const entity of entitiesToDraw) {
-                renderEntity({
-                    ctx,
-                    entity,
-                    isSpecimen: false,
-                });
+                renderEntity({ ctx, entity, isSpecimen: false });
             }
 
-            { // Render lightning bounces
-                const { lightningBounces } = this;
-
-                ctx.save();
-
-                ctx.strokeStyle = "#fff";
-                ctx.lineCap = "round";
-
-                for (let i = lightningBounces.length - 1; i >= 0; i--) {
-                    const bounce = lightningBounces[i];
-
-                    bounce.t -= deltaTime / 500;
-                    if (bounce.t <= 0) {
-                        lightningBounces.splice(i, 1);
-
-                        continue;
-                    }
-
-                    ctx.lineWidth = bounce.t * 4;
-                    ctx.globalAlpha = bounce.t;
-
-                    ctx.stroke(bounce.path);
-                }
-
-                ctx.restore();
-            }
+            renderLightningBounces();
 
             ctx.restore();
         }

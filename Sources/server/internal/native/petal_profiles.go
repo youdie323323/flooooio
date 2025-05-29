@@ -18,7 +18,7 @@ type PetalStat struct {
 	Count       int      `json:"count"`
 
 	// Maybe this should be any but ok now
-	Extra map[string]float32 `json:"extra,omitempty"`
+	Extra EntityExtra `json:"extra,omitempty"`
 }
 
 // GetDamage returns damage within PetalStat.
@@ -30,13 +30,13 @@ type PetalData struct {
 	EntityData[PetalI18n]
 
 	// Bit fancy... :(
-	Common    PetalStat `json:"0,omitempty"`
-	Unusual   PetalStat `json:"1,omitempty"`
-	Rare      PetalStat `json:"2,omitempty"`
-	Epic      PetalStat `json:"3,omitempty"`
-	Legendary PetalStat `json:"4,omitempty"`
-	Mythic    PetalStat `json:"5,omitempty"`
-	Ultra     PetalStat `json:"6,omitempty"`
+	Common    PetalStat `json:"0"`
+	Unusual   PetalStat `json:"1"`
+	Rare      PetalStat `json:"2"`
+	Epic      PetalStat `json:"3"`
+	Legendary PetalStat `json:"4"`
+	Mythic    PetalStat `json:"5"`
+	Ultra     PetalStat `json:"6"`
 }
 
 func inlinePtrFloat32(f float32) *float32 {
@@ -132,7 +132,8 @@ var PetalProfiles = map[PetalType]PetalData{
 			Health:      5,
 			PetalReload: 0.8,
 			Count:       1,
-			Extra: map[string]float32{
+
+			Extra: EntityExtra{
 				"rad": 0.15,
 			},
 		},
@@ -141,7 +142,7 @@ var PetalProfiles = map[PetalType]PetalData{
 			Health:      6,
 			PetalReload: 0.8,
 			Count:       1,
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"rad": 0.195,
 			},
 		},
@@ -150,7 +151,8 @@ var PetalProfiles = map[PetalType]PetalData{
 			Health:      7,
 			PetalReload: 0.8,
 			Count:       1,
-			Extra: map[string]float32{
+
+			Extra: EntityExtra{
 				"rad": 0.27,
 			},
 		},
@@ -159,7 +161,8 @@ var PetalProfiles = map[PetalType]PetalData{
 			Health:      8.5,
 			PetalReload: 0.8,
 			Count:       1,
-			Extra: map[string]float32{
+
+			Extra: EntityExtra{
 				"rad": 0.36,
 			},
 		},
@@ -168,7 +171,8 @@ var PetalProfiles = map[PetalType]PetalData{
 			Health:      10.5,
 			PetalReload: 0.8,
 			Count:       1,
-			Extra: map[string]float32{
+
+			Extra: EntityExtra{
 				"rad": 0.48,
 			},
 		},
@@ -177,7 +181,8 @@ var PetalProfiles = map[PetalType]PetalData{
 			Health:      25,
 			PetalReload: 0.8,
 			Count:       1,
-			Extra: map[string]float32{
+
+			Extra: EntityExtra{
 				"rad": 1.2,
 			},
 		},
@@ -186,7 +191,8 @@ var PetalProfiles = map[PetalType]PetalData{
 			Health:      50,
 			PetalReload: 0.8,
 			Count:       1,
-			Extra: map[string]float32{
+
+			Extra: EntityExtra{
 				"rad": 3,
 			},
 		},
@@ -324,6 +330,18 @@ var PetalProfiles = map[PetalType]PetalData{
 		},
 	},
 	PetalTypeYinYang: {
+		Common: PetalStat{
+			Damage:      7,
+			Health:      7,
+			PetalReload: 1,
+			Count:       1,
+		},
+		Unusual: PetalStat{
+			Damage:      9.1,
+			Health:      8.4,
+			PetalReload: 1,
+			Count:       1,
+		},
 		Rare: PetalStat{
 			Damage:      12.6,
 			Health:      9.8,
@@ -365,30 +383,51 @@ var PetalProfiles = map[PetalType]PetalData{
 			},
 		},
 	},
-	PetalTypeStick: {
+	PetalTypeMysteriousStick: {
+		Common: PetalStat{
+			Damage:      1,
+			Health:      10,
+			PetalReload: 4,
+			UsageReload: inlinePtrFloat32(10),
+			Count:       1,
+		},
+		Unusual: PetalStat{
+			Damage:      1.2,
+			Health:      13,
+			PetalReload: 4,
+			UsageReload: inlinePtrFloat32(8),
+			Count:       1,
+		},
+		Rare: PetalStat{
+			Damage:      1.4,
+			Health:      18,
+			PetalReload: 4,
+			UsageReload: inlinePtrFloat32(6),
+			Count:       1,
+		},
 		Epic: PetalStat{
-			Damage:      17,
+			Damage:      1.7,
 			Health:      24,
 			PetalReload: 4,
 			UsageReload: inlinePtrFloat32(4),
 			Count:       1,
 		},
 		Legendary: PetalStat{
-			Damage:      21,
+			Damage:      2.1,
 			Health:      32,
 			PetalReload: 4,
 			UsageReload: inlinePtrFloat32(2),
 			Count:       1,
 		},
 		Mythic: PetalStat{
-			Damage:      25,
+			Damage:      2.5,
 			Health:      40,
 			PetalReload: 4,
 			UsageReload: inlinePtrFloat32(1),
 			Count:       1,
 		},
 		Ultra: PetalStat{
-			Damage:      50,
+			Damage:      5,
 			Health:      100,
 			PetalReload: 4,
 			UsageReload: inlinePtrFloat32(0.1),
@@ -460,12 +499,24 @@ var PetalProfiles = map[PetalType]PetalData{
 		},
 	},
 	PetalTypeLightning: {
+		Common: PetalStat{
+			Damage:      0,
+			Health:      10,
+			PetalReload: 2.5,
+			Count:       1,
+
+			Extra: EntityExtra{
+				"lightning": 12,
+				"bounces":   2,
+			},
+		},
 		Unusual: PetalStat{
 			Damage:      0,
 			Health:      12,
 			PetalReload: 2.5,
 			Count:       1,
-			Extra: map[string]float32{
+
+			Extra: EntityExtra{
 				"lightning": 15.6,
 				"bounces":   3,
 			},
@@ -475,7 +526,8 @@ var PetalProfiles = map[PetalType]PetalData{
 			Health:      14,
 			PetalReload: 2.5,
 			Count:       1,
-			Extra: map[string]float32{
+
+			Extra: EntityExtra{
 				"lightning": 21.6,
 				"bounces":   4,
 			},
@@ -485,7 +537,8 @@ var PetalProfiles = map[PetalType]PetalData{
 			Health:      17,
 			PetalReload: 2.5,
 			Count:       1,
-			Extra: map[string]float32{
+
+			Extra: EntityExtra{
 				"lightning": 28.8,
 				"bounces":   5,
 			},
@@ -495,7 +548,8 @@ var PetalProfiles = map[PetalType]PetalData{
 			Health:      21,
 			PetalReload: 2.5,
 			Count:       1,
-			Extra: map[string]float32{
+
+			Extra: EntityExtra{
 				"lightning": 38.4,
 				"bounces":   6,
 			},
@@ -505,7 +559,8 @@ var PetalProfiles = map[PetalType]PetalData{
 			Health:      25,
 			PetalReload: 2.5,
 			Count:       1,
-			Extra: map[string]float32{
+
+			Extra: EntityExtra{
 				"lightning": 48,
 				"bounces":   15,
 			},
@@ -515,7 +570,8 @@ var PetalProfiles = map[PetalType]PetalData{
 			Health:      50,
 			PetalReload: 2.5,
 			Count:       1,
-			Extra: map[string]float32{
+
+			Extra: EntityExtra{
 				"lightning": 120,
 				"bounces":   15,
 			},
@@ -538,7 +594,7 @@ var PetalProfiles = map[PetalType]PetalData{
 			PetalReload: 3.5,
 			Count:       1,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"percentDamage": 9,
 				"limit":         100,
 			},
@@ -549,7 +605,7 @@ var PetalProfiles = map[PetalType]PetalData{
 			PetalReload: 3.5,
 			Count:       1,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"percentDamage": 11.7,
 				"limit":         130,
 			},
@@ -560,7 +616,7 @@ var PetalProfiles = map[PetalType]PetalData{
 			PetalReload: 3.5,
 			Count:       1,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"percentDamage": 16.2,
 				"limit":         180,
 			},
@@ -571,7 +627,7 @@ var PetalProfiles = map[PetalType]PetalData{
 			PetalReload: 3.5,
 			Count:       1,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"percentDamage": 21.6,
 				"limit":         240,
 			},
@@ -582,7 +638,7 @@ var PetalProfiles = map[PetalType]PetalData{
 			PetalReload: 3.5,
 			Count:       1,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"percentDamage": 28.8,
 				"limit":         320,
 			},
@@ -593,7 +649,7 @@ var PetalProfiles = map[PetalType]PetalData{
 			PetalReload: 3.5,
 			Count:       1,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"percentDamage": 36,
 				"limit":         1200,
 			},
@@ -604,7 +660,7 @@ var PetalProfiles = map[PetalType]PetalData{
 			PetalReload: 3.5,
 			Count:       1,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"percentDamage": 90,
 				"limit":         3000,
 			},
@@ -626,7 +682,8 @@ var PetalProfiles = map[PetalType]PetalData{
 			Health:      10,
 			PetalReload: 3.5,
 			Count:       1,
-			Extra: map[string]float32{
+
+			Extra: EntityExtra{
 				"damageHealed": 100,
 			},
 		},
@@ -635,7 +692,8 @@ var PetalProfiles = map[PetalType]PetalData{
 			Health:      12,
 			PetalReload: 3.5,
 			Count:       1,
-			Extra: map[string]float32{
+
+			Extra: EntityExtra{
 				"damageHealed": 100,
 			},
 		},
@@ -644,7 +702,8 @@ var PetalProfiles = map[PetalType]PetalData{
 			Health:      14,
 			PetalReload: 3.5,
 			Count:       1,
-			Extra: map[string]float32{
+
+			Extra: EntityExtra{
 				"damageHealed": 100,
 			},
 		},
@@ -653,7 +712,8 @@ var PetalProfiles = map[PetalType]PetalData{
 			Health:      17,
 			PetalReload: 3.5,
 			Count:       1,
-			Extra: map[string]float32{
+
+			Extra: EntityExtra{
 				"damageHealed": 100,
 			},
 		},
@@ -662,7 +722,8 @@ var PetalProfiles = map[PetalType]PetalData{
 			Health:      21,
 			PetalReload: 3.5,
 			Count:       1,
-			Extra: map[string]float32{
+
+			Extra: EntityExtra{
 				"damageHealed": 100,
 			},
 		},
@@ -671,7 +732,8 @@ var PetalProfiles = map[PetalType]PetalData{
 			Health:      25,
 			PetalReload: 3.5,
 			Count:       1,
-			Extra: map[string]float32{
+
+			Extra: EntityExtra{
 				"damageHealed": 300,
 			},
 		},
@@ -680,8 +742,10 @@ var PetalProfiles = map[PetalType]PetalData{
 			Health:      50,
 			PetalReload: 3.5,
 			Count:       1,
-			Extra: map[string]float32{
-				"damageHealed": 0,
+
+			Extra: EntityExtra{
+				// TODO: this is zero on xlsx data
+				"damageHealed": 500,
 			},
 		},
 		EntityData: EntityData[PetalI18n]{
@@ -696,6 +760,34 @@ var PetalProfiles = map[PetalType]PetalData{
 		},
 	},
 	PetalTypeYggdrasil: {
+		Common: PetalStat{
+			Damage:      10,
+			Health:      10,
+			PetalReload: 2.5,
+			UsageReload: inlinePtrFloat32(15),
+			Count:       1,
+		},
+		Unusual: PetalStat{
+			Damage:      12,
+			Health:      13,
+			PetalReload: 2.5,
+			UsageReload: inlinePtrFloat32(15),
+			Count:       1,
+		},
+		Rare: PetalStat{
+			Damage:      14,
+			Health:      18,
+			PetalReload: 2.5,
+			UsageReload: inlinePtrFloat32(15),
+			Count:       1,
+		},
+		Epic: PetalStat{
+			Damage:      17,
+			Health:      24,
+			PetalReload: 2.5,
+			UsageReload: inlinePtrFloat32(15),
+			Count:       1,
+		},
 		Legendary: PetalStat{
 			Damage:      21,
 			Health:      32,
@@ -729,14 +821,26 @@ var PetalProfiles = map[PetalType]PetalData{
 		},
 	},
 	PetalTypeWeb: {
+		Common: PetalStat{
+			Damage:      8,
+			Health:      5,
+			PetalReload: 3,
+			UsageReload: inlinePtrFloat32(0.5),
+			Count:       1,
+
+			Extra: EntityExtra{
+				"duration": 10,
+				"radius":   50,
+			},
+		},
 		Unusual: PetalStat{
 			Damage:      9.6,
 			Health:      6.5,
 			PetalReload: 3,
 			UsageReload: inlinePtrFloat32(0.5),
 			Count:       1,
-			
-			Extra: map[string]float32{
+
+			Extra: EntityExtra{
 				"duration": 10,
 				"radius":   60,
 			},
@@ -748,7 +852,7 @@ var PetalProfiles = map[PetalType]PetalData{
 			UsageReload: inlinePtrFloat32(0.5),
 			Count:       1,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"duration": 10,
 				"radius":   70,
 			},
@@ -760,7 +864,7 @@ var PetalProfiles = map[PetalType]PetalData{
 			UsageReload: inlinePtrFloat32(0.5),
 			Count:       1,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"duration": 10,
 				"radius":   80,
 			},
@@ -771,8 +875,8 @@ var PetalProfiles = map[PetalType]PetalData{
 			PetalReload: 3,
 			UsageReload: inlinePtrFloat32(0.5),
 			Count:       1,
-			
-			Extra: map[string]float32{
+
+			Extra: EntityExtra{
 				"duration": 10,
 				"radius":   90,
 			},
@@ -784,7 +888,7 @@ var PetalProfiles = map[PetalType]PetalData{
 			UsageReload: inlinePtrFloat32(0.5),
 			Count:       1,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"duration": 10,
 				"radius":   200,
 			},
@@ -796,7 +900,7 @@ var PetalProfiles = map[PetalType]PetalData{
 			UsageReload: inlinePtrFloat32(0.5),
 			Count:       1,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"duration": 30,
 				"radius":   200,
 			},
@@ -863,6 +967,60 @@ var PetalProfiles = map[PetalType]PetalData{
 			Collision: EntityCollision{
 				Fraction: 10,
 				Radius:   10,
+			},
+		},
+	},
+	PetalTypeWing: {
+		Common: PetalStat{
+			Damage:      10,
+			Health:      15,
+			PetalReload: 1.25,
+			Count:       1,
+		},
+		Unusual: PetalStat{
+			Damage:      13,
+			Health:      18,
+			PetalReload: 1.25,
+			Count:       1,
+		},
+		Rare: PetalStat{
+			Damage:      18,
+			Health:      21,
+			PetalReload: 1.25,
+			Count:       1,
+		},
+		Epic: PetalStat{
+			Damage:      24,
+			Health:      25.5,
+			PetalReload: 1.25,
+			Count:       1,
+		},
+		Legendary: PetalStat{
+			Damage:      32,
+			Health:      31.5,
+			PetalReload: 1.25,
+			Count:       1,
+		},
+		Mythic: PetalStat{
+			Damage:      40,
+			Health:      37.5,
+			PetalReload: 0.13,
+			Count:       1,
+		},
+		Ultra: PetalStat{
+			Damage:      100,
+			Health:      75,
+			PetalReload: 0.13,
+			Count:       1,
+		},
+		EntityData: EntityData[PetalI18n]{
+			I18n: PetalI18n{
+				Name:        "Wing",
+				Description: "Fuck you.",
+			},
+			Collision: EntityCollision{
+				Fraction: 10,
+				Radius:   15,
 			},
 		},
 	},

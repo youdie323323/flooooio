@@ -12,7 +12,7 @@ func (p *Petal) onEliminate(wp *WavePool) {
 
 	switch p.Type {
 	// If stick is destoryed, sandstorms destoryed too
-	case native.PetalTypeStick:
+	case native.PetalTypeMysteriousStick:
 		{
 			for i, pet := range p.SummonedPets {
 				if pet != nil {

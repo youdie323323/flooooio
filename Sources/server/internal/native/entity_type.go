@@ -35,7 +35,7 @@ const (
 	PetalTypeEggBeetle
 	PetalTypeBubble
 	PetalTypeYinYang
-	PetalTypeStick
+	PetalTypeMysteriousStick
 	PetalTypeSand
 	PetalTypeLightning
 	PetalTypeClaw
@@ -43,6 +43,7 @@ const (
 	PetalTypeYggdrasil
 	PetalTypeWeb
 	PetalTypeStinger
+	PetalTypeWing
 )
 
 var MobTypeValues = []MobType{
@@ -84,4 +85,5 @@ var PetalTypeValues = []PetalType{
 	PetalTypeYggdrasil,
 	PetalTypeWeb,
 	PetalTypeStinger,
+	PetalTypeWing,
 }

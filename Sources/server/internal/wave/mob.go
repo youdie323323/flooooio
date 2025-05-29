@@ -88,18 +88,19 @@ func (m *Mob) IsEnemy() bool {
 	return m.PetMaster == nil
 }
 
-// IsTrackableEnemy determinate if mob is enemy from player side, but its trackable.
-func (m *Mob) IsTrackableEnemy() bool {
-	if !m.IsEnemy() {
-		return false
-	}
-
-	return !m.IsProjectile() || m.IsEnemyMissile()
-}
-
 // IsProjectile determinate if mob is projectile.
 func (m *Mob) IsProjectile() bool {
 	return slices.Contains(ProjectileMobTypes, m.Type)
+}
+
+// IsTrackableEnemy determinate if mob is enemy from player side, but its trackable.
+func (m *Mob) IsTrackableEnemy() bool {
+	return m.IsEnemy() && (!m.IsProjectile() || m.IsEnemyMissile())
+}
+
+// IsOrganismEnemy determinate if mob is enemy from player side and its living organism.
+func (m *Mob) IsOrganismEnemy() bool {
+	return m.IsEnemy() && !m.IsProjectile()
 }
 
 // HasConnectingSegment determinate if mob has connecting segment.
@@ -184,9 +185,8 @@ func (m *Mob) OnUpdateTick(wp *WavePool, now time.Time) {
 	m.MobCollision(wp, now)
 
 	m.MobBodyConnection(wp, now)
-	m.MobHealthRegen(wp, now)
 	m.MobAggressivePursuit(wp, now)
-	m.MobSpecialMovement(wp, now)
+	m.MobUniqueTalent(wp, now)
 
 	{ // Base onUpdateTick
 		m.SigmaT += DeltaT
@@ -226,9 +226,6 @@ func NewMob(
 
 	missileMaster *Mob,
 ) *Mob {
-	// There is no way we can support ultra rarity mob
-	rarity = min(rarity, native.RarityMythic)
-
 	profile := native.MobProfiles[mType]
 
 	var size float32
@@ -313,7 +310,7 @@ var MobSpeed = map[native.MobType]float32{
 	native.MobTypeHornet: 3,
 
 	native.MobTypeBeetle:       2.8,
-	native.MobTypeSandstorm:    2,
+	native.MobTypeSandstorm:    4,
 	native.MobTypeCactus:       0,
 	native.MobTypeScorpion:     4,
 	native.MobTypeLadybugShiny: 2,
@@ -333,3 +330,6 @@ var MobSpeed = map[native.MobType]float32{
 	native.MobTypeMissileProjectile: 10,
 	native.MobTypeWebProjectile:     0,
 }
+
+// StaticMobData represents static data of Mob.
+type StaticMobData = StaticEntityData[native.MobType]

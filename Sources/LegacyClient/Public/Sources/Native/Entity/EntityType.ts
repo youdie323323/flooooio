@@ -32,7 +32,7 @@ export const enum PetalType {
     EGG_BEETLE,
     BUBBLE,
     YIN_YANG,
-    STICK,
+    MYSTERIOUS_STICK,
     SAND,
     LIGHTNING,
     CLAW,
@@ -40,6 +40,7 @@ export const enum PetalType {
     YGGDRASIL,
     WEB,
     STINGER,
+    WING,
 }
 
 export const PETAL_TYPES = [
@@ -48,7 +49,7 @@ export const PETAL_TYPES = [
     PetalType.EGG_BEETLE,
     PetalType.BUBBLE,
     PetalType.YIN_YANG,
-    PetalType.STICK,
+    PetalType.MYSTERIOUS_STICK,
     PetalType.SAND,
     PetalType.LIGHTNING,
     PetalType.CLAW,
@@ -56,4 +57,5 @@ export const PETAL_TYPES = [
     PetalType.YGGDRASIL,
     PetalType.WEB,
     PetalType.STINGER,
+    PetalType.WING,
 ] as const;

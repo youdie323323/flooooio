@@ -18,6 +18,7 @@ import (
 	"flooooio/internal/native"
 	"flooooio/internal/network"
 
+	"github.com/colega/zeropool"
 	"github.com/gorilla/websocket"
 	"github.com/puzpuzpuz/xsync/v3"
 
@@ -31,6 +32,14 @@ const (
 
 	DeltaT = 1. / WaveUpdateFPS
 )
+
+const (
+	KB = 1024
+	MB = 1024 * KB
+	GB = 1024 * MB
+)
+
+var BufPool = zeropool.New(func() []byte { return make([]byte, 512*KB) })
 
 func calculateWaveLength(x float32) float32 {
 	return max(60, math32.Pow(x, 0.2)*18.9287+30)
@@ -110,7 +119,7 @@ func (wp *WavePool) StartWave(candidates WaveRoomCandidates) {
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
 
-	buf := make([]byte, 2)
+	buf := BufPool.Get()
 	at := 0
 
 	buf[at] = network.ClientboundWaveStarted
@@ -120,7 +129,7 @@ func (wp *WavePool) StartWave(candidates WaveRoomCandidates) {
 	at++
 
 	for _, c := range candidates {
-		if pd, ok := ConnManager.GetUser(c.Conn); ok {
+		if pd, ok := ConnPool.GetUser(c.Conn); ok {
 			mapRadius := float32(wp.Wd.MapRadius)
 
 			randX, randY := GetRandomCoordinate(mapRadius, mapRadius, mapRadius)
@@ -132,6 +141,8 @@ func (wp *WavePool) StartWave(candidates WaveRoomCandidates) {
 			pd.Sp.SafeWriteMessage(websocket.BinaryMessage, buf)
 		}
 	}
+
+	BufPool.Put(buf)
 
 	wp.broadcastSeldIdPacket()
 
@@ -222,18 +233,20 @@ func (wp *WavePool) IsAllPlayerDead() bool {
 
 // broadcastSeldIdPacket broadcast the id packet. Must call lock before.
 func (wp *WavePool) broadcastSeldIdPacket() {
-	buf := make([]byte, 5)
+	buf := BufPool.Get()
 
 	buf[0] = network.ClientboundWaveSelfId
 
-	wp.playerPool.Range(func(id EntityId, player *Player) bool {
+	wp.playerPool.Range(func(id EntityId, p *Player) bool {
 		// Dynamically put id
 		binary.LittleEndian.PutUint32(buf[1:], id)
 
-		player.SafeWriteMessage(websocket.BinaryMessage, buf)
+		p.SafeWriteMessage(websocket.BinaryMessage, buf)
 
 		return true
 	})
+
+	BufPool.Put(buf)
 }
 
 func (wp *WavePool) startUpdate() {
@@ -283,34 +296,36 @@ func (wp *WavePool) updateEntities() {
 	// Now include syscall and its bit cost, so we can call it once for every frame
 	now := time.Now()
 
-	wp.playerPool.Range(func(_ EntityId, player *Player) bool {
-		player.OnUpdateTick(wp, now)
+	// These order is important, dont move
+
+	wp.playerPool.Range(func(_ EntityId, p *Player) bool {
+		p.OnUpdateTick(wp, now)
 
 		return true
 	})
-	wp.mobPool.Range(func(_ EntityId, mob *Mob) bool {
-		mob.OnUpdateTick(wp, now)
+	wp.mobPool.Range(func(_ EntityId, m *Mob) bool {
+		m.OnUpdateTick(wp, now)
 
 		return true
 	})
-	wp.petalPool.Range(func(_ EntityId, petal *Petal) bool {
-		petal.OnUpdateTick(wp, now)
+	wp.petalPool.Range(func(_ EntityId, p *Petal) bool {
+		p.OnUpdateTick(wp, now)
 
 		return true
 	})
 
-	wp.playerPool.Range(func(_ EntityId, player *Player) bool {
-		wp.SpatialHash.Update(player)
+	wp.playerPool.Range(func(_ EntityId, p *Player) bool {
+		wp.SpatialHash.Update(p)
 
 		return true
 	})
-	wp.mobPool.Range(func(_ EntityId, mob *Mob) bool {
-		wp.SpatialHash.Update(mob)
+	wp.mobPool.Range(func(_ EntityId, m *Mob) bool {
+		wp.SpatialHash.Update(m)
 
 		return true
 	})
-	wp.petalPool.Range(func(_ EntityId, petal *Petal) bool {
-		wp.SpatialHash.Update(petal)
+	wp.petalPool.Range(func(_ EntityId, p *Petal) bool {
+		wp.SpatialHash.Update(p)
 
 		return true
 	})
@@ -387,7 +402,7 @@ func (wp *WavePool) updateWaveData() {
 				wp.Wd.ProgressRedTimer+0.016,
 			)
 		} else {
-			wp.playerPool.Range(func(id EntityId, p *Player) bool {
+			wp.playerPool.Range(func(_ EntityId, p *Player) bool {
 				RevivePlayer(wp, p)
 
 				return true
@@ -411,128 +426,19 @@ func (wp *WavePool) updateWaveData() {
 func (wp *WavePool) broadcastUpdatePacket() {
 	updatePacket := wp.createUpdatePacket()
 
-	wp.playerPool.Range(func(id EntityId, player *Player) bool {
-		player.SafeWriteMessage(websocket.BinaryMessage, updatePacket)
+	wp.playerPool.Range(func(_ EntityId, p *Player) bool {
+		p.SafeWriteMessage(websocket.BinaryMessage, updatePacket)
 
 		return true
 	})
 }
 
-func (wp *WavePool) calculateUpdatePacketSize() int {
-	size := 1 + // Opcode
-		// Wave progress
-		2 +
-		// Wave progress timer
-		4 +
-		// Wave progress red timer
-		4 +
-		// Wave ended
-		1 +
-		// Map radius
-		2
-
-	{ // Add player packet size
-		// Player count
-		size += 2
-		wp.playerPool.Range(func(id EntityId, player *Player) bool {
-			// String length is dynamically changeable, so we can do is just loop
-			size += 4 + // Id
-				// X
-				4 +
-				// Y
-				4 +
-				// Angle
-				4 +
-				// Health
-				4 +
-				// Size
-				4 +
-				// Mood
-				1 +
-				// Name length, null terminator
-				(len(player.Name) + 1) +
-				// Boolean flags
-				1
-
-			return true
-		})
-	}
-
-	{ // Add mob packet size
-		// Mob count
-		size += 2
-		size += wp.mobPool.Size() * (4 + // Id
-			// X
-			4 +
-			// Y
-			4 +
-			// Angle
-			4 +
-			// Health
-			4 +
-			// Size
-			4 +
-			// Type
-			1 +
-			// Rarity
-			1 +
-			// Boolean flags
-			1)
-
-		wp.mobPool.Range(func(id EntityId, m *Mob) bool {
-			if m.HasConnectingSegment(wp) {
-				size += 4
-			}
-
-			return true
-		})
-	}
-
-	{ // Add petal packet size
-		// Petal count
-		size += 2
-		size += wp.petalPool.Size() * (4 + // Id
-			// X
-			4 +
-			// Y
-			4 +
-			// Angle
-			4 +
-			// Health
-			4 +
-			// Size
-			4 +
-			// Type
-			1 +
-			// Rarity
-			1)
-	}
-
-	{ // Add size for eliminated entities
-		// Eliminated entity count
-		size += 2
-		size += len(wp.eliminatedEntityIDs) * 4
-	}
-
-	{ // Add size for lightning bounces
-		// Lightning bounce count
-		size += 2
-
-		for _, points := range wp.lightningBounces {
-			// Points count
-			size += 2
-			// Each point has X and Y coordinates (float32)
-			size += len(points) * (4 + 4)
-		}
-	}
-
-	return size
-}
-
 func (wp *WavePool) createUpdatePacket() []byte {
 	wp.mu.Lock()
 
-	buf := make([]byte, wp.calculateUpdatePacketSize())
+	buf := BufPool.Get()
+	defer BufPool.Put(buf)
+
 	at := 0
 
 	buf[at] = network.ClientboundWaveUpdate
@@ -648,7 +554,7 @@ func (wp *WavePool) createUpdatePacket() []byte {
 			var bFlags uint8 = 0
 
 			// Mob is pet, or not
-			if !m.IsTrackableEnemy() {
+			if !m.IsEnemy() {
 				bFlags |= 1
 			}
 
@@ -854,9 +760,9 @@ func (wp *WavePool) SafeFindPlayer(id EntityId) *Player {
 func (wp *WavePool) GetPlayersWithCondition(condition func(*Player) bool) []*Player {
 	filtered := make([]*Player, 0, wp.playerPool.Size())
 
-	wp.playerPool.Range(func(_ EntityId, player *Player) bool {
-		if condition(player) {
-			filtered = append(filtered, player)
+	wp.playerPool.Range(func(_ EntityId, p *Player) bool {
+		if condition(p) {
+			filtered = append(filtered, p)
 		}
 
 		return true
@@ -1002,9 +908,9 @@ func (wp *WavePool) SafeFindMob(id EntityId) *Mob {
 func (wp *WavePool) GetMobsWithCondition(condition func(*Mob) bool) []*Mob {
 	filtered := make([]*Mob, 0, wp.mobPool.Size())
 
-	wp.mobPool.Range(func(_ EntityId, mob *Mob) bool {
-		if condition(mob) {
-			filtered = append(filtered, mob)
+	wp.mobPool.Range(func(_ EntityId, m *Mob) bool {
+		if condition(m) {
+			filtered = append(filtered, m)
 		}
 
 		return true
@@ -1215,9 +1121,9 @@ func (wp *WavePool) SafeFindPetal(id EntityId) *Petal {
 func (wp *WavePool) GetPetalsWithCondition(condition func(*Petal) bool) []*Petal {
 	filtered := make([]*Petal, 0, wp.petalPool.Size())
 
-	wp.petalPool.Range(func(_ EntityId, petal *Petal) bool {
-		if condition(petal) {
-			filtered = append(filtered, petal)
+	wp.petalPool.Range(func(_ EntityId, p *Petal) bool {
+		if condition(p) {
+			filtered = append(filtered, p)
 		}
 
 		return true
@@ -1392,7 +1298,7 @@ func (wp *WavePool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 }
 
 func (wp *WavePool) staticPetalToDynamicPetal(
-	sp StaticPetal,
+	sp StaticPetalData,
 
 	master *Player,
 	isSurface bool,
@@ -1447,8 +1353,8 @@ func (wp *WavePool) createChatReceivPacket(msg string) []byte {
 func (wp *WavePool) BroadcastChatReceivPacket(msg string) {
 	buf := wp.createChatReceivPacket(msg)
 
-	wp.playerPool.Range(func(id EntityId, player *Player) bool {
-		player.SafeWriteMessage(websocket.BinaryMessage, buf)
+	wp.playerPool.Range(func(_ EntityId, p *Player) bool {
+		p.SafeWriteMessage(websocket.BinaryMessage, buf)
 
 		return true
 	})

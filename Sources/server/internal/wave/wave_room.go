@@ -45,8 +45,8 @@ type PlayerData struct {
 	mu sync.RWMutex
 }
 
-// ConnManager link conn and UserData together.
-var ConnManager = network.NewConnectionManager[*PlayerData]()
+// ConnPool link conn and UserData together.
+var ConnPool = network.NewConnectionPool[*PlayerData]()
 
 type WaveRoom struct {
 	// updatePacketBroadcastTicker is ticker to send wave room update packet
@@ -70,22 +70,18 @@ type WaveRoom struct {
 }
 
 func (pd *PlayerData) AssignWaveRoomPlayerId(id *WaveRoomPlayerId) {
-	pd.mu.Lock()
-	defer pd.mu.Unlock()
-
-	var size int
 	var opcode byte
 	if id != nil {
-		size = 5
 		opcode = network.ClientboundWaveRoomSelfId
 	} else {
-		size = 1
 		opcode = network.ClientboundWaveRoomJoinFailed
 	}
 
-	buf := make([]byte, size)
+	buf := BufPool.Get()
 
 	buf[0] = opcode
+
+	pd.mu.Lock()
 
 	if id != nil {
 		binary.LittleEndian.PutUint32(buf[1:], uint32(*id))
@@ -94,14 +90,19 @@ func (pd *PlayerData) AssignWaveRoomPlayerId(id *WaveRoomPlayerId) {
 	}
 
 	pd.Sp.SafeWriteMessage(websocket.BinaryMessage, buf)
+
+	pd.mu.Unlock()
+
+	BufPool.Put(buf)
 }
 
 func (pd *PlayerData) AssignWavePlayerId(id *EntityId) {
-	pd.mu.Lock()
-	defer pd.mu.Unlock()
-
 	if id != nil {
+		pd.mu.Lock()
+		
 		pd.WPId = id
+
+		pd.mu.Unlock()
 	}
 }
 
@@ -341,7 +342,9 @@ func (w *WaveRoom) broadcastUpdatePacket() {
 
 // createUpdatePacket returns update packet to broadcast. Must rlock before call.
 func (w *WaveRoom) createUpdatePacket() []byte {
-	buf := make([]byte, w.calculateUpdatePacketSize())
+	buf := BufPool.Get()
+	defer BufPool.Put(buf)
+
 	at := 0
 
 	buf[at] = network.ClientboundWaveRoomUpdate
@@ -385,19 +388,6 @@ func (w *WaveRoom) createUpdatePacket() []byte {
 	buf[at] = w.biome
 
 	return buf
-}
-
-// calculateUpdatePacketSize returns update packet size. Must rlock before call.
-func (w *WaveRoom) calculateUpdatePacketSize() int {
-	size := 1 + 1
-
-	for _, c := range w.candidates {
-		size += 4 + (len(c.Name) + 1) + 1
-	}
-
-	size += (len(w.code) + 1) + 1 + 1 + 1
-
-	return size
 }
 
 func (w *WaveRoom) isNewPlayerRegisterable() bool {

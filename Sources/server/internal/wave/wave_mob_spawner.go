@@ -36,7 +36,7 @@ var mobSpawnRules = map[native.Biome]map[native.MobType]MobSpawnRule{
 		native.MobTypeSandstorm:    {SpawnAfter: 1, Weight: 50},
 		native.MobTypeCactus:       {SpawnAfter: 1, Weight: 50},
 		native.MobTypeScorpion:     {SpawnAfter: 3, Weight: 50},
-		native.MobTypeLadybugShiny: {SpawnAfter: 3, Weight: 50},
+		native.MobTypeLadybugShiny: {SpawnAfter: 3, Weight: 1},
 
 		native.MobTypeCentipedeDesert: {SpawnAfter: 1, Weight: 1},
 	},

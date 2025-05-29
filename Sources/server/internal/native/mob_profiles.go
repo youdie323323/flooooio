@@ -15,7 +15,7 @@ type MobStat struct {
 	BodyDamage float32 `json:"bodyDamage"`
 
 	// Maybe this should bee any but ok now
-	Extra map[string]float32 `json:"extra,omitempty"`
+	Extra EntityExtra `json:"extra,omitempty"`
 }
 
 // GetDamage returns damage within MobStat.
@@ -29,12 +29,13 @@ type MobData struct {
 	BaseSize float32 `json:"baseSize"`
 
 	// Bit fancy... :(
-	Common    MobStat `json:"0,omitempty"`
-	Unusual   MobStat `json:"1,omitempty"`
-	Rare      MobStat `json:"2,omitempty"`
-	Epic      MobStat `json:"3,omitempty"`
-	Legendary MobStat `json:"4,omitempty"`
-	Mythic    MobStat `json:"5,omitempty"`
+	Common    MobStat `json:"0"`
+	Unusual   MobStat `json:"1"`
+	Rare      MobStat `json:"2"`
+	Epic      MobStat `json:"3"`
+	Legendary MobStat `json:"4"`
+	Mythic    MobStat `json:"5"`
+	Ultra     MobStat `json:"6,omitempty"`
 }
 
 func (d MobData) StatFromRarity(r Rarity) MobStat {
@@ -401,7 +402,7 @@ var MobProfiles = map[MobType]MobData{
 			Health:     50,
 			BodyDamage: 25,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"lightning": 7,
 				"bounces":   1,
 			},
@@ -410,7 +411,7 @@ var MobProfiles = map[MobType]MobData{
 			Health:     80,
 			BodyDamage: 27.5,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"lightning": 7.7,
 				"bounces":   2,
 			},
@@ -419,7 +420,7 @@ var MobProfiles = map[MobType]MobData{
 			Health:     125,
 			BodyDamage: 32.5,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"lightning": 9.1,
 				"bounces":   3,
 			},
@@ -428,7 +429,7 @@ var MobProfiles = map[MobType]MobData{
 			Health:     200,
 			BodyDamage: 40,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"lightning": 11.2,
 				"bounces":   4,
 			},
@@ -437,7 +438,7 @@ var MobProfiles = map[MobType]MobData{
 			Health:     1250,
 			BodyDamage: 50,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"lightning": 14,
 				"bounces":   5,
 			},
@@ -446,7 +447,7 @@ var MobProfiles = map[MobType]MobData{
 			Health:     2500,
 			BodyDamage: 62.5,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"lightning": 17.5,
 				"bounces":   10,
 			},
@@ -616,7 +617,7 @@ var MobProfiles = map[MobType]MobData{
 			Health:     70,
 			BodyDamage: 10,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"lifesteal": 7,
 			},
 		},
@@ -624,7 +625,7 @@ var MobProfiles = map[MobType]MobData{
 			Health:     112,
 			BodyDamage: 11,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"lifesteal": 7.7,
 			},
 		},
@@ -632,7 +633,7 @@ var MobProfiles = map[MobType]MobData{
 			Health:     175,
 			BodyDamage: 13,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"lifesteal": 9.1,
 			},
 		},
@@ -640,7 +641,7 @@ var MobProfiles = map[MobType]MobData{
 			Health:     280,
 			BodyDamage: 16,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"lifesteal": 11.2,
 			},
 		},
@@ -648,7 +649,7 @@ var MobProfiles = map[MobType]MobData{
 			Health:     1750,
 			BodyDamage: 20,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"lifesteal": 14,
 			},
 		},
@@ -656,7 +657,7 @@ var MobProfiles = map[MobType]MobData{
 			Health:     3500,
 			BodyDamage: 25,
 
-			Extra: map[string]float32{
+			Extra: EntityExtra{
 				"lifesteal": 17.5,
 			},
 		},
@@ -842,6 +843,10 @@ var MobProfiles = map[MobType]MobData{
 			BodyDamage: 0,
 		},
 		Mythic: MobStat{
+			Health:     1,
+			BodyDamage: 0,
+		},
+		Ultra: MobStat{
 			Health:     1,
 			BodyDamage: 0,
 		},

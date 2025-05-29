@@ -715,7 +715,35 @@ const webProjectile = (function () {
     return path;
 })();
 
+// Radius
+const BASE_SIZE = 13 * 10;
+const RESOLUTION_MULTIPLIER = 3;
+const WEB_PROJECTILE_CANVAS_SIZE = BASE_SIZE * RESOLUTION_MULTIPLIER;
+
+function createWebProjectileCanvas(isPet: boolean): OffscreenCanvas {
+    const canvas = new OffscreenCanvas(WEB_PROJECTILE_CANVAS_SIZE, WEB_PROJECTILE_CANVAS_SIZE);
+    const ctx = canvas.getContext("2d");
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+
+    ctx.translate(
+        WEB_PROJECTILE_CANVAS_SIZE / 2,
+        WEB_PROJECTILE_CANVAS_SIZE / 2,
+    );
+
+    ctx.scale(RESOLUTION_MULTIPLIER, RESOLUTION_MULTIPLIER);
+
+    ctx.fillStyle = isPet ? "#FFE763" : "#FFFFFF";
+    ctx.fill(webProjectile, "nonzero");
+
+    return canvas;
+}
+
 export default class MobRendererWebProjectile extends AbstractMobRenderer {
+    private static readonly normal = createWebProjectileCanvas(false);
+    private static readonly pet = createWebProjectileCanvas(true);
+
     override render(context: RenderingContext<Mob>): void {
         // Non-recursive renderer
         // super.render(context);
@@ -728,9 +756,14 @@ export default class MobRendererWebProjectile extends AbstractMobRenderer {
         const scale = entity.size / 70;
         ctx.scale(scale, scale);
 
-        ctx.globalAlpha = 0.3 * ctx.globalAlpha;
+        ctx.globalAlpha = 0.4 * ctx.globalAlpha;
 
-        ctx.fillStyle = this.calculateDamageEffectColor(context, "#FFE763");
-        ctx.fill(webProjectile, "nonzero");
+        ctx.drawImage(
+            entity.isPet ? MobRendererWebProjectile.pet : MobRendererWebProjectile.normal,
+            -BASE_SIZE / 2,
+            -BASE_SIZE / 2,
+            BASE_SIZE,
+            BASE_SIZE,
+        );
     }
 }

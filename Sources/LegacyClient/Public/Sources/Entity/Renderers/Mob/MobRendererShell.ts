@@ -59,13 +59,17 @@ export default class MobRendererShell extends AbstractMobRenderer {
 
             for (let dir = -1; dir <= 1; dir += 2) {
                 ctx.beginPath();
+
                 ctx.moveTo(12, 15 * dir);
                 ctx.quadraticCurveTo(0, 8 * dir, -8, 5 * dir);
+
                 ctx.stroke();
 
                 ctx.beginPath();
+                
                 ctx.moveTo(17.399999618530273, 6 * dir);
                 ctx.quadraticCurveTo(0, 3.200000047683716 * dir, -6.199999809265137, 2 * dir);
+
                 ctx.stroke();
             }
         }

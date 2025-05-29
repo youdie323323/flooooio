@@ -88,7 +88,7 @@ export default class MobRendererLeech extends AbstractMobRenderer {
             // Change angle
             ctx.rotate(entity.angle);
 
-            ctx.strokeStyle = "#292929";
+            ctx.strokeStyle = this.calculateDamageEffectColor(context, "#292929");
             ctx.lineWidth = 4;
 
             // Upper beak
