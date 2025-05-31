@@ -41,6 +41,7 @@ export const enum PetalType {
     WEB,
     STINGER,
     WING,
+    MAGNET,
 }
 
 export const PETAL_TYPES = [
@@ -58,4 +59,5 @@ export const PETAL_TYPES = [
     PetalType.WEB,
     PetalType.STINGER,
     PetalType.WING,
+    PetalType.MAGNET,
 ] as const;

@@ -91,10 +91,10 @@ export default class PetalRendererMysteriousStick extends AbstractPetalRenderer 
 
         ctx.lineJoin = "round";
 
-        ctx.fillStyle = this.calculateDamageEffectColor(context, "#654A19");
+        ctx.fillStyle = this.toEffectedColor(context, "#654A19");
         ctx.fill(stickBodyStroke, "nonzero");
         
-        ctx.fillStyle = this.calculateDamageEffectColor(context, "#7D5B1F");
+        ctx.fillStyle = this.toEffectedColor(context, "#7D5B1F");
         ctx.fill(stickBody, "nonzero");
     }
 }

@@ -4,8 +4,8 @@ import (
 	"sync"
 	"time"
 
-	"flooooio/internal/collision"
-	"flooooio/internal/native"
+	"flooooio/internal/wave/collision"
+	"flooooio/internal/wave/florr/native"
 
 	"github.com/gorilla/websocket"
 
@@ -14,6 +14,8 @@ import (
 
 type Player struct {
 	Entity
+
+	Poisonable
 
 	PlayerPrivileges
 
@@ -75,7 +77,7 @@ const maxHpLevel = 75.
 // calculatePlayerHp calculate hp by level.
 // 100 * x, x is upgrade.
 func calculatePlayerHp(level float32) float32 {
-	return (100 * 0.1) * math32.Pow(1.02, max(level, maxHpLevel)-1)
+	return (100 * 100) * math32.Pow(1.02, max(level, maxHpLevel)-1)
 }
 
 // GetMaxHealth calculates max hp of player.
@@ -150,12 +152,12 @@ func (c *SwapPetalCommand) Execute(wp *WavePool, p *Player) {
 		temp := p.Slots.Surface[at]
 
 		if temp != nil {
-			for _, petal := range temp {
-				if petal == nil {
+			for _, p := range temp {
+				if p == nil {
 					continue
 				}
 
-				petal.CompletelyRemove(wp)
+				p.CompletelyRemove(wp)
 			}
 		}
 
@@ -201,7 +203,6 @@ Done:
 
 	p.PlayerCoordinateMovement(wp, now)
 	p.PlayerCoordinateBoundary(wp, now)
-	p.PlayerElimination(wp, now)
 	p.PlayerCollision(wp, now)
 
 	p.PlayerDeadCamera(wp, now)
@@ -209,14 +210,38 @@ Done:
 	p.PlayerPetalReload(wp, now)
 	p.PlayerPetalOrbit(wp, now)
 
+	p.PlayerElimination(wp, now)
+
 	{ // Base onUpdateTick
 		p.MagnitudeMultiplier = 1
+
+		{ // Take poison damage
+			if p.IsPoisoned.Load() {
+				dp := p.PoisonDPS * DeltaT
+
+				pMaxHealth := p.GetMaxHealth()
+
+				p.Health -= dp / pMaxHealth
+				p.Health = max(0, p.Health)
+
+				p.TotalPoison += dp
+
+				if p.TotalPoison >= p.StopAtPoison {
+					p.IsPoisoned.Store(false)
+
+					p.TotalPoison = p.StopAtPoison
+				}
+			}
+		}
 	}
 
 	p.Mu.Unlock()
 }
 
 func (p *Player) Dispose() {
+	// Close and clear command queue
+	close(p.commandQueue)
+
 	{ // Dispose surface
 		for i := range p.Slots.Surface {
 			for j := range p.Slots.Surface[i] {
@@ -264,11 +289,13 @@ func (p *Player) Dispose() {
 	p.OrbitPetalRadii = nil
 	p.OrbitRadiusVelocities = nil
 
-	for i := range p.OrbitPetalSpins {
-		p.OrbitPetalSpins[i] = nil
-	}
+	{
+		for i := range p.OrbitPetalSpins {
+			p.OrbitPetalSpins[i] = nil
+		}
 
-	p.OrbitPetalSpins = nil
+		p.OrbitPetalSpins = nil
+	}
 }
 
 const PlayerSize = 15
@@ -291,6 +318,8 @@ func NewPlayer(
 
 			PlayerSize,
 		),
+
+		Poisonable: NewPoisonable(),
 
 		PlayerPrivileges: PlayerPrivileges{
 			IsDev: false,

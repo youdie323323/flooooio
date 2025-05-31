@@ -14,9 +14,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"flooooio/internal/collision"
-	"flooooio/internal/native"
 	"flooooio/internal/network"
+	"flooooio/internal/wave/collision"
+	"flooooio/internal/wave/florr/native"
 
 	"github.com/colega/zeropool"
 	"github.com/gorilla/websocket"
@@ -345,8 +345,8 @@ func (wp *WavePool) updateWaveData() {
 	}()
 
 	if !wp.Wd.ProgressIsRed {
-		sm := wp.Ms.DetermineStaticMobData(wp.Wd)
-		if sm != nil {
+		dmd := wp.Ms.ComputeDynamicMobData(wp.Wd)
+		if dmd != nil {
 			randX, randY, ok := GetRandomSafeCoordinate(
 				float32(wp.Wd.MapRadius),
 				300,
@@ -354,16 +354,16 @@ func (wp *WavePool) updateWaveData() {
 			)
 
 			if ok {
-				if slices.Contains(LinkableMobTypes, sm.MobType) {
+				if slices.Contains(LinkableMobTypes, dmd.Type) {
 					wp.LinkedMobSegmentation(
-						sm.MobType,
+						dmd.Type,
 
-						sm.Rarity,
+						dmd.Rarity,
 
 						randX,
 						randY,
 
-						sm.SegmentBodies,
+						dmd.SegmentBodies,
 
 						nil,
 
@@ -371,9 +371,9 @@ func (wp *WavePool) updateWaveData() {
 					)
 				} else {
 					wp.GenerateMob(
-						sm.MobType,
+						dmd.Type,
 
-						sm.Rarity,
+						dmd.Rarity,
 
 						randX,
 						randY,
@@ -514,6 +514,11 @@ func (wp *WavePool) createUpdatePacket() []byte {
 				bFlags |= 2
 			}
 
+			// Player is poisoned, or not
+			if p.IsPoisoned.Load() {
+				bFlags |= 4
+			}
+
 			buf[at] = bFlags
 			at++
 
@@ -554,7 +559,7 @@ func (wp *WavePool) createUpdatePacket() []byte {
 			var bFlags uint8 = 0
 
 			// Mob is pet, or not
-			if !m.IsEnemy() {
+			if m.IsAlly() {
 				bFlags |= 1
 			}
 
@@ -568,6 +573,11 @@ func (wp *WavePool) createUpdatePacket() []byte {
 			// Mob has connecting segment, or not
 			if hasConnectingSegment {
 				bFlags |= 4
+			}
+
+			// Mob is poisoned, or not
+			if m.IsPoisoned.Load() {
+				bFlags |= 8
 			}
 
 			buf[at] = bFlags
@@ -725,14 +735,14 @@ func (wp *WavePool) SafeGeneratePlayer(
 }
 
 func (wp *WavePool) RemovePlayer(id EntityId) {
-	if player, ok := wp.playerPool.Load(id); ok {
+	if p, ok := wp.playerPool.Load(id); ok {
 		wp.playerPool.Delete(id)
 
-		wp.SpatialHash.Remove(player)
+		wp.SpatialHash.Remove(p)
 
 		wp.eliminatedEntityIDs = append(wp.eliminatedEntityIDs, id)
 
-		player.Dispose()
+		p.Dispose()
 	}
 }
 
@@ -744,9 +754,9 @@ func (wp *WavePool) SafeRemovePlayer(id EntityId) {
 }
 
 func (wp *WavePool) FindPlayer(id EntityId) *Player {
-	player, _ := wp.playerPool.Load(id)
+	p, _ := wp.playerPool.Load(id)
 
-	return player
+	return p
 }
 
 func (wp *WavePool) SafeFindPlayer(id EntityId) *Player {
@@ -873,14 +883,14 @@ func (wp *WavePool) SafeGenerateMob(
 }
 
 func (wp *WavePool) RemoveMob(id EntityId) {
-	if mob, ok := wp.mobPool.Load(id); ok {
+	if m, ok := wp.mobPool.Load(id); ok {
 		wp.mobPool.Delete(id)
 
-		wp.SpatialHash.Remove(mob)
+		wp.SpatialHash.Remove(m)
 
 		wp.eliminatedEntityIDs = append(wp.eliminatedEntityIDs, id)
 
-		mob.Dispose()
+		m.Dispose()
 	}
 }
 
@@ -892,9 +902,9 @@ func (wp *WavePool) SafeRemoveMob(id EntityId) {
 }
 
 func (wp *WavePool) FindMob(id EntityId) *Mob {
-	mob, _ := wp.mobPool.Load(id)
+	m, _ := wp.mobPool.Load(id)
 
-	return mob
+	return m
 }
 
 func (wp *WavePool) SafeFindMob(id EntityId) *Mob {
@@ -1086,14 +1096,14 @@ func (wp *WavePool) SafeGeneratePetal(
 }
 
 func (wp *WavePool) RemovePetal(id EntityId) {
-	if petal, ok := wp.petalPool.Load(id); ok {
+	if p, ok := wp.petalPool.Load(id); ok {
 		wp.petalPool.Delete(id)
 
-		wp.SpatialHash.Remove(petal)
+		wp.SpatialHash.Remove(p)
 
 		wp.eliminatedEntityIDs = append(wp.eliminatedEntityIDs, id)
 
-		petal.Dispose()
+		p.Dispose()
 	}
 }
 
@@ -1105,9 +1115,9 @@ func (wp *WavePool) SafeRemovePetal(id EntityId) {
 }
 
 func (wp *WavePool) FindPetal(id EntityId) *Petal {
-	mob, _ := wp.petalPool.Load(id)
+	m, _ := wp.petalPool.Load(id)
 
-	return mob
+	return m
 }
 
 func (wp *WavePool) SafeFindPetal(id EntityId) *Petal {
@@ -1182,6 +1192,31 @@ Loop:
 				bounceTargets := jellyfish.GetLightningBounceTargets(wp, bouncedIds)
 
 				targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, targetEntity.Size*10)
+				if targetNode == nil {
+					break Loop
+				}
+			}
+
+		case *Petal:
+			{
+				bouncePoints = append(bouncePoints, [2]float32{targetEntity.X, targetEntity.Y})
+
+				bouncedIds = append(bouncedIds, targetEntity.Id)
+
+				{
+					mobMaxHealth := targetEntity.GetMaxHealth()
+
+					targetEntity.Health -= lightningDamage / mobMaxHealth
+				}
+
+				// No hit after magnet
+				if targetEntity.Type == native.PetalTypeMagnet {
+					break Loop
+				}
+
+				bounceTargets := jellyfish.GetLightningBounceTargets(wp, bouncedIds)
+
+				targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, 2*targetEntity.CalculateDiameter())
 				if targetNode == nil {
 					break Loop
 				}

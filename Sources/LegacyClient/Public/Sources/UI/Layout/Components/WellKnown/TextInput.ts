@@ -705,7 +705,7 @@ export default class TextInput extends Component {
 
     private clipText(value: string = this.value) {
         const padding = this.paddingSize + this.borderWidth;
-        const availableWidth = this.w - (padding * 2);
+        const availableWidth = this.w - (2 * padding);
         const textWidth = this.textWidth(value);
 
         if (textWidth <= availableWidth) return value;

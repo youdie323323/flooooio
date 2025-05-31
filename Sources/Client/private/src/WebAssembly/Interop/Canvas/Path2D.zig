@@ -1,5 +1,5 @@
-///! This module proivded minimal path2d operations for wasm.
-///! We are not going to use c string here for performance reason.
+//! This module proivded minimal path2d operations for wasm.
+//! We are not going to use c string here for performance reason.
 const Path2D = @This();
 
 pub const PathId = u32;

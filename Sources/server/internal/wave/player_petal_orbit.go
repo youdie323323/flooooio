@@ -1,12 +1,11 @@
 package wave
 
 import (
-	"math"
 	"slices"
 	"time"
 
-	"flooooio/internal/collision"
-	"flooooio/internal/native"
+	"flooooio/internal/wave/collision"
+	"flooooio/internal/wave/florr/native"
 
 	"github.com/chewxy/math32"
 )
@@ -31,6 +30,10 @@ func init() {
 	}
 }
 
+var MoodablePetalTypes = slices.Concat(UsablePetalTypes, []native.PetalType{
+	native.PetalTypeMagnet,
+})
+
 // PlayerPetalOrbit class constants
 const (
 	defaultRotateSpeed         = 2.5
@@ -41,6 +44,12 @@ const (
 	spingInterpolationSpeed    = 0.6
 	spinNearestSizeCoefficient = 1.075
 	spinAngleCoefficient       = 10.0
+)
+
+const (
+	DefaultMoodRadius = 40
+	SadMoodRadius     = 25
+	AngryMoodRadius   = 80
 )
 
 func calcTableIndex(i float32) int {
@@ -87,11 +96,6 @@ func doPetalSpin(
 	i int,
 	j int,
 ) {
-	// Ensure len > 0
-	if len(pss) < 1 {
-		return
-	}
-
 	var spinTargets []collision.Node
 
 	{
@@ -224,19 +228,20 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 
 	var targetRadius float32
 
-	if isAngry {
-		targetRadius = 80
-	} else {
-		if isSad {
-			targetRadius = 25
-		} else {
-			targetRadius = 40
-		}
+	switch true {
+	case isAngry:
+		targetRadius = AngryMoodRadius
+
+	case isSad:
+		targetRadius = SadMoodRadius
+
+	default:
+		targetRadius = DefaultMoodRadius
 	}
 
 	targetRadius += ((p.Size / PlayerSize) - 1) * PlayerCollision.Radius
 
-	wingAddition := float32(200 * math.Sin(math.Mod(float64(now.UnixMilli())/300, math.Pi)))
+	wingAddition := 200 * math32.Sin(math32.Mod(float32(now.UnixMilli())/300, math32.Pi))
 
 	for i, petals := range surface {
 		if petals == nil {
@@ -260,8 +265,8 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 		var springForce float32
 
 		switch true {
-		case slices.Contains(UsablePetalTypes, firstPetal.Type):
-			springForce = (40 - p.OrbitPetalRadii[i]) * radiusSpringStrength
+		case slices.Contains(MoodablePetalTypes, firstPetal.Type):
+			springForce = (DefaultMoodRadius - p.OrbitPetalRadii[i]) * radiusSpringStrength
 
 		case isAngry && firstPetal.Type == native.PetalTypeWing:
 			springForce = (targetRadius + wingAddition - p.OrbitPetalRadii[i]) * radiusSpringStrength

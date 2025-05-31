@@ -62,7 +62,7 @@ export default class MobRendererMissileProjectile extends AbstractMobRenderer {
         const scale = entity.size / 25;
         ctx.scale(scale, scale);
 
-        ctx.fillStyle = this.calculateDamageEffectColor(context, "#333333");
+        ctx.fillStyle = this.toEffectedColor(context, "#333333");
         ctx.fill(missileBody, "nonzero");
         ctx.fill(missileBodyStroke, "nonzero");
     }

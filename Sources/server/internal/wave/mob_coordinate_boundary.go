@@ -1,8 +1,9 @@
 package wave
 
 import (
-	"flooooio/internal/native"
 	"time"
+
+	"flooooio/internal/wave/florr/native"
 
 	"github.com/chewxy/math32"
 )
@@ -12,7 +13,7 @@ var ProjectileMobTypes = []native.MobType{
 	native.MobTypeWebProjectile,
 }
 
-const missileEliminateFactor = 1.5
+const missileEliminateRadiusMultiplier = 1.5
 
 func (m *Mob) MobCoordinateBoundary(wp *WavePool, _ time.Time) {
 	mapRadius := float32(wp.Wd.MapRadius)
@@ -27,7 +28,7 @@ func (m *Mob) MobCoordinateBoundary(wp *WavePool, _ time.Time) {
 
 	if m.IsProjectile() {
 		// Eliminate if missile above desiredMapRadius * 1.5
-		if dot > (desiredMapRadius*missileEliminateFactor)*(desiredMapRadius*missileEliminateFactor) {
+		if dot > (desiredMapRadius*missileEliminateRadiusMultiplier)*(desiredMapRadius*missileEliminateRadiusMultiplier) {
 			m.ForceEliminate(wp)
 		}
 	} else {

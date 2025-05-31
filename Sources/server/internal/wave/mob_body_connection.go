@@ -9,13 +9,17 @@ import (
 
 // TraverseMobSegments traverse mob segments and return final segment.
 func TraverseMobSegments(wp *WavePool, m *Mob) *Mob {
-	if m.ConnectingSegment != nil {
-		if segment, ok := m.ConnectingSegment.(*Mob); ok && !segment.WasEliminated(wp) {
-			return TraverseMobSegments(wp, segment)
+	current := m
+
+	for current.ConnectingSegment != nil {
+		if segment, ok := current.ConnectingSegment.(*Mob); ok && !segment.WasEliminated(wp) {
+			current = segment
+		} else {
+			break
 		}
 	}
 
-	return m
+	return current
 }
 
 // IsBody determinate if segment piece mob is body.
@@ -24,11 +28,8 @@ func IsBody(wp *WavePool, m *Mob) bool {
 }
 
 func IsConnectedSegment(m1, m2 *Mob) bool {
-	if m1.ConnectingSegment == m2 || m2.ConnectingSegment == m1 {
-		return true
-	}
-
-	return slices.Contains(m1.ConnectedSegmentIds, m2.Id) || slices.Contains(m2.ConnectedSegmentIds, m1.Id)
+	return m1.ConnectingSegment == m2 || m2.ConnectingSegment == m1 ||
+		slices.Contains(m1.ConnectedSegmentIds, m2.Id) || slices.Contains(m2.ConnectedSegmentIds, m1.Id)
 }
 
 func (m *Mob) MobBodyConnection(wp *WavePool, _ time.Time) {

@@ -9,24 +9,24 @@ const Rgb = @Vector(3, u8);
 
 const FloatingRgb = @Vector(3, f64);
 
-const white = fromCSSColorName("white").rgb;
+const white = comptimeFromCSSColorName("white").internal_rgb;
 
-const black = fromCSSColorName("black").rgb;
+const black = comptimeFromCSSColorName("black").internal_rgb;
 
 const white_f64: FloatingRgb = @floatFromInt(white);
 
 const black_f64: FloatingRgb = @floatFromInt(black);
 
-rgb: Rgb,
+internal_rgb: Rgb,
 
 pub inline fn init(rgb: Rgb) Color {
-    return .{ .rgb = rgb };
+    return .{ .internal_rgb = rgb };
 }
 
-inline fn mulClamp(self: Color, strength: FloatingRgb, lower: FloatingRgb, upper: FloatingRgb) Rgb {
+inline fn mulWithBound(self: Color, strength: FloatingRgb, lower: FloatingRgb, upper: FloatingRgb) Rgb {
     return @intFromFloat(
         math.clamp(
-            @as(FloatingRgb, @floatFromInt(self.rgb)) * strength,
+            @as(FloatingRgb, @floatFromInt(self.internal_rgb)) * strength,
             lower,
             upper,
         ),
@@ -38,7 +38,7 @@ pub inline fn darkened(self: Color, comptime strength: f64) Color {
 
     const strength_c: FloatingRgb = comptime @splat(1 - strength);
 
-    const result = self.mulClamp(strength_c, black_f64, white_f64);
+    const result = self.mulWithBound(strength_c, black_f64, white_f64);
 
     return init(result);
 }
@@ -48,26 +48,45 @@ pub inline fn lightened(self: Color, comptime strength: f64) Color {
 
     const strength_a: FloatingRgb = comptime @splat(1 + strength);
 
-    const result = self.mulClamp(strength_a, black_f64, white_f64);
+    const result = self.mulWithBound(strength_a, black_f64, white_f64);
 
     return init(result);
 }
 
-pub fn fromAnyString(comptime str: []const u8) Color {
+/// Interpolate between two colors.
+pub inline fn interpolate(self: Color, other: Color, t: f32) Color {
+    return init(math.lerp(self, other, t));
+}
+
+/// N-dimensionally interpolates colors.
+pub fn nDimensionalInterpolate(comptime n: anytype, colors: @Vector(n, Color), t: f32) Color {
+    const last = n - 1;
+    
+    const segment = t * @as(f32, @intFromFloat(last));
+    const index = @floor(segment);
+
+    if (index >= last) return colors[last];
+
+    const index_int: usize = @intFromFloat(index);
+
+    return interpolate(colors[index_int], colors[index_int + 1], 1 - (segment - index));
+}
+
+pub fn comptimeFromAnyString(comptime str: []const u8) Color {
     comptime {
         if (str.len == 0) @compileError("fromAnyString not valid with empty string");
 
-        if (isValidStringColorCode(str)) return fromStringColorCode(str);
+        if (isValidHexColorCode(str)) return comptimeFromHexColorCode(str);
 
-        if (isValidRgbString(str)) return fromRgbString(str);
+        if (isValidRgbString(str)) return comptimeFromRgbString(str);
 
-        return fromCSSColorName(str);
+        return comptimeFromCSSColorName(str);
     }
 }
 
-const StringColorCode = *const [7:0]u8;
+const HexColorCode = *const [7:0]u8;
 
-inline fn isValidStringColorCode(comptime code: StringColorCode) bool {
+inline fn isValidHexColorCode(comptime code: HexColorCode) bool {
     comptime {
         // Checking length here is redundant because already constrained with type
         return mem.startsWith(u8, code, "#") and for (code[1..]) |c| {
@@ -76,10 +95,10 @@ inline fn isValidStringColorCode(comptime code: StringColorCode) bool {
     }
 }
 
-/// Convert color code to Color.
-pub fn fromStringColorCode(comptime code: StringColorCode) Color {
+/// Convert hex color code to Color.
+pub fn comptimeFromHexColorCode(comptime code: HexColorCode) Color {
     comptime {
-        if (!isValidStringColorCode(code)) @compileError("color code " ++ code ++ " is not valid");
+        if (!isValidHexColorCode(code)) @compileError("color code " ++ code ++ " is not valid");
 
         const r = std.fmt.parseInt(u8, code[1..3], 16) catch @compileError("couldn't parsed r section of " ++ code);
         const g = std.fmt.parseInt(u8, code[3..5], 16) catch @compileError("couldn't parsed g section of " ++ code);
@@ -92,7 +111,7 @@ pub fn fromStringColorCode(comptime code: StringColorCode) Color {
 pub const Unsigned24BitIntegerColorCode = u24;
 
 /// Convert u24 representation of color code to Color.
-pub fn fromUnsigned24BitIntegerColorCode(comptime code: Unsigned24BitIntegerColorCode) Color {
+pub fn comptimeFromUnsigned24BitIntegerColorCode(comptime code: Unsigned24BitIntegerColorCode) Color {
     comptime {
         const r: u8 = (code >> 16) & 0xFF;
         const g: u8 = (code >> 8) & 0xFF;
@@ -111,7 +130,7 @@ inline fn isValidRgbString(comptime str: []const u8) bool {
 }
 
 /// Convert rgb string to Color.
-pub fn fromRgbString(comptime str: []const u8) Color {
+pub fn comptimeFromRgbString(comptime str: []const u8) Color {
     comptime {
         if (!isValidRgbString(str)) @compileError("rgb string " ++ str ++ " is not valid");
 
@@ -284,11 +303,11 @@ const css_name_map = std.StaticStringMap(Unsigned24BitIntegerColorCode).initComp
 /// Returns a Color based on its CSS color name.
 /// Color sources taken from W3C wiki:
 /// https://www.w3.org/wiki/CSS/Properties/color/keywords
-pub fn fromCSSColorName(comptime name: []const u8) Color {
+pub fn comptimeFromCSSColorName(comptime name: []const u8) Color {
     comptime {
         if (name.len == 0) @compileError("empty name not allowed for fromName");
 
-        if (css_name_map.get(name)) |color| return fromUnsigned24BitIntegerColorCode(color);
+        if (css_name_map.get(name)) |color| return comptimeFromUnsigned24BitIntegerColorCode(color);
 
         @compileError("css color name " ++ name ++ " is not valid");
     }

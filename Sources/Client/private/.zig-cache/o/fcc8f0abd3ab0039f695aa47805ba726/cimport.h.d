@@ -1,0 +1,23 @@
+cimport.o: \
+  C:/Users/kouki/デスクトップ/Things/flooooio/Sources/Client/private/.zig-cache/o/fcc8f0abd3ab0039f695aa47805ba726/cimport.h \
+  C:/Users/kouki/デスクトップ/Things/flooooio/Sources/Client/private/src-c/parse_svg.h \
+  C:/Users/kouki/AppData/Roaming/VSCodium/User/globalStorage/ziglang.vscode-zig/zig/x86_64-windows-0.14.1/lib/libcxx/include/stdint.h \
+  C:/Users/kouki/AppData/Roaming/VSCodium/User/globalStorage/ziglang.vscode-zig/zig/x86_64-windows-0.14.1/lib/libcxx/include/__config \
+  C:/Users/kouki/AppData/Roaming/VSCodium/User/globalStorage/ziglang.vscode-zig/zig/x86_64-windows-0.14.1/lib/libcxx/include/__configuration/abi.h \
+  C:/Users/kouki/AppData/Roaming/VSCodium/User/globalStorage/ziglang.vscode-zig/zig/x86_64-windows-0.14.1/lib/libcxx/include/__configuration/compiler.h \
+  C:/Users/kouki/AppData/Roaming/VSCodium/User/globalStorage/ziglang.vscode-zig/zig/x86_64-windows-0.14.1/lib/libcxx/include/__configuration/platform.h \
+  C:/Users/kouki/AppData/Roaming/VSCodium/User/globalStorage/ziglang.vscode-zig/zig/x86_64-windows-0.14.1/lib/libcxx/include/__configuration/availability.h \
+  C:/Users/kouki/AppData/Roaming/VSCodium/User/globalStorage/ziglang.vscode-zig/zig/x86_64-windows-0.14.1/lib/libcxx/include/__configuration/language.h \
+  C:/Users/kouki/AppData/Roaming/VSCodium/User/globalStorage/ziglang.vscode-zig/zig/x86_64-windows-0.14.1/lib/include/stdint.h \
+  C:/Users/kouki/AppData/Roaming/VSCodium/User/globalStorage/ziglang.vscode-zig/zig/x86_64-windows-0.14.1/lib//libc/include/generic-musl/stdint.h \
+  C:/Users/kouki/AppData/Roaming/VSCodium/User/globalStorage/ziglang.vscode-zig/zig/x86_64-windows-0.14.1/lib//libc/include/wasm-wasi-musl/bits/alltypes.h \
+  C:/Users/kouki/AppData/Roaming/VSCodium/User/globalStorage/ziglang.vscode-zig/zig/x86_64-windows-0.14.1/lib//libc/include/wasm-wasi-musl/__struct_timeval.h \
+  C:/Users/kouki/AppData/Roaming/VSCodium/User/globalStorage/ziglang.vscode-zig/zig/x86_64-windows-0.14.1/lib//libc/include/wasm-wasi-musl/__typedef_time_t.h \
+  C:/Users/kouki/AppData/Roaming/VSCodium/User/globalStorage/ziglang.vscode-zig/zig/x86_64-windows-0.14.1/lib//libc/include/wasm-wasi-musl/__typedef_suseconds_t.h \
+  C:/Users/kouki/AppData/Roaming/VSCodium/User/globalStorage/ziglang.vscode-zig/zig/x86_64-windows-0.14.1/lib//libc/include/wasm-wasi-musl/__struct_timespec.h \
+  C:/Users/kouki/AppData/Roaming/VSCodium/User/globalStorage/ziglang.vscode-zig/zig/x86_64-windows-0.14.1/lib//libc/include/wasm-wasi-musl/__struct_iovec.h \
+  C:/Users/kouki/AppData/Roaming/VSCodium/User/globalStorage/ziglang.vscode-zig/zig/x86_64-windows-0.14.1/lib/libcxx/include/stddef.h \
+  C:/Users/kouki/AppData/Roaming/VSCodium/User/globalStorage/ziglang.vscode-zig/zig/x86_64-windows-0.14.1/lib/include/stddef.h \
+  C:/Users/kouki/AppData/Roaming/VSCodium/User/globalStorage/ziglang.vscode-zig/zig/x86_64-windows-0.14.1/lib//libc/include/generic-musl/stddef.h \
+  C:/Users/kouki/AppData/Roaming/VSCodium/User/globalStorage/ziglang.vscode-zig/zig/x86_64-windows-0.14.1/lib/include/__stddef_size_t.h \
+  C:/Users/kouki/AppData/Roaming/VSCodium/User/globalStorage/ziglang.vscode-zig/zig/x86_64-windows-0.14.1/lib//libc/include/wasm-wasi-musl/bits/stdint.h

@@ -501,10 +501,10 @@ export default class MobRendererSponge extends AbstractMobRenderer {
 
         ctx.lineJoin = "round";
 
-        ctx.fillStyle = this.calculateDamageEffectColor(context, bodyColor);
+        ctx.fillStyle = this.toEffectedColor(context, bodyColor);
         ctx.fill(spongeBody, "nonzero");
 
-        ctx.fillStyle = this.calculateDamageEffectColor(context, bodyStrokeColor);
+        ctx.fillStyle = this.toEffectedColor(context, bodyStrokeColor);
         ctx.fill(spongeBodyStroke, "nonzero");
         ctx.fill(spongeSpots, "nonzero");
     }

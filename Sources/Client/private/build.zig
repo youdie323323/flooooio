@@ -48,9 +48,9 @@ pub fn build(b: *std.Build) !void {
         },
     });
 
-    {
-        const optimize = b.standardOptimizeOption(.{});
+    const optimize = b.standardOptimizeOption(.{});
 
+    {
         const boost_dep = b.dependency("boost", .{
             .target = target,
             .optimize = optimize,

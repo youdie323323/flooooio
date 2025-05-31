@@ -12,7 +12,9 @@ import { isPetal } from "../Petal";
 import { MobType, PetalType } from "../../Native/Entity/EntityType";
 import { setGameFont } from "../../UI/Layout/Components/WellKnown/StaticText";
 
-const hexToRgb = memo((hexColor: ColorCode) => {
+type TupleColor = [number, number, number];
+
+const hexToRgb = memo((hexColor: ColorCode): TupleColor => {
     return [
         parseInt(hexColor.slice(1, 3), 16),
         parseInt(hexColor.slice(3, 5), 16),
@@ -20,7 +22,36 @@ const hexToRgb = memo((hexColor: ColorCode) => {
     ];
 });
 
-const TARGET_COLOR = [255, 0, 0] as const;
+function blendColor(
+    [sr, sg, sb]: TupleColor,
+    [tr, tg, tb]: TupleColor,
+
+    t: number,
+): TupleColor {
+    const tInvert = 1 - t;
+
+    return [
+        (sr * t) + (tr * tInvert),
+        (sg * t) + (tg * tInvert),
+        (sb * t) + (tb * tInvert),
+    ];
+}
+
+function blendColors(colors: Array<TupleColor>, t: number): TupleColor {
+    const last = colors.length - 1;
+
+    const segment = t * last;
+    const index = Math.floor(segment);
+
+    if (index >= last) return colors[last];
+
+    return blendColor(colors[index], colors[index + 1], 1 - (segment - index));
+}
+
+const HURT_TARGET_COLOR_MIDDLE = [255, 0, 0] as const satisfies TupleColor;
+const HURT_TARGET_COLOR_LAST = [255, 255, 255] as const satisfies TupleColor;
+
+const POISON_TARGET_COLOR = [189, 80, 255] as const satisfies TupleColor;
 
 export default class Renderer<T extends Entity> {
     private static readonly HP_BAR_MAX_WIDTH = 45 as const;
@@ -61,19 +92,21 @@ export default class Renderer<T extends Entity> {
     }
 
     /**
-     * Change the color based on hit.
+     * Change the color based on effects.
      */
-    protected calculateDamageEffectColor({ entity: { hurtT } }: RenderingContext<T>, color: ColorCode): string {
-        const invertedHurtT = 1 - hurtT;
-        if (invertedHurtT >= 1) return color;
+    protected toEffectedColor({ entity: { hurtT, poisonT } }: RenderingContext<T>, color: ColorCode): string {
+        // No effects to apply
+        if (hurtT === 0 && poisonT === 0) return color;
 
-        const progress = invertedHurtT * 0.5 + 0.5;
+        let sourceRgb = hexToRgb(color);
 
-        const sourceRgb = hexToRgb(color);
+        // Apply additional colors
 
-        const r = Math.round(sourceRgb[0] * progress + TARGET_COLOR[0] * (1 - progress));
-        const g = Math.round(sourceRgb[1] * progress + TARGET_COLOR[1] * (1 - progress));
-        const b = Math.round(sourceRgb[2] * progress + TARGET_COLOR[2] * (1 - progress));
+        if (poisonT > 0) sourceRgb = blendColor(sourceRgb, POISON_TARGET_COLOR, 0.75 * (1 - poisonT));
+
+        const blended = blendColors([sourceRgb, HURT_TARGET_COLOR_MIDDLE, HURT_TARGET_COLOR_LAST], 0.95 * (1 - hurtT));
+
+        const [r, g, b] = blendColor(sourceRgb, blended, 0.5);
 
         return `rgb(${r},${g},${b})`;
     }
@@ -101,20 +134,15 @@ export default class Renderer<T extends Entity> {
     }
 
     protected drawEntityStatus({ ctx, entity }: RenderingContext<T>) {
-        if (entity instanceof Mob && (
-            isPetal(entity.type) ||
-            entity.type === MobType.MISSILE_PROJECTILE
-            // This condition is unrechable because leech body is always full hp and hp bar is not rendered
-            // (entity.type === MobType.LEECH && entity.connectingSegment)
-        )) return;
+        if (entity instanceof Mob && (isPetal(entity.type) || entity.type === MobType.MISSILE_PROJECTILE)) return;
 
         if (entity.hpAlpha <= 0) return;
 
         if (
             entity instanceof Player &&
-            uiCtx.currentCtx instanceof UIGame &&
+            uiCtx.currentContext instanceof UIGame &&
             // Draw nickname if not self
-            entity.id !== uiCtx.currentCtx.waveSelfId
+            entity.id !== uiCtx.currentContext.waveSelfId
         ) {
             ctx.save();
 

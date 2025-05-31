@@ -4,8 +4,8 @@ import (
 	"slices"
 	"time"
 
-	"flooooio/internal/collision"
-	"flooooio/internal/native"
+	"flooooio/internal/wave/collision"
+	"flooooio/internal/wave/florr/native"
 )
 
 type Petal struct {
@@ -36,6 +36,11 @@ func (p *Petal) CalculateRadius() float32 {
 	return collision.Radius * (p.Size / collision.Fraction)
 }
 
+// CalculateDiameter return diameter (display size).
+func (m *Petal) CalculateDiameter() float32 {
+	return 2 * m.CalculateRadius()
+}
+
 // GetMaxHealth calculates max hp of petal.
 func (p *Petal) GetMaxHealth() float32 {
 	profile := native.PetalProfiles[p.Type]
@@ -54,16 +59,9 @@ var _ LightningEmitter = (*Petal)(nil)
 
 // GetLightningBounceTargets returns targets to bounce.
 func (p *Petal) GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node {
-	mobTargets := wp.GetMobsWithCondition(func(targetMob *Mob) bool {
+	return collision.ToNodeSlice(wp.GetMobsWithCondition(func(targetMob *Mob) bool {
 		return !slices.Contains(bouncedIds, targetMob.Id) && targetMob.IsTrackableEnemy()
-	})
-
-	nodeTargets := make([]collision.Node, len(mobTargets))
-	for i, mob := range mobTargets {
-		nodeTargets[i] = mob
-	}
-
-	return nodeTargets
+	}))
 }
 
 const PetalSize = 6
@@ -117,8 +115,9 @@ func (p *Petal) OnUpdateTick(wp *WavePool, now time.Time) {
 	p.PetalCoordinateBoundary(wp, now)
 	p.PetalSpecialAngle(wp, now)
 	p.PetalFasterRaging(wp, now)
-	p.PetalElimination(wp, now)
 	p.PetalCoordinateMovement(wp, now)
+
+	p.PetalElimination(wp, now)
 
 	{ // Base onUpdateTick
 	}
@@ -127,6 +126,14 @@ func (p *Petal) OnUpdateTick(wp *WavePool, now time.Time) {
 }
 
 func (p *Petal) Dispose() {
+	{
+		for i := range p.SummonedPets {
+			p.SummonedPets[i] = nil
+		}
+
+		p.SummonedPets = nil
+	}
+
 	p.Master = nil
 }
 

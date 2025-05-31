@@ -88,7 +88,7 @@ export default class MobRendererLeech extends AbstractMobRenderer {
             // Change angle
             ctx.rotate(entity.angle);
 
-            ctx.strokeStyle = this.calculateDamageEffectColor(context, "#292929");
+            ctx.strokeStyle = this.toEffectedColor(context, "#292929");
             ctx.lineWidth = 4;
 
             // Upper beak
@@ -185,12 +185,12 @@ export default class MobRendererLeech extends AbstractMobRenderer {
 
         // Body stroke
         ctx.lineWidth = 25;
-        ctx.strokeStyle = this.calculateDamageEffectColor(context, "#292929");
+        ctx.strokeStyle = this.toEffectedColor(context, "#292929");
         ctx.stroke();
 
         // Body
         ctx.lineWidth = 22;
-        ctx.strokeStyle = this.calculateDamageEffectColor(context, "#333333");
+        ctx.strokeStyle = this.toEffectedColor(context, "#333333");
         ctx.stroke();
     }
 }

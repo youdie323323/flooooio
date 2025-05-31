@@ -65,7 +65,7 @@ export default class MobRendererSpider extends AbstractMobRenderer {
 
         { // Legs
             ctx.lineWidth = 10;
-            ctx.strokeStyle = this.calculateDamageEffectColor(context, "#323032");
+            ctx.strokeStyle = this.toEffectedColor(context, "#323032");
 
             const moveCounter = entity.moveCounter / 1.25;
 
@@ -94,14 +94,14 @@ export default class MobRendererSpider extends AbstractMobRenderer {
 
             ctx.arc(0, 0, 35, 0, TAU);
 
-            ctx.fillStyle = this.calculateDamageEffectColor(context, "#403525");
+            ctx.fillStyle = this.toEffectedColor(context, "#403525");
             ctx.fill();
 
             ctx.beginPath();
 
             ctx.arc(0, 0, 25, 0, TAU);
 
-            ctx.fillStyle = this.calculateDamageEffectColor(context, "#4F412E");
+            ctx.fillStyle = this.toEffectedColor(context, "#4F412E");
             ctx.fill();
         }
     }

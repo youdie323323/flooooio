@@ -4,12 +4,14 @@ import (
 	"slices"
 	"time"
 
-	"flooooio/internal/collision"
-	"flooooio/internal/native"
+	"flooooio/internal/wave/collision"
+	"flooooio/internal/wave/florr/native"
 )
 
 type Mob struct {
 	Entity
+
+	Poisonable
 
 	Type native.MobType
 
@@ -88,6 +90,11 @@ func (m *Mob) IsEnemy() bool {
 	return m.PetMaster == nil
 }
 
+// IsAlly determinate if mob is ally from player side.
+func (m *Mob) IsAlly() bool {
+	return m.PetMaster != nil
+}
+
 // IsProjectile determinate if mob is projectile.
 func (m *Mob) IsProjectile() bool {
 	return slices.Contains(ProjectileMobTypes, m.Type)
@@ -101,6 +108,11 @@ func (m *Mob) IsTrackableEnemy() bool {
 // IsOrganismEnemy determinate if mob is enemy from player side and its living organism.
 func (m *Mob) IsOrganismEnemy() bool {
 	return m.IsEnemy() && !m.IsProjectile()
+}
+
+// IsOrganismAlly determinate if mob is living organism and not enemy.
+func (m *Mob) IsOrganismAlly() bool {
+	return m.IsAlly() && !m.IsProjectile()
 }
 
 // HasConnectingSegment determinate if mob has connecting segment.
@@ -130,43 +142,18 @@ var _ LightningEmitter = (*Mob)(nil)
 // GetLightningBounceTargets returns targets to bounce.
 func (m *Mob) GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node {
 	if m.IsEnemy() {
-		playerTargets := wp.GetPlayersWithCondition(func(targetPlayer *Player) bool {
-			return !slices.Contains(bouncedIds, targetPlayer.Id)
-		})
-
-		// Target pets
-		mobTargets := wp.GetMobsWithCondition(func(targetMob *Mob) bool {
-			return !slices.Contains(bouncedIds, targetMob.Id) && !targetMob.IsEnemy()
-		})
-
-		lenPlayerTargets := len(playerTargets)
-		lenMobTargets := len(mobTargets)
-
-		nodeTargets := make([]collision.Node, lenPlayerTargets+lenMobTargets)
-
-		for i, player := range playerTargets {
-			nodeTargets[i] = player
-		}
-
-		for i, mob := range mobTargets {
-			nodeTargets[lenPlayerTargets+i] = mob
-		}
-
-		return nodeTargets
+		return slices.Concat(
+			collision.ToNodeSlice(wp.GetPlayersWithCondition(func(targetPlayer *Player) bool {
+				return !slices.Contains(bouncedIds, targetPlayer.Id)
+			})),
+			collision.ToNodeSlice(wp.GetMobsWithCondition(func(targetMob *Mob) bool {
+				return !slices.Contains(bouncedIds, targetMob.Id) && targetMob.IsAlly()
+			})),
+		)
 	} else {
-		mobTargets := wp.GetMobsWithCondition(func(targetMob *Mob) bool {
+		return collision.ToNodeSlice(wp.GetMobsWithCondition(func(targetMob *Mob) bool {
 			return !slices.Contains(bouncedIds, targetMob.Id) && targetMob.IsEnemy()
-		})
-
-		lenMobTargets := len(mobTargets)
-
-		nodeTargets := make([]collision.Node, lenMobTargets)
-
-		for i, mob := range mobTargets {
-			nodeTargets[i] = mob
-		}
-
-		return nodeTargets
+		}))
 	}
 }
 
@@ -181,15 +168,35 @@ func (m *Mob) OnUpdateTick(wp *WavePool, now time.Time) {
 
 	m.MobCoordinateMovement(wp, now)
 	m.MobCoordinateBoundary(wp, now)
-	m.MobElimination(wp, now)
 	m.MobCollision(wp, now)
 
 	m.MobBodyConnection(wp, now)
-	m.MobAggressivePursuit(wp, now)
+	m.MobCombatBehavior(wp, now)
 	m.MobUniqueTalent(wp, now)
+
+	m.MobElimination(wp, now)
 
 	{ // Base onUpdateTick
 		m.SigmaT += DeltaT
+
+		{ // Take poison damage
+			if m.IsPoisoned.Load() {
+				dp := m.PoisonDPS * DeltaT
+
+				mMaxHealth := m.GetMaxHealth()
+
+				m.Health -= dp / mMaxHealth
+				m.Health = max(0, m.Health)
+
+				m.TotalPoison += dp
+
+				if m.TotalPoison >= m.StopAtPoison {
+					m.IsPoisoned.Store(false)
+
+					m.TotalPoison = m.StopAtPoison
+				}
+			}
+		}
 	}
 
 	m.Mu.Unlock()
@@ -205,7 +212,14 @@ func (m *Mob) Dispose() {
 	m.MissileMaster = nil
 
 	m.ConnectingSegment = nil
-	clear(m.ConnectedSegmentIds)
+
+	{
+		for i := range m.ConnectedSegmentIds {
+			m.ConnectedSegmentIds[i] = nil
+		}
+
+		m.ConnectedSegmentIds = nil
+	}
 }
 
 // NewMob return new mob instance.
@@ -247,6 +261,8 @@ func NewMob(
 
 			size,
 		),
+
+		Poisonable: NewPoisonable(),
 
 		Type: mType,
 
@@ -310,7 +326,7 @@ var MobSpeed = map[native.MobType]float32{
 	native.MobTypeHornet: 3,
 
 	native.MobTypeBeetle:       2.8,
-	native.MobTypeSandstorm:    4,
+	native.MobTypeSandstorm:    2,
 	native.MobTypeCactus:       0,
 	native.MobTypeScorpion:     4,
 	native.MobTypeLadybugShiny: 2,

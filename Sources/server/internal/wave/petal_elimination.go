@@ -1,30 +1,27 @@
 package wave
 
 import (
-	"slices"
 	"time"
 
-	"flooooio/internal/native"
+	"flooooio/internal/wave/florr/native"
 )
 
 func (p *Petal) onEliminate(wp *WavePool) {
-	wp.RemovePetal(*p.Id)
-
 	switch p.Type {
 	// If stick is destoryed, sandstorms destoryed too
 	case native.PetalTypeMysteriousStick:
 		{
-			for i, pet := range p.SummonedPets {
-				if pet != nil {
-					if !pet.WasEliminated(wp) {
-						pet.SafeForceEliminate(wp)
-					}
-
-					p.SummonedPets = slices.Delete(p.SummonedPets, i, i+1)
+			for _, p := range p.SummonedPets {
+				if p != nil && !p.WasEliminated(wp) {
+					p.ForceEliminate(wp)
 				}
 			}
 		}
 	}
+
+	// SummonedPets are cleared in Dispose
+
+	wp.RemovePetal(*p.Id)
 }
 
 func (p *Petal) PetalElimination(wp *WavePool, _ time.Time) {

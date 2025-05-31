@@ -122,6 +122,13 @@ export const getWebAssemblyFunction = (ptr: number): AnyFunction => {
     return fn;
 };
 
+const enum ClockId {
+    REALTIME,
+    MONOTONIC,
+    PROCESS_CPU_TIME_ID,
+    THREAD_CPU_TIME_ID,
+}
+
 type FlooooWebAssemblyInstance = Omit<WebAssembly.Instance, "exports"> & { exports: FlooooWebAssemblyExports };
 
 export type AnyFunction = (...args: Array<any>) => any;
@@ -185,22 +192,28 @@ export type AnyFunction = (...args: Array<any>) => any;
                 return 0;
             },
 
-            clock_time_get(clockid: number, precision: number, ptr: number): number {
-                // WASI clock ids
-                const CLOCK_REALTIME = 0;
-                const CLOCK_MONOTONIC = 1;
+            clock_time_get(clockid: ClockId, precision: number, ptr: number): number {
+                const Origin =
+                    clockid === ClockId.REALTIME
+                        ? Date
+                        : performance;
 
-                let nowNs: bigint;
+                // Compiler definitely not giving this wrong clockid so this check is pointless
+                /*
+                let Origin: DateConstructor | Performance;
 
-                if (clockid === CLOCK_REALTIME) {
-                    nowNs = BigInt(Date.now()) * 1000000n;
-                } else if (clockid === CLOCK_MONOTONIC) {
-                    const nowMs = performance.now();
+                switch (clockid) {
+                    case ClockId.REALTIME: Origin = Date; break;
 
-                    nowNs = BigInt(Math.floor(nowMs * 1_000_000));
-                } else {
-                    return ENOSYS;
+                    case ClockId.MONOTONIC:
+                    case ClockId.PROCESS_CPU_TIME_ID:
+                    case ClockId.THREAD_CPU_TIME_ID: Origin = performance; break;
+
+                    default: return ENOSYS;
                 }
+                */
+
+                const nowNs: bigint = BigInt(Math.round(Origin.now() * 1_000_000));
 
                 // Store the time value into memory (assumes 64-bit value at ptr)
                 const low = Number(nowNs & 0xFFFFFFFFn);

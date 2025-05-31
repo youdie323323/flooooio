@@ -1,9 +1,10 @@
 package wave
 
 import (
-	"flooooio/internal/collision"
-	"flooooio/internal/native"
 	"time"
+
+	"flooooio/internal/wave/collision"
+	"flooooio/internal/wave/florr/native"
 )
 
 var PlayerCollision = native.EntityCollision{
@@ -11,7 +12,7 @@ var PlayerCollision = native.EntityCollision{
 	Radius:   25,
 }
 
-const playerToPlayerKnockbackFactor = 2.5
+const playerToPlayerKnockbackMultiplier = 2.5
 
 // Define reusable circle
 var (
@@ -54,11 +55,11 @@ func (p *Player) PlayerCollision(wp *WavePool, _ time.Time) {
 
 		px, py, ok := collision.ComputeCirclePush(c0player, c1player)
 		if ok {
-			p.Velocity[0] -= px * playerToPlayerKnockbackFactor
-			p.Velocity[1] -= py * playerToPlayerKnockbackFactor
+			p.Velocity[0] -= px * playerToPlayerKnockbackMultiplier
+			p.Velocity[1] -= py * playerToPlayerKnockbackMultiplier
 
-			np.Velocity[0] += px * playerToPlayerKnockbackFactor
-			np.Velocity[1] += py * playerToPlayerKnockbackFactor
+			np.Velocity[0] += px * playerToPlayerKnockbackMultiplier
+			np.Velocity[1] += py * playerToPlayerKnockbackMultiplier
 		}
 
 		return true

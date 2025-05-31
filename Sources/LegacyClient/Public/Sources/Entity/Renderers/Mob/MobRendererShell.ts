@@ -22,7 +22,7 @@ export default class MobRendererShell extends AbstractMobRenderer {
         ctx.lineWidth = 5;
         ctx.lineJoin = ctx.lineCap = "round";
 
-        const bodyStrokeColor = this.calculateDamageEffectColor(context, "#CCB36D");
+        const bodyStrokeColor = this.toEffectedColor(context, "#CCB36D");
 
         { // Draw auricle
             ctx.beginPath();
@@ -49,7 +49,7 @@ export default class MobRendererShell extends AbstractMobRenderer {
             
             ctx.closePath();
 
-            ctx.fillStyle = this.calculateDamageEffectColor(context, "#FCDD86");
+            ctx.fillStyle = this.toEffectedColor(context, "#FCDD86");
             ctx.fill();
             ctx.stroke();
         }

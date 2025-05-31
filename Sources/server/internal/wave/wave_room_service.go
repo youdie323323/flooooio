@@ -4,7 +4,7 @@ import (
 	"slices"
 	"sync"
 
-	"flooooio/internal/native"
+	"flooooio/internal/wave/florr/native"
 )
 
 type WaveRoomService struct {

@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"flooooio/internal/native"
 	"flooooio/internal/network"
+	"flooooio/internal/wave/florr/native"
 
 	"github.com/gorilla/websocket"
 )
@@ -99,7 +99,7 @@ func (pd *PlayerData) AssignWaveRoomPlayerId(id *WaveRoomPlayerId) {
 func (pd *PlayerData) AssignWavePlayerId(id *EntityId) {
 	if id != nil {
 		pd.mu.Lock()
-		
+
 		pd.WPId = id
 
 		pd.mu.Unlock()

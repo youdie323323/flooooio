@@ -3,11 +3,12 @@ package wave
 import (
 	"math/rand/v2"
 	"sync"
+	"sync/atomic"
 
 	"github.com/chewxy/math32"
 
-	"flooooio/internal/collision"
-	"flooooio/internal/native"
+	"flooooio/internal/wave/collision"
+	"flooooio/internal/wave/florr/native"
 )
 
 type EntityId = uint32
@@ -30,11 +31,32 @@ type Entity struct {
 	Size float32
 
 	// Health is health of entity.
-	// Range will be [0, 1] float range.
+	// Range will be [0, 1] float.
 	Health float32
 
 	Mu sync.RWMutex
 }
+
+type Poisonable struct {
+	IsPoisoned atomic.Bool
+	// PoisonDPS is damage per second of poison.
+	PoisonDPS float32
+	// TotalPoison is total damage by poison.
+	TotalPoison float32
+	// StopAtPoison is poison is stopped if reached this.
+	StopAtPoison float32
+}
+
+// NewPoisonable returns basic poison information.
+func NewPoisonable() Poisonable {
+	return Poisonable{
+		PoisonDPS:    0,
+		TotalPoison:  0,
+		StopAtPoison: 0,
+	}
+}
+
+// TODO: wrap all poison damages into TakePoisonDamage
 
 // StaticEntityData represents static data of Petal.
 type StaticEntityData[T ~uint8] struct {
@@ -76,14 +98,14 @@ func NewEntity(
 	}
 }
 
-// LightningEmitter is lightning emitter (like jellyfish, lightning)
+// LightningEmitter is lightning emitter (like jellyfish, lightning).
 type LightningEmitter interface {
 	GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node
 }
 
-const Tau = math32.Pi * 2
+const Tau = 2 * math32.Pi
 
-// GetRandomSafeCoordinate generates a random safe position
+// GetRandomSafeCoordinate generates a random safe position.
 func GetRandomSafeCoordinate(mapRadius float32, safetyDistance float32, clients []*Player) (float32, float32, bool) {
 	const maxAttempts = 100
 
@@ -96,13 +118,14 @@ func GetRandomSafeCoordinate(mapRadius float32, safetyDistance float32, clients 
 
 		isSafe := true
 
-		// Don't spawn on player
-		for _, client := range clients {
-			dx := client.X - x
-			dy := client.Y - y
-			distanceToClient := math32.Hypot(dx, dy)
+		// Dont spawn on player
+		for _, c := range clients {
+			dx := c.X - x
+			dy := c.Y - y
 
-			if distanceToClient < safetyDistance+client.Size {
+			safeSafetyDistance := safetyDistance + c.Size
+
+			if (dx*dx + dy*dy) < (safeSafetyDistance * safeSafetyDistance) {
 				isSafe = false
 
 				break
@@ -117,18 +140,18 @@ func GetRandomSafeCoordinate(mapRadius float32, safetyDistance float32, clients 
 	return 0, 0, false
 }
 
-// GetRandomCoordinate generates a random position
-func GetRandomCoordinate(centerX, centerY, spawnRadius float32) (float32, float32) {
+// GetRandomCoordinate generates a random position.
+func GetRandomCoordinate(cx, cy, spawnRadius float32) (float32, float32) {
 	angle := rand.Float32() * Tau
-	distance := (0.5 + rand.Float32()*0.5) * spawnRadius
+	distance := (0.5 + 0.5*rand.Float32()) * spawnRadius
 
-	x := centerX + math32.Cos(angle)*distance
-	y := centerY + math32.Sin(angle)*distance
+	x := spawnRadius + math32.Cos(angle)*distance
+	y := spawnRadius + math32.Sin(angle)*distance
 
 	return x, y
 }
 
-// Methods that satisfy spatial hash's Node.
+// Methods that satisfy spatial hash's Node
 
 func (e *Entity) GetX() float32 {
 	return e.X
@@ -153,10 +176,10 @@ func (e *Entity) GetAngle() float32 {
 // IsDeadNode determine if Node is dead.
 func IsDeadNode(wp *WavePool, n collision.Node) bool {
 	switch e := n.(type) {
-	case *Petal:
+	case *Mob:
 		return e.WasEliminated(wp)
 
-	case *Mob:
+	case *Petal:
 		return e.WasEliminated(wp)
 
 	case *Player:

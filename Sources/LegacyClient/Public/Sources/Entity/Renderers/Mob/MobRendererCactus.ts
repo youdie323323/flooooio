@@ -125,7 +125,7 @@ export default class MobRendererCactus extends AbstractMobRenderer {
         ctx.lineJoin = "round";
 
         {
-            ctx.fillStyle = this.calculateDamageEffectColor(context, "#292929");
+            ctx.fillStyle = this.toEffectedColor(context, "#292929");
 
             /*
             for (let i = 0; i < 10; i++) {
@@ -259,10 +259,10 @@ export default class MobRendererCactus extends AbstractMobRenderer {
         {
             ctx.scale(0.8, 0.8);
 
-            ctx.fillStyle = this.calculateDamageEffectColor(context, "#32A852");
+            ctx.fillStyle = this.toEffectedColor(context, "#32A852");
             ctx.fill(cactusBody, "nonzero");
 
-            ctx.fillStyle = this.calculateDamageEffectColor(context, "#288842");
+            ctx.fillStyle = this.toEffectedColor(context, "#288842");
             ctx.fill(cactusBodyStroke, "nonzero");
         }
     }

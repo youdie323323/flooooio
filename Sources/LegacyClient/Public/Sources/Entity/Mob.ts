@@ -15,11 +15,6 @@ export default class Mob extends Entity {
      */
     public legD: Array<number> = generateDefaultStarfishLegDistance();
 
-    /**
-     * Angle index of sandstorm hexagon.
-     */
-    public sandstormAngle: number = 0;
-
     public connectedSegments: Set<Mob> = new Set();
 
     constructor(

@@ -27,8 +27,8 @@ export default class PetalRendererYinYang extends AbstractPetalRenderer {
 
             ctx.clip();
 
-            ctx.fillStyle = this.calculateDamageEffectColor(context, fillColor);
-            ctx.strokeStyle = this.calculateDamageEffectColor(context, strokeColor);
+            ctx.fillStyle = this.toEffectedColor(context, fillColor);
+            ctx.strokeStyle = this.toEffectedColor(context, strokeColor);
             ctx.fill();
             ctx.stroke();
 

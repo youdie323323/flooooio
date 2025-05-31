@@ -4,7 +4,7 @@ import (
 	"math/rand/v2"
 	"time"
 
-	"flooooio/internal/native"
+	"flooooio/internal/wave/florr/native"
 
 	"github.com/chewxy/math32"
 )

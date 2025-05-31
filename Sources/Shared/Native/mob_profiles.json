@@ -653,27 +653,51 @@
     "baseSize": 30,
     "0": {
       "health": 60,
-      "bodyDamage": 10
+      "bodyDamage": 10,
+      "extra": {
+        "poisonDPS": 15,
+        "totalPoison": 50
+      }
     },
     "1": {
       "health": 96,
-      "bodyDamage": 11
+      "bodyDamage": 11,
+      "extra": {
+        "poisonDPS": 16.5,
+        "totalPoison": 55
+      }
     },
     "2": {
       "health": 150,
-      "bodyDamage": 13
+      "bodyDamage": 13,
+      "extra": {
+        "poisonDPS": 19.5,
+        "totalPoison": 65
+      }
     },
     "3": {
       "health": 240,
-      "bodyDamage": 16
+      "bodyDamage": 16,
+      "extra": {
+        "poisonDPS": 24,
+        "totalPoison": 80
+      }
     },
     "4": {
       "health": 1500,
-      "bodyDamage": 20
+      "bodyDamage": 20,
+      "extra": {
+        "poisonDPS": 30,
+        "totalPoison": 100
+      }
     },
     "5": {
       "health": 3000,
-      "bodyDamage": 25
+      "bodyDamage": 25,
+      "extra": {
+        "poisonDPS": 37.5,
+        "totalPoison": 125
+      }
     },
     "6": {
       "health": 0,

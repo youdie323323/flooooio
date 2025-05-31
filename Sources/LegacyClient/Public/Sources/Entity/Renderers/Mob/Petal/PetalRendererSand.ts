@@ -29,8 +29,8 @@ export default class PetalRendererSand extends AbstractPetalRenderer {
         ctx.closePath();
         
         ctx.lineWidth = 3;
-        ctx.fillStyle = this.calculateDamageEffectColor(context, "#E0C85C");
-        ctx.strokeStyle = this.calculateDamageEffectColor(context, "#B5A24B");
+        ctx.fillStyle = this.toEffectedColor(context, "#E0C85C");
+        ctx.strokeStyle = this.toEffectedColor(context, "#B5A24B");
         ctx.fill();
         ctx.stroke();
     }

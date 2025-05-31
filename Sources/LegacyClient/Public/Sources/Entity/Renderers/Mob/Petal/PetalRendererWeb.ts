@@ -85,10 +85,10 @@ export default class PetalRendererWeb extends AbstractPetalRenderer {
 
         ctx.lineJoin = "round";
 
-        ctx.fillStyle = this.calculateDamageEffectColor(context, "#FFFFFF");
+        ctx.fillStyle = this.toEffectedColor(context, "#FFFFFF");
         ctx.fill(webBody, "nonzero");
 
-        ctx.fillStyle = this.calculateDamageEffectColor(context, "#CFCFCF");
+        ctx.fillStyle = this.toEffectedColor(context, "#CFCFCF");
         ctx.fill(webBodyStroke, "nonzero");
     }
 }

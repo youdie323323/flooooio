@@ -3,7 +3,7 @@ package wave
 import (
 	"slices"
 
-	"flooooio/internal/native"
+	"flooooio/internal/wave/florr/native"
 )
 
 type SpawnMobCmd struct {

@@ -4,15 +4,15 @@ import (
 	"slices"
 	"time"
 
-	"flooooio/internal/native"
+	"flooooio/internal/wave/florr/native"
 
 	"github.com/chewxy/math32"
 )
 
 const (
-	bubbleBounceForce = 25.
+	bubbleBounceForce = 6
 
-	yggdrasilPushForce = 10.
+	yggdrasilPushForce = 2.5
 )
 
 var summonTypeMapping = map[native.PetalType]map[native.Rarity]StaticMobData{
@@ -118,8 +118,8 @@ func (p *Player) PlayerPetalConsume(wp *WavePool, now time.Time) {
 							dirX := dx / distance
 							dirY := dy / distance
 
-							petal.X += dirX * yggdrasilPushForce
-							petal.Y += dirY * yggdrasilPushForce
+							petal.Velocity[0] += dirX * yggdrasilPushForce
+							petal.Velocity[1] += dirY * yggdrasilPushForce
 						}
 					}
 
@@ -128,7 +128,7 @@ func (p *Player) PlayerPetalConsume(wp *WavePool, now time.Time) {
 
 			case native.PetalTypeMysteriousStick:
 				{
-					if len(petal.SummonedPets) < 1 {
+					if 1 > len(petal.SummonedPets) {
 						smd := summonTypeMapping[petal.Type][petal.Rarity]
 
 						petal.SummonedPets = append(petal.SummonedPets, wp.GenerateMob(
@@ -215,8 +215,8 @@ func (p *Player) PlayerPetalConsume(wp *WavePool, now time.Time) {
 					// Calculate angle from player to petal
 					angle := math32.Atan2(dy, dx)
 
-					petal.Velocity[0] += 30 * math32.Cos(angle)
-					petal.Velocity[1] += 30 * math32.Sin(angle)
+					petal.Velocity[0] += 20 * math32.Cos(angle)
+					petal.Velocity[1] += 20 * math32.Sin(angle)
 				}
 			}
 

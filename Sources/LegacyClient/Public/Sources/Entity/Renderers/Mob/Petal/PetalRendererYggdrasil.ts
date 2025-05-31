@@ -356,10 +356,10 @@ export default class PetalRendererYggdrasil extends AbstractPetalRenderer {
         ctx.rotate(Math.PI);
         ctx.scale(0.0803571417927742, 0.0803571417927742);
 
-        ctx.fillStyle = this.calculateDamageEffectColor(context, "#886D35");
+        ctx.fillStyle = this.toEffectedColor(context, "#886D35");
         ctx.fill(yggdrasilBody, "evenodd");
         
-        ctx.fillStyle = this.calculateDamageEffectColor(context, "#A88642");
+        ctx.fillStyle = this.toEffectedColor(context, "#A88642");
         ctx.fill(yggdrasilBodyStroke, "evenodd");
     }
 }

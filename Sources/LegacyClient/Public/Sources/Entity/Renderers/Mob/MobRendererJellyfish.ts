@@ -17,7 +17,7 @@ export default class MobRendererJellyfish extends AbstractMobRenderer {
         const scale = entity.size / 20;
         ctx.scale(scale, scale);
 
-        ctx.strokeStyle = ctx.fillStyle = this.calculateDamageEffectColor(context, "#ffffff");
+        ctx.strokeStyle = ctx.fillStyle = this.toEffectedColor(context, "#ffffff");
 
         const oldGlobalAlpha = ctx.globalAlpha;
         ctx.globalAlpha = oldGlobalAlpha * 0.6;

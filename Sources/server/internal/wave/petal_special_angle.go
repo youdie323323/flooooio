@@ -1,8 +1,9 @@
 package wave
 
 import (
-	"flooooio/internal/native"
 	"time"
+
+	"flooooio/internal/wave/florr/native"
 
 	"github.com/chewxy/math32"
 )
@@ -22,6 +23,11 @@ func (p *Petal) PetalSpecialAngle(wp *WavePool, _ time.Time) {
 	case native.PetalTypeWing:
 		{
 			p.Angle += 5
+		}
+
+	case native.PetalTypeMagnet:
+		{
+			p.Angle += 0.6
 		}
 
 	default:

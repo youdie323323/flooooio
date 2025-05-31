@@ -34,6 +34,7 @@ import MobRendererMissileProjectile from "./Projectile/MobRendererMissileProject
 import MobRendererWebProjectile from "./Projectile/MobRendererWebProjectile";
 import PetalRendererStinger from "./Petal/PetalRendererStinger";
 import PetalRendererWing from "./Petal/PetalRendererWing";
+import PetalRendererMagnet from "./Petal/PetalRendererMagnet";
 
 const centipedeRenderer = new MobRendererCentipede();
 
@@ -81,6 +82,7 @@ const MOB_RENDERERS = {
     [PetalType.WEB]: new PetalRendererWeb,
     [PetalType.STINGER]: new PetalRendererStinger,
     [PetalType.WING]: new PetalRendererWing,
+    [PetalType.MAGNET]: new PetalRendererMagnet,
 } as const satisfies Record<MobType | PetalType, Renderer<Mob>>;
 
 export default class MobRendererDispatcher extends Renderer<Mob> {

@@ -7,6 +7,6 @@ export default class MobRendererBubble extends AbstractMobRenderer {
         // Non-recursive renderer
         // super.render(context);
 
-        this.drawBubble(context, false);
+        this.drawBubble(context, 20, false);
     }
 }

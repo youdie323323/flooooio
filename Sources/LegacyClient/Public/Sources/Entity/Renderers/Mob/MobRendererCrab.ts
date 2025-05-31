@@ -181,12 +181,12 @@ export default class MobRendererCrab extends AbstractMobRenderer {
         { // Draw body
             ctx.save();
 
-            const shellColor = this.calculateDamageEffectColor(context, "#DB6F4B");
+            const shellColor = this.toEffectedColor(context, "#DB6F4B");
 
             ctx.fillStyle = shellColor;
             ctx.fill(crabBody, "nonzero");
 
-            const strokeColor = this.calculateDamageEffectColor(context, "#B15A3D");
+            const strokeColor = this.toEffectedColor(context, "#B15A3D");
 
             ctx.fillStyle = strokeColor;
             ctx.fill(crabBodyStroke, "nonzero");

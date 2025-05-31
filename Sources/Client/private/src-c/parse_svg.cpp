@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdexcept>
 #include <typeinfo>
+#include <parse_svg.h>
 
 #include <rapidxml_ns/rapidxml_ns.hpp>
 #include <svgpp/policy/xml/rapidxml_ns.hpp>
@@ -153,9 +154,9 @@ void loadSvg(xml_element_t xml_root_element)
   document_traversal_t::load_document(xml_root_element, context);
 }
 
-extern "C" void parseSvg(const char* svgText, CanvasContext ctx) {
+extern "C" void parseSvg(const char* svgText, CanvasContext* ctx) {
   std::ios_base::Init init;
-  std::cout << ctx.id << std::endl;
+  std::cout << ctx->id << std::endl;
 
   rapidxml_ns::xml_document<> doc;
   doc.parse<0>(const_cast<char*>(svgText));

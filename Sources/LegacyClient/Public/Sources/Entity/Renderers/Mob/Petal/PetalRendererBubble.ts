@@ -7,6 +7,6 @@ export default class PetalRendererBubble extends AbstractPetalRenderer {
         // Non-recursive renderer
         // super.render(context);
 
-        this.drawBubble(context, true);
+        this.drawBubble(context, 15, true);
     }
 }

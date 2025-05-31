@@ -192,12 +192,12 @@ export default class UITitle extends AbstractUI {
 
             const waveBiome = reader.readUInt8() satisfies Biome;
 
-            if (uiCtx.previousCtx) {
-                uiCtx.previousCtx.biome = waveBiome;
+            if (uiCtx.previousContext) {
+                uiCtx.previousContext.biome = waveBiome;
             }
 
-            if (uiCtx.currentCtx) {
-                uiCtx.currentCtx.biome = waveBiome;
+            if (uiCtx.currentContext) {
+                uiCtx.currentContext.biome = waveBiome;
             }
         },
         [Clientbound.WAVE_ROOM_JOIN_FAILED]: (reader: BinaryReader): void => {

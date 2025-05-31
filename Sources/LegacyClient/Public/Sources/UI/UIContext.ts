@@ -11,12 +11,12 @@ export default class UIContext {
     private readonly transition: UISceneTransition;
     public isTransitioning: boolean;
 
-    public currentCtx: AbstractUI | null;
-    public previousCtx: AbstractUI | null;
+    public currentContext: AbstractUI | null;
+    public previousContext: AbstractUI | null;
 
     constructor(private readonly canvas: HTMLCanvasElement) {
-        this.currentCtx = new UITitle(canvas);
-        this.previousCtx = null;
+        this.currentContext = new UITitle(canvas);
+        this.previousContext = null;
 
         this.transition = new UISceneTransition(canvas);
         this.isTransitioning = false;
@@ -24,8 +24,8 @@ export default class UIContext {
 
     public cleanup(): void {
         // Cleanup ui-depending values & components
-        this.previousCtx?.destroy();
-        this.previousCtx?.cleanupComponentHierarchy();
+        this.previousContext?.destroy();
+        this.previousContext?.cleanupComponentHierarchy();
 
         // Set cursor to default
         this.canvas.style.cursor = "default";
@@ -39,17 +39,17 @@ export default class UIContext {
             return;
         }
 
-        this.previousCtx = this.currentCtx;
+        this.previousContext = this.currentContext;
 
-        this.previousCtx.onContextChange();
+        this.previousContext.onContextChange();
 
         // Cleanup listeners so cant touch before ui buttons
-        this.previousCtx?.removeEventListeners();
+        this.previousContext?.removeEventListeners();
 
         // Set cursor to default
         this.canvas.style.cursor = "default";
 
-        this.currentCtx = this.createUI(mode);
+        this.currentContext = this.createUI(mode);
 
         this.isTransitioning = true;
 
@@ -70,15 +70,15 @@ export default class UIContext {
 
     public update(): void {
         if (!this.isTransitioning) {
-            this.currentCtx?.render();
+            this.currentContext?.render();
 
             return;
         }
 
-        this.transition.draw(this.currentCtx, this.previousCtx);
+        this.transition.draw(this.currentContext, this.previousContext);
 
         const type = (
-            this.currentCtx instanceof UITitle
+            this.currentContext instanceof UITitle
                 ? "title"
                 : "game"
         ) satisfies UIType;

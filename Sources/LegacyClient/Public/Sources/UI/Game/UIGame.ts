@@ -96,7 +96,7 @@ function prepareLightningBouncePath({ points }: LightningBounce): Path2D {
                 startPoint[1] + ratio * dy + jitterY,
             );
 
-            currentDistance += Math.random() * 40 + 30;
+            currentDistance += Math.random() * 50 + 50;
         }
 
         path.lineTo(...endPoint);
@@ -165,6 +165,10 @@ export default class UIGame extends AbstractUI {
 
     public waveSelfId: number = -1;
 
+    // W,A,S,D
+    private movementKeys: [boolean, boolean, boolean, boolean] = [false, false, false, false];
+    private lastMovementKeyAngle: number = 0;
+
     override biome: Biome = Biome.GARDEN;
 
     override readonly CLIENTBOUND_HANDLERS = {
@@ -221,7 +225,8 @@ export default class UIGame extends AbstractUI {
                     const bFlags = reader.readUInt8();
 
                     const playerIsDead = Boolean(bFlags & 1),
-                        playerIsDev = Boolean(bFlags & 2);
+                        playerIsDev = Boolean(bFlags & 2),
+                        playerIsPoisoned = Boolean(bFlags & 4);
 
                     const player = this.players.get(playerId);
                     if (player) {
@@ -233,7 +238,7 @@ export default class UIGame extends AbstractUI {
                         player.nSize = playerSize;
 
                         { // Update health properties
-                            if (playerHealth < player.nHealth) {
+                            if (!player.isPoison && playerHealth < player.nHealth) {
                                 player.redHealthTimer = 1;
                                 player.hurtT = 1;
                             } else if (playerHealth > player.nHealth) {
@@ -257,6 +262,8 @@ export default class UIGame extends AbstractUI {
                         player.oSize = player.size;
 
                         player.oHealth = player.health;
+
+                        player.isPoison = playerIsPoisoned;
 
                         player.updateT = 0;
                     } else {
@@ -309,7 +316,8 @@ export default class UIGame extends AbstractUI {
 
                     const mobIsPet = Boolean(bFlags & 1),
                         mobIsFirstSegment = Boolean(bFlags & 2),
-                        mobHasConnectingSegment = Boolean(bFlags & 4);
+                        mobHasConnectingSegment = Boolean(bFlags & 4),
+                        mobIsPoisoned = Boolean(bFlags & 8);
 
                     let mobConnectingSegment: Mob = null;
 
@@ -333,7 +341,9 @@ export default class UIGame extends AbstractUI {
                         { // Update health properties
                             const parentMob = Mob.traverseSegments(mob);
 
-                            if (mobHealth < mob.nHealth) {
+                            // TODO: original game can hurtT = 1 when poisoned
+                            // But do that can affect to color always
+                            if (!mob.isPoison && mobHealth < mob.nHealth) {
                                 parentMob.redHealthTimer = 1;
                                 parentMob.hurtT = 1;
                             } else if (mobHealth > mob.nHealth) {
@@ -351,6 +361,8 @@ export default class UIGame extends AbstractUI {
                         mob.oSize = mob.size;
 
                         mob.oHealth = mob.health;
+
+                        mob.isPoison = mobIsPoisoned;
 
                         mob.updateT = 0;
                     } else {
@@ -701,6 +713,38 @@ export default class UIGame extends AbstractUI {
                     );
                 }
             });
+
+            { // Setup WASD movement listeners
+                this.on("onKeyDown", (event: KeyboardEvent) => {
+                    if (!this.isOperative) return;
+
+                    if (!SettingStorage.get("keyboard_control")) return;
+
+                    switch (event.key.toLowerCase()) {
+                        case "w": this.movementKeys[0] = true; break;
+                        case "a": this.movementKeys[1] = true; break;
+                        case "s": this.movementKeys[2] = true; break;
+                        case "d": this.movementKeys[3] = true; break;
+                    }
+
+                    this.updateKeyboardMovement();
+                });
+
+                this.on("onKeyUp", (event: KeyboardEvent) => {
+                    if (!this.isOperative) return;
+
+                    if (!SettingStorage.get("keyboard_control")) return;
+
+                    switch (event.key.toLowerCase()) {
+                        case "w": this.movementKeys[0] = false; break;
+                        case "a": this.movementKeys[1] = false; break;
+                        case "s": this.movementKeys[2] = false; break;
+                        case "d": this.movementKeys[3] = false; break;
+                    }
+
+                    this.updateKeyboardMovement();
+                });
+            }
         }
     }
 
@@ -1163,7 +1207,7 @@ export default class UIGame extends AbstractUI {
                     }
 
                     ctx.globalAlpha = bounce.t;
-                    ctx.lineWidth = bounce.t * 4;
+                    ctx.lineWidth = bounce.t * 5;
                     ctx.stroke(bounce.path);
                 }
             };
@@ -1172,9 +1216,16 @@ export default class UIGame extends AbstractUI {
 
             ctx.save();
 
-            ctx.translate(centerWidth, centerHeight);
-            ctx.scale(antennaScaleFactor, antennaScaleFactor);
-            ctx.translate(-selfPlayer.x, -selfPlayer.y);
+            const viewScale = uiScaleFactor * antennaScaleFactor;
+
+            ctx.setTransform(
+                viewScale,
+                0,
+                0,
+                viewScale,
+                centerWidth * uiScaleFactor - selfPlayer.x * viewScale,
+                centerHeight * uiScaleFactor - selfPlayer.y * viewScale,
+            );
 
             for (const entity of entitiesToDraw) {
                 renderEntity({ ctx, entity, isSpecimen: false });
@@ -1323,6 +1374,37 @@ export default class UIGame extends AbstractUI {
 
             ctx.restore();
         }
+    }
+
+    private updateKeyboardMovement() {
+        const [w, a, s, d] = this.movementKeys;
+
+        // Calculate the movement vector
+        let dx = 0;
+        let dy = 0;
+
+        if (w) dy -= 1;
+        if (s) dy += 1;
+        if (a) dx -= 1;
+        if (d) dx += 1;
+
+        // If no keys are pressed or opposing keys are pressed
+        if (dx === 0 && dy === 0) {
+            clientWebsocket.packetServerbound.sendWaveChangeMove(this.lastMovementKeyAngle, 0);
+
+            return;
+        }
+
+        // Normalize diagonal movement
+        if (dx !== 0 && dy !== 0) {
+            dx /= Math.SQRT2;
+            dy /= Math.SQRT2;
+        }
+
+        const angle = this.lastMovementKeyAngle = Math.atan2(dy, dx);
+
+        // Send movement to server
+        clientWebsocket.packetServerbound.sendWaveChangeMove(angle, 1);
     }
 
     private leaveGame() {

@@ -1,18 +1,30 @@
 package wave
 
 import (
+	"slices"
 	"time"
 
-	"flooooio/internal/native"
+	"flooooio/internal/wave/florr/native"
 
 	"github.com/chewxy/math32"
 )
 
 const movementDuration = 1. / 150.
 
+var talentDisabledMobTypes = []native.MobType{
+	native.MobTypeShell,
+	native.MobTypeBubble,
+	native.MobTypeCactus,
+	native.MobTypeSponge,
+}
+
+const (
+	specialMovementDefaultTimer         = 1
+	specialMovementCentipedeDesertTimer = 2
+)
+
 func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
-	// Dont special movement when passive
-	if native.EachMobBehaviorDefinition[m.Type][m.Rarity] == native.PassiveBehavior {
+	if slices.Contains(talentDisabledMobTypes, m.Type) {
 		return
 	}
 
@@ -26,12 +38,56 @@ func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
 		return
 	}
 
+	if m.TargetEntity == nil {
+		if m.RotationCounter >= 500 {
+			m.Angle = GetRandomAngle()
+
+			m.RotationCounter = 0
+		}
+
+		m.RotationCounter++
+
+		if m.IsSpecialMoving {
+			var timer float32
+
+			switch m.Type {
+			case native.MobTypeCentipedeDesert:
+				timer = specialMovementCentipedeDesertTimer
+
+			default:
+				timer = specialMovementDefaultTimer
+			}
+
+			if m.SpecialMovementTimer >= timer {
+				m.Magnitude = 0
+
+				m.IsSpecialMoving = false
+			} else {
+				switch m.Type {
+				case native.MobTypeCentipedeDesert:
+					m.Magnitude = SpeedOf(m.Type) * 255
+					m.Angle += math32.Sin(math32.Pi*m.SpecialMovementTimer) / 2
+
+				default:
+					m.Magnitude = math32.Sin(math32.Pi*m.SpecialMovementTimer) * (SpeedOf(m.Type) * 255)
+				}
+
+				m.SpecialMovementTimer += movementDuration
+			}
+		} else {
+			m.IsSpecialMoving = true
+			m.SpecialMovementTimer = 0
+		}
+	} else {
+		m.IsSpecialMoving = false
+	}
+
 	switch m.Type {
 	// Follows the player when the player moves away from this (pet) for a certain distance
 	// Dont follows if targetting other mob
 	case native.MobTypeBeetle:
 		{
-			if !m.IsEnemy() && m.TargetEntity == nil {
+			if m.IsAlly() && m.TargetEntity == nil {
 				dx := m.PetMaster.X - m.X
 				dy := m.PetMaster.Y - m.Y
 				distanceToParent := math32.Hypot(dx, dy)
@@ -74,33 +130,6 @@ func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
 
 				m.Angle += BeeSinusoidalWave.At(m.SineWaveIndex) * shakeMultiplier
 				m.SineWaveIndex++
-			}
-
-			if m.TargetEntity == nil {
-				if m.RotationCounter >= 500 {
-					m.Angle = GetRandomAngle()
-
-					m.RotationCounter = 0
-				}
-
-				m.RotationCounter++
-
-				if m.IsSpecialMoving {
-					if m.SpecialMovementTimer >= 1 {
-						m.Magnitude = 0
-
-						m.IsSpecialMoving = false
-					} else {
-						m.Magnitude = math32.Sin(m.SpecialMovementTimer*math32.Pi) * (SpeedOf(m.Type) * 255)
-
-						m.SpecialMovementTimer += movementDuration
-					}
-				} else {
-					m.IsSpecialMoving = true
-					m.SpecialMovementTimer = 0
-				}
-			} else {
-				m.IsSpecialMoving = false
 			}
 		}
 

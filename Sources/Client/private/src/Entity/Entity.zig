@@ -1,13 +1,15 @@
 const std = @import("std");
 const math = std.math;
+const Vector2 = @Vector(2, f32);
 
 // TODO
-var delta_time: f32 = 0.0;
+pub const delta_time: f32 = 0;
 
-pub fn Entity() type {
+pub const EntityId = i32;
+
+pub fn Entity(comptime Impl: type) type {
     return struct {
         const Self = @This();
-        const Vector2 = @Vector(2, f32);
 
         inline fn calculateAngleDistance(start_angle: f32, end_angle: f32) f32 {
             return @mod(end_angle - start_angle, math.tau) - math.pi;
@@ -21,13 +23,19 @@ pub fn Entity() type {
             return current + (target - current) * @min(1, delta_time / duration);
         }
 
-        id: u32,
+        allocator: std.mem.Allocator,
+        impl: Impl,
+
+        id: EntityId,
 
         t: f32,
         update_t: f32,
 
         hurt_t: f32,
         dead_t: f32,
+
+        is_poisoned: bool,
+        poison_t: f32,
 
         pos: Vector2,
         old_pos: Vector2,
@@ -54,10 +62,22 @@ pub fn Entity() type {
         move_counter: f32,
         hp_alpha: f32,
 
-        pub fn init(id: u32, x: f32, y: f32, angle: f32, size: f32, health: f32) Self {
+        pub fn init(
+            allocator: std.mem.Allocator,
+            impl: Impl,
+            id: EntityId,
+            x: f32,
+            y: f32,
+            angle: f32,
+            size: f32,
+            health: f32,
+        ) Self {
             const initial_pos: Vector2 = .{ x, y };
 
             return .{
+                .allocator = allocator,
+                .impl = impl,
+
                 .id = id,
 
                 .t = 0,
@@ -65,6 +85,9 @@ pub fn Entity() type {
 
                 .hurt_t = 0,
                 .dead_t = 0,
+
+                .is_poisoned = false,
+                .poison_t = 0,
 
                 .pos = initial_pos,
                 .old_pos = initial_pos,
@@ -93,16 +116,32 @@ pub fn Entity() type {
             };
         }
 
+        pub fn deinit(self: *Self) void {
+            if (@hasDecl(Impl, "deinit"))
+                self.impl.deinit(self);
+
+            self.allocator.destroy(self);
+
+            self.* = undefined;
+        }
+
         pub fn update(self: *Self) void {
-            if (self.is_dead) self.dead_t += delta_time / 200;
+            const delta_time_100 = delta_time / 100;
+            const delta_time_150 = delta_time_100 * 2 / 3;
+            const delta_time_200 = delta_time_100 * 0.5;
+
+            if (self.is_dead) self.dead_t += delta_time_150;
 
             if (self.hurt_t > 0) {
-                self.hurt_t -= delta_time / 150;
+                self.hurt_t -= delta_time_150;
 
                 if (self.hurt_t < 0) self.hurt_t = 0;
             }
 
-            self.update_t += delta_time / 100;
+            self.poison_t += @as(f32, if (self.is_poisoned) 1 else -1) * delta_time_200;
+            self.poison_t = math.clamp(self.poison_t, 0, 1);
+
+            self.update_t += delta_time_100;
             self.t = @min(1, self.update_t);
 
             const t_vector: Vector2 = @splat(self.t);
@@ -111,11 +150,13 @@ pub fn Entity() type {
             self.health = self.old_health + (self.next_health - self.old_health) * self.t;
             self.size = self.old_size + (self.next_size - self.old_size) * self.t;
 
-            const eye_time_factor = @min(1, delta_time / 100);
-            const target_eye: Vector2 = .{ @cos(self.next_angle), @sin(self.next_angle) };
-            const eye_factor: Vector2 = @splat(eye_time_factor);
+            {
+                const eye_time_factor = @min(1, delta_time_100);
+                const target_eye: Vector2 = .{ @cos(self.next_angle), @sin(self.next_angle) };
+                const eye_factor: Vector2 = @splat(eye_time_factor);
 
-            self.eye_pos += (target_eye - self.eye_pos) * eye_factor;
+                self.eye_pos += (target_eye - self.eye_pos) * eye_factor;
+            }
 
             self.angle = interpolateAngle(self.old_angle, self.next_angle, self.t);
 
@@ -123,7 +164,7 @@ pub fn Entity() type {
                 const diff_x, const diff_y = self.pos - self.next_pos;
                 const dist = math.hypot(diff_x, diff_y);
 
-                self.move_counter += dist / 50 * delta_time / 18;
+                self.move_counter += (delta_time * dist) / 900;
             }
 
             if (self.health < 1) self.hp_alpha = smoothInterpolate(self.hp_alpha, 1, 200);
@@ -135,7 +176,10 @@ pub fn Entity() type {
             }
 
             if (self.red_health_timer == 0)
-                self.red_health += (self.health - self.red_health) * @min(1, delta_time / 200);
+                self.red_health += (self.health - self.red_health) * @min(1, delta_time_200);
+
+            if (@hasDecl(Impl, "update"))
+                self.impl.update(self);
         }
     };
 }

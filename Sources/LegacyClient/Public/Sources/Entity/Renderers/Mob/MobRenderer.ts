@@ -10,19 +10,23 @@ export default abstract class AbstractMobRenderer extends Renderer<Mob> {
         // super.render(context);
     }
 
-    protected drawBubble(context: RenderingContext<Mob>, isPetal: boolean) {
+    protected drawBubble(
+        context: RenderingContext<Mob>, 
+        fraction: number,
+        isPetal: boolean,
+    ) {
         const { ctx, entity } = context;
 
         // Change angle
         ctx.rotate(entity.angle);
 
-        const scale = entity.size / 20;
+        const scale = entity.size / fraction;
         ctx.scale(scale, scale);
 
         const oldGlobalAlpha = ctx.globalAlpha;
 
         ctx.lineJoin = ctx.lineCap = "round";
-        ctx.strokeStyle = ctx.fillStyle = this.calculateDamageEffectColor(context, "#ffffff");
+        ctx.strokeStyle = ctx.fillStyle = this.toEffectedColor(context, "#ffffff");
 
         {
             ctx.beginPath();

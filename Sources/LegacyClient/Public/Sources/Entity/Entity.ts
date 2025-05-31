@@ -42,6 +42,8 @@ export default abstract class Entity {
     public redHealthTimer: number;
     public moveCounter: number;
     public hpAlpha: number;
+    public poisonT: number;
+    public isPoison: boolean;
 
     /**
      * @remarks
@@ -67,6 +69,8 @@ export default abstract class Entity {
         this.size = this.nSize = this.oSize = size;
         this.redHealth = this.health = this.nHealth = this.oHealth = health;
         this.redHealthTimer = 0;
+        this.poisonT = 0;
+        this.isPoison = false;
         this.eyeX = 1;
         this.eyeY = 0;
         this.updateT = 0;
@@ -78,29 +82,36 @@ export default abstract class Entity {
     }
 
     public update() {
+        const deltaTime100 = deltaTime / 100;
+        const deltaTime150 = deltaTime100 * 2 / 3;
+        const deltaTime200 = deltaTime100 / 2;
+
         if (this.isDead) {
-            this.deadT += deltaTime / 150;
+            this.deadT += deltaTime150;
         }
 
         if (this.hurtT > 0) {
-            this.hurtT -= deltaTime / 150;
-            
+            this.hurtT -= deltaTime150;
+
             if (this.hurtT < 0) {
                 this.hurtT = 0;
             }
         }
 
-        this.updateT += deltaTime / 100;
+        this.poisonT += (this.isPoison ? 1 : -1) * deltaTime200;
+        this.poisonT = Math.min(1, Math.max(0, this.poisonT));
+
+        this.updateT += deltaTime100;
         this.t = Math.min(1, this.updateT);
         this.x = this.ox + (this.nx - this.ox) * this.t;
         this.y = this.oy + (this.ny - this.oy) * this.t;
         this.health = this.oHealth + (this.nHealth - this.oHealth) * this.t;
         this.size = this.oSize + (this.nSize - this.oSize) * (this.t * 2);
 
-        const eyeTimeFactor = Math.min(1, deltaTime / 100);
+        const eyeTimeFactor = Math.min(1, deltaTime100);
         this.eyeX += (Math.cos(this.nAngle) - this.eyeX) * eyeTimeFactor;
         this.eyeY += (Math.sin(this.nAngle) - this.eyeY) * eyeTimeFactor;
-        
+
         this.angle = interpolateAngle(this.oAngle, this.nAngle, this.t);
 
         this.moveCounter += (Math.hypot(this.x - this.nx, this.y - this.ny) * deltaTime) / 900;
@@ -108,7 +119,7 @@ export default abstract class Entity {
 
         if (this.redHealthTimer > 0) {
             this.redHealthTimer -= deltaTime / 600;
-            
+
             if (this.redHealthTimer < 0) {
                 this.redHealthTimer = 0;
             }
@@ -119,7 +130,7 @@ export default abstract class Entity {
         }
 
         if (this.redHealthTimer === 0) {
-            this.redHealth += (this.health - this.redHealth) * Math.min(1, deltaTime / 200);
+            this.redHealth += (this.health - this.redHealth) * Math.min(1, deltaTime200);
         }
     }
 }

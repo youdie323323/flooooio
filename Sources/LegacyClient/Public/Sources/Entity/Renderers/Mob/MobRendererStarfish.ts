@@ -78,11 +78,11 @@ export default class MobRendererStarfish extends AbstractMobRenderer {
         ctx.lineCap = ctx.lineJoin = "round";
 
         ctx.lineWidth = 52;
-        ctx.strokeStyle = this.calculateDamageEffectColor(context, darkened("#d0504e", DARKENED_BASE));
+        ctx.strokeStyle = this.toEffectedColor(context, darkened("#d0504e", DARKENED_BASE));
         ctx.stroke();
 
         ctx.lineWidth = 26;
-        ctx.strokeStyle = ctx.fillStyle = this.calculateDamageEffectColor(context, "#d0504e");
+        ctx.strokeStyle = ctx.fillStyle = this.toEffectedColor(context, "#d0504e");
         ctx.fill();
         ctx.stroke();
 
@@ -115,7 +115,7 @@ export default class MobRendererStarfish extends AbstractMobRenderer {
             ctx.restore();
         }
 
-        ctx.fillStyle = this.calculateDamageEffectColor(context, "#d3756b");
+        ctx.fillStyle = this.toEffectedColor(context, "#d3756b");
         ctx.fill();
     }
 }

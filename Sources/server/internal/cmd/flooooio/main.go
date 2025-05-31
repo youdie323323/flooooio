@@ -9,9 +9,9 @@ import (
 	"slices"
 	"unsafe"
 
-	"flooooio/internal/native"
 	"flooooio/internal/network"
 	"flooooio/internal/wave"
+	"flooooio/internal/wave/florr/native"
 
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
@@ -43,35 +43,35 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Slots: wave.StaticPetalSlots{
 				Surface: []wave.StaticPetalData{
 					{
-						Type:   native.PetalTypeStinger,
+						Type:   native.PetalTypeMagnet,
 						Rarity: native.RarityUltra,
 					},
 					{
-						Type:   native.PetalTypeClaw,
+						Type:   native.PetalTypeLightning,
 						Rarity: native.RarityUltra,
 					},
 					{
-						Type:   native.PetalTypeStinger,
+						Type:   native.PetalTypeLightning,
 						Rarity: native.RarityUltra,
 					},
 					{
-						Type:   native.PetalTypeClaw,
+						Type:   native.PetalTypeLightning,
 						Rarity: native.RarityUltra,
 					},
 					{
-						Type:   native.PetalTypeStinger,
+						Type:   native.PetalTypeLightning,
 						Rarity: native.RarityUltra,
 					},
 					{
-						Type:   native.PetalTypeClaw,
+						Type:   native.PetalTypeLightning,
 						Rarity: native.RarityUltra,
 					},
 					{
-						Type:   native.PetalTypeStinger,
+						Type:   native.PetalTypeLightning,
 						Rarity: native.RarityUltra,
 					},
 					{
-						Type:   native.PetalTypeClaw,
+						Type:   native.PetalTypeLightning,
 						Rarity: native.RarityUltra,
 					},
 					{
@@ -79,37 +79,25 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 						Rarity: native.RarityUltra,
 					},
 					{
-						Type:   native.PetalTypeClaw,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeWing,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeWing,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeWing,
+						Type:   native.PetalTypeLightning,
 						Rarity: native.RarityUltra,
 					},
 				},
 				Bottom: []wave.StaticPetalData{
 					{
+						Type:   native.PetalTypeBubble,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeBubble,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeYinYang,
+						Rarity: native.RarityUltra,
+					},
+					{
 						Type:   native.PetalTypeWeb,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeMysteriousStick,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeMysteriousStick,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeMysteriousStick,
 						Rarity: native.RarityUltra,
 					},
 					{

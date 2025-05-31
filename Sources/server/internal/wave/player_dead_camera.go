@@ -1,34 +1,18 @@
 package wave
 
 import (
+	"slices"
 	"time"
 
-	"flooooio/internal/collision"
+	"flooooio/internal/wave/collision"
 )
 
+// getCameraTargets returns target to camera.
 func getCameraTargets(wp *WavePool) []collision.Node {
-	var cameraTargets []collision.Node
-
-	{ // Add camera targets
-		// Or just, all mobs
-		mobs := wp.GetMobsWithCondition(func(m *Mob) bool { return m.IsEnemy() })
-		players := wp.GetPlayersWithCondition(func(p2 *Player) bool { return !p2.IsDead })
-
-		mobsLen := len(mobs)
-		playersLen := len(players)
-
-		cameraTargets = make([]collision.Node, mobsLen+playersLen)
-
-		for i, mob := range mobs {
-			cameraTargets[i] = mob
-		}
-
-		for i, player := range players {
-			cameraTargets[mobsLen+i] = player
-		}
-	}
-
-	return cameraTargets
+	return slices.Concat(
+		collision.ToNodeSlice(wp.GetMobsWithCondition(func(m *Mob) bool { return m.IsEnemy() })),
+		collision.ToNodeSlice(wp.GetPlayersWithCondition(func(p2 *Player) bool { return !p2.IsDead })),
+	)
 }
 
 const deadCameraSwitchAfterMS = 500
@@ -38,15 +22,21 @@ func (p *Player) PlayerDeadCamera(wp *WavePool, now time.Time) {
 		return
 	}
 
-	// TODO: set now to LastDeadCameraUpdate if IsDeadNode(wp, p.DeadCameraTarget)
+	isCameraDead := IsDeadNode(wp, p.DeadCameraTarget)
 
-	isFindable := p.DeadCameraTarget == nil || IsDeadNode(wp, p.DeadCameraTarget)
+	isFindable := p.DeadCameraTarget == nil || isCameraDead
+
+	if isCameraDead && p.DeadCameraTarget != nil {
+		p.DeadCameraTarget = nil
+
+		p.LastDeadCameraUpdate = now
+
+		return
+	}
 
 	if isFindable {
 		if now.Sub(p.LastDeadCameraUpdate) >= deadCameraSwitchAfterMS*time.Millisecond {
 			p.DeadCameraTarget = FindNearestEntity(p, getCameraTargets(wp))
-
-			p.LastDeadCameraUpdate = now
 		}
 	} else {
 		p.X = p.DeadCameraTarget.GetX()

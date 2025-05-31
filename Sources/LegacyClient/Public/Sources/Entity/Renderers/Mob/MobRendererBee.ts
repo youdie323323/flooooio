@@ -19,7 +19,7 @@ export default class MobRendererBee extends AbstractMobRenderer {
         const scale = entity.size / 30;
         ctx.scale(scale, scale);
 
-        const bcolor = this.calculateDamageEffectColor(context, "#333333");
+        const bcolor = this.toEffectedColor(context, "#333333");
         const fcolor = "#ffe763" satisfies ColorCode;
         const scolor = darkened(fcolor, DARKENED_BASE);
 
@@ -28,7 +28,7 @@ export default class MobRendererBee extends AbstractMobRenderer {
 
         { // Stinger
             ctx.fillStyle = bcolor;
-            ctx.strokeStyle = this.calculateDamageEffectColor(context, darkened("#333333", DARKENED_BASE));
+            ctx.strokeStyle = this.toEffectedColor(context, darkened("#333333", DARKENED_BASE));
 
             ctx.beginPath();
 

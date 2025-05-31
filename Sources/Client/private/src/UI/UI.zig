@@ -53,7 +53,7 @@ pub fn render(self: *UI) void {
     // Render all components
     for (self.components.constSlice()) |component| {
         if (component.is_visible) {
-            self.ctx.fillColor(comptime (Color.fromCSSColorName("mintcream").lightened(0.1)));
+            self.ctx.fillStyle(comptime (Color.comptimeFromCSSColorName("mintcream").lightened(0.1)));
             self.ctx.rect(component.x, component.y, component.w, component.h);
             self.ctx.fill();
         }

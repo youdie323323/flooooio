@@ -887,5 +887,78 @@
       "petalReload": 0.13,
       "count": 1
     }
+  },
+  "34": {
+    "i18n": {
+      "name": "Magnet",
+      "description": "Fuck you."
+    },
+    "collision": {
+      "fraction": 18,
+      "radius": 40
+    },
+    "0": {
+      "damage": 5,
+      "health": 15,
+      "petalReload": 1.5,
+      "count": 1,
+      "extra": {
+        "pickupRange": 150
+      }
+    },
+    "1": {
+      "damage": 6,
+      "health": 19.5,
+      "petalReload": 1.5,
+      "count": 1,
+      "extra": {
+        "pickupRange": 195
+      }
+    },
+    "2": {
+      "damage": 7,
+      "health": 27,
+      "petalReload": 1.5,
+      "count": 1,
+      "extra": {
+        "pickupRange": 270
+      }
+    },
+    "3": {
+      "damage": 8.5,
+      "health": 36,
+      "petalReload": 1.5,
+      "count": 1,
+      "extra": {
+        "pickupRange": 360
+      }
+    },
+    "4": {
+      "damage": 10.5,
+      "health": 48,
+      "petalReload": 1.5,
+      "count": 1,
+      "extra": {
+        "pickupRange": 480
+      }
+    },
+    "5": {
+      "damage": 12.5,
+      "health": 60,
+      "petalReload": 1.5,
+      "count": 1,
+      "extra": {
+        "pickupRange": 800
+      }
+    },
+    "6": {
+      "damage": 25,
+      "health": 150,
+      "petalReload": 1.5,
+      "count": 1,
+      "extra": {
+        "pickupRange": 2500
+      }
+    }
   }
 }

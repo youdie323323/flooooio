@@ -176,7 +176,7 @@ export default class MobRendererScorpion extends AbstractMobRenderer {
                 ctx.stroke();
             }
 
-            ctx.strokeStyle = this.calculateDamageEffectColor(context, "#9E7C24");
+            ctx.strokeStyle = this.toEffectedColor(context, "#9E7C24");
 
             { // Body
                 ctx.beginPath();
@@ -189,7 +189,7 @@ export default class MobRendererScorpion extends AbstractMobRenderer {
                 
                 ctx.closePath();
 
-                ctx.fillStyle = this.calculateDamageEffectColor(context, "#C69A2D");
+                ctx.fillStyle = this.toEffectedColor(context, "#C69A2D");
                 ctx.fill();
                 ctx.stroke();
             }
@@ -219,9 +219,9 @@ export default class MobRendererScorpion extends AbstractMobRenderer {
             ctx.restore();
         }
 
-        const tailColor = this.calculateDamageEffectColor(context, "#DBAB32");
+        const tailColor = this.toEffectedColor(context, "#DBAB32");
 
-        const tailStrokeColor = this.calculateDamageEffectColor(context, "#B18B28");
+        const tailStrokeColor = this.toEffectedColor(context, "#B18B28");
 
         { // Tail
             ctx.save();

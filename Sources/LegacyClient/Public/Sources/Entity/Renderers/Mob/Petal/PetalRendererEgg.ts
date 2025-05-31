@@ -23,8 +23,8 @@ export default class PetalRendererEgg extends AbstractPetalRenderer {
         
         ctx.ellipse(0, 0, 30, 40, 0, 0, TAU);
 
-        ctx.fillStyle = this.calculateDamageEffectColor(context, "#fff0b8");
-        ctx.strokeStyle = this.calculateDamageEffectColor(context, "#cfc295");
+        ctx.fillStyle = this.toEffectedColor(context, "#fff0b8");
+        ctx.strokeStyle = this.toEffectedColor(context, "#cfc295");
         ctx.fill();
         ctx.stroke();
     }

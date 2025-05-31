@@ -4,7 +4,7 @@ import (
 	"slices"
 	"time"
 
-	"flooooio/internal/native"
+	"flooooio/internal/wave/florr/native"
 )
 
 var UsablePetalTypes = []native.PetalType{

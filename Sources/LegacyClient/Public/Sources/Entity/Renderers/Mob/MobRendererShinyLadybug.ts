@@ -89,9 +89,9 @@ export default class MobRendererShinyLadybug extends AbstractMobRenderer {
         const scale = entity.size / 30;
         ctx.scale(scale, scale);
 
-        const bodyColor = this.calculateDamageEffectColor(context, "#EBEB34");
-        const bodyStrokeColor = this.calculateDamageEffectColor(context, "#0E0E0E");
-        const bodyStrokeStrokeColor = this.calculateDamageEffectColor(context, "#111111");
+        const bodyColor = this.toEffectedColor(context, "#EBEB34");
+        const bodyStrokeColor = this.toEffectedColor(context, "#0E0E0E");
+        const bodyStrokeStrokeColor = this.toEffectedColor(context, "#111111");
 
         ctx.lineJoin = "round";
 
@@ -139,7 +139,7 @@ export default class MobRendererShinyLadybug extends AbstractMobRenderer {
             ctx.restore();
         }
 
-        ctx.fillStyle = this.calculateDamageEffectColor(context, "#BEBE2A");
+        ctx.fillStyle = this.toEffectedColor(context, "#BEBE2A");
         ctx.fill(shinyLadybugBodyStroke, "nonzero");
     }
 }

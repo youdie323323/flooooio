@@ -25,8 +25,8 @@ export default class PlayerRendererNormal extends AbstractPlayerRenderer {
             ctx.arc(0, 0, 25, 0, TAU);
 
             ctx.lineWidth = 2.75;
-            ctx.fillStyle = this.calculateDamageEffectColor(context, "#ffe763");
-            ctx.strokeStyle = this.calculateDamageEffectColor(context, "#cfbb50");
+            ctx.fillStyle = this.toEffectedColor(context, "#ffe763");
+            ctx.strokeStyle = this.toEffectedColor(context, "#cfbb50");
             ctx.fill();
             ctx.stroke();
         }

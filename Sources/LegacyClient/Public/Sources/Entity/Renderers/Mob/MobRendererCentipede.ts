@@ -24,7 +24,7 @@ export default class MobRendererCentipede extends AbstractMobRenderer {
 
         // Antennas
         if (entity.isFirstSegment) {
-            const acolor = this.calculateDamageEffectColor(context, "#333333");
+            const acolor = this.toEffectedColor(context, "#333333");
 
             ctx.fillStyle = ctx.strokeStyle = acolor;
             ctx.lineWidth = 3;
@@ -57,7 +57,7 @@ export default class MobRendererCentipede extends AbstractMobRenderer {
         ctx.arc(0, 33, 18, 0, TAU);
         ctx.arc(0, -33, 18, 0, TAU);
 
-        ctx.fillStyle = this.calculateDamageEffectColor(context, "#333333");
+        ctx.fillStyle = this.toEffectedColor(context, "#333333");
 
         ctx.fill();
 
@@ -87,11 +87,11 @@ export default class MobRendererCentipede extends AbstractMobRenderer {
 
         ctx.arc(0, 0, 40, 0, TAU);
 
-        ctx.fillStyle = this.calculateDamageEffectColor(context, bodyColor);
+        ctx.fillStyle = this.toEffectedColor(context, bodyColor);
         ctx.fill();
 
         ctx.lineWidth = 8;
-        ctx.strokeStyle = this.calculateDamageEffectColor(context, darkened(bodyColor, DARKENED_BASE));
+        ctx.strokeStyle = this.toEffectedColor(context, darkened(bodyColor, DARKENED_BASE));
         ctx.stroke();
     }
 }

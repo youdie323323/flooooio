@@ -134,7 +134,7 @@ export default class MobRendererHornet extends AbstractMobRenderer {
 
         ctx.lineWidth = 5;
 
-        const missileColor = this.calculateDamageEffectColor(context, "#333333");
+        const missileColor = this.toEffectedColor(context, "#333333");
 
         { // Draw missile
             ctx.save();
@@ -152,7 +152,7 @@ export default class MobRendererHornet extends AbstractMobRenderer {
         {
             ctx.save();
 
-            ctx.fillStyle = this.calculateDamageEffectColor(context, "#FFD363");
+            ctx.fillStyle = this.toEffectedColor(context, "#FFD363");
             ctx.fill(hornetBody, "nonzero");
 
             ctx.fillStyle = missileColor;
@@ -160,7 +160,7 @@ export default class MobRendererHornet extends AbstractMobRenderer {
             ctx.fill(hornetPattern2, "evenodd");
             ctx.fill(hornetPattern3, "evenodd");
 
-            ctx.fillStyle = this.calculateDamageEffectColor(context, "#D3AD46");
+            ctx.fillStyle = this.toEffectedColor(context, "#D3AD46");
             ctx.fill(hornetBodyStroke, "nonzero");
 
             ctx.restore();

@@ -71,11 +71,11 @@ export default class MobRendererBeetle extends AbstractMobRenderer {
                     ? "#ffe667"
                     : "#8f5db0";
 
-            ctx.fillStyle = this.calculateDamageEffectColor(context, skinColor);
+            ctx.fillStyle = this.toEffectedColor(context, skinColor);
             ctx.fill(beetleBodyPath);
 
             // Arc points are same color with this
-            ctx.fillStyle = ctx.strokeStyle = this.calculateDamageEffectColor(context, darkened(skinColor, DARKENED_BASE));
+            ctx.fillStyle = ctx.strokeStyle = this.toEffectedColor(context, darkened(skinColor, DARKENED_BASE));
             ctx.stroke(beetleBodyPath);
         }
 

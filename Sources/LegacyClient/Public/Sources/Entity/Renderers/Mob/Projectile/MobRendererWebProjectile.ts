@@ -715,7 +715,7 @@ const webProjectile = (function () {
     return path;
 })();
 
-// Radius
+// Radius * fraction
 const BASE_SIZE = 13 * 10;
 const RESOLUTION_MULTIPLIER = 3;
 const WEB_PROJECTILE_CANVAS_SIZE = BASE_SIZE * RESOLUTION_MULTIPLIER;
@@ -759,7 +759,9 @@ export default class MobRendererWebProjectile extends AbstractMobRenderer {
         ctx.globalAlpha = 0.4 * ctx.globalAlpha;
 
         ctx.drawImage(
-            entity.isPet ? MobRendererWebProjectile.pet : MobRendererWebProjectile.normal,
+            entity.isPet
+                ? MobRendererWebProjectile.pet
+                : MobRendererWebProjectile.normal,
             -BASE_SIZE / 2,
             -BASE_SIZE / 2,
             BASE_SIZE,

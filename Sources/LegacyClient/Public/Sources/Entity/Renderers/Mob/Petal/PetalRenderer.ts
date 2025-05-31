@@ -32,8 +32,8 @@ export default abstract class AbstractPetalRenderer extends AbstractMobRenderer 
 
         ctx.arc(0, 0, 15, 0, TAU);
 
-        ctx.fillStyle = this.calculateDamageEffectColor(context, fillColor);
-        ctx.strokeStyle = this.calculateDamageEffectColor(context, strokeColor);
+        ctx.fillStyle = this.toEffectedColor(context, fillColor);
+        ctx.strokeStyle = this.toEffectedColor(context, strokeColor);
         ctx.fill();
         ctx.stroke();
     }

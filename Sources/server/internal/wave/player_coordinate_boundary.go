@@ -6,7 +6,7 @@ import (
 	"github.com/chewxy/math32"
 )
 
-const bounaryKnockback = 3
+const bounaryKnockback = 5
 
 func (p *Player) PlayerCoordinateBoundary(wp *WavePool, _ time.Time) {
 	// Dont if uncollidable

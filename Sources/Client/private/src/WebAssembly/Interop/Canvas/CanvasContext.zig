@@ -1,5 +1,5 @@
-///! This module proivded minimal canvas operations for wasm.
-///! Im not going to use C string here for performance reason.
+//! This module proivded minimal canvas operations for wasm.
+//! Im not going to use C string here for performance reason.
 const std = @import("std");
 const Path2D = @import("Path2D.zig");
 const Color = @import("./Color.zig");
@@ -90,14 +90,14 @@ pub inline fn strokeRect(self: CanvasContext, w: f32, h: f32) void {
     @"20"(self.id, w, h);
 }
 
-pub inline fn fillColor(self: CanvasContext, color: Color) void {
-    const r, const g, const b = color.rgb;
+pub inline fn fillStyle(self: CanvasContext, color: Color) void {
+    const r, const g, const b = color.internal_rgb;
 
     @"21"(self.id, r, g, b);
 }
 
-pub inline fn strokeColor(self: CanvasContext, color: Color) void {
-    const r, const g, const b = color.rgb;
+pub inline fn strokeStyle(self: CanvasContext, color: Color) void {
+    const r, const g, const b = color.internal_rgb;
 
     @"22"(self.id, r, g, b);
 }

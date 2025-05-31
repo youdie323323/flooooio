@@ -4,12 +4,12 @@ import (
 	"cmp"
 	"time"
 
-	"flooooio/internal/collision"
-	"flooooio/internal/native"
+	"flooooio/internal/wave/collision"
+	"flooooio/internal/wave/florr/native"
 )
 
 const (
-	mobToMobPushMultiplier = 0.5
+	mobToMobKnockbackMultiplier = 0.5
 
 	maxMobToPlayerVelocity = 30.0
 
@@ -35,9 +35,12 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 	// Turn back to original multiplier
 	m.MagnitudeMultiplier = 1
 
-	profile0 := native.MobProfiles[m.Type]
+	mType := m.Type
 
-	collision0 := profile0.Collision
+	mProfile := native.MobProfiles[mType]
+	mStat := mProfile.StatFromRarity(m.Rarity)
+
+	mCollision := mProfile.Collision
 
 	mToDamage := m.GetMobToDamage(wp)
 
@@ -45,7 +48,7 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 	// NOTE: yea because mMaxHealth is used as
 	// mMobToDamage.Health -= somedamage / mMaxHealth
 	mMaxHealth := mToDamage.GetMaxHealth()
-	mDamage := profile0.StatFromRarity(m.Rarity).GetDamage()
+	mDamage := mStat.GetDamage()
 
 	mTraversed := TraverseMobSegments(wp, m)
 
@@ -57,13 +60,13 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 	mIsEnemy := m.IsEnemy()
 	mIsNotEnemy := !mIsEnemy
 
-	mIsWeb := m.Type == native.MobTypeWebProjectile
+	mIsWeb := mType == native.MobTypeWebProjectile
 
 	c0mob.X = m.X
 	c0mob.Y = m.Y
 	c0mob.R = m.CalculateRadius()
 
-	searchRadius := CalculateSearchRadius(collision0, m.Size)
+	searchRadius := CalculateSearchRadius(mCollision, m.Size)
 
 	nearby := wp.SpatialHash.Search(m.X, m.Y, searchRadius)
 
@@ -78,6 +81,12 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 
 				// Web only activated by m
 				if nearEntity.Type == native.MobTypeWebProjectile {
+					return true
+				}
+
+				// This is most simple lag mitigation but this constrain the all MagnitudeMultiplier is unique
+				// Avoid redundant calculation if mob is already slowed this frame
+				if mIsWeb && nearEntity.MagnitudeMultiplier == webSlowPercent {
 					return true
 				}
 
@@ -128,11 +137,11 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 						return true
 					}
 
-					m.X -= px * mobToMobPushMultiplier
-					m.Y -= py * mobToMobPushMultiplier
+					m.X -= px * mobToMobKnockbackMultiplier
+					m.Y -= py * mobToMobKnockbackMultiplier
 
-					nearEntity.X += px * mobToMobPushMultiplier
-					nearEntity.Y += py * mobToMobPushMultiplier
+					nearEntity.X += px * mobToMobKnockbackMultiplier
+					nearEntity.Y += py * mobToMobKnockbackMultiplier
 
 					// Mob doesnt damaged to mob
 					if mIsEnemy && nearEntityIsEnemy {
@@ -160,7 +169,7 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 							// So maybe its possible to do multiple hit once one frame
 							// To avoid this we need to return sufficient amount collision in ComputeCirclePush
 
-							if !nearEntity.IsEnemy() {
+							if nearEntity.IsAlly() {
 								mTraversed.LastAttackedEntity = nearEntity.PetMaster
 							}
 						}
@@ -236,6 +245,11 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 					return true
 				}
 
+				// Avoid redundant calculation if mob is already slowed this frame
+				if mIsWeb && nearEntity.MagnitudeMultiplier == webSlowPercent {
+					return true
+				}
+
 				// Dont collide to dead/uncollidable player
 				if nearEntity.IsDead || !nearEntity.IsCollidable() {
 					return true
@@ -266,6 +280,11 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 
 						mToDamage.Health -= nearEntity.BodyDamage / mMaxHealth
 						nearEntity.Health -= mDamage / nearEntityMaxHealth
+
+						switch mType {
+						case native.MobTypeScorpion:
+							scropionPoisonPlayer(mStat, nearEntity)
+						}
 
 						{ // Set LastAttackedEntity
 							mTraversed.LastAttackedEntity = nearEntity
@@ -300,7 +319,7 @@ func fangDoLifesteal(fang *Petal, stat native.PetalStat, damage float32) {
 	master.Health = min(1, master.Health+(healAmount/masterMaxHP))
 }
 
-const clawExtraDamagableHPPercent = 80. / 100.
+const clawExtraDamagableHPPercent = (100. - 20.) / 100.
 
 func clawTakeExtraDamage(claw *Petal, stat native.PetalStat, hitMob *Mob) {
 	if claw.Master == nil {
@@ -324,4 +343,24 @@ func clawTakeExtraDamage(claw *Petal, stat native.PetalStat, hitMob *Mob) {
 	maxHealth := hitMob.GetMaxHealth()
 
 	hitMob.Health -= min(hitMob.Health*(percentDamage/100), limit/maxHealth)
+}
+
+func scropionPoisonPlayer(scorpionStat native.MobStat, target *Player) {
+	poisonDPS, ok := scorpionStat.Extra["poisonDPS"]
+	if !ok {
+		return
+	}
+
+	totalPoison, ok := scorpionStat.Extra["totalPoison"]
+	if !ok {
+		return
+	}
+
+	if poisonDPS > target.PoisonDPS {
+		target.PoisonDPS = poisonDPS
+		target.StopAtPoison = totalPoison
+	}
+
+	target.IsPoisoned.Store(true)
+	target.TotalPoison = 0
 }

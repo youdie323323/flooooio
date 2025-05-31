@@ -40,16 +40,11 @@ func ResetBindings(wp *WavePool, p *Player) {
 		}
 
 		for _, petal := range petals {
-			if !petal.WasEliminated(wp) {
-				petal.SafeForceEliminate(wp)
+			if petal == nil {
+				continue
 			}
-		}
-	}
-
-	// Remove all pets
-	for _, pet := range wp.GetMobsWithCondition(func(m *Mob) bool { return m.PetMaster == p }) {
-		if pet != nil {
-			pet.SafeForceEliminate(wp)
+			
+			petal.CompletelyRemove(wp)
 		}
 	}
 
@@ -68,6 +63,8 @@ func (p *Player) PlayerElimination(wp *WavePool, now time.Time) {
 		p.Magnitude = 0
 
 		p.LastDeadCameraUpdate = now
+
+		p.IsPoisoned.Store(false)
 
 		ResetBindings(wp, p)
 	}
