@@ -53,6 +53,14 @@ pub const PetalType = enum(u8) {
 pub const EntityType = union(enum) {
     mob: MobType,
     petal: PetalType,
+
+    /// Returns direct entity type within this type.
+    pub fn get(self: EntityType) u8 {
+        switch (self) {
+           .mob => |m| return @intFromEnum(m),
+           .petal => |p| return @intFromEnum(p),
+        }
+    }
 };
 
 pub const petal_types = [_]PetalType{

@@ -5,42 +5,42 @@ const MoodBitSet = @import("./PlayerMood.zig").MoodBitSet;
 const MoodFlags = @import("./PlayerMood.zig").MoodFlags;
 const decodeMood = @import("./PlayerMood.zig").decodeMood;
 
-var delta_time = @import("./Entity.zig").delta_time;
+const PlayerImpl = @This();
 
-pub const PlayerImpl = struct {
-    mood: MoodBitSet = MoodBitSet.initEmpty(),
+pub const Super = Entity(PlayerImpl);
 
-    angry_t: f32 = 0,
-    sad_t: f32 = 0,
+pub const Renderer = @import("./Renderers/PlayerRenderingDispatcher.zig").PlayerRenderingDispatcher;
 
-    /// Whether this player is already eliminated from server yet.
-    was_eliminated: bool = false,
+mood: MoodBitSet = MoodBitSet.initEmpty(),
 
-    /// Whether this player is dev flower.
-    is_developer: bool = false,
+angry_t: f32 = 0,
+sad_t: f32 = 0,
 
-    pub fn init(_: std.mem.Allocator) PlayerImpl {
-        return .{};
-    }
+/// Whether this player is already eliminated from server yet.
+was_eliminated: bool = false,
 
-    pub fn update(self: *PlayerImpl, entity: anytype) void {
-        if (entity.is_dead) {
-            self.sad_t = 1;
-            self.angry_t = 0;
-        } else {
-            const mood_mouth_speed = delta_time / 100;
+/// Whether this player is dev flower.
+is_developer: bool = false,
 
-            var is_angry, var is_sad = decodeMood(self.mood);
+pub fn init(_: std.mem.Allocator) PlayerImpl {
+    return .{};
+}
 
-            if (entity.is_poisoned) {
-                is_angry = false;
-                is_sad = false;
-            }
+pub fn update(self: *PlayerImpl, delta_time: f32, entity: *Super) void {
+    if (entity.is_dead) {
+        self.sad_t = 1;
+        self.angry_t = 0;
+    } else {
+        const mood_mouth_speed = delta_time / 100;
 
-            self.angry_t = math.clamp(self.angry_t + (if (is_angry) mood_mouth_speed else -mood_mouth_speed), 0, 1);
-            self.sad_t = math.clamp(self.sad_t + (if (!is_angry and is_sad) mood_mouth_speed else -mood_mouth_speed), 0, 1);
+        var is_angry, var is_sad = decodeMood(self.mood);
+
+        if (entity.is_poisoned) {
+            is_angry = false;
+            is_sad = false;
         }
-    }
-};
 
-pub const Player = Entity(PlayerImpl);
+        self.angry_t = math.clamp(self.angry_t + (if (is_angry) mood_mouth_speed else -mood_mouth_speed), 0, 1);
+        self.sad_t = math.clamp(self.sad_t + (if (!is_angry and is_sad) mood_mouth_speed else -mood_mouth_speed), 0, 1);
+    }
+}

@@ -35,8 +35,6 @@ func (sm *SpawnMobCmd) Run(ctx *Context) error {
 				9,
 
 				petMaster,
-
-				nil,
 			)
 		}
 	} else {
@@ -53,8 +51,6 @@ func (sm *SpawnMobCmd) Run(ctx *Context) error {
 
 				nil,
 				false,
-
-				nil,
 			)
 		}
 	}

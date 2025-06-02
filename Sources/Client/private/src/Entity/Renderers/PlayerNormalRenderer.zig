@@ -1,0 +1,140 @@
+const std = @import("std");
+const math = std.math;
+
+const Renderer = @import("../Renderers/Renderer.zig").Renderer;
+const RenderingContext = @import("../Renderers/Renderer.zig").RenderingContext;
+const PlayerSuper = @import("../Player.zig").Super;
+
+const Color = @import("../../WebAssembly/Interop/Canvas/Color.zig");
+
+const dead_eye_length = 4;
+
+pub fn drawDeadEyes(
+    rctx: RenderingContext(PlayerSuper),
+    comptime eye_x: f32,
+    comptime eye_y: f32,
+) void {
+    const ctx = rctx.ctx;
+
+    ctx.beginPath();
+
+    ctx.moveTo(eye_x - dead_eye_length, eye_y - dead_eye_length);
+    ctx.moveTo(eye_x + dead_eye_length, eye_y + dead_eye_length);
+    ctx.moveTo(eye_x + dead_eye_length, eye_y - dead_eye_length);
+    ctx.moveTo(eye_x - dead_eye_length, eye_y + dead_eye_length);
+
+    ctx.@"lineCap = 'round'"();
+
+    ctx.setLineWidth(3);
+    ctx.strokeColor(comptime Color.comptimeFromHexColorCode("#000000"));
+    ctx.stroke();
+}
+
+fn drawEyeShape(
+    rctx: RenderingContext(PlayerSuper),
+    comptime center_x: f32,
+    comptime center_y: f32,
+    comptime width_radius: f32,
+    comptime height_radius: f32,
+    anger_offset: f32,
+    comptime flag: bool,
+) void {
+    const ctx = rctx.ctx;
+
+    const flag_u1: u1 = comptime @intFromBool(flag);
+
+    const flag_f32: f32 = comptime @floatFromInt(flag_u1);
+    const flipped_flag: f32 = comptime @floatFromInt(flag_u1 ^ 1);
+
+    ctx.moveTo(center_x - width_radius, center_y - height_radius + flag_f32 * anger_offset);
+    ctx.lineTo(center_x + width_radius, center_y - height_radius + flipped_flag * anger_offset + flag_f32);
+    ctx.lineTo(center_x + width_radius, center_y + height_radius);
+    ctx.lineTo(center_x - width_radius, center_y + height_radius);
+    ctx.lineTo(center_x - width_radius, center_y - height_radius);
+}
+
+fn drawEyeOutline(
+    rctx: RenderingContext(PlayerSuper),
+    comptime offset: f32,
+) void {
+    const ctx = rctx.ctx;
+
+    ctx.beginPath();
+
+    ctx.ellipse(7, -5, offset + 2.4, offset + 5.6, 0, 0, math.tau, false);
+    ctx.moveTo(-7, -5);
+    ctx.ellipse(-7, -5, offset + 2.4, offset + 5.6, 0, 0, math.tau, false);
+
+    ctx.fillColor(comptime Color.comptimeFromHexColorCode("#000000"));
+    ctx.fill();
+}
+
+fn render(rctx: RenderingContext(PlayerSuper)) void {
+    const ctx = rctx.ctx;
+    const entity = rctx.entity;
+    const player = entity.impl;
+
+    ctx.@"lineCap = 'round'"();
+
+    { // Body
+        ctx.beginPath();
+
+        ctx.arc(0, 0, 25, 0, math.tau, false);
+
+        ctx.setLineWidth(2.75);
+        ctx.fillColor(PlayerNormalRenderer.blendStatusEffects(rctx, comptime Color.comptimeFromHexColorCode("#ffe763")));
+        ctx.strokeColor(PlayerNormalRenderer.blendStatusEffects(rctx, comptime Color.comptimeFromHexColorCode("#cfbb50")));
+        ctx.fill();
+        ctx.stroke();
+    }
+
+    if (entity.is_dead) {
+        drawDeadEyes(rctx, 7, -5);
+        drawDeadEyes(rctx, -7, -5);
+    } else {
+        const anger_offset = player.angry_t * 6;
+
+        ctx.save();
+        defer ctx.restore();
+
+        drawEyeShape(rctx, 7, -5, 6, 7.3, anger_offset, true);
+        drawEyeShape(rctx, 7, -5, 6, 7.3, anger_offset, false);
+
+        ctx.clip();
+
+        drawEyeOutline(rctx, 0.9);
+        drawEyeOutline(rctx, 0);
+
+        ctx.clip();
+
+        { // Draw pupil
+            const eye_x, const eye_y = entity.eye_pos;
+
+            ctx.beginPath();
+
+            ctx.arc(7 + eye_x * 2, -5 + eye_y * 3.5, 3.1, 0, math.tau, false);
+            ctx.moveTo(-7, -5);
+            ctx.arc(-7 + eye_x * 2, -5 + eye_y * 3.5, 3.1, 0, math.tau, false);
+
+            ctx.fillColor(comptime Color.comptimeFromHexColorCode("#eeeeee"));
+            ctx.fill();
+        }
+    }
+
+    {
+        const vertic_rise = 5.5 - 10.5 * player.angry_t - 9 * player.sad_t;
+
+        ctx.beginPath();
+
+        ctx.translate(0, 9.7);
+
+        ctx.moveTo(-6.1, 0);
+        ctx.quadraticCurveTo(0, vertic_rise, 6.1, 0);
+
+        ctx.setLineWidth(1.5);
+        ctx.strokeColor(comptime Color.comptimeFromHexColorCode("#000000"));
+        ctx.stroke();
+    }
+}
+
+pub const PlayerNormalRenderer = Renderer(PlayerSuper, false, render, null);

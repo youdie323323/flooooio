@@ -1,5 +1,5 @@
 import { MoodFlags } from "../../Native/Entity/Player/PlayerMood";
-import { WaveRoomPlayerReadyState } from "../../../../Private/Sources/Wave/WaveRoom";
+import { WaveRoomPlayerReadyState } from "../../../../private/Sources/Wave/WaveRoom";
 import Player from "../../Entity/Player";
 import { renderEntity } from "../../Entity/Renderers/RendererRenderingLink";
 import { DARKENED_BASE } from "../../Utils/Color";

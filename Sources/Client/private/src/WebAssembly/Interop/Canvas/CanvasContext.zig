@@ -1,5 +1,6 @@
 //! This module proivded minimal canvas operations for wasm.
 //! Im not going to use C string here for performance reason.
+//! Some method like @"textAlign = 'center'" is only for when value is statically determined.
 const std = @import("std");
 const Path2D = @import("Path2D.zig");
 const Color = @import("./Color.zig");
@@ -90,14 +91,14 @@ pub inline fn strokeRect(self: CanvasContext, w: f32, h: f32) void {
     @"20"(self.id, w, h);
 }
 
-pub inline fn fillStyle(self: CanvasContext, color: Color) void {
-    const r, const g, const b = color.internal_rgb;
+pub inline fn fillColor(self: CanvasContext, color: Color) void {
+    const r, const g, const b = color.rgb;
 
     @"21"(self.id, r, g, b);
 }
 
-pub inline fn strokeStyle(self: CanvasContext, color: Color) void {
-    const r, const g, const b = color.internal_rgb;
+pub inline fn strokeColor(self: CanvasContext, color: Color) void {
+    const r, const g, const b = color.rgb;
 
     @"22"(self.id, r, g, b);
 }
@@ -134,11 +135,11 @@ pub inline fn bezierCurveTo(self: CanvasContext, cp1x: f32, cp1y: f32, cp2x: f32
     @"30"(self.id, cp1x, cp1y, cp2x, cp2y, x, y);
 }
 
-pub inline fn arc(self: CanvasContext, x: f32, y: f32, radius: f32, start_angle: f32, end_angle: f32, counterclockwise: bool) void {
+pub inline fn arc(self: CanvasContext, x: f32, y: f32, radius: f32, start_angle: f32, end_angle: f32, comptime counterclockwise: bool) void {
     @"31"(self.id, x, y, radius, start_angle, end_angle, comptime @intFromBool(counterclockwise));
 }
 
-pub inline fn ellipse(self: CanvasContext, x: f32, y: f32, radius_x: f32, radius_y: f32, rotation: f32, start_angle: f32, end_angle: f32, counterclockwise: bool) void {
+pub inline fn ellipse(self: CanvasContext, x: f32, y: f32, radius_x: f32, radius_y: f32, rotation: f32, start_angle: f32, end_angle: f32, comptime counterclockwise: bool) void {
     @"32"(self.id, x, y, radius_x, radius_y, rotation, start_angle, end_angle, comptime @intFromBool(counterclockwise));
 }
 
@@ -158,6 +159,10 @@ pub inline fn copyCanvasWithScale(self: CanvasContext, src_context: CanvasContex
     @"36"(self.id, src_context.id, dx, dy, dw, dh);
 }
 
+pub inline fn calculateStrokeWidth(w: f32) f32 {
+    return w / 8.333333830038736;
+}
+
 pub inline fn fillText(self: CanvasContext, text: []const u8, x: f32, y: f32) void {
     @"37"(self.id, text.ptr, text.len, x, y);
 }
@@ -166,11 +171,19 @@ pub inline fn strokeText(self: CanvasContext, text: []const u8, x: f32, y: f32) 
     @"38"(self.id, text.ptr, text.len, x, y);
 }
 
-pub inline fn font(self: CanvasContext, pixel: u16) void {
+pub const FontPixel = f32;
+
+pub inline fn setUbuntuFont(self: CanvasContext, pixel: FontPixel) void {
     @"39"(self.id, pixel);
 }
 
-pub inline fn setCenterToTextAlign(self: CanvasContext) void {
+pub inline fn prepareFontProperties(self: CanvasContext, pixel: FontPixel) void {
+    self.strokeColor(comptime Color.comptimeFromHexColorCode("#000000"));
+    self.setUbuntuFont(pixel);
+    self.setLineWidth(calculateStrokeWidth(pixel));
+}
+
+pub inline fn @"textAlign = 'center'"(self: CanvasContext) void {
     @"40"(self.id);
 }
 
@@ -178,23 +191,23 @@ pub inline fn setTextAlign(self: CanvasContext, comptime @"align": []const u8) v
     @"41"(self.id, @"align".ptr, @"align".len);
 }
 
-pub inline fn setButtToLineCap(self: CanvasContext) void {
+pub inline fn @"lineCap = 'butt'"(self: CanvasContext) void {
     @"42"(self.id);
 }
 
-pub inline fn setRoundToLineCap(self: CanvasContext) void {
+pub inline fn @"lineCap = 'round'"(self: CanvasContext) void {
     @"43"(self.id);
 }
 
-pub inline fn setSquareToLineCap(self: CanvasContext) void {
+pub inline fn @"lineCap = 'square'"(self: CanvasContext) void {
     @"44"(self.id);
 }
 
-pub inline fn setRoundToLineJoin(self: CanvasContext) void {
+pub inline fn @"lineJoin = 'round'"(self: CanvasContext) void {
     @"45"(self.id);
 }
 
-pub inline fn setMiterToLineJoin(self: CanvasContext) void {
+pub inline fn @"lineJoin = 'miter'"(self: CanvasContext) void {
     @"46"(self.id);
 }
 
@@ -202,7 +215,7 @@ pub inline fn setMiterLimit(self: CanvasContext, miter_limit: u16) void {
     @"47"(self.id, miter_limit);
 }
 
-pub inline fn setRealLineToLineDash(self: CanvasContext) void {
+pub inline fn @"setLineDash([])"(self: CanvasContext) void {
     @"48"(self.id);
 }
 
@@ -210,23 +223,23 @@ pub inline fn setLineDashOffset(self: CanvasContext, line_dash_offset: u16) void
     @"49"(self.id, line_dash_offset);
 }
 
-pub inline fn setSourceOverToGlobalCompositeOperation(self: CanvasContext) void {
+pub inline fn @"globalCompositeOperation = 'source-over'"(self: CanvasContext) void {
     @"50"(self.id);
 }
 
-pub inline fn setDestinationInToGlobalCompositeOperation(self: CanvasContext) void {
+pub inline fn @"globalCompositeOperation = 'destination'"(self: CanvasContext) void {
     @"51"(self.id);
 }
 
-pub inline fn setCopyToGlobalCompositeOperation(self: CanvasContext) void {
+pub inline fn @"globalCompositeOperation = 'copy'"(self: CanvasContext) void {
     @"52"(self.id);
 }
 
-pub inline fn setLighterToGlobalCompositeOperation(self: CanvasContext) void {
+pub inline fn @"globalCompositeOperation = 'lighter'"(self: CanvasContext) void {
     @"53"(self.id);
 }
 
-pub inline fn setMultiplyToGlobalCompositeOperation(self: CanvasContext) void {
+pub inline fn @"globalCompositeOperation = 'multiply'"(self: CanvasContext) void {
     @"54"(self.id);
 }
 
@@ -251,113 +264,113 @@ pub inline fn getSize(self: CanvasContext) @Vector(2, u16) {
 extern "0" fn @"0"(width: f32, height: f32, is_discardable: u8) Id;
 /// Get context by element id.
 extern "0" fn @"1"(ptr: mem.MemoryPointer, alpha: u8) Id;
-/// Draw svg on context.
+/// Draw svg.
 extern "0" fn @"2"(id: Id, ptr: [*]const u8, len: u32) void;
 /// Destroys the context.
 extern "0" fn @"3"(id: Id) void;
-/// Performs save on context.
+/// Performs save.
 extern "0" fn @"4"(id: Id) void;
-/// Performs restore on context.
+/// Performs restore.
 extern "0" fn @"5"(id: Id) void;
 /// Resets context transform.
 extern "0" fn @"6"(id: Id) void;
 /// Sets context transform.
 extern "0" fn @"7"(id: Id, a: f32, b: f32, c: f32, d: f32, e: f32, f: f32) void;
-/// Performs fill on context.
+/// Performs fill.
 extern "0" fn @"8"(id: Id) void;
-/// Performs path fill on context.
+/// Performs path fill.
 extern "0" fn @"9"(id: Id, path_id: Path2D.PathId, is_non_zero: u8) void;
-/// Performs stroke on context.
+/// Performs stroke.
 extern "0" fn @"10"(id: Id) void;
-/// Performs path stroke on context.
+/// Performs path stroke.
 extern "0" fn @"11"(id: Id, path_id: Path2D.PathId) void;
-/// Performs clip on context.
+/// Performs clip.
 extern "0" fn @"12"(id: Id) void;
-/// Performs path clip on context.
+/// Performs path clip.
 extern "0" fn @"13"(id: Id, path_id: Path2D.PathId) void;
-/// Performs beginPath on context.
+/// Performs beginPath.
 extern "0" fn @"14"(id: Id) void;
-/// Performs closePath on context.
+/// Performs closePath.
 extern "0" fn @"15"(id: Id) void;
-/// Performs rect on context.
+/// Performs rect.
 extern "0" fn @"16"(id: Id, x: f32, y: f32, w: f32, h: f32) void;
-/// Performs full clear on context.
+/// Performs full clear.
 extern "0" fn @"17"(id: Id) void;
-/// Performs clearRect on context.
+/// Performs clearRect.
 extern "0" fn @"18"(id: Id, x: f32, y: f32, w: f32, h: f32) void;
 /// Draws a pixel.
 extern "0" fn @"19"(id: Id) void;
 /// Strokes a rect.
 extern "0" fn @"20"(id: Id, w: f32, h: f32) void;
-/// Sets fillStyle on context.
+/// Sets fillStyle.
 extern "0" fn @"21"(id: Id, r: u8, g: u8, b: u8) void;
 /// Sets strokeStyle to context.
 extern "0" fn @"22"(id: Id, r: u8, g: u8, b: u8) void;
-/// Sets globalAlpha on context.
+/// Sets globalAlpha.
 extern "0" fn @"23"(id: Id, alpha: f32) void;
-/// Performs moveTo on context.
+/// Performs moveTo.
 extern "0" fn @"24"(id: Id, x: f32, y: f32) void;
-/// Performs lineTo on context.
+/// Performs lineTo.
 extern "0" fn @"25"(id: Id, x: f32, y: f32) void;
-/// Performs translate on context.
+/// Performs translate.
 extern "0" fn @"26"(id: Id, x: f32, y: f32) void;
-/// Performs scale on context.
+/// Performs scale.
 extern "0" fn @"27"(id: Id, x: f32, y: f32) void;
-/// Performs rotate on context.
+/// Performs rotate.
 extern "0" fn @"28"(id: Id, angle: f32) void;
-/// Performs quadraticCurveTo on context.
+/// Performs quadraticCurveTo.
 extern "0" fn @"29"(id: Id, cpx: f32, cpy: f32, x: f32, y: f32) void;
-/// Performs bezierCurveTo on context.
+/// Performs bezierCurveTo.
 extern "0" fn @"30"(id: Id, cp1x: f32, cp1y: f32, cp2x: f32, cp2y: f32, x: f32, y: f32) void;
-/// Performs arc on context.
+/// Performs arc.
 extern "0" fn @"31"(id: Id, x: f32, y: f32, radius: f32, start_angle: f32, end_angle: f32, counterclockwise: u8) void;
-/// Performs ellipse on context.
+/// Performs ellipse.
 extern "0" fn @"32"(id: Id, x: f32, y: f32, radius_x: f32, radius_y: f32, rotation: f32, start_angle: f32, end_angle: f32, counterclockwise: u8) void;
 /// Sets lineWidth to context.
 extern "0" fn @"33"(id: Id, w: f32) void;
-/// Performs drawImage (overload 1) on context.
+/// Performs drawImage (overload 1).
 extern "0" fn @"34"(dst_id: Id, src_id: Id, dx: f32, dy: f32) void;
-/// Performs drawImage (overload 2) on context.
+/// Performs drawImage (overload 2).
 extern "0" fn @"35"(dst_id: Id, src_id: Id, dx: f32, dy: f32) void;
-/// Performs drawImage (overload 3) on context.
+/// Performs drawImage (overload 3).
 extern "0" fn @"36"(dst_id: Id, src_id: Id, dx: f32, dy: f32, dw: f32, dh: f32) void;
-/// Performs fillText on context.
+/// Performs fillText.
 extern "0" fn @"37"(id: Id, ptr: [*]const u8, len: u32, x: f32, y: f32) void;
 /// Performs strokeText to context.
 extern "0" fn @"38"(id: Id, ptr: [*]const u8, len: u32, x: f32, y: f32) void;
-/// Sets font on context.
-extern "0" fn @"39"(id: Id, pixel: u16) void;
-/// Sets center to textAlign on context.
+/// Sets font.
+extern "0" fn @"39"(id: Id, pixel: FontPixel) void;
+/// Sets center to textAlign.
 extern "0" fn @"40"(id: Id) void;
-/// Sets textAlign on context.
+/// Sets textAlign.
 extern "0" fn @"41"(id: Id, ptr: [*]const u8, len: u32) void;
-/// Sets butt to lineCap on context.
+/// Sets butt to lineCap.
 extern "0" fn @"42"(id: Id) void;
-/// Sets round to lineCap on context.
+/// Sets round to lineCap.
 extern "0" fn @"43"(id: Id) void;
-/// Sets square to lineCap on context.
+/// Sets square to lineCap.
 extern "0" fn @"44"(id: Id) void;
-/// Sets round to lineJoin on context.
+/// Sets round to lineJoin.
 extern "0" fn @"45"(id: Id) void;
-/// Sets miter to lineJoin on context.
+/// Sets miter to lineJoin.
 extern "0" fn @"46"(id: Id) void;
 /// Sets miterLimit to context.
 extern "0" fn @"47"(id: Id, miter_limit: u16) void;
-/// Sets line dash to real line on context.
+/// Sets line dash to real line.
 extern "0" fn @"48"(id: Id) void;
 /// Sets lineDashOffset to context.
 extern "0" fn @"49"(id: Id, line_dash_offset: u16) void;
-/// Sets source-over to globalCompositeOperation on context.
+/// Sets source-over to globalCompositeOperation.
 extern "0" fn @"50"(id: Id) void;
-/// Sets destination-in to globalCompositeOperation on context.
+/// Sets destination-in to globalCompositeOperation.
 extern "0" fn @"51"(id: Id) void;
-/// Sets copy to globalCompositeOperation on context.
+/// Sets copy to globalCompositeOperation.
 extern "0" fn @"52"(id: Id) void;
-/// Sets lighter to globalCompositeOperation on context.
+/// Sets lighter to globalCompositeOperation.
 extern "0" fn @"53"(id: Id) void;
-/// Sets multiply to globalCompositeOperation on context.
+/// Sets multiply to globalCompositeOperation.
 extern "0" fn @"54"(id: Id) void;
-/// Sets imageSmoothingEnabled on context.
+/// Sets imageSmoothingEnabled.
 extern "0" fn @"55"(id: Id, smoothing: u8) void;
 /// Sets width and height to canvas.
 extern "0" fn @"56"(id: Id, w: u16, h: u16) void;
@@ -380,8 +393,8 @@ pub inline fn getCanvasContextFromElement(comptime element_id: []const u8, compt
     return CanvasContext.init(id);
 }
 
-/// Function signature for RAF (requestAnimationFrame) event handler.
-pub const RAFCallback = *const fn (time: f64) callconv(.c) void;
+/// Function signature for rAF (requestAnimationFrame) event handler.
+pub const RAFCallback = *const fn (time: f32) callconv(.c) void;
 
 extern "0" fn @"65"(callback: RAFCallback) u32;
 

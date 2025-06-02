@@ -7,14 +7,19 @@ const dom = @import("./WebAssembly/Interop/Dom.zig");
 const ClientWebsocket = @import("./WebSocket/ClientWebSocket.zig");
 
 const CanvasContext = @import("./WebAssembly/Interop/Canvas/CanvasContext.zig");
+const Color = @import("./WebAssembly/Interop/Canvas/Color.zig");
 const Path2D = @import("./WebAssembly/Interop/Canvas/Path2D.zig");
+
+const timer = @import("./WebAssembly/Interop/Timer.zig");
 
 const UI = @import("./UI/UI.zig");
 
 const TileMap = @import("./Tile/TileMap.zig");
 
-const Player = @import("./Entity/Player.zig").Player;
-const PlayerImpl = @import("./Entity/Player.zig").PlayerImpl;
+const PlayerImpl = @import("./Entity/Player.zig");
+const MobImpl = @import("./Entity/Mob.zig");
+const renderEntity = @import("./Entity/Renderers/Renderer.zig").renderEntity;
+const MobRenderingDispatcher = @import("./Entity/Renderers/MobRenderingDispatcher.zig").MobRenderingDispatcher;
 
 const mach_objects = @import("./Entity/MachObjects/main.zig");
 
@@ -34,19 +39,43 @@ var current_ui: UI = undefined;
 
 var client: *ClientWebsocket = undefined;
 
+var width: f32 = 0;
+var height: f32 = 0;
+
 fn onResize(_: ?*const event.Event) callconv(.c) void {
     const dpr = dom.devicePixelRatio();
 
-    const w = @as(f32, @floatFromInt(dom.clientWidth())) * dpr;
-    const h = @as(f32, @floatFromInt(dom.clientHeight())) * dpr;
+    width = @as(f32, @floatFromInt(dom.clientWidth())) * dpr;
+    height = @as(f32, @floatFromInt(dom.clientHeight())) * dpr;
 
     ctx.setSize(
-        @intFromFloat(w),
-        @intFromFloat(h),
+        @intFromFloat(width),
+        @intFromFloat(height),
     );
 }
 
-var players: mach_objects.Objects(.{}, Player) = undefined;
+fn onWheel(_: ?*const event.Event) callconv(.c) void {
+    players.lock();
+
+    var slice = players.slice();
+
+    while (slice.next()) |p| {
+        var player = players.getValue(p);
+
+        player.hurt_t = 1;
+
+        player.impl.is_developer = !player.impl.is_developer;
+
+        players.setValue(p, player);
+    }
+
+    players.unlock();
+}
+
+var players: mach_objects.Objects(.{}, PlayerImpl.Super) = undefined;
+var mobs: mach_objects.Objects(.{}, MobImpl.Super) = undefined;
+
+var i: f32 = 0;
 
 // This function overrides C main
 // main(_: c_int, _: [*][*]u8) c_int
@@ -64,31 +93,60 @@ export fn main() c_int {
     onResize(null);
 
     event.addGlobalEventListener(.window, .resize, onResize);
+    event.addEventListener("canvas", .wheel, onWheel);
 
     current_ui = UI.init(allocator, ctx) catch unreachable;
 
-    {
+    { // Initialize DOD models
+        // Initalize objects
         players.init(allocator);
+        mobs.init(allocator);
 
-        players.lock();
-        defer players.unlock();
+        // Initialize renderer static values
+        PlayerImpl.Renderer.initStatic();
+        MobImpl.Renderer.initStatic();
 
-        const new_player_obj_id = players.new(
-            Player.init(allocator, PlayerImpl.init(allocator), -1, 1, 1, 1, 1, 1),
-        ) catch unreachable;
+        var player = PlayerImpl.Super.init(
+            PlayerImpl.init(allocator),
+            -1,
+            @splat(100),
+            0,
+            50,
+            1,
+        );
 
-        var slice = players.slice();
+        player.hurt_t = 1;
 
-        while (slice.next()) |player_obj_id| {
-            var player = players.getValue(player_obj_id);
+        _ = timer.setInterval(struct {
+            fn call() callconv(.c) void {
+                const mob = MobImpl.Super.init(
+                    MobImpl.init(
+                        allocator,
+                        .{ .mob = .starfish },
+                        .mythic,
+                        false,
+                        false,
+                        null,
+                        null,
+                    ),
+                    -1,
+                    @splat(i * 10),
+                    0,
+                    40,
+                    1,
+                );
 
-            player.update();
+                i += 1;
 
-            players.setValue(player_obj_id, player);
-        }
+                mobs.lock();
 
-        const new_player = players.getValue(new_player_obj_id);
-        std.debug.print("player: {}\n", .{new_player});
+                _ = mobs.new(mob) catch unreachable;
+
+                mobs.unlock();
+            }
+        }.call, 500);
+
+        _ = players.new(player) catch unreachable;
     }
 
     draw(-1);
@@ -96,12 +154,91 @@ export fn main() c_int {
     return 0;
 }
 
-fn draw(_: f64) callconv(.c) void {
+var last_timestamp: i64 = 0;
+var delta_time: f32 = 0;
+var prev_timestamp: i64 = 0;
+
+fn draw(_: f32) callconv(.c) void {
+    last_timestamp = std.time.milliTimestamp();
+    delta_time = @floatFromInt(last_timestamp - prev_timestamp);
+    prev_timestamp = last_timestamp;
+
     ctx.save();
 
     current_ui.render();
 
+    { // Render entities
+        {
+            players.lock();
+
+            var slice = players.slice();
+
+            while (slice.next()) |p| {
+                var player = players.getValue(p);
+
+                renderEntity(PlayerImpl, &.{
+                    .ctx = ctx,
+                    .entity = &player,
+                    .is_specimen = false,
+                });
+
+                player.update(delta_time);
+
+                players.setValue(p, player);
+            }
+
+            players.unlock();
+        }
+
+        {
+            mobs.lock();
+
+            var slice = mobs.slice();
+
+            while (slice.next()) |m| {
+                var mob = mobs.getValue(m);
+
+                renderEntity(MobImpl, &.{
+                    .ctx = ctx,
+                    .entity = &mob,
+                    .is_specimen = false,
+                });
+
+                mob.update(delta_time);
+
+                mobs.setValue(m, mob);
+            }
+
+            mobs.unlock();
+        }
+    }
+
     ctx.restore();
+
+    { // Show fps
+        ctx.save();
+        defer ctx.restore();
+
+        const fps =
+            if (delta_time > 0)
+                1000 / delta_time
+            else
+                0;
+
+        ctx.@"lineJoin = 'round'"();
+        ctx.@"lineCap = 'round'"();
+        ctx.setTextAlign("right");
+
+        ctx.fillColor(comptime Color.comptimeFromHexColorCode("#FFFFFF"));
+
+        ctx.prepareFontProperties(30);
+
+        var buf: [32]u8 = undefined;
+        const fps_text = std.fmt.bufPrint(&buf, "FPS: {d:.1}", .{fps}) catch unreachable;
+
+        ctx.strokeText(fps_text, width, height);
+        ctx.fillText(fps_text, width, height);
+    }
 
     _ = CanvasContext.requestAnimationFrame(draw);
 }

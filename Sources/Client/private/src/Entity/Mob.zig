@@ -2,55 +2,75 @@ const std = @import("std");
 const math = std.math;
 const Entity = @import("./Entity.zig").Entity;
 const EntityType = @import("./EntityType.zig").EntityType;
+const MobType = @import("./EntityType.zig").MobType;
 const Rarity = @import("../Florr/Native/Rarity.zig").Rarity;
 
-var delta_time = @import("./Entity.zig").delta_time;
+const starfish = @import("./Renderers/MobStarfishRenderer.zig");
 
-const Segments = []*Mob;
+const MobImpl = @This();
 
-pub const MobImpl = struct {
-    /// Type of mob.
-    type: EntityType,
+pub const Super = Entity(MobImpl);
 
-    /// Rarity of mob.
+const Segments = []*Super;
+
+pub const Renderer = @import("./Renderers/MobRenderingDispatcher.zig").MobRenderingDispatcher;
+
+/// Type of mob.
+type: EntityType,
+
+/// Rarity of mob.
+rarity: Rarity,
+
+/// Whether this mob is pet.
+is_pet: bool,
+
+/// Whether this mob is first generated segment in segment chain.
+is_first_segment: bool,
+/// Connected segment of this mob.
+connecting_segment: ?*Super,
+/// List of mobs that connected to this mob.
+connected_segments: ?Segments,
+
+/// Leg distances of starfish.
+/// Value is null if not starfish.
+leg_distances: ?[starfish.starfish_leg_amount]f32,
+
+pub fn init(
+    _: std.mem.Allocator,
+    @"type": EntityType,
     rarity: Rarity,
-
-    /// Whether this mob is pet.
     is_pet: bool,
-
-    /// Whether this mob is first generated segment in segment chain.
     is_first_segment: bool,
-    /// Connected segment of this mob.
-    connecting_segment: ?*Mob,
-    /// List of mobs that connected to this mob.
+    connecting_segment: ?*Super,
     connected_segments: ?Segments,
+) MobImpl {
+    return .{
+        // Using type identifier directly is detected as keyword
+        .type = @"type",
 
-    pub fn init(
-        _: std.mem.Allocator,
-        @"type": EntityType,
-        rarity: Rarity,
-        is_pet: bool,
-        is_first_segment: bool,
-        connecting_segment: ?*Mob,
-        connected_segments: ?Segments,
-    ) MobImpl {
-        return .{
-            // Using type identifier directly is detected as keyword
-            .type = @"type",
+        .rarity = rarity,
 
-            .rarity = rarity,
+        .is_pet = is_pet,
 
-            .is_pet = is_pet,
+        .is_first_segment = is_first_segment,
+        .connecting_segment = connecting_segment,
+        .connected_segments = connected_segments,
 
-            .is_first_segment = is_first_segment,
-            .connecting_segment = connecting_segment,
-            .connected_segments = connected_segments,
-        };
+        .leg_distances = if (@"type".get() == @intFromEnum(MobType.starfish)) generateDefaultStarfishLegDistance() else null,
+    };
+}
+
+pub fn deinit(self: *MobImpl, _: *Super) void {
+    self.connecting_segment = null;
+    self.connected_segments = null;
+}
+
+pub fn generateDefaultStarfishLegDistance() [starfish.starfish_leg_amount]f32 {
+    var distances: [starfish.starfish_leg_amount]f32 = undefined;
+
+    for (&distances) |*distance| {
+        distance.* = starfish.undestroyed_leg_distance;
     }
 
-    pub fn deinit(self: *MobImpl, _: anytype) void {
-        self.connecting_segment = null;
-    }
-};
-
-pub const Mob = Entity(MobImpl);
+    return distances;
+}

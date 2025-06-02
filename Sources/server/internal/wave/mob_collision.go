@@ -52,15 +52,12 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 
 	mTraversed := TraverseMobSegments(wp, m)
 
+	mIsWeb := mType == native.MobTypeWebProjectile
+
 	mIsProjectile := m.IsProjectile()
 
-	mIsEnemyMissile := m.IsEnemyMissile()
-	mIsNotEnemyMissile := !mIsEnemyMissile
-
 	mIsEnemy := m.IsEnemy()
-	mIsNotEnemy := !mIsEnemy
-
-	mIsWeb := mType == native.MobTypeWebProjectile
+	mIsAlly := !mIsEnemy
 
 	c0mob.X = m.X
 	c0mob.Y = m.Y
@@ -101,21 +98,17 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 
 				nearEntityIsProjectile := nearEntity.IsProjectile()
 
-				nearEntityIsEnemyMissile := nearEntity.IsEnemyMissile()
-
 				nearEntityIsEnemy := nearEntity.IsEnemy()
-				nearEntityIsNotEnemy := !nearEntityIsEnemy
+				nearEntityIsAlly := !nearEntityIsEnemy
 
-				{
+				if mIsProjectile || nearEntityIsProjectile {
 					// Enemy missile cant collide to enemy mob
-					if (mIsProjectile && mIsEnemyMissile && nearEntityIsEnemy) ||
-						(nearEntityIsProjectile && nearEntityIsEnemyMissile && mIsEnemy) {
+					if mIsEnemy && nearEntityIsEnemy {
 						return true
 					}
 
 					// Friendly missile cant collide to friendly mob
-					if (mIsProjectile && mIsNotEnemyMissile && nearEntityIsNotEnemy) ||
-						(nearEntityIsProjectile && !nearEntityIsEnemyMissile && mIsNotEnemy) {
+					if mIsAlly && nearEntityIsAlly {
 						return true
 					}
 				}
@@ -149,7 +142,7 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 					}
 
 					// Pet doesnt damaged to other pet
-					if mIsNotEnemy && nearEntityIsNotEnemy {
+					if mIsAlly && nearEntityIsAlly {
 						return true
 					}
 
@@ -180,7 +173,7 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 		case *Petal:
 			{
 				// Petal doesnt damaged/knockbacked to pet
-				if mIsNotEnemy {
+				if mIsAlly {
 					return true
 				}
 
@@ -241,17 +234,17 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 		case *Player:
 			{
 				// Pet dont damage/knockback to player
-				if mIsNotEnemy {
-					return true
-				}
-
-				// Avoid redundant calculation if mob is already slowed this frame
-				if mIsWeb && nearEntity.MagnitudeMultiplier == webSlowPercent {
+				if mIsAlly {
 					return true
 				}
 
 				// Dont collide to dead/uncollidable player
 				if nearEntity.IsDead || !nearEntity.IsCollidable() {
+					return true
+				}
+
+				// Avoid redundant calculation if mob is already slowed this frame
+				if mIsWeb && nearEntity.MagnitudeMultiplier == webSlowPercent {
 					return true
 				}
 

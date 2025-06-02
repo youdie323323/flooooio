@@ -213,14 +213,10 @@ export type AnyFunction = (...args: Array<any>) => any;
                 }
                 */
 
-                const nowNs: bigint = BigInt(Math.round(Origin.now() * 1_000_000));
+                const nsec = Math.round(Origin.now() * 1_000_000);
 
-                // Store the time value into memory (assumes 64-bit value at ptr)
-                const low = Number(nowNs & 0xFFFFFFFFn);
-                const high = Number((nowNs >> 32n) & 0xFFFFFFFFn);
-
-                HEAPU32[ptr >> 2] = low;
-                HEAPU32[(ptr + 4) >> 2] = high;
+                HEAPU32[ptr >> 2] = nsec >>> 0;
+                HEAPU32[(ptr + 4) >> 2] = nsec / 4294967296 >>> 0;
 
                 return 0; // Success
             },

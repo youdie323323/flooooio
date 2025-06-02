@@ -2,9 +2,6 @@ const std = @import("std");
 const math = std.math;
 const Vector2 = @Vector(2, f32);
 
-// TODO
-pub const delta_time: f32 = 0;
-
 pub const EntityId = i32;
 
 pub fn Entity(comptime Impl: type) type {
@@ -19,11 +16,10 @@ pub fn Entity(comptime Impl: type) type {
             return start_angle + calculateAngleDistance(start_angle, end_angle) * progress;
         }
 
-        inline fn smoothInterpolate(current: f32, target: f32, duration: f32) f32 {
+        inline fn smoothInterpolate(delta_time: f32, current: f32, target: f32, duration: f32) f32 {
             return current + (target - current) * @min(1, delta_time / duration);
         }
 
-        allocator: std.mem.Allocator,
         impl: Impl,
 
         id: EntityId,
@@ -63,19 +59,14 @@ pub fn Entity(comptime Impl: type) type {
         hp_alpha: f32,
 
         pub fn init(
-            allocator: std.mem.Allocator,
             impl: Impl,
             id: EntityId,
-            x: f32,
-            y: f32,
+            pos: Vector2,
             angle: f32,
             size: f32,
             health: f32,
         ) Self {
-            const initial_pos: Vector2 = .{ x, y };
-
             return .{
-                .allocator = allocator,
                 .impl = impl,
 
                 .id = id,
@@ -89,9 +80,9 @@ pub fn Entity(comptime Impl: type) type {
                 .is_poisoned = false,
                 .poison_t = 0,
 
-                .pos = initial_pos,
-                .old_pos = initial_pos,
-                .next_pos = initial_pos,
+                .pos = pos,
+                .old_pos = pos,
+                .next_pos = pos,
 
                 .eye_pos = .{ 1, 0 },
 
@@ -117,15 +108,13 @@ pub fn Entity(comptime Impl: type) type {
         }
 
         pub fn deinit(self: *Self) void {
-            if (@hasDecl(Impl, "deinit"))
+            if (comptime @hasDecl(Impl, "deinit"))
                 self.impl.deinit(self);
-
-            self.allocator.destroy(self);
 
             self.* = undefined;
         }
 
-        pub fn update(self: *Self) void {
+        pub fn update(self: *Self, delta_time: f32) void {
             const delta_time_100 = delta_time / 100;
             const delta_time_150 = delta_time_100 * 2 / 3;
             const delta_time_200 = delta_time_100 * 0.5;
@@ -135,7 +124,7 @@ pub fn Entity(comptime Impl: type) type {
             if (self.hurt_t > 0) {
                 self.hurt_t -= delta_time_150;
 
-                if (self.hurt_t < 0) self.hurt_t = 0;
+                if (0 > self.hurt_t) self.hurt_t = 0;
             }
 
             self.poison_t += @as(f32, if (self.is_poisoned) 1 else -1) * delta_time_200;
@@ -167,19 +156,19 @@ pub fn Entity(comptime Impl: type) type {
                 self.move_counter += (delta_time * dist) / 900;
             }
 
-            if (self.health < 1) self.hp_alpha = smoothInterpolate(self.hp_alpha, 1, 200);
+            if (1 > self.health) self.hp_alpha = smoothInterpolate(delta_time, self.hp_alpha, 1, 200);
 
             if (self.red_health_timer > 0) {
                 self.red_health_timer -= delta_time / 600;
 
-                if (self.red_health_timer < 0) self.red_health_timer = 0;
+                if (0 > self.red_health_timer) self.red_health_timer = 0;
             }
 
             if (self.red_health_timer == 0)
                 self.red_health += (self.health - self.red_health) * @min(1, delta_time_200);
 
-            if (@hasDecl(Impl, "update"))
-                self.impl.update(self);
+            if (comptime @hasDecl(Impl, "update"))
+                self.impl.update(delta_time, self);
         }
     };
 }

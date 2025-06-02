@@ -60,7 +60,7 @@ export default class PlayerRendererDev extends AbstractPlayerRenderer {
             ctx.fill();
         }
 
-        const verticRise = angryT * -10.5 + sadT * -9;
+        const verticRise = 5.5 + (angryT * -10.5 + sadT * -9);
 
         ctx.beginPath();
 
@@ -68,7 +68,7 @@ export default class PlayerRendererDev extends AbstractPlayerRenderer {
         ctx.rotate(0.5);
 
         ctx.moveTo(-3, 0);
-        ctx.quadraticCurveTo(0, 5.5 + verticRise, 3, 0);
+        ctx.quadraticCurveTo(0, verticRise, 3, 0);
 
         ctx.lineWidth = 1.5;
         ctx.strokeStyle = "#000000";

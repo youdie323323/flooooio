@@ -30,9 +30,6 @@ type Mob struct {
 	PetMaster        *Player
 	PetGoingToMaster bool
 
-	// MissileMaster is master which owns this missile.
-	MissileMaster *Mob
-
 	StarfishRegeningHealth bool
 
 	// ConnectingSegment represents connected segment.
@@ -80,11 +77,6 @@ func (m *Mob) GetMaxHealth() float32 {
 	return profile.StatFromRarity(m.Rarity).Health
 }
 
-// IsEnemyMissile determinate if mob is enemy missile from player side.
-func (m *Mob) IsEnemyMissile() bool {
-	return m.MissileMaster != nil && m.MissileMaster.PetMaster == nil /* Dont use IsEnemy here. Can make infinite loop */
-}
-
 // IsEnemy determinate if mob is enemy from player side.
 func (m *Mob) IsEnemy() bool {
 	return m.PetMaster == nil
@@ -98,11 +90,6 @@ func (m *Mob) IsAlly() bool {
 // IsProjectile determinate if mob is projectile.
 func (m *Mob) IsProjectile() bool {
 	return slices.Contains(ProjectileMobTypes, m.Type)
-}
-
-// IsTrackableEnemy determinate if mob is enemy from player side, but its trackable.
-func (m *Mob) IsTrackableEnemy() bool {
-	return m.IsEnemy() && (!m.IsProjectile() || m.IsEnemyMissile())
 }
 
 // IsOrganismEnemy determinate if mob is enemy from player side and its living organism.
@@ -209,8 +196,6 @@ func (m *Mob) Dispose() {
 
 	m.PetMaster = nil
 
-	m.MissileMaster = nil
-
 	m.ConnectingSegment = nil
 
 	{
@@ -237,8 +222,6 @@ func NewMob(
 
 	connectingSegment collision.Node,
 	isFirstSegment bool,
-
-	missileMaster *Mob,
 ) *Mob {
 	profile := native.MobProfiles[mType]
 
@@ -278,8 +261,6 @@ func NewMob(
 
 		PetMaster:        petMaster,
 		PetGoingToMaster: false,
-
-		MissileMaster: missileMaster,
 
 		StarfishRegeningHealth: false,
 

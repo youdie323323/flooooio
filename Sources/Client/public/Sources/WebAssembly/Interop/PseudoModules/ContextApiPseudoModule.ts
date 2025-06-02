@@ -316,7 +316,7 @@ export const createContextApiPseudoModule = ((...[, {
             },
 
             39: (contextId: number, pixel: number) => {
-                contexts[contextId].font = "700 " + pixel + "px Game, Microsoft YaHei, sans-serif";
+                contexts[contextId].font = pixel + "px Ubuntu";
             },
 
             40: (contextId: number) => {

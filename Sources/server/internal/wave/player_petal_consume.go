@@ -93,8 +93,6 @@ func (p *Player) PlayerPetalConsume(wp *WavePool, now time.Time) {
 
 						nil,
 						false,
-
-						nil,
 					))
 				}
 
@@ -143,8 +141,6 @@ func (p *Player) PlayerPetalConsume(wp *WavePool, now time.Time) {
 
 							nil,
 							false,
-
-							nil,
 						))
 					}
 				}
@@ -186,8 +182,6 @@ func (p *Player) PlayerPetalConsume(wp *WavePool, now time.Time) {
 
 								nil,
 								false,
-
-								nil,
 							)
 
 							// Remove petal as it consumed

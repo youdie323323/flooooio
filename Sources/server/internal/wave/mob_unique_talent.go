@@ -148,8 +148,6 @@ func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
 
 					nil,
 					false,
-
-					nil,
 				)
 
 				// TODO: this implementation is not safe and cant used by other location

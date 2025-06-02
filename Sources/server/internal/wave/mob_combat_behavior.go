@@ -335,12 +335,10 @@ func (m *Mob) MobCombatBehavior(wp *WavePool, now time.Time) {
 					shootX,
 					shootY,
 
-					nil,
+					m.PetMaster,
 
 					nil,
 					false,
-
-					m,
 				)
 
 				missile.Magnitude = SpeedOf(missile.Type) * 255

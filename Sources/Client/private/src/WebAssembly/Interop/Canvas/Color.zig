@@ -7,69 +7,67 @@ const Color = @This();
 
 const Rgb = @Vector(3, u8);
 
-const FloatingRgb = @Vector(3, f64);
+const FloatingRgb = @Vector(3, f32);
 
-const white = comptimeFromCSSColorName("white").internal_rgb;
+const white = comptimeFromCSSColorName("white").rgb;
 
-const black = comptimeFromCSSColorName("black").internal_rgb;
+const black = comptimeFromCSSColorName("black").rgb;
 
-const white_f64: FloatingRgb = @floatFromInt(white);
+const floating_white: FloatingRgb = @floatFromInt(white);
 
-const black_f64: FloatingRgb = @floatFromInt(black);
+const floating_black: FloatingRgb = @floatFromInt(black);
 
-internal_rgb: Rgb,
+rgb: Rgb,
 
 pub inline fn init(rgb: Rgb) Color {
-    return .{ .internal_rgb = rgb };
+    return .{ .rgb = rgb };
 }
 
 inline fn mulWithBound(self: Color, strength: FloatingRgb, lower: FloatingRgb, upper: FloatingRgb) Rgb {
-    return @intFromFloat(
-        math.clamp(
-            @as(FloatingRgb, @floatFromInt(self.internal_rgb)) * strength,
-            lower,
-            upper,
-        ),
-    );
+    const result: FloatingRgb = @as(FloatingRgb, @floatFromInt(self.rgb)) * strength;
+
+    return @intFromFloat(@select(f32, result < lower, lower, @select(f32, result > upper, upper, result)));
 }
 
-pub inline fn darkened(self: Color, comptime strength: f64) Color {
+pub inline fn darkened(self: Color, comptime strength: f32) Color {
     comptime debug.assert(strength <= 1);
 
-    const strength_c: FloatingRgb = comptime @splat(1 - strength);
+    const strength_c: FloatingRgb = @splat(1 - strength);
 
-    const result = self.mulWithBound(strength_c, black_f64, white_f64);
-
-    return init(result);
+    return init(self.mulWithBound(strength_c, floating_black, floating_white));
 }
 
-pub inline fn lightened(self: Color, comptime strength: f64) Color {
+pub inline fn lightened(self: Color, comptime strength: f32) Color {
     comptime debug.assert(strength > 0);
 
-    const strength_a: FloatingRgb = comptime @splat(1 + strength);
+    const strength_a: FloatingRgb = @splat(1 + strength);
 
-    const result = self.mulWithBound(strength_a, black_f64, white_f64);
-
-    return init(result);
+    return init(self.mulWithBound(strength_a, floating_black, floating_white));
 }
 
 /// Interpolate between two colors.
 pub inline fn interpolate(self: Color, other: Color, t: f32) Color {
-    return init(math.lerp(self, other, t));
+    return init(
+        @intFromFloat(math.lerp(
+            @as(FloatingRgb, @floatFromInt(self.rgb)),
+            @as(FloatingRgb, @floatFromInt(other.rgb)),
+            @as(FloatingRgb, @splat(t)),
+        )),
+    );
 }
 
 /// N-dimensionally interpolates colors.
-pub fn nDimensionalInterpolate(comptime n: anytype, colors: @Vector(n, Color), t: f32) Color {
-    const last = n - 1;
-    
-    const segment = t * @as(f32, @intFromFloat(last));
+pub fn multiColorInterpolate(colors: []const Color, t: f32) Color {
+    const last = colors.len - 1;
+
+    const segment = t * @as(f32, @floatFromInt(last));
     const index = @floor(segment);
 
-    if (index >= last) return colors[last];
+    const index_usize: usize = @intFromFloat(index);
 
-    const index_int: usize = @intFromFloat(index);
+    if (index_usize >= last) return colors[last];
 
-    return interpolate(colors[index_int], colors[index_int + 1], 1 - (segment - index));
+    return interpolate(colors[index_usize], colors[index_usize + 1], segment - index);
 }
 
 pub fn comptimeFromAnyString(comptime str: []const u8) Color {
@@ -86,6 +84,8 @@ pub fn comptimeFromAnyString(comptime str: []const u8) Color {
 
 const HexColorCode = *const [7:0]u8;
 
+const Unsigned24BitIntegerColorCode = u24;
+
 inline fn isValidHexColorCode(comptime code: HexColorCode) bool {
     comptime {
         // Checking length here is redundant because already constrained with type
@@ -100,15 +100,12 @@ pub fn comptimeFromHexColorCode(comptime code: HexColorCode) Color {
     comptime {
         if (!isValidHexColorCode(code)) @compileError("color code " ++ code ++ " is not valid");
 
-        const r = std.fmt.parseInt(u8, code[1..3], 16) catch @compileError("couldn't parsed r section of " ++ code);
-        const g = std.fmt.parseInt(u8, code[3..5], 16) catch @compileError("couldn't parsed g section of " ++ code);
-        const b = std.fmt.parseInt(u8, code[5..7], 16) catch @compileError("couldn't parsed b section of " ++ code);
+        const value = std.fmt.parseInt(Unsigned24BitIntegerColorCode, code[1..], 16) catch
+            @compileError("invalid hex color: " ++ code);
 
-        return init(.{ r, g, b });
+        return comptimeFromUnsigned24BitIntegerColorCode(value);
     }
 }
-
-pub const Unsigned24BitIntegerColorCode = u24;
 
 /// Convert u24 representation of color code to Color.
 pub fn comptimeFromUnsigned24BitIntegerColorCode(comptime code: Unsigned24BitIntegerColorCode) Color {
@@ -136,15 +133,19 @@ pub fn comptimeFromRgbString(comptime str: []const u8) Color {
 
         const content = str[4 .. str.len - 1];
 
-        var parts = mem.splitSequence(u8, content, ",");
+        var iter = mem.tokenizeScalar(u8, content, ',');
 
-        const r_str = mem.trim(u8, parts.next() orelse @compileError("couldn't splitted the r section of " ++ str), " ");
-        const g_str = mem.trim(u8, parts.next() orelse @compileError("couldn't splitted the g section of " ++ str), " ");
-        const b_str = mem.trim(u8, parts.next() orelse @compileError("couldn't splitted the b section of " ++ str), " ");
+        const r = std.fmt.parseInt(u8, mem.trim(u8, iter.next() orelse
+            @compileError("missing r value"), " "), 10) catch
+            @compileError("invalid r value");
 
-        const r = std.fmt.parseInt(u8, r_str, 10) catch @compileError("cannot parse r section of " ++ str);
-        const g = std.fmt.parseInt(u8, g_str, 10) catch @compileError("cannot parse g section of " ++ str);
-        const b = std.fmt.parseInt(u8, b_str, 10) catch @compileError("cannot parse b section of " ++ str);
+        const g = std.fmt.parseInt(u8, mem.trim(u8, iter.next() orelse
+            @compileError("missing g value"), " "), 10) catch
+            @compileError("invalid g value");
+
+        const b = std.fmt.parseInt(u8, mem.trim(u8, iter.next() orelse
+            @compileError("missing b value"), " "), 10) catch
+            @compileError("invalid b value");
 
         return init(.{ r, g, b });
     }

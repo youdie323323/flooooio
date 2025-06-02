@@ -100,7 +100,7 @@ func doPetalSpin(
 
 	{
 		mobs := wp.GetMobsWithCondition(func(m *Mob) bool {
-			if !m.IsTrackableEnemy() {
+			if !m.IsEnemy() {
 				return false
 			}
 

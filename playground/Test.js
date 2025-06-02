@@ -4,90 +4,31 @@ const ctx = canvas.getContext("2d");
 const TAU = 2 * Math.PI;
 const PI2 = Math.PI / 2;
 
-ctx.translate(300, 300);
-ctx.scale(5, 5);
+ctx.translate(500, 500);
+ctx.scale(15, 15);
 
-ctx.lineJoin = "round";
 ctx.lineCap = "round";
 
-ctx.beginPath();
-ctx.lineWidth = 2;
-ctx.arc(0, 0, 40, 0, TAU);
-ctx.stroke();
+{ // Dev body
+    ctx.beginPath();
 
-ctx.translate(-23, 0);
+    const START_X = 25;
+    const START_Y = -0.5;
 
-ctx.beginPath();
+    ctx.moveTo(START_X, START_Y);
 
-ctx.moveTo(39.5, 18);
-ctx.quadraticCurveTo(0, 30, 0, 0);
+    ctx.quadraticCurveTo(19, 35, 4, 25.5);
+    
+    ctx.quadraticCurveTo(-20, 18, -22, 5);
+    ctx.quadraticCurveTo(-25, -32, 0, -22);
 
-ctx.lineWidth = 28;
-ctx.strokeStyle = "#363685";
-ctx.stroke();
+    ctx.quadraticCurveTo(15, -24, START_X, START_Y);
 
-ctx.beginPath();
+    ctx.closePath();
 
-ctx.moveTo(40, 18);
-ctx.quadraticCurveTo(0, 30, 0, 0);
-
-ctx.lineWidth = 16.799999237060547;
-ctx.strokeStyle = "#4343A4";
-ctx.stroke();
-
-ctx.beginPath();
-
-ctx.moveTo(39.5, -18);
-ctx.quadraticCurveTo(0, -30, 0, 0);
-
-ctx.lineWidth = 28;
-ctx.strokeStyle = "#853636";
-ctx.stroke();
-
-ctx.beginPath();
-
-ctx.moveTo(40, -18);
-ctx.quadraticCurveTo(0, -30, 0, 0);
-
-ctx.lineWidth = 16.799999237060547;
-ctx.strokeStyle = "#A44343";
-ctx.stroke();
-
-ctx.lineCap = "butt";
-
-ctx.beginPath();
-
-ctx.moveTo(39.5, 18);
-ctx.quadraticCurveTo(0, 30, 0, 0);
-
-ctx.lineWidth = 28;
-ctx.strokeStyle = "#363685";
-ctx.stroke();
-
-
-ctx.beginPath();
-
-ctx.moveTo(40, 18);
-ctx.quadraticCurveTo(0, 30, 0, 0);
-
-ctx.lineWidth = 16.799999237060547;
-ctx.strokeStyle = "#4343A4";
-ctx.stroke();
-
-ctx.beginPath();
-
-ctx.moveTo(39.5, -18);
-ctx.quadraticCurveTo(0, -30, 0, 0);
-
-ctx.lineWidth = 28;
-ctx.strokeStyle = "#853636";
-ctx.stroke();
-
-ctx.beginPath();
-
-ctx.moveTo(40, -18);
-ctx.quadraticCurveTo(0, -30, 0, 0);
-
-ctx.lineWidth = 16.799999237060547;
-ctx.strokeStyle = "#A44343";
-ctx.stroke();
+    ctx.lineWidth = 3;
+    ctx.fillStyle = "#ffe763";
+    ctx.strokeStyle = "#cebb50";
+    ctx.fill();
+    ctx.stroke();
+}

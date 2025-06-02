@@ -366,8 +366,6 @@ func (wp *WavePool) updateWaveData() {
 						dmd.SegmentBodies,
 
 						nil,
-
-						nil,
 					)
 				} else {
 					wp.GenerateMob(
@@ -382,8 +380,6 @@ func (wp *WavePool) updateWaveData() {
 
 						nil,
 						false,
-
-						nil,
 					)
 				}
 			}
@@ -393,7 +389,7 @@ func (wp *WavePool) updateWaveData() {
 	waveLength := calculateWaveLength(float32(wp.Wd.Progress))
 
 	if wp.Wd.ProgressTimer >= waveLength {
-		mobCount := len(wp.GetMobsWithCondition(func(m *Mob) bool { return m.IsTrackableEnemy() }))
+		mobCount := len(wp.GetMobsWithCondition(func(m *Mob) bool { return m.IsEnemy() }))
 
 		if !(wp.Wd.ProgressRedTimer >= waveLength) && mobCount > 4 {
 			wp.Wd.ProgressIsRed = true
@@ -800,8 +796,6 @@ func (wp *WavePool) GenerateMob(
 
 	connectingSegment collision.Node,
 	isFirstSegment bool,
-
-	missileMaster *Mob,
 ) *Mob {
 	id := GetRandomId()
 	if _, ok := wp.mobPool.Load(id); ok {
@@ -817,8 +811,6 @@ func (wp *WavePool) GenerateMob(
 
 			connectingSegment,
 			isFirstSegment,
-
-			missileMaster,
 		)
 	}
 
@@ -836,8 +828,6 @@ func (wp *WavePool) GenerateMob(
 
 		connectingSegment,
 		isFirstSegment,
-
-		missileMaster,
 	)
 
 	wp.mobPool.Store(id, mob)
@@ -859,8 +849,6 @@ func (wp *WavePool) SafeGenerateMob(
 
 	connectingSegment collision.Node,
 	isFirstSegment bool,
-
-	missileMaster *Mob,
 ) *Mob {
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
@@ -877,8 +865,6 @@ func (wp *WavePool) SafeGenerateMob(
 
 		connectingSegment,
 		isFirstSegment,
-
-		missileMaster,
 	)
 }
 
@@ -947,8 +933,6 @@ func (wp *WavePool) LinkedMobSegmentation(
 	bodyCount int,
 
 	petMaster *Player,
-
-	missileMaster *Mob,
 ) {
 	profile := native.MobProfiles[mType]
 
@@ -977,8 +961,6 @@ func (wp *WavePool) LinkedMobSegmentation(
 			prevSegment,
 			// Head
 			i == 0,
-
-			missileMaster,
 		)
 	}
 }
@@ -994,8 +976,6 @@ func (wp *WavePool) SafeLinkedMobSegmentation(
 	bodyCount int,
 
 	petMaster *Player,
-
-	missileMaster *Mob,
 ) {
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
@@ -1011,8 +991,6 @@ func (wp *WavePool) SafeLinkedMobSegmentation(
 		bodyCount,
 
 		petMaster,
-
-		missileMaster,
 	)
 }
 

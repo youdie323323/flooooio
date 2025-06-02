@@ -60,7 +60,7 @@ var _ LightningEmitter = (*Petal)(nil)
 // GetLightningBounceTargets returns targets to bounce.
 func (p *Petal) GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node {
 	return collision.ToNodeSlice(wp.GetMobsWithCondition(func(targetMob *Mob) bool {
-		return !slices.Contains(bouncedIds, targetMob.Id) && targetMob.IsTrackableEnemy()
+		return !slices.Contains(bouncedIds, targetMob.Id) && targetMob.IsEnemy()
 	}))
 }
 
