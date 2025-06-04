@@ -20,9 +20,9 @@ import type { StaticAdheredClientboundHandlers } from "../../Websocket/Packet/Pa
 import DISCORD_ICON_SVG from "./Assets/discord_icon.svg";
 import Tooltip from "../Layout/Extensions/ExtensionTooltip";
 import UITitleBottomLeftButtonGroup from "./BottomLeftButtonGroup/UITitleBottomLeftButtonGroup";
-import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../../Private/Sources/Wave/WaveRoom";
-import type { WaveRoomCode } from "../../../../Private/Sources/Wave/WaveRoomCode";
-import { isWaveRoomCode } from "../../../../Private/Sources/Wave/WaveRoomCode";
+import { WaveRoomPlayerReadyState, WaveRoomState, WaveRoomVisibleState } from "../../../../private/Sources/Wave/WaveRoom";
+import type { WaveRoomCode } from "../../../../private/Sources/Wave/WaveRoomCode";
+import { isWaveRoomCode } from "../../../../private/Sources/Wave/WaveRoomCode";
 import { uiCtx, clientWebsocket, deltaTime, cameraController } from "../../../../Application";
 import { isPetal } from "../../Entity/Petal";
 import type { ColorCode } from "../../Utils/Color";

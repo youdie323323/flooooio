@@ -717,7 +717,7 @@ const webProjectile = (function () {
 
 // Radius * fraction
 const BASE_SIZE = 13 * 10;
-const RESOLUTION_MULTIPLIER = 3;
+const RESOLUTION_MULTIPLIER = 4;
 const WEB_PROJECTILE_CANVAS_SIZE = BASE_SIZE * RESOLUTION_MULTIPLIER;
 
 function createWebProjectileCanvas(isPet: boolean): OffscreenCanvas {

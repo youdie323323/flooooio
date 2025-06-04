@@ -11,6 +11,7 @@ type WaveRoomCode string
 
 func generateRandomServerIdentifier() string {
 	chars := make([]string, 3)
+	
 	for i := range chars {
 		chars[i] = fmt.Sprintf("%x", rand.IntN(16))
 	}
@@ -20,6 +21,7 @@ func generateRandomServerIdentifier() string {
 
 func generateRandomMeaninglessIdentifier() string {
 	chars := make([]string, 6)
+
 	for i := range chars {
 		chars[i] = string(rune('a' + rand.IntN(26)))
 	}

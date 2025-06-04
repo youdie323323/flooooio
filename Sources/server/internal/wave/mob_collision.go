@@ -67,33 +67,33 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 
 	nearby := wp.SpatialHash.Search(m.X, m.Y, searchRadius)
 
-	nearby.Range(func(_ uint32, ni collision.Node) bool {
-		switch nearEntity := ni.(type) {
+	for _, n := range nearby {
+		switch nearEntity := n.(type) {
 		// Mob -> Mob
 		case *Mob:
 			{
 				if nearEntity.Id == m.Id {
-					return true
+					continue
 				}
 
 				// Web only activated by m
 				if nearEntity.Type == native.MobTypeWebProjectile {
-					return true
+					continue
 				}
 
 				// This is most simple lag mitigation but this constrain the all MagnitudeMultiplier is unique
 				// Avoid redundant calculation if mob is already slowed this frame
 				if mIsWeb && nearEntity.MagnitudeMultiplier == webSlowPercent {
-					return true
+					continue
 				}
 
 				if nearEntity.WasEliminated(wp) {
-					return true
+					continue
 				}
 
 				// Adjacent segment should not collide eachother
 				if IsConnectedSegment(m, nearEntity) {
-					return true
+					continue
 				}
 
 				nearEntityIsProjectile := nearEntity.IsProjectile()
@@ -104,12 +104,12 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 				if mIsProjectile || nearEntityIsProjectile {
 					// Enemy missile cant collide to enemy mob
 					if mIsEnemy && nearEntityIsEnemy {
-						return true
+						continue
 					}
 
 					// Friendly missile cant collide to friendly mob
 					if mIsAlly && nearEntityIsAlly {
-						return true
+						continue
 					}
 				}
 
@@ -127,7 +127,7 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 						}
 
 						// Web does nothing
-						return true
+						continue
 					}
 
 					m.X -= px * mobToMobKnockbackMultiplier
@@ -138,12 +138,12 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 
 					// Mob doesnt damaged to mob
 					if mIsEnemy && nearEntityIsEnemy {
-						return true
+						continue
 					}
 
 					// Pet doesnt damaged to other pet
 					if mIsAlly && nearEntityIsAlly {
-						return true
+						continue
 					}
 
 					{ // Damage
@@ -174,16 +174,16 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 			{
 				// Petal doesnt damaged/knockbacked to pet
 				if mIsAlly {
-					return true
+					continue
 				}
 
 				// Web not valid to petal
 				if mIsWeb {
-					return true
+					continue
 				}
 
 				if nearEntity.WasEliminated(wp) {
-					return true
+					continue
 				}
 
 				c1mob.X = nearEntity.X
@@ -235,17 +235,17 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 			{
 				// Pet dont damage/knockback to player
 				if mIsAlly {
-					return true
+					continue
 				}
 
 				// Dont collide to dead/uncollidable player
 				if nearEntity.IsDead || !nearEntity.IsCollidable() {
-					return true
+					continue
 				}
 
 				// Avoid redundant calculation if mob is already slowed this frame
 				if mIsWeb && nearEntity.MagnitudeMultiplier == webSlowPercent {
-					return true
+					continue
 				}
 
 				c1mob.X = nearEntity.X
@@ -259,7 +259,7 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 						nearEntity.MagnitudeMultiplier = webSlowPercent
 
 						// Web does nothing
-						return true
+						continue
 					}
 
 					m.X -= px
@@ -286,9 +286,9 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 				}
 			}
 		}
+	}
 
-		return true
-	})
+	nearby = nil
 }
 
 func fangDoLifesteal(fang *Petal, stat native.PetalStat, damage float32) {

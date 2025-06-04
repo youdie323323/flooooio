@@ -34,34 +34,34 @@ func (p *Player) PlayerCollision(wp *WavePool, _ time.Time) {
 
 	nearby := wp.SpatialHash.Search(p.X, p.Y, searchRadius)
 
-	nearby.Range(func(_ uint32, ne collision.Node) bool {
-		np, ok := ne.(*Player)
+	for _, n := range nearby {
+		op, ok := n.(*Player)
 		if !ok {
-			return true
+			continue
 		}
 
-		if np.Id == p.Id {
-			return true
+		if op.Id == p.Id {
+			continue
 		}
 
 		// Dont collide to dead/uncollidable player
-		if np.IsDead || !np.IsCollidable() {
-			return true
+		if op.IsDead || !op.IsCollidable() {
+			continue
 		}
 
-		c1player.X = np.X
-		c1player.Y = np.Y
-		c1player.R = np.Size
+		c1player.X = op.X
+		c1player.Y = op.Y
+		c1player.R = op.Size
 
 		px, py, ok := collision.ComputeCirclePush(c0player, c1player)
 		if ok {
 			p.Velocity[0] -= px * playerToPlayerKnockbackMultiplier
 			p.Velocity[1] -= py * playerToPlayerKnockbackMultiplier
 
-			np.Velocity[0] += px * playerToPlayerKnockbackMultiplier
-			np.Velocity[1] += py * playerToPlayerKnockbackMultiplier
+			op.Velocity[0] += px * playerToPlayerKnockbackMultiplier
+			op.Velocity[1] += py * playerToPlayerKnockbackMultiplier
 		}
+	}
 
-		return true
-	})
+	nearby = nil
 }

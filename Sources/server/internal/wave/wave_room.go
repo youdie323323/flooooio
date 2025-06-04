@@ -78,18 +78,21 @@ func (pd *PlayerData) AssignWaveRoomPlayerId(id *WaveRoomPlayerId) {
 	}
 
 	buf := SharedBufPool.Get()
+	at := 0
 
-	buf[0] = opcode
+	buf[at] = opcode
+	at++
 
 	pd.mu.Lock()
 
 	if id != nil {
-		binary.LittleEndian.PutUint32(buf[1:], uint32(*id))
+		binary.LittleEndian.PutUint32(buf[at:], uint32(*id))
+		at += 4
 
 		pd.WrPId = id
 	}
 
-	pd.Sp.SafeWriteMessage(websocket.BinaryMessage, buf)
+	pd.Sp.SafeWriteMessage(websocket.BinaryMessage, buf[:at])
 
 	pd.mu.Unlock()
 
@@ -357,27 +360,15 @@ func (w *WaveRoom) createUpdatePacket() []byte {
 		binary.LittleEndian.PutUint32(buf[at:], c.Id)
 		at += 4
 
-		{ // Write name
-			copy(buf[at:], []byte(c.Name))
-			at += len(c.Name)
-
-			// Write null terminator
-			buf[at] = 0
-			at++
-		}
+		// Write name
+		at = writeCString(buf, at, c.Name)
 
 		buf[at] = c.State
 		at++
 	}
 
-	{ // Write name
-		copy(buf[at:], []byte(w.code))
-		at += len(w.code)
-
-		// Write null terminator
-		buf[at] = 0
-		at++
-	}
+	// Write code
+	at = writeCString(buf, at, w.code)
 
 	buf[at] = w.state
 	at++
@@ -386,8 +377,9 @@ func (w *WaveRoom) createUpdatePacket() []byte {
 	at++
 
 	buf[at] = w.biome
+	at++
 
-	return buf
+	return buf[:at]
 }
 
 func (w *WaveRoom) isNewPlayerRegisterable() bool {

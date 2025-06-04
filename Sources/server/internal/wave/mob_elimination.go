@@ -33,7 +33,6 @@ func (m *Mob) onEliminate(wp *WavePool) {
 		}
 	}
 
-	// Pre-automatic remove
 	wp.RemoveMob(*m.Id)
 }
 

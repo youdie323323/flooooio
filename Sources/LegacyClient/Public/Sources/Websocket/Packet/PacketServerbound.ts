@@ -8,6 +8,7 @@ const TAU = 2 * Math.PI;
 
 function getNormalizedAngle(angle: number): number {
     angle %= TAU;
+    
     if (angle < 0) {
         angle += TAU;
     }

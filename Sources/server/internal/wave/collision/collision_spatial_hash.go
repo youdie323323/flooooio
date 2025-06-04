@@ -4,8 +4,9 @@ import (
 	"sync"
 
 	"github.com/chewxy/math32"
+	"github.com/colega/zeropool"
 
-	"github.com/puzpuzpuz/xsync/v3"
+	"github.com/puzpuzpuz/xsync/v4"
 )
 
 // Node represents an interface entity.
@@ -30,7 +31,7 @@ func ToNodeSlice[T Node](es []T) []Node {
 // SpatialHash provides a thread-safe 2D spatial hashing implementation.
 type SpatialHash struct {
 	cellSize float32
-	buckets  *xsync.MapOf[int64, *nodeSet]
+	buckets  *xsync.Map[int, *nodeSet]
 }
 
 // nodeSet is a thread-safe set implementation for Node objects.
@@ -61,17 +62,17 @@ func (s *nodeSet) ForEach(f func(Node)) {
 // NewSpatialHash creates a new SpatialHash instance.
 func NewSpatialHash(cellSize float32) *SpatialHash {
 	if cellSize <= 0 {
-		cellSize = 256
+		cellSize = 1024
 	}
 
 	return &SpatialHash{
 		cellSize: cellSize,
-		buckets:  xsync.NewMapOf[int64, *nodeSet](),
+		buckets:  xsync.NewMap[int, *nodeSet](),
 	}
 }
 
 // pairPoint combines x,y coordinates into a single int64 key.
-func (sh *SpatialHash) pairPoint(x, y int64) int64 {
+func (sh *SpatialHash) pairPoint(x, y int) int {
 	if x >= y {
 		return x*x + x + y
 	}
@@ -82,8 +83,8 @@ func (sh *SpatialHash) pairPoint(x, y int64) int64 {
 // Put adds a node to the spatial hash.
 func (sh *SpatialHash) Put(n Node) {
 	key := sh.pairPoint(
-		int64(math32.Floor(n.GetX()/sh.cellSize)),
-		int64(math32.Floor(n.GetY()/sh.cellSize)),
+		int(math32.Floor(n.GetX()/sh.cellSize)),
+		int(math32.Floor(n.GetY()/sh.cellSize)),
 	)
 
 	// Get or create bucket
@@ -94,8 +95,8 @@ func (sh *SpatialHash) Put(n Node) {
 // Remove removes a node from the spatial hash.
 func (sh *SpatialHash) Remove(n Node) {
 	key := sh.pairPoint(
-		int64(math32.Floor(n.GetX()/sh.cellSize)),
-		int64(math32.Floor(n.GetY()/sh.cellSize)),
+		int(math32.Floor(n.GetX()/sh.cellSize)),
+		int(math32.Floor(n.GetY()/sh.cellSize)),
 	)
 
 	if bucket, ok := sh.buckets.Load(key); ok {
@@ -109,45 +110,44 @@ func (sh *SpatialHash) Update(n Node) {
 	sh.Put(n)
 }
 
-// Search finds all nodes within the specified radius of the target point.
-func (sh *SpatialHash) Search(x, y, radius float32) *xsync.MapOf[uint32, Node] {
-	result := xsync.NewMapOf[uint32, Node]()
+// searchResultPool is shared collision searchResultPool between Search.
+var searchResultPool = zeropool.New(func() []Node { return make([]Node, 64) })
 
+// Search finds all nodes within the specified radius using optimized concurrency
+func (sh *SpatialHash) Search(x, y, radius float32) []Node {
 	radiusSq := radius * radius
 
-	minX := int64(math32.Floor((x - radius) / sh.cellSize))
-	maxX := int64(math32.Floor((x + radius) / sh.cellSize))
-	minY := int64(math32.Floor((y - radius) / sh.cellSize))
-	maxY := int64(math32.Floor((y + radius) / sh.cellSize))
+	minX := int(math32.Floor((x - radius) / sh.cellSize))
+	maxX := int(math32.Floor((x + radius) / sh.cellSize))
+	minY := int(math32.Floor((y - radius) / sh.cellSize))
+	maxY := int(math32.Floor((y + radius) / sh.cellSize))
 
-	var wg sync.WaitGroup
+	result := searchResultPool.Get()
+	nodes := result[:0]
 
 	for yy := minY; yy <= maxY; yy++ {
 		for xx := minX; xx <= maxX; xx++ {
 			key := sh.pairPoint(xx, yy)
 
 			if bucket, ok := sh.buckets.Load(key); ok {
-				wg.Add(1)
+				bucket.ForEach(func(n Node) {
+					dx := n.GetX() - x
+					dy := n.GetY() - y
 
-				go func(ns *nodeSet) {
-					ns.ForEach(func(n Node) {
-						dx := n.GetX() - x
-						dy := n.GetY() - y
-
-						if (dx*dx + dy*dy) <= radiusSq {
-							result.Store(n.GetID(), n)
-						}
-					})
-
-					wg.Done()
-				}(bucket)
+					if (dx*dx + dy*dy) <= radiusSq {
+						nodes = append(nodes, n)
+					}
+				})
 			}
 		}
 	}
 
-	wg.Wait()
+	finalResult := make([]Node, len(nodes))
+	copy(finalResult, nodes)
 
-	return result
+	searchResultPool.Put(result)
+
+	return finalResult
 }
 
 // Reset clears all nodes from the spatial hash.

@@ -3,7 +3,7 @@ const io = std.io;
 const mem = std.mem;
 const math = std.math;
 const opcode = @import("./Opcode.zig");
-const wr = @import("../../Florr/PseudoNative/Wave/WaveRoom.zig");
+const wr = @import("../../Florr/OwnNative/Wave/WaveRoom.zig");
 const Biome = @import("../../Florr/Native/Biome.zig").Biome;
 const pmood = @import("../../Entity/PlayerMood.zig");
 const ClientWebSocket = @import("../ClientWebSocket.zig");
@@ -119,7 +119,7 @@ pub fn sendWaveRoomFindPublic(self: ServerBound, biome: Biome) !void {
     shared_fbs.reset();
 }
 
-pub fn sendWaveRoomChangeReady(self: ServerBound, state: wr.RoomPlayerReadyState) !void {
+pub fn sendWaveRoomChangeReady(self: ServerBound, state: wr.PlayerReadyState) !void {
     try shared_stream.writeByte(@intFromEnum(opcode.ServerBound.wave_room_change_ready));
 
     try shared_stream.writeByte(@intFromEnum(state));
@@ -129,7 +129,7 @@ pub fn sendWaveRoomChangeReady(self: ServerBound, state: wr.RoomPlayerReadyState
     shared_fbs.reset();
 }
 
-pub fn sendWaveRoomChangeVisible(self: ServerBound, state: wr.RoomVisibleState) !void {
+pub fn sendWaveRoomChangeVisible(self: ServerBound, state: wr.VisibleState) !void {
     try shared_stream.writeByte(@intFromEnum(opcode.ServerBound.wave_room_change_visible));
 
     try shared_stream.writeByte(@intFromEnum(state));

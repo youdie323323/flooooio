@@ -140,11 +140,12 @@ export default class MobRendererLeech extends AbstractMobRenderer {
         ctx.beginPath();
 
         const firstPoint = points[0];
+        const lenPoints = points.length;
 
-        if (points.length > 1) {
+        if (lenPoints > 1) {
             ctx.moveTo(firstPoint[0], firstPoint[1]);
 
-            for (let i = 0; i < points.length - 1; i++) {
+            for (let i = 0; i < lenPoints - 1; i++) {
                 const p0 =
                     (i >= 1)
                         ? points[i - 1]
@@ -152,7 +153,7 @@ export default class MobRendererLeech extends AbstractMobRenderer {
                 const p1 = points[i];
                 const p2 = points[i + 1];
                 const p3 =
-                    (i !== points.length - 2)
+                    (i !== lenPoints - 2)
                         ? points[i + 2]
                         : p2;
 

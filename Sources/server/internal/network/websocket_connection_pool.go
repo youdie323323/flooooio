@@ -2,16 +2,16 @@ package network
 
 import (
 	"github.com/gorilla/websocket"
-	"github.com/puzpuzpuz/xsync/v3"
+	"github.com/puzpuzpuz/xsync/v4"
 )
 
 // ConnectionPool manages the mapping between connections and user data.
 type ConnectionPool[T any] struct {
-	users *xsync.MapOf[*websocket.Conn, T]
+	users *xsync.Map[*websocket.Conn, T]
 }
 
 func NewConnectionPool[T any]() *ConnectionPool[T] {
-	return &ConnectionPool[T]{xsync.NewMapOf[*websocket.Conn, T]()}
+	return &ConnectionPool[T]{xsync.NewMap[*websocket.Conn, T]()}
 }
 
 func (cm *ConnectionPool[T]) AddUser(conn *websocket.Conn, data T) {

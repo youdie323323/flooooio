@@ -17,6 +17,7 @@ export default class TilesetWavedRenderer {
 
         this.tilesetRenderer.renderTitleTileset({
             ...config,
+            
             translateX: this.backgroundX,
             translateY: this.backgroundY,
         });

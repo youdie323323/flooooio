@@ -287,7 +287,7 @@ func (s *WaveMobSpawner) Next(data *WaveData, groupIndex *int) {
 	s.points = int(data.Progress) * 10
 
 	if s.spawnGroup != nil {
-		s.points += 500
+		s.points += 1000
 	}
 }
 
@@ -328,7 +328,7 @@ func (s *WaveMobSpawner) ComputeDynamicMobData(data *WaveData) *DynamicMobData {
 				// TODO: this depend on rarity as described in wiki
 				segmentBodies = 9
 
-				pointsToConsume *= segmentBodies
+				// pointsToConsume *= segmentBodies
 			}
 
 			s.spawnList.PushBack(&DynamicMobData{
@@ -385,7 +385,7 @@ func flatTopGaussian(x, A, mu, w, sigma float64) float64 {
 }
 
 const (
-	gaussianAmplitude = 15
+	gaussianAmplitude = 25
 	gaussianMean      = 20
 	gaussianW         = 25
 	gaussianStdev     = 1.

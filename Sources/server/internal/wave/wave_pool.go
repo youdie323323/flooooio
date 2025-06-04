@@ -20,14 +20,14 @@ import (
 
 	"github.com/colega/zeropool"
 	"github.com/gorilla/websocket"
-	"github.com/puzpuzpuz/xsync/v3"
+	"github.com/puzpuzpuz/xsync/v4"
 )
 
 const (
 	spatialHashGridSize = 1024
 
 	WaveUpdateFPS = 60
-	
+
 	DeltaT = 1. / WaveUpdateFPS
 
 	WaveDataUpdateFPS = WaveUpdateFPS / 2
@@ -40,6 +40,14 @@ const (
 )
 
 var SharedBufPool = zeropool.New(func() []byte { return make([]byte, 512*KB) })
+
+func writeCString[T ~string](buf []byte, at int, s T) int {
+	n := copy(buf[at:], s)
+
+	buf[at+n] = 0
+
+	return at + n + 1
+}
 
 type WaveProgress = uint16
 
@@ -55,9 +63,9 @@ type WaveData struct {
 }
 
 type WavePool struct {
-	playerPool *xsync.MapOf[EntityId, *Player]
-	mobPool    *xsync.MapOf[EntityId, *Mob]
-	petalPool  *xsync.MapOf[EntityId, *Petal]
+	playerPool *xsync.Map[EntityId, *Player]
+	mobPool    *xsync.Map[EntityId, *Mob]
+	petalPool  *xsync.Map[EntityId, *Petal]
 
 	Ms *WaveMobSpawner
 
@@ -89,9 +97,9 @@ func NewWavePool(wr *WaveRoom, wd *WaveData) *WavePool {
 	spawner.Next(wd, nil)
 
 	return &WavePool{
-		playerPool: xsync.NewMapOf[EntityId, *Player](),
-		mobPool:    xsync.NewMapOf[EntityId, *Mob](),
-		petalPool:  xsync.NewMapOf[EntityId, *Petal](),
+		playerPool: xsync.NewMap[EntityId, *Player](),
+		mobPool:    xsync.NewMap[EntityId, *Mob](),
+		petalPool:  xsync.NewMap[EntityId, *Petal](),
 
 		Ms: spawner,
 
@@ -136,7 +144,7 @@ func (wp *WavePool) StartWave(candidates WaveRoomCandidates) {
 
 			pd.AssignWavePlayerId(player.Id)
 
-			pd.Sp.SafeWriteMessage(websocket.BinaryMessage, buf)
+			pd.Sp.SafeWriteMessage(websocket.BinaryMessage, buf[:at])
 		}
 	}
 
@@ -239,7 +247,7 @@ func (wp *WavePool) broadcastSeldIdPacket() {
 		// Dynamically put id
 		binary.LittleEndian.PutUint32(buf[1:], id)
 
-		p.SafeWriteMessage(websocket.BinaryMessage, buf)
+		p.SafeWriteMessage(websocket.BinaryMessage, buf[:5])
 
 		return true
 	})
@@ -488,14 +496,8 @@ func (wp *WavePool) createUpdatePacket() []byte {
 			buf[at] = byte(p.Mood)
 			at++
 
-			{ // Write name
-				copy(buf[at:], []byte(p.Name))
-				at += len(p.Name)
-
-				// Write null terminator
-				buf[at] = 0
-				at++
-			}
+			// Write name
+			at = writeCString(buf, at, p.Name)
 
 			var bFlags uint8 = 0
 
@@ -635,14 +637,14 @@ func (wp *WavePool) createUpdatePacket() []byte {
 		binary.LittleEndian.PutUint16(buf[at:], uint16(len(wp.lightningBounces)))
 		at += 2
 
-		for _, points := range wp.lightningBounces {
-			binary.LittleEndian.PutUint16(buf[at:], uint16(len(points)))
+		for _, ps := range wp.lightningBounces {
+			binary.LittleEndian.PutUint16(buf[at:], uint16(len(ps)))
 			at += 2
 
-			for _, point := range points {
-				binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(point[0]))
+			for _, p := range ps {
+				binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p[0]))
 				at += 4
-				binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(point[1]))
+				binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p[1]))
 				at += 4
 			}
 		}
@@ -1339,27 +1341,18 @@ func (wp *WavePool) staticPetalToDynamicPetal(
 }
 
 func (wp *WavePool) createChatReceivPacket(msg string) []byte {
-	buf := make(
-		[]byte,
-		1+ // Opcode size
-			4+ // Player id size
-			(len(msg)+1), // Length + null terminator
-	)
+	buf := SharedBufPool.Get()
+	defer SharedBufPool.Put(buf)
+
 	at := 0
 
 	buf[at] = network.ClientboundWaveChatReceiv
 	at++
 
-	{ // Write chat message
-		copy(buf[at:], []byte(msg))
-		at += len(msg)
+	// Write chat message
+	at = writeCString(buf, at, msg)
 
-		// Write null terminator
-		buf[at] = 0
-		at++
-	}
-
-	return buf
+	return buf[:at]
 }
 
 func (wp *WavePool) BroadcastChatReceivPacket(msg string) {

@@ -182,12 +182,8 @@ func predictInterceptionAnglePlayer(dx, dy float32, p *Player, currentAngle floa
 	return generalPurposePredictInterception(dx, dy, vtx, vty, currentAngle)
 }
 
-func (m *Mob) calculateDetectRange() float32 {
-	return 10 * m.CalculateDiameter()
-}
-
-func (m *Mob) calculateLoseRange() float32 {
-	return 2 * m.calculateDetectRange()
+func (m *Mob) getDetectRange() float32 {
+	return 2000
 }
 
 // GetTrackingTargets returns target nodes to track.
@@ -232,27 +228,16 @@ func (m *Mob) MobBehavior(wp *WavePool, now time.Time) {
 		m.LastAttackedEntity = nil
 	}
 
-	var distanceToTargetDot float32 = 0.
-
-	if m.TargetEntity != nil {
-		dx := m.TargetEntity.GetX() - m.X
-		dy := m.TargetEntity.GetY() - m.Y
-
-		distanceToTargetDot = dx*dx + dy*dy
-	}
-
-	loseRange := m.calculateLoseRange()
-
-	// Lose target
-	if distanceToTargetDot > loseRange*loseRange {
-		m.TargetEntity = nil
-	}
-
 	shouldStop := false
 
-	judgementFunc, ok := cautionBehaviorStopJudger[m.Type]
-	if ok {
-		shouldStop = judgementFunc(m, distanceToTargetDot)
+	if m.TargetEntity != nil {
+		judgementFunc, ok := cautionBehaviorStopJudger[m.Type]
+		if ok {
+			dx := m.TargetEntity.GetX() - m.X
+			dy := m.TargetEntity.GetY() - m.Y
+
+			shouldStop = judgementFunc(m, dx*dx+dy*dy)
+		}
 	}
 
 	shouldTurnToTarget := true
@@ -371,7 +356,7 @@ func (m *Mob) MobBehavior(wp *WavePool, now time.Time) {
 			} else if m.LastAttackedEntity != nil {
 				targetEntity = m.LastAttackedEntity
 			} else {
-				targetEntity = FindNearestEntityWithLimitedDistance(m, m.GetTrackingTargets(wp), m.calculateDetectRange())
+				targetEntity = FindNearestEntityWithLimitedDistance(m, m.GetTrackingTargets(wp), m.getDetectRange())
 				if targetEntity == nil {
 					return
 				}

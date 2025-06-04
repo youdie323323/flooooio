@@ -1,5 +1,5 @@
 /// Represents the state of the wave room.
-pub const RoomState = enum(u8) {
+pub const State = enum(u8) {
     /// Waiting, meaning waiting for players (not starting).
     waiting,
     /// Playing, meaning playing currently.
@@ -9,13 +9,13 @@ pub const RoomState = enum(u8) {
 };
 
 /// Represents the visible state of the wave room.
-pub const RoomVisibleState = enum(u8) {
+pub const VisibleState = enum(u8) {
     public,
     private,
 };
 
 /// Represents the player ready state in the wave room.
-pub const RoomPlayerReadyState = enum(u8) {
+pub const PlayerReadyState = enum(u8) {
     preparing,
     ready,
 };
