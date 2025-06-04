@@ -21,6 +21,8 @@ var talentDisabledMobTypes = []native.MobType{
 const (
 	specialMovementDefaultTimer         = 1
 	specialMovementCentipedeDesertTimer = 2
+
+	RotationCounterGoal = 500
 )
 
 func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
@@ -39,7 +41,7 @@ func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
 	}
 
 	if m.TargetEntity == nil {
-		if m.RotationCounter >= 500 {
+		if m.RotationCounter >= RotationCounterGoal {
 			m.Angle = GetRandomAngle()
 
 			m.RotationCounter = 0

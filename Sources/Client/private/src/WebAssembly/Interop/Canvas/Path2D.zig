@@ -7,9 +7,7 @@ pub const PathId = u32;
 id: PathId,
 
 pub inline fn init() Path2D {
-    const path_id = @"59"();
-
-    return .{ .id = path_id };
+    return .{ .id = @"59"() };
 }
 
 pub inline fn deinit(self: Path2D) void {

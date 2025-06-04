@@ -34,7 +34,7 @@ pub const Bounds = struct {
 };
 
 pub const TileMapLayer = struct {
-    tiles: []const CanvasContext,
+    tiles: []const *CanvasContext,
     data: []const []const u8,
 };
 
@@ -48,7 +48,7 @@ pub const TileMapOptions = struct {
     scale_bound: Vector2 = .{ -math.inf(f32), math.inf(f32) },
 };
 
-const Chunk = CanvasContext;
+const Chunk = *CanvasContext;
 
 const ChunkCacheKey = i64;
 
@@ -112,7 +112,7 @@ inline fn generateChunk(
 
     const bounds_top_left = if (options.bounds) |b| b.top_left else zero_vector;
 
-    chunk_ctx.setImageSmoothingEnabled(false);
+    chunk_ctx.@"imageSmoothingEnabled ="(false);
 
     for (options.layers) |layer| {
         // const data = layer.data;
@@ -157,7 +157,7 @@ inline fn generateChunk(
 
 inline fn drawChunk(
     _: TileMap,
-    ctx: CanvasContext,
+    ctx: *CanvasContext,
     chunk: Chunk,
     position: Vector2,
 ) void {
@@ -170,11 +170,11 @@ inline fn drawChunk(
 
 pub fn draw(
     self: *TileMap,
-    ctx: CanvasContext,
+    ctx: *CanvasContext,
     screen: Vector2,
     position: Vector2,
     scale: f32,
-) anyerror!void {
+) !void {
     @setRuntimeSafety(false);
     
     const options = self.options;
@@ -225,7 +225,7 @@ pub fn draw(
 
     ctx.save();
 
-    ctx.setImageSmoothingEnabled(false);
+    ctx.@"imageSmoothingEnabled ="(false);
 
     ctx.scale(
         actual_scale,

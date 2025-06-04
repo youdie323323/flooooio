@@ -93,11 +93,11 @@ fn render(rctx: RenderingContext(MobSuper)) void {
 
     const starfish_skin_color = MobStarfishRenderer.blendStatusEffects(rctx, comptime Color.comptimeFromHexColorCode("#d0504e"));
 
-    ctx.setLineWidth(52);
+    ctx.@"lineWidth ="(52);
     ctx.strokeColor(starfish_skin_color.darkened(darkened_base));
     ctx.stroke();
 
-    ctx.setLineWidth(26);
+    ctx.@"lineWidth ="(26);
     ctx.fillColor(starfish_skin_color);
     ctx.strokeColor(starfish_skin_color);
     ctx.fill();

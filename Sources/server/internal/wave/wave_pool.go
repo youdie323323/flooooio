@@ -21,16 +21,16 @@ import (
 	"github.com/colega/zeropool"
 	"github.com/gorilla/websocket"
 	"github.com/puzpuzpuz/xsync/v3"
-
-	"github.com/chewxy/math32"
 )
 
 const (
 	spatialHashGridSize = 1024
 
 	WaveUpdateFPS = 60
-
+	
 	DeltaT = 1. / WaveUpdateFPS
+
+	WaveDataUpdateFPS = WaveUpdateFPS / 2
 )
 
 const (
@@ -39,16 +39,14 @@ const (
 	GB = 1024 * MB
 )
 
-var BufPool = zeropool.New(func() []byte { return make([]byte, 512*KB) })
+var SharedBufPool = zeropool.New(func() []byte { return make([]byte, 512*KB) })
 
-func calculateWaveLength(x float32) float32 {
-	return max(60, math32.Pow(x, 0.2)*18.9287+30)
-}
+type WaveProgress = uint16
 
 type WaveData struct {
 	Biome native.Biome
 
-	Progress         uint16
+	Progress         WaveProgress
 	ProgressTimer    float32
 	ProgressRedTimer float32
 	ProgressIsRed    bool
@@ -88,7 +86,7 @@ type WavePool struct {
 
 func NewWavePool(wr *WaveRoom, wd *WaveData) *WavePool {
 	spawner := new(WaveMobSpawner)
-	spawner.Next(wd)
+	spawner.Next(wd, nil)
 
 	return &WavePool{
 		playerPool: xsync.NewMapOf[EntityId, *Player](),
@@ -119,7 +117,7 @@ func (wp *WavePool) StartWave(candidates WaveRoomCandidates) {
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
 
-	buf := BufPool.Get()
+	buf := SharedBufPool.Get()
 	at := 0
 
 	buf[at] = network.ClientboundWaveStarted
@@ -142,7 +140,7 @@ func (wp *WavePool) StartWave(candidates WaveRoomCandidates) {
 		}
 	}
 
-	BufPool.Put(buf)
+	SharedBufPool.Put(buf)
 
 	wp.broadcastSeldIdPacket()
 
@@ -202,9 +200,9 @@ Done:
 	wp.mobPool.Clear()
 	wp.petalPool.Clear()
 
-	clear(wp.eliminatedEntityIDs)
+	wp.eliminatedEntityIDs = nil
 
-	wp.lightningBounces = wp.lightningBounces[:0]
+	wp.lightningBounces = nil
 
 	wp.SpatialHash.Reset()
 
@@ -233,7 +231,7 @@ func (wp *WavePool) IsAllPlayerDead() bool {
 
 // broadcastSeldIdPacket broadcast the id packet. Must call lock before.
 func (wp *WavePool) broadcastSeldIdPacket() {
-	buf := BufPool.Get()
+	buf := SharedBufPool.Get()
 
 	buf[0] = network.ClientboundWaveSelfId
 
@@ -246,7 +244,7 @@ func (wp *WavePool) broadcastSeldIdPacket() {
 		return true
 	})
 
-	BufPool.Put(buf)
+	SharedBufPool.Put(buf)
 }
 
 func (wp *WavePool) startUpdate() {
@@ -386,7 +384,7 @@ func (wp *WavePool) updateWaveData() {
 		}
 	}
 
-	waveLength := calculateWaveLength(float32(wp.Wd.Progress))
+	waveLength := CalculateWaveLength(float32(wp.Wd.Progress))
 
 	if wp.Wd.ProgressTimer >= waveLength {
 		mobCount := len(wp.GetMobsWithCondition(func(m *Mob) bool { return m.IsEnemy() }))
@@ -409,7 +407,7 @@ func (wp *WavePool) updateWaveData() {
 			wp.Wd.ProgressTimer = 0
 			wp.Wd.Progress++
 
-			wp.Ms.Next(wp.Wd)
+			wp.Ms.Next(wp.Wd, nil)
 		}
 	} else {
 		wp.Wd.ProgressTimer = min(
@@ -432,8 +430,8 @@ func (wp *WavePool) broadcastUpdatePacket() {
 func (wp *WavePool) createUpdatePacket() []byte {
 	wp.mu.Lock()
 
-	buf := BufPool.Get()
-	defer BufPool.Put(buf)
+	buf := SharedBufPool.Get()
+	defer SharedBufPool.Put(buf)
 
 	at := 0
 
@@ -451,6 +449,7 @@ func (wp *WavePool) createUpdatePacket() []byte {
 
 	{ // Wave is ended or not
 		var y byte = 0
+
 		if wp.hasBeenEnded.Load() {
 			y = 1
 		}
@@ -629,7 +628,7 @@ func (wp *WavePool) createUpdatePacket() []byte {
 			at += 4
 		}
 
-		clear(wp.eliminatedEntityIDs)
+		wp.eliminatedEntityIDs = nil
 	}
 
 	{ // Write lightning bounces
@@ -648,12 +647,12 @@ func (wp *WavePool) createUpdatePacket() []byte {
 			}
 		}
 
-		wp.lightningBounces = wp.lightningBounces[:0]
+		wp.lightningBounces = nil
 	}
 
 	wp.mu.Unlock()
 
-	return buf
+	return buf[:at]
 }
 
 func (wp *WavePool) GeneratePlayer(
@@ -1130,6 +1129,11 @@ func (wp *WavePool) SafeGetPetalsWithCondition(condition func(*Petal) bool) []*P
 // MobDoLightningBounce performs lightning bounce effect between players and pets from enemy (mob) side.
 // hitEntity is the initially struck entity.
 func (wp *WavePool) MobDoLightningBounce(jellyfish *Mob, hitEntity collision.Node) {
+	// If strike projectile mob type, return
+	if m, ok := hitEntity.(*Mob); ok && slices.Contains(ProjectileMobTypes, m.Type) {
+		return
+	}
+
 	mobExtra := native.MobProfiles[jellyfish.Type].StatFromRarity(jellyfish.Rarity).Extra
 
 	maxBounces, ok := mobExtra["bounces"]
@@ -1202,11 +1206,6 @@ Loop:
 
 		case *Mob:
 			{
-				// Missile is not electrical
-				if targetEntity.Type == native.MobTypeMissileProjectile {
-					break Loop
-				}
-
 				bouncePoints = append(bouncePoints, [2]float32{targetEntity.X, targetEntity.Y})
 
 				bouncedIds = append(bouncedIds, targetEntity.Id)
@@ -1237,7 +1236,7 @@ Loop:
 		}
 	}
 
-	clear(bouncedIds)
+	bouncedIds = nil
 
 	if len(bouncePoints) > 0 {
 		wp.lightningBounces = append(wp.lightningBounces, bouncePoints)
@@ -1247,6 +1246,11 @@ Loop:
 // PetalDoLightningBounce performs lightning bounce effect between mobs.
 // hitMob is the initially struck mob.
 func (wp *WavePool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
+	// If strike unconducted mob type, return
+	if slices.Contains(ProjectileMobTypes, hitMob.Type) {
+		return
+	}
+
 	petalExtra := native.PetalProfiles[lightning.Type].StatFromRarity(lightning.Rarity).Extra
 
 	maxBounces, ok := petalExtra["bounces"]
@@ -1273,11 +1277,6 @@ func (wp *WavePool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 			break
 		}
 
-		// Missile is not electrical
-		if targetMob.Type == native.MobTypeMissileProjectile {
-			break
-		}
-
 		bouncePoints = append(bouncePoints, [2]float32{targetMob.X, targetMob.Y})
 
 		bouncedIds = append(bouncedIds, targetMob.Id)
@@ -1300,7 +1299,7 @@ func (wp *WavePool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 		}
 	}
 
-	clear(bouncedIds)
+	bouncedIds = nil
 
 	// Remove lightning
 	lightning.SafeForceEliminate(wp)

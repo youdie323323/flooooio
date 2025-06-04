@@ -47,7 +47,7 @@ const (
 	PetalTypeMagnet
 )
 
-var MobTypeValues = []MobType{
+var MobTypes = []MobType{
 	MobTypeBee,
 	MobTypeSpider,
 	MobTypeHornet,
@@ -73,7 +73,7 @@ var MobTypeValues = []MobType{
 	// MobTypeWebProjectile,
 }
 
-var PetalTypeValues = []PetalType{
+var PetalTypes = []PetalType{
 	PetalTypeBasic,
 	PetalTypeFaster,
 	PetalTypeEggBeetle,

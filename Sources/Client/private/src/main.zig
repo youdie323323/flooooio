@@ -4,7 +4,7 @@ const math = std.math;
 
 const event = @import("./WebAssembly/Interop/Event.zig");
 const dom = @import("./WebAssembly/Interop/Dom.zig");
-const ClientWebsocket = @import("./WebSocket/ClientWebSocket.zig");
+const ws = @import("./WebSocket/ws.zig");
 
 const CanvasContext = @import("./WebAssembly/Interop/Canvas/CanvasContext.zig");
 const Color = @import("./WebAssembly/Interop/Canvas/Color.zig");
@@ -21,7 +21,7 @@ const MobImpl = @import("./Entity/Mob.zig");
 const renderEntity = @import("./Entity/Renderers/Renderer.zig").renderEntity;
 const MobRenderingDispatcher = @import("./Entity/Renderers/MobRenderingDispatcher.zig").MobRenderingDispatcher;
 
-const mach_objects = @import("./Entity/MachObjects/main.zig");
+const mach_objects = @import("./Entity/MachObjects/objs.zig");
 
 const cpp = @cImport({
     @cDefine("BOOST_NO_RTTI", {});
@@ -32,12 +32,14 @@ const cpp = @cImport({
 
 const allocator = @import("./mem.zig").allocator;
 
-var ctx: CanvasContext = undefined;
+/// Global context of this application.
+var ctx: *CanvasContext = undefined;
+
 var current_ui: UI = undefined;
 
 // var tile_map: TileMap = undefined;
 
-var client: *ClientWebsocket = undefined;
+var client: *ws.ClientWebSocket = undefined;
 
 var width: f32 = 0;
 var height: f32 = 0;
@@ -72,21 +74,33 @@ fn onWheel(_: ?*const event.Event) callconv(.c) void {
     players.unlock();
 }
 
-var players: mach_objects.Objects(.{}, PlayerImpl.Super) = undefined;
-var mobs: mach_objects.Objects(.{}, MobImpl.Super) = undefined;
+var players: mach_objects.Objects(PlayerImpl.Super) = undefined;
+var mobs: mach_objects.Objects(MobImpl.Super) = undefined;
 
 var i: f32 = 0;
+
+fn handleWaveUpdate(stream: *ws.ClientBound.Reader) anyerror!void {
+    { // Read wave informations
+        const wave_progress = try stream.readInt(u16, .little);
+
+        const wave_progress_timer = try ws.ClientBound.readFloat32(stream);
+
+        std.debug.print("{} {}\n", .{ wave_progress, wave_progress_timer });
+    }
+}
 
 // This function overrides C main
 // main(_: c_int, _: [*][*]u8) c_int
 export fn main() c_int {
     std.debug.print("main()\n", .{});
 
-    client = ClientWebsocket.init(allocator) catch unreachable;
+    client = ws.ClientWebSocket.init(allocator) catch unreachable;
+
+    client.client_bound.putHandler(ws.opcode.ClientBound.wave_update, handleWaveUpdate) catch unreachable;
 
     client.connect("localhost:8080") catch unreachable;
 
-    ctx = CanvasContext.getCanvasContextFromElement("canvas", false);
+    ctx = CanvasContext.createCanvasContextFromElement("canvas", false);
 
     cpp.parseSvg(@embedFile("./Tile/Tiles/grass_c_0.svg"), @ptrCast(&ctx));
 
@@ -106,16 +120,26 @@ export fn main() c_int {
         PlayerImpl.Renderer.initStatic();
         MobImpl.Renderer.initStatic();
 
-        var player = PlayerImpl.Super.init(
-            PlayerImpl.init(allocator),
-            -1,
-            @splat(100),
-            0,
-            50,
-            1,
-        );
+        {
+            players.lock();
 
-        player.hurt_t = 1;
+            var player = PlayerImpl.Super.init(
+                PlayerImpl.init(allocator),
+                -1,
+                @splat(1000),
+                0,
+                50,
+                1,
+            );
+
+            player.hurt_t = 1;
+
+            player.is_dead = true;
+
+            _ = players.new(player) catch unreachable;
+
+            players.unlock();
+        }
 
         _ = timer.setInterval(struct {
             fn call() callconv(.c) void {
@@ -145,8 +169,6 @@ export fn main() c_int {
                 mobs.unlock();
             }
         }.call, 500);
-
-        _ = players.new(player) catch unreachable;
     }
 
     draw(-1);
@@ -204,7 +226,7 @@ fn draw(_: f32) callconv(.c) void {
                     .is_specimen = false,
                 });
 
-                mob.update(delta_time);
+                // mob.update(delta_time);
 
                 mobs.setValue(m, mob);
             }
@@ -227,7 +249,7 @@ fn draw(_: f32) callconv(.c) void {
 
         ctx.@"lineJoin = 'round'"();
         ctx.@"lineCap = 'round'"();
-        ctx.setTextAlign("right");
+        ctx.@"textAlign ="(.right);
 
         ctx.fillColor(comptime Color.comptimeFromHexColorCode("#FFFFFF"));
 

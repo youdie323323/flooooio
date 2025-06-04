@@ -1,11 +1,12 @@
 const std = @import("std");
 const math = std.math;
-const Vector2 = @Vector(2, f32);
 
 pub const EntityId = i32;
 
 pub fn Entity(comptime Impl: type) type {
     return struct {
+        const Vector2 = @Vector(2, f32);
+
         const Self = @This();
 
         inline fn calculateAngleDistance(start_angle: f32, end_angle: f32) f32 {
@@ -119,7 +120,7 @@ pub fn Entity(comptime Impl: type) type {
             const delta_time_150 = delta_time_100 * 2 / 3;
             const delta_time_200 = delta_time_100 * 0.5;
 
-            if (self.is_dead) self.dead_t += delta_time_150;
+            // if (self.is_dead) self.dead_t += delta_time_150;
 
             if (self.hurt_t > 0) {
                 self.hurt_t -= delta_time_150;

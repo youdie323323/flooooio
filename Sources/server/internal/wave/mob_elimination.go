@@ -26,6 +26,13 @@ func (m *Mob) onEliminate(wp *WavePool) {
 		removeConnectedSegmentTraversal(wp, m)
 	}
 
+	// Normal centi / desert centi changes angle when one of their segment is destroyed
+	if m.Type == native.MobTypeCentipede || m.Type == native.MobTypeCentipedeDesert {
+		if t, ok := IsBodyWithTraversedResult(wp, m); ok && t.TargetEntity == nil {
+			t.RotationCounter = RotationCounterGoal
+		}
+	}
+
 	// Pre-automatic remove
 	wp.RemoveMob(*m.Id)
 }

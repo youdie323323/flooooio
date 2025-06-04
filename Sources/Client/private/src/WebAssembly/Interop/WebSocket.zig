@@ -9,20 +9,20 @@ pub fn WebSocket(comptime Context: type) type {
         var websocket_instances =
             std.AutoHashMap(Self.WebSocketId, *Self).init(mem.allocator);
 
-        const OnMessageFn = ?*const fn (*Self, []const u8) void;
-        const OnOpenFn = ?*const fn (*Self) void;
-        const OnErrorFn = ?*const fn (*Self) void;
-        const OnCloseFn = ?*const fn (*Self) void;
+        const OnMessageFn = *const fn (*Self, []const u8) void;
+        const OnOpenFn = *const fn (*Self) void;
+        const OnErrorFn = *const fn (*Self) void;
+        const OnCloseFn = *const fn (*Self) void;
 
         pub const WebSocketId = u16;
 
         id: WebSocketId,
         ctx: Context,
 
-        on_message: OnMessageFn = null,
-        on_open: OnOpenFn = null,
-        on_error: OnErrorFn = null,
-        on_close: OnCloseFn = null,
+        on_message: ?OnMessageFn = null,
+        on_open: ?OnOpenFn = null,
+        on_error: ?OnErrorFn = null,
+        on_close: ?OnCloseFn = null,
 
         const EventType = enum(u8) {
             message = 1,

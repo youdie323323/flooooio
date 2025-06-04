@@ -9,14 +9,14 @@ pub const Point = @Vector(2, f32);
 
 pub const Components = std.BoundedArray(*Component, std.math.pow(usize, 2, 8));
 
-ctx: CanvasContext,
+ctx: *CanvasContext,
 components: Components,
 mouse_position: Point,
 allocator: Allocator,
 hovered_component: ?*Component = null,
 clicked_component: ?*Component = null,
 
-pub fn init(allocator: Allocator, ctx: CanvasContext) error{Overflow}!UI {
+pub fn init(allocator: Allocator, ctx: *CanvasContext) error{Overflow}!UI {
     return .{
         .ctx = ctx,
         .components = try Components.init(0),

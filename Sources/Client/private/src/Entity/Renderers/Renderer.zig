@@ -1,7 +1,9 @@
 const std = @import("std");
+const math = std.math;
 const CanvasContext = @import("../../WebAssembly/Interop/Canvas/CanvasContext.zig");
 const Color = @import("../../WebAssembly/Interop/Canvas/Color.zig");
 const allocator = @import("../../mem.zig").allocator;
+const MobType = @import("../EntityType.zig").MobType;
 
 /// A factor used for darken skin color.
 /// Mainly used for stroke color.
@@ -10,7 +12,7 @@ pub const darkened_base: f32 = 0.1875;
 pub fn RenderingContext(comptime Entity: type) type {
     return *const struct {
         /// Context to render entities.
-        ctx: CanvasContext,
+        ctx: *CanvasContext,
 
         /// A entity used to render.
         entity: *Entity,
@@ -51,7 +53,9 @@ pub fn Renderer(
 
                 ctx.translate(x, y);
 
-                if (!is_specimen) {}
+                if (!is_specimen) {
+                    applyDeathAnimation(rctx);
+                }
             }
 
             render_fn(rctx);
@@ -63,6 +67,28 @@ pub fn Renderer(
             const is_specimen = rctx.is_specimen;
 
             return !(!is_specimen and entity.is_dead and entity.dead_t > 1);
+        }
+
+        /// Apply death animation to current context.
+        pub fn applyDeathAnimation(rctx: RenderingContext(Entity)) void {
+            const ctx = rctx.ctx;
+            const entity = rctx.entity;
+
+            if (entity.is_dead) {
+                const impl = entity.impl;
+
+                const is_leech =
+                    // Check if entity is mob
+                    @hasDecl(@TypeOf(impl), "type") and
+                    entity.type.get() == @intFromEnum(MobType.leech);
+
+                const sin_waved_dead_t = @sin(entity.dead_t * math.pi / (if (is_leech) 9 else 3));
+
+                const scale = 1 + sin_waved_dead_t;
+
+                ctx.scale(scale, scale);
+                ctx.@"globalAlpha ="(ctx.global_alpha * (1 - (if (is_leech) 2 else 1) * sin_waved_dead_t));
+            }
         }
 
         /// Blend colors based on entity effects.
@@ -89,11 +115,12 @@ pub fn Renderer(
     };
 }
 
+/// Render the entity.
 pub fn renderEntity(comptime Impl: type, rctx: RenderingContext(Impl.Super)) void {
     const ctx = rctx.ctx;
 
-    comptime if (!@hasDecl(Impl, "Renderer"))
-        @compileError("Entity type must have a Renderer declaration");
+    // Validate implementation
+    comptime validateEntityImplementation(Impl);
 
     const EntityRenderer = Impl.Renderer;
 
@@ -104,4 +131,13 @@ pub fn renderEntity(comptime Impl: type, rctx: RenderingContext(Impl.Super)) voi
     EntityRenderer.render(rctx);
 
     ctx.restore();
+}
+
+/// Validates the given Entity implementation object (type check).
+inline fn validateEntityImplementation(comptime Impl: type) void {
+    if (!@hasDecl(Impl, "Super"))
+        @compileError("entity implementation must have a Super declaration");
+
+    if (!@hasDecl(Impl, "Renderer"))
+        @compileError("entity implementation must have a Renderer declaration");
 }

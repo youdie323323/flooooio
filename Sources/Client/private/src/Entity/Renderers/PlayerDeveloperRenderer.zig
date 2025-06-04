@@ -8,6 +8,12 @@ const PlayerSuper = @import("../Player.zig").Super;
 const Color = @import("../../WebAssembly/Interop/Canvas/Color.zig");
 const drawDeadEyes = @import("PlayerNormalRenderer.zig").drawDeadEyes;
 
+const developer_left_eye_x = 10;
+const developer_left_eye_y = 8;
+
+const developer_right_eye_x = -10;
+const developer_right_eye_y = -8;
+
 fn drawEyeOutline(
     rctx: RenderingContext(PlayerSuper),
     comptime offset: f32,
@@ -16,9 +22,9 @@ fn drawEyeOutline(
 
     ctx.beginPath();
 
-    ctx.ellipse(10, 8, offset + 2.4, offset + 5.6, -0.1, 0, math.tau, false);
+    ctx.ellipse(developer_left_eye_x, developer_left_eye_y, offset + 2.4, offset + 5.6, -0.1, 0, math.tau, false);
     ctx.moveTo(-8, -5);
-    ctx.ellipse(-10, -8, offset + 2.4, offset + 5.6, -0.1, 0, math.tau, false);
+    ctx.ellipse(developer_right_eye_x, developer_right_eye_y, offset + 2.4, offset + 5.6, -0.1, 0, math.tau, false);
 
     ctx.fillColor(comptime Color.comptimeFromHexColorCode("#000000"));
     ctx.fill();
@@ -49,7 +55,7 @@ fn render(rctx: RenderingContext(PlayerSuper)) void {
 
         ctx.closePath();
 
-        ctx.setLineWidth(3);
+        ctx.@"lineWidth ="(3);
         ctx.fillColor(PlayerDeveloperRenderer.blendStatusEffects(rctx, comptime Color.comptimeFromHexColorCode("#ffe763")));
         ctx.strokeColor(PlayerDeveloperRenderer.blendStatusEffects(rctx, comptime Color.comptimeFromHexColorCode("#cfbb50")));
         ctx.fill();
@@ -57,8 +63,8 @@ fn render(rctx: RenderingContext(PlayerSuper)) void {
     }
 
     if (entity.is_dead) {
-        drawDeadEyes(rctx, 10, 8);
-        drawDeadEyes(rctx, -10, -8);
+        drawDeadEyes(rctx, developer_left_eye_x, developer_left_eye_y);
+        drawDeadEyes(rctx, developer_right_eye_x, developer_right_eye_y);
     } else {
         ctx.save();
         defer ctx.restore();
@@ -95,7 +101,7 @@ fn render(rctx: RenderingContext(PlayerSuper)) void {
         ctx.moveTo(-3, 0);
         ctx.quadraticCurveTo(0, vertic_rise, 3, 0);
 
-        ctx.setLineWidth(1.5);
+        ctx.@"lineWidth ="(1.5);
         ctx.strokeColor(comptime Color.comptimeFromHexColorCode("#000000"));
         ctx.stroke();
     }

@@ -1,9 +1,7 @@
 const std = @import("std");
 const math = std.math;
 const Entity = @import("./Entity.zig").Entity;
-const MoodBitSet = @import("./PlayerMood.zig").MoodBitSet;
-const MoodFlags = @import("./PlayerMood.zig").MoodFlags;
-const decodeMood = @import("./PlayerMood.zig").decodeMood;
+const pmood = @import("./PlayerMood.zig");
 
 const PlayerImpl = @This();
 
@@ -11,7 +9,7 @@ pub const Super = Entity(PlayerImpl);
 
 pub const Renderer = @import("./Renderers/PlayerRenderingDispatcher.zig").PlayerRenderingDispatcher;
 
-mood: MoodBitSet = MoodBitSet.initEmpty(),
+mood: pmood.MoodBitSet = pmood.MoodBitSet.initEmpty(),
 
 angry_t: f32 = 0,
 sad_t: f32 = 0,
@@ -33,7 +31,7 @@ pub fn update(self: *PlayerImpl, delta_time: f32, entity: *Super) void {
     } else {
         const mood_mouth_speed = delta_time / 100;
 
-        var is_angry, var is_sad = decodeMood(self.mood);
+        var is_angry, var is_sad = pmood.decodeMood(self.mood);
 
         if (entity.is_poisoned) {
             is_angry = false;

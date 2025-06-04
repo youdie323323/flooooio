@@ -96,28 +96,19 @@ func doPetalSpin(
 	i int,
 	j int,
 ) {
-	var spinTargets []collision.Node
-
-	{
-		mobs := wp.GetMobsWithCondition(func(m *Mob) bool {
-			if !m.IsEnemy() {
-				return false
-			}
-
-			spinDetectRad := m.CalculateRadius() * spinNearestSizeCoefficient
-			spinDetectRadSq := spinDetectRad * spinDetectRad
-
-			dx := m.X - pe.X
-			dy := m.Y - pe.Y
-
-			return (dx*dx + dy*dy) <= spinDetectRadSq
-		})
-
-		spinTargets = make([]collision.Node, len(mobs))
-		for i, mob := range mobs {
-			spinTargets[i] = mob
+	spinTargets := collision.ToNodeSlice(wp.GetMobsWithCondition(func(m *Mob) bool {
+		if !m.IsOrganismEnemy() {
+			return false
 		}
-	}
+
+		spinDetectRad := m.CalculateRadius() * spinNearestSizeCoefficient
+		spinDetectRadSq := spinDetectRad * spinDetectRad
+
+		dx := m.X - pe.X
+		dy := m.Y - pe.Y
+
+		return (dx*dx + dy*dy) <= spinDetectRadSq
+	}))
 
 	mobToSpin, ok := FindNearestEntity(
 		pe,

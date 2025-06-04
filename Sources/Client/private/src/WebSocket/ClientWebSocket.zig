@@ -15,8 +15,8 @@ pub const DefaultPacketStream = io.FixedBufferStream([]const u8);
 allocator: mem.Allocator,
 
 socket: *OwnContextWebSocket = undefined,
-packet_handler: ClientBound,
-packet_writer: ServerBound,
+client_bound: ClientBound,
+server_bound: ServerBound,
 
 prng: std.Random.DefaultPrng,
 
@@ -34,58 +34,58 @@ fn tryFuzz() callconv(.c) void {
             const angle = random.float(f32) * std.math.tau;
             const magnitude = random.float(f32);
 
-            fuzzing_ws.ctx.packet_writer.sendWaveChangeMove(angle, magnitude) catch {};
+            fuzzing_ws.ctx.server_bound.sendWaveChangeMove(angle, magnitude) catch {};
         },
         1 => {
             // Random mood
             const mood = random.intRangeAtMost(u8, 0, 255);
 
-            fuzzing_ws.ctx.packet_writer.sendWaveChangeMood(mood) catch {};
+            fuzzing_ws.ctx.server_bound.sendWaveChangeMood(mood) catch {};
         },
         2 => {
             // Random petal swap
             const index = random.intRangeAtMost(u8, 0, 7);
 
-            fuzzing_ws.ctx.packet_writer.sendWaveSwapPetal(index) catch {};
+            fuzzing_ws.ctx.server_bound.sendWaveSwapPetal(index) catch {};
         },
         3 => {
             // Random chat
             const messages = [_][]const u8{ "Hello!", "Test", "Fuzzing", "Random", "Message" };
             const msg = messages[random.intRangeAtMost(usize, 0, messages.len - 1)];
 
-            fuzzing_ws.ctx.packet_writer.sendWaveChat(msg) catch {};
+            fuzzing_ws.ctx.server_bound.sendWaveChat(msg) catch {};
         },
         4 => {
             // Random room create
             const biome = random.intRangeAtMost(u8, 0, 255);
 
-            fuzzing_ws.ctx.packet_writer.sendWaveRoomCreate(biome) catch {};
+            fuzzing_ws.ctx.server_bound.sendWaveRoomCreate(biome) catch {};
         },
         5 => {
             // Random room join
-            const codes = [_][]const u8{ "ABCD", "EFGH", "IJKL", "MNOP" };
+            const codes = [_][]const u8{ "ABCD", "EFGH", "IJKL", "MNOP", "abc-abcabc", "abc-141421" };
             const code = codes[random.intRangeAtMost(usize, 0, codes.len - 1)];
 
-            fuzzing_ws.ctx.packet_writer.sendWaveRoomJoin(code) catch {};
+            fuzzing_ws.ctx.server_bound.sendWaveRoomJoin(code) catch {};
         },
         6 => {
             // Random ready state
             const state = random.intRangeAtMost(u8, 0, 1);
 
-            fuzzing_ws.ctx.packet_writer.sendWaveRoomChangeReady(state) catch {};
+            fuzzing_ws.ctx.server_bound.sendWaveRoomChangeReady(state) catch {};
         },
         7 => {
             // Random visibility
             const visible = random.intRangeAtMost(u8, 0, 1);
 
-            fuzzing_ws.ctx.packet_writer.sendWaveRoomChangeVisible(visible) catch {};
+            fuzzing_ws.ctx.server_bound.sendWaveRoomChangeVisible(visible) catch {};
         },
         8 => {
             // Random leave
             if (random.boolean()) {
-                fuzzing_ws.ctx.packet_writer.sendWaveLeave() catch {};
+                fuzzing_ws.ctx.server_bound.sendWaveLeave() catch {};
             } else {
-                fuzzing_ws.ctx.packet_writer.sendWaveRoomLeave() catch {};
+                fuzzing_ws.ctx.server_bound.sendWaveRoomLeave() catch {};
             }
         },
         else => unreachable,
@@ -99,11 +99,14 @@ pub fn init(allocator: mem.Allocator) !*ClientWebSocket {
     client.* = .{
         .allocator = allocator,
 
-        .packet_handler = ClientBound.init(
+        .client_bound = ClientBound.init(
             allocator,
             client,
         ),
-        .packet_writer = ServerBound.init(client),
+        .server_bound = ServerBound.init(
+            allocator,
+            client,
+        ),
 
         .prng = std.Random.DefaultPrng.init(@intCast(std.time.milliTimestamp())),
     };
@@ -112,28 +115,34 @@ pub fn init(allocator: mem.Allocator) !*ClientWebSocket {
 }
 
 pub fn connect(self: *ClientWebSocket, host: []const u8) !void {
-    const protocol = if (OwnContextWebSocket.isSecure()) "wss://" else "ws://";
+    const protocol =
+        if (OwnContextWebSocket.isSecure())
+            "wss://"
+        else
+            "ws://";
+
     const url = try std.fmt.allocPrint(self.allocator, "{s}{s}/ws", .{ protocol, host });
     defer self.allocator.free(url);
 
     self.socket = try OwnContextWebSocket.init(self, url);
 
-    {
-        if (prev_fuzzing_timer) |id| Timer.clearInterval(id);
-
-        fuzzing_ws = self.socket;
-
-        prev_fuzzing_timer = Timer.setInterval(tryFuzz, 50);
-    }
+    // {
+    //     if (prev_fuzzing_timer) |id| Timer.clearInterval(id);
+    // 
+    //     fuzzing_ws = self.socket;
+    // 
+    //     prev_fuzzing_timer = Timer.setInterval(tryFuzz, 50);
+    // }
 
     self.socket.on_message = onMessage;
+    self.socket.on_open = onOpen;
 }
 
 pub fn deinit(self: *ClientWebSocket) void {
     self.socket.deinit();
 
-    self.packet_handler.deinit();
-    self.packet_writer.deinit();
+    self.client_bound.deinit();
+    self.server_bound.deinit();
 
     self.allocator.destroy(self);
 
@@ -141,5 +150,10 @@ pub fn deinit(self: *ClientWebSocket) void {
 }
 
 fn onMessage(ws: *OwnContextWebSocket, data: []const u8) void {
-    ws.ctx.packet_handler.read(data) catch unreachable;
+    ws.ctx.client_bound.read(data) catch unreachable;
+}
+
+fn onOpen(ws: *OwnContextWebSocket) void {
+    ws.ctx.server_bound.sendWaveRoomFindPublic(.garden) catch unreachable;
+    ws.ctx.server_bound.sendWaveRoomChangeReady(.ready) catch unreachable;
 }

@@ -1,6 +1,4 @@
 const std = @import("std");
-const mach = @import("main.zig");
-const StringTable = @import("StringTable.zig");
 
 /// An ID representing a object. This is an opaque identifier which effectively encodes:
 ///
@@ -10,15 +8,7 @@ const StringTable = @import("StringTable.zig");
 ///
 pub const ObjectID = u48;
 
-pub const ObjectsOptions = struct {
-    /// If set to true, Mach will track when fields are set using the setField/setAll
-    /// methods using a bitset with one bit per field to indicate 'the field was set'.
-    /// You can get this information by calling `.updated(.field_name)`
-    /// Note that calling `.updated(.field_name) will also set the flag back to false.
-    track_fields: bool = false,
-};
-
-pub fn Objects(options: ObjectsOptions, comptime T: type) type {
+pub fn Objects(comptime T: type) type {
     return struct {
         internal: struct {
             allocator: std.mem.Allocator,
@@ -44,54 +34,46 @@ pub fn Objects(options: ObjectsOptions, comptime T: type) type {
             /// on the floor and forgotten about. This means there are dead items recorded by dead.set(index)
             /// which aren't in the recycling_bin, and the next call to new() may consider cleaning up.
             thrown_on_the_floor: u32 = 0,
-
-            /// A bitset used to track per-field changes. Only used if options.track_fields == true.
-            updated: ?std.bit_set.DynamicBitSetUnmanaged = if (options.track_fields) .{} else null,
-
-            /// Tags storage.
-            tags: std.AutoHashMapUnmanaged(TaggedObject, ?ObjectID) = .{},
         },
 
         const Generation = u16;
         const Index = u32;
 
-        const TaggedObject = struct {
-            object_id: ObjectID,
-            tag_hash: u64,
-        };
-
-        const PackedID = packed struct(u48) {
+        const PackedID = packed struct(ObjectID) {
             generation: Generation,
             index: Index,
         };
 
         pub const Slice = struct {
             index: Index,
-            objs: *Objects(options, T),
+            objs: *Objects(T),
 
-            pub fn next(s: *Slice) ?ObjectID {
-                const dead = &s.objs.internal.dead;
-                const generation = &s.objs.internal.generation;
+            pub fn next(self: *Slice) ?ObjectID {
+                const dead = &self.objs.internal.dead;
+                const generation = &self.objs.internal.generation;
                 const num_objects = generation.items.len;
 
                 while (true) {
-                    if (s.index == num_objects) {
-                        s.index = 0;
+                    if (self.index == num_objects) {
+                        self.index = 0;
 
                         return null;
                     }
 
-                    defer s.index += 1;
+                    defer self.index += 1;
 
-                    if (!dead.isSet(s.index)) return @bitCast(PackedID{
-                        .generation = generation.items[s.index],
-                        .index = s.index,
-                    });
+                    if (!dead.isSet(self.index))
+                        return @bitCast(PackedID{
+                            .generation = generation.items[self.index],
+                            .index = self.index,
+                        });
                 }
             }
         };
 
-        pub fn init(objs: *@This(), allocator: std.mem.Allocator) void {
+        const Self = @This();
+
+        pub fn init(objs: *Self, allocator: std.mem.Allocator) void {
             objs.internal = .{
                 .allocator = allocator,
             };
@@ -100,24 +82,24 @@ pub fn Objects(options: ObjectsOptions, comptime T: type) type {
         /// Tries to acquire the mutex without blocking the caller's thread.
         /// Returns `false` if the calling thread would have to block to acquire it.
         /// Otherwise, returns `true` and the caller should `unlock()` the Mutex to release it.
-        pub fn tryLock(objs: *@This()) bool {
+        pub fn tryLock(objs: *Self) bool {
             return objs.internal.mu.tryLock();
         }
 
         /// Acquires the mutex, blocking the caller's thread until it can.
         /// It is undefined behavior if the mutex is already held by the caller's thread.
         /// Once acquired, call `unlock()` on the Mutex to release it.
-        pub fn lock(objs: *@This()) void {
+        pub fn lock(objs: *Self) void {
             objs.internal.mu.lock();
         }
 
         /// Releases the mutex which was previously acquired with `lock()` or `tryLock()`.
         /// It is undefined behavior if the mutex is unlocked from a different thread that it was locked from.
-        pub fn unlock(objs: *@This()) void {
+        pub fn unlock(objs: *Self) void {
             objs.internal.mu.unlock();
         }
 
-        pub fn new(objs: *@This(), value: T) std.mem.Allocator.Error!ObjectID {
+        pub fn new(objs: *Self, value: T) !ObjectID {
             const allocator = objs.internal.allocator;
             const data = &objs.internal.data;
             const dead = &objs.internal.dead;
@@ -168,12 +150,8 @@ pub fn Objects(options: ObjectsOptions, comptime T: type) type {
             try dead.resize(allocator, data.capacity, false);
             try generation.ensureUnusedCapacity(allocator, 1);
 
-            // If we are tracking fields, we need to resize the bitset to hold another object's fields
-            if (objs.internal.updated) |*updated_fields| {
-                try updated_fields.resize(allocator, data.capacity * @typeInfo(T).@"struct".fields.len, true);
-            }
-
             const index = data.len;
+
             data.appendAssumeCapacity(value);
 
             dead.unset(index);
@@ -186,68 +164,32 @@ pub fn Objects(options: ObjectsOptions, comptime T: type) type {
             });
         }
 
-        /// Sets all fields of the given object to the given value.
-        ///
-        /// Unlike setAll(), this method does not respect any mach.Objects tracking
-        /// options, so changes made to an object through this method will not be tracked.
-        pub fn setValueRaw(objs: *@This(), id: ObjectID, value: T) void {
-            const data = &objs.internal.data;
-
-            const unpacked = objs.validateAndUnpack(id, "setValueRaw");
-
-            data.set(unpacked.index, value);
-        }
-
-        /// Sets all fields of the given object to the given value.
-        ///
-        /// Unlike setAllRaw, this method respects mach.Objects tracking
-        /// and changes made to an object through this method will be tracked.
-        pub fn setValue(objs: *@This(), id: ObjectID, value: T) void {
-            const data = &objs.internal.data;
-
-            const unpacked = objs.validateAndUnpack(id, "setValue");
-
-            data.set(unpacked.index, value);
-
-            if (objs.internal.updated) |*updated_fields| {
-                const updated_start = unpacked.index * @typeInfo(T).@"struct".fields.len;
-                const updated_end = updated_start + @typeInfo(T).@"struct".fields.len;
-
-                updated_fields.setRangeValue(.{ .start = @intCast(updated_start), .end = @intCast(updated_end) }, true);
-            }
-        }
-
         /// Sets a single field of the given object to the given value.
         ///
         /// Unlike set(), this method does not respect any mach.Objects tracking
         /// options, so changes made to an object through this method will not be tracked.
-        pub fn setRaw(objs: *@This(), id: ObjectID, comptime field_name: std.meta.FieldEnum(T), value: std.meta.FieldType(T, field_name)) void {
-            const data = &objs.internal.data;
-
-            const unpacked = objs.validateAndUnpack(id, "setRaw");
-
-            data.items(field_name)[unpacked.index] = value;
-        }
-
-        /// Sets a single field of the given object to the given value.
-        ///
-        /// Unlike setAllRaw, this method respects mach.Objects tracking
-        /// and changes made to an object through this method will be tracked.
-        pub fn set(objs: *@This(), id: ObjectID, comptime field_name: std.meta.FieldEnum(T), value: std.meta.FieldType(T, field_name)) void {
+        pub fn set(objs: *Self, id: ObjectID, comptime field_name: std.meta.FieldEnum(T), value: std.meta.FieldType(T, field_name)) void {
             const data = &objs.internal.data;
 
             const unpacked = objs.validateAndUnpack(id, "set");
 
             data.items(field_name)[unpacked.index] = value;
+        }
 
-            if (options.track_fields)
-                if (std.meta.fieldIndex(T, @tagName(field_name))) |field_index|
-                    if (objs.internal.updated) |*updated_fields|
-                        updated_fields.set(unpacked.index * @typeInfo(T).@"struct".fields.len + field_index);
+        /// Sets all fields of the given object to the given value.
+        ///
+        /// Unlike setAll(), this method does not respect any mach.Objects tracking
+        /// options, so changes made to an object through this method will not be tracked.
+        pub fn setValue(objs: *Self, id: ObjectID, value: T) void {
+            const data = &objs.internal.data;
+
+            const unpacked = objs.validateAndUnpack(id, "setValue");
+
+            data.set(unpacked.index, value);
         }
 
         /// Get a single field.
-        pub fn get(objs: *@This(), id: ObjectID, comptime field_name: std.meta.FieldEnum(T)) std.meta.FieldType(T, field_name) {
+        pub fn get(objs: *Self, id: ObjectID, comptime field_name: std.meta.FieldEnum(T)) std.meta.FieldType(T, field_name) {
             const data = &objs.internal.data;
 
             const unpacked = objs.validateAndUnpack(id, "get");
@@ -256,7 +198,7 @@ pub fn Objects(options: ObjectsOptions, comptime T: type) type {
         }
 
         /// Get all fields.
-        pub fn getValue(objs: *@This(), id: ObjectID) T {
+        pub fn getValue(objs: *Self, id: ObjectID) T {
             const data = &objs.internal.data;
 
             const unpacked = objs.validateAndUnpack(id, "getValue");
@@ -264,8 +206,7 @@ pub fn Objects(options: ObjectsOptions, comptime T: type) type {
             return data.get(unpacked.index);
         }
 
-        pub fn delete(objs: *@This(), id: ObjectID) void {
-            const data = &objs.internal.data;
+        pub fn delete(objs: *Self, id: ObjectID) void {
             const dead = &objs.internal.dead;
 
             const recycling_bin = &objs.internal.recycling_bin;
@@ -277,11 +218,9 @@ pub fn Objects(options: ObjectsOptions, comptime T: type) type {
             } else objs.internal.thrown_on_the_floor += 1;
 
             dead.set(unpacked.index);
-
-            if (mach.is_debug) data.set(unpacked.index, undefined);
         }
 
-        pub fn slice(objs: *@This()) Slice {
+        pub fn slice(objs: *Self) Slice {
             return .{
                 .index = 0,
                 .objs = objs,
@@ -290,7 +229,7 @@ pub fn Objects(options: ObjectsOptions, comptime T: type) type {
 
         /// Validates the given object is from this list (type check) and alive (not a use after delete
         /// situation.)
-        fn validateAndUnpack(objs: *const @This(), id: ObjectID, comptime fn_name: []const u8) PackedID {
+        fn validateAndUnpack(objs: *const Self, id: ObjectID, comptime fn_name: []const u8) PackedID {
             const dead = &objs.internal.dead;
             const generation = &objs.internal.generation;
 
@@ -298,76 +237,13 @@ pub fn Objects(options: ObjectsOptions, comptime T: type) type {
             // e.g. in release builds
             const unpacked: PackedID = @bitCast(id);
 
-            if (unpacked.generation != generation.items[unpacked.index]) {
-                @panic("mach: " ++ fn_name ++ "() called with a dead object (use after delete, recycled slot)");
-            }
+            if (unpacked.generation != generation.items[unpacked.index])
+                @panic(fn_name ++ "() called with a dead object (use after delete, recycled slot)");
 
-            if (dead.isSet(unpacked.index)) {
-                @panic("mach: " ++ fn_name ++ "() called with a dead object (use after delete)");
-            }
+            if (dead.isSet(unpacked.index))
+                @panic(fn_name ++ "() called with a dead object (use after delete)");
 
             return unpacked;
-        }
-
-        /// If options have tracking enabled, this returns true when the given field has been set
-        /// using the set() or setAll() methods. A subsequent call to .updated(), .anyUpdated(), etc.
-        /// will return false until another set() or setAll() call is made.
-        pub fn updated(objs: *@This(), id: ObjectID, field_name: anytype) bool {
-            return objs.updatedOptions(id, field_name, false);
-        }
-
-        /// Same as updated(), but doesn't alter the behavior of subsequent .updated(), .anyUpdated(),
-        /// etc. calls.
-        pub fn peekUpdated(objs: *@This(), id: ObjectID, field_name: anytype) bool {
-            return objs.updatedOptions(id, field_name, true);
-        }
-
-        inline fn updatedOptions(objs: *@This(), id: ObjectID, field_name: anytype, comptime peek: bool) bool {
-            if (!options.track_fields) return false;
-
-            const unpacked = objs.validateAndUnpack(id, "updated");
-            const field_index = std.meta.fieldIndex(T, @tagName(field_name)).?;
-
-            const updated_fields = &(objs.internal.updated orelse return false);
-            const updated_index = unpacked.index * @typeInfo(T).@"struct".fields.len + field_index;
-
-            const updated_value = updated_fields.isSet(updated_index);
-            if (!peek) updated_fields.unset(updated_index);
-
-            return updated_value;
-        }
-
-        /// If options have tracking enabled, this returns true when any field has been set using
-        /// the set() or setAll() methods. A subsequent call to .updated(), .anyUpdated(), etc. will
-        /// return false until another set() or setAll() call is made.
-        pub fn anyUpdated(objs: *@This(), id: ObjectID) bool {
-            return objs.anyUpdatedOptions(id, false);
-        }
-
-        /// Same as anyUpdated(), but doesn't alter the behavior of subsequent .updated(), .anyUpdated(),
-        /// etc. calls
-        pub fn peekAnyUpdated(objs: *@This(), id: ObjectID) bool {
-            return objs.anyUpdatedOptions(id, true);
-        }
-
-        inline fn anyUpdatedOptions(objs: *@This(), id: ObjectID, comptime peek: bool) bool {
-            if (!options.track_fields) return false;
-
-            const unpacked = objs.validateAndUnpack(id, "updated");
-            const updated_fields = &(objs.internal.updated orelse return false);
-
-            var any_updated = false;
-
-            inline for (0..@typeInfo(T).@"struct".fields.len) |field_index| {
-                const updated_index = unpacked.index * @typeInfo(T).@"struct".fields.len + field_index;
-                const updated_value = updated_fields.isSet(updated_index);
-
-                if (!peek) updated_fields.unset(updated_index);
-
-                if (updated_value) any_updated = true;
-            }
-
-            return any_updated;
         }
     };
 }

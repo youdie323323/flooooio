@@ -130,16 +130,20 @@ var _ LightningEmitter = (*Mob)(nil)
 func (m *Mob) GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node {
 	if m.IsEnemy() {
 		return slices.Concat(
-			collision.ToNodeSlice(wp.GetPlayersWithCondition(func(targetPlayer *Player) bool {
-				return !slices.Contains(bouncedIds, targetPlayer.Id)
+			collision.ToNodeSlice(wp.GetPlayersWithCondition(func(p *Player) bool {
+				return !slices.Contains(bouncedIds, p.Id)
 			})),
-			collision.ToNodeSlice(wp.GetMobsWithCondition(func(targetMob *Mob) bool {
-				return !slices.Contains(bouncedIds, targetMob.Id) && targetMob.IsAlly()
+			collision.ToNodeSlice(wp.GetMobsWithCondition(func(m *Mob) bool {
+				return !(slices.Contains(bouncedIds, m.Id) ||
+					slices.Contains(ProjectileMobTypes, m.Type)) &&
+					m.IsAlly()
 			})),
 		)
 	} else {
-		return collision.ToNodeSlice(wp.GetMobsWithCondition(func(targetMob *Mob) bool {
-			return !slices.Contains(bouncedIds, targetMob.Id) && targetMob.IsEnemy()
+		return collision.ToNodeSlice(wp.GetMobsWithCondition(func(m *Mob) bool {
+			return !(slices.Contains(bouncedIds, m.Id) ||
+				slices.Contains(ProjectileMobTypes, m.Type)) &&
+				m.IsEnemy()
 		}))
 	}
 }
@@ -158,7 +162,7 @@ func (m *Mob) OnUpdateTick(wp *WavePool, now time.Time) {
 	m.MobCollision(wp, now)
 
 	m.MobBodyConnection(wp, now)
-	m.MobCombatBehavior(wp, now)
+	m.MobBehavior(wp, now)
 	m.MobUniqueTalent(wp, now)
 
 	m.MobElimination(wp, now)

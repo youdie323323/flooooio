@@ -2,13 +2,14 @@ package wave
 
 import (
 	"container/list"
-	crand "crypto/rand"
-	"encoding/binary"
+	"fmt"
 	"math"
 	"math/rand/v2"
 	"slices"
 
 	"flooooio/internal/wave/florr/native"
+
+	"github.com/chewxy/math32"
 )
 
 var LinkableMobTypes = []native.MobType{
@@ -20,35 +21,40 @@ var LinkableMobTypes = []native.MobType{
 
 type MobSpawnRule struct {
 	SpawnAfter uint16
-	Weight     int
+	Weight     float64
+	Points     int
 }
+
+const (
+	centipedePoint = 3
+)
 
 var mobSpawnRules = map[native.Biome]map[native.MobType]MobSpawnRule{
 	native.BiomeGarden: {
-		native.MobTypeBee:    {SpawnAfter: 1, Weight: 50},
-		native.MobTypeSpider: {SpawnAfter: 3, Weight: 50},
-		native.MobTypeHornet: {SpawnAfter: 3, Weight: 50},
+		native.MobTypeBee:    {1, 50, 1},
+		native.MobTypeSpider: {3, 50, 1},
+		native.MobTypeHornet: {3, 50, 1},
 
-		native.MobTypeCentipede:     {SpawnAfter: 2, Weight: 1},
-		native.MobTypeCentipedeEvil: {SpawnAfter: 3, Weight: 1},
+		native.MobTypeCentipede:     {2, 1, centipedePoint},
+		native.MobTypeCentipedeEvil: {3, 1, centipedePoint},
 	},
 	native.BiomeDesert: {
-		native.MobTypeBeetle:       {SpawnAfter: 2, Weight: 50},
-		native.MobTypeSandstorm:    {SpawnAfter: 1, Weight: 50},
-		native.MobTypeCactus:       {SpawnAfter: 1, Weight: 50},
-		native.MobTypeScorpion:     {SpawnAfter: 3, Weight: 50},
-		native.MobTypeLadybugShiny: {SpawnAfter: 3, Weight: 1},
+		native.MobTypeBeetle:       {2, 200, 1},
+		native.MobTypeSandstorm:    {1, 200, 1},
+		native.MobTypeCactus:       {1, 200, 1},
+		native.MobTypeScorpion:     {3, 200, 1},
+		native.MobTypeLadybugShiny: {3, 1, 5},
 
-		native.MobTypeCentipedeDesert: {SpawnAfter: 1, Weight: 1},
+		native.MobTypeCentipedeDesert: {1, 1, centipedePoint},
 	},
 	native.BiomeOcean: {
-		native.MobTypeStarfish:  {SpawnAfter: 3, Weight: 1},
-		native.MobTypeJellyfish: {SpawnAfter: 3, Weight: 1},
-		native.MobTypeBubble:    {SpawnAfter: 1, Weight: 1},
-		native.MobTypeSponge:    {SpawnAfter: 1, Weight: 1},
-		native.MobTypeShell:     {SpawnAfter: 1, Weight: 1},
-		native.MobTypeCrab:      {SpawnAfter: 2, Weight: 1},
-		native.MobTypeLeech:     {SpawnAfter: 4, Weight: 1},
+		native.MobTypeStarfish:  {3, 1, 1},
+		native.MobTypeJellyfish: {3, 1, 1},
+		native.MobTypeBubble:    {1, 1, 1},
+		native.MobTypeSponge:    {1, 1, 1},
+		native.MobTypeShell:     {1, 1, 1},
+		native.MobTypeCrab:      {2, 1, 1},
+		native.MobTypeLeech:     {4, 1, 1},
 	},
 }
 
@@ -58,7 +64,7 @@ var mobSpawnEndAfter = map[native.Rarity]uint16{
 	native.RarityRare:      40,
 	native.RarityEpic:      50,
 	native.RarityLegendary: 60,
-	native.RarityMythic:    200,
+	native.RarityMythic:    math.MaxUint16,
 }
 
 type SpawnGroup = []native.MobType
@@ -90,22 +96,36 @@ var specialWaveMobGroups = map[native.Biome][]SpawnGroup{
 }
 
 var relativeRarity = []float64{
-	60000, // Common
-	15000, // Unusual
-	2500,  // Rare
-	100,   // Epic
-	5,     // Legendary
-	0.1,   // Mythic
-	0.001, // Ultra
+	28710.94, // Common
+	4921.88,  // Unusual
+	656.25,   // Rare
+	52.5,     // Epic
+	1.0,      // Legendary
+	0.1,      // Mythic
+	0.001,    // Ultra
 }
 
-var rarityTable []float64 = make([]float64, len(relativeRarity))
+var amountTable = []float64{
+	0.25,
+	0.20,
+	0.15,
+	0.10,
+	0.05,
+}
+
+var rarityTable = make([]float64, len(relativeRarity))
+
+var totalWeight float64 = 0.
+
+var totalAmountWeight float64 = 0.
 
 func init() {
-	totalWeight := 0.0
+	for _, w := range relativeRarity {
+		totalWeight += w
+	}
 
-	for _, weight := range relativeRarity {
-		totalWeight += weight
+	for _, a := range amountTable {
+		totalAmountWeight += a
 	}
 
 	acc := .0
@@ -117,31 +137,37 @@ func init() {
 	}
 }
 
-func secureRandom() float64 {
-	var buf [8]byte
+func generateRandomMobAmounts() int {
+	r := rand.Float64() * totalAmountWeight
 
-	crand.Read(buf[:])
+	for i, w := range amountTable {
+		r -= w
 
-	return float64(binary.LittleEndian.Uint64(buf[:])) / (1 << 64)
+		if r <= 0 {
+			return i + 1
+		}
+	}
+
+	return len(amountTable)
 }
 
-func getRandomMobType(difficulty uint16, biome native.Biome, sg *SpawnGroup) native.MobType {
+func getRandomMobType(diff uint16, b native.Biome, sg *SpawnGroup) native.MobType {
 	// If special group exists, use it
 	if sg != nil {
-		totalWeight := 0
+		totalWeight := 0.
 
 		// Calculate total weight for valid mob types in the special group
 		for _, t := range *sg {
-			if r, exists := mobSpawnRules[biome][t]; exists && r.SpawnAfter <= difficulty {
+			if r, exists := mobSpawnRules[b][t]; exists && r.SpawnAfter <= diff {
 				totalWeight += r.Weight
 			}
 		}
 
 		// Select mob from special group
-		random := secureRandom() * float64(totalWeight)
+		random := rand.Float64() * totalWeight
 		for _, t := range *sg {
-			if r, exists := mobSpawnRules[biome][t]; exists && r.SpawnAfter <= difficulty {
-				random -= float64(r.Weight)
+			if r, exists := mobSpawnRules[b][t]; exists && r.SpawnAfter <= diff {
+				random -= r.Weight
 
 				if random <= 0 {
 					return t
@@ -150,20 +176,20 @@ func getRandomMobType(difficulty uint16, biome native.Biome, sg *SpawnGroup) nat
 		}
 	}
 
-	totalWeight := 0
+	totalWeight := 0.
 
 	// First pass: calculate total weight
-	for _, r := range mobSpawnRules[biome] {
-		if r.SpawnAfter <= difficulty {
+	for _, r := range mobSpawnRules[b] {
+		if r.SpawnAfter <= diff {
 			totalWeight += r.Weight
 		}
 	}
 
 	// Second pass: select mob
-	random := secureRandom() * float64(totalWeight)
-	for t, r := range mobSpawnRules[biome] {
-		if r.SpawnAfter <= difficulty {
-			random -= float64(r.Weight)
+	random := rand.Float64() * totalWeight
+	for t, r := range mobSpawnRules[b] {
+		if r.SpawnAfter <= diff {
+			random -= r.Weight
 
 			if random <= 0 {
 				return t
@@ -174,7 +200,7 @@ func getRandomMobType(difficulty uint16, biome native.Biome, sg *SpawnGroup) nat
 	return native.MobTypeBee
 }
 
-func getRandomRarity(v float64) native.Rarity {
+func translateProbabilityToRarity(v float64) native.Rarity {
 	for i := len(rarityTable) - 1; i >= 0; i-- {
 		if v >= rarityTable[i] {
 			return native.Rarity(i)
@@ -185,11 +211,11 @@ func getRandomRarity(v float64) native.Rarity {
 }
 
 func getRandomRarityWithRolls(n float64) native.Rarity {
-	v := secureRandom()
+	v := rand.Float64()
 
 	v = math.Pow(v, 1/n)
 
-	return getRandomRarity(v)
+	return translateProbabilityToRarity(v)
 }
 
 func pickRandomRarity(difficulty uint16, luck float64) native.Rarity {
@@ -210,7 +236,7 @@ type DynamicMobData struct {
 
 type WaveMobSpawner struct {
 	// totalTime is total progress time.
-	totalTime float64
+	totalTime int
 
 	// spawnList is mob list to spawn.
 	spawnList *list.List
@@ -218,62 +244,108 @@ type WaveMobSpawner struct {
 	// spawnGroup is current spawn group.
 	// nil for empty.
 	spawnGroup *SpawnGroup
+
+	// points is current point.
+	points int
 }
 
-func (s *WaveMobSpawner) calculateWaveLuck(progress int) float64 {
+func CalculateWaveLuck(progress WaveProgress) float64 {
 	return math.Pow(1.3, float64(progress)) - 1
 }
 
-func (s *WaveMobSpawner) Next(data *WaveData) {
+// CalculateSpawnWave calculate spawn wave by best wave progression of this wave.
+func CalculateSpawnWave(bestWave WaveProgress) WaveProgress {
+	return WaveProgress(math.Ceil(2 / 3 * float64(bestWave)))
+}
+
+func CalculateWaveLength(x float32) float32 {
+	return max(60, math32.Pow(x, 0.2)*18.9287+30)
+}
+
+func (s *WaveMobSpawner) Next(data *WaveData, groupIndex *int) {
 	s.totalTime = -1
 
 	if s.spawnList == nil {
 		s.spawnList = list.New()
 	}
 
-	// Special wave starts with 15%
-	if data.Progress > 1 && secureRandom() < 0.15 {
+	if groupIndex == nil {
+		// Special wave starts with 15%
+		if data.Progress >= 15 && rand.Float64() < 0.15 {
+			groups := specialWaveMobGroups[data.Biome]
+
+			s.spawnGroup = &groups[rand.IntN(len(groups))]
+		} else {
+			s.spawnGroup = nil
+		}
+	} else {
 		groups := specialWaveMobGroups[data.Biome]
 
-		s.spawnGroup = &groups[rand.IntN(len(groups))]
-	} else {
-		s.spawnGroup = nil
+		s.spawnGroup = &groups[*groupIndex]
+	}
+
+	s.points = int(data.Progress) * 10
+
+	if s.spawnGroup != nil {
+		s.points += 500
 	}
 }
 
+const (
+	spawnDelay int = WaveDataUpdateFPS * 0.8
+)
+
 func (s *WaveMobSpawner) ComputeDynamicMobData(data *WaveData) *DynamicMobData {
+	// Increase time
 	s.totalTime++
 
-	const fps = 50
+	if s.points > 0 && (s.totalTime%spawnDelay) == 0 {
+		var amount int
 
-	if math.Mod(s.totalTime, fps) == 0 {
-		pointsToUse := int(math.Round(s.gaussian(s.totalTime / fps)))
+		if s.spawnGroup == nil {
+			amount = generateRandomMobAmounts()
+		} else {
+			sec := s.totalTime / spawnDelay
 
-		for pointsToUse > 0 {
+			amount = int(math.Round(s.gaussian(float64(sec))))
+		}
+
+		for range amount {
 			t := getRandomMobType(data.Progress, data.Biome, s.spawnGroup)
-			rarity := pickRandomRarity(data.Progress, 1+0)
+			r := pickRandomRarity(data.Progress, 1+0)
 
-			for r, max := range mobSpawnEndAfter {
-				if data.Progress > max && rarity == r {
-					rarity = native.Rarity(min(int(rarity)+1, int(native.RarityMythic)))
+			for a, m := range mobSpawnEndAfter {
+				if data.Progress > m && r == a {
+					r = native.Rarity(min(int(r)+1, int(native.RarityMythic)))
 				}
 			}
+
+			pointsToConsume := mobSpawnRules[data.Biome][t].Points
 
 			segmentBodies := -1
 
 			if slices.Contains(LinkableMobTypes, t) {
+				// TODO: this depend on rarity as described in wiki
 				segmentBodies = 9
+
+				pointsToConsume *= segmentBodies
 			}
 
 			s.spawnList.PushBack(&DynamicMobData{
 				StaticMobData: StaticMobData{
 					Type:   t,
-					Rarity: rarity,
+					Rarity: r,
 				},
 				SegmentBodies: segmentBodies,
 			})
 
-			pointsToUse--
+			s.points = max(0, s.points-pointsToConsume)
+
+			if s.points == 0 {
+				break
+			}
+
+			fmt.Println(s.totalTime, s.points)
 		}
 	}
 
@@ -281,51 +353,44 @@ func (s *WaveMobSpawner) ComputeDynamicMobData(data *WaveData) *DynamicMobData {
 		return nil
 	}
 
-	if math.Mod(s.totalTime, 5) == 0 {
-		element := s.spawnList.Front()
+	element := s.spawnList.Front()
+	s.spawnList.Remove(element)
+
+	dm := element.Value.(*DynamicMobData)
+
+	for i := 0; i < dm.SegmentBodies && s.spawnList.Len() > 0; i++ {
+		element = s.spawnList.Front()
+
 		s.spawnList.Remove(element)
-
-		dm := element.Value.(*DynamicMobData)
-
-		for i := 0; i < dm.SegmentBodies && s.spawnList.Len() > 0; i++ {
-			element = s.spawnList.Front()
-
-			s.spawnList.Remove(element)
-		}
-
-		return dm
-	} else {
-		return nil
 	}
+
+	return dm
 }
 
-// TODO: make these types float32
+func flatTopGaussian(x, A, mu, w, sigma float64) float64 {
+	const baseline = 1.0
 
-func flatTopGaussian(x, A, mu, w, sigma1, sigma2 float64) float64 {
-	const baseline = 1
-
-	distance := math.Abs(x - mu)
-	halfWidth := w / 2
-
-	if distance <= halfWidth {
-		return baseline + A
-	}
+	distance := x - mu
+	halfWidth := w / 2.0
 
 	if x <= mu {
-		return baseline + A*math.Exp(-math.Pow(distance-halfWidth, 2)/(2*math.Pow(sigma1, 2)))
+		if distance >= -halfWidth {
+			return baseline + A
+		}
+
+		return baseline + A*math.Exp(-math.Pow(-distance-halfWidth, 2)/(2*math.Pow(sigma, 2)))
 	}
 
-	return baseline + A*math.Exp(-math.Pow(distance-halfWidth, 2)/(2*math.Pow(sigma2, 2)))
+	return baseline + A
 }
 
 const (
-	amplitude = 10
-	mean      = 15
-	stdev1    = 1.
-	stdev2    = 5.
-	width     = 25
+	gaussianAmplitude = 15
+	gaussianMean      = 20
+	gaussianW         = 25
+	gaussianStdev     = 1.
 )
 
 func (s *WaveMobSpawner) gaussian(x float64) float64 {
-	return flatTopGaussian(x, amplitude, mean, width, stdev1, stdev2)
+	return flatTopGaussian(x, gaussianAmplitude, gaussianMean, gaussianW, gaussianStdev)
 }

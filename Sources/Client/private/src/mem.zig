@@ -1,5 +1,6 @@
 const std = @import("std");
 const testing = std.testing;
+const heap = std.heap;
 pub const CStringPointer = [*:0]u8;
 pub const ConstCStringPointer = [*:0]const u8;
 
@@ -9,6 +10,7 @@ pub const ConstOpaquePointer = *const anyopaque;
 
 // Use fba for block auto-memory growing
 var buffer: [0x1000]u8 = undefined;
+
 var fba = std.heap.FixedBufferAllocator.init(&buffer);
 pub const allocator = fba.allocator();
 

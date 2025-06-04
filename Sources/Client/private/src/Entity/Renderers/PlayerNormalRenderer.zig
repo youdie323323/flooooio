@@ -7,7 +7,7 @@ const PlayerSuper = @import("../Player.zig").Super;
 
 const Color = @import("../../WebAssembly/Interop/Canvas/Color.zig");
 
-const dead_eye_length = 4;
+const dead_eye_length: f32 = 4;
 
 pub fn drawDeadEyes(
     rctx: RenderingContext(PlayerSuper),
@@ -19,13 +19,11 @@ pub fn drawDeadEyes(
     ctx.beginPath();
 
     ctx.moveTo(eye_x - dead_eye_length, eye_y - dead_eye_length);
-    ctx.moveTo(eye_x + dead_eye_length, eye_y + dead_eye_length);
+    ctx.lineTo(eye_x + dead_eye_length, eye_y + dead_eye_length);
     ctx.moveTo(eye_x + dead_eye_length, eye_y - dead_eye_length);
-    ctx.moveTo(eye_x - dead_eye_length, eye_y + dead_eye_length);
+    ctx.lineTo(eye_x - dead_eye_length, eye_y + dead_eye_length);
 
-    ctx.@"lineCap = 'round'"();
-
-    ctx.setLineWidth(3);
+    ctx.@"lineWidth ="(3);
     ctx.strokeColor(comptime Color.comptimeFromHexColorCode("#000000"));
     ctx.stroke();
 }
@@ -53,6 +51,12 @@ fn drawEyeShape(
     ctx.lineTo(center_x - width_radius, center_y - height_radius);
 }
 
+const normal_left_eye_x = 7;
+const normal_left_eye_y = -5;
+
+const normal_right_eye_x = -7;
+const normal_right_eye_y = -5;
+
 fn drawEyeOutline(
     rctx: RenderingContext(PlayerSuper),
     comptime offset: f32,
@@ -61,9 +65,9 @@ fn drawEyeOutline(
 
     ctx.beginPath();
 
-    ctx.ellipse(7, -5, offset + 2.4, offset + 5.6, 0, 0, math.tau, false);
+    ctx.ellipse(normal_left_eye_x, normal_left_eye_y, offset + 2.4, offset + 5.6, 0, 0, math.tau, false);
     ctx.moveTo(-7, -5);
-    ctx.ellipse(-7, -5, offset + 2.4, offset + 5.6, 0, 0, math.tau, false);
+    ctx.ellipse(normal_right_eye_x, normal_right_eye_y, offset + 2.4, offset + 5.6, 0, 0, math.tau, false);
 
     ctx.fillColor(comptime Color.comptimeFromHexColorCode("#000000"));
     ctx.fill();
@@ -81,7 +85,7 @@ fn render(rctx: RenderingContext(PlayerSuper)) void {
 
         ctx.arc(0, 0, 25, 0, math.tau, false);
 
-        ctx.setLineWidth(2.75);
+        ctx.@"lineWidth ="(2.75);
         ctx.fillColor(PlayerNormalRenderer.blendStatusEffects(rctx, comptime Color.comptimeFromHexColorCode("#ffe763")));
         ctx.strokeColor(PlayerNormalRenderer.blendStatusEffects(rctx, comptime Color.comptimeFromHexColorCode("#cfbb50")));
         ctx.fill();
@@ -89,8 +93,8 @@ fn render(rctx: RenderingContext(PlayerSuper)) void {
     }
 
     if (entity.is_dead) {
-        drawDeadEyes(rctx, 7, -5);
-        drawDeadEyes(rctx, -7, -5);
+        drawDeadEyes(rctx, normal_left_eye_x, normal_left_eye_y);
+        drawDeadEyes(rctx, normal_right_eye_x, normal_right_eye_y);
     } else {
         const anger_offset = player.angry_t * 6;
 
@@ -131,7 +135,7 @@ fn render(rctx: RenderingContext(PlayerSuper)) void {
         ctx.moveTo(-6.1, 0);
         ctx.quadraticCurveTo(0, vertic_rise, 6.1, 0);
 
-        ctx.setLineWidth(1.5);
+        ctx.@"lineWidth ="(1.5);
         ctx.strokeColor(comptime Color.comptimeFromHexColorCode("#000000"));
         ctx.stroke();
     }

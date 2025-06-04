@@ -9,18 +9,156 @@ const CanvasContext = @This();
 
 pub const Id = u16;
 
+pub const LineCap = enum(u8) {
+    butt,
+    round,
+    square,
+};
+
+pub const LineJoin = enum(u8) {
+    round,
+    bevel,
+    miter,
+};
+
+pub const TextAlign = enum(u8) {
+    left,
+    right,
+    center,
+    start,
+    end,
+};
+
+pub const TextBaseline = enum(u8) {
+    top,
+    hanging,
+    middle,
+    alphabetic,
+    ideographic,
+    bottom,
+};
+
+pub const TextDirection = enum(u8) {
+    inherit,
+    ltr,
+    rtl,
+};
+
+pub const FontKerning = enum(u8) {
+    auto,
+    normal,
+    none,
+};
+
+pub const FillRule = enum(u8) {
+    nonzero,
+    evenodd,
+};
+
+pub const PatternRepeat = enum(u8) {
+    repeat,
+    repeat_x,
+    repeat_y,
+    no_repeat,
+};
+
+pub const BlendMode = enum(u8) {
+    source_over,
+    source_in,
+    source_out,
+    source_atop,
+    destination_over,
+    destination_in,
+    destination_out,
+    destination_atop,
+    lighter,
+    copy,
+    xor,
+    multiply,
+    screen,
+    overlay,
+    darken,
+    lighten,
+    color_dodge,
+    color_burn,
+    hard_light,
+    soft_light,
+    difference,
+    exclusion,
+    hue,
+    saturation,
+    color,
+    luminosity,
+};
+
+/// Utilities namespace definition for context.
+/// Utility mean they re not pure canvas call operations.
+const Utils = struct {
+    pub inline fn drawSVG(self: CanvasContext, svg: []const u8) void {
+    @"2"(self.id, svg.ptr, svg.len);
+}
+
+    pub inline fn prepareFontProperties(self: *CanvasContext, pixel: FontPixel) void {
+        self.@"font = $0 ++ 'px Ubuntu'"(pixel);
+        self.@"lineWidth ="(calculateStrokeWidth(pixel));
+        self.strokeColor(comptime Color.comptimeFromHexColorCode("#000000"));
+    }
+
+    pub inline fn clearContextRect(self: CanvasContext) void {
+        @"17"(self.id);
+    }
+};
+
+pub usingnamespace Utils;
+
 id: Id,
 
-pub inline fn init(id: Id) CanvasContext {
-    return .{ .id = id };
+/// Current lineWidth of this context.
+/// Default value is 1 px.
+line_width: f32 = 1.0,
+
+/// Current globalAlpha of this context.
+/// Default value is 1.0.
+global_alpha: f32 = 1.0,
+
+/// Current globalCompositeOperation of this context.
+/// Default value is source_over.
+global_composite_operation: BlendMode = .source_over,
+
+/// Current textAlign of this context.
+/// Default value is start.
+text_align: TextAlign = .start,
+
+/// Current lineCap of this context.
+/// Default value is butt.
+line_cap: LineCap = .butt,
+
+/// Current lineJoin of this context.
+/// Default value is miter.
+line_join: LineJoin = .miter,
+
+/// Current miterLimit of this context.
+/// Default value is 10.0.
+miter_limit: f32 = 10.0,
+
+/// Current lineDashOffset of this context.
+/// Default value is 0.0.
+line_dash_offset: f32 = 0.0,
+
+/// Current imageSmoothingEnabled of this context.
+/// Default value is true.
+image_smoothing_enabled: bool = true,
+
+pub inline fn init(id: Id) *CanvasContext {
+    var ctx: CanvasContext = .{ .id = id };
+
+    return &ctx;
 }
 
-pub inline fn deinit(self: CanvasContext) void {
+pub inline fn deinit(self: *CanvasContext) void {
     @"3"(self.id);
-}
 
-pub inline fn drawSVG(self: CanvasContext, svg: []const u8) void {
-    @"2"(self.id, svg.ptr, svg.len);
+    self.* = undefined;
 }
 
 pub inline fn save(self: CanvasContext) void {
@@ -43,8 +181,8 @@ pub inline fn fill(self: CanvasContext) void {
     @"8"(self.id);
 }
 
-pub inline fn fillPath(self: CanvasContext, path: Path2D, comptime is_non_zero: bool) void {
-    @"9"(self.id, path.id, comptime @intFromBool(is_non_zero));
+pub inline fn fillPath(self: CanvasContext, path: Path2D, comptime fill_rule: FillRule) void {
+    @"9"(self.id, path.id, comptime @intFromBool(fill_rule == .nonzero));
 }
 
 pub inline fn stroke(self: CanvasContext) void {
@@ -75,10 +213,6 @@ pub inline fn rect(self: CanvasContext, x: f32, y: f32, w: f32, h: f32) void {
     @"16"(self.id, x, y, w, h);
 }
 
-pub inline fn clearContextRect(self: CanvasContext) void {
-    @"17"(self.id);
-}
-
 pub inline fn clearRect(self: CanvasContext, x: f32, y: f32, w: f32, h: f32) void {
     @"18"(self.id, x, y, w, h);
 }
@@ -101,10 +235,6 @@ pub inline fn strokeColor(self: CanvasContext, color: Color) void {
     const r, const g, const b = color.rgb;
 
     @"22"(self.id, r, g, b);
-}
-
-pub inline fn setGlobalAlpha(self: CanvasContext, alpha: f32) void {
-    @"23"(self.id, alpha);
 }
 
 pub inline fn moveTo(self: CanvasContext, x: f32, y: f32) void {
@@ -143,10 +273,6 @@ pub inline fn ellipse(self: CanvasContext, x: f32, y: f32, radius_x: f32, radius
     @"32"(self.id, x, y, radius_x, radius_y, rotation, start_angle, end_angle, comptime @intFromBool(counterclockwise));
 }
 
-pub inline fn setLineWidth(self: CanvasContext, width: f32) void {
-    @"33"(self.id, width);
-}
-
 pub inline fn copyCanvas(self: CanvasContext, src_context: CanvasContext, dx: f32, dy: f32) void {
     @"34"(self.id, src_context.id, dx, dy);
 }
@@ -159,10 +285,6 @@ pub inline fn copyCanvasWithScale(self: CanvasContext, src_context: CanvasContex
     @"36"(self.id, src_context.id, dx, dy, dw, dh);
 }
 
-pub inline fn calculateStrokeWidth(w: f32) f32 {
-    return w / 8.333333830038736;
-}
-
 pub inline fn fillText(self: CanvasContext, text: []const u8, x: f32, y: f32) void {
     @"37"(self.id, text.ptr, text.len, x, y);
 }
@@ -171,47 +293,84 @@ pub inline fn strokeText(self: CanvasContext, text: []const u8, x: f32, y: f32) 
     @"38"(self.id, text.ptr, text.len, x, y);
 }
 
+pub inline fn @"globalAlpha ="(self: *CanvasContext, alpha: f32) void {
+    self.global_alpha = alpha;
+
+    @"23"(self.id, alpha);
+}
+
+pub inline fn @"lineWidth ="(self: *CanvasContext, width: f32) void {
+    self.line_width = width;
+
+    @"33"(self.id, width);
+}
+
 pub const FontPixel = f32;
 
-pub inline fn setUbuntuFont(self: CanvasContext, pixel: FontPixel) void {
+pub inline fn calculateStrokeWidth(w: f32) f32 {
+    return w / 8.333333830038736;
+}
+
+pub inline fn @"font = $0 ++ 'px Ubuntu'"(self: CanvasContext, pixel: FontPixel) void {
+    // No need to store the pixel because if really want to get previous font pixel, you need to parse the font
+    // But that not real
+
     @"39"(self.id, pixel);
 }
 
-pub inline fn prepareFontProperties(self: CanvasContext, pixel: FontPixel) void {
-    self.strokeColor(comptime Color.comptimeFromHexColorCode("#000000"));
-    self.setUbuntuFont(pixel);
-    self.setLineWidth(calculateStrokeWidth(pixel));
-}
+pub inline fn @"textAlign = 'center'"(self: *CanvasContext) void {
+    self.text_align = .center;
 
-pub inline fn @"textAlign = 'center'"(self: CanvasContext) void {
     @"40"(self.id);
 }
 
-pub inline fn setTextAlign(self: CanvasContext, comptime @"align": []const u8) void {
-    @"41"(self.id, @"align".ptr, @"align".len);
+pub inline fn @"textAlign ="(self: *CanvasContext, comptime @"align": TextAlign) void {
+    self.text_align = @"align";
+
+    const align_string = comptime switch (@"align") {
+        .left => "left",
+        .right => "right",
+        .center => "center",
+        .start => "start",
+        .end => "end",
+    };
+
+    @"41"(self.id, align_string.ptr, align_string.len);
 }
 
-pub inline fn @"lineCap = 'butt'"(self: CanvasContext) void {
+pub inline fn @"lineCap = 'butt'"(self: *CanvasContext) void {
+    self.line_cap = .butt;
+
     @"42"(self.id);
 }
 
-pub inline fn @"lineCap = 'round'"(self: CanvasContext) void {
+pub inline fn @"lineCap = 'round'"(self: *CanvasContext) void {
+    self.line_cap = .round;
+
     @"43"(self.id);
 }
 
-pub inline fn @"lineCap = 'square'"(self: CanvasContext) void {
+pub inline fn @"lineCap = 'square'"(self: *CanvasContext) void {
+    self.line_cap = .square;
+
     @"44"(self.id);
 }
 
-pub inline fn @"lineJoin = 'round'"(self: CanvasContext) void {
+pub inline fn @"lineJoin = 'round'"(self: *CanvasContext) void {
+    self.line_join = .round;
+
     @"45"(self.id);
 }
 
-pub inline fn @"lineJoin = 'miter'"(self: CanvasContext) void {
+pub inline fn @"lineJoin = 'miter'"(self: *CanvasContext) void {
+    self.line_join = .miter;
+
     @"46"(self.id);
 }
 
-pub inline fn setMiterLimit(self: CanvasContext, miter_limit: u16) void {
+pub inline fn @"miterLimit ="(self: *CanvasContext, miter_limit: f32) void {
+    self.miter_limit = miter_limit;
+
     @"47"(self.id, miter_limit);
 }
 
@@ -219,31 +378,45 @@ pub inline fn @"setLineDash([])"(self: CanvasContext) void {
     @"48"(self.id);
 }
 
-pub inline fn setLineDashOffset(self: CanvasContext, line_dash_offset: u16) void {
-    @"49"(self.id, line_dash_offset);
+pub inline fn @"lineDashOffset ="(self: *CanvasContext, ldo: f32) void {
+    self.line_dash_offset = ldo;
+
+    @"49"(self.id, ldo);
 }
 
-pub inline fn @"globalCompositeOperation = 'source-over'"(self: CanvasContext) void {
+pub inline fn @"globalCompositeOperation = 'source-over'"(self: *CanvasContext) void {
+    self.global_composite_operation = .source_over;
+
     @"50"(self.id);
 }
 
-pub inline fn @"globalCompositeOperation = 'destination'"(self: CanvasContext) void {
+pub inline fn @"globalCompositeOperation = 'destination-in'"(self: *CanvasContext) void {
+    self.global_composite_operation = .destination_in;
+
     @"51"(self.id);
 }
 
-pub inline fn @"globalCompositeOperation = 'copy'"(self: CanvasContext) void {
+pub inline fn @"globalCompositeOperation = 'copy'"(self: *CanvasContext) void {
+    self.global_composite_operation = .copy;
+
     @"52"(self.id);
 }
 
-pub inline fn @"globalCompositeOperation = 'lighter'"(self: CanvasContext) void {
+pub inline fn @"globalCompositeOperation = 'lighter'"(self: *CanvasContext) void {
+    self.global_composite_operation = .lighter;
+
     @"53"(self.id);
 }
 
-pub inline fn @"globalCompositeOperation = 'multiply'"(self: CanvasContext) void {
+pub inline fn @"globalCompositeOperation = 'multiply'"(self: *CanvasContext) void {
+    self.global_composite_operation = .multiply;
+
     @"54"(self.id);
 }
 
-pub inline fn setImageSmoothingEnabled(self: CanvasContext, comptime smoothing: bool) void {
+pub inline fn @"imageSmoothingEnabled ="(self: *CanvasContext, comptime smoothing: bool) void {
+    self.image_smoothing_enabled = smoothing;
+
     @"55"(self.id, comptime @intFromBool(smoothing));
 }
 
@@ -251,7 +424,7 @@ pub inline fn setSize(self: CanvasContext, w: u16, h: u16) void {
     @"56"(self.id, w, h);
 }
 
-pub inline fn getSize(self: CanvasContext) @Vector(2, u16) {
+pub inline fn getSize(self: CanvasContext) [2]16 {
     var width: u16 = undefined;
     var height: u16 = undefined;
 
@@ -304,7 +477,7 @@ extern "0" fn @"19"(id: Id) void;
 extern "0" fn @"20"(id: Id, w: f32, h: f32) void;
 /// Sets fillStyle.
 extern "0" fn @"21"(id: Id, r: u8, g: u8, b: u8) void;
-/// Sets strokeStyle to context.
+/// Sets strokeStyle.
 extern "0" fn @"22"(id: Id, r: u8, g: u8, b: u8) void;
 /// Sets globalAlpha.
 extern "0" fn @"23"(id: Id, alpha: f32) void;
@@ -326,7 +499,7 @@ extern "0" fn @"30"(id: Id, cp1x: f32, cp1y: f32, cp2x: f32, cp2y: f32, x: f32, 
 extern "0" fn @"31"(id: Id, x: f32, y: f32, radius: f32, start_angle: f32, end_angle: f32, counterclockwise: u8) void;
 /// Performs ellipse.
 extern "0" fn @"32"(id: Id, x: f32, y: f32, radius_x: f32, radius_y: f32, rotation: f32, start_angle: f32, end_angle: f32, counterclockwise: u8) void;
-/// Sets lineWidth to context.
+/// Sets lineWidth.
 extern "0" fn @"33"(id: Id, w: f32) void;
 /// Performs drawImage (overload 1).
 extern "0" fn @"34"(dst_id: Id, src_id: Id, dx: f32, dy: f32) void;
@@ -336,7 +509,7 @@ extern "0" fn @"35"(dst_id: Id, src_id: Id, dx: f32, dy: f32) void;
 extern "0" fn @"36"(dst_id: Id, src_id: Id, dx: f32, dy: f32, dw: f32, dh: f32) void;
 /// Performs fillText.
 extern "0" fn @"37"(id: Id, ptr: [*]const u8, len: u32, x: f32, y: f32) void;
-/// Performs strokeText to context.
+/// Performs strokeText.
 extern "0" fn @"38"(id: Id, ptr: [*]const u8, len: u32, x: f32, y: f32) void;
 /// Sets font.
 extern "0" fn @"39"(id: Id, pixel: FontPixel) void;
@@ -354,12 +527,12 @@ extern "0" fn @"44"(id: Id) void;
 extern "0" fn @"45"(id: Id) void;
 /// Sets miter to lineJoin.
 extern "0" fn @"46"(id: Id) void;
-/// Sets miterLimit to context.
-extern "0" fn @"47"(id: Id, miter_limit: u16) void;
+/// Sets miterLimit.
+extern "0" fn @"47"(id: Id, miter_limit: f32) void;
 /// Sets line dash to real line.
 extern "0" fn @"48"(id: Id) void;
-/// Sets lineDashOffset to context.
-extern "0" fn @"49"(id: Id, line_dash_offset: u16) void;
+/// Sets lineDashOffset.
+extern "0" fn @"49"(id: Id, line_dash_offset: f32) void;
 /// Sets source-over to globalCompositeOperation.
 extern "0" fn @"50"(id: Id) void;
 /// Sets destination-in to globalCompositeOperation.
@@ -372,18 +545,18 @@ extern "0" fn @"53"(id: Id) void;
 extern "0" fn @"54"(id: Id) void;
 /// Sets imageSmoothingEnabled.
 extern "0" fn @"55"(id: Id, smoothing: u8) void;
-/// Sets width and height to canvas.
+/// Sets width and height.
 extern "0" fn @"56"(id: Id, w: u16, h: u16) void;
-/// Get width and height of canvas.
+/// Get width and height.
 extern "0" fn @"57"(id: Id, w_addr: *u16, h_addr: *u16) void;
 
-pub inline fn createCanvasContext(width: f32, height: f32, comptime is_discardable: bool) CanvasContext {
+pub inline fn createCanvasContext(width: f32, height: f32, comptime is_discardable: bool) *CanvasContext {
     const id = @"0"(width, height, comptime @intFromBool(is_discardable));
 
     return CanvasContext.init(id);
 }
 
-pub inline fn getCanvasContextFromElement(comptime element_id: []const u8, comptime alpha: bool) CanvasContext {
+pub inline fn createCanvasContextFromElement(comptime element_id: []const u8, comptime alpha: bool) *CanvasContext {
     const str = mem.allocCString(element_id);
 
     const id = @"1"(str, comptime @intFromBool(alpha));

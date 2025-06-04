@@ -2,8 +2,8 @@ const std = @import("std");
 const math = std.math;
 const Entity = @import("./Entity.zig").Entity;
 const EntityType = @import("./EntityType.zig").EntityType;
+const EntityRarity = @import("../Florr/Native/Entity/EntityRarity.zig").EntityRarity;
 const MobType = @import("./EntityType.zig").MobType;
-const Rarity = @import("../Florr/Native/Rarity.zig").Rarity;
 
 const starfish = @import("./Renderers/MobStarfishRenderer.zig");
 
@@ -19,7 +19,7 @@ pub const Renderer = @import("./Renderers/MobRenderingDispatcher.zig").MobRender
 type: EntityType,
 
 /// Rarity of mob.
-rarity: Rarity,
+rarity: EntityRarity,
 
 /// Whether this mob is pet.
 is_pet: bool,
@@ -38,7 +38,7 @@ leg_distances: ?[starfish.starfish_leg_amount]f32,
 pub fn init(
     _: std.mem.Allocator,
     @"type": EntityType,
-    rarity: Rarity,
+    rarity: EntityRarity,
     is_pet: bool,
     is_first_segment: bool,
     connecting_segment: ?*Super,
@@ -61,8 +61,8 @@ pub fn init(
 }
 
 pub fn deinit(self: *MobImpl, _: *Super) void {
-    self.connecting_segment = null;
-    self.connected_segments = null;
+    self.connecting_segment = undefined;
+    self.connected_segments = undefined;
 }
 
 pub fn generateDefaultStarfishLegDistance() [starfish.starfish_leg_amount]f32 {

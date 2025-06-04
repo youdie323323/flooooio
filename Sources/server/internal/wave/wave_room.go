@@ -77,7 +77,7 @@ func (pd *PlayerData) AssignWaveRoomPlayerId(id *WaveRoomPlayerId) {
 		opcode = network.ClientboundWaveRoomJoinFailed
 	}
 
-	buf := BufPool.Get()
+	buf := SharedBufPool.Get()
 
 	buf[0] = opcode
 
@@ -93,7 +93,7 @@ func (pd *PlayerData) AssignWaveRoomPlayerId(id *WaveRoomPlayerId) {
 
 	pd.mu.Unlock()
 
-	BufPool.Put(buf)
+	SharedBufPool.Put(buf)
 }
 
 func (pd *PlayerData) AssignWavePlayerId(id *EntityId) {
@@ -319,7 +319,7 @@ func (w *WaveRoom) Dispose() {
 
 	w.updatePacketBroadcastTicker.Stop()
 
-	clear(w.candidates)
+	w.candidates = nil
 }
 
 // startBroadcastUpdatePacket starts sending update packets on an interval.
@@ -342,8 +342,8 @@ func (w *WaveRoom) broadcastUpdatePacket() {
 
 // createUpdatePacket returns update packet to broadcast. Must rlock before call.
 func (w *WaveRoom) createUpdatePacket() []byte {
-	buf := BufPool.Get()
-	defer BufPool.Put(buf)
+	buf := SharedBufPool.Get()
+	defer SharedBufPool.Put(buf)
 
 	at := 0
 
