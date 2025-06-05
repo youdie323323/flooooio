@@ -39,7 +39,7 @@ type PetalData struct {
 	Ultra     PetalStat `json:"6"`
 }
 
-func inlinePtrFloat32(f float32) *float32 {
+func inlineFloat32Pointer(f float32) *float32 {
 	return &f
 }
 
@@ -212,49 +212,49 @@ var PetalProfiles = map[PetalType]PetalData{
 			Damage:      1,
 			Health:      10,
 			PetalReload: 4,
-			UsageReload: inlinePtrFloat32(2),
+			UsageReload: inlineFloat32Pointer(2),
 			Count:       1,
 		},
 		Unusual: PetalStat{
 			Damage:      1.2,
 			Health:      13,
 			PetalReload: 4,
-			UsageReload: inlinePtrFloat32(2),
+			UsageReload: inlineFloat32Pointer(2),
 			Count:       1,
 		},
 		Rare: PetalStat{
 			Damage:      1.4,
 			Health:      18,
 			PetalReload: 4,
-			UsageReload: inlinePtrFloat32(2),
+			UsageReload: inlineFloat32Pointer(2),
 			Count:       1,
 		},
 		Epic: PetalStat{
 			Damage:      1.7,
 			Health:      24,
 			PetalReload: 4,
-			UsageReload: inlinePtrFloat32(2),
+			UsageReload: inlineFloat32Pointer(2),
 			Count:       1,
 		},
 		Legendary: PetalStat{
 			Damage:      2.1,
 			Health:      32,
 			PetalReload: 4,
-			UsageReload: inlinePtrFloat32(2),
+			UsageReload: inlineFloat32Pointer(2),
 			Count:       1,
 		},
 		Mythic: PetalStat{
 			Damage:      2.5,
 			Health:      100,
 			PetalReload: 4,
-			UsageReload: inlinePtrFloat32(15),
+			UsageReload: inlineFloat32Pointer(15),
 			Count:       1,
 		},
 		Ultra: PetalStat{
 			Damage:      5,
 			Health:      250,
 			PetalReload: 4,
-			UsageReload: inlinePtrFloat32(15),
+			UsageReload: inlineFloat32Pointer(15),
 			Count:       1,
 		},
 		EntityData: EntityData[PetalI18n]{
@@ -273,49 +273,49 @@ var PetalProfiles = map[PetalType]PetalData{
 			Damage:      0,
 			Health:      1,
 			PetalReload: 5.5,
-			UsageReload: inlinePtrFloat32(0.5),
+			UsageReload: inlineFloat32Pointer(0.5),
 			Count:       1,
 		},
 		Unusual: PetalStat{
 			Damage:      0,
 			Health:      1,
 			PetalReload: 4.5,
-			UsageReload: inlinePtrFloat32(0.5),
+			UsageReload: inlineFloat32Pointer(0.5),
 			Count:       1,
 		},
 		Rare: PetalStat{
 			Damage:      0,
 			Health:      1,
 			PetalReload: 3.5,
-			UsageReload: inlinePtrFloat32(0.5),
+			UsageReload: inlineFloat32Pointer(0.5),
 			Count:       1,
 		},
 		Epic: PetalStat{
 			Damage:      0,
 			Health:      1,
 			PetalReload: 2.5,
-			UsageReload: inlinePtrFloat32(0.5),
+			UsageReload: inlineFloat32Pointer(0.5),
 			Count:       1,
 		},
 		Legendary: PetalStat{
 			Damage:      0,
 			Health:      1,
 			PetalReload: 1.5,
-			UsageReload: inlinePtrFloat32(0.5),
+			UsageReload: inlineFloat32Pointer(0.5),
 			Count:       1,
 		},
 		Mythic: PetalStat{
 			Damage:      0,
 			Health:      1,
 			PetalReload: 0.5,
-			UsageReload: inlinePtrFloat32(0.5),
+			UsageReload: inlineFloat32Pointer(0.5),
 			Count:       1,
 		},
 		Ultra: PetalStat{
 			Damage:      0,
 			Health:      1,
 			PetalReload: 0.1,
-			UsageReload: inlinePtrFloat32(0.1),
+			UsageReload: inlineFloat32Pointer(0.1),
 			Count:       1,
 		},
 		EntityData: EntityData[PetalI18n]{
@@ -388,49 +388,49 @@ var PetalProfiles = map[PetalType]PetalData{
 			Damage:      1,
 			Health:      10,
 			PetalReload: 4,
-			UsageReload: inlinePtrFloat32(10),
+			UsageReload: inlineFloat32Pointer(10),
 			Count:       1,
 		},
 		Unusual: PetalStat{
 			Damage:      1.2,
 			Health:      13,
 			PetalReload: 4,
-			UsageReload: inlinePtrFloat32(8),
+			UsageReload: inlineFloat32Pointer(8),
 			Count:       1,
 		},
 		Rare: PetalStat{
 			Damage:      1.4,
 			Health:      18,
 			PetalReload: 4,
-			UsageReload: inlinePtrFloat32(6),
+			UsageReload: inlineFloat32Pointer(6),
 			Count:       1,
 		},
 		Epic: PetalStat{
 			Damage:      1.7,
 			Health:      24,
 			PetalReload: 4,
-			UsageReload: inlinePtrFloat32(4),
+			UsageReload: inlineFloat32Pointer(4),
 			Count:       1,
 		},
 		Legendary: PetalStat{
 			Damage:      2.1,
 			Health:      32,
 			PetalReload: 4,
-			UsageReload: inlinePtrFloat32(2),
+			UsageReload: inlineFloat32Pointer(2),
 			Count:       1,
 		},
 		Mythic: PetalStat{
 			Damage:      2.5,
 			Health:      40,
 			PetalReload: 4,
-			UsageReload: inlinePtrFloat32(1),
+			UsageReload: inlineFloat32Pointer(1),
 			Count:       1,
 		},
 		Ultra: PetalStat{
 			Damage:      5,
 			Health:      100,
 			PetalReload: 4,
-			UsageReload: inlinePtrFloat32(0.1),
+			UsageReload: inlineFloat32Pointer(0.1),
 			Count:       1,
 		},
 		EntityData: EntityData[PetalI18n]{
@@ -764,49 +764,49 @@ var PetalProfiles = map[PetalType]PetalData{
 			Damage:      10,
 			Health:      10,
 			PetalReload: 2.5,
-			UsageReload: inlinePtrFloat32(15),
+			UsageReload: inlineFloat32Pointer(15),
 			Count:       1,
 		},
 		Unusual: PetalStat{
 			Damage:      12,
 			Health:      13,
 			PetalReload: 2.5,
-			UsageReload: inlinePtrFloat32(15),
+			UsageReload: inlineFloat32Pointer(15),
 			Count:       1,
 		},
 		Rare: PetalStat{
 			Damage:      14,
 			Health:      18,
 			PetalReload: 2.5,
-			UsageReload: inlinePtrFloat32(15),
+			UsageReload: inlineFloat32Pointer(15),
 			Count:       1,
 		},
 		Epic: PetalStat{
 			Damage:      17,
 			Health:      24,
 			PetalReload: 2.5,
-			UsageReload: inlinePtrFloat32(15),
+			UsageReload: inlineFloat32Pointer(15),
 			Count:       1,
 		},
 		Legendary: PetalStat{
 			Damage:      21,
 			Health:      32,
 			PetalReload: 2.5,
-			UsageReload: inlinePtrFloat32(15),
+			UsageReload: inlineFloat32Pointer(15),
 			Count:       1,
 		},
 		Mythic: PetalStat{
 			Damage:      25,
 			Health:      40,
 			PetalReload: 2.5,
-			UsageReload: inlinePtrFloat32(5),
+			UsageReload: inlineFloat32Pointer(5),
 			Count:       1,
 		},
 		Ultra: PetalStat{
 			Damage:      50,
 			Health:      100,
 			PetalReload: 2.5,
-			UsageReload: inlinePtrFloat32(0.5),
+			UsageReload: inlineFloat32Pointer(0.5),
 			Count:       1,
 		},
 		EntityData: EntityData[PetalI18n]{
@@ -825,7 +825,7 @@ var PetalProfiles = map[PetalType]PetalData{
 			Damage:      8,
 			Health:      5,
 			PetalReload: 3,
-			UsageReload: inlinePtrFloat32(0.5),
+			UsageReload: inlineFloat32Pointer(0.5),
 			Count:       1,
 
 			Extra: EntityExtra{
@@ -837,7 +837,7 @@ var PetalProfiles = map[PetalType]PetalData{
 			Damage:      9.6,
 			Health:      6.5,
 			PetalReload: 3,
-			UsageReload: inlinePtrFloat32(0.5),
+			UsageReload: inlineFloat32Pointer(0.5),
 			Count:       1,
 
 			Extra: EntityExtra{
@@ -849,7 +849,7 @@ var PetalProfiles = map[PetalType]PetalData{
 			Damage:      11.2,
 			Health:      9,
 			PetalReload: 3,
-			UsageReload: inlinePtrFloat32(0.5),
+			UsageReload: inlineFloat32Pointer(0.5),
 			Count:       1,
 
 			Extra: EntityExtra{
@@ -861,7 +861,7 @@ var PetalProfiles = map[PetalType]PetalData{
 			Damage:      13.6,
 			Health:      12,
 			PetalReload: 3,
-			UsageReload: inlinePtrFloat32(0.5),
+			UsageReload: inlineFloat32Pointer(0.5),
 			Count:       1,
 
 			Extra: EntityExtra{
@@ -873,7 +873,7 @@ var PetalProfiles = map[PetalType]PetalData{
 			Damage:      16.8,
 			Health:      16,
 			PetalReload: 3,
-			UsageReload: inlinePtrFloat32(0.5),
+			UsageReload: inlineFloat32Pointer(0.5),
 			Count:       1,
 
 			Extra: EntityExtra{
@@ -885,7 +885,7 @@ var PetalProfiles = map[PetalType]PetalData{
 			Damage:      20,
 			Health:      20,
 			PetalReload: 3,
-			UsageReload: inlinePtrFloat32(0.5),
+			UsageReload: inlineFloat32Pointer(0.5),
 			Count:       1,
 
 			Extra: EntityExtra{
@@ -897,7 +897,7 @@ var PetalProfiles = map[PetalType]PetalData{
 			Damage:      40,
 			Health:      50,
 			PetalReload: 3,
-			UsageReload: inlinePtrFloat32(0.5),
+			UsageReload: inlineFloat32Pointer(0.5),
 			Count:       1,
 
 			Extra: EntityExtra{

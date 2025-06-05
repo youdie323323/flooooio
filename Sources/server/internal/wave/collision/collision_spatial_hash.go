@@ -18,10 +18,10 @@ type Node interface {
 	GetAngle() float32
 }
 
-func ToNodeSlice[T Node](es []T) []Node {
-	nodes := make([]Node, len(es))
+func ToNodeSlice[T Node](entities []T) []Node {
+	nodes := make([]Node, len(entities))
 
-	for i, e := range es {
+	for i, e := range entities {
 		nodes[i] = e
 	}
 
@@ -34,10 +34,22 @@ type SpatialHash struct {
 	buckets  *xsync.Map[int, *nodeSet]
 }
 
+// NewSpatialHash creates a new spatial hash.
+func NewSpatialHash(cellSize float32) *SpatialHash {
+	if cellSize <= 0 {
+		cellSize = 1024
+	}
+
+	return &SpatialHash{
+		cellSize: cellSize,
+		buckets:  xsync.NewMap[int, *nodeSet](),
+	}
+}
+
 // nodeSet is a thread-safe set implementation for Node objects.
 type nodeSet struct{ items sync.Map }
 
-// newNodeSet creates a new thread-safe node set.
+// newNodeSet creates a new node set.
 func newNodeSet() *nodeSet { return new(nodeSet) }
 
 // Add adds a node to the set.
@@ -59,25 +71,9 @@ func (s *nodeSet) ForEach(f func(Node)) {
 	})
 }
 
-// NewSpatialHash creates a new SpatialHash instance.
-func NewSpatialHash(cellSize float32) *SpatialHash {
-	if cellSize <= 0 {
-		cellSize = 1024
-	}
-
-	return &SpatialHash{
-		cellSize: cellSize,
-		buckets:  xsync.NewMap[int, *nodeSet](),
-	}
-}
-
 // pairPoint combines x,y coordinates into a single int64 key.
 func (sh *SpatialHash) pairPoint(x, y int) int {
-	if x >= y {
-		return x*x + x + y
-	}
-
-	return y*y + x
+	return (x << 16) ^ y
 }
 
 // Put adds a node to the spatial hash.
@@ -106,8 +102,18 @@ func (sh *SpatialHash) Remove(n Node) {
 
 // Update updates a node's position in the spatial hash.
 func (sh *SpatialHash) Update(n Node) {
-	sh.Remove(n)
-	sh.Put(n)
+	key := sh.pairPoint(
+		int(math32.Floor(n.GetX()/sh.cellSize)),
+		int(math32.Floor(n.GetY()/sh.cellSize)),
+	)
+
+	if bucket, ok := sh.buckets.Load(key); ok {
+		bucket.Delete(n)
+	}
+	
+    // Get or create bucket for the same key
+    bucket, _ := sh.buckets.LoadOrStore(key, newNodeSet())
+    bucket.Add(n)
 }
 
 // searchResultPool is shared collision searchResultPool between Search.

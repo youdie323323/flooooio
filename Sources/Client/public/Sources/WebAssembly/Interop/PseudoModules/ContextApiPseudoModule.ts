@@ -92,15 +92,18 @@ export const createContextApiPseudoModule = ((...[, {
         moduleImports: {
             // Begin canvas api
 
-            0: (w: number, h: number, isDiscardable: Uint1): number => {
-                const canvas = new OffscreenCanvas(w, h);
+            0: (width: number, height: number, isDiscardable: Uint1): number => {
+                const canvas = document.createElement("canvas");
+                
+                canvas.width = width;
+                canvas.height = height;
 
                 const ctx = canvas.getContext("2d", {
                     storage:
                         isDiscardable
                             ? "discardable"
                             : "persistent",
-                });
+                }) as CanvasRenderingContext2D;
                 if (!ctx) throw new Error("Failed to get 2D context");
 
                 let contextId: number;
@@ -167,8 +170,8 @@ export const createContextApiPseudoModule = ((...[, {
                 contexts[contextId].setTransform(1, 0, 0, 1, 0, 0);
             },
 
-            7: (contextId: number, a: number, b: number, c: number, d: number, e: number, f: number): void => {
-                contexts[contextId].setTransform(a, b, c, d, e, f);
+            7: (contextId: number, m11: number, m12: number, m21: number, m22: number, dx: number, dy: number): void => {
+                contexts[contextId].setTransform(m11, m12, m21, m22, dx, dy);
             },
 
             8: (contextId: number): void => {
@@ -203,8 +206,8 @@ export const createContextApiPseudoModule = ((...[, {
                 contexts[contextId].closePath();
             },
 
-            16: (contextId: number, x: number, y: number, w: number, h: number): void => {
-                contexts[contextId].rect(x, y, w, h);
+            16: (contextId: number, x: number, y: number, width: number, height: number): void => {
+                contexts[contextId].rect(x, y, width, height);
             },
 
             17: (contextId: number): void => {
@@ -214,8 +217,8 @@ export const createContextApiPseudoModule = ((...[, {
                 context.clearRect(0, 0, canvas.width, canvas.height);
             },
 
-            18: (contextId: number, x: number, y: number, w: number, h: number): void => {
-                contexts[contextId].clearRect(x, y, w, h);
+            18: (contextId: number, x: number, y: number, width: number, height: number): void => {
+                contexts[contextId].clearRect(x, y, width, height);
             },
 
             // Draw a pixel
@@ -223,8 +226,8 @@ export const createContextApiPseudoModule = ((...[, {
                 contexts[contextId].fillRect(0, 0, 1, 1);
             },
 
-            20: (contextId: number, w: number, h: number): void => {
-                contexts[contextId].strokeRect(0, 0, w, h);
+            20: (contextId: number, width: number, height: number): void => {
+                contexts[contextId].strokeRect(0, 0, width, height);
             },
 
             21: (contextId: number, r: number, g: number, b: number) => {
@@ -348,16 +351,16 @@ export const createContextApiPseudoModule = ((...[, {
                 contexts[contextId].lineJoin = "miter";
             },
 
-            47: (contextId: number, miterLimit: number) => {
-                contexts[contextId].miterLimit = miterLimit;
+            47: (contextId: number, limit: number) => {
+                contexts[contextId].miterLimit = limit;
             },
 
             48: (contextId: number) => {
                 contexts[contextId].setLineDash(LINE_DASH_REAL_LINE);
             },
 
-            49: (contextId: number, lineDashOffset: number) => {
-                contexts[contextId].lineDashOffset = lineDashOffset;
+            49: (contextId: number, offset: number) => {
+                contexts[contextId].lineDashOffset = offset;
             },
 
             50: (contextId: number) => {
@@ -384,11 +387,11 @@ export const createContextApiPseudoModule = ((...[, {
                 contexts[contextId].imageSmoothingEnabled = !!smoothing;
             },
 
-            56: (contextId: number, w: number, h: number) => {
+            56: (contextId: number, width: number, height: number) => {
                 const canvas = contexts[contextId].canvas;
 
-                canvas.width = w;
-                canvas.height = h;
+                canvas.width = width;
+                canvas.height = height;
             },
 
             57: (contextId: number, wAddr: number, hAddr: number) => {

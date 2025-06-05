@@ -84,7 +84,7 @@ var EachMobBehaviorDefinition = map[MobType]RarityMobBehaviorDefinition{
 	MobTypeCentipedeDesert: fullyPassiveDefinition,
 	MobTypeCentipedeEvil:   fullyHostileDefinition,
 
-	// These is just placeholder and does nothing
+	// These just placeholder and does nothing
 	MobTypeMissileProjectile: fullyPassiveDefinition,
 	MobTypeWebProjectile:     fullyPassiveDefinition,
 }
