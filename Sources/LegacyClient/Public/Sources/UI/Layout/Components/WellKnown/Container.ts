@@ -240,14 +240,6 @@ export class StaticPanelContainer<Child extends Components = Components> extends
         }
     }
 
-    private getStrokeWidth(): number {
-        return Math.min(
-            Component.computePointerLike(this.strokeWidthLimit),
-            Math.min(this.w, this.h) *
-            Component.computePointerLike(this.strokeWidthCoef),
-        );
-    }
-
     override layout(lc: LayoutContext): LayoutResult {
         const { ctx, containerWidth, containerHeight } = lc;
 
@@ -273,7 +265,7 @@ export class StaticPanelContainer<Child extends Components = Components> extends
             });
         }
 
-        const strokeWidth = this.getStrokeWidth();
+        const strokeWidth = this.calculateStrokeWidth();
 
         const options = Object.assign(
             {
@@ -284,7 +276,6 @@ export class StaticPanelContainer<Child extends Components = Components> extends
         );
 
         if (typeof options.w === "number") options.w += strokeWidth * 2;
-
         if (typeof options.h === "number") options.h += strokeWidth * 2;
 
         return Layout.layout(options, lc);
@@ -303,7 +294,7 @@ export class StaticPanelContainer<Child extends Components = Components> extends
 
             ctx.roundRect(this.x, this.y, this.w, this.h, computedRadii);
 
-            ctx.lineWidth = this.getStrokeWidth();
+            ctx.lineWidth = this.calculateStrokeWidth();
             ctx.fillStyle = computedColor;
             ctx.strokeStyle = darkened(computedColor, DARKENED_BASE);
             ctx.fill();
@@ -315,7 +306,7 @@ export class StaticPanelContainer<Child extends Components = Components> extends
         const { children } = this;
 
         if (children.length > 0) {
-            const strokeWidth = this.getStrokeWidth();
+            const strokeWidth = this.calculateStrokeWidth();
 
             children.forEach(child => {
                 const childLayout = child.cachedLayout({
@@ -336,6 +327,14 @@ export class StaticPanelContainer<Child extends Components = Components> extends
 
             renderPossibleComponents(ctx, children);
         }
+    }
+
+    private calculateStrokeWidth(): number {
+        return Math.min(
+            Component.computePointerLike(this.strokeWidthLimit),
+            Math.min(this.w, this.h) *
+            Component.computePointerLike(this.strokeWidthCoef),
+        );
     }
 }
 
@@ -408,7 +407,7 @@ export class StaticTranslucentPanelContainer<Child extends Components = Componen
 
             // 0.5 if globalAlpha is 1
             ctx.globalAlpha = alpha;
-            
+
             ctx.fillStyle = "black";
             ctx.fill();
 
@@ -540,7 +539,7 @@ export class StaticHContainer<Child extends Components = Components> extends Abs
         return Layout.layout(
             {
                 ...Component.computePointerLike(this.layoutOptions),
-                
+
                 w: totalWidth,
                 h: maxHeight,
             },

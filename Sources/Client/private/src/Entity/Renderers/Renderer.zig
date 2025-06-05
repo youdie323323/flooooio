@@ -1,7 +1,7 @@
 const std = @import("std");
 const math = std.math;
-const CanvasContext = @import("../../WebAssembly/Interop/Canvas/CanvasContext.zig");
-const Color = @import("../../WebAssembly/Interop/Canvas/Color.zig");
+const CanvasContext = @import("../../WebAssembly/Interop/Canvas2D/CanvasContext.zig");
+const Color = @import("../../WebAssembly/Interop/Canvas2D/Color.zig");
 const allocator = @import("../../mem.zig").allocator;
 const MobType = @import("../EntityType.zig").MobType;
 
@@ -87,7 +87,7 @@ pub fn Renderer(
                 const scale = 1 + sin_waved_dead_t;
 
                 ctx.scale(scale, scale);
-                ctx.@"globalAlpha ="(ctx.global_alpha * (1 - (if (is_leech) 2 else 1) * sin_waved_dead_t));
+                ctx.setGlobalAlpha(ctx.global_alpha * (1 - (if (is_leech) 2 else 1) * sin_waved_dead_t));
             }
         }
 

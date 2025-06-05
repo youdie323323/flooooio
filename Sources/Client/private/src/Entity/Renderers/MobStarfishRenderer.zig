@@ -6,7 +6,7 @@ const darkened_base = @import("../Renderers/Renderer.zig").darkened_base;
 const RenderingContext = @import("../Renderers/Renderer.zig").RenderingContext;
 const MobSuper = @import("../Mob.zig").Super;
 
-const Color = @import("../../WebAssembly/Interop/Canvas/Color.zig");
+const Color = @import("../../WebAssembly/Interop/Canvas2D/Color.zig");
 
 pub const starfish_leg_amount: usize = 5;
 
@@ -88,16 +88,16 @@ fn render(rctx: RenderingContext(MobSuper)) void {
         );
     }
 
-    ctx.@"lineCap = 'round'"();
-    ctx.@"lineJoin = 'round'"();
+    ctx.setLineJoin(.round);
+    ctx.setLineCap(.round);
 
     const starfish_skin_color = MobStarfishRenderer.blendStatusEffects(rctx, comptime Color.comptimeFromHexColorCode("#d0504e"));
 
-    ctx.@"lineWidth ="(52);
+    ctx.setLineWidth(52);
     ctx.strokeColor(starfish_skin_color.darkened(darkened_base));
     ctx.stroke();
 
-    ctx.@"lineWidth ="(26);
+    ctx.setLineWidth(26);
     ctx.fillColor(starfish_skin_color);
     ctx.strokeColor(starfish_skin_color);
     ctx.fill();

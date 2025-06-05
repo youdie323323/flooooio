@@ -1,7 +1,7 @@
 const std = @import("std");
-const CanvasContext = @import("../WebAssembly/Interop/Canvas/CanvasContext.zig");
+const CanvasContext = @import("../WebAssembly/Interop/Canvas2D/CanvasContext.zig");
 const Component = @import("./Layout/Components/Component.zig");
-const Color = @import("../WebAssembly/Interop/Canvas/Color.zig");
+const Color = @import("../WebAssembly/Interop/Canvas2D/Color.zig");
 const Allocator = std.mem.Allocator;
 const UI = @This();
 

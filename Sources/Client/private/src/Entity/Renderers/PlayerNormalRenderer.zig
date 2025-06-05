@@ -5,7 +5,7 @@ const Renderer = @import("../Renderers/Renderer.zig").Renderer;
 const RenderingContext = @import("../Renderers/Renderer.zig").RenderingContext;
 const PlayerSuper = @import("../Player.zig").Super;
 
-const Color = @import("../../WebAssembly/Interop/Canvas/Color.zig");
+const Color = @import("../../WebAssembly/Interop/Canvas2D/Color.zig");
 
 const dead_eye_length: f32 = 4;
 
@@ -23,7 +23,7 @@ pub fn drawDeadEyes(
     ctx.moveTo(eye_x + dead_eye_length, eye_y - dead_eye_length);
     ctx.lineTo(eye_x - dead_eye_length, eye_y + dead_eye_length);
 
-    ctx.@"lineWidth ="(3);
+    ctx.setLineWidth(3);
     ctx.strokeColor(comptime Color.comptimeFromHexColorCode("#000000"));
     ctx.stroke();
 }
@@ -78,14 +78,14 @@ fn render(rctx: RenderingContext(PlayerSuper)) void {
     const entity = rctx.entity;
     const player = entity.impl;
 
-    ctx.@"lineCap = 'round'"();
+    ctx.setLineCap(.round);
 
     { // Body
         ctx.beginPath();
 
         ctx.arc(0, 0, 25, 0, math.tau, false);
 
-        ctx.@"lineWidth ="(2.75);
+        ctx.setLineWidth(2.75);
         ctx.fillColor(PlayerNormalRenderer.blendStatusEffects(rctx, comptime Color.comptimeFromHexColorCode("#ffe763")));
         ctx.strokeColor(PlayerNormalRenderer.blendStatusEffects(rctx, comptime Color.comptimeFromHexColorCode("#cfbb50")));
         ctx.fill();
@@ -135,7 +135,7 @@ fn render(rctx: RenderingContext(PlayerSuper)) void {
         ctx.moveTo(-6.1, 0);
         ctx.quadraticCurveTo(0, vertic_rise, 6.1, 0);
 
-        ctx.@"lineWidth ="(1.5);
+        ctx.setLineWidth(1.5);
         ctx.strokeColor(comptime Color.comptimeFromHexColorCode("#000000"));
         ctx.stroke();
     }

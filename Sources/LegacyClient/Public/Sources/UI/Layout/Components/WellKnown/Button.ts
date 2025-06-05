@@ -39,7 +39,7 @@ export class Button extends StaticPanelContainer<StaticHContainer> {
 
             false,
 
-            () => this.getButtonColor(),
+            () => this.computeButtonColor(),
 
             rectRadii,
 
@@ -109,13 +109,13 @@ export class Button extends StaticPanelContainer<StaticHContainer> {
         }
     }
 
-    private getButtonColor(): ColorCode {
+    private computeButtonColor(): ColorCode {
         if (!this.isValid) return Button.INVALID_COLOR;
 
         const computedColor = Component.computePointerLike(this.buttonColor);
 
         if (this.isPressed) {
-            return darkened(computedColor, 0.106);
+            return darkened(computedColor, 0.1);
         } else if (this.isHovered) {
             return lightened(computedColor, 0.1);
         }

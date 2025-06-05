@@ -6,9 +6,9 @@ const event = @import("./WebAssembly/Interop/Event.zig");
 const dom = @import("./WebAssembly/Interop/Dom.zig");
 const ws = @import("./WebSocket/ws.zig");
 
-const CanvasContext = @import("./WebAssembly/Interop/Canvas/CanvasContext.zig");
-const Color = @import("./WebAssembly/Interop/Canvas/Color.zig");
-const Path2D = @import("./WebAssembly/Interop/Canvas/Path2D.zig");
+const CanvasContext = @import("./WebAssembly/Interop/Canvas2D/CanvasContext.zig");
+const Color = @import("./WebAssembly/Interop/Canvas2D/Color.zig");
+const Path2D = @import("./WebAssembly/Interop/Canvas2D/Path2D.zig");
 
 const timer = @import("./WebAssembly/Interop/Timer.zig");
 
@@ -247,9 +247,9 @@ fn draw(_: f32) callconv(.c) void {
             else
                 0;
 
-        ctx.@"lineJoin = 'round'"();
-        ctx.@"lineCap = 'round'"();
-        ctx.@"textAlign ="(.right);
+        ctx.setLineJoin(.round);
+        ctx.setLineCap(.round);
+        ctx.setTextAlign(.right);
 
         ctx.fillColor(comptime Color.comptimeFromHexColorCode("#FFFFFF"));
 
