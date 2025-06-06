@@ -33,7 +33,7 @@ connected_segments: ?Segments,
 
 /// Leg distances of starfish.
 /// Value is null if not starfish.
-leg_distances: ?[starfish.starfish_leg_amount]f32,
+leg_distances: ?[starfish.leg_amount]f32,
 
 pub fn init(
     _: std.mem.Allocator,
@@ -65,8 +65,8 @@ pub fn deinit(self: *MobImpl, _: *Super) void {
     self.connected_segments = undefined;
 }
 
-pub fn generateDefaultStarfishLegDistance() [starfish.starfish_leg_amount]f32 {
-    var distances: [starfish.starfish_leg_amount]f32 = undefined;
+pub fn generateDefaultStarfishLegDistance() [starfish.leg_amount]f32 {
+    var distances: [starfish.leg_amount]f32 = undefined;
 
     for (&distances) |*distance| {
         distance.* = starfish.undestroyed_leg_distance;

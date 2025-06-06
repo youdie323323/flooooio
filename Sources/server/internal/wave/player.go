@@ -34,8 +34,8 @@ type Player struct {
 
 	IsDead bool
 
-	Accel    [2]float32
-	Velocity [2]float32
+	Acceleration [2]float32
+	Velocity     [2]float32
 
 	// player_dead_camera.go struct field definitions
 	DeadCameraTarget collision.Node
@@ -118,8 +118,8 @@ func (c *MovementCommand) Execute(_ *WavePool, p *Player) {
 	accelX := math32.Cos(rad) * speed
 	accelY := math32.Sin(rad) * speed
 
-	p.Accel[0] = accelX
-	p.Accel[1] = accelY
+	p.Acceleration[0] = accelX
+	p.Acceleration[1] = accelY
 }
 
 func (c *MoodCommand) Execute(_ *WavePool, p *Player) {
@@ -351,8 +351,8 @@ func NewPlayer(
 
 		IsDead: false,
 
-		Accel:    [2]float32{0, 0},
-		Velocity: [2]float32{0, 0},
+		Acceleration: [2]float32{0, 0},
+		Velocity:     [2]float32{0, 0},
 
 		DeadCameraTarget: nil,
 

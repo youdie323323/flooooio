@@ -4,7 +4,6 @@ const RendererFn = @import("../Renderers/Renderer.zig").RendererFn;
 const RenderingContext = @import("../Renderers/Renderer.zig").RenderingContext;
 const MobSuper = @import("../Mob.zig").Super;
 const MobType = @import("../EntityType.zig").MobType;
-const allocator = @import("../../mem.zig").allocator;
 
 const starfishRender = @import("./MobStarfishRenderer.zig").MobStarfishRenderer.render;
 
@@ -19,7 +18,7 @@ fn render(rctx: RenderingContext(MobSuper)) void {
     if (type_to_renderer.get(mob.type.get())) |r| r(rctx);
 }
 
-fn init() void {
+fn init(allocator: std.mem.Allocator) void {
     type_to_renderer = TypeToRendererFn.init(allocator);
 
     type_to_renderer.put(@intFromEnum(MobType.starfish), starfishRender) catch unreachable;

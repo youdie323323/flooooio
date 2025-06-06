@@ -88,6 +88,42 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 						Type:   native.PetalTypeWeb,
 						Rarity: native.RarityUltra,
 					},
+					{
+						Type:   native.PetalTypeEggBeetle,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeEggBeetle,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeEggBeetle,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeEggBeetle,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeEggBeetle,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeEggBeetle,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeEggBeetle,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeEggBeetle,
+						Rarity: native.RarityUltra,
+					},
+					{
+						Type:   native.PetalTypeEggBeetle,
+						Rarity: native.RarityUltra,
+					},
 				},
 			},
 			Conn: conn,

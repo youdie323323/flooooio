@@ -29,7 +29,7 @@ func (s *WaveRoomService) JoinPublicWaveRoom(pd *PlayerData, biome native.Biome)
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if !s.canPlayerJoin(pd) {
+	if !s.isPlayerJoinable(pd) {
 		return nil
 	}
 
@@ -50,7 +50,7 @@ func (s *WaveRoomService) JoinWaveRoom(pd *PlayerData, code WaveRoomCode) *WaveR
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if !s.canPlayerJoin(pd) {
+	if !s.isPlayerJoinable(pd) {
 		return nil
 	}
 
@@ -111,7 +111,7 @@ func (s *WaveRoomService) NewPublicWaveRoom(pd *PlayerData, biome native.Biome) 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if !s.canPlayerJoin(pd) {
+	if !s.isPlayerJoinable(pd) {
 		return nil
 	}
 
@@ -171,8 +171,8 @@ func (s *WaveRoomService) FindPlayerRoom(id WaveRoomPlayerId) *WaveRoom {
 	return nil
 }
 
-// canPlayerJoin determines if a player is allowed to join/add.
-func (s *WaveRoomService) canPlayerJoin(pd *PlayerData) bool {
+// isPlayerJoinable determines if a player is allowed to join/add.
+func (s *WaveRoomService) isPlayerJoinable(pd *PlayerData) bool {
 	// Check if player is already in a room
 	for _, room := range s.waveRooms {
 		for _, candidate := range room.candidates {
@@ -206,7 +206,7 @@ func RemovePlayerFromService(pd *PlayerData) {
 		}
 	}
 
-	{ // This block should executed after because needs to use FindPlayerRoom
+	{ // This block should executed after room properties deinialization
 		// Dont care about result
 		_ = WrService.LeaveCurrentWaveRoom(pd)
 

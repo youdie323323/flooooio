@@ -27,8 +27,8 @@ func IsBody(wp *WavePool, m *Mob) bool {
 	return TraverseMobSegments(wp, m) != m
 }
 
-// IsBodyWithTraversedResult determinate if segment piece mob is body but returns traversed result too.
-func IsBodyWithTraversedResult(wp *WavePool, m *Mob) (*Mob, bool) {
+// IsBodyWithResult determinate if segment piece mob is body but returns traversed result too.
+func IsBodyWithResult(wp *WavePool, m *Mob) (*Mob, bool) {
 	t := TraverseMobSegments(wp, m)
 
 	return t, t != m

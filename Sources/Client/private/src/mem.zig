@@ -1,6 +1,7 @@
 const std = @import("std");
 const testing = std.testing;
 const heap = std.heap;
+
 pub const CStringPointer = [*:0]u8;
 pub const ConstCStringPointer = [*:0]const u8;
 

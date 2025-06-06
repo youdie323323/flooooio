@@ -84,7 +84,7 @@ pub fn comptimeFromAnyString(comptime str: []const u8) Color {
 
 const HexColorCode = *const [7:0]u8;
 
-const Unsigned24BitIntegerColorCode = u24;
+const HexColor = u24;
 
 inline fn isValidHexColorCode(comptime code: HexColorCode) bool {
     comptime {
@@ -100,19 +100,19 @@ pub fn comptimeFromHexColorCode(comptime code: HexColorCode) Color {
     comptime {
         if (!isValidHexColorCode(code)) @compileError("color code " ++ code ++ " is not valid");
 
-        const value = std.fmt.parseInt(Unsigned24BitIntegerColorCode, code[1..], 16) catch
+        const value = std.fmt.parseInt(HexColor, code[1..], 16) catch
             @compileError("invalid hex color: " ++ code);
 
-        return comptimeFromUnsigned24BitIntegerColorCode(value);
+        return comptimeFromHex(value);
     }
 }
 
 /// Convert u24 representation of color code to Color.
-pub fn comptimeFromUnsigned24BitIntegerColorCode(comptime code: Unsigned24BitIntegerColorCode) Color {
+pub fn comptimeFromHex(comptime hex: HexColor) Color {
     comptime {
-        const r: u8 = (code >> 16) & 0xFF;
-        const g: u8 = (code >> 8) & 0xFF;
-        const b: u8 = code & 0xFF;
+        const r: u8 = (hex >> 16) & 0xFF;
+        const g: u8 = (hex >> 8) & 0xFF;
+        const b: u8 = hex & 0xFF;
 
         return init(.{ r, g, b });
     }
@@ -151,7 +151,7 @@ pub fn comptimeFromRgbString(comptime str: []const u8) Color {
     }
 }
 
-const css_name_map = std.StaticStringMap(Unsigned24BitIntegerColorCode).initComptime(.{
+const css_name_map = std.StaticStringMap(HexColor).initComptime(.{
     .{ "aliceblue", 0xf0f8ff },
     .{ "antiquewhite", 0xfaebd7 },
     .{ "aqua", 0x00ffff },
@@ -308,7 +308,7 @@ pub fn comptimeFromCSSColorName(comptime name: []const u8) Color {
     comptime {
         if (name.len == 0) @compileError("empty name not allowed for fromName");
 
-        if (css_name_map.get(name)) |color| return comptimeFromUnsigned24BitIntegerColorCode(color);
+        if (css_name_map.get(name)) |color| return comptimeFromHex(color);
 
         @compileError("css color name " ++ name ++ " is not valid");
     }

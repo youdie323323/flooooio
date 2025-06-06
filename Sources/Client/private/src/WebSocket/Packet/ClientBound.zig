@@ -15,6 +15,14 @@ client: *ClientWebSocket,
 handlers: HandlerMap,
 default_handlers: HandlerMap,
 
+pub fn readFloat16(stream: anytype) ClientWebSocket.DefaultPacketStream.ReadError!f16 {
+    var buffer: [2]u8 align(@alignOf(f16)) = undefined;
+
+    _ = try stream.readAll(&buffer);
+
+    return std.mem.bytesAsValue(f16, &buffer).*;
+}
+
 pub fn readFloat32(stream: anytype) ClientWebSocket.DefaultPacketStream.ReadError!f32 {
     var buffer: [4]u8 align(@alignOf(f32)) = undefined;
 

@@ -1,5 +1,6 @@
 const std = @import("std");
 const mem = @import("../../mem.zig");
+const allocator = mem.allocator;
 
 /// WebSocket provides basic WebSocket operations callable by webassembly internaly.
 pub fn WebSocket(comptime Context: type) type {
@@ -7,7 +8,7 @@ pub fn WebSocket(comptime Context: type) type {
         const Self = @This();
 
         var websocket_instances =
-            std.AutoHashMap(Self.WebSocketId, *Self).init(mem.allocator);
+            std.AutoHashMap(Self.WebSocketId, *Self).init(allocator);
 
         const OnMessageFn = *const fn (*Self, []const u8) void;
         const OnOpenFn = *const fn (*Self) void;
@@ -47,15 +48,15 @@ pub fn WebSocket(comptime Context: type) type {
 
             mem.free(str);
 
-            const ws = try mem.allocator.create(Self);
-            errdefer mem.allocator.destroy(ws);
+            const ws = try allocator.create(Self);
+            errdefer allocator.destroy(ws);
 
             ws.* = .{
                 .id = socket_id,
                 .ctx = ctx,
             };
 
-            try websocket_instances.put(ws.id, ws);
+            try websocket_instances.putNoClobber(ws.id, ws);
 
             return ws;
         }
@@ -64,9 +65,9 @@ pub fn WebSocket(comptime Context: type) type {
         pub inline fn deinit(self: *Self) void {
             @"2"(self.id);
 
-            mem.allocator.destroy(self);
-
             _ = websocket_instances.remove(self.id);
+
+            allocator.destroy(self);
 
             self.* = undefined;
         }
@@ -78,7 +79,7 @@ pub fn WebSocket(comptime Context: type) type {
 
         /// Sends binary data through the WebSocket.
         pub inline fn send(self: Self, data: []const u8) !bool {
-            // This could slow the code
+            // This would slow the code
             // if (!self.isReady()) {
             //     return error.WebSocketNotReady;
             // }

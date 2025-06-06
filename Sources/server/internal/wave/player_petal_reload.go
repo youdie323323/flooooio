@@ -49,7 +49,7 @@ func (p *Player) PlayerPetalReload(wp *WavePool, now time.Time) {
 				case native.PetalTypeEggBeetle:
 					{
 						// If summoned pets is not eliminated, not reload
-						// Already deleted eliminated pets, so just check the length
+						// We already deleted eliminated pets, so just check the length
 						if len(pe.SummonedPets) > 0 {
 							continue
 						}
@@ -62,12 +62,6 @@ func (p *Player) PlayerPetalReload(wp *WavePool, now time.Time) {
 					peReloadCooldown[j] = now.Add(time.Duration(native.PetalProfiles[pe.Type].StatFromRarity(pe.Rarity).PetalReload * float32(time.Second)))
 				} else if now.After(peReloadCooldown[j]) || now.Equal(peReloadCooldown[j]) {
 					// If cooldown elapsed
-
-					// We overriding petal so save summoned pets
-					tempSummonedPets := pe.SummonedPets
-
-					// Dispose pe summoned pets because we no longer have this in memory
-					pe.SummonedPets = nil
 
 					s[j] = wp.GeneratePetal(
 						pe.Type,
@@ -83,7 +77,10 @@ func (p *Player) PlayerPetalReload(wp *WavePool, now time.Time) {
 						false,
 					)
 
-					s[j].SummonedPets = tempSummonedPets
+					s[j].SummonedPets = pe.SummonedPets
+
+					// Dispose pe summoned pets because we no longer need this in the memory
+					pe.SummonedPets = nil
 
 					// Zero
 					peReloadCooldown[j] = time.Time{}

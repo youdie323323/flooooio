@@ -4,11 +4,11 @@ import type Player from "../../Entity/Player";
 import { renderEntity } from "../../Entity/Renderers/RendererRenderingLink";
 
 export default class UIGameOtherPlayerStatus extends Gauge {
-    private static readonly OTHER_PLAYER_SIZE_COEFF: number = 0.8;
+    private static readonly OTHER_PLAYER_SIZE_COEF: number = 0.8;
 
     private static readonly PLAYER_PROXY_HANDLER = {
         get(target, property, receiver) {
-            if (property === "size") return 20 * UIGameOtherPlayerStatus.OTHER_PLAYER_SIZE_COEFF;
+            if (property === "size") return 20 * UIGameOtherPlayerStatus.OTHER_PLAYER_SIZE_COEF;
 
             return Reflect.get(target, property, receiver);
         },
@@ -23,14 +23,14 @@ export default class UIGameOtherPlayerStatus extends Gauge {
 
         private player: Player,
     ) {
-        const { OTHER_PLAYER_SIZE_COEFF } = UIGameOtherPlayerStatus;
+        const { OTHER_PLAYER_SIZE_COEF } = UIGameOtherPlayerStatus;
 
         super(
             {
                 ...layoutOptions,
 
-                w: 135 * OTHER_PLAYER_SIZE_COEFF,
-                h: 22 * OTHER_PLAYER_SIZE_COEFF,
+                w: 135 * OTHER_PLAYER_SIZE_COEF,
+                h: 22 * OTHER_PLAYER_SIZE_COEF,
             },
 
             healthGaugeSources(player),

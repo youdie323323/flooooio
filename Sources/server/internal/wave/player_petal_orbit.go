@@ -30,20 +30,20 @@ func init() {
 	}
 }
 
-var MoodablePetalTypes = slices.Concat(UsablePetalTypes, []native.PetalType{
+var UnmoodablePetalTypes = slices.Concat(UsablePetalTypes, []native.PetalType{
 	native.PetalTypeMagnet,
 })
 
 // PlayerPetalOrbit class constants
 const (
-	defaultRotateSpeed         = 2.5
-	radiusSpringStrength       = 0.4
-	radiusFriction             = 0.1
-	petalVelocityAcceleration  = 0.1
-	petalClusterRadius         = 6.0
-	spingInterpolationSpeed    = 0.6
-	spinNearestSizeCoefficient = 1.075
-	spinAngleCoefficient       = 10.0
+	defaultRotateSpeed        = 2.5
+	radiusSpringStrength      = 0.4
+	radiusFriction            = 0.1
+	petalVelocityAcceleration = 0.1
+	petalClusterRadius        = 6.0
+	spingInterpolationSpeed   = 0.6
+	spinNearestSizeCoef       = 1.075
+	spinAngleCoef             = 10.0
 )
 
 const (
@@ -53,7 +53,7 @@ const (
 )
 
 func calcTableIndex(i float32) int {
-	return int(math32.Mod(math32.Mod(i, Tau)+Tau, Tau) * float32(precalcSize) / Tau)
+	return int(math32.Mod(math32.Mod(i, Tau)+Tau, Tau) * 180 / math32.Pi)
 }
 
 func calculateRotationDelta(
@@ -61,7 +61,7 @@ func calculateRotationDelta(
 
 	cw float32,
 ) float32 {
-	return (ts * cw) / float32(WaveUpdateFPS)
+	return (ts * cw) * DeltaT
 }
 
 func doPetalOrbit(
@@ -101,7 +101,7 @@ func doPetalSpin(
 			return false
 		}
 
-		spinDetectRad := m.CalculateRadius() * spinNearestSizeCoefficient
+		spinDetectRad := m.CalculateRadius() * spinNearestSizeCoef
 		spinDetectRadSq := spinDetectRad * spinDetectRad
 
 		dx := m.X - pe.X
@@ -215,7 +215,7 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 
 	var totalSpeed float32 = defaultRotateSpeed
 
-	spinRotationDelta := calculateRotationDelta(defaultRotateSpeed*spinAngleCoefficient, clockwise)
+	spinRotationDelta := calculateRotationDelta(defaultRotateSpeed*spinAngleCoef, clockwise)
 
 	var targetRadius float32
 
@@ -256,7 +256,7 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 		var springForce float32
 
 		switch true {
-		case slices.Contains(MoodablePetalTypes, firstPetal.Type):
+		case slices.Contains(UnmoodablePetalTypes, firstPetal.Type):
 			springForce = (DefaultMoodRadius - p.OrbitPetalRadii[i]) * radiusSpringStrength
 
 		case isAngry && firstPetal.Type == native.PetalTypeWing:

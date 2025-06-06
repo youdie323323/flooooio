@@ -2,7 +2,6 @@ const std = @import("std");
 const math = std.math;
 const CanvasContext = @import("../../WebAssembly/Interop/Canvas2D/CanvasContext.zig");
 const Color = @import("../../WebAssembly/Interop/Canvas2D/Color.zig");
-const allocator = @import("../../mem.zig").allocator;
 const MobType = @import("../EntityType.zig").MobType;
 
 /// A factor used for darken skin color.
@@ -35,11 +34,11 @@ pub fn Renderer(
     comptime Entity: type,
     comptime recursive: bool,
     render_fn: RendererFn(Entity),
-    static_init_fn: ?*const fn () void,
+    static_init_fn: ?*const fn (allocator: std.mem.Allocator) void,
 ) type {
     return struct {
-        pub fn initStatic() void {
-            if (comptime static_init_fn) |f| f();
+        pub fn initStatic(allocator: std.mem.Allocator) void {
+            if (comptime static_init_fn) |f| f(allocator);
         }
 
         /// Render the entity.

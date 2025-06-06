@@ -48,15 +48,16 @@ func FindNearestEntity(me collision.Node, entities []collision.Node) collision.N
 	nearest := entities[0]
 
 	var dx, dy float32
+	var distanceSqToCurrent, distanceSqToNearest float32
 
 	for _, current := range entities[1:] {
 		dx = current.GetX() - meX
 		dy = current.GetY() - meY
-		distanceSqToCurrent := dx*dx + dy*dy
+		distanceSqToCurrent = dx*dx + dy*dy
 
 		dx = nearest.GetX() - meX
 		dy = nearest.GetY() - meY
-		distanceSqToNearest := dx*dx + dy*dy
+		distanceSqToNearest = dx*dx + dy*dy
 
 		if distanceSqToCurrent < distanceSqToNearest {
 			nearest = current
@@ -99,8 +100,8 @@ const angleFactor = 255 / Tau // 255/(2*PI)
 
 const angleInterpolationFactor = .05
 
-// CalculateInterpolatedAngleToTarget calculates interpolated angle to target.
-func CalculateInterpolatedAngleToTarget(thisAngle, dx, dy float32) float32 {
+// CalculateInterpolatedAngleToEntity calculates interpolated angle to entity.
+func CalculateInterpolatedAngleToEntity(thisAngle, dx, dy float32) float32 {
 	angleDiff := math32.Mod(math32.Atan2(dy, dx)*angleFactor, 255) - thisAngle
 
 	switch {
@@ -126,7 +127,9 @@ func normalizeAngle(angle float32) float32 {
 	return angle
 }
 
-func generalPurposePredictInterception(dx, dy, vtx, vty, currentAngle float32) *float32 {
+// predictInterceptionAngle predict interception angle to entity.
+// vtx, vty is movement vector of entity.
+func predictInterceptionAngle(dx, dy, vtx, vty, currentAngle float32) *float32 {
 	targetAngle := math32.Atan2(dy, dx)
 	currentRad := currentAngle / angleFactor
 	angleDiff := math32.Abs(normalizeAngle(targetAngle - currentRad))
@@ -155,13 +158,13 @@ func generalPurposePredictInterception(dx, dy, vtx, vty, currentAngle float32) *
 	xf := dx + vtx*totalTime
 	yf := dy + vty*totalTime
 
-	interpolatedAngle := CalculateInterpolatedAngleToTarget(currentAngle, xf, yf)
+	interpolatedAngle := CalculateInterpolatedAngleToEntity(currentAngle, xf, yf)
 
 	return &interpolatedAngle
 }
 
-// predictInterceptionAngleMob calculates the angle to hit a moving mob with a missile.
-func predictInterceptionAngleMob(dx, dy float32, m *Mob, currentAngle float32) *float32 {
+// predictInterceptionAngleToMob calculates the angle to hit a moving mob with a missile.
+func predictInterceptionAngleToMob(dx, dy float32, m *Mob, currentAngle float32) *float32 {
 	// Calculate target's speed vector
 	targetRad := angleToRadian(m.Angle)
 
@@ -170,16 +173,16 @@ func predictInterceptionAngleMob(dx, dy float32, m *Mob, currentAngle float32) *
 	vtx := math32.Cos(targetRad) * targetSpeed
 	vty := math32.Sin(targetRad) * targetSpeed
 
-	return generalPurposePredictInterception(dx, dy, vtx, vty, currentAngle)
+	return predictInterceptionAngle(dx, dy, vtx, vty, currentAngle)
 }
 
-// predictInterceptionAnglePlayer calculates the angle to hit a player target with a missile.
-// Player movement uses velocity with friction instead of direct angle-based movement.
-func predictInterceptionAnglePlayer(dx, dy float32, p *Player, currentAngle float32) *float32 {
-	vtx := p.Velocity[0] + p.Accel[0]
-	vty := p.Velocity[1] + p.Accel[1]
+// predictInterceptionAngleToPlayer calculates the angle to hit a player target with a missile.
+// Player movement uses velocity instead of angle-based movement.
+func predictInterceptionAngleToPlayer(dx, dy float32, p *Player, currentAngle float32) *float32 {
+	vtx := p.Velocity[0] + p.Acceleration[0]
+	vty := p.Velocity[1] + p.Acceleration[1]
 
-	return generalPurposePredictInterception(dx, dy, vtx, vty, currentAngle)
+	return predictInterceptionAngle(dx, dy, vtx, vty, currentAngle)
 }
 
 func (m *Mob) getDetectRange() float32 {
@@ -288,26 +291,26 @@ func (m *Mob) MobBehavior(wp *WavePool, now time.Time) {
 
 			// If distance is close, we can just use CalculateInterpolatedAngleToTarget
 			if (dx*dx + dy*dy) <= mRadiusSq {
-				m.Angle = CalculateInterpolatedAngleToTarget(m.Angle, dx, dy)
+				m.Angle = CalculateInterpolatedAngleToEntity(m.Angle, dx, dy)
 			} else {
 				var predicted *float32 = nil
 
 				switch e := m.TargetEntity.(type) {
 				case *Mob:
 					{
-						predicted = predictInterceptionAngleMob(dx, dy, e, m.Angle)
+						predicted = predictInterceptionAngleToMob(dx, dy, e, m.Angle)
 					}
 
 				case *Player:
 					{
-						predicted = predictInterceptionAnglePlayer(dx, dy, e, m.Angle)
+						predicted = predictInterceptionAngleToPlayer(dx, dy, e, m.Angle)
 					}
 				}
 
 				if predicted != nil {
 					m.Angle = *predicted
 				} else {
-					m.Angle = CalculateInterpolatedAngleToTarget(m.Angle, dx, dy)
+					m.Angle = CalculateInterpolatedAngleToEntity(m.Angle, dx, dy)
 				}
 			}
 
@@ -366,7 +369,7 @@ func (m *Mob) MobBehavior(wp *WavePool, now time.Time) {
 				dx := targetEntity.GetX() - m.X
 				dy := targetEntity.GetY() - m.Y
 
-				m.Angle = CalculateInterpolatedAngleToTarget(
+				m.Angle = CalculateInterpolatedAngleToEntity(
 					m.Angle,
 					dx,
 					dy,
@@ -392,7 +395,7 @@ func (m *Mob) MobBehavior(wp *WavePool, now time.Time) {
 					dx := m.LastAttackedEntity.GetX() - m.X
 					dy := m.LastAttackedEntity.GetY() - m.Y
 
-					m.Angle = CalculateInterpolatedAngleToTarget(
+					m.Angle = CalculateInterpolatedAngleToEntity(
 						m.Angle,
 						dx,
 						dy,

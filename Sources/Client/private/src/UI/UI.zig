@@ -47,9 +47,6 @@ inline fn isPointInComponent(p: Point, component: *Component) bool {
 }
 
 pub fn render(self: *UI) void {
-    // Clear canvas
-    self.ctx.clearContextRect();
-
     // Render all components
     for (self.components.constSlice()) |component| {
         if (component.is_visible) {

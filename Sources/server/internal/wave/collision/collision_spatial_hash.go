@@ -72,16 +72,20 @@ func (s *nodeSet) ForEach(f func(Node)) {
 }
 
 // pairPoint combines x,y coordinates into a single int64 key.
-func (sh *SpatialHash) pairPoint(x, y int) int {
+func pairPoint(x, y int) int {
 	return (x << 16) ^ y
+}
+
+func (sh *SpatialHash) calculateNodeKey(n Node) int {
+	return pairPoint(
+		int(math32.Floor(n.GetX()/sh.cellSize)),
+		int(math32.Floor(n.GetY()/sh.cellSize)),
+	)
 }
 
 // Put adds a node to the spatial hash.
 func (sh *SpatialHash) Put(n Node) {
-	key := sh.pairPoint(
-		int(math32.Floor(n.GetX()/sh.cellSize)),
-		int(math32.Floor(n.GetY()/sh.cellSize)),
-	)
+	key := sh.calculateNodeKey(n)
 
 	// Get or create bucket
 	bucket, _ := sh.buckets.LoadOrStore(key, newNodeSet())
@@ -90,10 +94,7 @@ func (sh *SpatialHash) Put(n Node) {
 
 // Remove removes a node from the spatial hash.
 func (sh *SpatialHash) Remove(n Node) {
-	key := sh.pairPoint(
-		int(math32.Floor(n.GetX()/sh.cellSize)),
-		int(math32.Floor(n.GetY()/sh.cellSize)),
-	)
+	key := sh.calculateNodeKey(n)
 
 	if bucket, ok := sh.buckets.Load(key); ok {
 		bucket.Delete(n)
@@ -102,10 +103,7 @@ func (sh *SpatialHash) Remove(n Node) {
 
 // Update updates a node's position in the spatial hash.
 func (sh *SpatialHash) Update(n Node) {
-	key := sh.pairPoint(
-		int(math32.Floor(n.GetX()/sh.cellSize)),
-		int(math32.Floor(n.GetY()/sh.cellSize)),
-	)
+	key := sh.calculateNodeKey(n)
 
 	if bucket, ok := sh.buckets.Load(key); ok {
 		bucket.Delete(n)
@@ -133,7 +131,7 @@ func (sh *SpatialHash) Search(x, y, radius float32) []Node {
 
 	for yy := minY; yy <= maxY; yy++ {
 		for xx := minX; xx <= maxX; xx++ {
-			key := sh.pairPoint(xx, yy)
+			key := pairPoint(xx, yy)
 
 			if bucket, ok := sh.buckets.Load(key); ok {
 				bucket.ForEach(func(n Node) {

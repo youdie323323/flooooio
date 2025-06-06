@@ -33,7 +33,7 @@ export default class Gauge extends Component {
         protected readonly gaugeSources: GaugeSources,
         protected readonly gaugeWidthPadding: MaybePointerLike<number> = 0,
         protected readonly gaugeText: MaybePointerLike<string> | null = null,
-        protected readonly gaugeCoeff: MaybePointerLike<number> = 0.65,
+        protected readonly gaugeCoef: MaybePointerLike<number> = 0.65,
         protected readonly gaugeBackground: MaybePointerLike<ColorCode> = "#000000",
         protected readonly gaugeTransparent: MaybePointerLike<boolean> = true,
     ) {
@@ -76,7 +76,7 @@ export default class Gauge extends Component {
         const computedGaugeText = Component.computePointerLike(this.gaugeText);
         const computedGaugeBackground = Component.computePointerLike(this.gaugeBackground);
         const computedGaugeTransparent = Component.computePointerLike(this.gaugeTransparent);
-        const computedGaugeCoeff = Component.computePointerLike(this.gaugeCoeff);
+        const computedGaugeCoef = Component.computePointerLike(this.gaugeCoef);
 
         const lineWidth = this.h;
 
@@ -136,7 +136,7 @@ export default class Gauge extends Component {
         if (computedGaugeText) {
             ctx.save();
 
-            const fontSize = this.h * computedGaugeCoeff;
+            const fontSize = this.h * computedGaugeCoef;
 
             ctx.lineJoin = "round";
             ctx.lineCap = "round";

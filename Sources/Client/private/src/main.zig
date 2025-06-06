@@ -117,8 +117,8 @@ export fn main() c_int {
         mobs.init(allocator);
 
         // Initialize renderer static values
-        PlayerImpl.Renderer.initStatic();
-        MobImpl.Renderer.initStatic();
+        PlayerImpl.Renderer.initStatic(allocator);
+        MobImpl.Renderer.initStatic(allocator);
 
         {
             players.lock();
@@ -185,6 +185,9 @@ fn draw(_: f32) callconv(.c) void {
     delta_time = @floatFromInt(last_timestamp - prev_timestamp);
     prev_timestamp = last_timestamp;
 
+    // Clear canvas
+    ctx.clearContextRect();
+
     ctx.save();
 
     current_ui.render();
@@ -226,7 +229,7 @@ fn draw(_: f32) callconv(.c) void {
                     .is_specimen = false,
                 });
 
-                // mob.update(delta_time);
+                mob.update(delta_time);
 
                 mobs.setValue(m, mob);
             }

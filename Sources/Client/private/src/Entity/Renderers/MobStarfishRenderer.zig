@@ -8,7 +8,7 @@ const MobSuper = @import("../Mob.zig").Super;
 
 const Color = @import("../../WebAssembly/Interop/Canvas2D/Color.zig");
 
-pub const starfish_leg_amount: usize = 5;
+pub const leg_amount: usize = 5;
 
 pub const destroyed_leg_distance: f32 = 100.0;
 pub const undestroyed_leg_distance: f32 = 175.0;
@@ -19,6 +19,25 @@ const spots_per_leg: usize = 3;
 const spots_per_leg_f32: f32 = @floatFromInt(spots_per_leg);
 
 const epsilon: f32 = 0.9999;
+
+const leg_angles = blk: {
+    var angles: [leg_amount][4]f32 = undefined;
+
+    for (0..leg_amount) |i| {
+        const i_f32: f32 = @floatFromInt(i);
+        const mid_angle: f32 = (i_f32 + 0.5) / leg_amount * math.tau;
+        const end_angle: f32 = (i_f32 + 1) / leg_amount * math.tau;
+
+        angles[i] = .{
+            @cos(mid_angle) * 15,
+            @sin(mid_angle) * 15,
+            @cos(end_angle),
+            @sin(end_angle),
+        };
+    }
+
+    break :blk angles;
+};
 
 fn render(rctx: RenderingContext(MobSuper)) void {
     const ctx = rctx.ctx;
@@ -48,28 +67,23 @@ fn render(rctx: RenderingContext(MobSuper)) void {
 
     const remaining_leg_amount =
         if (is_specimen)
-            starfish_leg_amount
+            leg_amount
         else
             (if (entity.is_dead)
                 0
             else
                 @round(
                     // Use pure health value (0 ~ 1)
-                    entity.next_health * starfish_leg_amount,
+                    entity.next_health * leg_amount,
                 ));
 
     ctx.beginPath();
 
-    for (0..starfish_leg_amount) |i| {
-        const i_f32: f32 = @floatFromInt(i);
-
-        const mid_angle = (i_f32 + 0.5) / starfish_leg_amount * math.tau;
-        const end_angle = (i_f32 + 1) / starfish_leg_amount * math.tau;
-
+    inline for (0..leg_amount) |i| {
         const old_distance = leg_distances[i];
 
         const to =
-            if (i_f32 < remaining_leg_amount)
+            if (i < remaining_leg_amount)
                 undestroyed_leg_distance
             else
                 destroyed_leg_distance;
@@ -80,11 +94,13 @@ fn render(rctx: RenderingContext(MobSuper)) void {
 
         if (i == 0) ctx.moveTo(distance, 0);
 
+        const mid_cos, const mid_sin, const end_cos, const end_sin = leg_angles[i];
+
         ctx.quadraticCurveTo(
-            @cos(mid_angle) * 15,
-            @sin(mid_angle) * 15,
-            @cos(end_angle) * distance,
-            @sin(end_angle) * distance,
+            mid_cos,
+            mid_sin,
+            end_cos * distance,
+            end_sin * distance,
         );
     }
 
@@ -105,13 +121,14 @@ fn render(rctx: RenderingContext(MobSuper)) void {
 
     ctx.beginPath();
 
-    for (0..starfish_leg_amount) |i| {
-        const i_f32: f32 = @floatFromInt(i);
+    inline for (0..leg_amount) |i| {
+        const i_f32: f32 = comptime @floatFromInt(i);
+
+        const leg_rotation = comptime (i_f32 / leg_amount * math.tau);
 
         const distance = leg_distances[i];
 
         const length_ratio = distance / undestroyed_leg_distance;
-        const leg_rotation = i_f32 / starfish_leg_amount * math.tau;
 
         const num_spots =
             if (length_ratio > epsilon)
@@ -119,11 +136,11 @@ fn render(rctx: RenderingContext(MobSuper)) void {
             else
                 1;
 
-        var spot_pos: f32 = 52;
-
         ctx.save();
 
         ctx.rotate(leg_rotation);
+
+        var spot_pos: f32 = 52;
 
         for (0..num_spots) |j| {
             const j_f32: f32 = @floatFromInt(j);

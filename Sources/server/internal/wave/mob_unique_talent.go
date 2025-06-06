@@ -94,8 +94,8 @@ func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
 				dy := m.PetMaster.Y - m.Y
 				distanceToParent := math32.Hypot(dx, dy)
 
-				if distanceToParent > m.CalculateRadius()*5 {
-					m.Angle = CalculateInterpolatedAngleToTarget(
+				if distanceToParent > m.CalculateDiameter()*3 {
+					m.Angle = CalculateInterpolatedAngleToEntity(
 						m.Angle,
 						dx,
 						dy,
@@ -179,7 +179,7 @@ func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
 					dx := m.TargetEntity.GetX() - m.X
 					dy := m.TargetEntity.GetY() - m.Y
 
-					m.Angle = CalculateInterpolatedAngleToTarget(
+					m.Angle = CalculateInterpolatedAngleToEntity(
 						m.Angle,
 						// Reverse angle
 						-dx,
