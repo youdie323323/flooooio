@@ -34,7 +34,25 @@ type Entity struct {
 	// Range will be [0, 1] float.
 	Health float32
 
+	// CreationTick, LastUpdateTick is values for syncing.
+	CreationTick, LastUpdateTick uint32
+
 	Mu sync.RWMutex
+}
+
+// IsEntityUpdated returns whether entity is updated this tick.
+func (e *Entity) IsEntityUpdated(
+	oldX float32,
+	oldY float32,
+
+	oldMagnitude float32,
+	oldAngle float32,
+
+	oldSize float32,
+
+	oldHealth float32,
+) bool {
+	return e.X != oldX || e.Y != oldY || e.Magnitude != oldMagnitude || e.Angle != oldAngle || e.Size != oldSize || e.Health != oldHealth
 }
 
 type Poisonable struct {

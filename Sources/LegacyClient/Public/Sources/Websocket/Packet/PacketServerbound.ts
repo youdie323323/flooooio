@@ -145,4 +145,14 @@ export default class PacketServerbound {
 
         this.send(writer.buffer);
     }
+
+    public sendAck(tick: number) {
+        const writer = new BinaryWriter();
+
+        writer.writeUInt8(Serverbound.ACK);
+
+        writer.writeUInt32(tick);
+
+        this.send(writer.buffer);
+    }
 }

@@ -2,6 +2,7 @@ package kernel
 
 import (
 	"bytes"
+	"encoding/binary"
 	"slices"
 	"unsafe"
 
@@ -293,6 +294,24 @@ func HandleMessage(pd *wave.PlayerData, message []byte) {
 			}
 
 			pd.WrPId = nil
+		}
+
+	case network.ServerboundAck:
+		if msgLen < 5 || pd.WPId == nil {
+			return
+		}
+
+		tick := binary.LittleEndian.Uint32(message[at:])
+		at += 4
+
+		wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
+		if wr == nil {
+			return
+		}
+		
+		player := wr.WavePool.SafeFindPlayer(*pd.WPId)
+		if player != nil {
+			player.LastAckTick = tick
 		}
 	}
 }
