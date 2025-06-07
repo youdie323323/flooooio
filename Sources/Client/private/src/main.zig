@@ -79,11 +79,11 @@ var mobs: mach_objects.Objects(MobImpl.Super) = undefined;
 
 var i: f32 = 0;
 
-fn handleWaveUpdate(stream: *ws.ClientBound.Reader) anyerror!void {
+fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
     { // Read wave informations
         const wave_progress = try stream.readInt(u16, .little);
 
-        const wave_progress_timer = try ws.ClientBound.readFloat32(stream);
+        const wave_progress_timer = try ws.Clientbound.readFloat32(stream);
 
         std.debug.print("{} {}\n", .{ wave_progress, wave_progress_timer });
     }
@@ -96,7 +96,7 @@ export fn main() c_int {
 
     client = ws.ClientWebSocket.init(allocator) catch unreachable;
 
-    client.client_bound.putHandler(ws.opcode.ClientBound.wave_update, handleWaveUpdate) catch unreachable;
+    client.client_bound.putHandler(ws.opcode.Clientbound.wave_update, handleWaveUpdate) catch unreachable;
 
     client.connect("localhost:8080") catch unreachable;
 

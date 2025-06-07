@@ -1,7 +1,7 @@
 const std = @import("std");
 const Opcode = @This();
 
-pub const ServerBound = enum(u8) {
+pub const Serverbound = enum(u8) {
     wave_change_move,
     wave_change_mood,
     wave_swap_petal,
@@ -20,7 +20,7 @@ pub const ServerBound = enum(u8) {
     wave_room_leave,
 };
 
-pub const ClientBound = enum(u8) {
+pub const Clientbound = enum(u8) {
     wave_self_id,
     wave_room_self_id,
 
@@ -36,16 +36,16 @@ pub const ClientBound = enum(u8) {
     connection_kicked,
 };
 
-pub const ClientBoundConnectionKickReason = enum(u8) {
+pub const ClientboundConnectionKickReason = enum(u8) {
     outdated_client,
     cheat_detected,
 };
 
 const kick_reason_messages = std.StaticStringMap([]const u8).initComptime(.{
-    .{ @tagName(ClientBoundConnectionKickReason.outdated_client), "Outdated client" },
-    .{ @tagName(ClientBoundConnectionKickReason.cheat_detected), "Cheat detected" },
+    .{ @tagName(ClientboundConnectionKickReason.outdated_client), "Outdated client" },
+    .{ @tagName(ClientboundConnectionKickReason.cheat_detected), "Cheat detected" },
 });
 
-pub inline fn getKickReasonMessage(reason: ClientBoundConnectionKickReason) ?[]const u8 {
+pub inline fn getKickReasonMessage(reason: ClientboundConnectionKickReason) ?[]const u8 {
     return kick_reason_messages.get(@tagName(reason));
 }

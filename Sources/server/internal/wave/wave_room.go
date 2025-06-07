@@ -7,10 +7,11 @@ import (
 	"sync"
 	"time"
 
-	"flooooio/internal/network"
 	"flooooio/internal/wave/florr/native"
+	"flooooio/internal/wave/kernel/network"
 
 	"github.com/gorilla/websocket"
+	"github.com/puzpuzpuz/xsync/v4"
 )
 
 const (
@@ -46,7 +47,7 @@ type PlayerData struct {
 }
 
 // ConnPool link conn and UserData together.
-var ConnPool = network.NewConnectionPool[*PlayerData]()
+var ConnPool = xsync.NewMap[*websocket.Conn, *PlayerData]()
 
 type WaveRoom struct {
 	// updatePacketBroadcastTicker is ticker to send wave room update packet

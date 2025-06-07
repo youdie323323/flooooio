@@ -8,7 +8,7 @@ const Biome = @import("../../Florr/Native/Biome.zig").Biome;
 const pmood = @import("../../Entity/PlayerMood.zig");
 const ClientWebSocket = @import("../ClientWebSocket.zig");
 
-const ServerBound = @This();
+const Serverbound = @This();
 
 pub const Writer = ClientWebSocket.DefaultPacketStream.Writer;
 
@@ -17,13 +17,13 @@ client: *ClientWebSocket,
 pub fn init(
     _: mem.Allocator,
     client: *ClientWebSocket,
-) ServerBound {
+) Serverbound {
     return .{
         .client = client,
     };
 }
 
-pub fn deinit(self: *ServerBound) void {
+pub fn deinit(self: *Serverbound) void {
     self.* = undefined;
 }
 
@@ -44,12 +44,12 @@ var shared_buf: [1024]u8 = undefined;
 var shared_fbs = io.fixedBufferStream(&shared_buf);
 var shared_stream = shared_fbs.writer();
 
-pub inline fn send(self: ServerBound, buf: []const u8) !void {
+pub inline fn send(self: Serverbound, buf: []const u8) !void {
     _ = try self.client.socket.send(buf);
 }
 
-pub fn sendWaveChangeMove(self: ServerBound, angle: f32, magnitude: f32) !void {
-    try shared_stream.writeByte(@intFromEnum(opcode.ServerBound.wave_change_move));
+pub fn sendWaveChangeMove(self: Serverbound, angle: f32, magnitude: f32) !void {
+    try shared_stream.writeByte(@intFromEnum(opcode.Serverbound.wave_change_move));
 
     try shared_stream.writeByte(@intFromFloat(@round(calculateNormalizedAngle(angle))));
     try shared_stream.writeByte(@intFromFloat(@round(magnitude * 255)));
@@ -59,8 +59,8 @@ pub fn sendWaveChangeMove(self: ServerBound, angle: f32, magnitude: f32) !void {
     shared_fbs.reset();
 }
 
-pub fn sendWaveChangeMood(self: ServerBound, set: pmood.MoodBitSet) !void {
-    try shared_stream.writeByte(@intFromEnum(opcode.ServerBound.wave_change_mood));
+pub fn sendWaveChangeMood(self: Serverbound, set: pmood.MoodBitSet) !void {
+    try shared_stream.writeByte(@intFromEnum(opcode.Serverbound.wave_change_mood));
 
     try shared_stream.writeByte(@intCast(set.mask));
 
@@ -69,8 +69,8 @@ pub fn sendWaveChangeMood(self: ServerBound, set: pmood.MoodBitSet) !void {
     shared_fbs.reset();
 }
 
-pub fn sendWaveSwapPetal(self: ServerBound, index: u8) !void {
-    try shared_stream.writeByte(@intFromEnum(opcode.ServerBound.wave_swap_petal));
+pub fn sendWaveSwapPetal(self: Serverbound, index: u8) !void {
+    try shared_stream.writeByte(@intFromEnum(opcode.Serverbound.wave_swap_petal));
 
     try shared_stream.writeByte(index);
 
@@ -79,8 +79,8 @@ pub fn sendWaveSwapPetal(self: ServerBound, index: u8) !void {
     shared_fbs.reset();
 }
 
-pub fn sendWaveChat(self: ServerBound, message: []const u8) !void {
-    try shared_stream.writeByte(@intFromEnum(opcode.ServerBound.wave_send_chat));
+pub fn sendWaveChat(self: Serverbound, message: []const u8) !void {
+    try shared_stream.writeByte(@intFromEnum(opcode.Serverbound.wave_send_chat));
 
     try writeCString(&shared_stream, message);
 
@@ -89,8 +89,8 @@ pub fn sendWaveChat(self: ServerBound, message: []const u8) !void {
     shared_fbs.reset();
 }
 
-pub fn sendWaveRoomCreate(self: ServerBound, biome: Biome) !void {
-    try shared_stream.writeByte(@intFromEnum(opcode.ServerBound.wave_room_create));
+pub fn sendWaveRoomCreate(self: Serverbound, biome: Biome) !void {
+    try shared_stream.writeByte(@intFromEnum(opcode.Serverbound.wave_room_create));
 
     try shared_stream.writeByte(@intFromEnum(biome));
 
@@ -99,8 +99,8 @@ pub fn sendWaveRoomCreate(self: ServerBound, biome: Biome) !void {
     shared_fbs.reset();
 }
 
-pub fn sendWaveRoomJoin(self: ServerBound, code: []const u8) !void {
-    try shared_stream.writeByte(@intFromEnum(opcode.ServerBound.wave_room_join));
+pub fn sendWaveRoomJoin(self: Serverbound, code: []const u8) !void {
+    try shared_stream.writeByte(@intFromEnum(opcode.Serverbound.wave_room_join));
 
     try writeCString(&shared_stream, code);
 
@@ -109,8 +109,8 @@ pub fn sendWaveRoomJoin(self: ServerBound, code: []const u8) !void {
     shared_fbs.reset();
 }
 
-pub fn sendWaveRoomFindPublic(self: ServerBound, biome: Biome) !void {
-    try shared_stream.writeByte(@intFromEnum(opcode.ServerBound.wave_room_find_public));
+pub fn sendWaveRoomFindPublic(self: Serverbound, biome: Biome) !void {
+    try shared_stream.writeByte(@intFromEnum(opcode.Serverbound.wave_room_find_public));
 
     try shared_stream.writeByte(@intFromEnum(biome));
 
@@ -119,8 +119,8 @@ pub fn sendWaveRoomFindPublic(self: ServerBound, biome: Biome) !void {
     shared_fbs.reset();
 }
 
-pub fn sendWaveRoomChangeReady(self: ServerBound, state: wr.PlayerReadyState) !void {
-    try shared_stream.writeByte(@intFromEnum(opcode.ServerBound.wave_room_change_ready));
+pub fn sendWaveRoomChangeReady(self: Serverbound, state: wr.PlayerReadyState) !void {
+    try shared_stream.writeByte(@intFromEnum(opcode.Serverbound.wave_room_change_ready));
 
     try shared_stream.writeByte(@intFromEnum(state));
 
@@ -129,8 +129,8 @@ pub fn sendWaveRoomChangeReady(self: ServerBound, state: wr.PlayerReadyState) !v
     shared_fbs.reset();
 }
 
-pub fn sendWaveRoomChangeVisible(self: ServerBound, state: wr.VisibleState) !void {
-    try shared_stream.writeByte(@intFromEnum(opcode.ServerBound.wave_room_change_visible));
+pub fn sendWaveRoomChangeVisible(self: Serverbound, state: wr.VisibleState) !void {
+    try shared_stream.writeByte(@intFromEnum(opcode.Serverbound.wave_room_change_visible));
 
     try shared_stream.writeByte(@intFromEnum(state));
 
@@ -139,8 +139,8 @@ pub fn sendWaveRoomChangeVisible(self: ServerBound, state: wr.VisibleState) !voi
     shared_fbs.reset();
 }
 
-pub fn sendWaveRoomChangeName(self: ServerBound, name: []const u8) !void {
-    try shared_stream.writeByte(@intFromEnum(opcode.ServerBound.wave_room_change_name));
+pub fn sendWaveRoomChangeName(self: Serverbound, name: []const u8) !void {
+    try shared_stream.writeByte(@intFromEnum(opcode.Serverbound.wave_room_change_name));
 
     try writeCString(&shared_stream, name);
 
@@ -149,16 +149,16 @@ pub fn sendWaveRoomChangeName(self: ServerBound, name: []const u8) !void {
     shared_fbs.reset();
 }
 
-pub fn sendWaveLeave(self: ServerBound) !void {
-    try shared_stream.writeByte(@intFromEnum(opcode.ServerBound.wave_leave));
+pub fn sendWaveLeave(self: Serverbound) !void {
+    try shared_stream.writeByte(@intFromEnum(opcode.Serverbound.wave_leave));
 
     try self.send(shared_fbs.getWritten());
 
     shared_fbs.reset();
 }
 
-pub fn sendWaveRoomLeave(self: ServerBound) !void {
-    try shared_stream.writeByte(@intFromEnum(opcode.ServerBound.wave_room_leave));
+pub fn sendWaveRoomLeave(self: Serverbound) !void {
+    try shared_stream.writeByte(@intFromEnum(opcode.Serverbound.wave_room_leave));
 
     try self.send(shared_fbs.getWritten());
 

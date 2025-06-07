@@ -2,7 +2,7 @@ package network
 
 // Serverbound packet opcodes.
 const (
-	ServerboundWaveChangeMove byte = iota
+	ServerboundWaveChangeMove Opcode = iota
 	ServerboundWaveChangeMood
 	ServerboundWaveSwapPetal
 	

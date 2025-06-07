@@ -1,161 +1,14 @@
-package main
+package kernel
 
 import (
 	"bytes"
-	"fmt"
-	"log"
-	"log/slog"
-	"net/http"
 	"slices"
 	"unsafe"
 
-	"flooooio/internal/network"
 	"flooooio/internal/wave"
 	"flooooio/internal/wave/florr/native"
-
-	"github.com/gorilla/websocket"
-	"github.com/joho/godotenv"
+	"flooooio/internal/wave/kernel/network"
 )
-
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
-func handleWebSocket(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		slog.Error("Websocket upgrade failed", "reason", err)
-
-		return
-	}
-
-	// Init user data
-	pd := &wave.PlayerData{
-		WrPId: nil,
-		WPId:  nil,
-
-		Sp: &wave.StaticPlayer[wave.StaticPetalSlots]{
-			Name: "Mankoblablatrix",
-			Slots: wave.StaticPetalSlots{
-				Surface: []wave.StaticPetalData{
-					{
-						Type:   native.PetalTypeClaw,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeStinger,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeClaw,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeStinger,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeClaw,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeStinger,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeClaw,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeStinger,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeFaster,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeClaw,
-						Rarity: native.RarityUltra,
-					},
-				},
-				Bottom: []wave.StaticPetalData{
-					{
-						Type:   native.PetalTypeWeb,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeEggBeetle,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeEggBeetle,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeEggBeetle,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeEggBeetle,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeEggBeetle,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeEggBeetle,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeEggBeetle,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeEggBeetle,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeEggBeetle,
-						Rarity: native.RarityUltra,
-					},
-				},
-			},
-			Conn: conn,
-		},
-	}
-
-	wave.ConnPool.AddUser(conn, pd)
-
-	// On close
-	defer func() {
-		wave.ConnPool.RemoveUser(conn)
-		_ = conn.Close()
-
-		wave.RemovePlayerFromService(pd)
-	}()
-
-	for {
-		messageType, message, err := conn.ReadMessage()
-		if err != nil {
-			// Most of error of cannot read message because ws is closed
-			// slog.Error("Message read failed", "reason", err)
-
-			break
-		}
-
-		if messageType != websocket.BinaryMessage {
-			continue
-		}
-
-		handleMessage(pd, message)
-	}
-}
 
 func readCString(buf []byte, at int) (string, int) {
 	end := at + bytes.IndexByte(buf[at:], 0)
@@ -166,7 +19,7 @@ func readCString(buf []byte, at int) (string, int) {
 	return unsafe.String(&buf[at], end-at), end + 1
 }
 
-func handleMessage(pd *wave.PlayerData, message []byte) {
+func HandleMessage(pd *wave.PlayerData, message []byte) {
 	msgLen := len(message)
 
 	if msgLen < 1 {
@@ -442,24 +295,4 @@ func handleMessage(pd *wave.PlayerData, message []byte) {
 			pd.WrPId = nil
 		}
 	}
-}
-
-func main() {
-	err := godotenv.Load("../../.env")
-	if err != nil {
-		slog.Error("Error loading .env file", "reason", err)
-
-		return
-	}
-
-	// Host all files under ./static
-	http.Handle("/", http.FileServer(http.Dir("./static")))
-
-	// WebSocket endpoint
-	http.HandleFunc("/ws", handleWebSocket)
-
-	const PORT = 8080
-
-	slog.Info("Server running", "port", PORT)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", PORT), nil))
 }

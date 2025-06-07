@@ -1,8 +1,8 @@
 const std = @import("std");
 const io = std.io;
 const mem = std.mem;
-const ClientBound = @import("./Packet/ClientBound.zig");
-const ServerBound = @import("./Packet/ServerBound.zig");
+const Clientbound = @import("./Packet/Clientbound.zig");
+const Serverbound = @import("./Packet/Serverbound.zig");
 const WebSocket = @import("../WebAssembly/Interop/WebSocket.zig").WebSocket;
 const Timer = @import("../WebAssembly/Interop/Timer.zig");
 
@@ -15,8 +15,8 @@ pub const DefaultPacketStream = io.FixedBufferStream([]const u8);
 allocator: mem.Allocator,
 
 socket: *OwnContextWebSocket = undefined,
-client_bound: ClientBound,
-server_bound: ServerBound,
+client_bound: Clientbound,
+server_bound: Serverbound,
 
 prng: std.Random.DefaultPrng,
 
@@ -99,11 +99,11 @@ pub fn init(allocator: mem.Allocator) !*ClientWebSocket {
     client.* = .{
         .allocator = allocator,
 
-        .client_bound = ClientBound.init(
+        .client_bound = Clientbound.init(
             allocator,
             client,
         ),
-        .server_bound = ServerBound.init(
+        .server_bound = Serverbound.init(
             allocator,
             client,
         ),

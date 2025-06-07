@@ -4,12 +4,12 @@ const mem = std.mem;
 const opcode = @import("./Opcode.zig");
 const ClientWebSocket = @import("../ClientWebSocket.zig");
 
-const ClientBound = @This();
+const Clientbound = @This();
 
 pub const Reader = ClientWebSocket.DefaultPacketStream.Reader;
 pub const Handler = *const fn (stream: *Reader) anyerror!void;
 
-const HandlerMap = std.AutoHashMap(opcode.ClientBound, Handler);
+const HandlerMap = std.AutoHashMap(opcode.Clientbound, Handler);
 
 client: *ClientWebSocket,
 handlers: HandlerMap,
@@ -42,7 +42,7 @@ pub fn readFloat64(stream: anytype) ClientWebSocket.DefaultPacketStream.ReadErro
 pub fn init(
     allocator: mem.Allocator,
     client: *ClientWebSocket,
-) ClientBound {
+) Clientbound {
     return .{
         .client = client,
         .handlers = HandlerMap.init(allocator),
@@ -50,18 +50,18 @@ pub fn init(
     };
 }
 
-pub fn deinit(self: *ClientBound) void {
+pub fn deinit(self: *Clientbound) void {
     self.handlers.deinit();
     self.default_handlers.deinit();
 
     self.* = undefined;
 }
 
-pub fn read(self: ClientBound, data: []const u8) !void {
+pub fn read(self: Clientbound, data: []const u8) !void {
     var fbs = io.fixedBufferStream(data);
     var stream = fbs.reader();
 
-    const packet_type = try stream.readEnum(opcode.ClientBound, .little);
+    const packet_type = try stream.readEnum(opcode.Clientbound, .little);
 
     if (self.handlers.get(packet_type) orelse self.default_handlers.get(packet_type)) |handler| {
         try handler(&stream);
@@ -72,25 +72,25 @@ pub fn read(self: ClientBound, data: []const u8) !void {
 
 /// Puts custom handler.
 pub fn putHandler(
-    self: *ClientBound,
-    cb: opcode.ClientBound,
+    self: *Clientbound,
+    cb: opcode.Clientbound,
     handler: Handler,
 ) !void {
     try self.handlers.put(cb, handler);
 }
 
 /// Clear all custom handlers.
-pub fn clearHandlers(self: *ClientBound) void {
+pub fn clearHandlers(self: *Clientbound) void {
     self.handlers.clearRetainingCapacity();
 }
 
 /// Puts all default handlers.
-fn putDefaultHandlers(self: *ClientBound) mem.Allocator.Error!void {
+fn putDefaultHandlers(self: *Clientbound) mem.Allocator.Error!void {
     try self.default_handlers.put(.connection_kicked, handleConnectionKick);
 }
 
 fn handleConnectionKick(stream: *Reader) !void {
-    const reason = try stream.readEnum(opcode.ClientBoundConnectionKickReason, .little);
+    const reason = try stream.readEnum(opcode.ClientboundConnectionKickReason, .little);
 
     switch (reason) {
         .outdated_client => {},

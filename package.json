@@ -6,9 +6,9 @@
     "build:client:public": "cd Sources/Client/public && esbuild Sources/Application.ts --bundle --minify --legal-comments=none --allow-overwrite --outfile=../../server/static/client.js",
     "build:client:private": "cd Sources/Client/private && zig build",
     "build:client:public:legacy": "tsc --noEmit & node esbuild.mjs",
-    "build:server": "cd Sources/server && go build -ldflags=\"-s -w\" -trimpath internal/cmd/flooooio/main.go",
-    "start:server": "cd Sources/server && go run -ldflags=\"-s -w\" -trimpath internal/cmd/flooooio/main.go",
-    "start:server:debug": "cd Sources/server && go run internal/cmd/flooooio/main.go"
+    "build:server": "cd Sources/server && go build -ldflags=\"-s -w\" -trimpath cmd/flooooio/main.go",
+    "start:server": "cd Sources/server && go run -ldflags=\"-s -w\" -trimpath cmd/flooooio/main.go",
+    "start:server:debug": "cd Sources/server && go run cmd/flooooio/main.go"
   },
   "devDependencies": {
     "@basementuniverse/utils": "^1.7.0",

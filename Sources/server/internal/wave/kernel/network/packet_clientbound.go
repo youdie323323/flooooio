@@ -2,7 +2,7 @@ package network
 
 // Clientbound packet opcodes.
 const (
-	ClientboundWaveSelfId byte = iota
+	ClientboundWaveSelfId Opcode = iota
 	ClientboundWaveRoomSelfId
 
 	ClientboundWaveUpdate

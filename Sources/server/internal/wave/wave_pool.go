@@ -14,9 +14,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"flooooio/internal/network"
 	"flooooio/internal/wave/collision"
 	"flooooio/internal/wave/florr/native"
+	"flooooio/internal/wave/kernel/network"
 
 	"github.com/colega/zeropool"
 	"github.com/gorilla/websocket"
@@ -135,7 +135,7 @@ func (wp *WavePool) StartWave(candidates WaveRoomCandidates) {
 	at++
 
 	for _, c := range candidates {
-		if pd, ok := ConnPool.GetUser(c.Conn); ok {
+		if pd, ok := ConnPool.Load(c.Conn); ok {
 			mapRadius := float32(wp.Wd.MapRadius)
 
 			randX, randY := GetRandomCoordinate(mapRadius, mapRadius, mapRadius)
