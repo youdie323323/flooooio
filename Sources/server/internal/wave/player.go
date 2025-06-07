@@ -50,9 +50,6 @@ type Player struct {
 	OrbitPetalRadii       []float32
 	OrbitRadiusVelocities []float32
 	OrbitPetalSpins       [][]float32
-
-	// LastAckTick is values for syncing.
-	LastAckTick uint32
 }
 
 type PlayerPrivileges struct {

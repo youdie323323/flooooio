@@ -18,8 +18,6 @@ pub const Serverbound = enum(u8) {
 
     wave_leave,
     wave_room_leave,
-
-    ack,
 };
 
 pub const Clientbound = enum(u8) {

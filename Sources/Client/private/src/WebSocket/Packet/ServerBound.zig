@@ -38,7 +38,7 @@ pub inline fn writeCString(stream: anytype, str: []const u8) !void {
     try stream.writeByte(0);
 }
 
-var shared_buf: [512]u8 = undefined;
+var shared_buf: [1024]u8 = undefined;
 
 // Prepare fbs of shared_stringable_buffer
 var shared_fbs = io.fixedBufferStream(&shared_buf);
@@ -159,16 +159,6 @@ pub fn sendWaveLeave(self: Serverbound) !void {
 
 pub fn sendWaveRoomLeave(self: Serverbound) !void {
     try shared_stream.writeByte(@intFromEnum(opcode.Serverbound.wave_room_leave));
-
-    try self.send(shared_fbs.getWritten());
-
-    shared_fbs.reset();
-}
-
-pub fn sendAck(self: Serverbound, tick: u32) !void {
-    try shared_stream.writeByte(@intFromEnum(opcode.Serverbound.ack));
-
-    try shared_stream.writeInt(u32, tick, .little);
 
     try self.send(shared_fbs.getWritten());
 

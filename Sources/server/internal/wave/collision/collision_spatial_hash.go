@@ -71,7 +71,7 @@ func (s *nodeSet) ForEach(f func(Node)) {
 	})
 }
 
-// pairPoint combines x,y coordinates into a single int key.
+// pairPoint combines x,y coordinates into a single int64 key.
 func pairPoint(x, y int) int {
 	return (x << 16) ^ y
 }

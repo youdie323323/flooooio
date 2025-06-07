@@ -176,8 +176,6 @@ export default class UIGame extends AbstractUI {
             this.waveSelfId = reader.readUInt32();
         },
         [Clientbound.WAVE_UPDATE]: (reader: BinaryReader): void => {
-            const currentTick = reader.readUInt32();
-
             { // Wave informations
                 const waveProgress = reader.readUInt16();
 
@@ -204,289 +202,285 @@ export default class UIGame extends AbstractUI {
                 this.updateT = 0;
             }
 
-            {
-                const entityCount = reader.readUInt16();
+            { // Read players
+                const playerCount = reader.readUInt16();
 
-                for (let i = 0; i < entityCount; i++) {
-                    const entityType = reader.readUInt8();
+                for (let i = 0; i < playerCount; i++) {
+                    const playerId = reader.readUInt32();
 
-                    switch (entityType) {
-                        case 0: {
-                            const playerId = reader.readUInt32();
+                    const playerX = reader.readFloat32();
+                    const playerY = reader.readFloat32();
 
-                            const playerX = reader.readFloat32();
-                            const playerY = reader.readFloat32();
+                    const playerAngle = angleToRad(reader.readFloat32());
 
-                            const playerAngle = angleToRad(reader.readFloat32());
+                    const playerHealth = reader.readFloat32();
 
-                            const playerHealth = reader.readFloat32();
+                    const playerSize = reader.readFloat32();
 
-                            const playerSize = reader.readFloat32();
+                    const playerMood = reader.readUInt8();
 
-                            const playerMood = reader.readUInt8();
+                    const playerName = reader.readString();
 
-                            const playerName = reader.readString();
+                    // Decode boolean flags
+                    const bFlags = reader.readUInt8();
 
-                            // Decode boolean flags
-                            const bFlags = reader.readUInt8();
+                    const playerIsDead = Boolean(bFlags & 1),
+                        playerIsDev = Boolean(bFlags & 2),
+                        playerIsPoisoned = Boolean(bFlags & 4);
 
-                            const playerIsDead = Boolean(bFlags & 1),
-                                playerIsDev = Boolean(bFlags & 2),
-                                playerIsPoisoned = Boolean(bFlags & 4);
+                    const player = this.players.get(playerId);
+                    if (player) {
+                        player.nx = playerX;
+                        player.ny = playerY;
 
-                            const player = this.players.get(playerId);
-                            if (player) {
-                                player.nx = playerX;
-                                player.ny = playerY;
+                        player.nAngle = playerAngle;
 
-                                player.nAngle = playerAngle;
+                        player.nSize = playerSize;
 
-                                player.nSize = playerSize;
-
-                                { // Update health properties
-                                    if (!player.isPoison && playerHealth < player.nHealth) {
-                                        player.redHealthTimer = 1;
-                                        player.hurtT = 1;
-                                    } else if (playerHealth > player.nHealth) {
-                                        player.redHealthTimer = 0;
-                                    }
-
-                                    player.nHealth = playerHealth;
-                                }
-
-                                player.mood = playerMood;
-
-                                player.isDead = playerIsDead;
-
-                                player.isDev = playerIsDev;
-
-                                player.ox = player.x;
-                                player.oy = player.y;
-
-                                player.oAngle = player.angle;
-
-                                player.oSize = player.size;
-
-                                player.oHealth = player.health;
-
-                                player.isPoison = playerIsPoisoned;
-
-                                player.updateT = 0;
-                            } else {
-                                const player = new Player(
-                                    playerId,
-
-                                    playerX,
-                                    playerY,
-
-                                    playerAngle,
-
-                                    playerSize,
-
-                                    playerHealth,
-
-                                    playerMood,
-
-                                    playerName,
-                                );
-
-                                this.players.set(playerId, player);
-
-                                // Add status
-                                this.playerStatuses.addPlayer(player, this.waveSelfId === player.id);
+                        { // Update health properties
+                            if (!player.isPoison && playerHealth < player.nHealth) {
+                                player.redHealthTimer = 1;
+                                player.hurtT = 1;
+                            } else if (playerHealth > player.nHealth) {
+                                player.redHealthTimer = 0;
                             }
 
-                            break;
+                            player.nHealth = playerHealth;
                         }
 
-                        case 1: {
-                            const mobId = reader.readUInt32();
+                        player.mood = playerMood;
 
-                            const mobX = reader.readFloat32();
-                            const mobY = reader.readFloat32();
+                        player.isDead = playerIsDead;
 
-                            const mobAngle = angleToRad(reader.readFloat32());
+                        player.isDev = playerIsDev;
 
-                            const mobHealth = reader.readFloat32();
+                        player.ox = player.x;
+                        player.oy = player.y;
 
-                            const mobSize = reader.readFloat32();
+                        player.oAngle = player.angle;
 
-                            const mobType = reader.readUInt8();
+                        player.oSize = player.size;
 
-                            const mobRarity = reader.readUInt8() as Rarity;
+                        player.oHealth = player.health;
 
-                            // Decode boolean flags
-                            const bFlags = reader.readUInt8();
+                        player.isPoison = playerIsPoisoned;
 
-                            const mobIsPet = Boolean(bFlags & 1),
-                                mobIsFirstSegment = Boolean(bFlags & 2),
-                                mobHasConnectingSegment = Boolean(bFlags & 4),
-                                mobIsPoisoned = Boolean(bFlags & 8);
+                        player.updateT = 0;
+                    } else {
+                        const player = new Player(
+                            playerId,
 
-                            let mobConnectingSegment: Mob = null;
+                            playerX,
+                            playerY,
 
-                            if (mobHasConnectingSegment) {
-                                const connectingSegmentModId = reader.readUInt32();
+                            playerAngle,
 
-                                mobConnectingSegment = this.mobs.get(connectingSegmentModId);
+                            playerSize,
+
+                            playerHealth,
+
+                            playerMood,
+
+                            playerName,
+                        );
+
+                        this.players.set(playerId, player);
+
+                        // Add status
+                        this.playerStatuses.addPlayer(player, this.waveSelfId === player.id);
+                    }
+                }
+            }
+
+            { // Read mobs
+                const mobCount = reader.readUInt16();
+
+                for (let i = 0; i < mobCount; i++) {
+                    const mobId = reader.readUInt32();
+
+                    const mobX = reader.readFloat32();
+                    const mobY = reader.readFloat32();
+
+                    const mobAngle = angleToRad(reader.readFloat32());
+
+                    const mobHealth = reader.readFloat32();
+
+                    const mobSize = reader.readFloat32();
+
+                    const mobType = reader.readUInt8();
+
+                    const mobRarity = reader.readUInt8() as Rarity;
+
+                    // Decode boolean flags
+                    const bFlags = reader.readUInt8();
+
+                    const mobIsPet = Boolean(bFlags & 1),
+                        mobIsFirstSegment = Boolean(bFlags & 2),
+                        mobHasConnectingSegment = Boolean(bFlags & 4),
+                        mobIsPoisoned = Boolean(bFlags & 8);
+
+                    let mobConnectingSegment: Mob = null;
+
+                    if (mobHasConnectingSegment) {
+                        const connectingSegmentModId = reader.readUInt32();
+
+                        mobConnectingSegment = this.mobs.get(connectingSegmentModId);
+                    }
+
+                    let mob = this.mobs.get(mobId);
+                    if (mob) {
+                        mob.nx = mobX;
+                        mob.ny = mobY;
+
+                        mob.nAngle = mobAngle;
+
+                        mob.nSize = mobSize;
+
+                        mob.connectingSegment = mobConnectingSegment;
+
+                        { // Update health properties
+                            const parentMob = Mob.traverseSegments(mob);
+
+                            // TODO: original game can hurtT = 1 when poisoned
+                            // But do that can affect to color always
+                            if (!mob.isPoison && mobHealth < mob.nHealth) {
+                                parentMob.redHealthTimer = 1;
+                                parentMob.hurtT = 1;
+                            } else if (mobHealth > mob.nHealth) {
+                                parentMob.redHealthTimer = 0;
                             }
 
-                            let mob = this.mobs.get(mobId);
-                            if (mob) {
-                                mob.nx = mobX;
-                                mob.ny = mobY;
-
-                                mob.nAngle = mobAngle;
-
-                                mob.nSize = mobSize;
-
-                                mob.connectingSegment = mobConnectingSegment;
-
-                                { // Update health properties
-                                    const parentMob = Mob.traverseSegments(mob);
-
-                                    // TODO: original game can hurtT = 1 when poisoned
-                                    // But do that can affect to color always
-                                    if (!mob.isPoison && mobHealth < mob.nHealth) {
-                                        parentMob.redHealthTimer = 1;
-                                        parentMob.hurtT = 1;
-                                    } else if (mobHealth > mob.nHealth) {
-                                        parentMob.redHealthTimer = 0;
-                                    }
-
-                                    mob.nHealth = mobHealth;
-                                }
-
-                                mob.ox = mob.x;
-                                mob.oy = mob.y;
-
-                                mob.oAngle = mob.angle;
-
-                                mob.oSize = mob.size;
-
-                                mob.oHealth = mob.health;
-
-                                mob.isPoison = mobIsPoisoned;
-
-                                mob.updateT = 0;
-                            } else {
-                                mob = new Mob(
-                                    mobId,
-
-                                    mobX,
-                                    mobY,
-
-                                    mobAngle,
-
-                                    mobSize,
-
-                                    mobHealth,
-
-                                    mobType,
-                                    mobRarity,
-
-                                    mobIsPet,
-
-                                    mobIsFirstSegment,
-
-                                    mobConnectingSegment,
-                                );
-
-                                if (this.waveMobIcons.isIconableMobInstance(mob)) {
-                                    this.waveMobIcons.addMobIcon(mob);
-                                }
-
-                                this.mobs.set(mobId, mob);
-                            }
-
-                            if (mobConnectingSegment && !mobConnectingSegment.connectedSegments.has(mob)) {
-                                mobConnectingSegment.connectedSegments.add(mob);
-                            }
-
-                            break;
+                            mob.nHealth = mobHealth;
                         }
 
-                        case 2: {
-                            const petalId = reader.readUInt32();
+                        mob.ox = mob.x;
+                        mob.oy = mob.y;
 
-                            const petalX = reader.readFloat32();
-                            const petalY = reader.readFloat32();
+                        mob.oAngle = mob.angle;
 
-                            const petalAngle = angleToRad(reader.readFloat32());
+                        mob.oSize = mob.size;
 
-                            const petalHealth = reader.readFloat32();
+                        mob.oHealth = mob.health;
 
-                            const petalSize = reader.readFloat32();
+                        mob.isPoison = mobIsPoisoned;
 
-                            const petalType = reader.readUInt8();
+                        mob.updateT = 0;
+                    } else {
+                        mob = new Mob(
+                            mobId,
 
-                            const petalRarity = reader.readUInt8() as Rarity;
+                            mobX,
+                            mobY,
 
-                            const petal = this.mobs.get(petalId);
-                            if (petal) {
-                                petal.nx = petalX;
-                                petal.ny = petalY;
+                            mobAngle,
 
-                                petal.nAngle = petalAngle;
+                            mobSize,
 
-                                petal.nSize = petalSize;
+                            mobHealth,
 
-                                { // Update health properties
-                                    if (petalHealth < petal.nHealth) {
-                                        petal.redHealthTimer = 1;
-                                        petal.hurtT = 1;
-                                    } else if (petalHealth > petal.nHealth) {
-                                        petal.redHealthTimer = 0;
-                                    }
+                            mobType,
+                            mobRarity,
 
-                                    petal.nHealth = petalHealth;
-                                }
+                            mobIsPet,
 
-                                petal.ox = petal.x;
-                                petal.oy = petal.y;
+                            mobIsFirstSegment,
 
-                                petal.oAngle = petal.angle;
+                            mobConnectingSegment,
+                        );
 
-                                petal.oSize = petal.size;
+                        if (this.waveMobIcons.isIconableMobInstance(mob)) {
+                            this.waveMobIcons.addMobIcon(mob);
+                        }
 
-                                petal.oHealth = petal.health;
+                        this.mobs.set(mobId, mob);
+                    }
 
-                                petal.updateT = 0;
-                            } else {
-                                // Petal treated as mob
-                                this.mobs.set(petalId, new Mob(
-                                    petalId,
+                    if (mobConnectingSegment && !mobConnectingSegment.connectedSegments.has(mob)) {
+                        mobConnectingSegment.connectedSegments.add(mob);
+                    }
+                }
+            }
 
-                                    petalX,
-                                    petalY,
+            { // Read petals
+                const petalCount = reader.readUInt16();
 
-                                    petalAngle,
+                for (let i = 0; i < petalCount; i++) {
+                    const petalId = reader.readUInt32();
 
-                                    petalSize,
+                    const petalX = reader.readFloat32();
+                    const petalY = reader.readFloat32();
 
-                                    petalHealth,
+                    const petalAngle = angleToRad(reader.readFloat32());
 
-                                    petalType,
-                                    petalRarity,
+                    const petalHealth = reader.readFloat32();
 
-                                    false,
+                    const petalSize = reader.readFloat32();
 
-                                    false,
+                    const petalType = reader.readUInt8();
 
-                                    null,
-                                ));
+                    const petalRarity = reader.readUInt8() as Rarity;
+
+                    const petal = this.mobs.get(petalId);
+                    if (petal) {
+                        petal.nx = petalX;
+                        petal.ny = petalY;
+
+                        petal.nAngle = petalAngle;
+
+                        petal.nSize = petalSize;
+
+                        { // Update health properties
+                            if (petalHealth < petal.nHealth) {
+                                petal.redHealthTimer = 1;
+                                petal.hurtT = 1;
+                            } else if (petalHealth > petal.nHealth) {
+                                petal.redHealthTimer = 0;
                             }
 
-                            break;
+                            petal.nHealth = petalHealth;
                         }
+
+                        petal.ox = petal.x;
+                        petal.oy = petal.y;
+
+                        petal.oAngle = petal.angle;
+
+                        petal.oSize = petal.size;
+
+                        petal.oHealth = petal.health;
+
+                        petal.updateT = 0;
+                    } else {
+                        // Petal treated as mob
+                        this.mobs.set(petalId, new Mob(
+                            petalId,
+
+                            petalX,
+                            petalY,
+
+                            petalAngle,
+
+                            petalSize,
+
+                            petalHealth,
+
+                            petalType,
+                            petalRarity,
+
+                            false,
+
+                            false,
+
+                            null,
+                        ));
                     }
                 }
             }
 
             { // Read eliminated entities
-                const destroyedCount = reader.readUInt16();
+                const eliminatedEntitiesCount = reader.readUInt16();
 
-                for (let i = 0; i < destroyedCount; i++) {
+                for (let i = 0; i < eliminatedEntitiesCount; i++) {
                     const entityId = reader.readUInt32();
 
                     if (this.mobs.has(entityId)) {
@@ -539,8 +533,6 @@ export default class UIGame extends AbstractUI {
                     this.lightningBounces.push(bounce);
                 }
             }
-
-            clientWebsocket.packetServerbound.sendAck(currentTick);
         },
         [Clientbound.WAVE_CHAT_RECEIV]: (reader: BinaryReader): void => {
             const lines = reader.readString();

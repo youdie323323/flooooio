@@ -20,6 +20,4 @@ const (
 
 	ServerboundWaveLeave
 	ServerboundWaveRoomLeave
-
-	ServerboundAck
 )

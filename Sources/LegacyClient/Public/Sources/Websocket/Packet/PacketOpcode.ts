@@ -17,8 +17,6 @@ export const enum Serverbound {
 
     WAVE_LEAVE,
     WAVE_ROOM_LEAVE,
-
-    ACK,
 }
 
 export const enum Clientbound {
