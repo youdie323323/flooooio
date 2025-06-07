@@ -114,4 +114,4 @@ package-lock.json
 
 .DS_Store
 
-Sources/zigclient/private/.zig-cache
+Sources/zigclient/private/.zig-cache/

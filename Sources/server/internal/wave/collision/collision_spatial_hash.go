@@ -71,7 +71,7 @@ func (s *nodeSet) ForEach(f func(Node)) {
 	})
 }
 
-// pairPoint combines x,y coordinates into a single int64 key.
+// pairPoint combines x,y coordinates into a single int key.
 func pairPoint(x, y int) int {
 	return (x << 16) ^ y
 }
@@ -139,6 +139,46 @@ func (sh *SpatialHash) Search(x, y, radius float32) []Node {
 					dy := n.GetY() - y
 
 					if (dx*dx + dy*dy) <= radiusSq {
+						nodes = append(nodes, n)
+					}
+				})
+			}
+		}
+	}
+
+	finalResult := make([]Node, len(nodes))
+	copy(finalResult, nodes)
+
+	searchResultPool.Put(result)
+
+	return finalResult
+}
+
+// SearchRect finds all nodes within the specified rectangular area centered on a player.
+func (sh *SpatialHash) SearchRect(x, y, width, height float32) []Node {
+	// Calculate rectangle bounds
+	halfWidth := width * 0.5
+	halfHeight := height * 0.5
+	
+	minX := int(math32.Floor((x - halfWidth) / sh.cellSize))
+	maxX := int(math32.Floor((x + halfWidth) / sh.cellSize))
+	minY := int(math32.Floor((y - halfHeight) / sh.cellSize))
+	maxY := int(math32.Floor((y + halfHeight) / sh.cellSize))
+
+	result := searchResultPool.Get()
+	nodes := result[:0]
+
+	for yy := minY; yy <= maxY; yy++ {
+		for xx := minX; xx <= maxX; xx++ {
+			key := pairPoint(xx, yy)
+
+			if bucket, ok := sh.buckets.Load(key); ok {
+				bucket.ForEach(func(n Node) {
+					// Check if node is within rectangle bounds
+					if n.GetX() >= x-halfWidth && 
+					   n.GetX() <= x+halfWidth &&
+					   n.GetY() >= y-halfHeight && 
+					   n.GetY() <= y+halfHeight {
 						nodes = append(nodes, n)
 					}
 				})

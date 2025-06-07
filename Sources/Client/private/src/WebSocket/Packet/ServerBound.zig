@@ -38,7 +38,7 @@ pub inline fn writeCString(stream: anytype, str: []const u8) !void {
     try stream.writeByte(0);
 }
 
-var shared_buf: [1024]u8 = undefined;
+var shared_buf: [512]u8 = undefined;
 
 // Prepare fbs of shared_stringable_buffer
 var shared_fbs = io.fixedBufferStream(&shared_buf);

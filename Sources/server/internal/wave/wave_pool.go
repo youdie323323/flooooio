@@ -425,200 +425,224 @@ func (wp *WavePool) updateWaveData() {
 	}
 }
 
+const (
+	updatedEntityKindPlayer byte = iota
+	updatedEntityKindMob
+	updatedEntityKindPetal
+)
+
 func (wp *WavePool) broadcastUpdatePacket() {
-	updatePacket := wp.createUpdatePacket()
+	staticPacket, staticAt := wp.createStaticUpdatePacket()
+	defer SharedBufPool.Put(staticPacket)
 
 	wp.playerPool.Range(func(_ EntityId, p *Player) bool {
-		p.SafeWriteMessage(websocket.BinaryMessage, updatePacket)
+		playerPacket := SharedBufPool.Get()
+		defer SharedBufPool.Put(playerPacket)
+
+		at := 0
+
+		// TODO
+		toSend := wp.SpatialHash.SearchRect(p.X, p.Y, 3440, 1440)
+
+		// Write entity count
+		binary.LittleEndian.PutUint16(playerPacket[at:], uint16(len(toSend)))
+		at += 2
+
+		for _, e := range toSend {
+			if IsDeadNode(wp, e) {
+				continue
+			}
+
+			switch n := e.(type) {
+			case *Player:
+				{
+					playerPacket[at] = updatedEntityKindPlayer
+					at++
+
+					n.Mu.RLock()
+
+					binary.LittleEndian.PutUint32(playerPacket[at:], *n.Id)
+					at += 4
+
+					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.X))
+					at += 4
+					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Y))
+					at += 4
+
+					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Angle))
+					at += 4
+
+					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Health))
+					at += 4
+
+					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Size))
+					at += 4
+
+					playerPacket[at] = byte(n.Mood)
+					at++
+
+					// Write name
+					at = writeCString(playerPacket, at, n.Name)
+
+					var bFlags uint8 = 0
+
+					// Player is dead, or not
+					if n.IsDead {
+						bFlags |= 1
+					}
+
+					// Player is developer, or not
+					if n.IsDev {
+						bFlags |= 2
+					}
+
+					// Player is poisoned, or not
+					if n.IsPoisoned.Load() {
+						bFlags |= 4
+					}
+
+					playerPacket[at] = bFlags
+					at++
+
+					n.Mu.RUnlock()
+				}
+
+			case *Mob:
+				{
+					playerPacket[at] = updatedEntityKindMob
+					at++
+
+					binary.LittleEndian.PutUint32(playerPacket[at:], *n.Id)
+					at += 4
+
+					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.X))
+					at += 4
+					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Y))
+					at += 4
+
+					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Angle))
+					at += 4
+
+					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Health))
+					at += 4
+
+					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Size))
+					at += 4
+
+					playerPacket[at] = n.Type
+					at++
+
+					playerPacket[at] = n.Rarity
+					at++
+
+					var bFlags uint8 = 0
+
+					// Mob is pet, or not
+					if n.IsAlly() {
+						bFlags |= 1
+					}
+
+					// Mob is first segment, or not
+					if n.IsFirstSegment {
+						bFlags |= 2
+					}
+
+					hasConnectingSegment := n.HasConnectingSegment(wp)
+
+					// Mob has connecting segment, or not
+					if hasConnectingSegment {
+						bFlags |= 4
+					}
+
+					// Mob is poisoned, or not
+					if n.IsPoisoned.Load() {
+						bFlags |= 8
+					}
+
+					playerPacket[at] = bFlags
+					at++
+
+					if hasConnectingSegment {
+						binary.LittleEndian.PutUint32(playerPacket[at:], n.ConnectingSegment.GetID())
+						at += 4
+					}
+				}
+
+			case *Petal:
+				{
+					playerPacket[at] = updatedEntityKindPetal
+					at++
+
+					binary.LittleEndian.PutUint32(playerPacket[at:], *n.Id)
+					at += 4
+
+					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.X))
+					at += 4
+					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Y))
+					at += 4
+
+					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Angle))
+					at += 4
+
+					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Health))
+					at += 4
+
+					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Size))
+					at += 4
+
+					playerPacket[at] = n.Type
+					at++
+
+					playerPacket[at] = n.Rarity
+					at++
+				}
+			}
+		}
+
+		toSend = nil
+
+		p.SafeWriteMessage(websocket.BinaryMessage, slices.Concat(
+			staticPacket[:staticAt],
+			playerPacket[:at],
+		))
 
 		return true
 	})
 }
 
-func (wp *WavePool) createUpdatePacket() []byte {
-	wp.mu.Lock()
-
+// createStaticUpdatePacket creates static section for update packet.
+// Caller gurantees release buffer.
+func (wp *WavePool) createStaticUpdatePacket() ([]byte, int) {
 	buf := SharedBufPool.Get()
-	defer SharedBufPool.Put(buf)
 
 	at := 0
 
 	buf[at] = network.ClientboundWaveUpdate
 	at++
 
-	binary.LittleEndian.PutUint16(buf[at:], wp.Wd.Progress)
-	at += 2
+	{ // Write wave data
+		binary.LittleEndian.PutUint16(buf[at:], wp.Wd.Progress)
+		at += 2
 
-	binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(wp.Wd.ProgressTimer))
-	at += 4
+		binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(wp.Wd.ProgressTimer))
+		at += 4
 
-	binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(wp.Wd.ProgressRedTimer))
-	at += 4
+		binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(wp.Wd.ProgressRedTimer))
+		at += 4
 
-	{ // Wave is ended or not
-		var y byte = 0
+		{ // Wave is ended or not
+			var y byte = 0
 
-		if wp.hasBeenEnded.Load() {
-			y = 1
+			if wp.hasBeenEnded.Load() {
+				y = 1
+			}
+
+			buf[at] = y
+			at++
 		}
 
-		buf[at] = y
-		at++
-	}
-
-	binary.LittleEndian.PutUint16(buf[at:], wp.Wd.MapRadius)
-	at += 2
-
-	{ // Write players
-		binary.LittleEndian.PutUint16(buf[at:], uint16(wp.playerPool.Size()))
+		binary.LittleEndian.PutUint16(buf[at:], wp.Wd.MapRadius)
 		at += 2
-
-		wp.playerPool.Range(func(id EntityId, p *Player) bool {
-			p.Mu.RLock()
-
-			binary.LittleEndian.PutUint32(buf[at:], id)
-			at += 4
-
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p.X))
-			at += 4
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p.Y))
-			at += 4
-
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p.Angle))
-			at += 4
-
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p.Health))
-			at += 4
-
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p.Size))
-			at += 4
-
-			buf[at] = byte(p.Mood)
-			at++
-
-			// Write name
-			at = writeCString(buf, at, p.Name)
-
-			var bFlags uint8 = 0
-
-			// Player is dead, or not
-			if p.IsDead {
-				bFlags |= 1
-			}
-
-			// Player is developer, or not
-			if p.IsDev {
-				bFlags |= 2
-			}
-
-			// Player is poisoned, or not
-			if p.IsPoisoned.Load() {
-				bFlags |= 4
-			}
-
-			buf[at] = bFlags
-			at++
-
-			p.Mu.RUnlock()
-
-			return true
-		})
-	}
-
-	{ // Write mobs
-		binary.LittleEndian.PutUint16(buf[at:], uint16(wp.mobPool.Size()))
-		at += 2
-
-		wp.mobPool.Range(func(id EntityId, m *Mob) bool {
-			binary.LittleEndian.PutUint32(buf[at:], id)
-			at += 4
-
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(m.X))
-			at += 4
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(m.Y))
-			at += 4
-
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(m.Angle))
-			at += 4
-
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(m.Health))
-			at += 4
-
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(m.Size))
-			at += 4
-
-			buf[at] = m.Type
-			at++
-
-			buf[at] = m.Rarity
-			at++
-
-			var bFlags uint8 = 0
-
-			// Mob is pet, or not
-			if m.IsAlly() {
-				bFlags |= 1
-			}
-
-			// Mob is first segment, or not
-			if m.IsFirstSegment {
-				bFlags |= 2
-			}
-
-			hasConnectingSegment := m.HasConnectingSegment(wp)
-
-			// Mob has connecting segment, or not
-			if hasConnectingSegment {
-				bFlags |= 4
-			}
-
-			// Mob is poisoned, or not
-			if m.IsPoisoned.Load() {
-				bFlags |= 8
-			}
-
-			buf[at] = bFlags
-			at++
-
-			if hasConnectingSegment {
-				binary.LittleEndian.PutUint32(buf[at:], m.ConnectingSegment.GetID())
-				at += 4
-			}
-
-			return true
-		})
-	}
-
-	{ // Write petals
-		binary.LittleEndian.PutUint16(buf[at:], uint16(wp.petalPool.Size()))
-		at += 2
-
-		wp.petalPool.Range(func(id EntityId, p *Petal) bool {
-			binary.LittleEndian.PutUint32(buf[at:], id)
-			at += 4
-
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p.X))
-			at += 4
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p.Y))
-			at += 4
-
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p.Angle))
-			at += 4
-
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p.Health))
-			at += 4
-
-			binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p.Size))
-			at += 4
-
-			buf[at] = p.Type
-			at++
-
-			buf[at] = p.Rarity
-			at++
-
-			return true
-		})
 	}
 
 	{ // Write eliminated entities
@@ -652,9 +676,7 @@ func (wp *WavePool) createUpdatePacket() []byte {
 		wp.lightningBounces = nil
 	}
 
-	wp.mu.Unlock()
-
-	return buf[:at]
+	return buf, at
 }
 
 func (wp *WavePool) GeneratePlayer(
