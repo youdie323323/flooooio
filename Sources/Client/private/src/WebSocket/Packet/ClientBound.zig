@@ -15,6 +15,15 @@ client: *ClientWebSocket,
 handlers: HandlerMap,
 default_handlers: HandlerMap,
 
+pub fn readCString(reader: anytype) ![]const u8 {
+    var buf: [512]u8 = undefined;
+    var fbs = std.io.fixedBufferStream(&buf);
+    
+    try reader.streamUntilDelimiter(fbs.writer(), 0, buf.len);
+    
+    return fbs.getWritten();
+}
+
 pub fn readFloat16(stream: anytype) ClientWebSocket.DefaultPacketStream.ReadError!f16 {
     var buffer: [2]u8 align(@alignOf(f16)) = undefined;
 

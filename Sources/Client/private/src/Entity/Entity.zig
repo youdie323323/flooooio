@@ -1,7 +1,7 @@
 const std = @import("std");
 const math = std.math;
 
-pub const EntityId = i32;
+pub const EntityId = u32;
 
 pub fn Entity(comptime Impl: type) type {
     return struct {
@@ -10,7 +10,9 @@ pub fn Entity(comptime Impl: type) type {
         const Self = @This();
 
         inline fn calculateAngleDistance(start_angle: f32, end_angle: f32) f32 {
-            return @mod(end_angle - start_angle, math.tau) - math.pi;
+            const angle_diff = @mod(end_angle - start_angle, math.tau);
+
+            return @mod(angle_diff * 2, math.tau) - angle_diff;
         }
 
         inline fn interpolateAngle(start_angle: f32, end_angle: f32, progress: f32) f32 {
@@ -26,6 +28,7 @@ pub fn Entity(comptime Impl: type) type {
         id: EntityId,
 
         t: f32,
+        total_t: f32,
         update_t: f32,
 
         hurt_t: f32,
@@ -73,6 +76,7 @@ pub fn Entity(comptime Impl: type) type {
                 .id = id,
 
                 .t = 0,
+                .total_t = 0,
                 .update_t = 0,
 
                 .hurt_t = 0,
@@ -108,9 +112,9 @@ pub fn Entity(comptime Impl: type) type {
             };
         }
 
-        pub fn deinit(self: *Self) void {
+        pub fn deinit(self: *Self, allocator: std.mem.Allocator) void {
             if (comptime @hasDecl(Impl, "deinit"))
-                self.impl.deinit(self);
+                self.impl.deinit(allocator, self);
 
             self.* = undefined;
         }
@@ -120,7 +124,7 @@ pub fn Entity(comptime Impl: type) type {
             const delta_time_150 = delta_time_100 * 2 / 3;
             const delta_time_200 = delta_time_100 * 0.5;
 
-            // if (self.is_dead) self.dead_t += delta_time_150;
+            if (self.is_dead) self.dead_t += delta_time_150;
 
             if (self.hurt_t > 0) {
                 self.hurt_t -= delta_time_150;
@@ -157,6 +161,8 @@ pub fn Entity(comptime Impl: type) type {
                 self.move_counter += (delta_time * dist) / 900;
             }
 
+            self.total_t += delta_time / 40;
+
             if (1 > self.health) self.hp_alpha = smoothInterpolate(delta_time, self.hp_alpha, 1, 200);
 
             if (self.red_health_timer > 0) {
@@ -170,6 +176,10 @@ pub fn Entity(comptime Impl: type) type {
 
             if (comptime @hasDecl(Impl, "update"))
                 self.impl.update(delta_time, self);
+        }
+
+        pub inline fn calculateBeakAngle(self: Self) f32 {
+            return @sin(self.total_t) * 0.1;
         }
     };
 }

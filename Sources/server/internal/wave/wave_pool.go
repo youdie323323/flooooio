@@ -441,8 +441,10 @@ func (wp *WavePool) broadcastUpdatePacket() {
 
 		at := 0
 
+		window := p.Window
+
 		// TODO
-		toSend := wp.SpatialHash.SearchRect(p.X, p.Y, 3440, 1440)
+		toSend := wp.SpatialHash.SearchRect(p.X, p.Y, float32(window[0]), float32(window[1]))
 
 		// Write entity count
 		binary.LittleEndian.PutUint16(playerPacket[at:], uint16(len(toSend)))

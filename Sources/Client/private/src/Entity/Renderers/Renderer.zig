@@ -3,6 +3,7 @@ const math = std.math;
 const CanvasContext = @import("../../WebAssembly/Interop/Canvas2D/CanvasContext.zig");
 const Color = @import("../../WebAssembly/Interop/Canvas2D/Color.zig");
 const MobType = @import("../EntityType.zig").MobType;
+const main = @import("../../main.zig");
 
 /// A factor used for darken skin color.
 /// Mainly used for stroke color.
@@ -18,6 +19,9 @@ pub fn RenderingContext(comptime Entity: type) type {
 
         /// Whether this rendering is specimen.
         is_specimen: bool,
+
+        players: *main.Players,
+        mobs: *main.Mobs,
     };
 }
 

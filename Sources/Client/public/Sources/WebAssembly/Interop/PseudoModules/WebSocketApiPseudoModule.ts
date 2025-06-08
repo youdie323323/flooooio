@@ -70,7 +70,9 @@ export const createWebSocketApiPseudoModule = ((...[, { decodeCString }]: Pseudo
                     const size = data.length;
 
                     const ptr = malloc(size);
+
                     HEAP8.set(data, ptr);
+
                     socket.th.push([EventType.MESSAGE, ptr, size]);
 
                     pollHandle(socketId);
@@ -126,7 +128,7 @@ export const createWebSocketApiPseudoModule = ((...[, { decodeCString }]: Pseudo
                 const query = socket.th.shift();
 
                 HEAPU32[ptrAddr >> 2] = query[1];
-                HEAP32[sizeAddr >> 2] = query[2];
+                HEAPU32[sizeAddr >> 2] = query[2];
 
                 return query[0];
             },

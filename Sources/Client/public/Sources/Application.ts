@@ -11,9 +11,9 @@ type FlooooWebAssemblyExports = {
 
     main: (argc: number, argv: number) => number;
 
-    // Allocates a memory with n items
+    // Allocates a memory
     malloc: (size: number) => number;
-    // Free a memory at ptr
+    // Frees a memory
     free: (ptr: number) => void;
     pollHandle: (socketId: number) => void;
 };
@@ -109,7 +109,7 @@ export function decodeCString(ptr: number, len?: number): string {
 export const decodeString = (ptr: number, len: number): string =>
     textDecoder.decode(HEAPU8.subarray(ptr, ptr + len));
 
-const functionPointerCache: Array<AnyFunction> = [];
+const functionPointerCache: Array<AnyFunction> = new Array();
 
 export const getWebAssemblyFunction = (ptr: number): AnyFunction => {
     let fn = functionPointerCache[ptr];

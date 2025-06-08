@@ -94,7 +94,7 @@ export const createContextApiPseudoModule = ((...[, {
 
             0: (width: number, height: number, isDiscardable: Uint1): number => {
                 const canvas = document.createElement("canvas");
-                
+
                 canvas.width = width;
                 canvas.height = height;
 
@@ -208,6 +208,10 @@ export const createContextApiPseudoModule = ((...[, {
 
             16: (contextId: number, x: number, y: number, width: number, height: number): void => {
                 contexts[contextId].rect(x, y, width, height);
+            },
+
+            66: (contextId: number, x: number, y: number, width: number, height: number): void => {
+                contexts[contextId].fillRect(x, y, width, height);
             },
 
             17: (contextId: number): void => {

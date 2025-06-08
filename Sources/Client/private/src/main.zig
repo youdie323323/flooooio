@@ -2,62 +2,60 @@ const std = @import("std");
 const builtin = std.builtin;
 const math = std.math;
 
-const event = @import("./WebAssembly/Interop/Event.zig");
-const dom = @import("./WebAssembly/Interop/Dom.zig");
-const ws = @import("./WebSocket/ws.zig");
+const event = @import("WebAssembly/Interop/Event.zig");
+const dom = @import("WebAssembly/Interop/Dom.zig");
+const ws = @import("WebSocket/ws.zig");
 
-const CanvasContext = @import("./WebAssembly/Interop/Canvas2D/CanvasContext.zig");
-const Color = @import("./WebAssembly/Interop/Canvas2D/Color.zig");
-const Path2D = @import("./WebAssembly/Interop/Canvas2D/Path2D.zig");
+const CanvasContext = @import("WebAssembly/Interop/Canvas2D/CanvasContext.zig");
+const Color = @import("WebAssembly/Interop/Canvas2D/Color.zig");
+const Path2D = @import("WebAssembly/Interop/Canvas2D/Path2D.zig");
 
-const timer = @import("./WebAssembly/Interop/Timer.zig");
+const timer = @import("WebAssembly/Interop/Timer.zig");
 
-const UI = @import("./UI/UI.zig");
+const UI = @import("UI/UI.zig");
 
-const TileMap = @import("./Tile/TileMap.zig");
+const TileMap = @import("Tile/TileMap.zig");
 
-const PlayerImpl = @import("./Entity/Player.zig");
-const MobImpl = @import("./Entity/Mob.zig");
-const renderEntity = @import("./Entity/Renderers/Renderer.zig").renderEntity;
-const MobRenderingDispatcher = @import("./Entity/Renderers/MobRenderingDispatcher.zig").MobRenderingDispatcher;
+const EntityId = @import("Entity/Entity.zig").EntityId;
+const EntityType = @import("Entity/EntityType.zig").EntityType;
+const EntityRarity = @import("Florr/Native/Entity/EntityRarity.zig").EntityRarity;
 
-const mach_objects = @import("./Entity/MachObjects/objs.zig");
+const PlayerImpl = @import("Entity/Player.zig");
+const pmood = @import("Entity/PlayerMood.zig");
 
-const cpp = @cImport({
-    @cDefine("BOOST_NO_RTTI", {});
-    @cDefine("BOOST_NO_EXCEPTIONS", {});
-    @cDefine("BOOST_EXCEPTION_DISABLE", {});
-    @cInclude("parse_svg.h");
-});
+const MobImpl = @import("Entity/Mob.zig");
+const renderEntity = @import("Entity/Renderers/Renderer.zig").renderEntity;
+const MobRenderingDispatcher = @import("Entity/Renderers/MobRenderingDispatcher.zig").MobRenderingDispatcher;
 
-const allocator = @import("./mem.zig").allocator;
+const mach_objects = @import("Entity/MachObjects/objs.zig");
+
+const allocator = @import("mem.zig").allocator;
 
 /// Global context of this application.
 var ctx: *CanvasContext = undefined;
 
-var current_ui: UI = undefined;
-
-// var tile_map: TileMap = undefined;
+var ui: UI = undefined;
 
 var client: *ws.ClientWebSocket = undefined;
 
-var width: f32 = 0;
-var height: f32 = 0;
+var width: u16 = 0;
+var height: u16 = 0;
 
 fn onResize(_: ?*const event.Event) callconv(.c) void {
     const dpr = dom.devicePixelRatio();
 
-    width = @as(f32, @floatFromInt(dom.clientWidth())) * dpr;
-    height = @as(f32, @floatFromInt(dom.clientHeight())) * dpr;
+    width = @intFromFloat(@as(f32, @floatFromInt(dom.clientWidth())) * dpr);
+    height = @intFromFloat(@as(f32, @floatFromInt(dom.clientHeight())) * dpr);
 
     ctx.setSize(
-        @intFromFloat(width),
-        @intFromFloat(height),
+        width,
+        height,
     );
 }
 
 fn onWheel(_: ?*const event.Event) callconv(.c) void {
     players.lock();
+    defer players.unlock();
 
     var slice = players.slice();
 
@@ -70,14 +68,35 @@ fn onWheel(_: ?*const event.Event) callconv(.c) void {
 
         players.setValue(p, player);
     }
-
-    players.unlock();
 }
 
-var players: mach_objects.Objects(PlayerImpl.Super) = undefined;
-var mobs: mach_objects.Objects(MobImpl.Super) = undefined;
+pub const Players = mach_objects.Objects(PlayerImpl.Super, .id);
+pub const Mobs = mach_objects.Objects(MobImpl.Super, .id);
 
-var i: f32 = 0;
+var players: Players = undefined;
+var mobs: Mobs = undefined;
+
+pub fn inSlice(comptime T: type, haystack: []T, needle: T) bool {
+    for (haystack) |elem| if (elem == needle) return true;
+
+    return false;
+}
+
+const EntityKind = enum(u8) {
+    player,
+    mob,
+    petal,
+};
+
+inline fn angleToRad(angle: f32) f32 {
+    return angle / 255 * math.tau;
+}
+
+var wave_self_id: EntityId = undefined;
+
+fn handleWaveSelfId(stream: *ws.Clientbound.Reader) anyerror!void {
+    wave_self_id = try stream.readInt(EntityId, .little);
+}
 
 fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
     { // Read wave informations
@@ -85,8 +104,346 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
 
         const wave_progress_timer = try ws.Clientbound.readFloat32(stream);
 
-        std.debug.print("{} {}\n", .{ wave_progress, wave_progress_timer });
+        const wave_progress_red_gage_timer = try ws.Clientbound.readFloat32(stream);
+
+        const wave_ended = try stream.readByte() != 0;
+
+        const wave_map_radius = try stream.readInt(u16, .little);
+
+        std.debug.print("{} {} {} {} {}\n", .{ wave_progress, wave_progress_timer, wave_progress_red_gage_timer, wave_ended, wave_map_radius });
     }
+
+    { // Read eliminated entities
+        const eliminated_entities_count = try stream.readInt(u16, .little);
+
+        for (0..eliminated_entities_count) |_| {
+            const entity_id = try stream.readInt(EntityId, .little);
+
+            if (mobs.search(entity_id)) |obj_id| {
+                var mob = mobs.getValue(obj_id);
+
+                mob.is_dead = true;
+
+                continue;
+            }
+
+            if (players.search(entity_id)) |obj_id| {
+                var player = players.getValue(obj_id);
+
+                player.impl.was_eliminated = true;
+
+                player.is_dead = true;
+
+                player.dead_t = 0;
+                player.health = 0;
+
+                continue;
+            }
+        }
+    }
+
+    { // Read lighning bounces
+        const lightning_bounces_count = try stream.readInt(u16, .little);
+
+        for (0..lightning_bounces_count) |_| {
+            const coordinates_count = try stream.readInt(u16, .little);
+
+            for (0..coordinates_count) |_| {
+                _ = try ws.Clientbound.readFloat32(stream); // X
+                _ = try ws.Clientbound.readFloat32(stream); // Y
+            }
+        }
+    }
+
+    { // Read entities
+        const entities_count = try stream.readInt(u16, .little);
+
+        for (0..entities_count) |_| {
+            const entity_kind = try stream.readEnum(EntityKind, .little);
+
+            switch (entity_kind) {
+                .player => {
+                    const player_id = try stream.readInt(EntityId, .little);
+
+                    const player_x = try ws.Clientbound.readFloat32(stream);
+                    const player_y = try ws.Clientbound.readFloat32(stream);
+
+                    const player_angle = angleToRad(try ws.Clientbound.readFloat32(stream));
+
+                    const player_health = try ws.Clientbound.readFloat32(stream);
+
+                    const player_size = try ws.Clientbound.readFloat32(stream);
+
+                    const player_mood_mask = @as(pmood.MoodBitSet.MaskInt, @intCast(try stream.readByte()));
+
+                    const player_name = try ws.Clientbound.readCString(stream);
+
+                    const player_bool_flags = try stream.readStruct(packed struct {
+                        is_dead: bool,
+                        is_developer: bool,
+                        is_poisoned: bool,
+                    });
+
+                    players.lock();
+
+                    if (players.search(player_id)) |obj_id| {
+                        var player = players.getValue(obj_id);
+
+                        { // Update next properties
+                            player.next_pos[0] = player_x;
+                            player.next_pos[1] = player_y;
+
+                            player.next_angle = player_angle;
+
+                            player.next_size = player_size;
+                        }
+
+                        { // Update health properties
+                            if (!player.is_poisoned and player_health < player.next_health) {
+                                player.red_health_timer = 1;
+                                player.hurt_t = 1;
+                            } else if (player_health > player.next_health) {
+                                player.red_health_timer = 0;
+                            }
+
+                            player.next_health = player_health;
+                        }
+
+                        { // Update common properties
+                            player.impl.mood.mask = player_mood_mask;
+
+                            player.impl.name = player_name;
+
+                            player.is_dead = player_bool_flags.is_dead;
+
+                            player.impl.is_developer = player_bool_flags.is_developer;
+
+                            player.is_poisoned = player_bool_flags.is_poisoned;
+                        }
+
+                        { // Update old properties
+                            player.old_pos = player.pos;
+
+                            player.old_angle = player.angle;
+
+                            player.old_size = player.size;
+
+                            player.old_health = player.health;
+                        }
+
+                        player.update_t = 0;
+
+                        players.setValue(obj_id, player);
+                    } else {
+                        const player = PlayerImpl.Super.init(
+                            PlayerImpl.init(
+                                allocator,
+                                pmood.initPartial(player_mood_mask),
+                                player_name,
+                            ),
+                            player_id,
+                            .{ player_x, player_y },
+                            player_angle,
+                            player_size,
+                            player_health,
+                        );
+
+                        _ = try players.new(player);
+                    }
+
+                    players.unlock();
+                },
+
+                .mob => {
+                    const mob_id = try stream.readInt(EntityId, .little);
+
+                    const mob_x = try ws.Clientbound.readFloat32(stream);
+                    const mob_y = try ws.Clientbound.readFloat32(stream);
+
+                    const mob_angle = angleToRad(try ws.Clientbound.readFloat32(stream));
+
+                    const mob_health = try ws.Clientbound.readFloat32(stream);
+
+                    const mob_size = try ws.Clientbound.readFloat32(stream);
+
+                    const mob_type: EntityType = .{ .mob = @enumFromInt(try stream.readByte()) };
+
+                    const mob_rarity = try stream.readEnum(EntityRarity, .little);
+
+                    const mob_bool_flags = try stream.readStruct(packed struct {
+                        is_pet: bool,
+                        is_first_segment: bool,
+                        has_connecting_segment: bool,
+                        is_poisoned: bool,
+                    });
+
+                    var mob_connecting_segment: ?mach_objects.ObjectID = null;
+
+                    mobs.lock();
+
+                    if (mob_bool_flags.has_connecting_segment) {
+                        const mob_connecting_segment_id = try stream.readInt(EntityId, .little);
+
+                        mob_connecting_segment =
+                            if (mobs.search(mob_connecting_segment_id)) |obj_id| obj_id else null;
+                    }
+
+                    if (mobs.search(mob_id)) |obj_id| {
+                        var mob = mobs.getValue(obj_id);
+
+                        { // Update next properties
+                            mob.next_pos[0] = mob_x;
+                            mob.next_pos[1] = mob_y;
+
+                            mob.next_angle = mob_angle;
+
+                            mob.next_size = mob_size;
+                        }
+
+                        { // Update health properties
+                            // TODO: not same as original code
+
+                            if (!mob.is_poisoned and mob_health < mob.next_health) {
+                                mob.red_health_timer = 1;
+                                mob.hurt_t = 1;
+                            } else if (mob_health > mob.next_health) {
+                                mob.red_health_timer = 0;
+                            }
+
+                            mob.next_health = mob_health;
+                        }
+
+                        { // Update common properties
+                            mob.impl.connecting_segment = mob_connecting_segment;
+
+                            mob.is_poisoned = mob_bool_flags.is_poisoned;
+                        }
+
+                        { // Update old properties
+                            mob.old_pos = mob.pos;
+
+                            mob.old_angle = mob.angle;
+
+                            mob.old_size = mob.size;
+
+                            mob.old_health = mob.health;
+                        }
+
+                        mob.update_t = 0;
+
+                        mobs.setValue(obj_id, mob);
+                    } else {
+                        const mob = MobImpl.Super.init(
+                            MobImpl.init(
+                                allocator,
+                                mob_type,
+                                mob_rarity,
+                                mob_bool_flags.is_pet,
+                                mob_bool_flags.is_first_segment,
+                                mob_connecting_segment,
+                            ),
+                            mob_id,
+                            .{ mob_x, mob_y },
+                            mob_angle,
+                            mob_size,
+                            mob_health,
+                        );
+
+                        _ = try mobs.new(mob);
+                    }
+
+                    if (mob_connecting_segment) |obj_id| {
+                        var mob = mobs.getValue(obj_id);
+
+                        if (!mob.impl.isConnectedBy(mob_id)) try mob.impl.addConnectedSegment(mob_id);
+                        
+                        mobs.setValue(obj_id, mob);
+                    }
+
+                    mobs.unlock();
+                },
+
+                .petal => { // Petal treated as mob
+                    const petal_id = try stream.readInt(EntityId, .little);
+
+                    const petal_x = try ws.Clientbound.readFloat32(stream);
+                    const petal_y = try ws.Clientbound.readFloat32(stream);
+
+                    const petal_angle = angleToRad(try ws.Clientbound.readFloat32(stream));
+
+                    const petal_health = try ws.Clientbound.readFloat32(stream);
+
+                    const petal_size = try ws.Clientbound.readFloat32(stream);
+
+                    const petal_type: EntityType = .{ .petal = @enumFromInt(try stream.readByte()) };
+
+                    const petal_rarity = try stream.readEnum(EntityRarity, .little);
+
+                    mobs.lock();
+
+                    if (mobs.search(petal_id)) |obj_id| {
+                        var petal = mobs.getValue(obj_id);
+
+                        { // Update next properties
+                            petal.next_pos[0] = petal_x;
+                            petal.next_pos[1] = petal_y;
+
+                            petal.next_angle = petal_angle;
+
+                            petal.next_size = petal_size;
+                        }
+
+                        { // Update health properties
+                            if (petal_health < petal.next_health) {
+                                petal.red_health_timer = 1;
+                                petal.hurt_t = 1;
+                            } else if (petal_health > petal.next_health) {
+                                petal.red_health_timer = 0;
+                            }
+
+                            petal.next_health = petal_health;
+                        }
+
+                        { // Update old properties
+                            petal.old_pos = petal.pos;
+
+                            petal.old_angle = petal.angle;
+
+                            petal.old_size = petal.size;
+
+                            petal.old_health = petal.health;
+                        }
+
+                        petal.update_t = 0;
+
+                        mobs.setValue(obj_id, petal);
+                    } else {
+                        const petal = MobImpl.Super.init(
+                            MobImpl.init(
+                                allocator,
+                                petal_type,
+                                petal_rarity,
+                                false,
+                                false,
+                                null,
+                            ),
+                            petal_id,
+                            .{ petal_x, petal_y },
+                            petal_angle,
+                            petal_size,
+                            petal_health,
+                        );
+
+                        _ = try mobs.new(petal);
+                    }
+
+                    mobs.unlock();
+                },
+            }
+        }
+    }
+
+    try client.server_bound.sendAck(width, height);
 }
 
 // This function overrides C main
@@ -94,22 +451,27 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
 export fn main() c_int {
     std.debug.print("main()\n", .{});
 
-    client = ws.ClientWebSocket.init(allocator) catch unreachable;
+    ctx = CanvasContext.createCanvasContextFromElement(allocator, "canvas", false);
 
-    client.client_bound.putHandler(ws.opcode.Clientbound.wave_update, handleWaveUpdate) catch unreachable;
+    {
+        client = ws.ClientWebSocket.init(allocator) catch unreachable;
 
-    client.connect("localhost:8080") catch unreachable;
+        client.client_bound.putHandler(ws.opcode.Clientbound.wave_self_id, handleWaveSelfId) catch unreachable;
+        client.client_bound.putHandler(ws.opcode.Clientbound.wave_update, handleWaveUpdate) catch unreachable;
 
-    ctx = CanvasContext.createCanvasContextFromElement("canvas", false);
+        client.connect("localhost:8080") catch unreachable;
+    }
 
-    cpp.parseSvg(@embedFile("./Tile/Tiles/grass_c_0.svg"), @ptrCast(&ctx));
+    {
+        event.addGlobalEventListener(.window, .resize, onResize);
+        event.addEventListener("canvas", .wheel, onWheel);
 
-    onResize(null);
+        onResize(null);
+    }
 
-    event.addGlobalEventListener(.window, .resize, onResize);
-    event.addEventListener("canvas", .wheel, onWheel);
-
-    current_ui = UI.init(allocator, ctx) catch unreachable;
+    {
+        ui = UI.init(allocator, ctx) catch unreachable;
+    }
 
     { // Initialize DOD models
         // Initalize objects
@@ -119,57 +481,27 @@ export fn main() c_int {
         // Initialize renderer static values
         PlayerImpl.Renderer.initStatic(allocator);
         MobImpl.Renderer.initStatic(allocator);
-
-        {
-            players.lock();
-
-            var player = PlayerImpl.Super.init(
-                PlayerImpl.init(allocator),
-                -1,
-                @splat(1000),
-                0,
-                50,
-                1,
-            );
-
-            player.hurt_t = 1;
-
-            player.is_dead = true;
-
-            _ = players.new(player) catch unreachable;
-
-            players.unlock();
-        }
-
-        _ = timer.setInterval(struct {
-            fn call() callconv(.c) void {
-                const mob = MobImpl.Super.init(
-                    MobImpl.init(
-                        allocator,
-                        .{ .mob = .starfish },
-                        .mythic,
-                        false,
-                        false,
-                        null,
-                        null,
-                    ),
-                    -1,
-                    @splat(i * 10),
-                    0,
-                    40,
-                    1,
-                );
-
-                i += 1;
-
-                mobs.lock();
-
-                _ = mobs.new(mob) catch unreachable;
-
-                mobs.unlock();
-            }
-        }.call, 500);
     }
+
+    // {
+    //     const tile_ctx = CanvasContext.createCanvasContext(allocator, 256 * 4, 256 * 4, false);
+
+    //     tile_ctx.drawSVG(@embedFile("./Tile/Tiles/desert_c_2.svg"));
+
+    //     tile_map = TileMap.init(allocator, .{
+    //         .tile_size = @splat(512),
+    //         .chunk_border = @splat(1),
+    //         .layers = &.{
+    //             .{
+    //                 .tiles = &.{tile_ctx},
+    //                 .data = &.{
+    //                     &.{ 0, 0 },
+    //                     &.{ 0, 0 },
+    //                 },
+    //             },
+    //         },
+    //     }) catch unreachable;
+    // }
 
     draw(-1);
 
@@ -190,80 +522,106 @@ fn draw(_: f32) callconv(.c) void {
 
     ctx.save();
 
-    current_ui.render();
+    ui.render();
 
     { // Render entities
+        const self_player =
+            if (players.search(wave_self_id)) |obj_id|
+                players.getValue(obj_id)
+            else
+                null;
+
+        if (self_player) |p| {
+            const center_width = @as(f32, @floatFromInt(width)) / 2;
+            const center_height = @as(f32, @floatFromInt(height)) / 2;
+
+            const p_x, const p_y = p.pos;
+
+            ctx.setTransform(
+                1,
+                0,
+                0,
+                1,
+                center_width - p_x,
+                center_height - p_y,
+            );
+        }
+
         {
             players.lock();
+            defer players.unlock();
 
             var slice = players.slice();
 
-            while (slice.next()) |p| {
-                var player = players.getValue(p);
+            while (slice.next()) |obj_id| {
+                var player = players.getValue(obj_id);
+
+                player.update(delta_time);
+
+                // Only remove when disconnected
+                if (player.is_dead and player.dead_t > 1 and player.impl.was_eliminated) {
+                    players.delete(obj_id);
+
+                    player.deinit(allocator);
+
+                    continue;
+                }
 
                 renderEntity(PlayerImpl, &.{
                     .ctx = ctx,
                     .entity = &player,
                     .is_specimen = false,
+                    .players = &players,
+                    .mobs = &mobs,
                 });
 
-                player.update(delta_time);
-
-                players.setValue(p, player);
+                players.setValue(obj_id, player);
             }
-
-            players.unlock();
         }
 
         {
             mobs.lock();
+            defer mobs.unlock();
 
             var slice = mobs.slice();
 
-            while (slice.next()) |m| {
-                var mob = mobs.getValue(m);
+            while (slice.next()) |obj_id| {
+                var mob = mobs.getValue(obj_id);
+
+                mob.update(delta_time);
+
+                // Only remove when disconnected
+                if (mob.is_dead and mob.dead_t > 1) {
+                    var inner_slice = mobs.slice();
+
+                    while (inner_slice.next()) |inner_obj_id| {
+                        var inner_mob = mobs.getValue(inner_obj_id);
+
+                        if (inner_mob.impl.isConnectedBy(obj_id))
+                            inner_mob.impl.removeConnectedSegment(obj_id);
+                    }
+
+                    mobs.delete(obj_id);
+
+                    mob.deinit(allocator);
+
+                    continue;
+                }
 
                 renderEntity(MobImpl, &.{
                     .ctx = ctx,
                     .entity = &mob,
                     .is_specimen = false,
+                    .players = &players,
+                    .mobs = &mobs,
                 });
 
-                mob.update(delta_time);
-
-                mobs.setValue(m, mob);
+                mobs.setValue(obj_id, mob);
             }
-
-            mobs.unlock();
         }
     }
 
     ctx.restore();
-
-    { // Show fps
-        ctx.save();
-        defer ctx.restore();
-
-        const fps =
-            if (delta_time > 0)
-                1000 / delta_time
-            else
-                0;
-
-        ctx.setLineJoin(.round);
-        ctx.setLineCap(.round);
-        ctx.setTextAlign(.right);
-
-        ctx.fillColor(comptime Color.comptimeFromHexColorCode("#FFFFFF"));
-
-        ctx.prepareFontProperties(30);
-
-        var buf: [32]u8 = undefined;
-        const fps_text = std.fmt.bufPrint(&buf, "FPS: {d:.1}", .{fps}) catch unreachable;
-
-        ctx.strokeText(fps_text, width, height);
-        ctx.fillText(fps_text, width, height);
-    }
 
     _ = CanvasContext.requestAnimationFrame(draw);
 }

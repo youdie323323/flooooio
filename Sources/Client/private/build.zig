@@ -4,6 +4,8 @@ const src_folder = "src";
 
 const c_src_folder = "src-c";
 
+pub const memory = 4096 * std.wasm.page_size;
+
 pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{
         .default_target = .{
@@ -28,25 +30,32 @@ pub fn build(b: *std.Build) !void {
     });
 
     exe.export_memory = true;
+
+    exe.initial_memory = memory;
+    exe.max_memory = memory;
+
     exe.export_table = true;
+
     exe.entry = .disabled;
+
     exe.rdynamic = true;
+
     exe.want_lto = true;
 
-    exe.linkLibCpp();
-    exe.addIncludePath(b.path(c_src_folder));
-    exe.addCSourceFile(.{
-        .file = b.path(c_src_folder ++ "/parse_svg.cpp"),
-        .flags = &.{
-            "-s",
-            "-fno-stack-protector",
-            "-fno-pie",
-            "-fno-unwind-tables",
-            "-fno-asynchronous-unwind-tables",
-            "-Wl,--gc-sections",
-            "-Wl,--strip-all",
-        },
-    });
+    // exe.linkLibCpp();
+    // exe.addIncludePath(b.path(c_src_folder));
+    // exe.addCSourceFile(.{
+    //     .file = b.path(c_src_folder ++ "/parse_svg.cpp"),
+    //     .flags = &.{
+    //         "-s",
+    //         "-fno-stack-protector",
+    //         "-fno-pie",
+    //         "-fno-unwind-tables",
+    //         "-fno-asynchronous-unwind-tables",
+    //         "-Wl,--gc-sections",
+    //         "-Wl,--strip-all",
+    //     },
+    // });
 
     const optimize = b.standardOptimizeOption(.{});
 

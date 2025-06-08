@@ -2,6 +2,9 @@ package kernel
 
 import (
 	"bytes"
+	"cmp"
+	"encoding/binary"
+	"fmt"
 	"slices"
 	"unsafe"
 
@@ -9,6 +12,26 @@ import (
 	"flooooio/internal/wave/florr/native"
 	"flooooio/internal/wave/kernel/network"
 )
+
+// Clamp returns f clamped to [low, high].
+func Clamp[T cmp.Ordered](f, low, high T) T {
+	return min(max(f, low), high)
+}
+
+const (
+	maxWindowWidth  uint16 = 4000
+	maxWindowHeight uint16 = 3000
+	minWindowWidth  uint16 = 100
+	minWindowHeight uint16 = 100
+)
+
+// clampWindowSize clamp window size.
+func clampWindowSize(width, height uint16) (uint16, uint16) {
+	width = Clamp(width, minWindowWidth, maxWindowWidth)
+	height = Clamp(height, minWindowHeight, maxWindowHeight)
+
+	return width, height
+}
 
 func readCString(buf []byte, at int) (string, int) {
 	end := at + bytes.IndexByte(buf[at:], 0)
@@ -19,22 +42,22 @@ func readCString(buf []byte, at int) (string, int) {
 	return unsafe.String(&buf[at], end-at), end + 1
 }
 
-func HandleMessage(pd *wave.PlayerData, message []byte) {
-	msgLen := len(message)
+func HandleMessage(pd *wave.PlayerData, buf []byte) {
+	bufLen := len(buf)
 
-	if msgLen < 1 {
+	if bufLen < 1 {
 		return
 	}
 
 	at := 0
 
-	opcode := message[at]
+	opcode := buf[at]
 	at++
 
 	switch opcode {
 	case network.ServerboundWaveChangeMove:
 		{
-			if msgLen != 3 {
+			if bufLen != 3 {
 				return
 			}
 
@@ -44,6 +67,10 @@ func HandleMessage(pd *wave.PlayerData, message []byte) {
 
 			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
+				return
+			}
+
+			if wr.WavePool == nil {
 				return
 			}
 
@@ -52,10 +79,10 @@ func HandleMessage(pd *wave.PlayerData, message []byte) {
 				return
 			}
 
-			angle := message[at]
+			angle := buf[at]
 			at++
 
-			magnitude := message[at]
+			magnitude := buf[at]
 			at++
 
 			player.UpdateMovement(angle, magnitude)
@@ -63,7 +90,7 @@ func HandleMessage(pd *wave.PlayerData, message []byte) {
 
 	case network.ServerboundWaveChangeMood:
 		{
-			if msgLen != 2 {
+			if bufLen != 2 {
 				return
 			}
 
@@ -71,7 +98,7 @@ func HandleMessage(pd *wave.PlayerData, message []byte) {
 				return
 			}
 
-			flag := native.Mood(message[at])
+			flag := native.Mood(buf[at])
 			at++
 
 			if !slices.Contains(native.ValidMoodFlags, flag) {
@@ -80,6 +107,10 @@ func HandleMessage(pd *wave.PlayerData, message []byte) {
 
 			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
+				return
+			}
+
+			if wr.WavePool == nil {
 				return
 			}
 
@@ -93,7 +124,7 @@ func HandleMessage(pd *wave.PlayerData, message []byte) {
 
 	case network.ServerboundWaveSwapPetal:
 		{
-			if msgLen != 2 {
+			if bufLen != 2 {
 				return
 			}
 
@@ -101,7 +132,7 @@ func HandleMessage(pd *wave.PlayerData, message []byte) {
 				return
 			}
 
-			swapAt := message[at]
+			swapAt := buf[at]
 			at++
 
 			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
@@ -127,7 +158,7 @@ func HandleMessage(pd *wave.PlayerData, message []byte) {
 
 	case network.ServerboundWaveChat:
 		{
-			if msgLen < 2 {
+			if bufLen < 2 {
 				return
 			}
 
@@ -145,7 +176,7 @@ func HandleMessage(pd *wave.PlayerData, message []byte) {
 			}
 
 			var chatMsg string
-			chatMsg, at = readCString(message, at)
+			chatMsg, at = readCString(buf, at)
 
 			wr.WavePool.HandleChatMessage(*pd.WPId, chatMsg)
 		}
@@ -157,11 +188,11 @@ func HandleMessage(pd *wave.PlayerData, message []byte) {
 
 	case network.ServerboundWaveRoomCreate:
 		{
-			if msgLen != 2 {
+			if bufLen != 2 {
 				return
 			}
 
-			biome := message[at]
+			biome := buf[at]
 			at++
 
 			if !slices.Contains(native.BiomeValues, biome) {
@@ -175,12 +206,13 @@ func HandleMessage(pd *wave.PlayerData, message []byte) {
 
 	case network.ServerboundWaveRoomJoin:
 		{
-			if msgLen < 2 {
+			if bufLen < 2 {
 				return
 			}
 
 			var maybeCode string
-			maybeCode, at = readCString(message, at)
+
+			maybeCode, at = readCString(buf, at)
 			if !wave.IsWaveRoomCode(maybeCode) {
 				return
 			}
@@ -194,11 +226,11 @@ func HandleMessage(pd *wave.PlayerData, message []byte) {
 
 	case network.ServerboundWaveRoomFindPublic:
 		{
-			if msgLen != 2 {
+			if bufLen != 2 {
 				return
 			}
 
-			biome := message[at]
+			biome := buf[at]
 			at++
 
 			if !slices.Contains(native.BiomeValues, biome) {
@@ -216,7 +248,7 @@ func HandleMessage(pd *wave.PlayerData, message []byte) {
 
 	case network.ServerboundWaveRoomChangeReady:
 		{
-			if msgLen != 2 {
+			if bufLen != 2 {
 				return
 			}
 
@@ -224,7 +256,7 @@ func HandleMessage(pd *wave.PlayerData, message []byte) {
 				return
 			}
 
-			state := message[at]
+			state := buf[at]
 			at++
 
 			if !slices.Contains(wave.PlayerStateValues, state) {
@@ -241,7 +273,7 @@ func HandleMessage(pd *wave.PlayerData, message []byte) {
 
 	case network.ServerboundWaveRoomChangeVisible:
 		{
-			if msgLen != 2 {
+			if bufLen != 2 {
 				return
 			}
 
@@ -249,7 +281,7 @@ func HandleMessage(pd *wave.PlayerData, message []byte) {
 				return
 			}
 
-			state := message[at]
+			state := buf[at]
 			at++
 
 			if !slices.Contains(wave.WaveRoomVisibilityValues, state) {
@@ -266,7 +298,7 @@ func HandleMessage(pd *wave.PlayerData, message []byte) {
 
 	case network.ServerboundWaveRoomChangeName:
 		{
-			if msgLen < 2 {
+			if bufLen < 2 {
 				return
 			}
 
@@ -275,7 +307,7 @@ func HandleMessage(pd *wave.PlayerData, message []byte) {
 			}
 
 			var name string
-			name, at = readCString(message, at)
+			name, at = readCString(buf, at)
 
 			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
@@ -293,6 +325,44 @@ func HandleMessage(pd *wave.PlayerData, message []byte) {
 			}
 
 			pd.WrPId = nil
+		}
+
+	case network.ServerboundAck:
+		{
+			if bufLen != 1+2+2 {
+				return
+			}
+
+			if pd.WrPId == nil || pd.WPId == nil {
+				return
+			}
+
+			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
+			if wr == nil {
+				return
+			}
+
+			if wr.WavePool == nil {
+				return
+			}
+
+			player := wr.WavePool.SafeFindPlayer(*pd.WPId)
+			if player == nil {
+				return
+			}
+
+			width := binary.LittleEndian.Uint16(buf[at:])
+			at += 2
+
+			height := binary.LittleEndian.Uint16(buf[at:])
+			at += 2
+
+			width, height = clampWindowSize(width, height)
+
+			player.Window[0] = width
+			player.Window[1] = height
+
+			fmt.Println(player.Window)
 		}
 	}
 }

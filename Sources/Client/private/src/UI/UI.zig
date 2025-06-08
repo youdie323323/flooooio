@@ -1,31 +1,34 @@
 const std = @import("std");
+const mem = std.mem;
 const CanvasContext = @import("../WebAssembly/Interop/Canvas2D/CanvasContext.zig");
 const Component = @import("./Layout/Components/Component.zig");
 const Color = @import("../WebAssembly/Interop/Canvas2D/Color.zig");
-const Allocator = std.mem.Allocator;
 const UI = @This();
 
 pub const Point = @Vector(2, f32);
 
 pub const Components = std.BoundedArray(*Component, std.math.pow(usize, 2, 8));
 
+allocator: mem.Allocator,
+
 ctx: *CanvasContext,
 components: Components,
 mouse_position: Point,
-allocator: Allocator,
+
 hovered_component: ?*Component = null,
 clicked_component: ?*Component = null,
 
-pub fn init(allocator: Allocator, ctx: *CanvasContext) error{Overflow}!UI {
+pub fn init(allocator: mem.Allocator, ctx: *CanvasContext) !UI {
     return .{
+        .allocator = allocator,
+
         .ctx = ctx,
         .components = try Components.init(0),
         .mouse_position = .{ 0, 0 },
-        .allocator = allocator,
     };
 }
 
-pub fn addComponent(self: *UI, component: *Component) error{Overflow}!void {
+pub fn addComponent(self: *UI, component: *Component) !void {
     try self.components.append(component);
 }
 
@@ -61,4 +64,6 @@ pub fn destroy(self: *UI) void {
     for (self.components.constSlice()) |component| {
         component.destroy();
     }
+
+    self.components.clear();
 }

@@ -307,14 +307,18 @@ line_dash_offset: f32 = 0.0,
 /// Default value is true.
 image_smoothing_enabled: bool = true,
 
-pub inline fn init(id: Id) *CanvasContext {
-    var ctx: CanvasContext = .{ .id = id };
+pub inline fn init(allocator: std.mem.Allocator, id: Id) *CanvasContext {
+    const ctx = allocator.create(CanvasContext) catch unreachable;
 
-    return &ctx;
+    ctx.* = .{ .id = id };
+
+    return ctx;
 }
 
-pub inline fn deinit(self: *CanvasContext) void {
+pub inline fn deinit(self: *CanvasContext, allocator: std.mem.Allocator) void {
     @"3"(self.id);
+
+    allocator.destroy(self);
 
     self.* = undefined;
 }
@@ -367,6 +371,10 @@ pub inline fn rect(self: CanvasContext, x: f32, y: f32, width: f32, height: f32)
     @"16"(self.id, x, y, width, height);
 }
 
+pub inline fn fillRect(self: CanvasContext, x: f32, y: f32, width: f32, height: f32) void {
+    @"66"(self.id, x, y, width, height);
+}
+
 pub inline fn clearRect(self: CanvasContext, x: f32, y: f32, width: f32, height: f32) void {
     @"18"(self.id, x, y, width, height);
 }
@@ -391,15 +399,15 @@ pub inline fn rotate(self: CanvasContext, angle: f32) void {
     @"28"(self.id, angle);
 }
 
-pub inline fn copyCanvas(self: CanvasContext, src_context: CanvasContext, dx: f32, dy: f32) void {
+pub inline fn copyCanvas(self: CanvasContext, src_context: *CanvasContext, dx: f32, dy: f32) void {
     @"34"(self.id, src_context.id, dx, dy);
 }
 
-pub inline fn copyCanvasAsOnePixel(self: CanvasContext, src_context: CanvasContext, dx: f32, dy: f32) void {
+pub inline fn copyCanvasAsOnePixel(self: CanvasContext, src_context: *CanvasContext, dx: f32, dy: f32) void {
     @"35"(self.id, src_context.id, dx, dy);
 }
 
-pub inline fn copyCanvasWithScale(self: CanvasContext, src_context: CanvasContext, dx: f32, dy: f32, dw: f32, dh: f32) void {
+pub inline fn copyCanvasWithScale(self: CanvasContext, src_context: *CanvasContext, dx: f32, dy: f32, dw: f32, dh: f32) void {
     @"36"(self.id, src_context.id, dx, dy, dw, dh);
 }
 
@@ -415,7 +423,7 @@ pub inline fn setSize(self: CanvasContext, width: u16, height: u16) void {
     @"56"(self.id, width, height);
 }
 
-pub inline fn size(self: CanvasContext) [2]16 {
+pub inline fn size(self: CanvasContext) @Vector(2, u16) {
     var width: u16 = undefined;
     var height: u16 = undefined;
 
@@ -427,7 +435,7 @@ pub inline fn size(self: CanvasContext) [2]16 {
 /// Creates the context.
 extern "0" fn @"0"(width: f32, height: f32, is_discardable: u8) Id;
 /// Get context by element id.
-extern "0" fn @"1"(ptr: mem.MemoryPointer, alpha: u8) Id;
+extern "0" fn @"1"(ptr: mem.CStringPointer, alpha: u8) Id;
 /// Draw svg.
 extern "0" fn @"2"(id: Id, ptr: [*]const u8, len: u32) void;
 /// Destroys the context.
@@ -456,6 +464,8 @@ extern "0" fn @"13"(id: Id, path_id: Path2D.PathId) void;
 extern "0" fn @"14"(id: Id) void;
 /// Performs rect.
 extern "0" fn @"16"(id: Id, x: f32, y: f32, width: f32, height: f32) void;
+/// Performs fillRect.
+extern "0" fn @"66"(id: Id, x: f32, y: f32, width: f32, height: f32) void;
 /// Performs full clear.
 extern "0" fn @"17"(id: Id) void;
 /// Performs clearRect.
@@ -527,20 +537,20 @@ extern "0" fn @"56"(id: Id, width: u16, height: u16) void;
 /// Get width and height.
 extern "0" fn @"57"(id: Id, w_addr: *u16, h_addr: *u16) void;
 
-pub inline fn createCanvasContext(width: f32, height: f32, comptime is_discardable: bool) *CanvasContext {
+pub inline fn createCanvasContext(allocator: std.mem.Allocator, width: f32, height: f32, comptime is_discardable: bool) *CanvasContext {
     const id = @"0"(width, height, comptime @intFromBool(is_discardable));
 
-    return CanvasContext.init(id);
+    return CanvasContext.init(allocator, id);
 }
 
-pub inline fn createCanvasContextFromElement(comptime element_id: []const u8, comptime alpha: bool) *CanvasContext {
+pub inline fn createCanvasContextFromElement(allocator: std.mem.Allocator, comptime element_id: []const u8, comptime alpha: bool) *CanvasContext {
     const str = mem.allocCString(element_id);
 
     const id = @"1"(str, comptime @intFromBool(alpha));
 
-    mem.free(str);
+    mem.freeCString(str);
 
-    return CanvasContext.init(id);
+    return CanvasContext.init(allocator, id);
 }
 
 /// Function signature for rAF (requestAnimationFrame) event handler.

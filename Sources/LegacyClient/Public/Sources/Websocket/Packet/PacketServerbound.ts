@@ -8,7 +8,7 @@ const TAU = 2 * Math.PI;
 
 function getNormalizedAngle(angle: number): number {
     angle %= TAU;
-    
+
     if (angle < 0) {
         angle += TAU;
     }
@@ -102,7 +102,7 @@ export default class PacketServerbound {
         const writer = new BinaryWriter();
 
         writer.writeUInt8(Serverbound.WAVE_ROOM_FIND_PUBLIC);
-        
+
         writer.writeUInt8(biome);
 
         this.send(writer.buffer);
@@ -142,6 +142,17 @@ export default class PacketServerbound {
         const writer = new BinaryWriter();
 
         writer.writeUInt8(Serverbound.WAVE_ROOM_LEAVE);
+
+        this.send(writer.buffer);
+    }
+
+    public sendAck([width, height]: [number, number]) {
+        const writer = new BinaryWriter();
+
+        writer.writeUInt8(Serverbound.ACK);
+
+        writer.writeUInt16(width);
+        writer.writeUInt16(height);
 
         this.send(writer.buffer);
     }

@@ -543,6 +543,12 @@ export default class UIGame extends AbstractUI {
                     }
                 }
             }
+            
+            // Send ack
+            clientWebsocket.packetServerbound.sendAck([
+                this.canvas.width / uiScaleFactor + 500,
+                this.canvas.height / uiScaleFactor + 500,
+            ]);
         },
         [Clientbound.WAVE_CHAT_RECEIV]: (reader: BinaryReader): void => {
             const lines = reader.readString();
@@ -1203,12 +1209,14 @@ export default class UIGame extends AbstractUI {
                 ctx.strokeStyle = "#FFF";
                 ctx.lineCap = "round";
 
-                const dtScale = deltaTime / 500;
+                const dt500 = deltaTime / 500;
+
                 let i = lightningBounces.length;
 
                 while (i--) {
                     const bounce = lightningBounces[i];
-                    bounce.t -= dtScale;
+
+                    bounce.t -= dt500;
 
                     if (bounce.t <= 0) {
                         lightningBounces.splice(i, 1);

@@ -2,15 +2,13 @@ const std = @import("std");
 const testing = std.testing;
 const heap = std.heap;
 
-pub const CStringPointer = [*:0]u8;
-pub const ConstCStringPointer = [*:0]const u8;
-
-/// Alias for `*anyopaque`
-pub const OpaquePointer = *anyopaque;
-pub const ConstOpaquePointer = *const anyopaque;
+// IF SOME WEIRD BUG APPEARS, MUST CHECK BUFFER SIZE
+// I WAS GOT STRESSED OUT FOR 2 WEEKS BECAUSE OF THAT
+// 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡
 
 // Use fba for block auto-memory growing
-var buffer: [0x1000]u8 = undefined;
+// Maybe too big size?
+var buffer: [std.wasm.page_size * 512]u8 = undefined;
 
 var fba = std.heap.FixedBufferAllocator.init(&buffer);
 pub const allocator = fba.allocator();
@@ -19,31 +17,37 @@ pub const allocator = fba.allocator();
 
 const size_of_usize = @sizeOf(usize);
 
-const align_of_usize = @alignOf(usize);
+const alignment_of_usize = @alignOf(usize);
 
 pub const MemoryPointer = *align(size_of_usize) anyopaque;
 
-pub export fn malloc(size: usize) MemoryPointer {
+pub export fn malloc(size: usize) callconv(.c) MemoryPointer {
     const total_size = size + size_of_usize;
-    const ptr = allocator.alignedAlloc(u8, align_of_usize, total_size) catch {
-        // You should set errno here, auxiliary C function will work
-        unreachable;
-    };
+    const ptr = allocator.alignedAlloc(u8, alignment_of_usize, total_size) catch unreachable;
 
     @as(*usize, @ptrCast(ptr)).* = total_size;
 
     return ptr.ptr + size_of_usize;
 }
 
-pub export fn free(ptr: MemoryPointer) void {
+pub export fn free(ptr: MemoryPointer) callconv(.c) void {
     const to_free = @as([*]align(size_of_usize) u8, @ptrCast(ptr)) - size_of_usize;
     const total_size = @as(*usize, @ptrCast(to_free)).*;
 
     allocator.free(to_free[0..total_size]);
 }
 
-pub fn allocCString(slice: []const u8) MemoryPointer {
-    return @ptrCast(@alignCast(allocator.dupeZ(u8, slice) catch unreachable));
+pub const CStringPointer = [*:0]u8;
+pub const ConstCStringPointer = [*:0]const u8;
+
+pub fn allocCString(slice: []const u8) CStringPointer {
+    return allocator.dupeZ(u8, slice) catch unreachable;
+}
+
+pub fn freeCString(ptr: CStringPointer) void {
+    const len = std.mem.len(ptr) + 1;
+
+    allocator.free(ptr[0..len]);
 }
 
 test "malloc/free benchmark" {

@@ -217,7 +217,7 @@ pub const EventListenerId = u16;
 
 extern "1" fn @"0"(global_event_target_type: GlobalEventTargetType, event_type: EventType, listener: EventListener) void;
 
-extern "1" fn @"1"(ptr: mem.MemoryPointer, event_type: EventType, listener: EventListener) void;
+extern "1" fn @"1"(ptr: mem.CStringPointer, event_type: EventType, listener: EventListener) void;
 
 pub inline fn addGlobalEventListener(global_event_target_type: GlobalEventTargetType, event_type: EventType, listener: EventListener) void {
     @"0"(global_event_target_type, event_type, listener);
@@ -228,7 +228,7 @@ pub inline fn addEventListener(element_id: []const u8, event_type: EventType, li
 
     @"1"(str, event_type, listener);
 
-    mem.free(str);
+    mem.freeCString(str);
 }
 
 /// Removes the listener for given ID.

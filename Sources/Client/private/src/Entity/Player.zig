@@ -9,7 +9,9 @@ pub const Super = Entity(PlayerImpl);
 
 pub const Renderer = @import("./Renderers/PlayerRenderingDispatcher.zig").PlayerRenderingDispatcher;
 
-mood: pmood.MoodBitSet = pmood.MoodBitSet.initEmpty(),
+mood: pmood.MoodBitSet,
+
+name: []const u8,
 
 angry_t: f32 = 0,
 sad_t: f32 = 0,
@@ -20,8 +22,19 @@ was_eliminated: bool = false,
 /// Whether this player is dev flower.
 is_developer: bool = false,
 
-pub fn init(_: std.mem.Allocator) PlayerImpl {
-    return .{};
+pub fn init(
+    _: std.mem.Allocator,
+    mood: pmood.MoodBitSet,
+    name: []const u8,
+) PlayerImpl {
+    return .{
+        .mood = mood,
+        .name = name,
+    };
+}
+
+pub fn deinit(self: *PlayerImpl, _: std.mem.Allocator, _: *Super) void {
+    self.* = undefined;
 }
 
 pub fn update(self: *PlayerImpl, delta_time: f32, entity: *Super) void {

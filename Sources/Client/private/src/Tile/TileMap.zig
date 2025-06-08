@@ -1,6 +1,6 @@
 const std = @import("std");
 const math = std.math;
-const Allocator = std.mem.Allocator;
+const mem = std.mem;
 const CanvasContext = @import("../WebAssembly/Interop/Canvas2D/CanvasContext.zig");
 const S3FIFO = @import("./S3FIFO/S3FIFO.zig").S3FIFO;
 const Color = @import("../WebAssembly/Interop/Canvas2D/Color.zig");
@@ -9,13 +9,10 @@ const TileMap = @This();
 
 pub const Vector2 = @Vector(2, f32);
 
-inline fn szudzikPair(x: f32, y: f32) i64 {
-    return @intFromFloat(
-        if (x >= y)
-            @mulAdd(f32, x, x, x + y)
-        else
-            @mulAdd(f32, y, y, x),
-    );
+// Hash two floats into cache key.
+// Caller owns the memory.
+inline fn szudzikPair(allocator: mem.Allocator, x: f32, y: f32) !ChunkCacheKey {
+    return try std.fmt.allocPrint(allocator, "{},{}", .{ x, y });
 }
 
 const U16Vector2 = @Vector(2, u16);
@@ -42,7 +39,7 @@ pub const TileMapOptions = struct {
     tile_size: U16Vector2 = @splat(16),
     chunk_size: U16Vector2 = .{ 4, 3 },
     chunk_border: U16Vector2 = @splat(1),
-    chunk_max_cache_size: u32 = 64,
+    chunk_max_cache_size: u32 = 16,
     layers: []const TileMapLayer,
     bounds: ?Bounds = null,
     scale_bound: Vector2 = .{ -math.inf(f32), math.inf(f32) },
@@ -50,25 +47,26 @@ pub const TileMapOptions = struct {
 
 const Chunk = *CanvasContext;
 
-const ChunkCacheKey = i64;
+const ChunkCacheKey = []const u8;
 
 const ChunkCache = S3FIFO(ChunkCacheKey, Chunk, *TileMap, onChunkEvict);
 
-const ChunkList = Deque(Chunk);
+const ChunkList = Deque(std.meta.Tuple(&[_]type{ ChunkCacheKey, Chunk }));
 
-fn onChunkEvict(self: *TileMap, _: ChunkCacheKey, chunk: Chunk) void {
-    self.pending_destruction.pushBack(chunk) catch {
-        // Force deinit if not enough memory
-        chunk.deinit();
-    };
+fn onChunkEvict(self: *TileMap, key: ChunkCacheKey, chunk: Chunk) void {
+    self.pending_destruction.pushBack(.{ key, chunk }) catch unreachable;
 }
+
+allocator: mem.Allocator,
 
 options: TileMapOptions,
 chunk_cache: ChunkCache,
 pending_destruction: ChunkList,
 
-pub fn init(allocator: Allocator, options: TileMapOptions) Allocator.Error!TileMap {
+pub fn init(allocator: mem.Allocator, options: TileMapOptions) mem.Allocator.Error!TileMap {
     var tile_map: TileMap = .{
+        .allocator = allocator,
+
         .options = options,
         .chunk_cache = undefined,
         .pending_destruction = try ChunkList.init(allocator),
@@ -94,9 +92,11 @@ inline fn generateChunk(
     tile_size: Vector2,
     chunk_size: Vector2,
 ) Chunk {
+    const allocator = self.allocator;
     const options = self.options;
 
     const chunk_ctx: Chunk = CanvasContext.createCanvasContext(
+        allocator,
         absolute_chunk_size[0],
         absolute_chunk_size[1],
         false,
@@ -112,7 +112,7 @@ inline fn generateChunk(
 
     const bounds_top_left = if (options.bounds) |b| b.top_left else zero_vector;
 
-    chunk_ctx.@"imageSmoothingEnabled ="(false);
+    chunk_ctx.setImageSmoothingEnabled(false);
 
     for (options.layers) |layer| {
         // const data = layer.data;
@@ -122,7 +122,7 @@ inline fn generateChunk(
         while (y_tile <= bottom_right_tile_y) : (y_tile += 1) {
             var x_tile: f32 = top_left_tile_x;
             while (x_tile <= bottom_right_tile_x) : (x_tile += 1) {
-                const tile_position = Vector2{ x_tile, y_tile };
+                const tile_position: Vector2 = .{ x_tile, y_tile };
 
                 const tile_data_position: Vector2 = tile_position - bounds_top_left;
                 if (tile_data_position[0] < 0 or tile_data_position[1] < 0) continue;
@@ -176,7 +176,9 @@ pub fn draw(
     scale: f32,
 ) !void {
     @setRuntimeSafety(false);
-    
+
+    const allocator = self.allocator;
+
     const options = self.options;
 
     const tile_size: Vector2 = @floatFromInt(options.tile_size);
@@ -225,7 +227,7 @@ pub fn draw(
 
     ctx.save();
 
-    ctx.@"imageSmoothingEnabled ="(false);
+    ctx.setImageSmoothingEnabled(false);
 
     ctx.scale(
         actual_scale,
@@ -240,16 +242,18 @@ pub fn draw(
     while (y_chunk < bottom_right_chunk_y) : (y_chunk += 1) {
         var x_chunk: f32 = top_left_chunk_x;
         while (x_chunk < bottom_right_chunk_x) : (x_chunk += 1) {
-            const chunk_position = Vector2{ x_chunk, y_chunk };
+            const chunk_position: Vector2 = .{ x_chunk, y_chunk };
 
-            const chunk_hash = szudzikPair(x_chunk, y_chunk);
+            const chunk_key = try szudzikPair(allocator, x_chunk, y_chunk);
 
             // chunk_position and absolute_chunk_size_vector is actually integer vector, so no need to round
             const absolute_chunk_position: Vector2 = chunk_position * absolute_chunk_size;
 
-            if (self.chunk_cache.get(chunk_hash)) |chunk|
-                self.drawChunk(ctx, chunk, absolute_chunk_position)
-            else {
+            if (self.chunk_cache.get(chunk_key)) |chunk|{
+                self.drawChunk(ctx, chunk, absolute_chunk_position);
+
+                allocator.free(chunk_key);
+            }  else {
                 const chunk = self.generateChunk(
                     chunk_position,
                     absolute_chunk_position,
@@ -258,7 +262,7 @@ pub fn draw(
                     chunk_size,
                 );
 
-                try self.chunk_cache.insert(chunk_hash, chunk);
+                try self.chunk_cache.insert(chunk_key, chunk);
 
                 self.drawChunk(ctx, chunk, absolute_chunk_position);
             }
@@ -268,5 +272,10 @@ pub fn draw(
     ctx.restore();
 
     // Deinit all pending chunks
-    while (self.pending_destruction.popBack()) |chunk| chunk.deinit();
+    while (self.pending_destruction.popBack()) |c| {
+        const key, const chunk = c;
+
+        allocator.free(key);
+        chunk.deinit(allocator);
+    }
 }

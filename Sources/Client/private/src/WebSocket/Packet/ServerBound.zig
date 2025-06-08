@@ -164,3 +164,14 @@ pub fn sendWaveRoomLeave(self: Serverbound) !void {
 
     shared_fbs.reset();
 }
+
+pub fn sendAck(self: Serverbound, width: u16, height: u16) !void {
+    try shared_stream.writeByte(@intFromEnum(opcode.Serverbound.ack));
+    
+    try shared_stream.writeInt(u16, width, .little);
+    try shared_stream.writeInt(u16, height, .little);
+
+    try self.send(shared_fbs.getWritten());
+
+    shared_fbs.reset();
+}

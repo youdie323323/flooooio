@@ -90,8 +90,8 @@ pub fn S3FIFO(
                 .ctx = ctx,
 
                 .entries = Entries.init(allocator),
-                .small = Small{},
-                .main = Main{},
+                .small = .{},
+                .main = .{},
                 .ghost = try Ghost.init(allocator),
 
                 .max_cache_size = max_cache_size,
@@ -148,6 +148,7 @@ pub fn S3FIFO(
         inline fn insertGhost(self: *Self, tail: *Node) Allocator.Error!void {
             if (self.ghost.len() == self.max_main_size) {
                 const key, const freq = self.ghost.popBack().?;
+
                 if (freq < 0) {
                     _ = self.entries.swapRemove(key);
                 }
@@ -212,10 +213,13 @@ test S3FIFO {
     defer cache.deinit();
 
     const start = std.time.nanoTimestamp();
+
     var i: u32 = 0;
+
     while (i < 1000000) : (i += 1) {
         _ = cache.get(i % 500);
     }
+
     const end = std.time.nanoTimestamp();
     const elapsed_ns: f64 = @floatFromInt(end - start);
     const time_per_get = elapsed_ns / 1000000;

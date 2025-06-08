@@ -8,7 +8,9 @@ const std = @import("std");
 ///
 pub const ObjectID = u48;
 
-pub fn Objects(comptime T: type) type {
+pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(T)) type {
+    const SearchFieldType = std.meta.FieldType(T, search_field_name);
+
     return struct {
         internal: struct {
             allocator: std.mem.Allocator,
@@ -30,6 +32,8 @@ pub fn Objects(comptime T: type) type {
             /// The recycling bin which tells which data indices are dead and can be reused.
             recycling_bin: std.ArrayListUnmanaged(Index) = .{},
 
+            id_to_obj_id: std.AutoHashMap(SearchFieldType, ObjectID),
+
             /// The number of objects that could not fit in the recycling bin and hence were thrown
             /// on the floor and forgotten about. This means there are dead items recorded by dead.set(index)
             /// which aren't in the recycling_bin, and the next call to new() may consider cleaning up.
@@ -46,7 +50,7 @@ pub fn Objects(comptime T: type) type {
 
         pub const Slice = struct {
             index: Index,
-            objs: *Objects(T),
+            objs: *Objects(T, search_field_name),
 
             pub fn next(self: *Slice) ?ObjectID {
                 const dead = &self.objs.internal.dead;
@@ -76,7 +80,15 @@ pub fn Objects(comptime T: type) type {
         pub fn init(objs: *Self, allocator: std.mem.Allocator) void {
             objs.internal = .{
                 .allocator = allocator,
+
+                .id_to_obj_id = .init(allocator),
             };
+        }
+
+        pub fn deinit(objs: *Self) void {
+            const id_to_obj_id = &objs.internal.id_to_obj_id;
+
+            id_to_obj_id.deinit(objs.internal.allocator);
         }
 
         /// Tries to acquire the mutex without blocking the caller's thread.
@@ -105,6 +117,7 @@ pub fn Objects(comptime T: type) type {
             const dead = &objs.internal.dead;
             const generation = &objs.internal.generation;
             const recycling_bin = &objs.internal.recycling_bin;
+            const id_to_obj_id = &objs.internal.id_to_obj_id;
 
             // The recycling bin should always be big enough, but we check at this point if 10% of
             // all objects have been thrown on the floor. If they have, we find them and grow the
@@ -158,10 +171,14 @@ pub fn Objects(comptime T: type) type {
 
             generation.appendAssumeCapacity(0);
 
-            return @bitCast(PackedID{
+            const obj_id: ObjectID = @bitCast(PackedID{
                 .generation = 0,
                 .index = @intCast(index),
             });
+
+            try id_to_obj_id.put(@field(value, @tagName(search_field_name)), obj_id);
+
+            return obj_id;
         }
 
         /// Sets a single field of the given object to the given value.
@@ -208,16 +225,25 @@ pub fn Objects(comptime T: type) type {
 
         pub fn delete(objs: *Self, id: ObjectID) void {
             const dead = &objs.internal.dead;
+            const data = &objs.internal.data;
+            const id_to_obj_id = &objs.internal.id_to_obj_id;
 
             const recycling_bin = &objs.internal.recycling_bin;
 
             const unpacked = objs.validateAndUnpack(id, "delete");
+
+            _ = id_to_obj_id.remove(data.items(search_field_name)[unpacked.index]);
 
             if (recycling_bin.items.len < recycling_bin.capacity) {
                 recycling_bin.appendAssumeCapacity(unpacked.index);
             } else objs.internal.thrown_on_the_floor += 1;
 
             dead.set(unpacked.index);
+        }
+
+        /// Search for an object by matching a specific field value.
+        pub fn search(objs: *Self, id: SearchFieldType) ?ObjectID {
+            return objs.internal.id_to_obj_id.get(id);
         }
 
         pub fn slice(objs: *Self) Slice {

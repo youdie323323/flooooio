@@ -57,8 +57,8 @@ pub const EntityType = union(enum) {
     /// Returns direct entity type within this type.
     pub fn get(self: EntityType) u8 {
         switch (self) {
-           .mob => |m| return @intFromEnum(m),
-           .petal => |p| return @intFromEnum(p),
+            .mob => |m| return @intFromEnum(m),
+            .petal => |p| return @intFromEnum(p),
         }
     }
 };

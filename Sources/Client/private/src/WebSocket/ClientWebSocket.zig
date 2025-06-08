@@ -154,6 +154,6 @@ fn onMessage(ws: *OwnContextWebSocket, data: []const u8) void {
 }
 
 fn onOpen(ws: *OwnContextWebSocket) void {
-    ws.ctx.server_bound.sendWaveRoomFindPublic(.garden) catch unreachable;
+    ws.ctx.server_bound.sendWaveRoomFindPublic(.ocean) catch unreachable;
     ws.ctx.server_bound.sendWaveRoomChangeReady(.ready) catch unreachable;
 }

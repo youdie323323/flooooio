@@ -23,19 +23,22 @@ type Player struct {
 
 	MagnitudeMultiplier float32
 
-	// commandQueue is command queue of player.
+	// commandQueue is command queue of a player.
 	commandQueue chan PlayerCommand
 
 	BodyDamage float32
 
-	// Mood a current mood of player.
-	// If you want to read/write, use Mu.
+	// Mood is current mood of a player.
 	Mood native.Mood
 
 	IsDead bool
 
 	Acceleration [2]float32
 	Velocity     [2]float32
+
+	// Window is current window size of user.
+	// This should not calculated within antenna scale, that will proceed by server.
+	Window [2]uint16
 
 	// player_dead_camera.go struct field definitions
 	DeadCameraTarget collision.Node
@@ -353,6 +356,8 @@ func NewPlayer(
 
 		Acceleration: [2]float32{0, 0},
 		Velocity:     [2]float32{0, 0},
+
+		Window: [2]uint16{1920, 1080},
 
 		DeadCameraTarget: nil,
 

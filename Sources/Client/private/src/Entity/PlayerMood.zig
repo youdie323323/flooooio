@@ -10,6 +10,14 @@ pub const MoodFlags = enum(u8) {
     sad = 1 << 1,
 };
 
+pub fn initPartial(mask: MoodBitSet.MaskInt) MoodBitSet {
+    var bits = MoodBitSet.initEmpty();
+    
+    bits.mask = mask;
+
+    return bits;
+}
+
 /// Decode mood flags into array of booleans.
 pub fn decodeMood(flags: MoodBitSet) [2]bool {
     return .{
