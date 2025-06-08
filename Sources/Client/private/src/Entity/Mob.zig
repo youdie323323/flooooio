@@ -63,21 +63,28 @@ pub fn init(
 pub fn deinit(self: *MobImpl, _: std.mem.Allocator, _: *Super) void {
     self.connecting_segment = undefined;
     self.connected_segments.deinit();
+    
+    self.leg_distances = undefined;
 
     self.* = undefined;
 }
 
-pub fn isConnectedBy(self: *MobImpl, other: ObjectID) bool {
-    return self.connected_segments.contains(other);
-}
+/// Definition for basic operation of connected_segments.
+const SegmentMethods = struct {
+    pub fn isConnectedBy(self: *MobImpl, other: ObjectID) bool {
+        return self.connected_segments.contains(other);
+    }
 
-pub fn addConnectedSegment(self: *MobImpl, seg: ObjectID) !void {
-    try self.connected_segments.put(seg, {});
-}
+    pub fn addConnectedSegment(self: *MobImpl, segment: ObjectID) !void {
+        try self.connected_segments.put(segment, {});
+    }
 
-pub fn removeConnectedSegment(self: *MobImpl, seg: ObjectID) void {
-    _ = self.connected_segments.remove(seg);
-}
+    pub fn removeConnectedSegment(self: *MobImpl, segment: ObjectID) void {
+        _ = self.connected_segments.remove(segment);
+    }
+};
+
+pub usingnamespace SegmentMethods;
 
 pub fn generateDefaultStarfishLegDistance() [starfish.leg_amount]f32 {
     var distances: [starfish.leg_amount]f32 = undefined;

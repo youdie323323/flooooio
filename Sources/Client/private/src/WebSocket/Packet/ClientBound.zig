@@ -15,13 +15,17 @@ client: *ClientWebSocket,
 handlers: HandlerMap,
 default_handlers: HandlerMap,
 
+var shared_buf: [512]u8 = undefined;
+
+// Prepare fbs of shared_buf
+var shared_fbs = io.fixedBufferStream(&shared_buf);
+
 pub fn readCString(reader: anytype) ![]const u8 {
-    var buf: [512]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buf);
-    
-    try reader.streamUntilDelimiter(fbs.writer(), 0, buf.len);
-    
-    return fbs.getWritten();
+    defer shared_fbs.reset();
+
+    try reader.streamUntilDelimiter(shared_fbs.writer(), 0, shared_buf.len);
+
+    return shared_fbs.getWritten();
 }
 
 pub fn readFloat16(stream: anytype) ClientWebSocket.DefaultPacketStream.ReadError!f16 {

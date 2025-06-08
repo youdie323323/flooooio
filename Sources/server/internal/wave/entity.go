@@ -161,7 +161,7 @@ func (e *Entity) GetY() float32 {
 	return e.Y
 }
 
-func (e *Entity) GetID() uint32 {
+func (e *Entity) GetId() uint32 {
 	return *e.Id
 }
 

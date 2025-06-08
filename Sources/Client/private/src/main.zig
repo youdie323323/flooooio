@@ -76,12 +76,6 @@ pub const Mobs = mach_objects.Objects(MobImpl.Super, .id);
 var players: Players = undefined;
 var mobs: Mobs = undefined;
 
-pub fn inSlice(comptime T: type, haystack: []T, needle: T) bool {
-    for (haystack) |elem| if (elem == needle) return true;
-
-    return false;
-}
-
 const EntityKind = enum(u8) {
     player,
     mob,
@@ -98,6 +92,8 @@ fn handleWaveSelfId(stream: *ws.Clientbound.Reader) anyerror!void {
     wave_self_id = try stream.readInt(EntityId, .little);
 }
 
+var i: usize = 0;
+
 fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
     { // Read wave informations
         const wave_progress = try stream.readInt(u16, .little);
@@ -110,8 +106,26 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
 
         const wave_map_radius = try stream.readInt(u16, .little);
 
-        std.debug.print("{} {} {} {} {}\n", .{ wave_progress, wave_progress_timer, wave_progress_red_gage_timer, wave_ended, wave_map_radius });
+        _ = wave_progress;
+
+        _ = wave_progress_timer;
+
+        _ = wave_progress_red_gage_timer;
+
+        _ = wave_ended;
+
+        _ = wave_map_radius;
+
+        // std.debug.print("{} {} {} {} {}\n", .{ wave_progress, wave_progress_timer, wave_progress_red_gage_timer, wave_ended, wave_map_radius });
     }
+
+    // Lock objects
+
+    mobs.lock();
+    defer mobs.unlock();
+
+    players.lock();
+    defer players.unlock();
 
     { // Read eliminated entities
         const eliminated_entities_count = try stream.readInt(u16, .little);
@@ -119,23 +133,28 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
         for (0..eliminated_entities_count) |_| {
             const entity_id = try stream.readInt(EntityId, .little);
 
-            if (mobs.search(entity_id)) |obj_id| {
-                var mob = mobs.getValue(obj_id);
+            if (mobs.search(entity_id)) |o| {
+                var mob = mobs.getValue(o);
 
                 mob.is_dead = true;
+
+                mob.dead_t = 0;
+
+                mobs.setValue(o, mob);
 
                 continue;
             }
 
-            if (players.search(entity_id)) |obj_id| {
-                var player = players.getValue(obj_id);
+            if (players.search(entity_id)) |o| {
+                var player = players.getValue(o);
 
                 player.impl.was_eliminated = true;
 
                 player.is_dead = true;
 
                 player.dead_t = 0;
-                player.health = 0;
+
+                players.setValue(o, player);
 
                 continue;
             }
@@ -174,7 +193,7 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
 
                     const player_size = try ws.Clientbound.readFloat32(stream);
 
-                    const player_mood_mask = @as(pmood.MoodBitSet.MaskInt, @intCast(try stream.readByte()));
+                    const player_mood_mask: pmood.MoodBitSet.MaskInt = @intCast(try stream.readByte());
 
                     const player_name = try ws.Clientbound.readCString(stream);
 
@@ -184,10 +203,8 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
                         is_poisoned: bool,
                     });
 
-                    players.lock();
-
-                    if (players.search(player_id)) |obj_id| {
-                        var player = players.getValue(obj_id);
+                    if (players.search(player_id)) |o| {
+                        var player = players.getValue(o);
 
                         { // Update next properties
                             player.next_pos[0] = player_x;
@@ -233,7 +250,7 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
 
                         player.update_t = 0;
 
-                        players.setValue(obj_id, player);
+                        players.setValue(o, player);
                     } else {
                         const player = PlayerImpl.Super.init(
                             PlayerImpl.init(
@@ -250,8 +267,6 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
 
                         _ = try players.new(player);
                     }
-
-                    players.unlock();
                 },
 
                 .mob => {
@@ -279,17 +294,14 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
 
                     var mob_connecting_segment: ?mach_objects.ObjectID = null;
 
-                    mobs.lock();
-
                     if (mob_bool_flags.has_connecting_segment) {
                         const mob_connecting_segment_id = try stream.readInt(EntityId, .little);
 
-                        mob_connecting_segment =
-                            if (mobs.search(mob_connecting_segment_id)) |obj_id| obj_id else null;
+                        mob_connecting_segment = mobs.search(mob_connecting_segment_id);
                     }
 
-                    if (mobs.search(mob_id)) |obj_id| {
-                        var mob = mobs.getValue(obj_id);
+                    if (mobs.search(mob_id)) |o| {
+                        var mob = mobs.getValue(o);
 
                         { // Update next properties
                             mob.next_pos[0] = mob_x;
@@ -331,7 +343,7 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
 
                         mob.update_t = 0;
 
-                        mobs.setValue(obj_id, mob);
+                        mobs.setValue(o, mob);
                     } else {
                         const mob = MobImpl.Super.init(
                             MobImpl.init(
@@ -352,15 +364,14 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
                         _ = try mobs.new(mob);
                     }
 
-                    if (mob_connecting_segment) |obj_id| {
-                        var mob = mobs.getValue(obj_id);
+                    if (mob_connecting_segment) |o| {
+                        var mob = mobs.getValue(o);
 
-                        if (!mob.impl.isConnectedBy(mob_id)) try mob.impl.addConnectedSegment(mob_id);
-                        
-                        mobs.setValue(obj_id, mob);
+                        if (!mob.impl.isConnectedBy(mob_id))
+                            try mob.impl.addConnectedSegment(mob_id);
+
+                        mobs.setValue(o, mob);
                     }
-
-                    mobs.unlock();
                 },
 
                 .petal => { // Petal treated as mob
@@ -379,10 +390,8 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
 
                     const petal_rarity = try stream.readEnum(EntityRarity, .little);
 
-                    mobs.lock();
-
-                    if (mobs.search(petal_id)) |obj_id| {
-                        var petal = mobs.getValue(obj_id);
+                    if (mobs.search(petal_id)) |o| {
+                        var petal = mobs.getValue(o);
 
                         { // Update next properties
                             petal.next_pos[0] = petal_x;
@@ -416,7 +425,7 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
 
                         petal.update_t = 0;
 
-                        mobs.setValue(obj_id, petal);
+                        mobs.setValue(o, petal);
                     } else {
                         const petal = MobImpl.Super.init(
                             MobImpl.init(
@@ -436,14 +445,14 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
 
                         _ = try mobs.new(petal);
                     }
-
-                    mobs.unlock();
                 },
             }
         }
     }
 
     try client.server_bound.sendAck(width, height);
+
+    i += 1;
 }
 
 // This function overrides C main
@@ -526,8 +535,8 @@ fn draw(_: f32) callconv(.c) void {
 
     { // Render entities
         const self_player =
-            if (players.search(wave_self_id)) |obj_id|
-                players.getValue(obj_id)
+            if (players.search(wave_self_id)) |o|
+                players.getValue(o)
             else
                 null;
 
@@ -553,16 +562,16 @@ fn draw(_: f32) callconv(.c) void {
 
             var slice = players.slice();
 
-            while (slice.next()) |obj_id| {
-                var player = players.getValue(obj_id);
+            while (slice.next()) |o| {
+                var player = players.getValue(o);
 
                 player.update(delta_time);
 
                 // Only remove when disconnected
-                if (player.is_dead and player.dead_t > 1 and player.impl.was_eliminated) {
-                    players.delete(obj_id);
-
+                if (player.impl.was_eliminated and player.dead_t > 1) {
                     player.deinit(allocator);
+
+                    players.delete(o);
 
                     continue;
                 }
@@ -575,7 +584,7 @@ fn draw(_: f32) callconv(.c) void {
                     .mobs = &mobs,
                 });
 
-                players.setValue(obj_id, player);
+                players.setValue(o, player);
             }
         }
 
@@ -585,8 +594,8 @@ fn draw(_: f32) callconv(.c) void {
 
             var slice = mobs.slice();
 
-            while (slice.next()) |obj_id| {
-                var mob = mobs.getValue(obj_id);
+            while (slice.next()) |o| {
+                var mob = mobs.getValue(o);
 
                 mob.update(delta_time);
 
@@ -594,16 +603,19 @@ fn draw(_: f32) callconv(.c) void {
                 if (mob.is_dead and mob.dead_t > 1) {
                     var inner_slice = mobs.slice();
 
-                    while (inner_slice.next()) |inner_obj_id| {
-                        var inner_mob = mobs.getValue(inner_obj_id);
+                    while (inner_slice.next()) |inner_o| {
+                        var inner_mob = mobs.getValue(inner_o);
 
-                        if (inner_mob.impl.isConnectedBy(obj_id))
-                            inner_mob.impl.removeConnectedSegment(obj_id);
+                        if (inner_mob.impl.isConnectedBy(o)) {
+                            inner_mob.impl.removeConnectedSegment(o);
+
+                            mobs.setValue(inner_o, inner_mob);
+                        }
                     }
 
-                    mobs.delete(obj_id);
-
                     mob.deinit(allocator);
+
+                    mobs.delete(o);
 
                     continue;
                 }
@@ -616,7 +628,7 @@ fn draw(_: f32) callconv(.c) void {
                     .mobs = &mobs,
                 });
 
-                mobs.setValue(obj_id, mob);
+                mobs.setValue(o, mob);
             }
         }
     }

@@ -444,17 +444,15 @@ func (wp *WavePool) broadcastUpdatePacket() {
 		window := p.Window
 
 		// TODO
-		toSend := wp.SpatialHash.SearchRect(p.X, p.Y, float32(window[0]), float32(window[1]))
+		toSend := wp.SpatialHash.SearchRect(p.X, p.Y, float32(window[0]), float32(window[1]), func(n collision.Node) bool {
+			return !IsDeadNode(wp, n)
+		})
 
 		// Write entity count
 		binary.LittleEndian.PutUint16(playerPacket[at:], uint16(len(toSend)))
 		at += 2
 
 		for _, e := range toSend {
-			if IsDeadNode(wp, e) {
-				continue
-			}
-
 			switch n := e.(type) {
 			case *Player:
 				{
@@ -565,7 +563,7 @@ func (wp *WavePool) broadcastUpdatePacket() {
 					at++
 
 					if hasConnectingSegment {
-						binary.LittleEndian.PutUint32(playerPacket[at:], n.ConnectingSegment.GetID())
+						binary.LittleEndian.PutUint32(playerPacket[at:], n.ConnectingSegment.GetId())
 						at += 4
 					}
 				}

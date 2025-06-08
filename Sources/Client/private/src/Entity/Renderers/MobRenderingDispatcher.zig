@@ -18,7 +18,7 @@ fn render(rctx: RenderingContext(MobSuper)) void {
     const mob = entity.impl;
 
     if (type_to_renderer.get(mob.type.get())) |r| r(rctx) else {
-        std.log.warn("Unrendered mob: {}", .{mob.type});
+        // std.log.warn("Unrendered mob: {}", .{mob.type});
     }
 }
 

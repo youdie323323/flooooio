@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"cmp"
 	"encoding/binary"
-	"fmt"
 	"slices"
 	"unsafe"
 
@@ -361,8 +360,6 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 
 			player.Window[0] = width
 			player.Window[1] = height
-
-			fmt.Println(player.Window)
 		}
 	}
 }

@@ -128,9 +128,9 @@ pub fn connect(self: *ClientWebSocket, host: []const u8) !void {
 
     // {
     //     if (prev_fuzzing_timer) |id| Timer.clearInterval(id);
-    // 
+    //
     //     fuzzing_ws = self.socket;
-    // 
+    //
     //     prev_fuzzing_timer = Timer.setInterval(tryFuzz, 50);
     // }
 
@@ -150,10 +150,10 @@ pub fn deinit(self: *ClientWebSocket) void {
 }
 
 fn onMessage(ws: *OwnContextWebSocket, data: []const u8) void {
-    ws.ctx.client_bound.read(data) catch unreachable;
+    ws.ctx.client_bound.read(data) catch |err| std.debug.print("{}\n", .{err});
 }
 
 fn onOpen(ws: *OwnContextWebSocket) void {
-    ws.ctx.server_bound.sendWaveRoomFindPublic(.ocean) catch unreachable;
+    ws.ctx.server_bound.sendWaveRoomFindPublic(.garden) catch unreachable;
     ws.ctx.server_bound.sendWaveRoomChangeReady(.ready) catch unreachable;
 }

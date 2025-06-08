@@ -11,20 +11,17 @@ const allocator = @import("../../mem.zig").allocator;
 
 const Color = @import("../../WebAssembly/Interop/Canvas2D/Color.zig");
 
-const Point = [2]f32;
+const Point = @Vector(2, f32);
 const Points = []const Point;
 
-fn getLinkedLeechBodyPointsWithDiv(mobs: *Mobs, leech: *MobSuper, scale: f32) !Points {
+fn collectLeechSegmentPoints(mobs: *Mobs, leech: *MobSuper, scale: MobSuper.Vector2) !Points {
     var bodies = std.ArrayList(Point).init(allocator);
     errdefer bodies.deinit();
 
-    const leech_x, const leech_y = leech.pos;
-
-    // Append self to the list
-    try bodies.append(.{
-        leech_x / scale,
-        leech_y / scale,
-    });
+    try bodies.append(
+        leech.pos /
+            scale,
+    );
 
     // Iterate over connected segments
     var it = leech.impl.connected_segments.keyIterator();
@@ -33,7 +30,7 @@ fn getLinkedLeechBodyPointsWithDiv(mobs: *Mobs, leech: *MobSuper, scale: f32) !P
         var mob = mobs.getValue(key.*);
 
         // Recursively get linked bodies and append them
-        const linked_bodies = try getLinkedLeechBodyPointsWithDiv(mobs, &mob, scale);
+        const linked_bodies = try collectLeechSegmentPoints(mobs, &mob, scale);
 
         try bodies.appendSlice(linked_bodies);
 
@@ -74,21 +71,23 @@ fn render(rctx: RenderingContext(MobSuper)) void {
             ctx.setLineWidth(4);
             ctx.strokeColor(comptime Color.comptimeFromHexColorCode("#292929"));
 
-            // Upper beak
-            ctx.beginPath();
+            { // Upper beak
+                ctx.beginPath();
 
-            ctx.moveTo(0, 10);
-            ctx.quadraticCurveTo(11, 10, 22, 5);
+                ctx.moveTo(0, 10);
+                ctx.quadraticCurveTo(11, 10, 22, 5);
 
-            ctx.stroke();
+                ctx.stroke();
+            }
 
-            // Lower beak
-            ctx.beginPath();
+            { // Lower beak
+                ctx.beginPath();
 
-            ctx.moveTo(0, -10);
-            ctx.quadraticCurveTo(11, -10, 22, -5);
+                ctx.moveTo(0, -10);
+                ctx.quadraticCurveTo(11, -10, 22, -5);
 
-            ctx.stroke();
+                ctx.stroke();
+            }
         }
 
         {
@@ -117,30 +116,32 @@ fn render(rctx: RenderingContext(MobSuper)) void {
         ctx.strokeColor(MobLeechRenderer.blendStatusEffects(rctx, comptime Color.comptimeFromHexColorCode("#292929")));
         ctx.setLineWidth(4);
 
-        // Upper beak
-        ctx.beginPath();
+        { // Upper beak
+            ctx.beginPath();
 
-        ctx.rotate(beak_angle);
+            ctx.rotate(beak_angle);
 
-        ctx.moveTo(0, 10);
-        ctx.quadraticCurveTo(11, 10, 22, 5);
+            ctx.moveTo(0, 10);
+            ctx.quadraticCurveTo(11, 10, 22, 5);
 
-        ctx.stroke();
+            ctx.stroke();
+        }
 
-        // Lower beak
-        ctx.beginPath();
+        { // Lower beak
+            ctx.beginPath();
 
-        ctx.rotate(-beak_angle * 2);
+            ctx.rotate(-beak_angle * 2);
 
-        ctx.moveTo(0, -10);
-        ctx.quadraticCurveTo(11, -10, 22, -5);
+            ctx.moveTo(0, -10);
+            ctx.quadraticCurveTo(11, -10, 22, -5);
 
-        ctx.stroke();
+            ctx.stroke();
+        }
     }
 
     {
         const bodies =
-            getLinkedLeechBodyPointsWithDiv(mobs, entity, scale) catch unreachable;
+            collectLeechSegmentPoints(mobs, entity, @splat(scale)) catch unreachable;
 
         const first_body: Point = bodies[0];
 

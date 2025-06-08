@@ -2,7 +2,6 @@ package wave
 
 import (
 	"container/list"
-	"fmt"
 	"math"
 	"math/rand/v2"
 	"slices"
@@ -344,8 +343,6 @@ func (s *WaveMobSpawner) ComputeDynamicMobData(data *WaveData) *DynamicMobData {
 			if s.points == 0 {
 				break
 			}
-
-			fmt.Println(s.totalTime, s.points)
 		}
 	}
 

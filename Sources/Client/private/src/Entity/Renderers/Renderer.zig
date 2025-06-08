@@ -83,14 +83,14 @@ pub fn Renderer(
                 const is_leech =
                     // Check if entity is mob
                     @hasDecl(@TypeOf(impl), "type") and
-                    entity.type.get() == @intFromEnum(MobType.leech);
+                    entity.type == .leech;
 
                 const sin_waved_dead_t = @sin(entity.dead_t * math.pi / (if (is_leech) 9 else 3));
-
+                
                 const scale = 1 + sin_waved_dead_t;
 
                 ctx.scale(scale, scale);
-                ctx.setGlobalAlpha(ctx.global_alpha * (1 - (if (is_leech) 2 else 1) * sin_waved_dead_t));
+                ctx.setGlobalAlpha(ctx.global_alpha * (1 - sin_waved_dead_t));
             }
         }
 
@@ -105,6 +105,7 @@ pub fn Renderer(
             // No effects to apply
             if (hurt_t == 0 and poison_t == 0) return color;
 
+            // Copy color
             var applied: Color = color;
 
             // Apply effects

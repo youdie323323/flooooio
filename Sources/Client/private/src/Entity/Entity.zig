@@ -5,8 +5,6 @@ pub const EntityId = u32;
 
 pub fn Entity(comptime Impl: type) type {
     return struct {
-        const Vector2 = @Vector(2, f32);
-
         const Self = @This();
 
         inline fn calculateAngleDistance(start_angle: f32, end_angle: f32) f32 {
@@ -22,6 +20,8 @@ pub fn Entity(comptime Impl: type) type {
         inline fn smoothInterpolate(delta_time: f32, current: f32, target: f32, duration: f32) f32 {
             return current + (target - current) * @min(1, delta_time / duration);
         }
+        
+        pub const Vector2 = @Vector(2, f32);
 
         impl: Impl,
 

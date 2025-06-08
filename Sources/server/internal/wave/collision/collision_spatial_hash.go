@@ -13,7 +13,7 @@ import (
 type Node interface {
 	GetX() float32
 	GetY() float32
-	GetID() uint32
+	GetId() uint32
 	GetMagnitude() float32
 	GetAngle() float32
 }
@@ -54,12 +54,12 @@ func newNodeSet() *nodeSet { return new(nodeSet) }
 
 // Add adds a node to the set.
 func (s *nodeSet) Add(n Node) {
-	s.items.Store(n.GetID(), n)
+	s.items.Store(n.GetId(), n)
 }
 
 // Delete removes a node from the set.
 func (s *nodeSet) Delete(n Node) {
-	s.items.Delete(n.GetID())
+	s.items.Delete(n.GetId())
 }
 
 // ForEach iterates over all nodes in the set.
@@ -108,10 +108,10 @@ func (sh *SpatialHash) Update(n Node) {
 	if bucket, ok := sh.buckets.Load(key); ok {
 		bucket.Delete(n)
 	}
-	
-    // Get or create bucket for the same key
-    bucket, _ := sh.buckets.LoadOrStore(key, newNodeSet())
-    bucket.Add(n)
+
+	// Get or create bucket for the same key
+	bucket, _ := sh.buckets.LoadOrStore(key, newNodeSet())
+	bucket.Add(n)
 }
 
 // searchResultPool is shared collision searchResultPool between Search.
@@ -154,12 +154,15 @@ func (sh *SpatialHash) Search(x, y, radius float32) []Node {
 	return finalResult
 }
 
+// sharedSeen a shared seen map between SearchRect.
+var sharedSeen = make(map[uint32]bool)
+
 // SearchRect finds all nodes within the specified rectangular area centered on a player.
-func (sh *SpatialHash) SearchRect(x, y, width, height float32) []Node {
+func (sh *SpatialHash) SearchRect(x, y, width, height float32, filter func(n Node) bool) []Node {
 	// Calculate rectangle bounds
 	halfWidth := width * 0.5
 	halfHeight := height * 0.5
-	
+
 	minX := int(math32.Floor((x - halfWidth) / sh.cellSize))
 	maxX := int(math32.Floor((x + halfWidth) / sh.cellSize))
 	minY := int(math32.Floor((y - halfHeight) / sh.cellSize))
@@ -174,11 +177,22 @@ func (sh *SpatialHash) SearchRect(x, y, width, height float32) []Node {
 
 			if bucket, ok := sh.buckets.Load(key); ok {
 				bucket.ForEach(func(n Node) {
+					nId := n.GetId()
+					if sharedSeen[nId] {
+						return
+					}
+
+					nX := n.GetX()
+					nY := n.GetY()
+
 					// Check if node is within rectangle bounds
-					if n.GetX() >= x-halfWidth && 
-					   n.GetX() <= x+halfWidth &&
-					   n.GetY() >= y-halfHeight && 
-					   n.GetY() <= y+halfHeight {
+					if nX >= x-halfWidth &&
+						nX <= x+halfWidth &&
+						nY >= y-halfHeight &&
+						nY <= y+halfHeight &&
+						filter(n) {
+						sharedSeen[nId] = true
+
 						nodes = append(nodes, n)
 					}
 				})
@@ -190,6 +204,8 @@ func (sh *SpatialHash) SearchRect(x, y, width, height float32) []Node {
 	copy(finalResult, nodes)
 
 	searchResultPool.Put(result)
+
+	clear(sharedSeen)
 
 	return finalResult
 }
