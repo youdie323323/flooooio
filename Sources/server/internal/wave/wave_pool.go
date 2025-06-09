@@ -69,7 +69,7 @@ type WavePool struct {
 
 	Ms *WaveMobSpawner
 
-	eliminatedEntityIDs []uint32
+	eliminatedEntityIds []uint32
 
 	lightningBounces [][][2]float32
 
@@ -103,7 +103,7 @@ func NewWavePool(wr *WaveRoom, wd *WaveData) *WavePool {
 
 		Ms: spawner,
 
-		eliminatedEntityIDs: make([]uint32, 0),
+		eliminatedEntityIds: make([]uint32, 0),
 
 		lightningBounces: make([][][2]float32, 0),
 
@@ -208,7 +208,7 @@ Done:
 	wp.mobPool.Clear()
 	wp.petalPool.Clear()
 
-	wp.eliminatedEntityIDs = nil
+	wp.eliminatedEntityIds = nil
 
 	wp.lightningBounces = nil
 
@@ -646,15 +646,15 @@ func (wp *WavePool) createStaticUpdatePacket() ([]byte, int) {
 	}
 
 	{ // Write eliminated entities
-		binary.LittleEndian.PutUint16(buf[at:], uint16(len(wp.eliminatedEntityIDs)))
+		binary.LittleEndian.PutUint16(buf[at:], uint16(len(wp.eliminatedEntityIds)))
 		at += 2
 
-		for _, e := range wp.eliminatedEntityIDs {
+		for _, e := range wp.eliminatedEntityIds {
 			binary.LittleEndian.PutUint32(buf[at:], e)
 			at += 4
 		}
 
-		wp.eliminatedEntityIDs = nil
+		wp.eliminatedEntityIds = nil
 	}
 
 	{ // Write lightning bounces
@@ -759,7 +759,7 @@ func (wp *WavePool) RemovePlayer(id EntityId) {
 
 		wp.SpatialHash.Remove(p)
 
-		wp.eliminatedEntityIDs = append(wp.eliminatedEntityIDs, id)
+		wp.eliminatedEntityIds = append(wp.eliminatedEntityIds, id)
 
 		p.Dispose()
 	}
@@ -897,7 +897,7 @@ func (wp *WavePool) RemoveMob(id EntityId) {
 
 		wp.SpatialHash.Remove(m)
 
-		wp.eliminatedEntityIDs = append(wp.eliminatedEntityIDs, id)
+		wp.eliminatedEntityIds = append(wp.eliminatedEntityIds, id)
 
 		m.Dispose()
 	}
@@ -1102,7 +1102,7 @@ func (wp *WavePool) RemovePetal(id EntityId) {
 
 		wp.SpatialHash.Remove(p)
 
-		wp.eliminatedEntityIDs = append(wp.eliminatedEntityIDs, id)
+		wp.eliminatedEntityIds = append(wp.eliminatedEntityIds, id)
 
 		p.Dispose()
 	}

@@ -1,19 +1,19 @@
-type ServerIdentifier = string & { length: 3 };
-type MeaninglessIdentifier = string & { length: 6 };
+type ServerId = string & { length: 3 };
+type MeaninglessId = string & { length: 6 };
 
 // XXX-XXXXXX
-export type WaveRoomCode = `${ServerIdentifier}-${MeaninglessIdentifier}`;
+export type WaveRoomCode = `${ServerId}-${MeaninglessId}`;
 
-function generateRandomServerIdentifier(): ServerIdentifier {
+function generateRandomServerIdentifier(): ServerId {
     return [...Array(3)]
         .map(() => Math.floor(Math.random() * 16).toString(16))
-        .join("") as ServerIdentifier;
+        .join("") as ServerId;
 }
 
-function generateRandomMeaninglessIdentifier(): MeaninglessIdentifier {
+function generateRandomMeaninglessIdentifier(): MeaninglessId {
     return [...Array(6)]
         .map(() => String.fromCharCode(97 + Math.floor(26 * Math.random())))
-        .join("") as MeaninglessIdentifier;
+        .join("") as MeaninglessId;
 }
 
 export function generateRandomWaveRoomCode(): WaveRoomCode {

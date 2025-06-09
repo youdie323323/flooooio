@@ -22,7 +22,7 @@ prng: std.Random.DefaultPrng,
 
 var fuzzing_ws: *OwnContextWebSocket = undefined;
 
-var prev_fuzzing_timer: ?Timer.TimerID = null;
+var prev_fuzzing_timer: ?Timer.TimerId = null;
 
 fn tryFuzz() callconv(.c) void {
     const random = fuzzing_ws.ctx.prng.random();

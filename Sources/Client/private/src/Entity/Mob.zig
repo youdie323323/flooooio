@@ -1,6 +1,6 @@
 const std = @import("std");
 const math = std.math;
-const ObjectID = @import("MachObjects/objs.zig").ObjectID;
+const ObjectId = @import("MachObjects/objs.zig").ObjectId;
 const Entity = @import("./Entity.zig").Entity;
 const EntityType = @import("./EntityType.zig").EntityType;
 const EntityRarity = @import("../Florr/Native/Entity/EntityRarity.zig").EntityRarity;
@@ -10,7 +10,7 @@ const starfish = @import("./Renderers/MobStarfishRenderer.zig");
 
 const MobImpl = @This();
 
-const Segments = std.HashMap(ObjectID, void, std.hash_map.AutoContext(ObjectID), 80);
+const Segments = std.HashMap(ObjectId, void, std.hash_map.AutoContext(ObjectId), 80);
 
 pub const Super = Entity(MobImpl);
 
@@ -28,7 +28,7 @@ is_pet: bool,
 /// Whether this mob is first generated segment in segment chain.
 is_first_segment: bool,
 /// Connected segment of this mob.
-connecting_segment: ?ObjectID,
+connecting_segment: ?ObjectId,
 /// List of mobs that connected to this mob.
 connected_segments: Segments,
 
@@ -42,7 +42,7 @@ pub fn init(
     rarity: EntityRarity,
     is_pet: bool,
     is_first_segment: bool,
-    connecting_segment: ?ObjectID,
+    connecting_segment: ?ObjectId,
 ) MobImpl {
     return .{
         // Using type identifier directly is detected as keyword
@@ -63,7 +63,7 @@ pub fn init(
 pub fn deinit(self: *MobImpl, _: std.mem.Allocator, _: *Super) void {
     self.connecting_segment = undefined;
     self.connected_segments.deinit();
-    
+
     self.leg_distances = undefined;
 
     self.* = undefined;
@@ -71,15 +71,15 @@ pub fn deinit(self: *MobImpl, _: std.mem.Allocator, _: *Super) void {
 
 /// Definition for basic operation of connected_segments.
 const SegmentMethods = struct {
-    pub fn isConnectedBy(self: *MobImpl, other: ObjectID) bool {
+    pub fn isConnectedBy(self: *MobImpl, other: ObjectId) bool {
         return self.connected_segments.contains(other);
     }
 
-    pub fn addConnectedSegment(self: *MobImpl, segment: ObjectID) !void {
+    pub fn addConnectedSegment(self: *MobImpl, segment: ObjectId) !void {
         try self.connected_segments.put(segment, {});
     }
 
-    pub fn removeConnectedSegment(self: *MobImpl, segment: ObjectID) void {
+    pub fn removeConnectedSegment(self: *MobImpl, segment: ObjectId) void {
         _ = self.connected_segments.remove(segment);
     }
 };

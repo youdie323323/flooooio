@@ -292,7 +292,7 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
                         is_poisoned: bool,
                     });
 
-                    var mob_connecting_segment: ?mach_objects.ObjectID = null;
+                    var mob_connecting_segment: ?mach_objects.ObjectId = null;
 
                     if (mob_bool_flags.has_connecting_segment) {
                         const mob_connecting_segment_id = try stream.readInt(EntityId, .little);
