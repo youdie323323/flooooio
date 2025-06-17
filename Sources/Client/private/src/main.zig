@@ -31,8 +31,6 @@ const MobRenderingDispatcher = @import("Entity/Renderers/Mob/MobRenderingDispatc
 
 const mach_objects = @import("Entity/MachObjects/objs.zig");
 
-const EntityProfiles = @import("Florr/Native/Entity/EntityProfiles.zig");
-
 const allocator = @import("mem.zig").allocator;
 
 /// Global context of this application.
@@ -465,9 +463,6 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
 // main(_: c_int, _: [*][*]u8) c_int
 export fn main() c_int {
     std.debug.print("main()\n", .{});
-
-    // Init entity profiles
-    EntityProfiles.staticInit();
 
     ctx = CanvasContext.createCanvasContextFromElement(allocator, "canvas", false);
 
