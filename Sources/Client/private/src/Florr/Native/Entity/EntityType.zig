@@ -70,12 +70,22 @@ pub const EntityType = union(enum(u8)) {
         };
     }
 
+    /// Returns whether this mob is specific mob type.
+    pub inline fn isMobTypeOf(self: EntityType, @"type": MobType) bool {
+        return self.get() == @intFromEnum(@"type");
+    }
+
     /// Returns whether this EntityType is petal type.
     pub inline fn isPetal(self: EntityType) bool {
         return switch (self) {
             inline .mob => false,
             inline .petal => true,
         };
+    }
+
+    /// Returns whether this petal is specific mob type.
+    pub inline fn isPetalTypeOf(self: EntityType, @"type": PetalType) bool {
+        return self.get() == @intFromEnum(@"type");
     }
 };
 

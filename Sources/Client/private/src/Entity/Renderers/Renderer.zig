@@ -3,19 +3,20 @@ const math = std.math;
 const CanvasContext = @import("../../WebAssembly/Interop/Canvas2D/CanvasContext.zig");
 const Color = @import("../../WebAssembly/Interop/Canvas2D/Color.zig");
 const MobType = @import("../../Florr/Native/Entity/EntityType.zig").MobType;
+const Entity = @import("../Entity.zig").Entity;
 const main = @import("../../main.zig");
 
 /// Factor for darken skin color.
 /// Mainly used with body stroke color.
 pub const darkened_base: f32 = 0.1875;
 
-pub fn RenderContext(comptime Entity: type) type {
+pub fn RenderContext(comptime AnyEntity: type) type {
     return *const struct {
         /// Canvas context to render this render context.
         ctx: *CanvasContext,
 
         /// A entity used to render this render context.
-        entity: *Entity,
+        entity: *AnyEntity,
 
         /// Whether this render context is specimen.
         is_specimen: bool,
@@ -23,31 +24,35 @@ pub fn RenderContext(comptime Entity: type) type {
         players: *main.Players,
         mobs: *main.Mobs,
 
-        // We'll place functions here which hasn't used outside comptime environments (something kind like: { comptime recursive: bool })
+        /// Returns strictly typed entity.
+        pub inline fn typedEntity(self: @This()) *Entity(@TypeOf(self.entity.impl)) {
+            return self.entity;
+        }
 
         /// Returns whether this render context entity is mob.
-        pub inline fn isMob(self: *const @This()) bool {
-            return @hasDecl(@TypeOf(self.entity.impl), "type");
+        pub inline fn isMob(self: @This()) bool {
+            return comptime @hasField(@TypeOf(self.entity.impl), "type");
         }
 
         /// Returns whether this render context should rendered.
-        pub inline fn isCandidate(self: *const @This()) bool {
-            const entity = self.entity;
+        pub inline fn shouldRender(self: @This()) bool {
+            const entity = self.typedEntity();
             const is_specimen = self.is_specimen;
 
             return !(!is_specimen and entity.is_dead and entity.dead_t > 1);
         }
 
         /// Apply death animation with this render context.
-        pub inline fn applyDeathAnimation(self: *const @This()) void {
+        pub inline fn applyDeathAnimation(self: @This()) void {
             const ctx = self.ctx;
-            const entity = self.entity;
+            const entity = self.typedEntity();
+            const impl = entity.impl;
 
             if (entity.is_dead) {
                 const is_leech =
-                    self.isMob() and entity.type == .leech;
+                    self.isMob() and impl.type.isMobTypeOf(.leech);
 
-                const sin_waved_dead_t = @sin(entity.dead_t * math.pi / (if (is_leech) 9 else 3));
+                const sin_waved_dead_t = @sin(entity.dead_t * math.pi / @as(f32, if (is_leech) 9 else 3));
 
                 const scale = 1 + sin_waved_dead_t;
 
@@ -63,8 +68,8 @@ pub fn RenderContext(comptime Entity: type) type {
 
         /// Blend colors based on this render context entity effect values.
         /// All effect values should in [0, 1].
-        pub inline fn blendStatusEffects(self: *const @This(), color: Color) Color {
-            const entity = self.entity;
+        pub inline fn blendStatusEffects(self: @This(), color: Color) Color {
+            const entity = self.typedEntity();
 
             const hurt_t = entity.hurt_t;
             const poison_t = entity.poison_t;
@@ -84,7 +89,7 @@ pub fn RenderContext(comptime Entity: type) type {
             return applied.interpolate(color, 0.5);
         }
 
-        pub inline fn fadeOut(x: f32, comptime after: f32) f32 {
+        pub inline fn fadeValue(x: f32, comptime after: f32) f32 {
             return if (x < after)
                 x / after
             else
@@ -94,14 +99,15 @@ pub fn RenderContext(comptime Entity: type) type {
         const hp_bar_max_width = 45;
 
         /// Draw the entity statuses (e.g. health bar).
-        pub inline fn drawEntityStatuses(self: *const @This()) void {
+        pub inline fn drawEntityStatuses(self: @This()) void {
             const ctx = self.ctx;
-            const entity = self.entity;
+            const entity = self.typedEntity();
+            const impl = entity.impl;
 
             const is_mob = self.isMob();
             const is_player = !is_mob;
 
-            if (is_mob and (entity.type.isPetal() or entity.type == .missile_projectile))
+            if (is_mob and (impl.type.isPetal() or impl.type.isMobTypeOf(.missile_projectile)))
                 return;
 
             if (entity.hp_alpha <= 0) return;
@@ -162,7 +168,7 @@ pub fn RenderContext(comptime Entity: type) type {
                 }
 
                 if (entity.red_health > 0) {
-                    ctx.setGlobalAlpha(fadeOut(entity.red_health, 0.05));
+                    ctx.setGlobalAlpha(fadeValue(entity.red_health, 0.05));
 
                     ctx.beginPath();
 
@@ -175,7 +181,7 @@ pub fn RenderContext(comptime Entity: type) type {
                 }
 
                 if (entity.health > 0) {
-                    ctx.setGlobalAlpha(fadeOut(entity.health, 0.05));
+                    ctx.setGlobalAlpha(fadeValue(entity.health, 0.05));
 
                     ctx.beginPath();
 
@@ -191,14 +197,14 @@ pub fn RenderContext(comptime Entity: type) type {
     };
 }
 
-pub fn RenderFn(comptime Entity: type) type {
-    return *const fn (rctx: RenderContext(Entity)) void;
+pub fn RenderFn(comptime AnyEntity: type) type {
+    return *const fn (rctx: RenderContext(AnyEntity)) void;
 }
 
 pub fn Renderer(
-    comptime Entity: type,
+    comptime AnyEntity: type,
     comptime is_ancestor: bool,
-    comptime render_fn: RenderFn(Entity),
+    comptime render_fn: RenderFn(AnyEntity),
     comptime static_init_fn: ?*const fn (allocator: std.mem.Allocator) void,
 ) type {
     return struct {
@@ -207,10 +213,10 @@ pub fn Renderer(
         }
 
         /// Renders the entity.
-        pub fn render(rctx: RenderContext(Entity)) void {
+        pub fn render(rctx: RenderContext(AnyEntity)) void {
             if (comptime is_ancestor) {
                 const ctx = rctx.ctx;
-                const entity = rctx.entity;
+                const entity = rctx.typedEntity();
                 const is_specimen = rctx.is_specimen;
 
                 const x, const y = entity.pos;
@@ -238,7 +244,7 @@ pub fn renderEntity(comptime Impl: type, rctx: RenderContext(Impl.Super)) void {
 
     const EntityRenderer = Impl.Renderer;
 
-    if (!rctx.isCandidate()) return;
+    if (!rctx.shouldRender()) return;
 
     ctx.save();
     defer ctx.restore();
@@ -247,6 +253,7 @@ pub fn renderEntity(comptime Impl: type, rctx: RenderContext(Impl.Super)) void {
 }
 
 /// Validates the given Entity implementation type.
+/// TODO: too much locs use this function, decide one loc to call.
 pub inline fn validateEntityImplementation(comptime Impl: type) void {
     if (!@hasDecl(Impl, "Super"))
         @compileError("entity implementation must have a Super declaration");

@@ -7,6 +7,12 @@ const c_src_folder = "src-c";
 pub const memory = 4096 * std.wasm.page_size;
 
 pub fn build(b: *std.Build) !void {
+    const is_production = b.option(
+        bool,
+        "production",
+        "Enable production build",
+    ) orelse false;
+
     const target = b.standardTargetOptions(.{
         .default_target = .{
             .cpu_arch = .wasm32,
@@ -17,11 +23,22 @@ pub fn build(b: *std.Build) !void {
 
     const exe = b.addExecutable(.{
         .name = "client",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path(src_folder ++ "/main.zig"),
-            .target = target,
-            .optimize = .Debug,
-        }),
+        .root_module = b.createModule(
+            if (is_production) .{
+                .root_source_file = b.path(src_folder ++ "/main.zig"),
+                .target = target,
+                .optimize = .ReleaseFast,
+                .single_threaded = true,
+                .strip = true,
+                .unwind_tables = .none,
+                .stack_protector = false,
+                .pic = false,
+            } else .{
+                .root_source_file = b.path(src_folder ++ "/main.zig"),
+                .target = target,
+                .optimize = .Debug,
+            },
+        ),
     });
 
     exe.export_memory = true;

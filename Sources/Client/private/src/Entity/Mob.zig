@@ -22,7 +22,7 @@ comptime { // Validate
 
 const Segments = std.AutoHashMap(ObjectId, void);
 
-const StarfishLegs = [starfish.leg_amount]f32;
+const StarfishLegDistances = [starfish.leg_amount]f32;
 
 /// Linkable mob types defined in wave_mob_spawner.go.
 const linkable_mob_types = [_]MobType{
@@ -50,7 +50,7 @@ connected_segments: ?Segments,
 
 /// Leg distances of starfish.
 /// Value is null if mob is not starfish.
-leg_distances: ?StarfishLegs,
+leg_distances: ?StarfishLegDistances,
 
 pub fn init(
     allocator: std.mem.Allocator,
@@ -67,7 +67,7 @@ pub fn init(
             false;
 
     return .{
-        // Using type identifier directly is detected as keyword
+        // Using "type" identifier directly detected as keyword, @"type" will avoid that
         .type = @"type",
 
         .rarity = rarity,
@@ -83,7 +83,7 @@ pub fn init(
 
         .leg_distances = if (@"type".get() == @intFromEnum(MobType.starfish))
             // Splat doesnt allow nullable type
-            @as(StarfishLegs, @splat(starfish.undestroyed_leg_distance))
+            @as(StarfishLegDistances, @splat(starfish.undestroyed_leg_distance))
         else
             null,
     };
