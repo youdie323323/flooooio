@@ -104,7 +104,7 @@ pub fn Entity(comptime Impl: type) type {
 
         pub fn update(self: *Self, delta_time: f32) void {
             const delta_time_100 = delta_time * 0.01;
-            const delta_time_150 = delta_time_100 * (2 / 3);
+            const delta_time_150 = delta_time_100 * (2.0 / 3.0);
             const delta_time_200 = delta_time_100 * 0.5;
 
             if (self.is_dead) self.dead_t += delta_time_150;

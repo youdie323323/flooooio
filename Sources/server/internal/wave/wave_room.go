@@ -37,16 +37,15 @@ type StaticWaveRoomCandidatePlayer struct {
 type WaveRoomCandidates = []*StaticWaveRoomCandidatePlayer
 
 type PlayerData struct {
+	*StaticPlayer[StaticPetalSlots]
+
 	WrPId *WaveRoomPlayerId
 	WPId  *EntityId
-
-	// Sp represents static player data of user.
-	Sp *StaticPlayer[StaticPetalSlots]
 
 	mu sync.RWMutex
 }
 
-// ConnPool link conn and UserData together.
+// ConnPool link conn and PlayerData, respectively.
 var ConnPool = xsync.NewMap[*websocket.Conn, *PlayerData]()
 
 type WaveRoom struct {
@@ -93,7 +92,7 @@ func (pd *PlayerData) AssignWaveRoomPlayerId(id *WaveRoomPlayerId) {
 		pd.WrPId = id
 	}
 
-	pd.Sp.SafeWriteMessage(websocket.BinaryMessage, buf[:at])
+	pd.StaticPlayer.SafeWriteMessage(websocket.BinaryMessage, buf[:at])
 
 	pd.mu.Unlock()
 
@@ -123,8 +122,8 @@ func NewWaveRoom(b native.Biome, v WaveRoomVisibility) *WaveRoom {
 		candidates: make([]*StaticWaveRoomCandidatePlayer, 0, waveRoomMaxPlayerAmount),
 	}
 
-	// WaveRoom have circular property respectively
-	// So init WavePool after initialized WaveRoom
+	// WavePool and WaveRoom respectively has circular property,
+	// thus initalize WavePool after initialized WaveRoom
 	wr.WavePool = NewWavePool(wr, &WaveData{
 		Biome: b,
 
@@ -188,7 +187,7 @@ func (w *WaveRoom) DeregisterPlayer(id WaveRoomPlayerId) (ok bool) {
 		if c != nil && c.Id == id {
 			savedIsOwner := c.Owner
 
-			// Remove the candidate using slice operations
+			// Remove the candidate
 			w.candidates = slices.Delete(w.candidates, i, i+1)
 
 			// Grant owner to first remaining candidate if owner was removed
@@ -271,7 +270,7 @@ func (w *WaveRoom) UpdateRoomVisibility(caller WaveRoomPlayerId, v WaveRoomVisib
 	return false
 }
 
-func (w *WaveRoom) isAllCandidateReady() bool {
+func (w *WaveRoom) IsAllCandidateReady() bool {
 	candidatesReady := true
 
 	for _, c := range w.candidates {
@@ -286,11 +285,11 @@ func (w *WaveRoom) isAllCandidateReady() bool {
 }
 
 func (w *WaveRoom) CheckAndUpdateRoomState() {
-	if w.state == RoomStateWaiting && len(w.candidates) != 0 && w.isAllCandidateReady() {
+	if w.state == RoomStateWaiting && len(w.candidates) != 0 && w.IsAllCandidateReady() {
 		w.StartWave()
 	}
 
-	if w.state == RoomStatePlaying && w.WavePool.IsAllPlayerDead() {
+	if w.state == RoomStatePlaying && w.WavePool.IsAllPlayersDead() {
 		w.EndWave()
 	}
 }

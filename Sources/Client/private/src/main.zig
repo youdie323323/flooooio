@@ -103,9 +103,9 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
     { // Read wave informations
         const wave_progress = try ws.Clientbound.readVarUint16(stream);
 
-        const wave_progress_timer = try ws.Clientbound.readVarFloat(f32, stream);
+        const wave_progress_timer = try ws.Clientbound.readFloat32(stream);
 
-        const wave_progress_red_gage_timer = try ws.Clientbound.readVarFloat(f32, stream);
+        const wave_progress_red_gage_timer = try ws.Clientbound.readFloat32(stream);
 
         const wave_ended = try ws.Clientbound.readBool(stream);
 
@@ -132,7 +132,7 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
         const eliminated_entities_count: FiniteObjectCount = try ws.Clientbound.readVarUint16(stream);
 
         for (0..eliminated_entities_count) |_| {
-            const entity_id: EntityId = try ws.Clientbound.readVarUint32(stream);
+            const entity_id = try stream.readInt(EntityId, .little);
 
             if (mobs.search(entity_id)) |o| {
                 var mob = mobs.getValue(o);
@@ -169,8 +169,8 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
             const points_count: FiniteObjectCount = try ws.Clientbound.readVarUint16(stream);
 
             for (0..points_count) |_| {
-                _ = try ws.Clientbound.readVarFloat(f32, stream); // X
-                _ = try ws.Clientbound.readVarFloat(f32, stream); // Y
+                _ = try ws.Clientbound.readFloat32(stream); // X
+                _ = try ws.Clientbound.readFloat32(stream); // Y
             }
         }
     }
@@ -183,16 +183,16 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
 
             switch (entity_kind) {
                 .player => {
-                    const player_id: EntityId = try ws.Clientbound.readVarUint32(stream);
+                    const player_id = try stream.readInt(EntityId, .little);
 
-                    const player_x = try ws.Clientbound.readVarFloat(f32, stream);
-                    const player_y = try ws.Clientbound.readVarFloat(f32, stream);
+                    const player_x = try ws.Clientbound.readFloat32(stream);
+                    const player_y = try ws.Clientbound.readFloat32(stream);
 
-                    const player_angle = internalAngleToRadians(try ws.Clientbound.readVarFloat(f32, stream));
+                    const player_angle = internalAngleToRadians(try ws.Clientbound.readFloat32(stream));
 
-                    const player_health = try ws.Clientbound.readVarFloat(f32, stream);
+                    const player_health = try ws.Clientbound.readFloat32(stream);
 
-                    const player_size = try ws.Clientbound.readVarFloat(f32, stream);
+                    const player_size = try ws.Clientbound.readFloat32(stream);
 
                     const player_mood_mask: pmood.MoodBitSet.MaskInt = @intCast(try stream.readByte());
 
@@ -270,16 +270,16 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
                 },
 
                 .mob => {
-                    const mob_id: EntityId = try ws.Clientbound.readVarUint32(stream);
+                    const mob_id = try stream.readInt(EntityId, .little);
 
-                    const mob_x = try ws.Clientbound.readVarFloat(f32, stream);
-                    const mob_y = try ws.Clientbound.readVarFloat(f32, stream);
+                    const mob_x = try ws.Clientbound.readFloat32(stream);
+                    const mob_y = try ws.Clientbound.readFloat32(stream);
 
-                    const mob_angle = internalAngleToRadians(try ws.Clientbound.readVarFloat(f32, stream));
+                    const mob_angle = internalAngleToRadians(try ws.Clientbound.readFloat32(stream));
 
-                    const mob_health = try ws.Clientbound.readVarFloat(f32, stream);
+                    const mob_health = try ws.Clientbound.readFloat32(stream);
 
-                    const mob_size = try ws.Clientbound.readVarFloat(f32, stream);
+                    const mob_size = try ws.Clientbound.readFloat32(stream);
 
                     const mob_type: EntityType = .{ .mob = try stream.readEnum(MobType, .little) };
 
@@ -295,7 +295,7 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
                     var mob_connecting_segment: ?mach_objects.ObjectId = null;
 
                     if (mob_bool_flags.has_connecting_segment) {
-                        const mob_connecting_segment_id: EntityId = try ws.Clientbound.readVarUint32(stream);
+                        const mob_connecting_segment_id = try stream.readInt(EntityId, .little);
 
                         mob_connecting_segment = mobs.search(mob_connecting_segment_id);
                     }
@@ -377,19 +377,19 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
                 .petal => {
                     // Petal treated as mob
 
-                    // TODO: in server, the id may collide between player, mob, petal because their pool is respectively separated
+                    // TODO: in server, the id may collide between player, mob, petal because their pool is separated
                     // So may need to separate mobs objects for petals
                     // That chance is 1 / math.maxInt(u32) but that possibly collidable (and can cause error)
-                    const petal_id: EntityId = try ws.Clientbound.readVarUint32(stream);
+                    const petal_id = try stream.readInt(EntityId, .little);
 
-                    const petal_x = try ws.Clientbound.readVarFloat(f32, stream);
-                    const petal_y = try ws.Clientbound.readVarFloat(f32, stream);
+                    const petal_x = try ws.Clientbound.readFloat32(stream);
+                    const petal_y = try ws.Clientbound.readFloat32(stream);
 
-                    const petal_angle = internalAngleToRadians(try ws.Clientbound.readVarFloat(f32, stream));
+                    const petal_angle = internalAngleToRadians(try ws.Clientbound.readFloat32(stream));
 
-                    const petal_health = try ws.Clientbound.readVarFloat(f32, stream);
+                    const petal_health = try ws.Clientbound.readFloat32(stream);
 
-                    const petal_size = try ws.Clientbound.readVarFloat(f32, stream);
+                    const petal_size = try ws.Clientbound.readFloat32(stream);
 
                     const petal_type: EntityType = .{ .petal = try stream.readEnum(PetalType, .little) };
 

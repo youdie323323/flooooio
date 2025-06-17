@@ -9,7 +9,7 @@ const std = @import("std");
 pub const ObjectId = u48;
 
 pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(T)) type {
-    const SearchFieldType = std.meta.FieldType(T, search_field_name);
+    const SearchFieldType = comptime std.meta.FieldType(T, search_field_name);
 
     return struct {
         internal: struct {
@@ -226,9 +226,8 @@ pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(
         pub fn delete(objs: *Self, id: ObjectId) void {
             const dead = &objs.internal.dead;
             const data = &objs.internal.data;
-            const id_to_obj_id = &objs.internal.id_to_obj_id;
-
             const recycling_bin = &objs.internal.recycling_bin;
+            const id_to_obj_id = &objs.internal.id_to_obj_id;
 
             const unpacked = objs.validateAndUnpack(id, "delete");
 

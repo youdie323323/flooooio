@@ -2,6 +2,7 @@ package wave
 
 import (
 	"crypto/sha256"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -138,11 +139,11 @@ func (wp *WavePool) StartWave(candidates WaveRoomCandidates) {
 
 			randX, randY := GetRandomCoordinate(mapRadius, mapRadius, mapRadius)
 
-			player := wp.GeneratePlayer(pd.Sp, randX, randY)
+			player := wp.GeneratePlayer(pd.StaticPlayer, randX, randY)
 
 			pd.AssignWavePlayerId(player.Id)
 
-			pd.Sp.SafeWriteMessage(websocket.BinaryMessage, buf[:at])
+			pd.StaticPlayer.SafeWriteMessage(websocket.BinaryMessage, buf[:at])
 		}
 	}
 
@@ -216,7 +217,7 @@ Done:
 	wp.Wr = nil
 }
 
-func (wp *WavePool) IsAllPlayerDead() bool {
+func (wp *WavePool) IsAllPlayersDead() bool {
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
 
@@ -422,6 +423,19 @@ func (wp *WavePool) stepWaveData() {
 	}
 }
 
+// WriteFloat32 writes float32 into buf.
+// Float32bits always return big value, so its counterproductive with varint.
+func WriteFloat32(buf []byte, x float32) int {
+	binary.LittleEndian.PutUint32(buf, math.Float32bits(x))
+	return 4
+}
+
+// WriteUint32 writes uint32 into buf.
+func WriteUint32(buf []byte, x uint32) int {
+	binary.LittleEndian.PutUint32(buf, x)
+	return 4
+}
+
 // PutUvarint32 encodes a uint32 into buf and returns the number of bytes written.
 // If the buffer is too small, PutUvarint32 will panic.
 func PutUvarint32(buf []byte, x uint32) int {
@@ -489,16 +503,16 @@ func (wp *WavePool) broadcastUpdatePacket() {
 
 					n.Mu.RLock()
 
-					at += PutUvarint32(dynamicPacket[at:], *n.Id)
+					at += WriteUint32(dynamicPacket[at:], *n.Id)
 
-					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.X))
-					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Y))
+					at += WriteFloat32(dynamicPacket[at:], n.X)
+					at += WriteFloat32(dynamicPacket[at:], n.Y)
 
-					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Angle))
+					at += WriteFloat32(dynamicPacket[at:], n.Angle)
 
-					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Health))
+					at += WriteFloat32(dynamicPacket[at:], n.Health)
 
-					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Size))
+					at += WriteFloat32(dynamicPacket[at:], n.Size)
 
 					dynamicPacket[at] = byte(n.Mood)
 					at++
@@ -523,10 +537,10 @@ func (wp *WavePool) broadcastUpdatePacket() {
 						bFlags |= 4
 					}
 
+					n.Mu.RUnlock()
+
 					dynamicPacket[at] = bFlags
 					at++
-
-					n.Mu.RUnlock()
 				}
 
 			case *Mob:
@@ -534,16 +548,16 @@ func (wp *WavePool) broadcastUpdatePacket() {
 					dynamicPacket[at] = updatedEntityKindMob
 					at++
 
-					at += PutUvarint32(dynamicPacket[at:], *n.Id)
+					at += WriteUint32(dynamicPacket[at:], *n.Id)
 
-					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.X))
-					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Y))
+					at += WriteFloat32(dynamicPacket[at:], n.X)
+					at += WriteFloat32(dynamicPacket[at:], n.Y)
 
-					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Angle))
+					at += WriteFloat32(dynamicPacket[at:], n.Angle)
 
-					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Health))
+					at += WriteFloat32(dynamicPacket[at:], n.Health)
 
-					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Size))
+					at += WriteFloat32(dynamicPacket[at:], n.Size)
 
 					dynamicPacket[at] = n.Type
 					at++
@@ -579,7 +593,7 @@ func (wp *WavePool) broadcastUpdatePacket() {
 					at++
 
 					if hasConnectingSegment {
-						at += PutUvarint32(dynamicPacket[at:], n.ConnectingSegment.GetId())
+						at += WriteUint32(dynamicPacket[at:], n.ConnectingSegment.GetId())
 					}
 				}
 
@@ -588,16 +602,16 @@ func (wp *WavePool) broadcastUpdatePacket() {
 					dynamicPacket[at] = updatedEntityKindPetal
 					at++
 
-					at += PutUvarint32(dynamicPacket[at:], *n.Id)
+					at += WriteUint32(dynamicPacket[at:], *n.Id)
 
-					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.X))
-					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Y))
+					at += WriteFloat32(dynamicPacket[at:], n.X)
+					at += WriteFloat32(dynamicPacket[at:], n.Y)
 
-					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Angle))
+					at += WriteFloat32(dynamicPacket[at:], n.Angle)
 
-					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Health))
+					at += WriteFloat32(dynamicPacket[at:], n.Health)
 
-					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Size))
+					at += WriteFloat32(dynamicPacket[at:], n.Size)
 
 					dynamicPacket[at] = n.Type
 					at++
@@ -632,9 +646,9 @@ func (wp *WavePool) createStaticUpdatePacket() ([]byte, int) {
 	{ // Write wave data
 		at += PutUvarint16(buf[at:], wp.Wd.Progress)
 
-		at += PutUvarint32(buf[at:], math.Float32bits(wp.Wd.ProgressTimer))
+		at += WriteFloat32(buf[at:], wp.Wd.ProgressTimer)
 
-		at += PutUvarint32(buf[at:], math.Float32bits(wp.Wd.ProgressRedTimer))
+		at += WriteFloat32(buf[at:], wp.Wd.ProgressRedTimer)
 
 		{ // Wave is ended or not
 			if wp.hasBeenEnded.Load() {
@@ -653,7 +667,7 @@ func (wp *WavePool) createStaticUpdatePacket() ([]byte, int) {
 		at += PutUvarint16(buf[at:], FiniteObjectCount(len(wp.eliminatedEntityIds)))
 
 		for _, e := range wp.eliminatedEntityIds {
-			at += PutUvarint32(buf[at:], e)
+			at += WriteUint32(buf[at:], e)
 		}
 
 		wp.eliminatedEntityIds = nil
@@ -666,8 +680,8 @@ func (wp *WavePool) createStaticUpdatePacket() ([]byte, int) {
 			at += PutUvarint16(buf[at:], FiniteObjectCount(len(ps)))
 
 			for _, p := range ps {
-				at += PutUvarint32(buf[at:], math.Float32bits(p[0]))
-				at += PutUvarint32(buf[at:], math.Float32bits(p[1]))
+				at += WriteFloat32(buf[at:], p[0])
+				at += WriteFloat32(buf[at:], p[1])
 			}
 		}
 

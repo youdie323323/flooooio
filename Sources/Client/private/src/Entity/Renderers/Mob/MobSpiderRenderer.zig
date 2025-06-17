@@ -12,18 +12,20 @@ const allocator = @import("../../../mem.zig").allocator;
 const Color = @import("../../../WebAssembly/Interop/Canvas2D/Color.zig");
 
 const Vector2 = @Vector(2, f32);
-const Vector4 = @Vector(4, f32);
+
+const body_size: f32 = 25;
+const body_size_vector: Vector2 = @splat(body_size);
 
 const LegCurve = struct {
     dir: f32,
     start: Vector2,
-    curve: Vector4,
+    curve: @Vector(4, f32),
 
     pub fn init(angle: f32, dir: f32, offset: f32) LegCurve {
         const angle_vector: Vector2 = .{ @cos(angle), @sin(angle) };
         const cos_angle, const sin_angle = angle_vector;
 
-        const start = angle_vector * @as(Vector2, @splat(25));
+        const start = angle_vector * body_size_vector;
         const start_x, const start_y = start;
 
         return .{
@@ -78,10 +80,10 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
         const move_counter = entity.move_counter / 1.25;
 
-        inline for (leg_curves, 0..) |c, i| {
-            const dir = comptime c.dir;
-            const start_x, const start_y = comptime c.start;
-            const curve_cpx, const curve_cpy, const curve_x, const curve_y = comptime c.curve;
+        inline for (leg_curves, 0..) |lc, i| {
+            const dir = comptime lc.dir;
+            const start_x, const start_y = comptime lc.start;
+            const curve_cpx, const curve_cpy, const curve_x, const curve_y = comptime lc.curve;
 
             const i_f32: f32 = comptime @floatFromInt(i);
 
@@ -110,7 +112,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
     // Body
     ctx.beginPath();
 
-    ctx.arc(0, 0, 25, 0, math.tau, false);
+    ctx.arc(0, 0, body_size, 0, math.tau, false);
 
     ctx.fillColor(fcolor);
     ctx.fill();

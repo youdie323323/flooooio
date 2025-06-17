@@ -35,7 +35,7 @@ func (s *WaveRoomService) JoinPublicWaveRoom(pd *PlayerData, biome native.Biome)
 
 	// Try to find existing public room
 	if room := s.findPublicRoom(biome); room != nil {
-		return room.RegisterPlayer(pd.Sp)
+		return room.RegisterPlayer(pd.StaticPlayer)
 	}
 
 	// Return nil if not found
@@ -59,7 +59,7 @@ func (s *WaveRoomService) JoinWaveRoom(pd *PlayerData, code WaveRoomCode) *WaveR
 		return nil
 	}
 
-	return room.RegisterPlayer(pd.Sp)
+	return room.RegisterPlayer(pd.StaticPlayer)
 }
 
 // removeWaveRoom removes a specific wave room from the manager.
@@ -119,7 +119,7 @@ func (s *WaveRoomService) NewPublicWaveRoom(pd *PlayerData, biome native.Biome) 
 
 	s.waveRooms = append(s.waveRooms, room)
 
-	return room.RegisterPlayer(pd.Sp)
+	return room.RegisterPlayer(pd.StaticPlayer)
 }
 
 // FindPublicRoom finds a public room with available slots for the specified biome.
@@ -176,7 +176,7 @@ func (s *WaveRoomService) isPlayerJoinable(pd *PlayerData) bool {
 	// Check if player is already in a room
 	for _, room := range s.waveRooms {
 		for _, candidate := range room.candidates {
-			if candidate != nil && candidate.Conn == pd.Sp.Conn {
+			if candidate != nil && candidate.Conn == pd.StaticPlayer.Conn {
 				return false
 			}
 		}

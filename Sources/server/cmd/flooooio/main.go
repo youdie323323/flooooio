@@ -37,8 +37,8 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		WrPId: nil,
 		WPId:  nil,
 
-		Sp: &wave.StaticPlayer[wave.StaticPetalSlots]{
-			Name: "Mankoblablatrix",
+		StaticPlayer: &wave.StaticPlayer[wave.StaticPetalSlots]{
+			Name: "pdfodwahfioahwfwapihugwaiugaifuwafgwailfgalifaguagtwaiufgwa",
 			Slots: wave.StaticPetalSlots{
 				Surface: []wave.StaticPetalData{
 					{
