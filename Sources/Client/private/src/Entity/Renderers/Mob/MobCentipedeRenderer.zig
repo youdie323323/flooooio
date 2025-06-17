@@ -26,7 +26,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
     const entity = rctx.entity;
     const mob = entity.impl;
 
-    const tcolor = rctx.blendStatusEffects(comptime Color.comptimeFromHexColorCode("#333333"));
+    const tcolor = rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#333333"));
 
     ctx.rotate(entity.angle);
 
@@ -67,7 +67,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
     ctx.stroke();
 
     if (mob.is_first_segment) { // Antennas
-        const acolor = rctx.blendStatusEffects(comptime Color.comptimeFromHexColorCode("#333333"));
+        const acolor = rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#333333"));
 
         ctx.setLineWidth(3);
         ctx.fillColor(acolor);

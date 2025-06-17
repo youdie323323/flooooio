@@ -48,7 +48,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
     var leg_distances = mob.leg_distances.?;
 
-    const fcolor = rctx.blendStatusEffects(comptime Color.comptimeFromHexColorCode("#d0504e"));
+    const fcolor = rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#d0504e"));
     const scolor = fcolor.darkened(darkened_base);
 
     ctx.rotate(entity.angle);
@@ -161,7 +161,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
             ctx.restore();
         }
 
-        ctx.fillColor(rctx.blendStatusEffects(comptime Color.comptimeFromHexColorCode("#d3756b")));
+        ctx.fillColor(rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#d3756b")));
         ctx.fill();
     }
 }

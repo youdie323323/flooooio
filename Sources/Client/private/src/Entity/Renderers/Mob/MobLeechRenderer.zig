@@ -112,7 +112,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
         // Change angle
         ctx.rotate(entity.angle);
 
-        ctx.strokeColor(rctx.blendStatusEffects(comptime Color.comptimeFromHexColorCode("#292929")));
+        ctx.strokeColor(rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#292929")));
         ctx.setLineWidth(4);
 
         const beak_angle = entity.calculateBeakAngle();
@@ -208,12 +208,12 @@ inline fn strokeBodyCurve(rctx: RenderContext(MobSuper)) void {
 
     // Body outline
     ctx.setLineWidth(25);
-    ctx.strokeColor(rctx.blendStatusEffects(comptime Color.comptimeFromHexColorCode("#292929")));
+    ctx.strokeColor(rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#292929")));
     ctx.stroke();
 
     // Body
     ctx.setLineWidth(22);
-    ctx.strokeColor(rctx.blendStatusEffects(comptime Color.comptimeFromHexColorCode("#333333")));
+    ctx.strokeColor(rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#333333")));
     ctx.stroke();
 }
 

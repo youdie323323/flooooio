@@ -40,7 +40,7 @@ fn render(rctx: RenderContext(PlayerSuper)) void {
     const entity = rctx.entity;
     const player = entity.impl;
 
-    const fcolor = rctx.blendStatusEffects(comptime Color.comptimeFromHexColorCode("#ffe763"));
+    const fcolor = rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#ffe763"));
     const scolor = fcolor.darkened(darkened_base);
 
     ctx.setLineJoin(.round);

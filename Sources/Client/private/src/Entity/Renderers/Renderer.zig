@@ -12,6 +12,8 @@ pub const darkened_base: f32 = 0.1875;
 
 pub fn RenderContext(comptime AnyEntity: type) type {
     return *const struct {
+        const AnyImpl = @FieldType(AnyEntity, "impl");
+
         /// Canvas context to render this render context.
         ctx: *CanvasContext,
 
@@ -25,13 +27,13 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         mobs: *main.Mobs,
 
         /// Returns strictly typed entity.
-        pub inline fn typedEntity(self: @This()) *Entity(@TypeOf(self.entity.impl)) {
+        pub inline fn typedEntity(self: @This()) *Entity(AnyImpl) {
             return self.entity;
         }
 
         /// Returns whether this render context entity is mob.
-        pub inline fn isMob(self: @This()) bool {
-            return comptime @hasField(@TypeOf(self.entity.impl), "type");
+        pub inline fn isMob(_: @This()) bool {
+            return comptime @hasField(AnyImpl, "type");
         }
 
         /// Returns whether this render context should rendered.
@@ -52,7 +54,13 @@ pub fn RenderContext(comptime AnyEntity: type) type {
                 const is_leech =
                     self.isMob() and impl.type.isMobTypeOf(.leech);
 
-                const sin_waved_dead_t = @sin(entity.dead_t * math.pi / @as(f32, if (is_leech) 9 else 3));
+                const sin_waved_dead_t = @sin(entity.dead_t * math.pi / @as(
+                    f32,
+                    if (is_leech)
+                        9
+                    else
+                        3,
+                ));
 
                 const scale = 1 + sin_waved_dead_t;
 
@@ -68,7 +76,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
 
         /// Blend colors based on this render context entity effect values.
         /// All effect values should in [0, 1].
-        pub inline fn blendStatusEffects(self: @This(), color: Color) Color {
+        pub inline fn blendEffectColors(self: @This(), color: Color) Color {
             const entity = self.typedEntity();
 
             const hurt_t = entity.hurt_t;
@@ -242,14 +250,12 @@ pub fn renderEntity(comptime Impl: type, rctx: RenderContext(Impl.Super)) void {
 
     const ctx = rctx.ctx;
 
-    const EntityRenderer = Impl.Renderer;
-
     if (!rctx.shouldRender()) return;
 
     ctx.save();
     defer ctx.restore();
 
-    EntityRenderer.render(rctx);
+    Impl.Renderer.render(rctx);
 }
 
 /// Validates the given Entity implementation type.

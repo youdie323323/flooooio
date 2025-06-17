@@ -58,7 +58,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
     const entity = rctx.entity;
     const is_specimen = rctx.is_specimen;
 
-    const fcolor = rctx.blendStatusEffects(comptime Color.comptimeFromHexColorCode("#403525"));
+    const fcolor = rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#403525"));
     const scolor = fcolor.darkened(darkened_base);
 
     ctx.rotate(entity.angle);
@@ -76,7 +76,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
     { // Legs
         ctx.setLineWidth(10);
-        ctx.strokeColor(rctx.blendStatusEffects(comptime Color.comptimeFromHexColorCode("#323032")));
+        ctx.strokeColor(rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#323032")));
 
         const move_counter = entity.move_counter / 1.25;
 
