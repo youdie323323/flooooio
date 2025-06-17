@@ -43,8 +43,8 @@ func ResetBindings(wp *WavePool, p *Player) {
 			if petal == nil {
 				continue
 			}
-			
-			petal.CompletelyRemove(wp)
+
+			petal.FullyRemove(wp)
 		}
 	}
 

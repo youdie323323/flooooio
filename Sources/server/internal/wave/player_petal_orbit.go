@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	HistorySize = 10
+	OrbitHistorySize = 10
 
 	precalcSize = 360
 )
@@ -96,23 +96,21 @@ func doPetalSpin(
 	i int,
 	j int,
 ) {
-	spinTargets := collision.ToNodeSlice(wp.GetMobsWithCondition(func(m *Mob) bool {
-		if !m.IsOrganismEnemy() {
-			return false
-		}
-
-		spinDetectRad := m.CalculateRadius() * spinNearestSizeCoef
-		spinDetectRadSq := spinDetectRad * spinDetectRad
-
-		dx := m.X - pe.X
-		dy := m.Y - pe.Y
-
-		return (dx*dx + dy*dy) <= spinDetectRadSq
-	}))
-
 	mobToSpin, ok := FindNearestEntity(
 		pe,
-		spinTargets,
+		collision.ToNodeSlice(wp.GetMobsWithCondition(func(m *Mob) bool {
+			if !m.IsOrganismEnemy() {
+				return false
+			}
+
+			spinDetectRad := m.CalculateRadius() * spinNearestSizeCoef
+			spinDetectRadSq := spinDetectRad * spinDetectRad
+
+			dx := m.X - pe.X
+			dy := m.Y - pe.Y
+
+			return (dx*dx + dy*dy) <= spinDetectRadSq
+		})),
 	).(*Mob)
 	if !ok {
 		return
@@ -155,18 +153,19 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 	p.OrbitHistoryX[p.OrbitHistoryIndex] = p.X
 	p.OrbitHistoryY[p.OrbitHistoryIndex] = p.Y
 
-	historyTargetIdx := (p.OrbitHistoryIndex + 6) % HistorySize
+	historyTargetIdx := (p.OrbitHistoryIndex + 6) % OrbitHistorySize
 
 	targetX := p.OrbitHistoryX[historyTargetIdx]
 	targetY := p.OrbitHistoryY[historyTargetIdx]
 
-	p.OrbitHistoryIndex = (p.OrbitHistoryIndex + 1) % HistorySize
+	p.OrbitHistoryIndex = (p.OrbitHistoryIndex + 1) % OrbitHistorySize
 
 	surface := p.Slots.Surface
 	surfaceLen := len(surface)
 
 	if p.OrbitPetalRadii == nil {
 		p.OrbitPetalRadii = make([]float32, surfaceLen)
+
 		for i := range p.OrbitPetalRadii {
 			p.OrbitPetalRadii[i] = 40
 		}
@@ -174,6 +173,7 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 		p.OrbitRadiusVelocities = make([]float32, surfaceLen)
 
 		p.OrbitPetalSpins = make([][]float32, surfaceLen)
+		
 		for i := range p.OrbitPetalSpins {
 			p.OrbitPetalSpins[i] = make([]float32, PetalMaxClusterAmount)
 		}
@@ -306,18 +306,24 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 					petalAngle,
 				)
 
-				doPetalSpin(
-					wp,
+				spins := p.OrbitPetalSpins
+				if len(spins) > i {
+					spin := spins[i]
+					if len(spin) > j {
+						doPetalSpin(
+							wp,
 
-					petal,
+							petal,
 
-					p.OrbitPetalSpins,
-					i,
-					j,
-				)
+							spins,
+							i,
+							j,
+						)
 
-				if petal.SpinningOnMob {
-					p.OrbitPetalSpins[i][j] += spinRotationDelta
+						if petal.SpinningOnMob {
+							spin[j] += spinRotationDelta
+						}
+					}
 				}
 			}
 		} else {
@@ -341,18 +347,24 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 				baseAngle,
 			)
 
-			doPetalSpin(
-				wp,
+			spins := p.OrbitPetalSpins
+			if len(spins) > i {
+				spin := spins[i]
+				if len(spin) > 0 {
+					doPetalSpin(
+						wp,
 
-				petal,
+						petal,
 
-				p.OrbitPetalSpins,
-				i,
-				0,
-			)
+						spins,
+						i,
+						0,
+					)
 
-			if petal.SpinningOnMob {
-				p.OrbitPetalSpins[i][0] += spinRotationDelta
+					if petal.SpinningOnMob {
+						spin[0] += spinRotationDelta
+					}
+				}
 			}
 		}
 	}

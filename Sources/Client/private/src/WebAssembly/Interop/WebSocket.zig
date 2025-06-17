@@ -78,7 +78,7 @@ pub fn WebSocket(comptime Context: type) type {
         }
 
         /// Sends binary data through the WebSocket.
-        pub inline fn send(self: Self, data: []const u8) !bool {
+        pub inline fn send(self: Self, data: []const u8) bool {
             // This would slow the code
             // if (!self.isReady()) {
             //     return error.WebSocketNotReady;
@@ -90,12 +90,12 @@ pub fn WebSocket(comptime Context: type) type {
         pub const MessageEvent = struct {
             event_type: EventType,
             data: ?[]const u8,
-            data_ptr: mem.MemoryPointer,
+            data_ptr: mem.MemoryPtr,
         };
 
         /// Polls for the next WebSocket event.
         pub inline fn poll(socket_id: WebSocketId) ?MessageEvent {
-            var data_ptr: mem.MemoryPointer = undefined;
+            var data_ptr: mem.MemoryPtr = undefined;
             var data_size: usize = undefined;
 
             const event_type_raw = @"5"(socket_id, &data_ptr, &data_size);
@@ -103,7 +103,10 @@ pub fn WebSocket(comptime Context: type) type {
 
             return .{
                 .event_type = @enumFromInt(event_type_raw),
-                .data = if (@intFromPtr(data_ptr) == 0 or data_size == 0) null else @as([*]const u8, @ptrCast(data_ptr))[0..data_size],
+                .data = if (@intFromPtr(data_ptr) == 0 or data_size == 0)
+                    null
+                else
+                    @as([*]const u8, @ptrCast(data_ptr))[0..data_size],
                 .data_ptr = data_ptr,
             };
         }
@@ -138,6 +141,6 @@ pub fn WebSocket(comptime Context: type) type {
         /// Sends data through WebSocket.
         extern "3" fn @"4"(socket_id: WebSocketId, ptr: [*]const u8, size: u32) u8;
         /// Polls for WebSocket events.
-        extern "3" fn @"5"(socket_id: WebSocketId, ptr_addr: *mem.MemoryPointer, size_addr: *usize) u8;
+        extern "3" fn @"5"(socket_id: WebSocketId, ptr_addr: *mem.MemoryPtr, size_addr: *usize) u8;
     };
 }

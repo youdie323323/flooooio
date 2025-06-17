@@ -24,7 +24,7 @@ func (sm *SpawnMobCmd) Run(ctx *Context) error {
 
 	if slices.Contains(LinkableMobTypes, sm.Type) {
 		for range sm.Num {
-			ctx.Wp.LinkedMobSegmentation(
+			ctx.Wp.MobSegmentation(
 				sm.Type,
 
 				sm.Rarity,

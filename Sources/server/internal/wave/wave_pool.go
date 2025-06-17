@@ -2,7 +2,6 @@ package wave
 
 import (
 	"crypto/sha256"
-	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -93,15 +92,14 @@ type WavePool struct {
 }
 
 func NewWavePool(wr *WaveRoom, wd *WaveData) *WavePool {
-	spawner := new(WaveMobSpawner)
-	spawner.Next(wd, nil)
+	s := NewWaveMobSpawner(wd)
 
 	return &WavePool{
 		playerPool: xsync.NewMap[EntityId, *Player](),
 		mobPool:    xsync.NewMap[EntityId, *Mob](),
 		petalPool:  xsync.NewMap[EntityId, *Petal](),
 
-		Ms: spawner,
+		Ms: s,
 
 		eliminatedEntityIds: make([]uint32, 0),
 
@@ -244,10 +242,9 @@ func (wp *WavePool) broadcastSeldIdPacket() {
 	buf[0] = network.ClientboundWaveSelfId
 
 	wp.playerPool.Range(func(id EntityId, p *Player) bool {
-		// Dynamically put id
-		binary.LittleEndian.PutUint32(buf[1:], id)
+		i := 1 + PutUvarint32(buf[1:], id)
 
-		p.SafeWriteMessage(websocket.BinaryMessage, buf[:5])
+		p.SafeWriteMessage(websocket.BinaryMessage, buf[:i])
 
 		return true
 	})
@@ -292,7 +289,7 @@ Done:
 	if wp.frameCount.Value()%2 == 0 {
 		wp.broadcastUpdatePacket()
 
-		wp.updateWaveData()
+		wp.stepWaveData()
 	}
 
 	// TODO: maybe frameCount will overflow?
@@ -302,7 +299,7 @@ func (wp *WavePool) updateEntities() {
 	// Now include syscall and its bit cost, so we can call it once for every frame
 	now := time.Now()
 
-	// These order is important, dont move
+	// These order is important, dont move it
 
 	wp.playerPool.Range(func(_ EntityId, p *Player) bool {
 		p.OnUpdateTick(wp, now)
@@ -337,7 +334,7 @@ func (wp *WavePool) updateEntities() {
 	})
 }
 
-func (wp *WavePool) updateWaveData() {
+func (wp *WavePool) stepWaveData() {
 	if wp.hasBeenEnded.Load() {
 		return
 	}
@@ -361,7 +358,7 @@ func (wp *WavePool) updateWaveData() {
 
 			if ok {
 				if slices.Contains(LinkableMobTypes, dmd.Type) {
-					wp.LinkedMobSegmentation(
+					wp.MobSegmentation(
 						dmd.Type,
 
 						dmd.Rarity,
@@ -425,64 +422,89 @@ func (wp *WavePool) updateWaveData() {
 	}
 }
 
+// PutUvarint32 encodes a uint32 into buf and returns the number of bytes written.
+// If the buffer is too small, PutUvarint32 will panic.
+func PutUvarint32(buf []byte, x uint32) int {
+	i := 0
+	for x >= 0x80 {
+		buf[i] = byte(x) | 0x80
+		x >>= 7
+		i++
+	}
+	buf[i] = byte(x)
+	return i + 1
+}
+
+// PutUvarint16 encodes a uint16 into buf and returns the number of bytes written.
+// If the buffer is too small, PutUvarint16 will panic.
+func PutUvarint16(buf []byte, x uint16) int {
+	i := 0
+	for x >= 0x80 {
+		buf[i] = byte(x) | 0x80
+		x >>= 7
+		i++
+	}
+	buf[i] = byte(x)
+	return i + 1
+}
+
 const (
 	updatedEntityKindPlayer byte = iota
 	updatedEntityKindMob
 	updatedEntityKindPetal
 )
 
+// FiniteObjectCount possible objects length.
+type FiniteObjectCount = uint16
+
 func (wp *WavePool) broadcastUpdatePacket() {
 	staticPacket, staticAt := wp.createStaticUpdatePacket()
 	defer SharedBufPool.Put(staticPacket)
 
 	wp.playerPool.Range(func(_ EntityId, p *Player) bool {
-		playerPacket := SharedBufPool.Get()
-		defer SharedBufPool.Put(playerPacket)
+		dynamicPacket := SharedBufPool.Get()
+		defer SharedBufPool.Put(dynamicPacket)
 
 		at := 0
 
 		window := p.Window
 
-		// TODO
-		toSend := wp.SpatialHash.SearchRect(p.X, p.Y, float32(window[0]), float32(window[1]), func(n collision.Node) bool {
-			return !IsDeadNode(wp, n)
-		})
+		toSend := wp.SpatialHash.SearchRect(
+			p.X, p.Y,
+			float32(window[0]), float32(window[1]),
+			func(n collision.Node) bool {
+				return !IsDeadNode(wp, n)
+			},
+		)
 
 		// Write entity count
-		binary.LittleEndian.PutUint16(playerPacket[at:], uint16(len(toSend)))
-		at += 2
+		at += PutUvarint16(dynamicPacket[at:], FiniteObjectCount(len(toSend)))
 
 		for _, e := range toSend {
 			switch n := e.(type) {
 			case *Player:
 				{
-					playerPacket[at] = updatedEntityKindPlayer
+					dynamicPacket[at] = updatedEntityKindPlayer
 					at++
 
 					n.Mu.RLock()
 
-					binary.LittleEndian.PutUint32(playerPacket[at:], *n.Id)
-					at += 4
+					at += PutUvarint32(dynamicPacket[at:], *n.Id)
 
-					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.X))
-					at += 4
-					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Y))
-					at += 4
+					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.X))
+					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Y))
 
-					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Angle))
-					at += 4
+					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Angle))
 
-					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Health))
-					at += 4
+					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Health))
 
-					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Size))
-					at += 4
+					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Size))
 
-					playerPacket[at] = byte(n.Mood)
+					dynamicPacket[at] = byte(n.Mood)
 					at++
 
 					// Write name
-					at = writeCString(playerPacket, at, n.Name)
+					at = writeCString(dynamicPacket, at, n.Name)
 
 					var bFlags uint8 = 0
 
@@ -501,7 +523,7 @@ func (wp *WavePool) broadcastUpdatePacket() {
 						bFlags |= 4
 					}
 
-					playerPacket[at] = bFlags
+					dynamicPacket[at] = bFlags
 					at++
 
 					n.Mu.RUnlock()
@@ -509,30 +531,24 @@ func (wp *WavePool) broadcastUpdatePacket() {
 
 			case *Mob:
 				{
-					playerPacket[at] = updatedEntityKindMob
+					dynamicPacket[at] = updatedEntityKindMob
 					at++
 
-					binary.LittleEndian.PutUint32(playerPacket[at:], *n.Id)
-					at += 4
+					at += PutUvarint32(dynamicPacket[at:], *n.Id)
 
-					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.X))
-					at += 4
-					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Y))
-					at += 4
+					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.X))
+					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Y))
 
-					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Angle))
-					at += 4
+					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Angle))
 
-					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Health))
-					at += 4
+					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Health))
 
-					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Size))
-					at += 4
+					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Size))
 
-					playerPacket[at] = n.Type
+					dynamicPacket[at] = n.Type
 					at++
 
-					playerPacket[at] = n.Rarity
+					dynamicPacket[at] = n.Rarity
 					at++
 
 					var bFlags uint8 = 0
@@ -559,41 +575,34 @@ func (wp *WavePool) broadcastUpdatePacket() {
 						bFlags |= 8
 					}
 
-					playerPacket[at] = bFlags
+					dynamicPacket[at] = bFlags
 					at++
 
 					if hasConnectingSegment {
-						binary.LittleEndian.PutUint32(playerPacket[at:], n.ConnectingSegment.GetId())
-						at += 4
+						at += PutUvarint32(dynamicPacket[at:], n.ConnectingSegment.GetId())
 					}
 				}
 
 			case *Petal:
 				{
-					playerPacket[at] = updatedEntityKindPetal
+					dynamicPacket[at] = updatedEntityKindPetal
 					at++
 
-					binary.LittleEndian.PutUint32(playerPacket[at:], *n.Id)
-					at += 4
+					at += PutUvarint32(dynamicPacket[at:], *n.Id)
 
-					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.X))
-					at += 4
-					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Y))
-					at += 4
+					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.X))
+					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Y))
 
-					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Angle))
-					at += 4
+					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Angle))
 
-					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Health))
-					at += 4
+					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Health))
 
-					binary.LittleEndian.PutUint32(playerPacket[at:], math.Float32bits(n.Size))
-					at += 4
+					at += PutUvarint32(dynamicPacket[at:], math.Float32bits(n.Size))
 
-					playerPacket[at] = n.Type
+					dynamicPacket[at] = n.Type
 					at++
 
-					playerPacket[at] = n.Rarity
+					dynamicPacket[at] = n.Rarity
 					at++
 				}
 			}
@@ -603,7 +612,7 @@ func (wp *WavePool) broadcastUpdatePacket() {
 
 		p.SafeWriteMessage(websocket.BinaryMessage, slices.Concat(
 			staticPacket[:staticAt],
-			playerPacket[:at],
+			dynamicPacket[:at],
 		))
 
 		return true
@@ -621,55 +630,44 @@ func (wp *WavePool) createStaticUpdatePacket() ([]byte, int) {
 	at++
 
 	{ // Write wave data
-		binary.LittleEndian.PutUint16(buf[at:], wp.Wd.Progress)
-		at += 2
+		at += PutUvarint16(buf[at:], wp.Wd.Progress)
 
-		binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(wp.Wd.ProgressTimer))
-		at += 4
+		at += PutUvarint32(buf[at:], math.Float32bits(wp.Wd.ProgressTimer))
 
-		binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(wp.Wd.ProgressRedTimer))
-		at += 4
+		at += PutUvarint32(buf[at:], math.Float32bits(wp.Wd.ProgressRedTimer))
 
 		{ // Wave is ended or not
-			var y byte = 0
-
 			if wp.hasBeenEnded.Load() {
-				y = 1
+				buf[at] = 1
+			} else {
+				buf[at] = 0
 			}
 
-			buf[at] = y
 			at++
 		}
 
-		binary.LittleEndian.PutUint16(buf[at:], wp.Wd.MapRadius)
-		at += 2
+		at += PutUvarint16(buf[at:], wp.Wd.MapRadius)
 	}
 
 	{ // Write eliminated entities
-		binary.LittleEndian.PutUint16(buf[at:], uint16(len(wp.eliminatedEntityIds)))
-		at += 2
+		at += PutUvarint16(buf[at:], FiniteObjectCount(len(wp.eliminatedEntityIds)))
 
 		for _, e := range wp.eliminatedEntityIds {
-			binary.LittleEndian.PutUint32(buf[at:], e)
-			at += 4
+			at += PutUvarint32(buf[at:], e)
 		}
 
 		wp.eliminatedEntityIds = nil
 	}
 
 	{ // Write lightning bounces
-		binary.LittleEndian.PutUint16(buf[at:], uint16(len(wp.lightningBounces)))
-		at += 2
+		at += PutUvarint16(buf[at:], FiniteObjectCount(len(wp.lightningBounces)))
 
 		for _, ps := range wp.lightningBounces {
-			binary.LittleEndian.PutUint16(buf[at:], uint16(len(ps)))
-			at += 2
+			at += PutUvarint16(buf[at:], FiniteObjectCount(len(ps)))
 
 			for _, p := range ps {
-				binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p[0]))
-				at += 4
-				binary.LittleEndian.PutUint32(buf[at:], math.Float32bits(p[1]))
-				at += 4
+				at += PutUvarint32(buf[at:], math.Float32bits(p[0]))
+				at += PutUvarint32(buf[at:], math.Float32bits(p[1]))
 			}
 		}
 
@@ -945,7 +943,7 @@ func (wp *WavePool) SafeGetMobsWithCondition(condition func(*Mob) bool) []*Mob {
 	return wp.GetMobsWithCondition(condition)
 }
 
-func (wp *WavePool) LinkedMobSegmentation(
+func (wp *WavePool) MobSegmentation(
 	mType native.MobType,
 
 	rarity native.Rarity,
@@ -988,7 +986,7 @@ func (wp *WavePool) LinkedMobSegmentation(
 	}
 }
 
-func (wp *WavePool) SafeLinkedMobSegmentation(
+func (wp *WavePool) SafeMobSegmentation(
 	mType native.MobType,
 
 	rarity native.Rarity,
@@ -1003,7 +1001,7 @@ func (wp *WavePool) SafeLinkedMobSegmentation(
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
 
-	wp.LinkedMobSegmentation(
+	wp.MobSegmentation(
 		mType,
 
 		rarity,
@@ -1264,6 +1262,8 @@ Loop:
 
 	if len(bouncePoints) > 0 {
 		wp.lightningBounces = append(wp.lightningBounces, bouncePoints)
+
+		bouncePoints = nil
 	}
 }
 
@@ -1330,6 +1330,8 @@ func (wp *WavePool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 
 	if len(bouncePoints) > 0 {
 		wp.lightningBounces = append(wp.lightningBounces, bouncePoints)
+
+		bouncePoints = nil
 	}
 }
 
@@ -1340,6 +1342,8 @@ func (wp *WavePool) staticPetalToDynamicPetal(
 	isSurface bool,
 ) DynamicPetal {
 	count := native.PetalProfiles[sp.Type].StatFromRarity(sp.Rarity).Count
+
+	isNotSurface := !isSurface
 
 	dp := make(DynamicPetal, count)
 
@@ -1355,7 +1359,7 @@ func (wp *WavePool) staticPetalToDynamicPetal(
 
 			master,
 
-			!isSurface,
+			isNotSurface,
 		)
 	}
 

@@ -1114,7 +1114,12 @@ func init() {
 		panic(err)
 	}
 
-	err = os.WriteFile("../Shared/Native/petal_profiles.json", data, 0o644)
+	err = os.WriteFile("../Shared/Florr/Native/ProfileData/petal_profiles.json", data, 0o644)
+	if err != nil {
+		panic(err)
+	}
+
+	err = os.WriteFile("../Client/private/src/Florr/Native/Entity/ProfileData/petal_profiles.json", data, 0o644)
 	if err != nil {
 		panic(err)
 	}

@@ -33,8 +33,8 @@ type Player struct {
 
 	IsDead bool
 
-	Acceleration [2]float32
-	Velocity     [2]float32
+	Acceleration Velocity
+	Velocity     Velocity
 
 	// Window is current window size of user.
 	// This should not calculated within antenna scale, that will proceed by server.
@@ -160,7 +160,7 @@ func (c *SwapPetalCommand) Execute(wp *WavePool, p *Player) {
 					continue
 				}
 
-				p.CompletelyRemove(wp)
+				p.FullyRemove(wp)
 			}
 		}
 
@@ -350,12 +350,12 @@ func NewPlayer(
 
 		BodyDamage: 100000,
 
-		Mood: native.MoodNormal,
+		Mood: 0,
 
 		IsDead: false,
 
-		Acceleration: [2]float32{0, 0},
-		Velocity:     [2]float32{0, 0},
+		Acceleration: Velocity{0, 0},
+		Velocity:     Velocity{0, 0},
 
 		Window: [2]uint16{1920, 1080},
 
@@ -365,8 +365,8 @@ func NewPlayer(
 
 		OrbitRotation:         0,
 		OrbitHistoryIndex:     0,
-		OrbitHistoryX:         make([]float32, HistorySize),
-		OrbitHistoryY:         make([]float32, HistorySize),
+		OrbitHistoryX:         make([]float32, OrbitHistorySize),
+		OrbitHistoryY:         make([]float32, OrbitHistorySize),
 		OrbitPetalRadii:       nil,
 		OrbitRadiusVelocities: nil,
 		OrbitPetalSpins:       nil,

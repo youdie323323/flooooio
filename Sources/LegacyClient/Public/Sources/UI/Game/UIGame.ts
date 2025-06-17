@@ -586,7 +586,7 @@ export default class UIGame extends AbstractUI {
 
         this.wasWaveEnded = false;
 
-        this.currentMoodFlags = MoodFlags.NORMAL;
+        this.currentMoodFlags = 0;
 
         { // Setup listeners
             this.on("onKeyDown", (event: KeyboardEvent) => {

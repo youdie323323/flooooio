@@ -76,6 +76,7 @@ function drawRoundedPolygon(
     ctx.translate(x, y);
     ctx.scale(radius, radius);
     ctx.rotate((rotation * Math.PI) / 180);
+    
     ctx.beginPath();
 
     const corners: Array<Array<number>> = new Array(numberOfCorners);

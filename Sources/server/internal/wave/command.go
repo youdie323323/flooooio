@@ -79,8 +79,7 @@ func GetCliHelp(c cli) string {
 			args = " " + args
 		}
 
-		command := fmt.Sprintf("/%s%s - %s", cmdName, args, help)
-		commands = append(commands, command)
+		commands = append(commands, fmt.Sprintf("/%s%s - %s", cmdName, args, help))
 	}
 
 	return strings.Join(commands, "\n")
@@ -96,7 +95,9 @@ func GetCommandFormat(cmd any) string {
 
 		help := field.Tag.Get("help")
 		if field.Type == yesNoBoolType {
-			help += "? y/n"
+			help += "?"
+			help += " "
+			help += "y/n"
 		}
 
 		_, ok := field.Tag.Lookup("optional")

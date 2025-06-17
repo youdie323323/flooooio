@@ -14,7 +14,7 @@ pub const EntityRarity = enum(u8) {
 
 const rarity_fields = meta.fields(EntityRarity);
 
-pub const max_rarities: u8 = rarity_fields[rarity_fields.len - 1].value;
+pub const max_rarities = rarity_fields[rarity_fields.len - 1].value;
 
 const rarity_names = std.StaticStringMap([]const u8).initComptime(.{
     .{ @tagName(EntityRarity.common), "Common" },
@@ -36,10 +36,10 @@ const rarity_colors = std.StaticStringMap(Color).initComptime(.{
     .{ @tagName(EntityRarity.ultra), Color.comptimeFromHexColorCode("#373737") },
 });
 
-pub inline fn getRarityName(rarity: EntityRarity) ?[]const u8 {
+pub inline fn nameOf(rarity: EntityRarity) ?[]const u8 {
     return rarity_names.get(@tagName(rarity));
 }
 
-pub inline fn getRarityColor(rarity: EntityRarity) ?Color {
+pub inline fn colorOf(rarity: EntityRarity) ?Color {
     return rarity_colors.get(@tagName(rarity));
 }

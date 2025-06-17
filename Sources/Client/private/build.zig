@@ -20,7 +20,8 @@ pub fn build(b: *std.Build) !void {
         .root_module = b.createModule(.{
             .root_source_file = b.path(src_folder ++ "/main.zig"),
             .target = target,
-            .optimize = .Debug
+            .optimize = .ReleaseFast,
+            .strip = true,
         }),
     });
 

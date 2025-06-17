@@ -19,7 +19,6 @@ func (m *Mob) MobCoordinateBoundary(wp *WavePool, _ time.Time) {
 	mapRadius := float32(wp.Wd.MapRadius)
 
 	desiredMapRadius := mapRadius - m.CalculateRadius()
-	desiredMapRadiusSq := desiredMapRadius * desiredMapRadius
 
 	dx := m.X - mapRadius
 	dy := m.Y - mapRadius
@@ -28,11 +27,13 @@ func (m *Mob) MobCoordinateBoundary(wp *WavePool, _ time.Time) {
 
 	if m.IsProjectile() {
 		// Eliminate if missile above desiredMapRadius * 1.5
-		if dot > (desiredMapRadius*missileEliminateRadiusMultiplier)*(desiredMapRadius*missileEliminateRadiusMultiplier) {
+		projectileLimit := desiredMapRadius * missileEliminateRadiusMultiplier
+
+		if dot > projectileLimit*projectileLimit {
 			m.ForceEliminate(wp)
 		}
 	} else {
-		if dot > desiredMapRadiusSq {
+		if dot > desiredMapRadius*desiredMapRadius {
 			collisionAngle := math32.Atan2(dy, dx)
 
 			m.X = mapRadius + math32.Cos(collisionAngle)*desiredMapRadius

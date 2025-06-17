@@ -19,9 +19,9 @@ const size_of_usize = @sizeOf(usize);
 
 const alignment_of_usize = @alignOf(usize);
 
-pub const MemoryPointer = *align(size_of_usize) anyopaque;
+pub const MemoryPtr = *align(size_of_usize) anyopaque;
 
-pub export fn malloc(size: usize) callconv(.c) MemoryPointer {
+pub export fn malloc(size: usize) callconv(.c) MemoryPtr {
     const total_size = size + size_of_usize;
     const ptr = allocator.alignedAlloc(u8, alignment_of_usize, total_size) catch unreachable;
 
@@ -30,7 +30,7 @@ pub export fn malloc(size: usize) callconv(.c) MemoryPointer {
     return ptr.ptr + size_of_usize;
 }
 
-pub export fn free(ptr: MemoryPointer) callconv(.c) void {
+pub export fn free(ptr: MemoryPtr) callconv(.c) void {
     const to_free = @as([*]align(size_of_usize) u8, @ptrCast(ptr)) - size_of_usize;
     const total_size = @as(*usize, @ptrCast(to_free)).*;
 

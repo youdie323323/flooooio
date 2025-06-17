@@ -46,10 +46,10 @@ type Mob struct {
 	HornetLastMissileShoot time.Time
 
 	// mob_special_movement.go struct field definitions
-	SineWaveIndex        int
-	RotationCounter      int
-	SpecialMovementTimer float32
-	IsSpecialMoving      bool
+	SineWaveIndex   int
+	RotationCounter int
+	MovementTimer   float32
+	IsSpecialMoving bool
 }
 
 // SpeedOf statically return speed within mob.
@@ -123,8 +123,13 @@ func (m *Mob) GetMobToDamage(wp *WavePool) *Mob {
 	return toDamaged
 }
 
-// Ensure mob satisfies LightningEmitter
-var _ LightningEmitter = (*Mob)(nil)
+// WasEliminated determine if mob is eliminated.
+// This method exists because struct pointer mob reference doesnt nil'ed when removed.
+func (m *Mob) WasEliminated(wp *WavePool) bool {
+	return wp.FindMob(*m.Id) == nil
+}
+
+var _ LightningEmitter = (*Mob)(nil) // *Mob must implement LightningEmitter
 
 // GetLightningBounceTargets returns targets to bounce.
 func (m *Mob) GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node {
@@ -146,12 +151,6 @@ func (m *Mob) GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []
 				m.IsEnemy()
 		}))
 	}
-}
-
-// WasEliminated determine if mob is eliminated.
-// This method exists because struct pointer mob reference doesnt nil'ed when removed.
-func (m *Mob) WasEliminated(wp *WavePool) bool {
-	return wp.FindMob(*m.Id) == nil
 }
 
 func (m *Mob) OnUpdateTick(wp *WavePool, now time.Time) {
@@ -277,10 +276,10 @@ func NewMob(
 		HornetLastMissileShoot: time.Time{},
 
 		// mob_special_movement default values
-		SineWaveIndex:        0,
-		RotationCounter:      0,
-		SpecialMovementTimer: 0,
-		IsSpecialMoving:      false,
+		SineWaveIndex:   0,
+		RotationCounter: 0,
+		MovementTimer:   0,
+		IsSpecialMoving: false,
 	}
 
 	// We only want connected segment ids for mob (leech)

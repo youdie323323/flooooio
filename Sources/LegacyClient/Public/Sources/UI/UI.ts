@@ -514,7 +514,6 @@ export default abstract class AbstractUI extends Emitter<ComponentCompatibleUnco
 
     private isAncestorAnimatingOut(child: Components): boolean {
         const parent = this.findParentContainer(child);
-
         if (parent === null) return false;
 
         if (this.isComponentAnimatingOut(parent)) return true;

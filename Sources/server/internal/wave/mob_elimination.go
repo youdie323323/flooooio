@@ -26,7 +26,7 @@ func (m *Mob) onEliminate(wp *WavePool) {
 		removeConnectedSegmentTraversal(wp, m)
 	}
 
-	// Normal centi / desert centi changes angle when one of their segment is destroyed
+	// Normal centi / desert centi changes angle when one of their segment is destroyed (or it isnt?)
 	if m.Type == native.MobTypeCentipede || m.Type == native.MobTypeCentipedeDesert {
 		if t, ok := IsBodyWithResult(wp, m); ok && t.TargetEntity == nil {
 			t.RotationCounter = RotationCounterGoal

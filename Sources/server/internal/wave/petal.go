@@ -22,7 +22,7 @@ type Petal struct {
 
 	SpinningOnMob bool
 
-	Velocity [2]float32
+	Velocity Velocity
 
 	// petal_faster_raging.go struct field definitions
 	LastVelocityApplied time.Time
@@ -54,8 +54,7 @@ func (p *Petal) WasEliminated(wp *WavePool) bool {
 	return wp.FindPetal(*p.Id) == nil
 }
 
-// Ensure petal satisfies LightningEmitter
-var _ LightningEmitter = (*Petal)(nil)
+var _ LightningEmitter = (*Petal)(nil) // *Petal must implement LightningEmitter
 
 // GetLightningBounceTargets returns targets to bounce.
 func (p *Petal) GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node {
@@ -64,6 +63,37 @@ func (p *Petal) GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) 
 			slices.Contains(ProjectileMobTypes, m.Type)) &&
 			m.IsEnemy()
 	}))
+}
+
+func (p *Petal) OnUpdateTick(wp *WavePool, now time.Time) {
+	p.Mu.Lock()
+
+	// Unneeded for petal
+	// m.EntityCoordinateMovement(wp, now)
+
+	p.PetalCoordinateBoundary(wp, now)
+	p.PetalSpecialAngle(wp, now)
+	p.PetalFasterRaging(wp, now)
+	p.PetalCoordinateMovement(wp, now)
+
+	p.PetalElimination(wp, now)
+
+	{ // Base onUpdateTick
+	}
+
+	p.Mu.Unlock()
+}
+
+func (p *Petal) Dispose() {
+	{
+		for i := range p.SummonedPets {
+			p.SummonedPets[i] = nil
+		}
+
+		p.SummonedPets = nil
+	}
+
+	p.Master = nil
 }
 
 const PetalSize = 6
@@ -102,41 +132,10 @@ func NewPetal(
 
 		SpinningOnMob: false,
 
-		Velocity: [2]float32{0, 0},
+		Velocity: Velocity{0, 0},
 
 		LastVelocityApplied: time.Time{},
 	}
-}
-
-func (p *Petal) OnUpdateTick(wp *WavePool, now time.Time) {
-	p.Mu.Lock()
-
-	// Unneeded for petal
-	// m.EntityCoordinateMovement(wp, now)
-
-	p.PetalCoordinateBoundary(wp, now)
-	p.PetalSpecialAngle(wp, now)
-	p.PetalFasterRaging(wp, now)
-	p.PetalCoordinateMovement(wp, now)
-
-	p.PetalElimination(wp, now)
-
-	{ // Base onUpdateTick
-	}
-
-	p.Mu.Unlock()
-}
-
-func (p *Petal) Dispose() {
-	{
-		for i := range p.SummonedPets {
-			p.SummonedPets[i] = nil
-		}
-
-		p.SummonedPets = nil
-	}
-
-	p.Master = nil
 }
 
 // StaticPetalData represents static data of Petal.

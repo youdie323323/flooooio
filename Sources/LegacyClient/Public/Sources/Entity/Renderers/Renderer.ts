@@ -3,7 +3,7 @@ import type Entity from "../Entity";
 import Mob from "../Mob";
 import Player from "../Player";
 import type { RenderingContext } from "./RendererRenderingContext";
-import MOB_PROFILES from "../../../../../Shared/Native/mob_profiles.json";
+import MOB_PROFILES from "../../../../../Shared/Florr/Native/ProfileData/mob_profiles.json";
 import { uiCtx } from "../../../../Application";
 import type { MobData } from "../../../../Private/Sources/Entity/Mob/MobData";
 import type { ColorCode } from "../../Utils/Color";

@@ -17,31 +17,31 @@ pub fn Entity(comptime Impl: type) type {
             return start_angle + calculateAngleDistance(start_angle, end_angle) * progress;
         }
 
-        inline fn smoothInterpolate(delta_time: f32, current: f32, target: f32, duration: f32) f32 {
-            return current + (target - current) * @min(1, delta_time / duration);
+        inline fn smoothInterpolate(dtx: f32, current: f32, comptime target: f32) f32 {
+            return current + ((comptime target) - current) * @min(1, dtx);
         }
-        
+
         pub const Vector2 = @Vector(2, f32);
 
         impl: Impl,
 
         id: EntityId,
 
-        t: f32,
-        total_t: f32,
-        update_t: f32,
+        t: f32 = 0,
+        total_t: f32 = 0,
+        update_t: f32 = 0,
 
-        hurt_t: f32,
-        dead_t: f32,
+        hurt_t: f32 = 0,
+        dead_t: f32 = 0,
 
-        is_poisoned: bool,
-        poison_t: f32,
+        is_poisoned: bool = false,
+        poison_t: f32 = 0,
 
         pos: Vector2,
         old_pos: Vector2,
         next_pos: Vector2,
 
-        eye_pos: Vector2,
+        eye_pos: Vector2 = .{ 1, 0 },
 
         size: f32,
         next_size: f32,
@@ -56,11 +56,11 @@ pub fn Entity(comptime Impl: type) type {
         old_health: f32,
 
         red_health: f32,
-        red_health_timer: f32,
+        red_health_timer: f32 = 0,
 
-        is_dead: bool,
-        move_counter: f32,
-        hp_alpha: f32,
+        is_dead: bool = false,
+        move_counter: f32 = 0,
+        hp_alpha: f32 = 1,
 
         pub fn init(
             impl: Impl,
@@ -75,21 +75,9 @@ pub fn Entity(comptime Impl: type) type {
 
                 .id = id,
 
-                .t = 0,
-                .total_t = 0,
-                .update_t = 0,
-
-                .hurt_t = 0,
-                .dead_t = 0,
-
-                .is_poisoned = false,
-                .poison_t = 0,
-
                 .pos = pos,
                 .old_pos = pos,
                 .next_pos = pos,
-
-                .eye_pos = .{ 1, 0 },
 
                 .angle = angle,
                 .next_angle = angle,
@@ -104,11 +92,6 @@ pub fn Entity(comptime Impl: type) type {
                 .old_health = health,
 
                 .red_health = health,
-                .red_health_timer = 0,
-
-                .is_dead = false,
-                .move_counter = 0,
-                .hp_alpha = 1,
             };
         }
 
@@ -120,8 +103,8 @@ pub fn Entity(comptime Impl: type) type {
         }
 
         pub fn update(self: *Self, delta_time: f32) void {
-            const delta_time_100 = delta_time / 100;
-            const delta_time_150 = delta_time_100 * 2 / 3;
+            const delta_time_100 = delta_time * 0.01;
+            const delta_time_150 = delta_time_100 * (2 / 3);
             const delta_time_200 = delta_time_100 * 0.5;
 
             if (self.is_dead) self.dead_t += delta_time_150;
@@ -129,7 +112,7 @@ pub fn Entity(comptime Impl: type) type {
             if (self.hurt_t > 0) {
                 self.hurt_t -= delta_time_150;
 
-                if (0 > self.hurt_t) self.hurt_t = 0;
+                if (self.hurt_t < 0) self.hurt_t = 0;
             }
 
             self.poison_t += @as(f32, if (self.is_poisoned) 1 else -1) * delta_time_200;
@@ -163,7 +146,7 @@ pub fn Entity(comptime Impl: type) type {
 
             self.total_t += delta_time / 40;
 
-            if (1 > self.health) self.hp_alpha = smoothInterpolate(delta_time, self.hp_alpha, 1, 200);
+            if (self.health < 1) self.hp_alpha = smoothInterpolate(delta_time_200, self.hp_alpha, 1);
 
             if (self.red_health_timer > 0) {
                 self.red_health_timer -= delta_time / 600;

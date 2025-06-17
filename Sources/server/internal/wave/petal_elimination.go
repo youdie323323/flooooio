@@ -48,7 +48,7 @@ func (p *Petal) SafeForceEliminate(wp *WavePool) {
 	p.Mu.Unlock()
 }
 
-func (p *Petal) CompletelyRemove(wp *WavePool) {
+func (p *Petal) FullyRemove(wp *WavePool) {
 	// Remove petal itself
 	if !p.WasEliminated(wp) {
 		p.ForceEliminate(wp)

@@ -2,16 +2,16 @@ const std = @import("std");
 const math = std.math;
 const mem = std.mem;
 const CanvasContext = @import("../WebAssembly/Interop/Canvas2D/CanvasContext.zig");
-const S3FIFO = @import("./S3FIFO/S3FIFO.zig").S3FIFO;
+const S3FIFO = @import("S3FIFO/S3FIFO.zig").S3FIFO;
 const Color = @import("../WebAssembly/Interop/Canvas2D/Color.zig");
-const Deque = @import("./S3FIFO/Deque.zig").Deque;
+const Deque = @import("S3FIFO/Deque.zig").Deque;
 const TileMap = @This();
 
 pub const Vector2 = @Vector(2, f32);
 
-// Hash two floats into cache key.
-// Caller owns the memory.
-inline fn szudzikPair(allocator: mem.Allocator, x: f32, y: f32) !ChunkCacheKey {
+/// Hash two floats into cache key.
+/// Caller owns the memory.
+inline fn pairPoint(allocator: mem.Allocator, x: f32, y: f32) !ChunkCacheKey {
     return try std.fmt.allocPrint(allocator, "{},{}", .{ x, y });
 }
 
@@ -102,15 +102,19 @@ inline fn generateChunk(
         false,
     );
 
-    const tile_size_w: f32, const tile_size_h: f32 = tile_size;
+    const tile_size_w, const tile_size_h = tile_size;
 
-    const top_left_tile: Vector2 = chunk_position * chunk_size;
-    const top_left_tile_x: f32, const top_left_tile_y: f32 = top_left_tile;
+    const top_left_tile = chunk_position * chunk_size;
+    const top_left_tile_x, const top_left_tile_y = top_left_tile;
 
-    const bottom_right_tile: Vector2 = top_left_tile + chunk_size - one_vector;
-    const bottom_right_tile_x: f32, const bottom_right_tile_y: f32 = bottom_right_tile;
+    const bottom_right_tile = top_left_tile + chunk_size - one_vector;
+    const bottom_right_tile_x, const bottom_right_tile_y = bottom_right_tile;
 
-    const bounds_top_left = if (options.bounds) |b| b.top_left else zero_vector;
+    // const bounds_top_left =
+    //     if (options.bounds) |b|
+    //         b.top_left
+    //     else
+    //         zero_vector;
 
     chunk_ctx.setImageSmoothingEnabled(false);
 
@@ -118,14 +122,14 @@ inline fn generateChunk(
         // const data = layer.data;
         const tiles = layer.tiles;
 
-        var y_tile: f32 = top_left_tile_y;
+        var y_tile = top_left_tile_y;
         while (y_tile <= bottom_right_tile_y) : (y_tile += 1) {
-            var x_tile: f32 = top_left_tile_x;
+            var x_tile = top_left_tile_x;
             while (x_tile <= bottom_right_tile_x) : (x_tile += 1) {
                 const tile_position: Vector2 = .{ x_tile, y_tile };
 
-                const tile_data_position: Vector2 = tile_position - bounds_top_left;
-                if (tile_data_position[0] < 0 or tile_data_position[1] < 0) continue;
+                // const tile_data_position = tile_position - bounds_top_left;
+                // if (tile_data_position[0] < 0 or tile_data_position[1] < 0) continue;
 
                 // const data_row_index: usize = @intFromFloat(tile_data_position[1]);
                 // if (data_row_index >= data.len) continue;
@@ -138,7 +142,7 @@ inline fn generateChunk(
                 // const tile_data: usize = @intCast(data_row[data_cell_index]);
                 // if (tile_data >= tiles.len) continue;
 
-                const tile_absolute_position_x: f32, const tile_absolute_position_y: f32 =
+                const tile_absolute_position_x, const tile_absolute_position_y =
                     @mulAdd(Vector2, tile_position, tile_size, -absolute_chunk_position);
 
                 chunk_ctx.copyCanvasWithScale(
@@ -187,73 +191,67 @@ pub fn draw(
 
     const chunk_border: Vector2 = @floatFromInt(options.chunk_border);
 
-    const scale_bound_lower: f32, const scale_bound_upper: f32 = options.scale_bound;
+    const scale_bound_lower, const scale_bound_upper = options.scale_bound;
 
     // tile_size and chunk_size are u16 vector, so this vector is actually integer vector
     const absolute_chunk_size: Vector2 = tile_size * chunk_size;
 
-    const actual_scale: f32 = math.clamp(scale, scale_bound_lower, scale_bound_upper);
+    const actual_scale = math.clamp(scale, scale_bound_lower, scale_bound_upper);
     const actual_scale_vector: Vector2 = @splat(actual_scale);
-    const actual_scale_vector_2mul: Vector2 = actual_scale_vector * two_vector;
+    const actual_scale_vector_2 = actual_scale_vector * two_vector;
 
-    const half_screen_scaled: Vector2 = @ceil(screen / actual_scale_vector_2mul);
+    const half_screen_scaled = @ceil(screen / actual_scale_vector_2);
 
-    const actual_position: Vector2 = @round(if (options.bounds) |bounds| blk: {
-        const tile_size_scaled: Vector2 = tile_size / actual_scale_vector;
+    const actual_position = @round(if (options.bounds) |bounds| blk: {
+        const tile_size_scaled = tile_size / actual_scale_vector;
+
         const min_position = @mulAdd(Vector2, bounds.top_left, tile_size_scaled, half_screen_scaled);
         const max_position = @mulAdd(Vector2, bounds.bottom_right, tile_size_scaled, -half_screen_scaled);
 
         break :blk math.clamp(position, min_position, max_position);
     } else position);
 
-    const screen_center_chunk: Vector2 = @divFloor(actual_position, absolute_chunk_size);
+    const screen_center_chunk = @divFloor(actual_position, absolute_chunk_size);
 
-    const half_screen_size_in_chunks: Vector2 = @ceil(
-        // Original calculation: (screen / (actual_scale_vector * absolute_chunk_size_vector)) * halfone_scalar_vector
+    const half_screen_size_in_chunks = @ceil(
         (halfone_vector * screen) / (actual_scale_vector * absolute_chunk_size),
     );
 
     // screen_center_chunk is floor'ed, half_screen_size_in_chunks is ceil'ed, chunk_border is u16 vector
     // so top_left_chunk, bottom_right_chunk is integer vector
-    const top_left_chunk_x: f32, const top_left_chunk_y: f32 = (screen_center_chunk - half_screen_size_in_chunks) - chunk_border;
-    const bottom_right_chunk_x: f32, const bottom_right_chunk_y: f32 = (screen_center_chunk + half_screen_size_in_chunks) + chunk_border;
+    const top_left_chunk_x, const top_left_chunk_y = (screen_center_chunk - half_screen_size_in_chunks) - chunk_border;
+    const bottom_right_chunk_x, const bottom_right_chunk_y = (screen_center_chunk + half_screen_size_in_chunks) + chunk_border;
 
     // Using round here because of:
     // https://stackoverflow.com/questions/9942209/unwanted-lines-appearing-in-html5-canvas-using-tiles
     // I̶ ̶d̶i̶d̶ ̶t̶h̶i̶s̶ ̶t̶o̶ ̶a̶b̶s̶o̶l̶u̶t̶e̶_̶c̶h̶u̶n̶k̶_̶p̶o̶s̶i̶t̶i̶o̶n̶ ̶t̶o̶o̶
     // half_screen_scaled and actual_position is actually integer vector,
     // so no need to round
-    const translate_position_x: f32, const translate_position_y: f32 = half_screen_scaled - actual_position;
+    const translate_position_x, const translate_position_y = half_screen_scaled - actual_position;
 
     ctx.save();
 
     ctx.setImageSmoothingEnabled(false);
 
-    ctx.scale(
-        actual_scale,
-        actual_scale,
-    );
-    ctx.translate(
-        translate_position_x,
-        translate_position_y,
-    );
+    ctx.scale(actual_scale, actual_scale);
+    ctx.translate(translate_position_x, translate_position_y);
 
-    var y_chunk: f32 = top_left_chunk_y;
+    var y_chunk = top_left_chunk_y;
     while (y_chunk < bottom_right_chunk_y) : (y_chunk += 1) {
-        var x_chunk: f32 = top_left_chunk_x;
+        var x_chunk = top_left_chunk_x;
         while (x_chunk < bottom_right_chunk_x) : (x_chunk += 1) {
             const chunk_position: Vector2 = .{ x_chunk, y_chunk };
 
-            const chunk_key = try szudzikPair(allocator, x_chunk, y_chunk);
+            const chunk_key = try pairPoint(allocator, x_chunk, y_chunk);
 
             // chunk_position and absolute_chunk_size_vector is actually integer vector, so no need to round
-            const absolute_chunk_position: Vector2 = chunk_position * absolute_chunk_size;
+            const absolute_chunk_position = chunk_position * absolute_chunk_size;
 
-            if (self.chunk_cache.get(chunk_key)) |chunk|{
+            if (self.chunk_cache.get(chunk_key)) |chunk| {
                 self.drawChunk(ctx, chunk, absolute_chunk_position);
 
                 allocator.free(chunk_key);
-            }  else {
+            } else {
                 const chunk = self.generateChunk(
                     chunk_position,
                     absolute_chunk_position,
@@ -276,6 +274,7 @@ pub fn draw(
         const key, const chunk = c;
 
         allocator.free(key);
+
         chunk.deinit(allocator);
     }
 }

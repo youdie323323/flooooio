@@ -7,6 +7,11 @@ const (
 	VelocityEpsilon = 0.1
 )
 
+// VelocityWithinEpsilon returns whether vector within epsilon.
+func VelocityWithinEpsilon(v Velocity) bool {
+	return v[0] < VelocityEpsilon && v[1] < VelocityEpsilon
+}
+
 func angleToRadian(angle float32) float32 {
 	return angle / 255 * Tau
 }

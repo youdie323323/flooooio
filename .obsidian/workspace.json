@@ -1,0 +1,177 @@
+{
+  "main": {
+    "id": "46e998bf6a3214ea",
+    "type": "split",
+    "children": [
+      {
+        "id": "a678836896973c9f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "d30f56aa44883852",
+            "type": "leaf",
+            "state": {
+              "type": "excalidraw",
+              "state": {
+                "file": "Sources/server/internal/wave/mob.md"
+              },
+              "icon": "excalidraw-icon",
+              "title": "mob"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "9db0deb4ab920aa4",
+    "type": "split",
+    "children": [
+      {
+        "id": "54e94599f3e722bf",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "c9cd604ee3148b06",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "ファイルエクスプローラ"
+            }
+          },
+          {
+            "id": "88a537d7df294cf7",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "検索"
+            }
+          },
+          {
+            "id": "a25274d95f2f2cc3",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "ブックマーク"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "794efbaccac6de06",
+    "type": "split",
+    "children": [
+      {
+        "id": "2b5bb9f82e5d9bd2",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "40d725ea404b254b",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Sources/server/internal/wave/mob.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "mobへのバックリンク"
+            }
+          },
+          {
+            "id": "afb1c003e0f47ec8",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Sources/server/internal/wave/mob.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "mobからのアウトゴーイングリンク"
+            }
+          },
+          {
+            "id": "47c88aaf087d2b63",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "タグ"
+            }
+          },
+          {
+            "id": "1a4c4c82f503381b",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Sources/server/internal/wave/mob.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "mobのアウトライン"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:クイックスイッチャーを開く": false,
+      "graph:グラフビューを開く": false,
+      "canvas:新規キャンバスを作成": false,
+      "daily-notes:今日のデイリーノートを開く": false,
+      "templates:テンプレートを挿入": false,
+      "command-palette:コマンドパレットを開く": false,
+      "obsidian-excalidraw-plugin:New drawing": false
+    }
+  },
+  "active": "d30f56aa44883852",
+  "lastOpenFiles": [
+    "Sources/server/internal/wave/entity.md",
+    "Sources/server/internal/wave/mob.md",
+    "Sources/server/internal/wave/mob.md",
+    "Excalidraw"
+  ]
+}

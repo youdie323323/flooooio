@@ -1,4 +1,4 @@
-import PETAL_PROFILES from "../../../../Shared/Native/petal_profiles.json";
+import PETAL_PROFILES from "../../../../Shared/Florr/Native/ProfileData/petal_profiles.json";
 import { memo } from "../Utils/Memoize";
 import type { MobType, PetalType } from "../Native/Entity/EntityType";
 

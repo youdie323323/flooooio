@@ -17,7 +17,9 @@ const UI = @import("UI/UI.zig");
 const TileMap = @import("Tile/TileMap.zig");
 
 const EntityId = @import("Entity/Entity.zig").EntityId;
-const EntityType = @import("Entity/EntityType.zig").EntityType;
+const EntityType = @import("Florr/Native/Entity/EntityType.zig").EntityType;
+const MobType = @import("Florr/Native/Entity/EntityType.zig").MobType;
+const PetalType = @import("Florr/Native/Entity/EntityType.zig").PetalType;
 const EntityRarity = @import("Florr/Native/Entity/EntityRarity.zig").EntityRarity;
 
 const PlayerImpl = @import("Entity/Player.zig");
@@ -25,9 +27,11 @@ const pmood = @import("Entity/PlayerMood.zig");
 
 const MobImpl = @import("Entity/Mob.zig");
 const renderEntity = @import("Entity/Renderers/Renderer.zig").renderEntity;
-const MobRenderingDispatcher = @import("Entity/Renderers/MobRenderingDispatcher.zig").MobRenderingDispatcher;
+const MobRenderingDispatcher = @import("Entity/Renderers/Mob/MobRenderingDispatcher.zig").MobRenderingDispatcher;
 
 const mach_objects = @import("Entity/MachObjects/objs.zig");
+
+const EntityProfiles = @import("Florr/Native/Entity/EntityProfiles.zig");
 
 const allocator = @import("mem.zig").allocator;
 
@@ -36,38 +40,38 @@ var ctx: *CanvasContext = undefined;
 
 var ui: UI = undefined;
 
+var tile_map: TileMap = undefined;
+
 var client: *ws.ClientWebSocket = undefined;
 
-var width: u16 = 0;
-var height: u16 = 0;
+var width: f32 = 0;
+var height: f32 = 0;
+
+var base_scale: f32 = 1;
+var antenna_scale: f32 = 1;
+
+const base_width: f32 = 1300;
+const base_height: f32 = 650;
 
 fn onResize(_: ?*const event.Event) callconv(.c) void {
     const dpr = dom.devicePixelRatio();
 
-    width = @intFromFloat(@as(f32, @floatFromInt(dom.clientWidth())) * dpr);
-    height = @intFromFloat(@as(f32, @floatFromInt(dom.clientHeight())) * dpr);
+    width = @as(f32, @floatFromInt(dom.clientWidth())) * dpr;
+    height = @as(f32, @floatFromInt(dom.clientHeight())) * dpr;
+
+    base_scale = @max(
+        width / base_width,
+        height / base_height,
+    );
 
     ctx.setSize(
-        width,
-        height,
+        @intFromFloat(width),
+        @intFromFloat(height),
     );
 }
 
 fn onWheel(_: ?*const event.Event) callconv(.c) void {
-    players.lock();
-    defer players.unlock();
-
-    var slice = players.slice();
-
-    while (slice.next()) |p| {
-        var player = players.getValue(p);
-
-        player.hurt_t = 1;
-
-        player.impl.is_developer = !player.impl.is_developer;
-
-        players.setValue(p, player);
-    }
+    antenna_scale -= 0.025;
 }
 
 pub const Players = mach_objects.Objects(PlayerImpl.Super, .id);
@@ -82,38 +86,35 @@ const EntityKind = enum(u8) {
     petal,
 };
 
-inline fn angleToRad(angle: f32) f32 {
-    return angle / 255 * math.tau;
+inline fn internalAngleToRadians(angle: f32) f32 {
+    return (angle / 255) * math.tau;
 }
 
 var wave_self_id: EntityId = undefined;
 
 fn handleWaveSelfId(stream: *ws.Clientbound.Reader) anyerror!void {
-    wave_self_id = try stream.readInt(EntityId, .little);
+    wave_self_id = try ws.Clientbound.readVarUint32(stream);
 }
 
-var i: usize = 0;
+/// Possible objects length.
+const FiniteObjectCount = u16;
 
 fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
     { // Read wave informations
-        const wave_progress = try stream.readInt(u16, .little);
+        const wave_progress = try ws.Clientbound.readVarUint16(stream);
 
-        const wave_progress_timer = try ws.Clientbound.readFloat32(stream);
+        const wave_progress_timer = try ws.Clientbound.readVarFloat(f32, stream);
 
-        const wave_progress_red_gage_timer = try ws.Clientbound.readFloat32(stream);
+        const wave_progress_red_gage_timer = try ws.Clientbound.readVarFloat(f32, stream);
 
-        const wave_ended = try stream.readByte() != 0;
+        const wave_ended = try ws.Clientbound.readBool(stream);
 
-        const wave_map_radius = try stream.readInt(u16, .little);
+        const wave_map_radius = try ws.Clientbound.readVarUint16(stream);
 
         _ = wave_progress;
-
         _ = wave_progress_timer;
-
         _ = wave_progress_red_gage_timer;
-
         _ = wave_ended;
-
         _ = wave_map_radius;
 
         // std.debug.print("{} {} {} {} {}\n", .{ wave_progress, wave_progress_timer, wave_progress_red_gage_timer, wave_ended, wave_map_radius });
@@ -128,10 +129,10 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
     defer players.unlock();
 
     { // Read eliminated entities
-        const eliminated_entities_count = try stream.readInt(u16, .little);
+        const eliminated_entities_count: FiniteObjectCount = try ws.Clientbound.readVarUint16(stream);
 
         for (0..eliminated_entities_count) |_| {
-            const entity_id = try stream.readInt(EntityId, .little);
+            const entity_id: EntityId = try ws.Clientbound.readVarUint32(stream);
 
             if (mobs.search(entity_id)) |o| {
                 var mob = mobs.getValue(o);
@@ -162,36 +163,36 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
     }
 
     { // Read lighning bounces
-        const lightning_bounces_count = try stream.readInt(u16, .little);
+        const lightning_bounces_count: FiniteObjectCount = try ws.Clientbound.readVarUint16(stream);
 
         for (0..lightning_bounces_count) |_| {
-            const coordinates_count = try stream.readInt(u16, .little);
+            const points_count: FiniteObjectCount = try ws.Clientbound.readVarUint16(stream);
 
-            for (0..coordinates_count) |_| {
-                _ = try ws.Clientbound.readFloat32(stream); // X
-                _ = try ws.Clientbound.readFloat32(stream); // Y
+            for (0..points_count) |_| {
+                _ = try ws.Clientbound.readVarFloat(f32, stream); // X
+                _ = try ws.Clientbound.readVarFloat(f32, stream); // Y
             }
         }
     }
 
     { // Read entities
-        const entities_count = try stream.readInt(u16, .little);
+        const entities_count: FiniteObjectCount = try ws.Clientbound.readVarUint16(stream);
 
         for (0..entities_count) |_| {
             const entity_kind = try stream.readEnum(EntityKind, .little);
 
             switch (entity_kind) {
                 .player => {
-                    const player_id = try stream.readInt(EntityId, .little);
+                    const player_id: EntityId = try ws.Clientbound.readVarUint32(stream);
 
-                    const player_x = try ws.Clientbound.readFloat32(stream);
-                    const player_y = try ws.Clientbound.readFloat32(stream);
+                    const player_x = try ws.Clientbound.readVarFloat(f32, stream);
+                    const player_y = try ws.Clientbound.readVarFloat(f32, stream);
 
-                    const player_angle = angleToRad(try ws.Clientbound.readFloat32(stream));
+                    const player_angle = internalAngleToRadians(try ws.Clientbound.readVarFloat(f32, stream));
 
-                    const player_health = try ws.Clientbound.readFloat32(stream);
+                    const player_health = try ws.Clientbound.readVarFloat(f32, stream);
 
-                    const player_size = try ws.Clientbound.readFloat32(stream);
+                    const player_size = try ws.Clientbound.readVarFloat(f32, stream);
 
                     const player_mood_mask: pmood.MoodBitSet.MaskInt = @intCast(try stream.readByte());
 
@@ -255,7 +256,6 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
                         const player = PlayerImpl.Super.init(
                             PlayerImpl.init(
                                 allocator,
-                                pmood.initPartial(player_mood_mask),
                                 player_name,
                             ),
                             player_id,
@@ -270,18 +270,18 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
                 },
 
                 .mob => {
-                    const mob_id = try stream.readInt(EntityId, .little);
+                    const mob_id: EntityId = try ws.Clientbound.readVarUint32(stream);
 
-                    const mob_x = try ws.Clientbound.readFloat32(stream);
-                    const mob_y = try ws.Clientbound.readFloat32(stream);
+                    const mob_x = try ws.Clientbound.readVarFloat(f32, stream);
+                    const mob_y = try ws.Clientbound.readVarFloat(f32, stream);
 
-                    const mob_angle = angleToRad(try ws.Clientbound.readFloat32(stream));
+                    const mob_angle = internalAngleToRadians(try ws.Clientbound.readVarFloat(f32, stream));
 
-                    const mob_health = try ws.Clientbound.readFloat32(stream);
+                    const mob_health = try ws.Clientbound.readVarFloat(f32, stream);
 
-                    const mob_size = try ws.Clientbound.readFloat32(stream);
+                    const mob_size = try ws.Clientbound.readVarFloat(f32, stream);
 
-                    const mob_type: EntityType = .{ .mob = @enumFromInt(try stream.readByte()) };
+                    const mob_type: EntityType = .{ .mob = try stream.readEnum(MobType, .little) };
 
                     const mob_rarity = try stream.readEnum(EntityRarity, .little);
 
@@ -295,7 +295,7 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
                     var mob_connecting_segment: ?mach_objects.ObjectId = null;
 
                     if (mob_bool_flags.has_connecting_segment) {
-                        const mob_connecting_segment_id = try stream.readInt(EntityId, .little);
+                        const mob_connecting_segment_id: EntityId = try ws.Clientbound.readVarUint32(stream);
 
                         mob_connecting_segment = mobs.search(mob_connecting_segment_id);
                     }
@@ -374,19 +374,24 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
                     }
                 },
 
-                .petal => { // Petal treated as mob
-                    const petal_id = try stream.readInt(EntityId, .little);
+                .petal => {
+                    // Petal treated as mob
 
-                    const petal_x = try ws.Clientbound.readFloat32(stream);
-                    const petal_y = try ws.Clientbound.readFloat32(stream);
+                    // TODO: in server, the id may collide between player, mob, petal because their pool is respectively separated
+                    // So may need to separate mobs objects for petals
+                    // That chance is 1 / math.maxInt(u32) but that possibly collidable (and can cause error)
+                    const petal_id: EntityId = try ws.Clientbound.readVarUint32(stream);
 
-                    const petal_angle = angleToRad(try ws.Clientbound.readFloat32(stream));
+                    const petal_x = try ws.Clientbound.readVarFloat(f32, stream);
+                    const petal_y = try ws.Clientbound.readVarFloat(f32, stream);
 
-                    const petal_health = try ws.Clientbound.readFloat32(stream);
+                    const petal_angle = internalAngleToRadians(try ws.Clientbound.readVarFloat(f32, stream));
 
-                    const petal_size = try ws.Clientbound.readFloat32(stream);
+                    const petal_health = try ws.Clientbound.readVarFloat(f32, stream);
 
-                    const petal_type: EntityType = .{ .petal = @enumFromInt(try stream.readByte()) };
+                    const petal_size = try ws.Clientbound.readVarFloat(f32, stream);
+
+                    const petal_type: EntityType = .{ .petal = try stream.readEnum(PetalType, .little) };
 
                     const petal_rarity = try stream.readEnum(EntityRarity, .little);
 
@@ -450,15 +455,19 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
         }
     }
 
-    try client.server_bound.sendAck(width, height);
-
-    i += 1;
+    try client.server_bound.sendAck(
+        @intFromFloat(width),
+        @intFromFloat(height),
+    );
 }
 
 // This function overrides C main
 // main(_: c_int, _: [*][*]u8) c_int
 export fn main() c_int {
     std.debug.print("main()\n", .{});
+
+    // Init entity profiles
+    EntityProfiles.staticInit();
 
     ctx = CanvasContext.createCanvasContextFromElement(allocator, "canvas", false);
 
@@ -488,29 +497,29 @@ export fn main() c_int {
         mobs.init(allocator);
 
         // Initialize renderer static values
-        PlayerImpl.Renderer.initStatic(allocator);
-        MobImpl.Renderer.initStatic(allocator);
+        PlayerImpl.Renderer.staticInit(allocator);
+        MobImpl.Renderer.staticInit(allocator);
     }
 
-    // {
-    //     const tile_ctx = CanvasContext.createCanvasContext(allocator, 256 * 4, 256 * 4, false);
+    {
+        const tile_ctx = CanvasContext.createCanvasContext(allocator, 256 * 4, 256 * 4, false);
 
-    //     tile_ctx.drawSVG(@embedFile("./Tile/Tiles/desert_c_2.svg"));
+        tile_ctx.drawSVG(@embedFile("Tile/Tiles/desert_c_2.svg"));
 
-    //     tile_map = TileMap.init(allocator, .{
-    //         .tile_size = @splat(512),
-    //         .chunk_border = @splat(1),
-    //         .layers = &.{
-    //             .{
-    //                 .tiles = &.{tile_ctx},
-    //                 .data = &.{
-    //                     &.{ 0, 0 },
-    //                     &.{ 0, 0 },
-    //                 },
-    //             },
-    //         },
-    //     }) catch unreachable;
-    // }
+        tile_map = TileMap.init(allocator, .{
+            .tile_size = @splat(512),
+            .chunk_border = @splat(1),
+            .layers = &.{
+                .{
+                    .tiles = &.{tile_ctx},
+                    .data = &.{
+                        &.{ 0, 0 },
+                        &.{ 0, 0 },
+                    },
+                },
+            },
+        }) catch unreachable;
+    }
 
     draw(-1);
 
@@ -534,6 +543,9 @@ fn draw(_: f32) callconv(.c) void {
     ui.render();
 
     { // Render entities
+        const center_width = width / 2;
+        const center_height = height / 2;
+
         const self_player =
             if (players.search(wave_self_id)) |o|
                 players.getValue(o)
@@ -541,51 +553,18 @@ fn draw(_: f32) callconv(.c) void {
                 null;
 
         if (self_player) |p| {
-            const center_width = @as(f32, @floatFromInt(width)) / 2;
-            const center_height = @as(f32, @floatFromInt(height)) / 2;
+            const x, const y = p.pos;
 
-            const p_x, const p_y = p.pos;
+            const view_scale = base_scale * antenna_scale;
 
             ctx.setTransform(
-                1,
+                view_scale,
                 0,
                 0,
-                1,
-                center_width - p_x,
-                center_height - p_y,
+                view_scale,
+                center_width - x * view_scale,
+                center_height - y * view_scale,
             );
-        }
-
-        {
-            players.lock();
-            defer players.unlock();
-
-            var slice = players.slice();
-
-            while (slice.next()) |o| {
-                var player = players.getValue(o);
-
-                player.update(delta_time);
-
-                // Only remove when disconnected
-                if (player.impl.was_eliminated and player.dead_t > 1) {
-                    player.deinit(allocator);
-
-                    players.delete(o);
-
-                    continue;
-                }
-
-                renderEntity(PlayerImpl, &.{
-                    .ctx = ctx,
-                    .entity = &player,
-                    .is_specimen = false,
-                    .players = &players,
-                    .mobs = &mobs,
-                });
-
-                players.setValue(o, player);
-            }
         }
 
         {
@@ -629,6 +608,38 @@ fn draw(_: f32) callconv(.c) void {
                 });
 
                 mobs.setValue(o, mob);
+            }
+        }
+
+        {
+            players.lock();
+            defer players.unlock();
+
+            var slice = players.slice();
+
+            while (slice.next()) |o| {
+                var player = players.getValue(o);
+
+                player.update(delta_time);
+
+                // Only remove when disconnected
+                if (player.impl.was_eliminated and player.dead_t > 1) {
+                    player.deinit(allocator);
+
+                    players.delete(o);
+
+                    continue;
+                }
+
+                renderEntity(PlayerImpl, &.{
+                    .ctx = ctx,
+                    .entity = &player,
+                    .is_specimen = false,
+                    .players = &players,
+                    .mobs = &mobs,
+                });
+
+                players.setValue(o, player);
             }
         }
     }

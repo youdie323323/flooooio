@@ -9,7 +9,11 @@ import (
 	"github.com/chewxy/math32"
 )
 
-const movementDuration = 1. / 150.
+const (
+	movementTimerDuration = 150.
+
+	RotationCounterGoal = 500
+)
 
 var talentDisabledMobTypes = []native.MobType{
 	native.MobTypeShell,
@@ -21,9 +25,9 @@ var talentDisabledMobTypes = []native.MobType{
 const (
 	specialMovementDefaultTimer         = 1
 	specialMovementCentipedeDesertTimer = 2
-
-	RotationCounterGoal = 500
 )
+
+var beeSinusoidalWave = NewSinusoidalWave(200)
 
 func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
 	if slices.Contains(talentDisabledMobTypes, m.Type) {
@@ -60,7 +64,7 @@ func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
 				timer = specialMovementDefaultTimer
 			}
 
-			if m.SpecialMovementTimer >= timer {
+			if m.MovementTimer >= timer {
 				m.Magnitude = 0
 
 				m.IsSpecialMoving = false
@@ -68,17 +72,17 @@ func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
 				switch m.Type {
 				case native.MobTypeCentipedeDesert:
 					m.Magnitude = SpeedOf(m.Type) * 255
-					m.Angle += math32.Sin(math32.Pi*m.SpecialMovementTimer) / 2
+					m.Angle += math32.Sin(math32.Pi*m.MovementTimer) / 2
 
 				default:
-					m.Magnitude = math32.Sin(math32.Pi*m.SpecialMovementTimer) * (SpeedOf(m.Type) * 255)
+					m.Magnitude = math32.Sin(math32.Pi*m.MovementTimer) * (SpeedOf(m.Type) * 255)
 				}
 
-				m.SpecialMovementTimer += movementDuration
+				m.MovementTimer += 1. / movementTimerDuration
 			}
 		} else {
 			m.IsSpecialMoving = true
-			m.SpecialMovementTimer = 0
+			m.MovementTimer = 0
 		}
 	} else {
 		m.IsSpecialMoving = false
@@ -92,9 +96,10 @@ func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
 			if m.IsAlly() && m.TargetEntity == nil {
 				dx := m.PetMaster.X - m.X
 				dy := m.PetMaster.Y - m.Y
-				distanceToParent := math32.Hypot(dx, dy)
 
-				if distanceToParent > m.CalculateDiameter()*3 {
+				dia3 := 3 * m.CalculateDiameter()
+
+				if (dx*dx + dy*dy) > (dia3 * dia3) {
 					m.Angle = CalculateInterpolatedAngleToEntity(
 						m.Angle,
 						dx,
@@ -130,7 +135,7 @@ func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
 					shakeMultiplier = 2.
 				}
 
-				m.Angle += BeeSinusoidalWave.At(m.SineWaveIndex) * shakeMultiplier
+				m.Angle += beeSinusoidalWave.At(m.SineWaveIndex) * shakeMultiplier
 				m.SineWaveIndex++
 			}
 		}

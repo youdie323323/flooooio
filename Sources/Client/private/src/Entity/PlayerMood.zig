@@ -1,22 +1,13 @@
 const std = @import("std");
 
 /// Mood bit flags.
-pub const MoodBitSet = std.bit_set.IntegerBitSet(3);
+pub const MoodBitSet = std.bit_set.IntegerBitSet(2);
 
 /// Mood flag positions.
-pub const MoodFlags = enum(u8) {
-    normal = 0,
-    angry = 1 << 0,
-    sad = 1 << 1,
+pub const MoodFlags = enum(u1) {
+    angry = 0,
+    sad = 1,
 };
-
-pub fn initPartial(mask: MoodBitSet.MaskInt) MoodBitSet {
-    var bits = MoodBitSet.initEmpty();
-    
-    bits.mask = mask;
-
-    return bits;
-}
 
 /// Decode mood flags into array of booleans.
 pub fn decodeMood(flags: MoodBitSet) [2]bool {

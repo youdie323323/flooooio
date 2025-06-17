@@ -164,6 +164,7 @@ func getRandomMobType(diff uint16, b native.Biome, sg *SpawnGroup) native.MobTyp
 
 		// Select mob from special group
 		random := rand.Float64() * totalWeight
+		
 		for _, t := range *sg {
 			if r, exists := mobSpawnRules[b][t]; exists && r.SpawnAfter <= diff {
 				random -= r.Weight
@@ -186,6 +187,7 @@ func getRandomMobType(diff uint16, b native.Biome, sg *SpawnGroup) native.MobTyp
 
 	// Second pass: select mob
 	random := rand.Float64() * totalWeight
+
 	for t, r := range mobSpawnRules[b] {
 		if r.SpawnAfter <= diff {
 			random -= r.Weight
@@ -246,6 +248,14 @@ type WaveMobSpawner struct {
 
 	// points is current point.
 	points int
+}
+
+func NewWaveMobSpawner(wd *WaveData) *WaveMobSpawner {
+	s := new(WaveMobSpawner)
+
+	s.Next(wd, nil)
+
+	return s
 }
 
 func CalculateWaveLuck(progress WaveProgress) float64 {

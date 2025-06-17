@@ -1,20 +1,26 @@
 const std = @import("std");
 const math = std.math;
+const json = std.json;
 const ObjectId = @import("MachObjects/objs.zig").ObjectId;
-const Entity = @import("./Entity.zig").Entity;
-const EntityType = @import("./EntityType.zig").EntityType;
+const Entity = @import("Entity.zig").Entity;
+const EntityType = @import("../Florr/Native/Entity/EntityType.zig").EntityType;
 const EntityRarity = @import("../Florr/Native/Entity/EntityRarity.zig").EntityRarity;
-const MobType = @import("./EntityType.zig").MobType;
-
-const starfish = @import("./Renderers/MobStarfishRenderer.zig");
+const EntityProfiles = @import("../Florr/Native/Entity/EntityProfiles.zig");
+const MobType = @import("../Florr/Native/Entity/EntityType.zig").MobType;
+const PureRenderer = @import("Renderers/Renderer.zig");
+const starfish = @import("Renderers/Mob/MobStarfishRenderer.zig");
 
 const MobImpl = @This();
 
-const Segments = std.HashMap(ObjectId, void, std.hash_map.AutoContext(ObjectId), 80);
+const Segments = std.AutoHashMap(ObjectId, void);
 
 pub const Super = Entity(MobImpl);
 
-pub const Renderer = @import("./Renderers/MobRenderingDispatcher.zig").MobRenderingDispatcher;
+pub const Renderer = @import("Renderers/Mob/MobRenderingDispatcher.zig").MobRenderingDispatcher;
+
+comptime { // Validate
+    PureRenderer.validateEntityImplementation(MobImpl);
+}
 
 /// Type of mob.
 type: EntityType,
@@ -56,7 +62,10 @@ pub fn init(
         .connecting_segment = connecting_segment,
         .connected_segments = Segments.init(allocator),
 
-        .leg_distances = if (@"type".get() == @intFromEnum(MobType.starfish)) generateDefaultStarfishLegDistance() else null,
+        .leg_distances = if (@"type".get() == @intFromEnum(MobType.starfish))
+            generateDefaultStarfishLegDistance()
+        else
+            null,
     };
 }
 
@@ -67,6 +76,25 @@ pub fn deinit(self: *MobImpl, _: std.mem.Allocator, _: *Super) void {
     self.leg_distances = undefined;
 
     self.* = undefined;
+}
+
+/// Returns a stat within this mob.
+pub inline fn stat(self: MobImpl, allocator: std.mem.Allocator) !?json.Value {
+    const type_value_string = try std.fmt.allocPrint(allocator, "{}", .{self.type.get()});
+    defer allocator.free(type_value_string);
+
+    const profiles =
+        if (self.type.isMob())
+            EntityProfiles.mobProfiles()
+        else
+            EntityProfiles.petalProfiles();
+
+    return if (profiles.value.object.get(type_value_string)) |prof| blk: {
+        const rarity_value_string = try std.fmt.allocPrint(allocator, "{}", .{@intFromEnum(self.rarity)});
+        defer allocator.free(rarity_value_string);
+
+        break :blk prof.object.get(rarity_value_string);
+    } else null;
 }
 
 /// Definition for basic operation of connected_segments.

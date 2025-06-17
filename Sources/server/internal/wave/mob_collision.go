@@ -160,7 +160,7 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 						{ // Set LastAttackedEntity
 							// TODO: this algorithm might collide like: mob1 -> mob2, mob2 -> mob1
 							// So maybe its possible to do multiple hit once one frame
-							// To avoid this we need to return sufficient amount collision in ComputeCirclePush
+							// To avoid this we need to return sufficient collision amount in ComputeCirclePush
 
 							if nearEntity.IsAlly() {
 								mTraversed.LastAttackedEntity = nearEntity.PetMaster
@@ -312,14 +312,14 @@ func fangDoLifesteal(fang *Petal, stat native.PetalStat, damage float32) {
 	master.Health = min(1, master.Health+(healAmount/masterMaxHP))
 }
 
-const clawExtraDamagableHPPercent = (100. - 20.) / 100.
+const clawDamagableHealthLimit = (100. - 20.) / 100.
 
 func clawTakeExtraDamage(claw *Petal, stat native.PetalStat, hitMob *Mob) {
 	if claw.Master == nil {
 		return
 	}
 
-	if hitMob.Health < clawExtraDamagableHPPercent {
+	if hitMob.Health < clawDamagableHealthLimit {
 		return
 	}
 

@@ -35,7 +35,7 @@ type MobData struct {
 	Epic      MobStat `json:"3"`
 	Legendary MobStat `json:"4"`
 	Mythic    MobStat `json:"5"`
-	Ultra     MobStat `json:"6,omitempty"`
+	Ultra     MobStat `json:"6"`
 }
 
 func (d MobData) StatFromRarity(r Rarity) MobStat {
@@ -293,7 +293,7 @@ var MobProfiles = map[MobType]MobData{
 
 			Extra: EntityExtra{
 				"totalPoison": 50,
-				"poisonDPS": 15,
+				"poisonDPS":   15,
 			},
 		},
 		Unusual: MobStat{
@@ -302,7 +302,7 @@ var MobProfiles = map[MobType]MobData{
 
 			Extra: EntityExtra{
 				"totalPoison": 55,
-				"poisonDPS": 16.5,
+				"poisonDPS":   16.5,
 			},
 		},
 		Rare: MobStat{
@@ -311,7 +311,7 @@ var MobProfiles = map[MobType]MobData{
 
 			Extra: EntityExtra{
 				"totalPoison": 65,
-				"poisonDPS": 19.5,
+				"poisonDPS":   19.5,
 			},
 		},
 		Epic: MobStat{
@@ -320,7 +320,7 @@ var MobProfiles = map[MobType]MobData{
 
 			Extra: EntityExtra{
 				"totalPoison": 80,
-				"poisonDPS": 24,
+				"poisonDPS":   24,
 			},
 		},
 		Legendary: MobStat{
@@ -329,7 +329,7 @@ var MobProfiles = map[MobType]MobData{
 
 			Extra: EntityExtra{
 				"totalPoison": 100,
-				"poisonDPS": 30,
+				"poisonDPS":   30,
 			},
 		},
 		Mythic: MobStat{
@@ -338,7 +338,7 @@ var MobProfiles = map[MobType]MobData{
 
 			Extra: EntityExtra{
 				"totalPoison": 125,
-				"poisonDPS": 37.5,
+				"poisonDPS":   37.5,
 			},
 		},
 		BaseSize: 30,
@@ -900,7 +900,12 @@ func init() {
 		panic(err)
 	}
 
-	err = os.WriteFile("../Shared/Native/mob_profiles.json", data, 0o644)
+	err = os.WriteFile("../Shared/Florr/Native/ProfileData/mob_profiles.json", data, 0o644)
+	if err != nil {
+		panic(err)
+	}
+
+	err = os.WriteFile("../Client/private/src/Florr/Native/Entity/ProfileData/mob_profiles.json", data, 0o644)
 	if err != nil {
 		panic(err)
 	}

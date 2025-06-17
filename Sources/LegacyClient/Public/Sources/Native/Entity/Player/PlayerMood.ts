@@ -5,9 +5,8 @@
  * According to microsoft, enum name should be plural :).
  */
 export const enum MoodFlags {
-    NORMAL = 0,
-    ANGRY = 1 << 0,  // 1
-    SAD = 1 << 1,    // 2
+    ANGRY = 0,
+    SAD = 1,
 }
 
 export function decodeMood(flags: number) {

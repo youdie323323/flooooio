@@ -123,8 +123,8 @@ func NewWaveRoom(b native.Biome, v WaveRoomVisibility) *WaveRoom {
 		candidates: make([]*StaticWaveRoomCandidatePlayer, 0, waveRoomMaxPlayerAmount),
 	}
 
-	// They have circular property wr -> wp, wp -> wr
-	// So init wp after initialized wr
+	// WaveRoom have circular property respectively
+	// So init WavePool after initialized WaveRoom
 	wr.WavePool = NewWavePool(wr, &WaveData{
 		Biome: b,
 

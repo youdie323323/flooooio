@@ -1,8 +1,8 @@
 const std = @import("std");
 const io = std.io;
 const mem = std.mem;
-const Clientbound = @import("./Packet/Clientbound.zig");
-const Serverbound = @import("./Packet/Serverbound.zig");
+const Clientbound = @import("Packet/Clientbound.zig");
+const Serverbound = @import("Packet/Serverbound.zig");
 const WebSocket = @import("../WebAssembly/Interop/WebSocket.zig").WebSocket;
 const Timer = @import("../WebAssembly/Interop/Timer.zig");
 
@@ -31,7 +31,7 @@ fn tryFuzz() callconv(.c) void {
     switch (packet_type) {
         0 => {
             // Random movement
-            const angle = random.float(f32) * std.math.tau;
+            const angle = std.math.tau * random.float(f32);
             const magnitude = random.float(f32);
 
             fuzzing_ws.ctx.server_bound.sendWaveChangeMove(angle, magnitude) catch {};

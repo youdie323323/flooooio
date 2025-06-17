@@ -9,13 +9,19 @@ const Rgb = @Vector(3, u8);
 
 const FloatingRgb = @Vector(3, f32);
 
+/// Converts f32 rgb to u8 rgb.
+inline fn toRgb(frgb: FloatingRgb) Rgb {
+    return @intFromFloat(frgb);
+}
+
+/// Converts u8 rgb to f32 rgb.
+inline fn toFloatingRgb(rgb: Rgb) FloatingRgb {
+    return @floatFromInt(rgb);
+}
+
 const white = comptimeFromCSSColorName("white").rgb;
 
-const black = comptimeFromCSSColorName("black").rgb;
-
-const floating_white: FloatingRgb = @floatFromInt(white);
-
-const floating_black: FloatingRgb = @floatFromInt(black);
+const fwhite = toFloatingRgb(white);
 
 rgb: Rgb,
 
@@ -23,36 +29,47 @@ pub inline fn init(rgb: Rgb) Color {
     return .{ .rgb = rgb };
 }
 
-inline fn mulWithBound(self: Color, strength: FloatingRgb, lower: FloatingRgb, upper: FloatingRgb) Rgb {
-    const result: FloatingRgb = @as(FloatingRgb, @floatFromInt(self.rgb)) * strength;
+inline fn mulWithUpperBound(self: Color, comptime strength: FloatingRgb, comptime upper: FloatingRgb) Rgb {
+    const result = toFloatingRgb(self.rgb) * strength;
 
-    return @intFromFloat(@select(f32, result < lower, lower, @select(f32, result > upper, upper, result)));
+    // Clamping lower bound redundant here since xy (x >= 0, y >= 0) always >= 0.
+
+    return toRgb(
+        @select(
+            f32,
+            result > upper,
+            upper,
+            result,
+        ),
+    );
 }
 
 pub inline fn darkened(self: Color, comptime strength: f32) Color {
     comptime debug.assert(strength <= 1);
 
-    const strength_c: FloatingRgb = @splat(1 - strength);
+    const strength_c: FloatingRgb = comptime @splat(1 - strength);
 
-    return init(self.mulWithBound(strength_c, floating_black, floating_white));
+    return init(self.mulWithUpperBound(strength_c, fwhite));
 }
 
 pub inline fn lightened(self: Color, comptime strength: f32) Color {
     comptime debug.assert(strength > 0);
 
-    const strength_a: FloatingRgb = @splat(1 + strength);
+    const strength_a: FloatingRgb = comptime @splat(1 + strength);
 
-    return init(self.mulWithBound(strength_a, floating_black, floating_white));
+    return init(self.mulWithUpperBound(strength_a, fwhite));
 }
 
 /// Interpolate between two colors.
 pub inline fn interpolate(self: Color, other: Color, t: f32) Color {
     return init(
-        @intFromFloat(math.lerp(
-            @as(FloatingRgb, @floatFromInt(self.rgb)),
-            @as(FloatingRgb, @floatFromInt(other.rgb)),
-            @as(FloatingRgb, @splat(t)),
-        )),
+        toRgb(
+            math.lerp(
+                toFloatingRgb(self.rgb),
+                toFloatingRgb(other.rgb),
+                @as(FloatingRgb, @splat(t)),
+            ),
+        ),
     );
 }
 
@@ -74,19 +91,19 @@ pub fn comptimeFromAnyString(comptime str: []const u8) Color {
     comptime {
         if (str.len == 0) @compileError("fromAnyString not valid with empty string");
 
-        if (isValidHexColorCode(str)) return comptimeFromHexColorCode(str);
+        if (comptimeIsValidHexColorCode(str)) return comptimeFromHexColorCode(str);
 
-        if (isValidRgbString(str)) return comptimeFromRgbString(str);
+        if (comptimeIsValidRgbString(str)) return comptimeFromRgbString(str);
 
         return comptimeFromCSSColorName(str);
     }
 }
 
-const HexColorCode = *const [7:0]u8;
+const HexColorCode = *const ["#abcdef".len]u8;
 
 const HexColor = u24;
 
-inline fn isValidHexColorCode(comptime code: HexColorCode) bool {
+inline fn comptimeIsValidHexColorCode(comptime code: HexColorCode) bool {
     comptime {
         // Checking length here is redundant because already constrained with type
         return mem.startsWith(u8, code, "#") and for (code[1..]) |c| {
@@ -98,7 +115,7 @@ inline fn isValidHexColorCode(comptime code: HexColorCode) bool {
 /// Convert hex color code to Color.
 pub fn comptimeFromHexColorCode(comptime code: HexColorCode) Color {
     comptime {
-        if (!isValidHexColorCode(code)) @compileError("color code " ++ code ++ " is not valid");
+        if (!comptimeIsValidHexColorCode(code)) @compileError("color code " ++ code ++ " is not valid");
 
         const value = std.fmt.parseInt(HexColor, code[1..], 16) catch
             @compileError("invalid hex color: " ++ code);
@@ -120,7 +137,7 @@ pub fn comptimeFromHex(comptime hex: HexColor) Color {
 
 const minimum_required_rgb_string_length = "rgb(r,g,b)".len;
 
-inline fn isValidRgbString(comptime str: []const u8) bool {
+inline fn comptimeIsValidRgbString(comptime str: []const u8) bool {
     comptime {
         return str.len >= minimum_required_rgb_string_length and mem.startsWith(u8, str, "rgb(") and str[str.len - 1] == ')';
     }
@@ -129,7 +146,7 @@ inline fn isValidRgbString(comptime str: []const u8) bool {
 /// Convert rgb string to Color.
 pub fn comptimeFromRgbString(comptime str: []const u8) Color {
     comptime {
-        if (!isValidRgbString(str)) @compileError("rgb string " ++ str ++ " is not valid");
+        if (!comptimeIsValidRgbString(str)) @compileError("rgb string " ++ str ++ " is not valid");
 
         const content = str[4 .. str.len - 1];
 

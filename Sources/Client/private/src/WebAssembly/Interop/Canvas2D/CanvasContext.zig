@@ -1,27 +1,25 @@
-//! This module proivded minimal canvas operations for wasm.
-//! Im not going to use C string here for performance reason.
-//! Some method like @"textAlign = 'center'" is only for when value is statically determined.
+//! This namespace provide minimal canvas operations for wasm.
 const std = @import("std");
 const Path2D = @import("Path2D.zig");
-const Color = @import("./Color.zig");
+const Color = @import("Color.zig");
 const mem = @import("../../../mem.zig");
 const CanvasContext = @This();
 
 pub const Id = u16;
 
-pub const LineCap = enum(u8) {
+pub const LineCap = enum(u2) {
     butt,
     round,
     square,
 };
 
-pub const LineJoin = enum(u8) {
+pub const LineJoin = enum(u2) {
     round,
     bevel,
     miter,
 };
 
-pub const TextAlign = enum(u8) {
+pub const TextAlign = enum(u3) {
     left,
     right,
     center,
@@ -29,7 +27,7 @@ pub const TextAlign = enum(u8) {
     end,
 };
 
-pub const TextBaseline = enum(u8) {
+pub const TextBaseline = enum(u3) {
     top,
     hanging,
     middle,
@@ -38,31 +36,31 @@ pub const TextBaseline = enum(u8) {
     bottom,
 };
 
-pub const TextDirection = enum(u8) {
+pub const TextDirection = enum(u2) {
     inherit,
     ltr,
     rtl,
 };
 
-pub const FontKerning = enum(u8) {
+pub const FontKerning = enum(u2) {
     auto,
     normal,
     none,
 };
 
-pub const FillType = enum(u8) {
+pub const FillType = enum(u1) {
     nonzero,
     evenodd,
 };
 
-pub const PatternRepeat = enum(u8) {
+pub const PatternRepeat = enum(u2) {
     repeat,
     repeat_x,
     repeat_y,
     no_repeat,
 };
 
-pub const CompositeOperator = enum(u8) {
+pub const CompositeOperator = enum(u5) {
     source_over,
     source_in,
     source_out,
@@ -91,20 +89,20 @@ pub const CompositeOperator = enum(u8) {
     luminosity,
 };
 
-pub inline fn calculateStrokeWidth(width: f32) f32 {
+pub inline fn calculateStrokeWidth(comptime width: f32) comptime_float {
     return width / 8.333333830038736;
 }
 
-/// Utilities namespace definition for context.
-/// Utility mean they re not pure canvas call operations.
+/// Utilities definition for context.
+/// Utility meaning these are not pure canvas call operations.
 const UtilityMethods = struct {
     pub inline fn drawSVG(self: CanvasContext, svg: []const u8) void {
         @"2"(self.id, svg.ptr, svg.len);
     }
 
-    pub inline fn prepareFontProperties(self: *CanvasContext, pixel: f32) void {
+    pub inline fn prepareFontProperties(self: *CanvasContext, comptime pixel: f32) void {
         self.setStandardFont(pixel);
-        self.setLineWidth(calculateStrokeWidth(pixel));
+        self.setLineWidth(comptime calculateStrokeWidth(pixel));
         self.strokeColor(comptime Color.comptimeFromHexColorCode("#000000"));
     }
 
@@ -116,7 +114,45 @@ const UtilityMethods = struct {
 pub usingnamespace UtilityMethods;
 
 /// Getter/setter methods which is similar to ctx.blahblah = blah / ctx.blahblah
-const ModifierMethods = struct {
+const AccessorMethods = struct {
+    pub const Properties = packed struct {
+        /// Current lineWidth of this context.
+        /// Default value is 1 px.
+        line_width: f32 = 1.0,
+
+        /// Current globalAlpha of this context.
+        /// Default value is 1.0.
+        global_alpha: f32 = 1.0,
+
+        /// Current globalCompositeOperation of this context.
+        /// Default value is source_over.
+        global_composite_operation: CompositeOperator = .source_over,
+
+        /// Current textAlign of this context.
+        /// Default value is start.
+        text_align: TextAlign = .start,
+
+        /// Current lineCap of this context.
+        /// Default value is butt.
+        line_cap: LineCap = .butt,
+
+        /// Current lineJoin of this context.
+        /// Default value is miter.
+        line_join: LineJoin = .miter,
+
+        /// Current miterLimit of this context.
+        /// Default value is 10.0.
+        miter_limit: f32 = 10.0,
+
+        /// Current lineDashOffset of this context.
+        /// Default value is 0.0.
+        line_dash_offset: f32 = 0.0,
+
+        /// Current imageSmoothingEnabled of this context.
+        /// Default value is true.
+        image_smoothing_enabled: bool = true,
+    };
+
     pub inline fn strokeColor(self: CanvasContext, color: Color) void {
         const r, const g, const b = color.rgb;
 
@@ -130,96 +166,132 @@ const ModifierMethods = struct {
     }
 
     pub inline fn setLineWidth(self: *CanvasContext, comptime width: f32) void {
-        self.line_width = width;
+        self.properties.line_width = width;
 
         @"33"(self.id, width);
     }
 
-    pub inline fn setLineCap(self: *CanvasContext, comptime cap: LineCap) void {
-        self.line_cap = cap;
+    pub inline fn lineWidth(self: CanvasContext) f32 {
+        return self.properties.line_width;
+    }
 
-        switch (cap) {
-            .butt => @"42"(self.id),
-            .round => @"43"(self.id),
-            .square => @"44"(self.id),
+    pub inline fn setLineCap(self: *CanvasContext, comptime cap: LineCap) void {
+        self.properties.line_cap = cap;
+
+        switch (comptime cap) {
+            inline .butt => @"42"(self.id),
+            inline .round => @"43"(self.id),
+            inline .square => @"44"(self.id),
         }
+    }
+
+    pub inline fn lineCap(self: CanvasContext) LineCap {
+        return self.properties.line_cap;
     }
 
     pub inline fn setLineJoin(self: *CanvasContext, comptime join: LineJoin) void {
-        self.line_join = join;
+        self.properties.line_join = join;
 
-        switch (join) {
-            .round => @"45"(self.id),
-            .miter => @"46"(self.id),
-            else => @compileError(std.fmt.comptimePrint("invalid line join: {any}", .{join})),
+        switch (comptime join) {
+            inline .round => @"45"(self.id),
+            inline .miter => @"46"(self.id),
+            inline else => @compileError(std.fmt.comptimePrint("invalid line join: {any}", .{join})),
         }
     }
 
+    pub inline fn lineJoin(self: CanvasContext) LineJoin {
+        return self.properties.line_join;
+    }
+
     pub inline fn setMiterLimit(self: *CanvasContext, comptime limit: f32) void {
-        self.miter_limit = limit;
+        self.properties.miter_limit = limit;
 
         @"47"(self.id, limit);
     }
 
-    /// Do setLineDash([]) to context.
+    pub inline fn miterLimit(self: CanvasContext) f32 {
+        return self.properties.miter_limit;
+    }
+
+    /// Do setLineDash([]) on context.
     pub inline fn setLineSolid(self: CanvasContext) void {
         @"48"(self.id);
     }
 
-    pub inline fn setLineDashOffset(self: *CanvasContext, offset: f32) void {
-        self.line_dash_offset = offset;
+    pub inline fn setLineDashOffset(self: *CanvasContext, comptime offset: f32) void {
+        self.properties.line_dash_offset = offset;
 
         @"49"(self.id, offset);
     }
 
+    pub inline fn lineDashOffset(self: CanvasContext) f32 {
+        return self.properties.line_dash_offset;
+    }
+
     pub inline fn setGlobalAlpha(self: *CanvasContext, alpha: f32) void {
-        self.global_alpha = alpha;
+        self.properties.global_alpha = alpha;
 
         @"23"(self.id, alpha);
     }
 
-    pub inline fn setStandardFont(self: CanvasContext, pixel: f32) void {
+    pub inline fn globalAlpha(self: CanvasContext) f32 {
+        return self.properties.global_alpha;
+    }
+
+    pub inline fn setStandardFont(self: CanvasContext, comptime pixel: f32) void {
         // No need to store the pixel because if really want to get previous font pixel, you need to parse the font
-        // But that not real
+        // But that not really
 
         @"39"(self.id, pixel);
     }
 
     pub inline fn setGlobalCompositeOperation(self: *CanvasContext, comptime op: CompositeOperator) void {
-        self.global_composite_operation = op;
+        self.properties.global_composite_operation = op;
 
-        switch (op) {
-            .source_over => @"50"(self.id),
-            .destination_in => @"51"(self.id),
-            .copy => @"52"(self.id),
-            .lighter => @"53"(self.id),
-            .multiply => @"54"(self.id),
-            else => @compileError(std.fmt.comptimePrint("invalid composite operator: {any}", .{op})),
+        switch (comptime op) {
+            inline .source_over => @"50"(self.id),
+            inline .destination_in => @"51"(self.id),
+            inline .copy => @"52"(self.id),
+            inline .lighter => @"53"(self.id),
+            inline .multiply => @"54"(self.id),
+            inline else => @compileError(std.fmt.comptimePrint("invalid composite operator: {any}", .{op})),
         }
     }
 
+    pub inline fn globalCompositeOperation(self: CanvasContext) CompositeOperator {
+        return self.properties.global_composite_operation;
+    }
+
     pub inline fn setTextAlign(self: *CanvasContext, comptime @"align": TextAlign) void {
-        self.text_align = @"align";
+        self.properties.text_align = @"align";
 
         const align_string = comptime switch (@"align") {
-            .left => "left",
-            .right => "right",
-            .center => return @"40"(self.id),
-            .start => "start",
-            .end => "end",
+            inline .left => "left",
+            inline .right => "right",
+            inline .center => return @"40"(self.id),
+            inline .start => "start",
+            inline .end => "end",
         };
 
         @"41"(self.id, align_string.ptr, align_string.len);
     }
 
+    pub inline fn textAlign(self: CanvasContext) TextAlign {
+        return self.properties.text_align;
+    }
+
     pub inline fn setImageSmoothingEnabled(self: *CanvasContext, comptime enabled: bool) void {
-        self.image_smoothing_enabled = enabled;
+        self.properties.image_smoothing_enabled = enabled;
 
         @"55"(self.id, comptime @intFromBool(enabled));
     }
+
+    pub inline fn imageSmoothingEnabled(self: CanvasContext) bool {
+        return self.properties.image_smoothing_enabled;
+    }
 };
 
-pub usingnamespace ModifierMethods;
+pub usingnamespace AccessorMethods;
 
 /// Context path methods.
 const PathMethods = struct {
@@ -271,41 +343,16 @@ pub usingnamespace PathMethods;
 
 id: Id,
 
-/// Current lineWidth of this context.
-/// Default value is 1 px.
-line_width: f32 = 1.0,
+/// Internal context frames.
+/// This should not accessed directly.
+frames: [32]AccessorMethods.Properties = undefined,
 
-/// Current globalAlpha of this context.
-/// Default value is 1.0.
-global_alpha: f32 = 1.0,
+/// Current depth of context frames.
+frames_depth: usize = 0,
 
-/// Current globalCompositeOperation of this context.
-/// Default value is source_over.
-global_composite_operation: CompositeOperator = .source_over,
-
-/// Current textAlign of this context.
-/// Default value is start.
-text_align: TextAlign = .start,
-
-/// Current lineCap of this context.
-/// Default value is butt.
-line_cap: LineCap = .butt,
-
-/// Current lineJoin of this context.
-/// Default value is miter.
-line_join: LineJoin = .miter,
-
-/// Current miterLimit of this context.
-/// Default value is 10.0.
-miter_limit: f32 = 10.0,
-
-/// Current lineDashOffset of this context.
-/// Default value is 0.0.
-line_dash_offset: f32 = 0.0,
-
-/// Current imageSmoothingEnabled of this context.
-/// Default value is true.
-image_smoothing_enabled: bool = true,
+/// Internal context property values.
+/// This should not accessed directly, if you want get value, call method that named with field name.
+properties: AccessorMethods.Properties = .{},
 
 pub inline fn init(allocator: std.mem.Allocator, id: Id) *CanvasContext {
     const ctx = allocator.create(CanvasContext) catch unreachable;
@@ -323,12 +370,24 @@ pub inline fn deinit(self: *CanvasContext, allocator: std.mem.Allocator) void {
     self.* = undefined;
 }
 
-pub inline fn save(self: CanvasContext) void {
+pub inline fn save(self: *CanvasContext) void {
     @"4"(self.id);
+
+    { // Save frame
+        self.frames[self.frames_depth] = self.properties;
+
+        self.frames_depth += 1;
+    }
 }
 
-pub inline fn restore(self: CanvasContext) void {
+pub inline fn restore(self: *CanvasContext) void {
     @"5"(self.id);
+
+    { // Restore frame
+        self.frames_depth -= 1;
+
+        self.properties = self.frames[self.frames_depth];
+    }
 }
 
 pub inline fn resetTransform(self: CanvasContext) void {
@@ -399,15 +458,15 @@ pub inline fn rotate(self: CanvasContext, angle: f32) void {
     @"28"(self.id, angle);
 }
 
-pub inline fn copyCanvas(self: CanvasContext, src_context: *CanvasContext, dx: f32, dy: f32) void {
+pub inline fn copyCanvas(self: CanvasContext, src_context: CanvasContext, dx: f32, dy: f32) void {
     @"34"(self.id, src_context.id, dx, dy);
 }
 
-pub inline fn copyCanvasAsOnePixel(self: CanvasContext, src_context: *CanvasContext, dx: f32, dy: f32) void {
+pub inline fn copyCanvasAsOnePixel(self: CanvasContext, src_context: CanvasContext, dx: f32, dy: f32) void {
     @"35"(self.id, src_context.id, dx, dy);
 }
 
-pub inline fn copyCanvasWithScale(self: CanvasContext, src_context: *CanvasContext, dx: f32, dy: f32, dw: f32, dh: f32) void {
+pub inline fn copyCanvasWithScale(self: CanvasContext, src_context: CanvasContext, dx: f32, dy: f32, dw: f32, dh: f32) void {
     @"36"(self.id, src_context.id, dx, dy, dw, dh);
 }
 
@@ -532,6 +591,7 @@ extern "0" fn @"53"(id: Id) void;
 extern "0" fn @"54"(id: Id) void;
 /// Sets imageSmoothingEnabled.
 extern "0" fn @"55"(id: Id, enabled: u8) void;
+
 /// Sets width and height.
 extern "0" fn @"56"(id: Id, width: u16, height: u16) void;
 /// Get width and height.

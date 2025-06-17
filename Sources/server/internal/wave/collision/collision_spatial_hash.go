@@ -182,15 +182,7 @@ func (sh *SpatialHash) SearchRect(x, y, width, height float32, filter func(n Nod
 						return
 					}
 
-					nX := n.GetX()
-					nY := n.GetY()
-
-					// Check if node is within rectangle bounds
-					if nX >= x-halfWidth &&
-						nX <= x+halfWidth &&
-						nY >= y-halfHeight &&
-						nY <= y+halfHeight &&
-						filter(n) {
+					if filter(n) {
 						sharedSeen[nId] = true
 
 						nodes = append(nodes, n)

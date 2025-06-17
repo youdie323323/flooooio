@@ -15,7 +15,7 @@ const (
 	yggdrasilPushForce = 2.5
 )
 
-var summonTypeMapping = map[native.PetalType]map[native.Rarity]StaticMobData{
+var summonPetsData = map[native.PetalType]map[native.Rarity]StaticMobData{
 	native.PetalTypeEggBeetle: {
 		native.RarityCommon:    StaticMobData{native.MobTypeBeetle, native.RarityCommon},  // TODO: should be common baby ant
 		native.RarityUnusual:   StaticMobData{native.MobTypeBeetle, native.RarityUnusual}, // TODO: should be unusual worker ant
@@ -78,7 +78,7 @@ func (p *Player) PlayerPetalConsume(wp *WavePool, now time.Time) {
 					// Remove petal as it consumed
 					wp.RemovePetal(*petal.Id)
 
-					smd := summonTypeMapping[petal.Type][petal.Rarity]
+					smd := summonPetsData[petal.Type][petal.Rarity]
 
 					// Its not really multiple beetles because removing petal have usage cooldown resetted
 					petal.SummonedPets = append(petal.SummonedPets, wp.GenerateMob(
@@ -127,7 +127,7 @@ func (p *Player) PlayerPetalConsume(wp *WavePool, now time.Time) {
 			case native.PetalTypeMysteriousStick:
 				{
 					if 1 > len(petal.SummonedPets) {
-						smd := summonTypeMapping[petal.Type][petal.Rarity]
+						smd := summonPetsData[petal.Type][petal.Rarity]
 
 						petal.SummonedPets = append(petal.SummonedPets, wp.GenerateMob(
 							smd.Type,
@@ -169,7 +169,7 @@ func (p *Player) PlayerPetalConsume(wp *WavePool, now time.Time) {
 				{
 					if petal.DetachedFromOrbit {
 						// Detached, use web if stop
-						if petal.Velocity[0] < VelocityEpsilon && petal.Velocity[1] < VelocityEpsilon {
+						if VelocityWithinEpsilon(petal.Velocity) {
 							wp.GenerateMob(
 								native.MobTypeWebProjectile,
 

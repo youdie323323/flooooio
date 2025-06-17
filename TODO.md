@@ -1,0 +1,1 @@
+- Make wave end signal running at update ends

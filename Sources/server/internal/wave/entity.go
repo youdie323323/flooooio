@@ -11,6 +11,8 @@ import (
 	"flooooio/internal/wave/florr/native"
 )
 
+type Velocity = [2]float32
+
 type EntityId = uint32
 
 type Entity struct {
@@ -58,7 +60,7 @@ func NewPoisonable() Poisonable {
 
 // TODO: wrap all poison damages into TakePoisonDamage
 
-// StaticEntityData represents static data of Petal.
+// StaticEntityData represents static entity data.
 type StaticEntityData[T ~uint8] struct {
 	Type   T
 	Rarity native.Rarity
@@ -151,7 +153,7 @@ func GetRandomCoordinate(cx, cy, spawnRadius float32) (float32, float32) {
 	return x, y
 }
 
-// Methods that satisfy spatial hash's Node
+// Methods that satisfies spatial hashes Node
 
 func (e *Entity) GetX() float32 {
 	return e.X

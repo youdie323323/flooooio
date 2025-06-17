@@ -1,18 +1,26 @@
 const std = @import("std");
 const math = std.math;
-const Entity = @import("./Entity.zig").Entity;
-const pmood = @import("./PlayerMood.zig");
+const Entity = @import("Entity.zig").Entity;
+const pmood = @import("PlayerMood.zig");
+const PureRenderer = @import("Renderers/Renderer.zig");
 
 const PlayerImpl = @This();
 
 pub const Super = Entity(PlayerImpl);
 
-pub const Renderer = @import("./Renderers/PlayerRenderingDispatcher.zig").PlayerRenderingDispatcher;
+pub const Renderer = @import("Renderers/Player/PlayerRenderingDispatcher.zig").PlayerRenderingDispatcher;
 
-mood: pmood.MoodBitSet,
+comptime { // Validate
+    PureRenderer.validateEntityImplementation(PlayerImpl);
+}
 
+/// Mood of player.
+mood: pmood.MoodBitSet = .initEmpty(),
+
+/// Name of player.
 name: []const u8,
 
+/// Time properties for face pupil.
 angry_t: f32 = 0,
 sad_t: f32 = 0,
 
@@ -24,13 +32,9 @@ is_developer: bool = false,
 
 pub fn init(
     _: std.mem.Allocator,
-    mood: pmood.MoodBitSet,
     name: []const u8,
 ) PlayerImpl {
-    return .{
-        .mood = mood,
-        .name = name,
-    };
+    return .{ .name = name };
 }
 
 pub fn deinit(self: *PlayerImpl, _: std.mem.Allocator, _: *Super) void {

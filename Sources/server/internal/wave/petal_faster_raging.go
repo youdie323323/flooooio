@@ -26,7 +26,7 @@ func (p *Petal) PetalFasterRaging(wp *WavePool, now time.Time) {
 }
 
 func (p *Petal) AddRandomVelocity(speed float32) {
-	angle := 2 * math32.Pi * rand.Float32()
+	angle := Tau * rand.Float32()
 
 	p.Velocity[0] += speed * math32.Cos(angle)
 	p.Velocity[1] += speed * math32.Sin(angle)

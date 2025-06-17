@@ -237,8 +237,8 @@ export type AnyFunction = (...args: Array<any>) => any;
                 return 0;
             },
 
-            fd_prestat_get(fd: number, prestat_ptr: number): number { return ENOSYS; }, // ENOSYS: function not implemented
-            fd_prestat_dir_name(fd: number, path_ptr: number, path_len: number): number { return ENOSYS; }, // ENOSYS
+            fd_prestat_get(fd: number, prestat_ptr: number): number { return ENOSYS; },
+            fd_prestat_dir_name(fd: number, path_ptr: number, path_len: number): number { return ENOSYS; },
 
             fd_read(fd: number, iovs_ptr: number, iovs_len: number, nread_ptr: number): number {
                 HEAP32[nread_ptr >> 2] = 0;
@@ -308,6 +308,7 @@ export type AnyFunction = (...args: Array<any>) => any;
             const response = await fetch(WASM_PATH, {
                 credentials: "same-origin",
             });
+
             if (!response.ok) {
                 throw "failed to load wasm binary file at '" + WASM_PATH + "'";
             }

@@ -27,8 +27,8 @@ ctx.lineCap = "round";
     ctx.closePath();
 
     ctx.lineWidth = 3;
-    ctx.fillStyle = "#ffe763";
-    ctx.strokeStyle = "#cebb50";
+    ctx.fillStyle = "#f22";
+    ctx.strokeStyle = "#f22";
     ctx.fill();
     ctx.stroke();
 }
