@@ -11,8 +11,6 @@ pub const darkened_base: f32 = 0.1875;
 
 pub fn RenderContext(comptime Entity: type) type {
     return *const struct {
-        const PtrConstSelf = *const @This();
-
         /// Canvas context to render this render context.
         ctx: *CanvasContext,
 
@@ -28,12 +26,12 @@ pub fn RenderContext(comptime Entity: type) type {
         // We'll place functions here which hasn't used outside comptime environments (something kind like: { comptime recursive: bool })
 
         /// Returns whether this render context entity is mob.
-        pub inline fn isMob(self: PtrConstSelf) bool {
+        pub inline fn isMob(self: *const @This()) bool {
             return @hasDecl(@TypeOf(self.entity.impl), "type");
         }
 
         /// Returns whether this render context should rendered.
-        pub inline fn isCandidate(self: PtrConstSelf) bool {
+        pub inline fn isCandidate(self: *const @This()) bool {
             const entity = self.entity;
             const is_specimen = self.is_specimen;
 
@@ -41,7 +39,7 @@ pub fn RenderContext(comptime Entity: type) type {
         }
 
         /// Apply death animation with this render context.
-        pub inline fn applyDeathAnimation(self: PtrConstSelf) void {
+        pub inline fn applyDeathAnimation(self: *const @This()) void {
             const ctx = self.ctx;
             const entity = self.entity;
 
@@ -65,7 +63,7 @@ pub fn RenderContext(comptime Entity: type) type {
 
         /// Blend colors based on this render context entity effect values.
         /// All effect values should in [0, 1].
-        pub inline fn blendStatusEffects(self: PtrConstSelf, color: Color) Color {
+        pub inline fn blendStatusEffects(self: *const @This(), color: Color) Color {
             const entity = self.entity;
 
             const hurt_t = entity.hurt_t;
@@ -96,7 +94,7 @@ pub fn RenderContext(comptime Entity: type) type {
         const hp_bar_max_width = 45;
 
         /// Draw the entity statuses (e.g. health bar).
-        pub inline fn drawEntityStatuses(self: PtrConstSelf) void {
+        pub inline fn drawEntityStatuses(self: *const @This()) void {
             const ctx = self.ctx;
             const entity = self.entity;
 

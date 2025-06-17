@@ -2,6 +2,8 @@ const std = @import("std");
 const builtin = std.builtin;
 const math = std.math;
 
+const log = @import("wasm_logger.zig").log;
+
 const event = @import("WebAssembly/Interop/Event.zig");
 const dom = @import("WebAssembly/Interop/Dom.zig");
 const ws = @import("WebSocket/ws.zig");
@@ -30,6 +32,8 @@ const renderEntity = @import("Entity/Renderers/Renderer.zig").renderEntity;
 const MobRenderingDispatcher = @import("Entity/Renderers/Mob/MobRenderingDispatcher.zig").MobRenderingDispatcher;
 
 const mach_objects = @import("Entity/MachObjects/objs.zig");
+
+const EntityProfiles = @import("Florr/Native/Entity/EntityProfiles.zig");
 
 const allocator = @import("mem.zig").allocator;
 
@@ -79,9 +83,9 @@ var players: Players = undefined;
 var mobs: Mobs = undefined;
 
 const EntityKind = enum(u8) {
-    player,
-    mob,
-    petal,
+    player = 0,
+    mob = 1,
+    petal = 2,
 };
 
 inline fn internalAngleToRadians(angle: f32) f32 {
@@ -462,11 +466,14 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
 // This function overrides C main
 // main(_: c_int, _: [*][*]u8) c_int
 export fn main() c_int {
-    std.debug.print("main()\n", .{});
+    log(@src(), .debug, "main()", .{});
+
+    // Init entity profiles
+    EntityProfiles.staticInit();
 
     ctx = CanvasContext.createCanvasContextFromElement(allocator, "canvas", false);
 
-    {
+    { // Initialize client websocket
         client = ws.ClientWebSocket.init(allocator) catch unreachable;
 
         client.client_bound.putHandler(ws.opcode.Clientbound.wave_self_id, handleWaveSelfId) catch unreachable;
@@ -475,14 +482,14 @@ export fn main() c_int {
         client.connect("localhost:8080") catch unreachable;
     }
 
-    {
+    { // Initialize dom event
         event.addGlobalEventListener(.window, .resize, onResize);
         event.addEventListener("canvas", .wheel, onWheel);
 
         onResize(null);
     }
 
-    {
+    { // Initialize ui
         ui = UI.init(allocator, ctx) catch unreachable;
     }
 
@@ -496,7 +503,7 @@ export fn main() c_int {
         MobImpl.Renderer.staticInit(allocator);
     }
 
-    {
+    { // Initialize tile map
         const tile_ctx = CanvasContext.createCanvasContext(allocator, 256 * 4, 256 * 4, false);
 
         tile_ctx.drawSVG(@embedFile("Tile/Tiles/desert_c_2.svg"));

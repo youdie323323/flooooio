@@ -62,6 +62,7 @@ pub const EntityType = union(enum(u8)) {
         }
     }
 
+    /// Returns whether this EntityType is mob type.
     pub inline fn isMob(self: EntityType) bool {
         return switch (self) {
             inline .mob => true,
@@ -69,6 +70,7 @@ pub const EntityType = union(enum(u8)) {
         };
     }
 
+    /// Returns whether this EntityType is petal type.
     pub inline fn isPetal(self: EntityType) bool {
         return switch (self) {
             inline .mob => false,

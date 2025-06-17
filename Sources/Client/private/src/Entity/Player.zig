@@ -4,14 +4,12 @@ const Entity = @import("Entity.zig").Entity;
 const pmood = @import("PlayerMood.zig");
 const PureRenderer = @import("Renderers/Renderer.zig");
 
-const PlayerImpl = @This();
-
-pub const Super = Entity(PlayerImpl);
+pub const Super = Entity(@This());
 
 pub const Renderer = @import("Renderers/Player/PlayerRenderingDispatcher.zig").PlayerRenderingDispatcher;
 
 comptime { // Validate
-    PureRenderer.validateEntityImplementation(PlayerImpl);
+    PureRenderer.validateEntityImplementation(@This());
 }
 
 /// Mood of player.
@@ -33,15 +31,15 @@ is_developer: bool = false,
 pub fn init(
     _: std.mem.Allocator,
     name: []const u8,
-) PlayerImpl {
+) @This() {
     return .{ .name = name };
 }
 
-pub fn deinit(self: *PlayerImpl, _: std.mem.Allocator, _: *Super) void {
+pub fn deinit(self: *@This(), _: std.mem.Allocator, _: *Super) void {
     self.* = undefined;
 }
 
-pub fn update(self: *PlayerImpl, delta_time: f32, entity: *Super) void {
+pub fn update(self: *@This(), delta_time: f32, entity: *Super) void {
     if (entity.is_dead) {
         self.sad_t = 1;
         self.angry_t = 0;

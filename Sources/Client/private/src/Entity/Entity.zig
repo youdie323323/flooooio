@@ -5,8 +5,6 @@ pub const EntityId = u32;
 
 pub fn Entity(comptime Impl: type) type {
     return struct {
-        const Self = @This();
-
         inline fn calculateAngleDistance(start_angle: f32, end_angle: f32) f32 {
             const angle_diff = @mod(end_angle - start_angle, math.tau);
 
@@ -69,7 +67,7 @@ pub fn Entity(comptime Impl: type) type {
             angle: f32,
             size: f32,
             health: f32,
-        ) Self {
+        ) @This() {
             return .{
                 .impl = impl,
 
@@ -95,14 +93,14 @@ pub fn Entity(comptime Impl: type) type {
             };
         }
 
-        pub fn deinit(self: *Self, allocator: std.mem.Allocator) void {
+        pub fn deinit(self: *@This(), allocator: std.mem.Allocator) void {
             if (comptime @hasDecl(Impl, "deinit"))
                 self.impl.deinit(allocator, self);
 
             self.* = undefined;
         }
 
-        pub fn update(self: *Self, delta_time: f32) void {
+        pub fn update(self: *@This(), delta_time: f32) void {
             const delta_time_100 = delta_time * 0.01;
             const delta_time_150 = delta_time_100 * (2.0 / 3.0);
             const delta_time_200 = delta_time_100 * 0.5;
@@ -161,7 +159,7 @@ pub fn Entity(comptime Impl: type) type {
                 self.impl.update(delta_time, self);
         }
 
-        pub inline fn calculateBeakAngle(self: Self) f32 {
+        pub inline fn calculateBeakAngle(self: @This()) f32 {
             return @sin(self.total_t) * 0.1;
         }
     };

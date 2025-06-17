@@ -75,9 +75,7 @@ pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(
             }
         };
 
-        const Self = @This();
-
-        pub fn init(objs: *Self, allocator: std.mem.Allocator) void {
+        pub fn init(objs: *@This(), allocator: std.mem.Allocator) void {
             objs.internal = .{
                 .allocator = allocator,
 
@@ -85,7 +83,7 @@ pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(
             };
         }
 
-        pub fn deinit(objs: *Self) void {
+        pub fn deinit(objs: *@This()) void {
             const id_to_obj_id = &objs.internal.id_to_obj_id;
 
             id_to_obj_id.deinit(objs.internal.allocator);
@@ -94,24 +92,24 @@ pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(
         /// Tries to acquire the mutex without blocking the caller's thread.
         /// Returns `false` if the calling thread would have to block to acquire it.
         /// Otherwise, returns `true` and the caller should `unlock()` the Mutex to release it.
-        pub fn tryLock(objs: *Self) bool {
+        pub fn tryLock(objs: *@This()) bool {
             return objs.internal.mu.tryLock();
         }
 
         /// Acquires the mutex, blocking the caller's thread until it can.
         /// It is undefined behavior if the mutex is already held by the caller's thread.
         /// Once acquired, call `unlock()` on the Mutex to release it.
-        pub fn lock(objs: *Self) void {
+        pub fn lock(objs: *@This()) void {
             objs.internal.mu.lock();
         }
 
         /// Releases the mutex which was previously acquired with `lock()` or `tryLock()`.
         /// It is undefined behavior if the mutex is unlocked from a different thread that it was locked from.
-        pub fn unlock(objs: *Self) void {
+        pub fn unlock(objs: *@This()) void {
             objs.internal.mu.unlock();
         }
 
-        pub fn new(objs: *Self, value: T) !ObjectId {
+        pub fn new(objs: *@This(), value: T) !ObjectId {
             const allocator = objs.internal.allocator;
             const data = &objs.internal.data;
             const dead = &objs.internal.dead;
@@ -185,7 +183,7 @@ pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(
         ///
         /// Unlike set(), this method does not respect any mach.Objects tracking
         /// options, so changes made to an object through this method will not be tracked.
-        pub fn set(objs: *Self, id: ObjectId, comptime field_name: std.meta.FieldEnum(T), value: std.meta.FieldType(T, field_name)) void {
+        pub fn set(objs: *@This(), id: ObjectId, comptime field_name: std.meta.FieldEnum(T), value: std.meta.FieldType(T, field_name)) void {
             const data = &objs.internal.data;
 
             const unpacked = objs.validateAndUnpack(id, "set");
@@ -197,7 +195,7 @@ pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(
         ///
         /// Unlike setAll(), this method does not respect any mach.Objects tracking
         /// options, so changes made to an object through this method will not be tracked.
-        pub fn setValue(objs: *Self, id: ObjectId, value: T) void {
+        pub fn setValue(objs: *@This(), id: ObjectId, value: T) void {
             const data = &objs.internal.data;
 
             const unpacked = objs.validateAndUnpack(id, "setValue");
@@ -206,7 +204,7 @@ pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(
         }
 
         /// Get a single field.
-        pub fn get(objs: *Self, id: ObjectId, comptime field_name: std.meta.FieldEnum(T)) std.meta.FieldType(T, field_name) {
+        pub fn get(objs: *@This(), id: ObjectId, comptime field_name: std.meta.FieldEnum(T)) std.meta.FieldType(T, field_name) {
             const data = &objs.internal.data;
 
             const unpacked = objs.validateAndUnpack(id, "get");
@@ -215,7 +213,7 @@ pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(
         }
 
         /// Get all fields.
-        pub fn getValue(objs: *Self, id: ObjectId) T {
+        pub fn getValue(objs: *@This(), id: ObjectId) T {
             const data = &objs.internal.data;
 
             const unpacked = objs.validateAndUnpack(id, "getValue");
@@ -223,7 +221,7 @@ pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(
             return data.get(unpacked.index);
         }
 
-        pub fn delete(objs: *Self, id: ObjectId) void {
+        pub fn delete(objs: *@This(), id: ObjectId) void {
             const dead = &objs.internal.dead;
             const data = &objs.internal.data;
             const recycling_bin = &objs.internal.recycling_bin;
@@ -241,11 +239,11 @@ pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(
         }
 
         /// Search for an object by matching a specific field value.
-        pub fn search(objs: *Self, id: SearchFieldType) ?ObjectId {
+        pub fn search(objs: *@This(), id: SearchFieldType) ?ObjectId {
             return objs.internal.id_to_obj_id.get(id);
         }
 
-        pub fn slice(objs: *Self) Slice {
+        pub fn slice(objs: *@This()) Slice {
             return .{
                 .index = 0,
                 .objs = objs,
@@ -254,7 +252,7 @@ pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(
 
         /// Validates the given object is from this list (type check) and alive (not a use after delete
         /// situation.)
-        fn validateAndUnpack(objs: *const Self, id: ObjectId, comptime fn_name: []const u8) PackedId {
+        fn validateAndUnpack(objs: *const @This(), id: ObjectId, comptime fn_name: []const u8) PackedId {
             const dead = &objs.internal.dead;
             const generation = &objs.internal.generation;
 

@@ -3,6 +3,7 @@ const ascii = std.ascii;
 const debug = std.debug;
 const mem = std.mem;
 const math = std.math;
+
 const Color = @This();
 
 const Rgb = @Vector(3, u8);
@@ -29,19 +30,57 @@ pub inline fn init(rgb: Rgb) Color {
     return .{ .rgb = rgb };
 }
 
-inline fn mulWithUpperBound(self: Color, comptime strength: FloatingRgb, comptime upper: FloatingRgb) Rgb {
+inline fn mulSafe(self: Color, comptime strength: FloatingRgb) Rgb {
     const result = toFloatingRgb(self.rgb) * strength;
 
     // Clamping lower bound redundant here since xy (x >= 0, y >= 0) always >= 0.
 
-    return toRgb(
-        @select(
-            f32,
-            result > upper,
-            upper,
-            result,
-        ),
-    );
+    return toRgb(@min(result, fwhite));
+}
+
+test "mulSafe @select vs @min" {
+    var i: usize = 0;
+    const iterations = 10000000;
+
+    var timer = try std.time.Timer.start();
+
+    var total_select: u64 = 0;
+    var total_min: u64 = 0;
+
+    var prng = std.Random.DefaultPrng.init(0);
+    var random = prng.random();
+
+    while (i < iterations) : (i += 1) {
+        const result: FloatingRgb = .{ random.float(f32), random.float(f32), random.float(f32) };
+
+        {
+            timer.reset();
+
+            _ = @select(
+                f32,
+                result > fwhite,
+                fwhite,
+                result,
+            );
+
+            total_select += timer.read();
+        }
+
+        {
+            timer.reset();
+
+            _ = @min(result, fwhite);
+
+            total_min += timer.read();
+        }
+    }
+
+    const avg_select = @as(f64, @floatFromInt(total_select)) / @as(f64, @floatFromInt(iterations));
+    const avg_min = @as(f64, @floatFromInt(total_min)) / @as(f64, @floatFromInt(iterations));
+
+    std.debug.print("Average time for @select: {d:.2} ns\n", .{avg_select});
+    std.debug.print("Average time for @min: {d:.2} ns\n", .{avg_min});
+    std.debug.print("Ratio (select/min): {d:.2}\n", .{avg_select / avg_min});
 }
 
 pub inline fn darkened(self: Color, comptime strength: f32) Color {
@@ -49,7 +88,7 @@ pub inline fn darkened(self: Color, comptime strength: f32) Color {
 
     const strength_c: FloatingRgb = comptime @splat(1 - strength);
 
-    return init(self.mulWithUpperBound(strength_c, fwhite));
+    return init(self.mulSafe(strength_c));
 }
 
 pub inline fn lightened(self: Color, comptime strength: f32) Color {
@@ -57,7 +96,7 @@ pub inline fn lightened(self: Color, comptime strength: f32) Color {
 
     const strength_a: FloatingRgb = comptime @splat(1 + strength);
 
-    return init(self.mulWithUpperBound(strength_a, fwhite));
+    return init(self.mulSafe(strength_a));
 }
 
 /// Interpolate between two colors.

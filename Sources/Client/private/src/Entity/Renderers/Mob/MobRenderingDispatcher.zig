@@ -5,6 +5,8 @@ const RenderContext = @import("../Renderer.zig").RenderContext;
 const MobSuper = @import("../../Mob.zig").Super;
 const MobType = @import("../../../Florr/Native/Entity/EntityType.zig").MobType;
 
+const log = @import("../../../wasm_logger.zig").log;
+
 const MobStarfishRenderer = @import("MobStarfishRenderer.zig").MobStarfishRenderer;
 const starfishRender = MobStarfishRenderer.render;
 
@@ -37,9 +39,10 @@ fn render(rctx: RenderContext(MobSuper)) void {
     const entity = rctx.entity;
     const mob = entity.impl;
 
-    if (type_to_renderer.get(mob.type.get())) |r| r(rctx) else {
-        // std.log.warn("Unrendered mob: {}", .{mob.type});
-    }
+    if (type_to_renderer.get(mob.type.get())) |r|
+        r(rctx)
+    else
+        log(@src(), .debug, "Unrendered mob: {}", .{mob.type});
 }
 
 fn init(allocator: std.mem.Allocator) void {

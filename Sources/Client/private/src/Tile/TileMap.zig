@@ -5,6 +5,7 @@ const CanvasContext = @import("../WebAssembly/Interop/Canvas2D/CanvasContext.zig
 const S3FIFO = @import("S3FIFO/S3FIFO.zig").S3FIFO;
 const Color = @import("../WebAssembly/Interop/Canvas2D/Color.zig");
 const Deque = @import("S3FIFO/Deque.zig").Deque;
+
 const TileMap = @This();
 
 pub const Vector2 = @Vector(2, f32);

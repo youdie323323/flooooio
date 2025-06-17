@@ -12,8 +12,6 @@ const starfish = @import("Renderers/Mob/MobStarfishRenderer.zig");
 
 const MobImpl = @This();
 
-const Segments = std.AutoHashMap(ObjectId, void);
-
 pub const Super = Entity(MobImpl);
 
 pub const Renderer = @import("Renderers/Mob/MobRenderingDispatcher.zig").MobRenderingDispatcher;
@@ -21,6 +19,18 @@ pub const Renderer = @import("Renderers/Mob/MobRenderingDispatcher.zig").MobRend
 comptime { // Validate
     PureRenderer.validateEntityImplementation(MobImpl);
 }
+
+const Segments = std.AutoHashMap(ObjectId, void);
+
+const StarfishLegs = [starfish.leg_amount]f32;
+
+/// Linkable mob types defined in wave_mob_spawner.go.
+const linkable_mob_types = [_]MobType{
+    .centipede,
+    .centipede_desert,
+    .centipede_evil,
+    .leech,
+};
 
 /// Type of mob.
 type: EntityType,
@@ -36,11 +46,11 @@ is_first_segment: bool,
 /// Connected segment of this mob.
 connecting_segment: ?ObjectId,
 /// List of mobs that connected to this mob.
-connected_segments: Segments,
+connected_segments: ?Segments,
 
 /// Leg distances of starfish.
-/// Value is null if not starfish.
-leg_distances: ?[starfish.leg_amount]f32,
+/// Value is null if mob is not starfish.
+leg_distances: ?StarfishLegs,
 
 pub fn init(
     allocator: std.mem.Allocator,
@@ -50,6 +60,12 @@ pub fn init(
     is_first_segment: bool,
     connecting_segment: ?ObjectId,
 ) MobImpl {
+    const is_linkable =
+        if (@"type".isMob())
+            std.mem.indexOf(MobType, &linkable_mob_types, &.{@"type".mob}) != null
+        else
+            false;
+
     return .{
         // Using type identifier directly is detected as keyword
         .type = @"type",
@@ -60,10 +76,14 @@ pub fn init(
 
         .is_first_segment = is_first_segment,
         .connecting_segment = connecting_segment,
-        .connected_segments = Segments.init(allocator),
+        .connected_segments = if (is_linkable)
+            Segments.init(allocator)
+        else
+            null,
 
         .leg_distances = if (@"type".get() == @intFromEnum(MobType.starfish))
-            generateDefaultStarfishLegDistance()
+            // Splat doesnt allow nullable type
+            @as(StarfishLegs, @splat(starfish.undestroyed_leg_distance))
         else
             null,
     };
@@ -71,7 +91,7 @@ pub fn init(
 
 pub fn deinit(self: *MobImpl, _: std.mem.Allocator, _: *Super) void {
     self.connecting_segment = undefined;
-    self.connected_segments.deinit();
+    if (self.connected_segments) |*s| s.deinit();
 
     self.leg_distances = undefined;
 
@@ -97,29 +117,25 @@ pub inline fn stat(self: MobImpl, allocator: std.mem.Allocator) !?json.Value {
     } else null;
 }
 
-/// Definition for basic operation of connected_segments.
-const SegmentMethods = struct {
+/// Basic operation of connected_segments.
+pub usingnamespace struct {
     pub fn isConnectedBy(self: *MobImpl, other: ObjectId) bool {
-        return self.connected_segments.contains(other);
+        if (self.connected_segments) |s| {
+            return s.contains(other);
+        }
+
+        return false;
     }
 
     pub fn addConnectedSegment(self: *MobImpl, segment: ObjectId) !void {
-        try self.connected_segments.put(segment, {});
+        if (self.connected_segments) |*s| {
+            try s.put(segment, {});
+        }
     }
 
     pub fn removeConnectedSegment(self: *MobImpl, segment: ObjectId) void {
-        _ = self.connected_segments.remove(segment);
+        if (self.connected_segments) |*s| {
+            _ = s.remove(segment);
+        }
     }
 };
-
-pub usingnamespace SegmentMethods;
-
-pub fn generateDefaultStarfishLegDistance() [starfish.leg_amount]f32 {
-    var distances: [starfish.leg_amount]f32 = undefined;
-
-    for (&distances) |*distance| {
-        distance.* = starfish.undestroyed_leg_distance;
-    }
-
-    return distances;
-}

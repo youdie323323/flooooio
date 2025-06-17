@@ -20,15 +20,11 @@ pub fn build(b: *std.Build) !void {
         .root_module = b.createModule(.{
             .root_source_file = b.path(src_folder ++ "/main.zig"),
             .target = target,
-            .optimize = .ReleaseFast,
-            .strip = true,
+            .optimize = .Debug,
         }),
     });
 
     exe.export_memory = true;
-
-    exe.initial_memory = memory;
-    exe.max_memory = memory;
 
     exe.export_table = true;
 

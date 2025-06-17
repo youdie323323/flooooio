@@ -20,19 +20,21 @@ fn collectLeechSegmentPoints(mobs: *Mobs, leech: *MobSuper, scale: MobSuper.Vect
 
     try bodies.append(leech.pos / scale);
 
-    // Iterate over connected segments
-    var it = leech.impl.connected_segments.keyIterator();
+    if (leech.impl.connected_segments) |s| {
+        // Iterate over connected segments
+        var it = s.keyIterator();
 
-    while (it.next()) |key| {
-        var mob = mobs.getValue(key.*);
+        while (it.next()) |key| {
+            var mob = mobs.getValue(key.*);
 
-        // Recursively get linked bodies and append them
-        const linked_bodies = try collectLeechSegmentPoints(mobs, &mob, scale);
+            // Recursively get linked bodies and append them
+            const linked_bodies = try collectLeechSegmentPoints(mobs, &mob, scale);
 
-        try bodies.appendSlice(linked_bodies);
+            try bodies.appendSlice(linked_bodies);
 
-        // Free the slice returned by the recursive call, as it's now copied
-        allocator.free(linked_bodies);
+            // Free the slice returned by the recursive call, as it's now copied
+            allocator.free(linked_bodies);
+        }
     }
 
     return bodies.toOwnedSlice();

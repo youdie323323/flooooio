@@ -3,6 +3,8 @@ const std = @import("std");
 const Path2D = @import("Path2D.zig");
 const Color = @import("Color.zig");
 const mem = @import("../../../mem.zig");
+const log = @import("../../../wasm_logger.zig").log;
+
 const CanvasContext = @This();
 
 pub const Id = u16;
@@ -178,7 +180,7 @@ const AccessorMethods = struct {
     pub inline fn setLineCap(self: *CanvasContext, comptime cap: LineCap) void {
         self.properties.line_cap = cap;
 
-        switch (comptime cap) {
+        switch (cap) {
             inline .butt => @"42"(self.id),
             inline .round => @"43"(self.id),
             inline .square => @"44"(self.id),
@@ -192,7 +194,7 @@ const AccessorMethods = struct {
     pub inline fn setLineJoin(self: *CanvasContext, comptime join: LineJoin) void {
         self.properties.line_join = join;
 
-        switch (comptime join) {
+        switch (join) {
             inline .round => @"45"(self.id),
             inline .miter => @"46"(self.id),
             inline else => @compileError(std.fmt.comptimePrint("invalid line join: {any}", .{join})),
@@ -248,7 +250,7 @@ const AccessorMethods = struct {
     pub inline fn setGlobalCompositeOperation(self: *CanvasContext, comptime op: CompositeOperator) void {
         self.properties.global_composite_operation = op;
 
-        switch (comptime op) {
+        switch (op) {
             inline .source_over => @"50"(self.id),
             inline .destination_in => @"51"(self.id),
             inline .copy => @"52"(self.id),
