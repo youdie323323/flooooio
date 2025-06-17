@@ -26,6 +26,9 @@ pub fn build(b: *std.Build) !void {
 
     exe.export_memory = true;
 
+    exe.initial_memory = memory;
+    exe.max_memory = memory;
+
     exe.export_table = true;
 
     exe.entry = .disabled;
