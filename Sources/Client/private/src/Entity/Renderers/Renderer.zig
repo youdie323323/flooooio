@@ -26,8 +26,8 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         players: *main.Players,
         mobs: *main.Mobs,
 
-        /// Returns strictly typed entity.
-        pub inline fn typedEntity(self: @This()) *Entity(AnyImpl) {
+        /// Returns real typed entity.
+        pub inline fn castedEntity(self: @This()) *Entity(AnyImpl) {
             return self.entity;
         }
 
@@ -38,7 +38,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
 
         /// Returns whether this render context should rendered.
         pub inline fn shouldRender(self: @This()) bool {
-            const entity = self.typedEntity();
+            const entity = self.castedEntity();
             const is_specimen = self.is_specimen;
 
             return !(!is_specimen and entity.is_dead and entity.dead_t > 1);
@@ -47,7 +47,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         /// Apply death animation with this render context.
         pub inline fn applyDeathAnimation(self: @This()) void {
             const ctx = self.ctx;
-            const entity = self.typedEntity();
+            const entity = self.castedEntity();
             const impl = entity.impl;
 
             if (entity.is_dead) {
@@ -77,7 +77,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         /// Blend colors based on this render context entity effect values.
         /// All effect values should in [0, 1].
         pub inline fn blendEffectColors(self: @This(), color: Color) Color {
-            const entity = self.typedEntity();
+            const entity = self.castedEntity();
 
             const hurt_t = entity.hurt_t;
             const poison_t = entity.poison_t;
@@ -109,7 +109,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         /// Draw the entity statuses (e.g. health bar).
         pub inline fn drawEntityStatuses(self: @This()) void {
             const ctx = self.ctx;
-            const entity = self.typedEntity();
+            const entity = self.castedEntity();
             const impl = entity.impl;
 
             const is_mob = self.isMob();
@@ -224,7 +224,7 @@ pub fn Renderer(
         pub fn render(rctx: RenderContext(AnyEntity)) void {
             if (comptime is_ancestor) {
                 const ctx = rctx.ctx;
-                const entity = rctx.typedEntity();
+                const entity = rctx.castedEntity();
                 const is_specimen = rctx.is_specimen;
 
                 const x, const y = entity.pos;

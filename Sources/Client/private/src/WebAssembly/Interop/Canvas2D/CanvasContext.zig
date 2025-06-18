@@ -3,7 +3,6 @@ const std = @import("std");
 const Path2D = @import("Path2D.zig");
 const Color = @import("Color.zig");
 const mem = @import("../../../mem.zig");
-const log = @import("../../../wasm_logger.zig").log;
 
 const CanvasContext = @This();
 

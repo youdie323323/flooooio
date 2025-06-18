@@ -296,8 +296,8 @@
       "description": "It's just there doing its thing."
     },
     "collision": {
-      "fraction": 40,
-      "radius": 40
+      "fraction": 35,
+      "radius": 35
     },
     "baseSize": 25,
     "0": {
@@ -335,8 +335,8 @@
       "description": "This one loves flowers."
     },
     "collision": {
-      "fraction": 40,
-      "radius": 40
+      "fraction": 35,
+      "radius": 35
     },
     "baseSize": 25,
     "0": {
@@ -374,8 +374,8 @@
       "description": "Gotta go fast."
     },
     "collision": {
-      "fraction": 40,
-      "radius": 40
+      "fraction": 35,
+      "radius": 35
     },
     "baseSize": 25,
     "0": {

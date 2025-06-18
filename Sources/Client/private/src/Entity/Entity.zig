@@ -26,7 +26,6 @@ pub fn Entity(comptime Impl: type) type {
         id: EntityId,
 
         t: f32 = 0,
-        total_t: f32 = 0,
         update_t: f32 = 0,
 
         hurt_t: f32 = 0,
@@ -142,8 +141,6 @@ pub fn Entity(comptime Impl: type) type {
                 self.move_counter += (delta_time * dist) / 900;
             }
 
-            self.total_t += delta_time / 40;
-
             if (self.health < 1) self.hp_alpha = smoothInterpolate(delta_time_200, self.hp_alpha, 1);
 
             if (self.red_health_timer > 0) {
@@ -156,11 +153,7 @@ pub fn Entity(comptime Impl: type) type {
                 self.red_health += (self.health - self.red_health) * @min(1, delta_time_200);
 
             if (comptime @hasDecl(Impl, "update"))
-                self.impl.update(delta_time, self);
-        }
-
-        pub inline fn calculateBeakAngle(self: @This()) f32 {
-            return @sin(self.total_t) * 0.1;
+                self.impl.update(self, delta_time);
         }
     };
 }

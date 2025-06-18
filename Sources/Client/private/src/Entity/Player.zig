@@ -39,7 +39,7 @@ pub fn deinit(self: *@This(), _: std.mem.Allocator, _: *Super) void {
     self.* = undefined;
 }
 
-pub fn update(self: *@This(), delta_time: f32, entity: *Super) void {
+pub fn update(self: *@This(), entity: *Super, delta_time: f32) void {
     if (entity.is_dead) {
         self.sad_t = 1;
         self.angry_t = 0;

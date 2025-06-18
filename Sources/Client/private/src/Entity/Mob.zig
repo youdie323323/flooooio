@@ -41,6 +41,9 @@ rarity: EntityRarity,
 /// Whether this mob is pet.
 is_pet: bool,
 
+/// Total time that increases continuously constantly, not affected by moving counter or something.
+total_t: f32 = 0,
+
 /// Whether this mob is first generated segment in segment chain.
 is_first_segment: bool,
 /// Connected segment of this mob.
@@ -96,6 +99,15 @@ pub fn deinit(self: *MobImpl, _: std.mem.Allocator, _: *Super) void {
     self.leg_distances = undefined;
 
     self.* = undefined;
+}
+
+pub fn update(self: *@This(), _: *Super, delta_time: f32) void {
+    self.total_t += delta_time / 40;
+}
+
+/// Calculate beak angle for mob.
+pub inline fn calculateBeakAngle(self: MobImpl) f32 {
+    return @sin(self.total_t) * 0.1;
 }
 
 /// Returns a stat within this mob.

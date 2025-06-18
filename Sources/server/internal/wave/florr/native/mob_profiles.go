@@ -735,8 +735,8 @@ var MobProfiles = map[MobType]MobData{
 				Description: "It's just there doing its thing.",
 			},
 			Collision: EntityCollision{
-				Fraction: 40,
-				Radius:   40,
+				Fraction: 35,
+				Radius:   35,
 			},
 		},
 	},
@@ -772,8 +772,8 @@ var MobProfiles = map[MobType]MobData{
 				Description: "This one loves flowers.",
 			},
 			Collision: EntityCollision{
-				Fraction: 40,
-				Radius:   40,
+				Fraction: 35,
+				Radius:   35,
 			},
 		},
 	},
@@ -809,8 +809,8 @@ var MobProfiles = map[MobType]MobData{
 				Description: "Gotta go fast.",
 			},
 			Collision: EntityCollision{
-				Fraction: 40,
-				Radius:   40,
+				Fraction: 35,
+				Radius:   35,
 			},
 		},
 	},

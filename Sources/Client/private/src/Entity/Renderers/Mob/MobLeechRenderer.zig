@@ -45,6 +45,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
     const ctx = rctx.ctx;
     const entity = rctx.entity;
+    const mob = entity.impl;
     const is_specimen = rctx.is_specimen;
     const mobs = rctx.mobs;
 
@@ -115,7 +116,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
         ctx.strokeColor(rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#292929")));
         ctx.setLineWidth(4);
 
-        const beak_angle = entity.calculateBeakAngle();
+        const beak_angle = mob.calculateBeakAngle();
 
         { // Upper beak
             ctx.beginPath();

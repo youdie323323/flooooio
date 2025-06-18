@@ -2,8 +2,6 @@ const std = @import("std");
 const builtin = std.builtin;
 const math = std.math;
 
-const log = @import("wasm_logger.zig").log;
-
 const event = @import("WebAssembly/Interop/Event.zig");
 const dom = @import("WebAssembly/Interop/Dom.zig");
 const ws = @import("WebSocket/ws.zig");
@@ -466,7 +464,7 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
 // This function overrides C main
 // main(_: c_int, _: [*][*]u8) c_int
 export fn main() c_int {
-    log(@src(), .debug, "main()", .{});
+    std.log.debug("main()", .{});
 
     // Init entity profiles
     EntityProfiles.staticInit();
