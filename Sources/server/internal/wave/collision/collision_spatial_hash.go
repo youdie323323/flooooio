@@ -37,7 +37,7 @@ func ToNodeSlice[T Node](entities []T) []Node {
 // SpatialHash provides a thread-safe 2D spatial hashing implementation.
 type SpatialHash struct {
 	cellSize float32
-	buckets  *xsync.Map[int, *nodeSet]
+	buckets  *xsync.Map[int, *bucket]
 }
 
 // NewSpatialHash creates a new spatial hash.
@@ -48,29 +48,29 @@ func NewSpatialHash(cellSize float32) *SpatialHash {
 
 	return &SpatialHash{
 		cellSize: cellSize,
-		buckets:  xsync.NewMap[int, *nodeSet](),
+		buckets:  xsync.NewMap[int, *bucket](),
 	}
 }
 
-// nodeSet is a thread-safe set implementation for Node objects.
-type nodeSet struct{ items sync.Map }
+// bucket is a thread-safe set implementation for Node objects.
+type bucket struct{ nodes sync.Map }
 
-// newNodeSet creates a new node set.
-func newNodeSet() *nodeSet { return new(nodeSet) }
+// newBucket creates a new node set.
+func newBucket() *bucket { return new(bucket) }
 
 // Add adds a node to the set.
-func (s *nodeSet) Add(n Node) {
-	s.items.Store(n.GetId(), n)
+func (s *bucket) Add(n Node) {
+	s.nodes.Store(n.GetId(), n)
 }
 
 // Delete removes a node from the set.
-func (s *nodeSet) Delete(n Node) {
-	s.items.Delete(n.GetId())
+func (s *bucket) Delete(n Node) {
+	s.nodes.Delete(n.GetId())
 }
 
 // ForEach iterates over all nodes in the set.
-func (s *nodeSet) ForEach(f func(Node)) {
-	s.items.Range(func(_, n any) bool {
+func (s *bucket) ForEach(f func(Node)) {
+	s.nodes.Range(func(_, n any) bool {
 		f(n.(Node))
 
 		return true
@@ -96,7 +96,7 @@ func (sh *SpatialHash) Put(n Node) {
 	// Get or create bucket
 	bucket, exists := sh.buckets.Load(key)
 	if !exists {
-		bucket = newNodeSet()
+		bucket = newBucket()
 
 		sh.buckets.Store(key, bucket)
 	}
@@ -125,6 +125,7 @@ func (sh *SpatialHash) Update(n Node) {
 			bucket.Delete(n)
 		}
 
+		// Set old pos to use later
 		n.SetOldPos(x, y)
 	}
 
@@ -134,7 +135,7 @@ func (sh *SpatialHash) Update(n Node) {
 		// Get or create bucket
 		bucket, exists := sh.buckets.Load(key)
 		if !exists {
-			bucket = newNodeSet()
+			bucket = newBucket()
 
 			sh.buckets.Store(key, bucket)
 		}
