@@ -32,8 +32,8 @@ func (p *Petal) PetalElimination(wp *WavePool, _ time.Time) {
 
 // ForceEliminate forces eliminate a petal.
 //
-// Warning: This behaves the same as when it is "naturally" removed.
-// What this means is that binded entities may also be deleted. If this is not desired, use wp.RemovePetal instead.
+// Warning: This behaves the same as when this petal is "naturally" removed.
+// This mean binded entities may also be deleted. If this behavior is not desired, use wp.RemovePetal instead.
 func (p *Petal) ForceEliminate(wp *WavePool) {
 	p.Health = 0
 

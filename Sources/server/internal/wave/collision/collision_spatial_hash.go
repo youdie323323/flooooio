@@ -1,8 +1,6 @@
 package collision
 
 import (
-	"sync"
-
 	"github.com/chewxy/math32"
 	"github.com/colega/zeropool"
 
@@ -53,10 +51,10 @@ func NewSpatialHash(cellSize float32) *SpatialHash {
 }
 
 // bucket is a thread-safe set implementation for Node objects.
-type bucket struct{ nodes sync.Map }
+type bucket struct{ nodes *xsync.Map[uint32, Node] }
 
 // newBucket creates a new node set.
-func newBucket() *bucket { return new(bucket) }
+func newBucket() *bucket { return &bucket{nodes: xsync.NewMap[uint32, Node]()} }
 
 // Add adds a node to the set.
 func (s *bucket) Add(n Node) {
@@ -69,12 +67,8 @@ func (s *bucket) Delete(n Node) {
 }
 
 // ForEach iterates over all nodes in the set.
-func (s *bucket) ForEach(f func(Node)) {
-	s.nodes.Range(func(_, n any) bool {
-		f(n.(Node))
-
-		return true
-	})
+func (s *bucket) ForEach(f func(_ uint32, n Node) bool) {
+	s.nodes.Range(f)
 }
 
 // pairPoint combines x,y coordinates into a single int key.
@@ -91,7 +85,9 @@ func (sh *SpatialHash) calculatePositionKey(x, y float32) int {
 
 // Put adds a node to the spatial hash.
 func (sh *SpatialHash) Put(n Node) {
-	key := sh.calculatePositionKey(n.GetX(), n.GetY())
+	x, y := n.GetX(), n.GetY()
+
+	key := sh.calculatePositionKey(x, y)
 
 	// Get or create bucket
 	bucket, exists := sh.buckets.Load(key)
@@ -106,7 +102,9 @@ func (sh *SpatialHash) Put(n Node) {
 
 // Remove removes a node from the spatial hash.
 func (sh *SpatialHash) Remove(n Node) {
-	key := sh.calculatePositionKey(n.GetX(), n.GetY())
+	x, y := n.GetX(), n.GetY()
+
+	key := sh.calculatePositionKey(x, y)
 
 	if bucket, ok := sh.buckets.Load(key); ok {
 		bucket.Delete(n)
@@ -164,13 +162,15 @@ func (sh *SpatialHash) Search(x, y, radius float32) []Node {
 			key := pairPoint(xx, yy)
 
 			if bucket, ok := sh.buckets.Load(key); ok {
-				bucket.ForEach(func(n Node) {
+				bucket.ForEach(func(_ uint32, n Node) bool {
 					dx := n.GetX() - x
 					dy := n.GetY() - y
 
 					if (dx*dx + dy*dy) <= radiusSq {
 						nodes = append(nodes, n)
 					}
+
+					return true;
 				})
 			}
 		}
@@ -203,10 +203,12 @@ func (sh *SpatialHash) SearchRect(x, y, width, height float32, filter func(n Nod
 			key := pairPoint(xx, yy)
 
 			if bucket, ok := sh.buckets.Load(key); ok {
-				bucket.ForEach(func(n Node) {
+				bucket.ForEach(func(_ uint32, n Node) bool {
 					if filter(n) {
 						nodes = append(nodes, n)
 					}
+
+					return true;
 				})
 			}
 		}

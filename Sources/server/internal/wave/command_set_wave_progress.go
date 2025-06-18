@@ -2,7 +2,7 @@ package wave
 
 type SetWaveProgressCommand struct {
 	Progress   uint16 `arg:"0" help:"progress"`
-	GroupIndex *int   `arg:"1" optional:""  help:"group"`
+	GroupIndex *int   `arg:"1" optional:"" help:"group"`
 }
 
 func (swp *SetWaveProgressCommand) Run(ctx *Context) error {

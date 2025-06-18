@@ -54,8 +54,8 @@ func (m *Mob) MobElimination(wp *WavePool, _ time.Time) {
 
 // ForceEliminate forces eliminate a mob.
 //
-// Warning: This behaves the same as when it is "naturally" removed.
-// What this means is that binded entities may also be deleted. If this is not desired, use wp.RemoveMob instead.
+// Warning: This behaves the same as when this mob is "naturally" removed.
+// This mean binded entities may also be deleted. If this behavior is not desired, use wp.RemovePetal instead.
 func (m *Mob) ForceEliminate(wp *WavePool) {
 	m.Health = 0
 
