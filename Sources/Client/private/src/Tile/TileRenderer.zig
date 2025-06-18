@@ -14,13 +14,9 @@ const U16Vector2 = @Vector(2, u16);
 
 const two_vector: Vector2 = @splat(2);
 
-const five_vector: Vector2 = @splat(5);
-
 const eighty_vector: Vector2 = @splat(80);
 
 const one_over_three_vector: Vector2 = @splat(1.0 / 3.0);
-
-const one_over_two_vector: Vector2 = @splat(1.0 / 2.0);
 
 const MapRenderingOptions = struct {
     ctx: *CanvasContext,
@@ -91,7 +87,7 @@ inline fn renderBoundaryCircle(
     const center_x, const center_y = center;
 
     // These vectors (scale, radius, etc) is created with splat (its not 100%, but i cant think situation that used different value for each components)
-    // so get scalar of them just access first component
+    // so get scalar of these just access the first component
     const scale_scalar = scale[0];
     const radius_scalar = radius[0];
 

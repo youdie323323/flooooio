@@ -24,6 +24,7 @@ import (
 )
 
 const (
+	// TODO: make this value 256 and parallelize spatial hash searching perhaps more performance (1024 is too big)
 	spatialHashGridSize = 1024
 
 	WaveUpdateFPS = 60

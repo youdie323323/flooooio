@@ -11,10 +11,16 @@ import (
 
 // Node represents an interface entity.
 type Node interface {
+	GetId() uint32
+
 	GetX() float32
 	GetY() float32
-	GetId() uint32
+
+	SetOldPos(x, y float32)
+	GetOldPos() (float32, float32)
+
 	GetMagnitude() float32
+
 	GetAngle() float32
 }
 
@@ -76,25 +82,31 @@ func pairPoint(x, y int) int {
 	return (x << 16) ^ y
 }
 
-func (sh *SpatialHash) calculateNodeKey(n Node) int {
+func (sh *SpatialHash) calculatePositionKey(x, y float32) int {
 	return pairPoint(
-		int(math32.Floor(n.GetX()/sh.cellSize)),
-		int(math32.Floor(n.GetY()/sh.cellSize)),
+		int(math32.Floor(x/sh.cellSize)),
+		int(math32.Floor(y/sh.cellSize)),
 	)
 }
 
 // Put adds a node to the spatial hash.
 func (sh *SpatialHash) Put(n Node) {
-	key := sh.calculateNodeKey(n)
+	key := sh.calculatePositionKey(n.GetX(), n.GetY())
 
 	// Get or create bucket
-	bucket, _ := sh.buckets.LoadOrStore(key, newNodeSet())
+	bucket, exists := sh.buckets.Load(key)
+	if !exists {
+		bucket = newNodeSet()
+
+		sh.buckets.Store(key, bucket)
+	}
+
 	bucket.Add(n)
 }
 
 // Remove removes a node from the spatial hash.
 func (sh *SpatialHash) Remove(n Node) {
-	key := sh.calculateNodeKey(n)
+	key := sh.calculatePositionKey(n.GetX(), n.GetY())
 
 	if bucket, ok := sh.buckets.Load(key); ok {
 		bucket.Delete(n)
@@ -103,21 +115,38 @@ func (sh *SpatialHash) Remove(n Node) {
 
 // Update updates a node's position in the spatial hash.
 func (sh *SpatialHash) Update(n Node) {
-	key := sh.calculateNodeKey(n)
+	x, y := n.GetX(), n.GetY()
 
-	if bucket, ok := sh.buckets.Load(key); ok {
-		bucket.Delete(n)
+	{ // Delete old node from buckets
+		old_x, old_y := n.GetOldPos()
+		old_key := sh.calculatePositionKey(old_x, old_y)
+
+		if bucket, ok := sh.buckets.Load(old_key); ok {
+			bucket.Delete(n)
+		}
+
+		n.SetOldPos(x, y)
 	}
 
-	// Get or create bucket for the same key
-	bucket, _ := sh.buckets.LoadOrStore(key, newNodeSet())
-	bucket.Add(n)
+	{ // Add new node to new bucket
+		key := sh.calculatePositionKey(x, y)
+
+		// Get or create bucket
+		bucket, exists := sh.buckets.Load(key)
+		if !exists {
+			bucket = newNodeSet()
+
+			sh.buckets.Store(key, bucket)
+		}
+
+		bucket.Add(n)
+	}
 }
 
 // searchResultPool is shared collision searchResultPool between Search.
 var searchResultPool = zeropool.New(func() []Node { return make([]Node, 64) })
 
-// Search finds all nodes within the specified radius using optimized concurrency
+// Search finds all nodes within the specified radius.
 func (sh *SpatialHash) Search(x, y, radius float32) []Node {
 	radiusSq := radius * radius
 
@@ -154,9 +183,6 @@ func (sh *SpatialHash) Search(x, y, radius float32) []Node {
 	return finalResult
 }
 
-// sharedSeen a shared seen map between SearchRect.
-var sharedSeen = make(map[uint32]bool)
-
 // SearchRect finds all nodes within the specified rectangular area centered on a player.
 func (sh *SpatialHash) SearchRect(x, y, width, height float32, filter func(n Node) bool) []Node {
 	// Calculate rectangle bounds
@@ -177,14 +203,7 @@ func (sh *SpatialHash) SearchRect(x, y, width, height float32, filter func(n Nod
 
 			if bucket, ok := sh.buckets.Load(key); ok {
 				bucket.ForEach(func(n Node) {
-					nId := n.GetId()
-					if sharedSeen[nId] {
-						return
-					}
-
 					if filter(n) {
-						sharedSeen[nId] = true
-
 						nodes = append(nodes, n)
 					}
 				})
@@ -196,8 +215,6 @@ func (sh *SpatialHash) SearchRect(x, y, width, height float32, filter func(n Nod
 	copy(finalResult, nodes)
 
 	searchResultPool.Put(result)
-
-	clear(sharedSeen)
 
 	return finalResult
 }

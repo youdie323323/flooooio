@@ -19,10 +19,12 @@ type Entity struct {
 	// Id is unique identifier of entity.
 	Id *EntityId
 
-	// X is x-pos of entity.
-	X float32
-	// Y is y-pos of entity.
-	Y float32
+	// X, Y is position of entity.
+	X, Y float32
+
+	// oldX, oldY is old position store for spatial hash.
+	// This should not accessed from outside.
+	oldX, oldY float32
 
 	// Magnitude is size of movement.
 	Magnitude float32
@@ -90,6 +92,9 @@ func NewEntity(
 		X: x,
 		Y: y,
 
+		oldX: x,
+		oldY: y,
+
 		Magnitude: 0,
 		Angle:     GetRandomAngle(),
 
@@ -155,6 +160,10 @@ func GetRandomCoordinate(cx, cy, spawnRadius float32) (float32, float32) {
 
 // Methods that satisfies spatial hashes Node
 
+func (e *Entity) GetId() uint32 {
+	return *e.Id
+}
+
 func (e *Entity) GetX() float32 {
 	return e.X
 }
@@ -163,8 +172,13 @@ func (e *Entity) GetY() float32 {
 	return e.Y
 }
 
-func (e *Entity) GetId() uint32 {
-	return *e.Id
+func (e *Entity) SetOldPos(x, y float32) {
+	e.oldX = x
+	e.oldY = y
+}
+
+func (e *Entity) GetOldPos() (float32, float32) {
+	return e.oldX, e.oldY
 }
 
 func (e *Entity) GetMagnitude() float32 {
