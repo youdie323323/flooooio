@@ -166,7 +166,7 @@ const AccessorMethods = struct {
         @"21"(self.id, r, g, b);
     }
 
-    pub inline fn setLineWidth(self: *CanvasContext, comptime width: f32) void {
+    pub inline fn setLineWidth(self: *CanvasContext, width: f32) void {
         self.properties.line_width = width;
 
         @"33"(self.id, width);
@@ -459,15 +459,15 @@ pub inline fn rotate(self: CanvasContext, angle: f32) void {
     @"28"(self.id, angle);
 }
 
-pub inline fn copyCanvas(self: CanvasContext, src_context: CanvasContext, dx: f32, dy: f32) void {
+pub inline fn copyCanvas(self: CanvasContext, src_context: *CanvasContext, dx: f32, dy: f32) void {
     @"34"(self.id, src_context.id, dx, dy);
 }
 
-pub inline fn copyCanvasAsOnePixel(self: CanvasContext, src_context: CanvasContext, dx: f32, dy: f32) void {
+pub inline fn copyCanvasAsOnePixel(self: CanvasContext, src_context: *CanvasContext, dx: f32, dy: f32) void {
     @"35"(self.id, src_context.id, dx, dy);
 }
 
-pub inline fn copyCanvasWithScale(self: CanvasContext, src_context: CanvasContext, dx: f32, dy: f32, dw: f32, dh: f32) void {
+pub inline fn copyCanvasWithScale(self: CanvasContext, src_context: *CanvasContext, dx: f32, dy: f32, dw: f32, dh: f32) void {
     @"36"(self.id, src_context.id, dx, dy, dw, dh);
 }
 

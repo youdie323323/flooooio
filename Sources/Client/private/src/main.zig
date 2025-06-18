@@ -14,8 +14,6 @@ const timer = @import("WebAssembly/Interop/Timer.zig");
 
 const UI = @import("UI/UI.zig");
 
-const TileMap = @import("Tile/TileMap.zig");
-
 const EntityId = @import("Entity/Entity.zig").EntityId;
 const smoothInterpolate = @import("Entity/Entity.zig").smoothInterpolate;
 const EntityType = @import("Entity/EntityType.zig").EntityType;
@@ -34,14 +32,16 @@ const mach_objects = @import("Entity/MachObjects/objs.zig");
 
 const EntityProfiles = @import("Florr/Native/Entity/EntityProfiles.zig");
 
+const tile = @import("Tile/TileRenderer.zig");
+
 const allocator = @import("mem.zig").allocator;
 
 /// Global context of this application.
 var ctx: *CanvasContext = undefined;
 
-var ui: UI = undefined;
+var tile_ctx: *CanvasContext = undefined;
 
-var tile_map: TileMap = undefined;
+var ui: UI = undefined;
 
 var client: *ws.ClientWebSocket = undefined;
 
@@ -93,7 +93,7 @@ inline fn drawMovementHelper(delta_time: f32) void {
     ctx.scale(antenna_scale, antenna_scale);
 
     ctx.beginPath();
-    
+
     ctx.moveTo(movement_helper_start_distance, 0);
     ctx.lineTo(distance, 0);
     ctx.lineTo(distance - 24, -18);
@@ -102,7 +102,7 @@ inline fn drawMovementHelper(delta_time: f32) void {
 
     ctx.setLineJoin(.round);
     ctx.setLineCap(.round);
-    ctx.setGlobalAlpha(alpha * 0.8);
+    ctx.setGlobalAlpha(alpha * 0.2);
     ctx.setLineWidth(12);
     ctx.strokeColor(comptime Color.comptimeFromHexColorCode("#000000"));
     ctx.stroke();
@@ -112,29 +112,38 @@ const Vector2 = @Vector(2, f32);
 
 const two_vector = @as(Vector2, @splat(2));
 
-fn onMouseEvent(_: event.EventType, e: *const event.MouseEvent) callconv(.c) bool {
-    mouse_x_offset, mouse_y_offset =
-        Vector2{
-            @floatFromInt(e.client_x),
-            @floatFromInt(e.client_y),
-        } -
-        (Vector2{
-            @floatFromInt(dom.clientWidth()),
-            @floatFromInt(dom.clientHeight()),
-        } /
-            two_vector);
+fn onMouseEvent(event_type: event.EventType, e: *const event.MouseEvent) callconv(.c) bool {
+    switch (event_type) {
+        .mouse_move => {
+            mouse_x_offset, mouse_y_offset =
+                Vector2{
+                    @floatFromInt(e.client_x),
+                    @floatFromInt(e.client_y),
+                } -
+                (Vector2{
+                    width,
+                    height,
+                } / two_vector);
 
-    const angle = math.atan2(mouse_y_offset, mouse_x_offset);
-    const distance = math.hypot(mouse_x_offset, mouse_y_offset) / base_scale;
+            const angle = math.atan2(mouse_y_offset, mouse_x_offset);
+            const distance = math.hypot(mouse_x_offset, mouse_y_offset) / base_scale;
 
-    client.serverbound.sendWaveChangeMove(
-        angle,
-        if (100 > distance)
-            distance / 100
-        else
-            1,
-    ) catch
-        return false;
+            client.serverbound.sendWaveChangeMove(
+                angle,
+                if (100 > distance)
+                    distance / 100
+                else
+                    1,
+            ) catch
+                return false;
+        },
+
+        .mouse_up => {
+            antenna_scale -= 0.025;
+        },
+
+        else => {},
+    }
 
     return true;
 }
@@ -186,25 +195,27 @@ fn handleWaveSelfId(stream: *ws.Clientbound.Reader) anyerror!void {
 /// Possible objects length.
 const FiniteObjectCount = u16;
 
+var wave_progress: u16 = 0;
+
+var wave_progress_timer: f32 = 0;
+
+var wave_progress_red_gage_timer: f32 = 0;
+
+var wave_ended: bool = false;
+
+var wave_map_radius: u16 = 0;
+
 fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
     { // Read wave informations
-        const wave_progress = try ws.Clientbound.readVarUint16(stream);
+        wave_progress = try ws.Clientbound.readVarUint16(stream);
 
-        const wave_progress_timer = try ws.Clientbound.readFloat32(stream);
+        wave_progress_timer = try ws.Clientbound.readFloat32(stream);
 
-        const wave_progress_red_gage_timer = try ws.Clientbound.readFloat32(stream);
+        wave_progress_red_gage_timer = try ws.Clientbound.readFloat32(stream);
 
-        const wave_ended = try ws.Clientbound.readBool(stream);
+        wave_ended = try ws.Clientbound.readBool(stream);
 
-        const wave_map_radius = try ws.Clientbound.readVarUint16(stream);
-
-        _ = wave_progress;
-        _ = wave_progress_timer;
-        _ = wave_progress_red_gage_timer;
-        _ = wave_ended;
-        _ = wave_map_radius;
-
-        // std.debug.print("{} {} {} {} {}\n", .{ wave_progress, wave_progress_timer, wave_progress_red_gage_timer, wave_ended, wave_map_radius });
+        wave_map_radius = try ws.Clientbound.readVarUint16(stream);
     }
 
     // Lock objects
@@ -567,8 +578,10 @@ export fn main() c_int {
         client.connect("localhost:8080") catch unreachable;
     }
 
-    { // Initialize dom event
+    { // Initialize dom events
         event.addEventListenerBySelector("canvas", .mouse_move, onMouseEvent, false);
+        event.addEventListenerBySelector("canvas", .mouse_up, onMouseEvent, false);
+
         event.addEventListener(.window, .screen_resize, onScreenEvent, false);
 
         { // Invoke event to correct init size
@@ -596,23 +609,9 @@ export fn main() c_int {
     }
 
     { // Initialize tile map
-        const tile_ctx = CanvasContext.createCanvasContext(allocator, 256 * 4, 256 * 4, false);
+        tile_ctx = CanvasContext.createCanvasContext(allocator, 256 * 4, 256 * 4, false);
 
         tile_ctx.drawSVG(@embedFile("Tile/Tiles/desert_c_2.svg"));
-
-        tile_map = TileMap.init(allocator, .{
-            .tile_size = @splat(512),
-            .chunk_border = @splat(1),
-            .layers = &.{
-                .{
-                    .tiles = &.{tile_ctx},
-                    .data = &.{
-                        &.{ 0, 0 },
-                        &.{ 0, 0 },
-                    },
-                },
-            },
-        }) catch unreachable;
     }
 
     draw(-1);
@@ -637,6 +636,36 @@ fn draw(_: f32) callconv(.c) void {
 
     ctx.scale(base_scale, base_scale);
 
+    const width_relative = width / base_scale;
+    const height_relative = height / base_scale;
+
+    const self_player =
+        if (players.search(wave_self_id)) |o|
+            players.getValue(o)
+        else
+            null;
+
+    if (self_player) |p| {
+        tile.renderGameTileset(.{
+            .ctx = ctx,
+
+            .tileset = &.{tile_ctx},
+
+            .tile_size = @splat(300),
+
+            .radius = @splat(@floatFromInt(wave_map_radius)),
+
+            .pos = p.pos,
+
+            .screen = .{
+                width_relative,
+                height_relative,
+            },
+
+            .scale = @splat(antenna_scale),
+        });
+    }
+
     ui.render();
 
     // Draw movement helper
@@ -645,12 +674,6 @@ fn draw(_: f32) callconv(.c) void {
     { // Render entities
         const center_width = width / 2;
         const center_height = height / 2;
-
-        const self_player =
-            if (players.search(wave_self_id)) |o|
-                players.getValue(o)
-            else
-                null;
 
         if (self_player) |p| {
             const x, const y = p.pos;
