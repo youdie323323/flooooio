@@ -1,4 +1,6 @@
 const std = @import("std");
+const meta = std.meta;
+const mem = std.mem;
 
 /// An ID representing a object. This is an opaque identifier which effectively encodes:
 ///
@@ -8,12 +10,12 @@ const std = @import("std");
 ///
 pub const ObjectId = u48;
 
-pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(T)) type {
-    const SearchFieldType = comptime std.meta.FieldType(T, search_field_name);
+pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type {
+    const SearchFieldType = meta.FieldType(T, search_field);
 
     return struct {
         internal: struct {
-            allocator: std.mem.Allocator,
+            allocator: mem.Allocator,
 
             /// Mutex to be held when operating on these objects.
             /// TODO(object): replace with RwLock and update website docs to indicate this
@@ -29,15 +31,7 @@ pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(
             /// again, this number is incremented by one.
             generation: std.ArrayListUnmanaged(Generation) = .{},
 
-            /// The recycling bin which tells which data indices are dead and can be reused.
-            recycling_bin: std.ArrayListUnmanaged(Index) = .{},
-
             id_to_obj_id: std.AutoHashMap(SearchFieldType, ObjectId),
-
-            /// The number of objects that could not fit in the recycling bin and hence were thrown
-            /// on the floor and forgotten about. This means there are dead items recorded by dead.set(index)
-            /// which aren't in the recycling_bin, and the next call to new() may consider cleaning up.
-            thrown_on_the_floor: u32 = 0,
         },
 
         const Generation = u16;
@@ -50,7 +44,7 @@ pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(
 
         pub const Slice = struct {
             index: Index,
-            objs: *Objects(T, search_field_name),
+            objs: *Objects(T, search_field),
 
             pub fn next(self: *Slice) ?ObjectId {
                 const dead = &self.objs.internal.dead;
@@ -75,10 +69,9 @@ pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(
             }
         };
 
-        pub fn init(objs: *@This(), allocator: std.mem.Allocator) void {
+        pub fn init(objs: *@This(), allocator: mem.Allocator) void {
             objs.internal = .{
                 .allocator = allocator,
-
                 .id_to_obj_id = .init(allocator),
             };
         }
@@ -114,47 +107,7 @@ pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(
             const data = &objs.internal.data;
             const dead = &objs.internal.dead;
             const generation = &objs.internal.generation;
-            const recycling_bin = &objs.internal.recycling_bin;
             const id_to_obj_id = &objs.internal.id_to_obj_id;
-
-            // The recycling bin should always be big enough, but we check at this point if 10% of
-            // all objects have been thrown on the floor. If they have, we find them and grow the
-            // recycling bin to fit them
-            if (objs.internal.thrown_on_the_floor >= (data.len / 10)) {
-                var iter = dead.iterator(.{ .kind = .set });
-
-                dead_object_loop: while (iter.next()) |index| {
-                    // We need to check if this index is already in the recycling bin since
-                    // if it is, it could get recycled a second time while still
-                    // in use
-                    for (recycling_bin.items) |recycled_index| {
-                        if (index == recycled_index) continue :dead_object_loop;
-                    }
-
-                    // Dead bitset contains data.capacity number of entries, we only care about ones that are in data.len range
-                    if (index > data.len - 1) break;
-
-                    try recycling_bin.append(allocator, @intCast(index));
-                }
-
-                objs.internal.thrown_on_the_floor = 0;
-            }
-
-            if (recycling_bin.pop()) |index| {
-                // Reuse a free slot from the recycling bin
-                dead.unset(index);
-
-                const gen = generation.items[index] + 1;
-
-                generation.items[index] = gen;
-
-                data.set(index, value);
-
-                return @bitCast(PackedId{
-                    .generation = gen,
-                    .index = index,
-                });
-            }
 
             // Ensure we have space for the new object
             try data.ensureUnusedCapacity(allocator, 1);
@@ -164,9 +117,7 @@ pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(
             const index = data.len;
 
             data.appendAssumeCapacity(value);
-
             dead.unset(index);
-
             generation.appendAssumeCapacity(0);
 
             const obj_id: ObjectId = @bitCast(PackedId{
@@ -174,7 +125,7 @@ pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(
                 .index = @intCast(index),
             });
 
-            try id_to_obj_id.put(@field(value, @tagName(search_field_name)), obj_id);
+            try id_to_obj_id.put(@field(value, @tagName(search_field)), obj_id);
 
             return obj_id;
         }
@@ -183,10 +134,10 @@ pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(
         ///
         /// Unlike set(), this method does not respect any mach.Objects tracking
         /// options, so changes made to an object through this method will not be tracked.
-        pub fn set(objs: *@This(), id: ObjectId, comptime field_name: std.meta.FieldEnum(T), value: std.meta.FieldType(T, field_name)) void {
+        pub fn set(objs: *@This(), id: ObjectId, comptime field_name: meta.FieldEnum(T), value: meta.FieldType(T, field_name)) void {
             const data = &objs.internal.data;
 
-            const unpacked = objs.validateAndUnpack(id, "set");
+            const unpacked = objs.validateAndUnpack(id, @src());
 
             data.items(field_name)[unpacked.index] = value;
         }
@@ -198,25 +149,25 @@ pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(
         pub fn setValue(objs: *@This(), id: ObjectId, value: T) void {
             const data = &objs.internal.data;
 
-            const unpacked = objs.validateAndUnpack(id, "setValue");
+            const unpacked = objs.validateAndUnpack(id, @src());
 
             data.set(unpacked.index, value);
         }
 
         /// Get a single field.
-        pub fn get(objs: *@This(), id: ObjectId, comptime field_name: std.meta.FieldEnum(T)) std.meta.FieldType(T, field_name) {
+        pub fn get(objs: *@This(), id: ObjectId, comptime field_name: meta.FieldEnum(T)) meta.FieldType(T, field_name) {
             const data = &objs.internal.data;
 
-            const unpacked = objs.validateAndUnpack(id, "get");
+            const unpacked = objs.validateAndUnpack(id, @src());
 
             return data.items(field_name)[unpacked.index];
         }
 
-        /// Get all fields.
+        /// Gets all fields.
         pub fn getValue(objs: *@This(), id: ObjectId) T {
             const data = &objs.internal.data;
 
-            const unpacked = objs.validateAndUnpack(id, "getValue");
+            const unpacked = objs.validateAndUnpack(id, @src());
 
             return data.get(unpacked.index);
         }
@@ -224,16 +175,11 @@ pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(
         pub fn delete(objs: *@This(), id: ObjectId) void {
             const dead = &objs.internal.dead;
             const data = &objs.internal.data;
-            const recycling_bin = &objs.internal.recycling_bin;
             const id_to_obj_id = &objs.internal.id_to_obj_id;
 
-            const unpacked = objs.validateAndUnpack(id, "delete");
+            const unpacked = objs.validateAndUnpack(id, @src());
 
-            _ = id_to_obj_id.remove(data.items(search_field_name)[unpacked.index]);
-
-            if (recycling_bin.items.len < recycling_bin.capacity) {
-                recycling_bin.appendAssumeCapacity(unpacked.index);
-            } else objs.internal.thrown_on_the_floor += 1;
+            _ = id_to_obj_id.remove(data.items(search_field)[unpacked.index]);
 
             dead.set(unpacked.index);
         }
@@ -252,9 +198,11 @@ pub fn Objects(comptime T: type, comptime search_field_name: std.meta.FieldEnum(
 
         /// Validates the given object is from this list (type check) and alive (not a use after delete
         /// situation.)
-        fn validateAndUnpack(objs: *const @This(), id: ObjectId, comptime fn_name: []const u8) PackedId {
+        inline fn validateAndUnpack(objs: *const @This(), id: ObjectId, comptime src: std.builtin.SourceLocation) PackedId {
             const dead = &objs.internal.dead;
             const generation = &objs.internal.generation;
+
+            const fn_name = src.fn_name;
 
             // TODO(object): decide whether to disable safety checks like this in some conditions,
             // e.g. in release builds
