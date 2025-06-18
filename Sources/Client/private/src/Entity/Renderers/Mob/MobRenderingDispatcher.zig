@@ -3,7 +3,7 @@ const Renderer = @import("../Renderer.zig").Renderer;
 const RenderFn = @import("../Renderer.zig").RenderFn;
 const RenderContext = @import("../Renderer.zig").RenderContext;
 const MobSuper = @import("../../Mob.zig").Super;
-const MobType = @import("../../../Florr/Native/Entity/EntityType.zig").MobType;
+const MobType = @import("../../EntityType.zig").MobType;
 
 const MobStarfishRenderer = @import("MobStarfishRenderer.zig").MobStarfishRenderer;
 const starfishRender = MobStarfishRenderer.render;

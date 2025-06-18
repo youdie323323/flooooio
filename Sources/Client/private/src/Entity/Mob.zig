@@ -3,10 +3,10 @@ const math = std.math;
 const json = std.json;
 const ObjectId = @import("MachObjects/objs.zig").ObjectId;
 const Entity = @import("Entity.zig").Entity;
-const EntityType = @import("../Florr/Native/Entity/EntityType.zig").EntityType;
-const EntityRarity = @import("../Florr/Native/Entity/EntityRarity.zig").EntityRarity;
+const EntityType = @import("EntityType.zig").EntityType;
+const MobType = @import("EntityType.zig").MobType;
+const EntityRarity = @import("EntityRarity.zig").EntityRarity;
 const EntityProfiles = @import("../Florr/Native/Entity/EntityProfiles.zig");
-const MobType = @import("../Florr/Native/Entity/EntityType.zig").MobType;
 const PureRenderer = @import("Renderers/Renderer.zig");
 const starfish = @import("Renderers/Mob/MobStarfishRenderer.zig");
 
@@ -20,9 +20,9 @@ comptime { // Validate
     PureRenderer.validateEntityImplementation(MobImpl);
 }
 
-const Segments = std.AutoHashMap(ObjectId, void);
-
 const StarfishLegDistances = [starfish.leg_amount]f32;
+
+const Segments = std.AutoHashMap(ObjectId, void);
 
 /// Linkable mob types defined in wave_mob_spawner.go.
 const linkable_mob_types = [_]MobType{

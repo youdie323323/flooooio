@@ -1,6 +1,6 @@
 const std = @import("std");
 const json = std.json;
-const MobType = @import("./EntityType.zig").MobType;
+const MobType = @import("../../../Entity/EntityType.zig").MobType;
 const allocator = @import("../../../mem.zig").allocator;
 
 const EntityProfiles = json.Parsed(json.Value);

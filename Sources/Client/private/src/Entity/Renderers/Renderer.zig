@@ -2,7 +2,7 @@ const std = @import("std");
 const math = std.math;
 const CanvasContext = @import("../../WebAssembly/Interop/Canvas2D/CanvasContext.zig");
 const Color = @import("../../WebAssembly/Interop/Canvas2D/Color.zig");
-const MobType = @import("../../Florr/Native/Entity/EntityType.zig").MobType;
+const MobType = @import("../EntityType.zig").MobType;
 const Entity = @import("../Entity.zig").Entity;
 const main = @import("../../main.zig");
 

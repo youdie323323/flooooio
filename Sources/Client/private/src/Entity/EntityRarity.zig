@@ -1,6 +1,6 @@
 const std = @import("std");
 const meta = std.meta;
-const Color = @import("../../../WebAssembly/Interop/Canvas2D/Color.zig");
+const Color = @import("../WebAssembly/Interop/Canvas2D/Color.zig");
 
 pub const EntityRarity = enum(u8) {
     common,

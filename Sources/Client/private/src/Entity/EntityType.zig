@@ -55,7 +55,7 @@ pub const EntityType = union(enum(u8)) {
     petal: PetalType,
 
     /// Returns direct entity type within this type.
-    pub inline fn get(self: EntityType) u8 {
+    pub inline fn get(self: @This()) u8 {
         switch (self) {
             .mob => |m| return @intFromEnum(m),
             .petal => |p| return @intFromEnum(p),
@@ -63,7 +63,7 @@ pub const EntityType = union(enum(u8)) {
     }
 
     /// Returns whether this EntityType is mob type.
-    pub inline fn isMob(self: EntityType) bool {
+    pub inline fn isMob(self: @This()) bool {
         return switch (self) {
             inline .mob => true,
             inline .petal => false,
@@ -71,12 +71,12 @@ pub const EntityType = union(enum(u8)) {
     }
 
     /// Returns whether this mob is specific mob type.
-    pub inline fn isMobTypeOf(self: EntityType, @"type": MobType) bool {
+    pub inline fn isMobTypeOf(self: @This(), @"type": MobType) bool {
         return self.get() == @intFromEnum(@"type");
     }
 
     /// Returns whether this EntityType is petal type.
-    pub inline fn isPetal(self: EntityType) bool {
+    pub inline fn isPetal(self: @This()) bool {
         return switch (self) {
             inline .mob => false,
             inline .petal => true,
@@ -84,7 +84,7 @@ pub const EntityType = union(enum(u8)) {
     }
 
     /// Returns whether this petal is specific mob type.
-    pub inline fn isPetalTypeOf(self: EntityType, @"type": PetalType) bool {
+    pub inline fn isPetalTypeOf(self: @This(), @"type": PetalType) bool {
         return self.get() == @intFromEnum(@"type");
     }
 };

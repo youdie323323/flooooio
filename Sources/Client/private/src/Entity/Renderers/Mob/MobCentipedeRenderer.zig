@@ -6,7 +6,7 @@ const Renderer = @import("../Renderer.zig").Renderer;
 const darkened_base = @import("../Renderer.zig").darkened_base;
 const RenderContext = @import("../Renderer.zig").RenderContext;
 const MobSuper = @import("../../Mob.zig").Super;
-const MobType = @import("../../../Florr/Native/Entity/EntityType.zig").MobType;
+const MobType = @import("../../EntityType.zig").MobType;
 
 const Color = @import("../../../WebAssembly/Interop/Canvas2D/Color.zig");
 

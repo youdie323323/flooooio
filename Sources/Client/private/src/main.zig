@@ -17,10 +17,10 @@ const UI = @import("UI/UI.zig");
 const TileMap = @import("Tile/TileMap.zig");
 
 const EntityId = @import("Entity/Entity.zig").EntityId;
-const EntityType = @import("Florr/Native/Entity/EntityType.zig").EntityType;
-const MobType = @import("Florr/Native/Entity/EntityType.zig").MobType;
-const PetalType = @import("Florr/Native/Entity/EntityType.zig").PetalType;
-const EntityRarity = @import("Florr/Native/Entity/EntityRarity.zig").EntityRarity;
+const EntityType = @import("Entity/EntityType.zig").EntityType;
+const MobType = @import("Entity/EntityType.zig").MobType;
+const PetalType = @import("Entity/EntityType.zig").PetalType;
+const EntityRarity = @import("Entity/EntityRarity.zig").EntityRarity;
 
 const PlayerImpl = @import("Entity/Player.zig");
 const pmood = @import("Entity/PlayerMood.zig");
