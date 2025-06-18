@@ -4,113 +4,154 @@
 const std = @import("std");
 const mem = @import("../../mem.zig");
 
+const event = @This();
+
+pub const GlobalEventTarget = enum(u8) {
+    document = 0,
+    window = 1,
+};
+
+/// Types of mouse events that can be handled.
+pub const EventType = enum(u32) {
+    mouse_down = 5,
+    mouse_up = 6,
+    mouse_move = 8,
+    mouse_enter = 33,
+    mouse_leave = 34,
+
+    screen_resize = 10,
+};
+
+/// Function represents js function that register events.
+fn EventRegister(comptime Event: type) type {
+    return *const fn (target: usize, use_capture: bool, callback: EventCallback(Event)) callconv(.c) void;
+}
+
+/// Gets the appropriate event register function for the given event type.
+inline fn getEventRegister(comptime event_type: EventType) EventRegister(EventFromEventType(event_type)) {
+    return comptime switch (event_type) {
+        .mouse_down => event.@"0",
+        .mouse_enter => event.@"1",
+        .mouse_leave => event.@"2",
+        .mouse_move => event.@"3",
+        .mouse_up => event.@"4",
+
+        .screen_resize => event.@"5",
+    };
+}
+
+/// Gets the appropriate event for the given event type.
+fn EventFromEventType(comptime event_type: EventType) type {
+    return comptime switch (event_type) {
+        .mouse_down, .mouse_enter, .mouse_leave, .mouse_move, .mouse_up => event.MouseEvent,
+        .screen_resize => event.ScreenEvent,
+    };
+}
+
+/// Callback function generic type for event handlers.
+/// Returns true to indicate the event was handled.
+/// Null pointer of this will removing handler.
+pub fn EventCallback(comptime Event: type) type {
+    return *allowzero const fn (event_type: EventType, event: *const Event) callconv(.c) bool;
+}
+
+/// Adds event listener to a target element or global target.
+pub fn addEventListener(
+    comptime target: GlobalEventTarget,
+    comptime event_type: EventType,
+    comptime callback: EventCallback(EventFromEventType(event_type)),
+    comptime use_capture: bool,
+) void {
+    (comptime getEventRegister(event_type))(comptime @intFromEnum(target), use_capture, callback);
+}
+
+/// Adds event listener to an element by selector.
+pub fn addEventListenerBySelector(
+    comptime selector: []const u8,
+    comptime event_type: EventType,
+    comptime callback: EventCallback(EventFromEventType(event_type)),
+    comptime use_capture: bool,
+) void {
+    const selector_ptr = mem.allocCString(selector);
+
+    (comptime getEventRegister(event_type))(@intFromPtr(selector_ptr), use_capture, callback);
+
+    mem.freeCString(selector_ptr);
+}
+
+/// Removes event listener of a target element or global target.
+pub fn removeEventListener(
+    comptime target: GlobalEventTarget,
+    comptime event_type: EventType,
+) void {
+    (comptime getEventRegister(event_type))(comptime @intFromEnum(target), false, @ptrFromInt(0));
+}
+
+/// Removes event listener of element by selector.
+pub fn removeEventListenerBySelector(
+    comptime selector: []const u8,
+    comptime event_type: EventType,
+) void {
+    const selector_ptr = mem.allocCString(selector);
+
+    (comptime getEventRegister(event_type))(@intFromPtr(selector_ptr), false, @ptrFromInt(0));
+
+    mem.freeCString(selector_ptr);
+}
+
 /// Mouse event definition.
 pub usingnamespace struct {
-    /// Represents a mouse event with position and state information.
+    /// Represents a mouse event data.
     pub const MouseEvent = extern struct {
-        // zig fmt: off
-        // TODO: for some reason timestamp be a broken value
-        timestamp: f64,       // HEAPF64[ptr >> 3]
+        // TODO: for some reason timestamp will be a broken value
+        timestamp: f64,
 
-        screen_x: i32,        // HEAP32[ptr + 2] 
-        screen_y: i32,        // HEAP32[ptr + 3]
+        screen_x: i32,
+        screen_y: i32,
 
-        client_x: i32,        // HEAP32[ptr + 4]
-        client_y: i32,        // HEAP32[ptr + 5]
+        client_x: i32,
+        client_y: i32,
 
-        ctrl_key: i32,        // HEAP32[ptr + 6]
-        shift_key: i32,       // HEAP32[ptr + 7]
-        alt_key: i32,         // HEAP32[ptr + 8]
-        meta_key: i32,        // HEAP32[ptr + 9]
+        ctrl_key: i32,
+        shift_key: i32,
+        alt_key: i32,
+        meta_key: i32,
 
-        button: i16,          // HEAP16[2 * ptr + 20]
-        buttons: i16,         // HEAP16[2 * ptr + 21]
-        
-        movement_x: i32,      // HEAP32[ptr + 11]
-        movement_y: i32,      // HEAP32[ptr + 12]
+        button: i16,
+        buttons: i16,
 
-        relative_x: i32,      // HEAP32[ptr + 13]
-        relative_y: i32,      // HEAP32[ptr + 14]
-        // zig fmt: on
+        movement_x: i32,
+        movement_y: i32,
+
+        relative_x: i32,
+        relative_y: i32,
     };
 
-    /// Callback function type for mouse event handlers.
-    /// Returns true to indicate the event was handled.
-    pub const MouseEventCallback = *allowzero const fn (event_type: MouseEventType, event: *const MouseEvent) callconv(.c) bool;
+    pub extern "1" fn @"0"(target: usize, use_capture: bool, callback: EventCallback(MouseEvent)) callconv(.c) void;
+    pub extern "1" fn @"1"(target: usize, use_capture: bool, callback: EventCallback(MouseEvent)) callconv(.c) void;
+    pub extern "1" fn @"2"(target: usize, use_capture: bool, callback: EventCallback(MouseEvent)) callconv(.c) void;
+    pub extern "1" fn @"3"(target: usize, use_capture: bool, callback: EventCallback(MouseEvent)) callconv(.c) void;
+    pub extern "1" fn @"4"(target: usize, use_capture: bool, callback: EventCallback(MouseEvent)) callconv(.c) void;
+};
 
-    /// Types of mouse events that can be handled.
-    pub const MouseEventType = enum(u32) {
-        down = 5,
-        up = 6,
-        move = 8,
-        enter = 33,
-        leave = 34,
+/// Screen event definition.
+pub usingnamespace struct {
+    /// Represents a mouse event data.
+    pub const ScreenEvent = extern struct {
+        detail: i32,
+
+        client_width: i32,
+        client_height: i32,
+
+        inner_width: i32,
+        inner_height: i32,
+
+        outer_width: i32,
+        outer_height: i32,
+
+        page_x_offset: i32,
+        page_y_offset: i32,
     };
 
-    pub const GlobalEventTarget = enum(u8) {
-        document = 0,
-        window = 1,
-    };
-
-    /// Function represents js function that register mouse events.
-    const MouseEventRegister = *const fn (target: usize, use_capture: bool, callback: MouseEventCallback) callconv(.c) void;
-
-    extern "1" fn @"0"(target: usize, use_capture: bool, callback: MouseEventCallback) callconv(.c) void;
-    extern "1" fn @"1"(target: usize, use_capture: bool, callback: MouseEventCallback) callconv(.c) void;
-    extern "1" fn @"2"(target: usize, use_capture: bool, callback: MouseEventCallback) callconv(.c) void;
-    extern "1" fn @"3"(target: usize, use_capture: bool, callback: MouseEventCallback) callconv(.c) void;
-    extern "1" fn @"4"(target: usize, use_capture: bool, callback: MouseEventCallback) callconv(.c) void;
-
-    /// Gets the appropriate event handler function for the given event type.
-    inline fn getEventHandler(comptime event_type: MouseEventType) MouseEventRegister {
-        return comptime switch (event_type) {
-            .down => @"0",
-            .enter => @"1",
-            .leave => @"2",
-            .move => @"3",
-            .up => @"4",
-        };
-    }
-
-    /// Add mouse event listener to a target element or global target.
-    pub fn addMouseEventListener(
-        comptime target: GlobalEventTarget,
-        comptime use_capture: bool,
-        comptime callback: MouseEventCallback,
-        comptime event_type: MouseEventType,
-    ) void {
-        getEventHandler(event_type)(comptime @intFromEnum(target), use_capture, callback);
-    }
-
-    /// Add mouse event listener to an element by selector.
-    pub fn addMouseEventListenerBySelector(
-        comptime selector: []const u8,
-        comptime use_capture: bool,
-        comptime callback: MouseEventCallback,
-        comptime event_type: MouseEventType,
-    ) void {
-        const selector_ptr = mem.allocCString(selector);
-
-        getEventHandler(event_type)(selector_ptr, use_capture, callback);
-
-        mem.freeCString(selector_ptr);
-    }
-
-    pub fn removeMouseEventListener(
-        comptime target: GlobalEventTarget,
-        comptime event_type: MouseEventType,
-    ) void {
-        getEventHandler(event_type)(comptime @intFromEnum(target), false, @ptrFromInt(0));
-    }
-
-    pub fn removeMouseEventListenerBySelector(
-        comptime selector: []const u8,
-        comptime event_type: MouseEventType,
-    ) void {
-        const selector_ptr = mem.allocCString(selector);
-
-        getEventHandler(event_type)(selector_ptr, false, @ptrFromInt(0));
-
-        mem.freeCString(selector_ptr);
-    }
+    pub extern "1" fn @"5"(target: usize, use_capture: bool, callback: EventCallback(ScreenEvent)) callconv(.c) void;
 };

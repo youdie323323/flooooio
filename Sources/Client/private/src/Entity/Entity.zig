@@ -3,6 +3,10 @@ const math = std.math;
 
 pub const EntityId = u32;
 
+pub inline fn smoothInterpolate(dtx: f32, current: f32, target: f32) f32 {
+    return current + (target - current) * @min(1, dtx);
+}
+
 pub fn Entity(comptime Impl: type) type {
     return struct {
         inline fn calculateAngleDistance(start_angle: f32, end_angle: f32) f32 {
@@ -13,10 +17,6 @@ pub fn Entity(comptime Impl: type) type {
 
         inline fn interpolateAngle(start_angle: f32, end_angle: f32, progress: f32) f32 {
             return start_angle + calculateAngleDistance(start_angle, end_angle) * progress;
-        }
-
-        inline fn smoothInterpolate(dtx: f32, current: f32, comptime target: f32) f32 {
-            return current + (target - current) * @min(1, dtx);
         }
 
         pub const Vector2 = @Vector(2, f32);

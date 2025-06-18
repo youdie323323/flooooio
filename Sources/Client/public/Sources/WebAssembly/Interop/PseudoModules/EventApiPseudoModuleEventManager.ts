@@ -106,7 +106,7 @@ export default class EventManager {
         this.registeredListeners.splice(index, 1);
     }
 
-    public addOrRemoveEventListener(handler: EventHandler & { pointerOrRemoveListener: number }): void {
+    public addOrRemoveEventListener(handler: EventHandler & { ptrOrRemoveListener: number }): void {
         const wrappedCallback = (event: Event) => {
             ++this.activeCallbacks;
 
@@ -121,7 +121,7 @@ export default class EventManager {
             --this.activeCallbacks;
         };
 
-        if (handler.pointerOrRemoveListener) {
+        if (handler.ptrOrRemoveListener) {
             handler.target.addEventListener(handler.eventName, wrappedCallback, handler.useCapture);
 
             this.registeredListeners.push({

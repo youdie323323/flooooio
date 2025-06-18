@@ -17,6 +17,7 @@ const UI = @import("UI/UI.zig");
 const TileMap = @import("Tile/TileMap.zig");
 
 const EntityId = @import("Entity/Entity.zig").EntityId;
+const smoothInterpolate = @import("Entity/Entity.zig").smoothInterpolate;
 const EntityType = @import("Entity/EntityType.zig").EntityType;
 const MobType = @import("Entity/EntityType.zig").MobType;
 const PetalType = @import("Entity/EntityType.zig").PetalType;
@@ -53,29 +54,109 @@ var antenna_scale: f32 = 1;
 const base_width: f32 = 1300;
 const base_height: f32 = 650;
 
-// fn onResize(_: ?*const event.Event) callconv(.c) void {
-//     const dpr = dom.devicePixelRatio();
-// 
-//     width = @as(f32, @floatFromInt(dom.clientWidth())) * dpr;
-//     height = @as(f32, @floatFromInt(dom.clientHeight())) * dpr;
-// 
-//     base_scale = @max(
-//         width / base_width,
-//         height / base_height,
-//     );
-// 
-//     ctx.setSize(
-//         @intFromFloat(width),
-//         @intFromFloat(height),
-//     );
-// }
-// 
-// fn onWheel(_: ?*const event.Event) callconv(.c) void {
-//     antenna_scale -= 0.025;
-// }
+var mouse_x_offset: f32 = 0;
+var mouse_y_offset: f32 = 0;
 
-fn onMouseEvent(_: event.MouseEventType, e: *const event.MouseEvent) callconv(.c) bool {
-    std.log.debug("{any}", .{e});
+var interpolated_mouse_x: f32 = 0;
+var interpolated_mouse_y: f32 = 0;
+
+const movement_helper_start_distance: f32 = 30;
+
+inline fn drawMovementHelper(delta_time: f32) void {
+    { // Interpolate mouse x and y
+        const delta_time_50 = delta_time * 0.02;
+
+        interpolated_mouse_x = smoothInterpolate(delta_time_50, interpolated_mouse_x, mouse_x_offset / antenna_scale);
+        interpolated_mouse_y = smoothInterpolate(delta_time_50, interpolated_mouse_y, mouse_y_offset / antenna_scale);
+    }
+
+    const distance =
+        math.hypot(interpolated_mouse_x, interpolated_mouse_y) / base_scale;
+
+    const alpha: f32 =
+        if (100 > distance)
+            (@max(distance - 50, 0) / 50)
+        else
+            1;
+
+    // Dont rendundant rendering
+    if (0 >= alpha) return;
+
+    ctx.save();
+    defer ctx.restore();
+
+    const width_relative = width / base_scale;
+    const height_relative = height / base_scale;
+
+    ctx.translate(width_relative / 2, height_relative / 2);
+    ctx.rotate(math.atan2(interpolated_mouse_y, interpolated_mouse_x));
+    ctx.scale(antenna_scale, antenna_scale);
+
+    ctx.beginPath();
+    
+    ctx.moveTo(movement_helper_start_distance, 0);
+    ctx.lineTo(distance, 0);
+    ctx.lineTo(distance - 24, -18);
+    ctx.moveTo(distance, 0);
+    ctx.lineTo(distance - 24, 18);
+
+    ctx.setLineJoin(.round);
+    ctx.setLineCap(.round);
+    ctx.setGlobalAlpha(alpha * 0.8);
+    ctx.setLineWidth(12);
+    ctx.strokeColor(comptime Color.comptimeFromHexColorCode("#000000"));
+    ctx.stroke();
+}
+
+const Vector2 = @Vector(2, f32);
+
+const two_vector = @as(Vector2, @splat(2));
+
+fn onMouseEvent(_: event.EventType, e: *const event.MouseEvent) callconv(.c) bool {
+    mouse_x_offset, mouse_y_offset =
+        Vector2{
+            @floatFromInt(e.client_x),
+            @floatFromInt(e.client_y),
+        } -
+        (Vector2{
+            @floatFromInt(dom.clientWidth()),
+            @floatFromInt(dom.clientHeight()),
+        } /
+            two_vector);
+
+    const angle = math.atan2(mouse_y_offset, mouse_x_offset);
+    const distance = math.hypot(mouse_x_offset, mouse_y_offset) / base_scale;
+
+    client.serverbound.sendWaveChangeMove(
+        angle,
+        if (100 > distance)
+            distance / 100
+        else
+            1,
+    ) catch
+        return false;
+
+    return true;
+}
+
+fn onScreenEvent(_: event.EventType, e: *const event.ScreenEvent) callconv(.c) bool {
+    const dpr: Vector2 = @splat(dom.devicePixelRatio());
+
+    width, height =
+        Vector2{
+            @floatFromInt(e.inner_width),
+            @floatFromInt(e.inner_height),
+        } * dpr;
+
+    base_scale = @max(
+        width / base_width,
+        height / base_height,
+    );
+
+    ctx.setSize(
+        @intFromFloat(width),
+        @intFromFloat(height),
+    );
 
     return true;
 }
@@ -487,7 +568,17 @@ export fn main() c_int {
     }
 
     { // Initialize dom event
-        event.addMouseEventListener(.window, false, onMouseEvent, .move);
+        event.addEventListenerBySelector("canvas", .mouse_move, onMouseEvent, false);
+        event.addEventListener(.window, .screen_resize, onScreenEvent, false);
+
+        { // Invoke event to correct init size
+            var pseudo_screen_event = std.mem.zeroes(event.ScreenEvent);
+
+            pseudo_screen_event.inner_width = dom.clientWidth();
+            pseudo_screen_event.inner_height = dom.clientHeight();
+
+            _ = onScreenEvent(.screen_resize, &pseudo_screen_event);
+        }
     }
 
     { // Initialize ui
@@ -530,12 +621,13 @@ export fn main() c_int {
 }
 
 var last_timestamp: i64 = 0;
-var delta_time: f32 = 0;
 var prev_timestamp: i64 = 0;
 
 fn draw(_: f32) callconv(.c) void {
     last_timestamp = std.time.milliTimestamp();
-    delta_time = @floatFromInt(last_timestamp - prev_timestamp);
+
+    const delta_time: f32 = @floatFromInt(last_timestamp - prev_timestamp);
+
     prev_timestamp = last_timestamp;
 
     // Clear canvas
@@ -543,7 +635,12 @@ fn draw(_: f32) callconv(.c) void {
 
     ctx.save();
 
+    ctx.scale(base_scale, base_scale);
+
     ui.render();
+
+    // Draw movement helper
+    drawMovementHelper(delta_time);
 
     { // Render entities
         const center_width = width / 2;

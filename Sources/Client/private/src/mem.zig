@@ -6,7 +6,7 @@ const heap = std.heap;
 // I WAS GOT STRESSED OUT FOR 2 WEEKS BECAUSE OF THAT
 // 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡
 
-// Use fba for block auto-memory growing
+// Use fba for no-growed memory (growing memory disposes memory buffer and heaps cant used anymore)
 // Maybe too big size?
 var buffer: [std.wasm.page_size * 512]u8 = undefined;
 
@@ -37,19 +37,6 @@ pub export fn free(ptr: MemoryPtr) callconv(.c) void {
     allocator.free(to_free[0..total_size]);
 }
 
-pub const CStringPointer = [*:0]u8;
-pub const ConstCStringPointer = [*:0]const u8;
-
-pub fn allocCString(slice: []const u8) CStringPointer {
-    return allocator.dupeZ(u8, slice) catch unreachable;
-}
-
-pub fn freeCString(ptr: CStringPointer) void {
-    const len = std.mem.len(ptr) + 1;
-
-    allocator.free(ptr[0..len]);
-}
-
 test "malloc/free benchmark" {
     const sizes = [_]usize{ 8, 64, 512, 4096, 16384 };
     const iterations = 10000;
@@ -78,6 +65,19 @@ test "malloc/free benchmark" {
             avg_ns,
         });
     }
+}
+
+pub const CStringPointer = [*:0]u8;
+pub const ConstCStringPointer = [*:0]const u8;
+
+pub fn allocCString(slice: []const u8) CStringPointer {
+    return allocator.dupeZ(u8, slice) catch unreachable;
+}
+
+pub fn freeCString(ptr: CStringPointer) void {
+    const len = std.mem.len(ptr) + 1;
+
+    allocator.free(ptr[0..len]);
 }
 
 // https://zigbin.io/9a46a9
