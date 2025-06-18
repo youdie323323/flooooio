@@ -65,7 +65,7 @@ pub fn init(
 ) MobImpl {
     const is_linkable =
         if (@"type".isMob())
-            std.mem.indexOf(MobType, &linkable_mob_types, &.{@"type".mob}) != null
+            std.mem.indexOfScalar(MobType, &linkable_mob_types, @"type".mob) != null
         else
             false;
 

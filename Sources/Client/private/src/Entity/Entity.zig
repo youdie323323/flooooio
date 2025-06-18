@@ -16,7 +16,7 @@ pub fn Entity(comptime Impl: type) type {
         }
 
         inline fn smoothInterpolate(dtx: f32, current: f32, comptime target: f32) f32 {
-            return current + ((comptime target) - current) * @min(1, dtx);
+            return current + (target - current) * @min(1, dtx);
         }
 
         pub const Vector2 = @Vector(2, f32);
@@ -30,9 +30,6 @@ pub fn Entity(comptime Impl: type) type {
 
         hurt_t: f32 = 0,
         dead_t: f32 = 0,
-
-        is_poisoned: bool = false,
-        poison_t: f32 = 0,
 
         pos: Vector2,
         old_pos: Vector2,
@@ -51,6 +48,9 @@ pub fn Entity(comptime Impl: type) type {
         health: f32,
         next_health: f32,
         old_health: f32,
+
+        is_poisoned: bool = false,
+        poison_t: f32 = 0,
 
         red_health: f32,
         red_health_timer: f32 = 0,
@@ -104,7 +104,8 @@ pub fn Entity(comptime Impl: type) type {
             const delta_time_150 = delta_time_100 * (2.0 / 3.0);
             const delta_time_200 = delta_time_100 * 0.5;
 
-            if (self.is_dead) self.dead_t += delta_time_150;
+            self.update_t += delta_time_100;
+            self.t = @min(1, self.update_t);
 
             if (self.hurt_t > 0) {
                 self.hurt_t -= delta_time_150;
@@ -112,11 +113,7 @@ pub fn Entity(comptime Impl: type) type {
                 if (self.hurt_t < 0) self.hurt_t = 0;
             }
 
-            self.poison_t += @as(f32, if (self.is_poisoned) 1 else -1) * delta_time_200;
-            self.poison_t = math.clamp(self.poison_t, 0, 1);
-
-            self.update_t += delta_time_100;
-            self.t = @min(1, self.update_t);
+            if (self.is_dead) self.dead_t += delta_time_150;
 
             const t_vector: Vector2 = @splat(self.t);
             self.pos = self.old_pos + (self.next_pos - self.old_pos) * t_vector;
@@ -142,6 +139,9 @@ pub fn Entity(comptime Impl: type) type {
             }
 
             if (self.health < 1) self.hp_alpha = smoothInterpolate(delta_time_200, self.hp_alpha, 1);
+
+            self.poison_t += @as(f32, if (self.is_poisoned) 1 else -1) * delta_time_200;
+            self.poison_t = math.clamp(self.poison_t, 0, 1);
 
             if (self.red_health_timer > 0) {
                 self.red_health_timer -= delta_time / 600;

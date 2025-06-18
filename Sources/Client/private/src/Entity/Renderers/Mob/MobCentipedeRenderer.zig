@@ -19,7 +19,15 @@ fn render(rctx: RenderContext(MobSuper)) void {
     const entity = rctx.entity;
     const mob = entity.impl;
 
-    const tcolor = rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#333333"));
+    const acolor = rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#333333"));
+
+    const fcolor = switch (mob.type.get()) {
+        inline @intFromEnum(MobType.centipede) => comptime Color.comptimeFromHexColorCode("#8ac255"),
+        inline @intFromEnum(MobType.centipede_desert) => comptime Color.comptimeFromHexColorCode("#d3c66d"),
+        inline @intFromEnum(MobType.centipede_evil) => comptime Color.comptimeFromHexColorCode("#8f5db0"),
+        inline else => comptime Color.comptimeFromHexColorCode("#ffffff"),
+    };
+    const scolor = fcolor.darkened(darkened_base);
 
     ctx.rotate(entity.angle);
 
@@ -37,17 +45,9 @@ fn render(rctx: RenderContext(MobSuper)) void {
         inline for (.{ -1, 1 }) |dir|
             ctx.arc(0, 30 * dir, 15, 0, math.tau, false);
 
-        ctx.fillColor(tcolor);
+        ctx.fillColor(acolor);
         ctx.fill();
     }
-
-    const fcolor = switch (mob.type.get()) {
-        inline @intFromEnum(MobType.centipede) => comptime Color.comptimeFromHexColorCode("#8ac255"),
-        inline @intFromEnum(MobType.centipede_desert) => comptime Color.comptimeFromHexColorCode("#d3c66d"),
-        inline @intFromEnum(MobType.centipede_evil) => comptime Color.comptimeFromHexColorCode("#8f5db0"),
-        inline else => comptime Color.comptimeFromHexColorCode("#ffffff"),
-    };
-    const scolor = fcolor.darkened(darkened_base);
 
     // Body
     ctx.beginPath();
@@ -60,8 +60,8 @@ fn render(rctx: RenderContext(MobSuper)) void {
     ctx.stroke();
 
     if (mob.is_first_segment) { // Antennas
-        ctx.fillColor(tcolor);
-        ctx.strokeColor(tcolor);
+        ctx.fillColor(acolor);
+        ctx.strokeColor(acolor);
 
         ctx.fillPath(antennas, .evenodd);
     }
