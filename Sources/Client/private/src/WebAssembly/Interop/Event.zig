@@ -1,263 +1,116 @@
+//! Mouse event handling module.
+//! Provides functionality for registering and managing mouse event listeners
+//! in a web context.
 const std = @import("std");
 const mem = @import("../../mem.zig");
 
-pub const EventType = enum(u32) {
-    drag,
-    focus,
-    input,
-    key,
-    mouse,
-    pointer,
-    resize,
-    scroll,
-    touch,
-    wheel,
-};
+/// Mouse event definition.
+pub usingnamespace struct {
+    /// Represents a mouse event with position and state information.
+    pub const MouseEvent = extern struct {
+        // zig fmt: off
+        // TODO: for some reason timestamp be a broken value
+        timestamp: f64,       // HEAPF64[ptr >> 3]
 
-pub const MouseButton = enum(u8) {
-    none,
-    primary = 1,
-    secondary = 2,
-    middle = 4,
-};
+        screen_x: i32,        // HEAP32[ptr + 2] 
+        screen_y: i32,        // HEAP32[ptr + 3]
 
-pub const PointerType = enum(u8) {
-    mouse,
-    pen,
-    touch,
-};
+        client_x: i32,        // HEAP32[ptr + 4]
+        client_y: i32,        // HEAP32[ptr + 5]
 
-pub const WheelDeltaMode = enum(u8) {
-    pixel,
-    line,
-    page,
-};
+        ctrl_key: i32,        // HEAP32[ptr + 6]
+        shift_key: i32,       // HEAP32[ptr + 7]
+        alt_key: i32,         // HEAP32[ptr + 8]
+        meta_key: i32,        // HEAP32[ptr + 9]
 
-pub const KeyModifier = enum(u8) {
-    shift = 1,
-    ctrl = 2,
-    alt = 4,
-    meta = 8,
-};
+        button: i16,          // HEAP16[2 * ptr + 20]
+        buttons: i16,         // HEAP16[2 * ptr + 21]
+        
+        movement_x: i32,      // HEAP32[ptr + 11]
+        movement_y: i32,      // HEAP32[ptr + 12]
 
-pub const GlobalEventTargetType = enum(u8) {
-    document,
-    window,
-};
+        relative_x: i32,      // HEAP32[ptr + 13]
+        relative_y: i32,      // HEAP32[ptr + 14]
+        // zig fmt: on
+    };
 
-pub const DragEvent = extern struct {
-    /// Mouse X position in the local space of the element's bounding rect.
-    clientX: i16 = 0,
-    /// Mouse Y position in the local space of the element's bounding rect.
-    clientY: i16 = 0,
-    /// If non-zero, data that is being dragged during a drag & drop operation can
-    /// be obtained via various DnD related API calls (only available when called
-    /// from event handler).
-    is_data_transfer: u8 = 0,
-    /// Encoded bitmask of currently pressed modifier keys, see `KeyModifier` enum.
-    modifiers: u8 = 0,
-    /// Encoded bitmask of all currently pressed mouse buttons, see `MouseButton` enum.
-    buttons: u8 = 0,
-    /// Event related mouse button ID (if any).
-    button: MouseButton,
-};
+    /// Callback function type for mouse event handlers.
+    /// Returns true to indicate the event was handled.
+    pub const MouseEventCallback = *allowzero const fn (event_type: MouseEventType, event: *const MouseEvent) callconv(.c) bool;
 
-pub const InputEvent = extern struct {
-    /// Value of the targeted input element.
-    /// The memory is owned by the DOM API and will be freed immediately after the
-    /// event handler has returned.
-    value: mem.ConstCStringPointer,
-    /// Length of the value string
-    len: u32,
+    /// Types of mouse events that can be handled.
+    pub const MouseEventType = enum(u32) {
+        down = 5,
+        up = 6,
+        move = 8,
+        enter = 33,
+        leave = 34,
+    };
 
-    pub inline fn getValue(self: *const InputEvent) [:0]const u8 {
-        return self.value[0..self.len :0];
-    }
-};
+    pub const GlobalEventTarget = enum(u8) {
+        document = 0,
+        window = 1,
+    };
 
-pub const KeyboardEvent = extern struct {
-    /// Value/name of the key pressed.
-    key: [15:0]u8,
-    /// Number of characters of the `key` string.
-    len: u8 = 0,
-    /// Encoded bitmask of currently pressed modifier keys, see `KeyModifier` enum.
-    modifiers: u8 = 0,
-    /// Non-zero value indicates key is being held down such that it's automatically
-    /// repeating.
-    repeat: u8 = 0,
+    /// Function represents js function that register mouse events.
+    const MouseEventRegister = *const fn (target: usize, use_capture: bool, callback: MouseEventCallback) callconv(.c) void;
 
-    pub inline fn getKey(self: *const KeyboardEvent) [:0]const u8 {
-        return self.key[0..@as(usize, self.len) :0];
+    extern "1" fn @"0"(target: usize, use_capture: bool, callback: MouseEventCallback) callconv(.c) void;
+    extern "1" fn @"1"(target: usize, use_capture: bool, callback: MouseEventCallback) callconv(.c) void;
+    extern "1" fn @"2"(target: usize, use_capture: bool, callback: MouseEventCallback) callconv(.c) void;
+    extern "1" fn @"3"(target: usize, use_capture: bool, callback: MouseEventCallback) callconv(.c) void;
+    extern "1" fn @"4"(target: usize, use_capture: bool, callback: MouseEventCallback) callconv(.c) void;
+
+    /// Gets the appropriate event handler function for the given event type.
+    inline fn getEventHandler(comptime event_type: MouseEventType) MouseEventRegister {
+        return comptime switch (event_type) {
+            .down => @"0",
+            .enter => @"1",
+            .leave => @"2",
+            .move => @"3",
+            .up => @"4",
+        };
     }
 
-    pub inline fn hasModifier(self: *const KeyboardEvent, mod: KeyModifier) bool {
-        return self.modifiers & @intFromEnum(mod) != 0;
+    /// Add mouse event listener to a target element or global target.
+    pub fn addMouseEventListener(
+        comptime target: GlobalEventTarget,
+        comptime use_capture: bool,
+        comptime callback: MouseEventCallback,
+        comptime event_type: MouseEventType,
+    ) void {
+        getEventHandler(event_type)(comptime @intFromEnum(target), use_capture, callback);
+    }
+
+    /// Add mouse event listener to an element by selector.
+    pub fn addMouseEventListenerBySelector(
+        comptime selector: []const u8,
+        comptime use_capture: bool,
+        comptime callback: MouseEventCallback,
+        comptime event_type: MouseEventType,
+    ) void {
+        const selector_ptr = mem.allocCString(selector);
+
+        getEventHandler(event_type)(selector_ptr, use_capture, callback);
+
+        mem.freeCString(selector_ptr);
+    }
+
+    pub fn removeMouseEventListener(
+        comptime target: GlobalEventTarget,
+        comptime event_type: MouseEventType,
+    ) void {
+        getEventHandler(event_type)(comptime @intFromEnum(target), false, @ptrFromInt(0));
+    }
+
+    pub fn removeMouseEventListenerBySelector(
+        comptime selector: []const u8,
+        comptime event_type: MouseEventType,
+    ) void {
+        const selector_ptr = mem.allocCString(selector);
+
+        getEventHandler(event_type)(selector_ptr, false, @ptrFromInt(0));
+
+        mem.freeCString(selector_ptr);
     }
 };
-
-pub const MouseEvent = extern struct {
-    /// Mouse X position in the local space of the element's bounding rect.
-    clientX: i16 = 0,
-    /// Mouse Y position in the local space of the element's bounding rect.
-    clientY: i16 = 0,
-    /// Encoded bitmask of currently pressed modifier keys, see `KeyModifier` enum.
-    modifiers: u8 = 0,
-    /// Encoded bitmask of all currently pressed mouse buttons, see `MouseButton` enum.
-    buttons: u8 = 0,
-    /// Event related mouse button ID (if any).
-    button: MouseButton,
-};
-
-pub const PointerEvent = extern struct {
-    /// Mouse X position in the local space of the element's bounding rect.
-    clientX: i16 = 0,
-    /// Mouse Y position in the local space of the element's bounding rect.
-    clientY: i16 = 0,
-    /// Unique pointer ID.
-    id: u32 = 0,
-    /// Normalized pressure value 0..1 .
-    pressure: f32 = 0,
-    /// The plane angle (in degrees, in the range of -90 to 90) between the Y-Z
-    /// plane and the plane containing both the pointer (e.g. pen stylus) axis and
-    /// the Y axis.
-    tiltX: i8 = 0,
-    /// The plane angle (in degrees, in the range of -90 to 90) between the X-Z
-    /// plane and the plane containing both the pointer (e.g. pen stylus) axis and
-    /// the X axis.
-    tiltY: i8 = 0,
-    /// The clockwise rotation of the pointer (e.g. pen stylus) around its major
-    /// axis in degrees, with a value in the range 0 to 359.
-    twist: u16 = 0,
-    pointer_type: PointerType,
-    /// Non-zero if event's pointer is the primary pointer (in a multitouch scenario).
-    isPrimary: u8,
-    /// Encoded bitmask of currently pressed modifier keys, see `KeyModifier` enum.
-    modifiers: u8 = 0,
-    /// Encoded bitmask of all currently pressed mouse buttons, see `MouseButton` enum.
-    buttons: u8 = 0,
-    /// Event related mouse button ID (if any).
-    button: MouseButton,
-};
-
-/// This event isnt exit actually.
-pub const ResizeEvent = extern struct {
-    /// Window inner width in pixels.
-    width: u16,
-    /// Window inner height in pixels.
-    height: u16,
-};
-
-/// This event isnt exit actually.
-pub const ScrollEvent = extern struct {
-    /// Horizontal scroll offset in fractional CSS pixels.
-    scrollX: f32,
-    /// Vertical scroll offset in fractional CSS pixels.
-    scrollY: f32,
-};
-
-pub const TouchEvent = extern struct {
-    /// Touch X position in the local space of the element's bounding rect.
-    clientX: i16 = 0,
-    /// Touch Y position in the local space of the element's bounding rect.
-    clientY: i16 = 0,
-    /// Encoded bitmask of currently pressed modifier keys, see `KeyModifier` enum.
-    modifiers: u8 = 0,
-};
-
-pub const WheelEvent = extern struct {
-    /// Scroll X delta
-    deltaX: i16 = 0,
-    /// Scroll Y delta
-    deltaY: i16 = 0,
-    /// Scroll Z delta
-    deltaZ: i16 = 0,
-    /// Delta mode
-    mode: WheelDeltaMode,
-    /// Encoded bitmask of currently pressed modifier keys, see `KeyModifier` enum.
-    modifiers: u8 = 0,
-    /// Encoded bitmask of currently pressed mouse buttons, see `MouseButton` enum.
-    buttons: u8 = 0,
-    /// Event related mouse button ID (if any).
-    button: MouseButton,
-};
-
-pub const EventBody = extern union {
-    drag: DragEvent,
-    input: InputEvent,
-    key: KeyboardEvent,
-    mouse: MouseEvent,
-    pointer: PointerEvent,
-    resize: ResizeEvent,
-    scroll: ScrollEvent,
-    touch: TouchEvent,
-    wheel: WheelEvent,
-};
-
-pub const Event = extern struct {
-    type: EventType,
-    /// Event details / payload. Currently, only the following event types have a
-    /// defined body:
-    ///
-    /// - drag
-    /// - input
-    /// - key
-    /// - mouse
-    /// - pointer
-    /// - resize
-    /// - scroll
-    /// - touch
-    /// - wheel
-    body: EventBody,
-};
-
-/// Event listener function. Takes an event.
-pub const EventListener = *const fn (event: ?*const Event) callconv(.c) void;
-
-pub const EventListenerId = u16;
-
-extern "1" fn @"0"(global_event_target_type: GlobalEventTargetType, event_type: EventType, listener: EventListener) void;
-
-extern "1" fn @"1"(ptr: mem.CStringPointer, event_type: EventType, listener: EventListener) void;
-
-pub inline fn addGlobalEventListener(global_event_target_type: GlobalEventTargetType, event_type: EventType, listener: EventListener) void {
-    @"0"(global_event_target_type, event_type, listener);
-}
-
-pub inline fn addEventListener(element_id: []const u8, event_type: EventType, listener: EventListener) void {
-    const str = mem.allocCString(element_id);
-
-    @"1"(str, event_type, listener);
-
-    mem.freeCString(str);
-}
-
-/// Removes the listener for given ID.
-extern "1" fn @"2"(listener_id: EventListenerId) void;
-
-pub inline fn removeEventListener(listener_id: EventListenerId) void {
-    @"2"(listener_id);
-}
-
-/// Calls .preventDefault() on currently processed event
-/// (only to be called from an EventListener!)
-extern "1" fn @"3"() void;
-
-/// Calls .stopPropagation() on currently processed event
-/// (only to be called from an EventListener!)
-extern "1" fn @"4"() void;
-
-/// Calls .stopImmediatePropagation() on currently processed event
-/// (only to be called from an EventListener!)
-extern "1" fn @"5"() void;
-
-pub inline fn preventDefault() void {
-    @"3"();
-}
-
-pub inline fn stopPropagation() void {
-    @"4"();
-}
-
-pub inline fn stopImmediatePropagation() void {
-    @"5"();
-}

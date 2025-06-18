@@ -2,10 +2,10 @@ interface EventHandler {
     target: EventTarget;
     eventName: string;
     callback: (event: Event) => void;
-    options: boolean | AddEventListenerOptions;
+    useCapture: boolean;
 }
 
-interface DeferredAction {
+interface PendingAction {
     action: Function;
     priority: number;
     args: Array<any>;
@@ -14,130 +14,130 @@ interface DeferredAction {
 export default class EventManager {
     private activeCallbacks: number = 0;
     private isSetupComplete: boolean = false;
-    private currentEvent: EventHandler | null = null;
-    private eventListeners: Array<EventHandler> = new Array();
-    private deferredActions: Array<DeferredAction> = new Array();
-    private cleanupCallbacks: Array<Function> = new Array();
+    private activeEventHandler: EventHandler | null = null;
+    private registeredListeners: Array<EventHandler> = new Array();
+    private pendingActions: Array<PendingAction> = new Array();
+    private cleanupHandlers: Array<Function> = new Array();
 
     constructor() {
-        this.cleanup = this.cleanup.bind(this);
+        this.initializeCleanup = this.initializeCleanup.bind(this);
     }
 
-    private cleanup(): void {
-        for (let i = this.eventListeners.length - 1; i >= 0; --i) {
-            this.removeEventListener(i);
+    private initializeCleanup(): void {
+        for (let i = this.registeredListeners.length - 1; i >= 0; --i) {
+            this.detachListener(i);
         }
 
-        this.eventListeners = new Array();
-        this.deferredActions = new Array();
+        this.registeredListeners = new Array();
+        this.pendingActions = new Array();
     }
 
     public setupCleanup(): void {
         if (!this.isSetupComplete) {
-            this.cleanupCallbacks.push(this.cleanup);
+            this.cleanupHandlers.push(this.initializeCleanup);
             this.isSetupComplete = true;
         }
     }
 
-    public addDeferredAction(action: Function, priority: number, args: Array<any>): void {
-        const isDuplicate = this.deferredActions.some(
-            item => item.action === action && this.areArraysEqual(item.args, args),
+    public scheduleAction(action: Function, priority: number, args: Array<any>): void {
+        const isDuplicate = this.pendingActions.some(
+            item => item.action === action && this.arraysEqual(item.args, args),
         );
 
         if (!isDuplicate) {
-            this.deferredActions.push({
+            this.pendingActions.push({
                 action,
                 priority,
                 args,
             });
 
-            this.deferredActions.sort((a, b) => b.priority - a.priority);
+            this.pendingActions.sort((a, b) => b.priority - a.priority);
         }
     }
 
-    private areArraysEqual(arr1: Array<any>, arr2: Array<any>): boolean {
+    private arraysEqual(arr1: Array<any>, arr2: Array<any>): boolean {
         if (arr1.length !== arr2.length) return false;
 
         return arr1.every((value, index) => value === arr2[index]);
     }
 
-    public removeDeferredActionsByFunction(action: Function): void {
-        this.deferredActions = this.deferredActions.filter(item => item.action !== action);
+    public removePendingActionsByAction(action: Function): void {
+        this.pendingActions = this.pendingActions.filter(item => item.action !== action);
     }
 
-    public isProcessingEvent(): boolean {
-        return this.activeCallbacks > 0 && this.currentEvent != null;
+    public hasActiveEvent(): boolean {
+        return this.activeCallbacks > 0 && this.activeEventHandler != null;
     }
 
-    public executeDeferredActions(): void {
-        if (this.isProcessingEvent()) {
-            for (const item of this.deferredActions) {
+    public runPendingActions(): void {
+        if (this.hasActiveEvent()) {
+            for (const item of this.pendingActions) {
                 item.action.apply(null, item.args);
 
-                this.deferredActions = this.deferredActions.filter(x => x !== item);
+                this.pendingActions = this.pendingActions.filter(x => x !== item);
             }
         }
     }
 
-    public removeEventListenersByTarget(target: EventTarget, eventName?: string): void {
-        for (let i = 0; i < this.eventListeners.length; i++) {
-            const listener = this.eventListeners[i];
+    public clearListenersByTarget(target: EventTarget, eventName?: string): void {
+        for (let i = 0; i < this.registeredListeners.length; i++) {
+            const listener = this.registeredListeners[i];
 
             if (listener.target === target && (!eventName || eventName === listener.eventName)) {
-                this.removeEventListener(i--);
+                this.detachListener(i--);
             }
         }
     }
 
-    private removeEventListener(index: number): void {
+    private detachListener(index: number): void {
         const {
             target,
             eventName,
             callback,
-            options,
-        } = this.eventListeners[index];
+            useCapture,
+        } = this.registeredListeners[index];
 
         target.removeEventListener(
             eventName,
             callback,
-            options,
+            useCapture,
         );
 
-        this.eventListeners.splice(index, 1);
+        this.registeredListeners.splice(index, 1);
     }
 
-    public addEventListener(handler: EventHandler & { enable: number | boolean }): void {
+    public addOrRemoveEventListener(handler: EventHandler & { pointerOrRemoveListener: number }): void {
         const wrappedCallback = (event: Event) => {
             ++this.activeCallbacks;
 
-            this.currentEvent = handler;
+            this.activeEventHandler = handler;
 
-            this.executeDeferredActions();
+            this.runPendingActions();
 
             handler.callback(event);
 
-            this.executeDeferredActions();
+            this.runPendingActions();
 
             --this.activeCallbacks;
         };
 
-        if (handler.enable) {
-            handler.target.addEventListener(handler.eventName, wrappedCallback, handler.options);
+        if (handler.pointerOrRemoveListener) {
+            handler.target.addEventListener(handler.eventName, wrappedCallback, handler.useCapture);
 
-            this.eventListeners.push({
+            this.registeredListeners.push({
                 target: handler.target,
                 eventName: handler.eventName,
                 callback: wrappedCallback,
-                options: handler.options,
+                useCapture: handler.useCapture,
             });
 
             this.setupCleanup();
         } else {
-            this.removeEventListenersByTarget(handler.target, handler.eventName);
+            this.clearListenersByTarget(handler.target, handler.eventName);
         }
     }
 
-    public getTargetDescription(target: any): string {
+    public describeTarget(target: any): string {
         if (!target) return "";
         if (target === window) return "#window";
         if (target === screen) return "#screen";
@@ -145,7 +145,7 @@ export default class EventManager {
         return target.nodeName || "";
     }
 
-    public isFullscreenEnabled(): boolean {
+    public fullscreenEnabled(): boolean {
         return document.fullscreenEnabled || (document as any).webkitFullscreenEnabled;
     }
 }

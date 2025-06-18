@@ -4,38 +4,6 @@ import { eventManager } from "./EventApiPseudoModuleEventManager";
 import type WebAssemblyPseudoModule from "./PseudoModule";
 import type { PseudoModuleFactory, PseudoModuleFactoryArguments } from "./PseudoModule";
 
-// Event handling state
-let currentEvent: Event | null = null;
-
-const eventListeners = new Map<number, (e: Event) => void>();
-const eventTargets = new Set<EventTarget>();
-
-const enum ZigEventType {
-    DRAG,
-    FOCUS,
-    INPUT,
-    KEY,
-    MOUSE,
-    POINTER,
-    RESIZE,
-    SCROLL,
-    TOUCH,
-    WHEEL,
-}
-
-const ZIG_EVENT_TYPE_TO_EVENT_TYPE = {
-    [ZigEventType.DRAG]: "drag",
-    [ZigEventType.FOCUS]: "focus",
-    [ZigEventType.INPUT]: "input",
-    [ZigEventType.KEY]: "key",
-    [ZigEventType.MOUSE]: "mouse",
-    [ZigEventType.POINTER]: "pointer",
-    [ZigEventType.RESIZE]: "resize",
-    [ZigEventType.SCROLL]: "scroll",
-    [ZigEventType.TOUCH]: "touch",
-    [ZigEventType.WHEEL]: "wheel",
-} as const satisfies Record<ZigEventType, string>;
-
 const enum GlobalEventTargetType {
     DOCUMENT,
     WINDOW,
@@ -43,18 +11,15 @@ const enum GlobalEventTargetType {
 
 const PSEUDO_GLOBAL_EVENT_TARGETS = [document, window];
 
-type TargetableValue = GlobalEventTargetType | number;
+type EventTargetIdentifier = GlobalEventTargetType | number /* Pointer */;
 
-function resolveEventTarget(targetIdentifier: TargetableValue): EventTarget | Element {
-    const identifier = targetIdentifier > 2
-        ? decodeCString(targetIdentifier)
-        : targetIdentifier;
-
-    return PSEUDO_GLOBAL_EVENT_TARGETS[identifier] ||
-        document.querySelector(identifier as string);
+function getEventTarget(targetIdentifier: EventTargetIdentifier): EventTarget | Element {
+    return targetIdentifier > 1
+        ? document.querySelector(decodeCString(targetIdentifier))
+        : PSEUDO_GLOBAL_EVENT_TARGETS[targetIdentifier];
 }
 
-function getElementBoundingRect(target: EventTarget | Element): DOMRect {
+function getElementBounds(target: EventTarget | Element): DOMRect {
     const isGlobalTarget = PSEUDO_GLOBAL_EVENT_TARGETS.includes(target as any);
 
     return isGlobalTarget
@@ -66,140 +31,107 @@ function getElementBoundingRect(target: EventTarget | Element): DOMRect {
 }
 
 function writeMouseEventToMemory(
-    memoryPtr: number,
+    ptr: number,
     event: MouseEvent,
     target: EventTarget | Element,
 ) {
-    HEAPF64[memoryPtr >> 3] = event.timeStamp;
+    HEAPF64[ptr >> 3] = event.timeStamp;
 
-    memoryPtr >>= 2;
+    ptr >>= 2;
 
-    HEAP32[memoryPtr + 2] = event.screenX;
-    HEAP32[memoryPtr + 3] = event.screenY;
+    HEAP32[ptr + 2] = event.screenX;
+    HEAP32[ptr + 3] = event.screenY;
 
-    HEAP32[memoryPtr + 4] = event.clientX;
-    HEAP32[memoryPtr + 5] = event.clientY;
+    HEAP32[ptr + 4] = event.clientX;
+    HEAP32[ptr + 5] = event.clientY;
 
-    HEAP32[memoryPtr + 6] = +event.ctrlKey;
-    HEAP32[memoryPtr + 7] = +event.shiftKey;
-    HEAP32[memoryPtr + 8] = +event.altKey;
-    HEAP32[memoryPtr + 9] = +event.metaKey;
+    HEAP32[ptr + 6] = +event.ctrlKey;
+    HEAP32[ptr + 7] = +event.shiftKey;
+    HEAP32[ptr + 8] = +event.altKey;
+    HEAP32[ptr + 9] = +event.metaKey;
 
-    HEAP16[2 * memoryPtr + 20] = event.button;
-    HEAP16[2 * memoryPtr + 21] = event.buttons;
+    HEAP16[2 * ptr + 20] = event.button;
+    HEAP16[2 * ptr + 21] = event.buttons;
 
-    HEAP32[memoryPtr + 11] = event.movementX;
-    HEAP32[memoryPtr + 12] = event.movementY;
+    HEAP32[ptr + 11] = event.movementX;
+    HEAP32[ptr + 12] = event.movementY;
 
-    const rect = getElementBoundingRect(target);
-    HEAP32[memoryPtr + 13] = event.clientX - rect.left;
-    HEAP32[memoryPtr + 14] = event.clientY - rect.top;
+    const rect = getElementBounds(target);
+
+    HEAP32[ptr + 13] = event.clientX - rect.left;
+    HEAP32[ptr + 14] = event.clientY - rect.top;
 }
 
-let mouseEventMemoryPtr: number | null = null;
+const enum MouseEventIdentifier {
+    DOWN = 5,
+    ENTER = 33,
+    LEAVE = 34,
+    MOVE = 8,
+    UP = 6,
+}
+
+let mouseEventPtr: number | null = null;
 
 function addMouseEventListener(
-    targetIdentifier: TargetableValue,
-    element: Element,
-    options: boolean | AddEventListenerOptions,
-    enable: number,
-    eventIdentifier: number,
+    targetIdentifier: EventTargetIdentifier,
+    useCapture: boolean,
+    pointerOrRemoveListener: number,
+    eventIdentifier: MouseEventIdentifier,
     eventName: string,
 ) {
-    mouseEventMemoryPtr ??= malloc(72);
+    mouseEventPtr ??= malloc(72);
 
-    const target = resolveEventTarget(targetIdentifier);
+    const target = getEventTarget(targetIdentifier);
 
-    eventManager.addEventListener({
+    eventManager.addOrRemoveEventListener({
         target,
         eventName,
-        enable,
-        callback: function (e) {
+        pointerOrRemoveListener,
+        callback(e) {
             e = e || event;
 
-            writeMouseEventToMemory(mouseEventMemoryPtr, e as MouseEvent, target);
+            writeMouseEventToMemory(mouseEventPtr, e as MouseEvent, target);
 
-            getWebAssemblyFunction(enable)(eventIdentifier, mouseEventMemoryPtr, element) && e.preventDefault();
+            // Here, using pointerOremoveListener as pointer is no problem, because removing listener wont require callback
+            getWebAssemblyFunction(pointerOrRemoveListener)(eventIdentifier, mouseEventPtr) &&
+                e.preventDefault();
         },
-        options,
+        useCapture,
     });
 }
 
-export const createEventApiPseudoModule = ((...[, {
-    getWebAssemblyFunction,
-    decodeCString: readCString,
-}]: PseudoModuleFactoryArguments): WebAssemblyPseudoModule => {
+export const createEventApiPseudoModule = ((...[]: PseudoModuleFactoryArguments): WebAssemblyPseudoModule => {
     return {
         moduleName: "1",
         moduleImports: {
-            0: (globalEventTargetType: GlobalEventTargetType, eventType: ZigEventType, listenerId: number) => {
-                const target = PSEUDO_GLOBAL_EVENT_TARGETS[globalEventTargetType];
+            0: (targetIdentifier: EventTargetIdentifier, useCapture: boolean, pointerOrRemoveListener: number) => {
+                // Ja(a, b, c, d, 5, "mousedown", e);
 
-                const eventName = ZIG_EVENT_TYPE_TO_EVENT_TYPE[eventType];
+                addMouseEventListener(targetIdentifier, useCapture, pointerOrRemoveListener, MouseEventIdentifier.DOWN, "mousedown");
+            },
+            
+            1: (targetIdentifier: EventTargetIdentifier, useCapture: boolean, pointerOrRemoveListener: number) => {
+                // Ja(a, b, c, d, 33, "mouseenter", e);
 
-                const wasmListener = getWebAssemblyFunction(listenerId);
-
-                const listener = (e: Event) => {
-                    currentEvent = e;
-
-                    wasmListener({});
-
-                    currentEvent = null;
-                };
-
-                eventListeners.set(listenerId, listener);
-                target.addEventListener(eventName, listener);
-
-                eventTargets.add(target);
+                addMouseEventListener(targetIdentifier, useCapture, pointerOrRemoveListener, MouseEventIdentifier.ENTER, "mouseenter");
             },
 
-            1: (ptr: number, eventType: ZigEventType, listenerId: number) => {
-                const target = document.getElementById(readCString(ptr));
+            2: (targetIdentifier: EventTargetIdentifier, useCapture: boolean, pointerOrRemoveListener: number) => {
+                // Ja(a, b, c, d, 34, "mouseleave", e);
 
-                const eventName = ZIG_EVENT_TYPE_TO_EVENT_TYPE[eventType];
-
-                const wasmListener = getWebAssemblyFunction(listenerId);
-
-                const listener = (e: Event) => {
-                    currentEvent = e;
-
-                    wasmListener({});
-
-                    currentEvent = null;
-                };
-
-                eventListeners.set(listenerId, listener);
-                target.addEventListener(eventName, listener);
-
-                eventTargets.add(target);
+                addMouseEventListener(targetIdentifier, useCapture, pointerOrRemoveListener, MouseEventIdentifier.LEAVE, "mouseleave");
             },
 
-            // Remove event listener
-            2: (listenerId: number) => {
-                const listener = eventListeners.get(listenerId);
-                if (listener) {
-                    // Remove from all possible targets since we dont track which target it was added to
-                    eventTargets.forEach(target => {
-                        target.removeEventListener("*", listener);
-                    });
+            3: (targetIdentifier: EventTargetIdentifier, useCapture: boolean, pointerOrRemoveListener: number) => {
+                // Ja(a, b, c, d, 8, "mousemove", e);
 
-                    eventListeners.delete(listenerId);
-                }
+                addMouseEventListener(targetIdentifier, useCapture, pointerOrRemoveListener, MouseEventIdentifier.MOVE, "mousemove");
             },
 
-            // preventDefault
-            3: () => {
-                currentEvent?.preventDefault();
-            },
+            4: (targetIdentifier: EventTargetIdentifier, useCapture: boolean, pointerOrRemoveListener: number) => {
+                // Ja(a, b, c, d, 6, "mouseup", e);
 
-            // stopPropagation
-            4: () => {
-                currentEvent?.stopPropagation();
-            },
-
-            // stopImmediatePropagation
-            5: () => {
-                currentEvent?.stopImmediatePropagation();
+                addMouseEventListener(targetIdentifier, useCapture, pointerOrRemoveListener, MouseEventIdentifier.UP, "mouseup");
             },
         },
     } as const satisfies WebAssemblyPseudoModule;

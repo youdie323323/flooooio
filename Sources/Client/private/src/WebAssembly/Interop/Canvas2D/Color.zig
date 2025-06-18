@@ -33,7 +33,7 @@ pub inline fn init(rgb: Rgb) Color {
 inline fn mulSafe(self: Color, comptime strength: FloatingRgb) Rgb {
     const result = toFloatingRgb(self.rgb) * strength;
 
-    // Clamping lower bound redundant here since xy (x >= 0, y >= 0) always >= 0.
+    // Clamping lower bound redundant here since xy (x >= 0, y >= 0) always >= 0
 
     return toRgb(@min(result, fwhite));
 }

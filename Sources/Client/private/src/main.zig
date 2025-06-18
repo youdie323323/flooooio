@@ -53,25 +53,31 @@ var antenna_scale: f32 = 1;
 const base_width: f32 = 1300;
 const base_height: f32 = 650;
 
-fn onResize(_: ?*const event.Event) callconv(.c) void {
-    const dpr = dom.devicePixelRatio();
+// fn onResize(_: ?*const event.Event) callconv(.c) void {
+//     const dpr = dom.devicePixelRatio();
+// 
+//     width = @as(f32, @floatFromInt(dom.clientWidth())) * dpr;
+//     height = @as(f32, @floatFromInt(dom.clientHeight())) * dpr;
+// 
+//     base_scale = @max(
+//         width / base_width,
+//         height / base_height,
+//     );
+// 
+//     ctx.setSize(
+//         @intFromFloat(width),
+//         @intFromFloat(height),
+//     );
+// }
+// 
+// fn onWheel(_: ?*const event.Event) callconv(.c) void {
+//     antenna_scale -= 0.025;
+// }
 
-    width = @as(f32, @floatFromInt(dom.clientWidth())) * dpr;
-    height = @as(f32, @floatFromInt(dom.clientHeight())) * dpr;
+fn onMouseEvent(_: event.MouseEventType, e: *const event.MouseEvent) callconv(.c) bool {
+    std.log.debug("{any}", .{e});
 
-    base_scale = @max(
-        width / base_width,
-        height / base_height,
-    );
-
-    ctx.setSize(
-        @intFromFloat(width),
-        @intFromFloat(height),
-    );
-}
-
-fn onWheel(_: ?*const event.Event) callconv(.c) void {
-    antenna_scale -= 0.025;
+    return true;
 }
 
 pub const Players = mach_objects.Objects(PlayerImpl.Super, .id);
@@ -455,7 +461,7 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
         }
     }
 
-    try client.server_bound.sendAck(
+    try client.serverbound.sendAck(
         @intFromFloat(width),
         @intFromFloat(height),
     );
@@ -474,17 +480,14 @@ export fn main() c_int {
     { // Initialize client websocket
         client = ws.ClientWebSocket.init(allocator) catch unreachable;
 
-        client.client_bound.putHandler(ws.opcode.Clientbound.wave_self_id, handleWaveSelfId) catch unreachable;
-        client.client_bound.putHandler(ws.opcode.Clientbound.wave_update, handleWaveUpdate) catch unreachable;
+        client.clientbound.putHandler(ws.opcode.Clientbound.wave_self_id, handleWaveSelfId) catch unreachable;
+        client.clientbound.putHandler(ws.opcode.Clientbound.wave_update, handleWaveUpdate) catch unreachable;
 
         client.connect("localhost:8080") catch unreachable;
     }
 
     { // Initialize dom event
-        event.addGlobalEventListener(.window, .resize, onResize);
-        event.addEventListener("canvas", .wheel, onWheel);
-
-        onResize(null);
+        event.addMouseEventListener(.window, false, onMouseEvent, .move);
     }
 
     { // Initialize ui

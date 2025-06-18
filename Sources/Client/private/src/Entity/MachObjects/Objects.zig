@@ -134,12 +134,12 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
         ///
         /// Unlike set(), this method does not respect any mach.Objects tracking
         /// options, so changes made to an object through this method will not be tracked.
-        pub fn set(objs: *@This(), id: ObjectId, comptime field_name: meta.FieldEnum(T), value: meta.FieldType(T, field_name)) void {
+        pub fn set(objs: *@This(), id: ObjectId, comptime field: meta.FieldEnum(T), value: meta.FieldType(T, field)) void {
             const data = &objs.internal.data;
 
             const unpacked = objs.validateAndUnpack(id, @src());
 
-            data.items(field_name)[unpacked.index] = value;
+            data.items(field)[unpacked.index] = value;
         }
 
         /// Sets all fields of the given object to the given value.
@@ -155,12 +155,12 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
         }
 
         /// Get a single field.
-        pub fn get(objs: *@This(), id: ObjectId, comptime field_name: meta.FieldEnum(T)) meta.FieldType(T, field_name) {
+        pub fn get(objs: *@This(), id: ObjectId, comptime field: meta.FieldEnum(T)) meta.FieldType(T, field) {
             const data = &objs.internal.data;
 
             const unpacked = objs.validateAndUnpack(id, @src());
 
-            return data.items(field_name)[unpacked.index];
+            return data.items(field)[unpacked.index];
         }
 
         /// Gets all fields.
@@ -202,17 +202,17 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
             const dead = &objs.internal.dead;
             const generation = &objs.internal.generation;
 
-            const fn_name = src.fn_name;
+            const fn_name = comptime src.fn_name;
 
             // TODO(object): decide whether to disable safety checks like this in some conditions,
             // e.g. in release builds
             const unpacked: PackedId = @bitCast(id);
 
             if (unpacked.generation != generation.items[unpacked.index])
-                @panic(fn_name ++ "() called with a dead object (use after delete, recycled slot)");
+                @panic(comptime (fn_name ++ "() called with a dead object (use after delete, recycled slot)"));
 
             if (dead.isSet(unpacked.index))
-                @panic(fn_name ++ "() called with a dead object (use after delete)");
+                @panic(comptime (fn_name ++ "() called with a dead object (use after delete)"));
 
             return unpacked;
         }
