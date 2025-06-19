@@ -31,7 +31,8 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
             /// again, this number is incremented by one.
             generation: std.ArrayListUnmanaged(Generation) = .{},
 
-            id_to_obj_id: std.AutoHashMap(SearchFieldType, ObjectId),
+            /// Hashmap for searching and get object id from search field value.
+            object_lut: std.AutoHashMapUnmanaged(SearchFieldType, ObjectId) = .{},
         },
 
         const Generation = u16;
@@ -72,14 +73,20 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
         pub fn init(objs: *@This(), allocator: mem.Allocator) void {
             objs.internal = .{
                 .allocator = allocator,
-                .id_to_obj_id = .init(allocator),
             };
         }
 
         pub fn deinit(objs: *@This()) void {
-            const id_to_obj_id = &objs.internal.id_to_obj_id;
+            const allocator = objs.internal.allocator;
+            const data = &objs.internal.data;
+            const dead = &objs.internal.dead;
+            const generation = &objs.internal.generation;
+            const object_lut = &objs.internal.object_lut;
 
-            id_to_obj_id.deinit(objs.internal.allocator);
+            data.deinit(allocator);
+            dead.deinit(allocator);
+            generation.deinit(allocator);
+            object_lut.deinit(allocator);
         }
 
         /// Tries to acquire the mutex without blocking the caller's thread.
@@ -107,7 +114,7 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
             const data = &objs.internal.data;
             const dead = &objs.internal.dead;
             const generation = &objs.internal.generation;
-            const id_to_obj_id = &objs.internal.id_to_obj_id;
+            const object_lut = &objs.internal.object_lut;
 
             // Ensure we have space for the new object
             try data.ensureUnusedCapacity(allocator, 1);
@@ -125,7 +132,7 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
                 .index = @intCast(index),
             });
 
-            try id_to_obj_id.put(@field(value, @tagName(search_field)), obj_id);
+            try object_lut.put(allocator, @field(value, @tagName(search_field)), obj_id);
 
             return obj_id;
         }
@@ -175,18 +182,18 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
         pub fn delete(objs: *@This(), id: ObjectId) void {
             const dead = &objs.internal.dead;
             const data = &objs.internal.data;
-            const id_to_obj_id = &objs.internal.id_to_obj_id;
+            const object_lut = &objs.internal.object_lut;
 
             const unpacked = objs.validateAndUnpack(id, @src());
 
-            _ = id_to_obj_id.remove(data.items(search_field)[unpacked.index]);
+            _ = object_lut.remove(data.items(search_field)[unpacked.index]);
 
             dead.set(unpacked.index);
         }
 
         /// Search for an object by matching a specific field value.
         pub fn search(objs: *@This(), id: SearchFieldType) ?ObjectId {
-            return objs.internal.id_to_obj_id.get(id);
+            return objs.internal.object_lut.get(id);
         }
 
         pub fn slice(objs: *@This()) Slice {
@@ -197,7 +204,7 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
         }
 
         /// Validates the given object is from this list (type check) and alive (not a use after delete
-        /// situation.)
+        /// situation).
         inline fn validateAndUnpack(objs: *const @This(), id: ObjectId, comptime src: std.builtin.SourceLocation) PackedId {
             const dead = &objs.internal.dead;
             const generation = &objs.internal.generation;

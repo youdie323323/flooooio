@@ -24,8 +24,7 @@ import (
 )
 
 const (
-	// TODO: make this value 256 and parallelize spatial hash searching perhaps bring more performance (1024 is too big)
-	spatialHashGridSize = 256
+	spatialHashGridSize = 512
 
 	WaveUpdateFPS = 60
 
@@ -40,7 +39,8 @@ const (
 	GB = 1024 * MB
 )
 
-var SharedBufPool = zeropool.New(func() []byte { return make([]byte, 512*KB) })
+// TODO: if buffer index overflow, may will panic
+var SharedBufPool = zeropool.New(func() []byte { return make([]byte, 256*KB) })
 
 func writeCString[T ~string](buf []byte, at int, s T) int {
 	n := copy(buf[at:], s)

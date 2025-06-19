@@ -95,7 +95,7 @@ pub inline fn calculateStrokeWidth(comptime width: f32) comptime_float {
 }
 
 /// Utilities definition for context.
-/// Utility meaning these are not pure canvas call operations.
+/// Utility means these are not pure canvas call operations.
 const UtilityMethods = struct {
     pub inline fn drawSVG(self: CanvasContext, svg: []const u8) void {
         @"2"(self.id, svg.ptr, svg.len);
@@ -114,7 +114,7 @@ const UtilityMethods = struct {
 
 pub usingnamespace UtilityMethods;
 
-/// Getter/setter methods which is similar to ctx.blahblah = blah / ctx.blahblah
+/// Getter/setter methods which is similar to ctx.blahblah = blah, ctx.blahblah
 const AccessorMethods = struct {
     pub const Properties = packed struct {
         /// Current lineWidth of this context.

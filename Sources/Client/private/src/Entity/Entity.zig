@@ -3,22 +3,8 @@ const math = std.math;
 
 pub const EntityId = u32;
 
-pub inline fn smoothInterpolate(dtx: f32, current: f32, target: f32) f32 {
-    return current + (target - current) * @min(1, dtx);
-}
-
 pub fn Entity(comptime Impl: type) type {
     return struct {
-        inline fn calculateAngleDistance(start_angle: f32, end_angle: f32) f32 {
-            const angle_diff = @mod(end_angle - start_angle, math.tau);
-
-            return @mod(angle_diff * 2, math.tau) - angle_diff;
-        }
-
-        inline fn interpolateAngle(start_angle: f32, end_angle: f32, progress: f32) f32 {
-            return start_angle + calculateAngleDistance(start_angle, end_angle) * progress;
-        }
-
         pub const Vector2 = @Vector(2, f32);
 
         impl: Impl,
@@ -93,7 +79,7 @@ pub fn Entity(comptime Impl: type) type {
         }
 
         pub fn deinit(self: *@This(), allocator: std.mem.Allocator) void {
-            if (comptime @hasDecl(Impl, "deinit"))
+            if (comptime @hasDecl(Impl, "deinit")) // Call implementation deinit
                 self.impl.deinit(allocator, self);
 
             self.* = undefined;
@@ -116,43 +102,63 @@ pub fn Entity(comptime Impl: type) type {
             if (self.is_dead) self.dead_t += delta_time_150;
 
             const t_vector: Vector2 = @splat(self.t);
-            self.pos = self.old_pos + (self.next_pos - self.old_pos) * t_vector;
 
-            self.health = self.old_health + (self.next_health - self.old_health) * self.t;
-            self.size = self.old_size + (self.next_size - self.old_size) * self.t;
+            { // Interpolate common properties and its related properties
+                // Position
+                self.pos = math.lerp(self.old_pos, self.next_pos, t_vector);
 
-            {
-                const eye_time_factor = @min(1, delta_time_100);
-                const target_eye: Vector2 = .{ @cos(self.next_angle), @sin(self.next_angle) };
-                const eye_factor: Vector2 = @splat(eye_time_factor);
+                // Size
+                self.size = math.lerp(self.old_size, self.next_size, self.t);
 
-                self.eye_pos += (target_eye - self.eye_pos) * eye_factor;
+                { // Angle
+                    self.angle = math.lerp(self.old_angle, self.next_angle, self.t);
+
+                    { // Eye pos
+                        const next_eye_pos: Vector2 = .{ @cos(self.next_angle), @sin(self.next_angle) };
+                        const eye_t: Vector2 = @splat(@min(1, delta_time_100));
+
+                        self.eye_pos = math.lerp(self.eye_pos, next_eye_pos, eye_t);
+                    }
+
+                    {
+                        const diff_x, const diff_y = self.pos - self.next_pos;
+                        const dist = math.hypot(diff_x, diff_y);
+
+                        self.move_counter += (delta_time * dist) / 900;
+                    }
+                }
+
+                { // Health
+                    self.health = math.lerp(self.old_health, self.next_health, self.t);
+
+                    // Hp alpha
+                    if (self.health < 1) self.hp_alpha = math.lerp(self.hp_alpha, 1, delta_time_200);
+
+                    { // Red health
+                        if (self.red_health_timer > 0) {
+                            self.red_health_timer -= delta_time / 600;
+
+                            if (0 > self.red_health_timer) self.red_health_timer = 0;
+                        }
+
+                        if (self.red_health_timer == 0)
+                            self.red_health = math.lerp(self.red_health, self.health, delta_time_200);
+                    }
+                }
             }
 
-            self.angle = interpolateAngle(self.old_angle, self.next_angle, self.t);
+            { // Poison
+                const poison_t_dir: f32 =
+                    if (self.is_poisoned)
+                        1
+                    else
+                        -1;
 
-            {
-                const diff_x, const diff_y = self.pos - self.next_pos;
-                const dist = math.hypot(diff_x, diff_y);
-
-                self.move_counter += (delta_time * dist) / 900;
+                self.poison_t = @mulAdd(f32, poison_t_dir, delta_time_200, self.poison_t);
+                self.poison_t = math.clamp(self.poison_t, 0, 1);
             }
 
-            if (self.health < 1) self.hp_alpha = smoothInterpolate(delta_time_200, self.hp_alpha, 1);
-
-            self.poison_t += @as(f32, if (self.is_poisoned) 1 else -1) * delta_time_200;
-            self.poison_t = math.clamp(self.poison_t, 0, 1);
-
-            if (self.red_health_timer > 0) {
-                self.red_health_timer -= delta_time / 600;
-
-                if (0 > self.red_health_timer) self.red_health_timer = 0;
-            }
-
-            if (self.red_health_timer == 0)
-                self.red_health += (self.health - self.red_health) * @min(1, delta_time_200);
-
-            if (comptime @hasDecl(Impl, "update"))
+            if (comptime @hasDecl(Impl, "update")) // Call implementation update
                 self.impl.update(self, delta_time);
         }
     };

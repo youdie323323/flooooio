@@ -44,7 +44,7 @@ pub fn update(self: *@This(), entity: *Super, delta_time: f32) void {
         self.sad_t = 1;
         self.angry_t = 0;
     } else {
-        const mood_mouth_speed = delta_time / 100;
+        const mouth_mood_speed = delta_time / 100;
 
         var is_angry, var is_sad = pmood.decodeMood(self.mood);
 
@@ -53,7 +53,7 @@ pub fn update(self: *@This(), entity: *Super, delta_time: f32) void {
             is_sad = false;
         }
 
-        self.angry_t = math.clamp(self.angry_t + (if (is_angry) mood_mouth_speed else -mood_mouth_speed), 0, 1);
-        self.sad_t = math.clamp(self.sad_t + (if (!is_angry and is_sad) mood_mouth_speed else -mood_mouth_speed), 0, 1);
+        self.angry_t = math.clamp(self.angry_t + (if (is_angry) mouth_mood_speed else -mouth_mood_speed), 0, 1);
+        self.sad_t = math.clamp(self.sad_t + (if (!is_angry and is_sad) mouth_mood_speed else -mouth_mood_speed), 0, 1);
     }
 }

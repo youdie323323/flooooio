@@ -15,7 +15,6 @@ const timer = @import("WebAssembly/Interop/Timer.zig");
 const UI = @import("UI/UI.zig");
 
 const EntityId = @import("Entity/Entity.zig").EntityId;
-const smoothInterpolate = @import("Entity/Entity.zig").smoothInterpolate;
 const EntityType = @import("Entity/EntityType.zig").EntityType;
 const MobType = @import("Entity/EntityType.zig").MobType;
 const PetalType = @import("Entity/EntityType.zig").PetalType;
@@ -62,12 +61,14 @@ var interpolated_mouse_y: f32 = 0;
 
 const movement_helper_start_distance: f32 = 30;
 
-inline fn drawMovementHelper(delta_time: f32) void {
+inline fn drawMovementHelper(self_player: *const PlayerImpl.Super, delta_time: f32) void {
+    _ = self_player;
+
     { // Interpolate mouse x and y
         const delta_time_50 = delta_time * 0.02;
 
-        interpolated_mouse_x = smoothInterpolate(delta_time_50, interpolated_mouse_x, mouse_x_offset / antenna_scale);
-        interpolated_mouse_y = smoothInterpolate(delta_time_50, interpolated_mouse_y, mouse_y_offset / antenna_scale);
+        interpolated_mouse_x = math.lerp(interpolated_mouse_x, mouse_x_offset / antenna_scale, delta_time_50);
+        interpolated_mouse_y = math.lerp(interpolated_mouse_y, mouse_y_offset / antenna_scale, delta_time_50);
     }
 
     const distance =
@@ -645,7 +646,7 @@ fn draw(_: f32) callconv(.c) void {
         else
             null;
 
-    if (self_player) |p| {
+    if (self_player) |p|
         tile.renderGameTileset(.{
             .ctx = ctx,
 
@@ -664,12 +665,12 @@ fn draw(_: f32) callconv(.c) void {
 
             .scale = @splat(antenna_scale),
         });
-    }
 
+    // Render ui
     ui.render();
 
-    // Draw movement helper
-    drawMovementHelper(delta_time);
+    if (self_player) |*p| // Draw movement helper
+        drawMovementHelper(p, delta_time);
 
     { // Render entities
         const center_width = width / 2;

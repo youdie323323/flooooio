@@ -34,7 +34,7 @@ const MapRenderingOptions = struct {
     scale: Vector2,
 };
 
-fn isWithinBound(
+inline fn isWithinBound(
     pos: Vector2,
     size: Vector2,
     bound: Vector2,
@@ -53,7 +53,7 @@ fn isWithinBound(
     // zig fmt: on
 }
 
-fn renderTile(
+inline fn renderTile(
     ctx: *CanvasContext,
     tile: Tile,
     pos: Vector2,
