@@ -43,7 +43,6 @@ func readCString(buf []byte, at int) (string, int) {
 
 func HandleMessage(pd *wave.PlayerData, buf []byte) {
 	bufLen := len(buf)
-
 	if bufLen < 1 {
 		return
 	}

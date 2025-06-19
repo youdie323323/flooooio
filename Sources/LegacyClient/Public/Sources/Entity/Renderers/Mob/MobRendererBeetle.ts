@@ -21,7 +21,11 @@ function createBeetleBodyPath() {
 const beetleBodyPath = createBeetleBodyPath();
 
 export default class MobRendererBeetle extends AbstractMobRenderer {
-    private static readonly ARC_POINTS = [[-17, -12], [17, -12], [0, -15]] as const satisfies Array<[number, number]>;
+    private static readonly ARC_POINTS = [
+        [-17, -12],
+        [17, -12],
+        [0, -15],
+    ] as const satisfies Array<[number, number]>;
 
     override render(context: RenderingContext<Mob>): void {
         // Non-recursive renderer
@@ -47,7 +51,7 @@ export default class MobRendererBeetle extends AbstractMobRenderer {
             for (let dir = -1; dir <= 1; dir += 2) {
                 ctx.save();
 
-                ctx.translate(30, dir * 10);
+                ctx.translate(30, 10 * dir);
                 ctx.rotate(beakAngle * dir);
 
                 ctx.beginPath();

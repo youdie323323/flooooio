@@ -1,0 +1,22 @@
+const std = @import("std");
+const math = std.math;
+const time = std.time;
+const Renderer = @import("../Renderer.zig").Renderer;
+const darkened_base = @import("../Renderer.zig").darkened_base;
+const RenderContext = @import("../Renderer.zig").RenderContext;
+const MobSuper = @import("../../Mob.zig").Super;
+
+const Color = @import("../../../WebAssembly/Interop/Canvas2D/Color.zig");
+
+const drawBasicLike = @import("PetalBasicRenderer.zig").drawBasicLike;
+
+fn render(rctx: RenderContext(MobSuper)) void {
+    drawBasicLike(
+        rctx,
+        comptime Color.comptimeFromHexColorCode("#feffc9"),
+        15,
+        4,
+    );
+}
+
+pub const PetalFasterRenderer = Renderer(MobSuper, false, render, null);

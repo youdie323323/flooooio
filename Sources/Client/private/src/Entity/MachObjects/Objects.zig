@@ -31,6 +31,14 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
             /// again, this number is incremented by one.
             generation: std.ArrayListUnmanaged(Generation) = .{},
 
+            /// The recycling bin which tells which data indices are dead and can be reused.
+            recycling_bin: std.ArrayListUnmanaged(Index) = .{},
+
+            /// The number of objects that could not fit in the recycling bin and hence were thrown
+            /// on the floor and forgotten about. This means there are dead items recorded by dead.set(index)
+            /// which aren't in the recycling_bin, and the next call to new() may consider cleaning up.
+            thrown_on_the_floor: u32 = 0,
+
             /// Hashmap for searching and get object id from search field value.
             object_lut: std.AutoHashMapUnmanaged(SearchFieldType, ObjectId) = .{},
         },
@@ -81,11 +89,13 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
             const data = &objs.internal.data;
             const dead = &objs.internal.dead;
             const generation = &objs.internal.generation;
+            const recycling_bin = &objs.internal.recycling_bin;
             const object_lut = &objs.internal.object_lut;
 
             data.deinit(allocator);
             dead.deinit(allocator);
             generation.deinit(allocator);
+            recycling_bin.deinit(allocator);
             object_lut.deinit(allocator);
         }
 
@@ -114,7 +124,52 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
             const data = &objs.internal.data;
             const dead = &objs.internal.dead;
             const generation = &objs.internal.generation;
+            const recycling_bin = &objs.internal.recycling_bin;
             const object_lut = &objs.internal.object_lut;
+
+            // The recycling bin should always be big enough, but we check at this point if 10% of
+            // all objects have been thrown on the floor. If they have, we find them and grow the
+            // recycling bin to fit them
+            if (objs.internal.thrown_on_the_floor >= (data.len / 10)) {
+                var iter = dead.iterator(.{ .kind = .set });
+
+                dead_object_loop: while (iter.next()) |index| {
+                    // We need to check if this index is already in the recycling bin since
+                    // if it is, it could get recycled a second time while still
+                    // in use
+                    for (recycling_bin.items) |recycled_index| {
+                        if (index == recycled_index) continue :dead_object_loop;
+                    }
+
+                    // dead bitset contains data.capacity number of entries, we only care about ones that are in data.len range
+                    if (index > data.len - 1) break;
+
+                    try recycling_bin.append(allocator, @intCast(index));
+                }
+
+                objs.internal.thrown_on_the_floor = 0;
+            }
+
+            const value_search_field = @field(value, @tagName(search_field));
+
+            if (recycling_bin.pop()) |index| {
+                // Reuse a free slot from the recycling bin
+                dead.unset(index);
+
+                const gen = generation.items[index] + 1;
+                generation.items[index] = gen;
+
+                data.set(index, value);
+
+                const obj_id: ObjectId = @bitCast(PackedId{
+                    .generation = gen,
+                    .index = index,
+                });
+
+                try object_lut.put(allocator, value_search_field, obj_id);
+
+                return obj_id;
+            }
 
             // Ensure we have space for the new object
             try data.ensureUnusedCapacity(allocator, 1);
@@ -132,7 +187,7 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
                 .index = @intCast(index),
             });
 
-            try object_lut.put(allocator, @field(value, @tagName(search_field)), obj_id);
+            try object_lut.put(allocator, value_search_field, obj_id);
 
             return obj_id;
         }
@@ -182,9 +237,14 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
         pub fn delete(objs: *@This(), id: ObjectId) void {
             const dead = &objs.internal.dead;
             const data = &objs.internal.data;
+            const recycling_bin = &objs.internal.recycling_bin;
             const object_lut = &objs.internal.object_lut;
 
             const unpacked = objs.validateAndUnpack(id, @src());
+
+            if (recycling_bin.items.len < recycling_bin.capacity) {
+                recycling_bin.appendAssumeCapacity(unpacked.index);
+            } else objs.internal.thrown_on_the_floor += 1;
 
             _ = object_lut.remove(data.items(search_field)[unpacked.index]);
 

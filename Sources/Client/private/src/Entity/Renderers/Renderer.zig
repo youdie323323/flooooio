@@ -155,7 +155,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
                         // ctx.scale(scale, scale);
                         // ctx.translate(-HP_BAR_MAX_WIDTH / 2, 25);
 
-                        ctx.scale(40, 40);
+                        ctx.scale(5, 5);
                         ctx.translate(-hp_bar_max_width / 2, 25);
 
                         break :blk 6.5;

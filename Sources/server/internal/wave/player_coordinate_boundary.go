@@ -6,7 +6,7 @@ import (
 	"github.com/chewxy/math32"
 )
 
-const bounaryKnockback = 5
+const bounaryKnockbackMultiplier = 3
 
 func (p *Player) PlayerCoordinateBoundary(wp *WavePool, _ time.Time) {
 	// Dont if uncollidable
@@ -28,7 +28,7 @@ func (p *Player) PlayerCoordinateBoundary(wp *WavePool, _ time.Time) {
 		overlap := distanceFromCenter - desiredMapRadius
 
 		// Add opposing velocity based on the overlap
-		bounceForce := min(overlap*bounaryKnockback, desiredMapRadius)
+		bounceForce := min(overlap*bounaryKnockbackMultiplier, desiredMapRadius)
 
 		p.Velocity[0] -= math32.Cos(collisionAngle) * bounceForce
 		p.Velocity[1] -= math32.Sin(collisionAngle) * bounceForce

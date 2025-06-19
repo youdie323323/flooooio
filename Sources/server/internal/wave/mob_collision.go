@@ -11,7 +11,7 @@ import (
 const (
 	mobToMobKnockbackMultiplier = 0.5
 
-	maxMobToPlayerVelocity = 30.0
+	maxMobToPlayerVelocity = 15.0
 
 	webSlowPercent = (100. - 75.) / 100.
 )

@@ -4,6 +4,7 @@ const RenderFn = @import("../Renderer.zig").RenderFn;
 const RenderContext = @import("../Renderer.zig").RenderContext;
 const MobSuper = @import("../../Mob.zig").Super;
 const MobType = @import("../../EntityType.zig").MobType;
+const PetalType = @import("../../EntityType.zig").PetalType;
 
 const MobStarfishRenderer = @import("MobStarfishRenderer.zig").MobStarfishRenderer;
 const starfishRender = MobStarfishRenderer.render;
@@ -25,6 +26,12 @@ const centipedeRender = MobCentipedeRenderer.render;
 
 const MobCactusRenderer = @import("MobCactusRenderer.zig").MobCactusRenderer;
 const cactusRender = MobCactusRenderer.render;
+
+const PetalBasicRenderer = @import("../Petal/PetalBasicRenderer.zig").PetalBasicRenderer;
+const basicRender = PetalBasicRenderer.render;
+
+const PetalFasterRenderer = @import("../Petal/PetalFasterRenderer.zig").PetalFasterRenderer;
+const fasterRender = PetalFasterRenderer.render;
 
 const ProjectileMissileRenderer = @import("ProjectileMissileRenderer.zig").ProjectileMissileRenderer;
 const missileRender = ProjectileMissileRenderer.render;
@@ -59,6 +66,11 @@ fn init(allocator: std.mem.Allocator) void {
             type_to_renderer.put(@intFromEnum(MobType.centipede_evil), centipedeRender) catch unreachable;
 
             type_to_renderer.put(@intFromEnum(MobType.cactus), cactusRender) catch unreachable;
+
+            { // Petal
+                type_to_renderer.put(@intFromEnum(PetalType.basic), basicRender) catch unreachable;
+                type_to_renderer.put(@intFromEnum(PetalType.faster), fasterRender) catch unreachable;
+            }
         }
 
         { // Projectile
@@ -75,6 +87,11 @@ fn init(allocator: std.mem.Allocator) void {
             MobSpiderRenderer.staticInit(allocator);
             MobCentipedeRenderer.staticInit(allocator);
             MobCactusRenderer.staticInit(allocator);
+
+            { // Petal
+                PetalBasicRenderer.staticInit(allocator);
+                PetalFasterRenderer.staticInit(allocator);
+            }
         }
 
         { // Projectile
