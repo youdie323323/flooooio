@@ -150,10 +150,10 @@ pub fn deinit(self: *ClientWebSocket) void {
 }
 
 fn onMessage(ws: *OwnContextWebSocket, data: []const u8) void {
-    ws.ctx.clientbound.read(data) catch |err| std.debug.print("{}\n", .{err});
+    ws.ctx.clientbound.read(data) catch return;
 }
 
 fn onOpen(ws: *OwnContextWebSocket) void {
-    ws.ctx.serverbound.sendWaveRoomFindPublic(.garden) catch unreachable;
-    ws.ctx.serverbound.sendWaveRoomChangeReady(.ready) catch unreachable;
+    ws.ctx.serverbound.sendWaveRoomFindPublic(.garden) catch return;
+    ws.ctx.serverbound.sendWaveRoomChangeReady(.ready) catch return;
 }

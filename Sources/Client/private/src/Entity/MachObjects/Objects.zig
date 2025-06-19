@@ -7,7 +7,6 @@ const mem = std.mem;
 /// * An array index that can be used to O(1) lookup the actual data / struct fields of the object.
 /// * The generation (or 'version') of the object, enabling detecting use-after-object-delete in
 ///   many (but not all) cases.
-///
 pub const ObjectId = u48;
 
 pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type {
@@ -216,7 +215,7 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
             data.set(unpacked.index, value);
         }
 
-        /// Get a single field.
+        /// Gets a single field.
         pub fn get(objs: *@This(), id: ObjectId, comptime field: meta.FieldEnum(T)) meta.FieldType(T, field) {
             const data = &objs.internal.data;
 
@@ -252,11 +251,11 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
         }
 
         /// Search for an object by matching a specific field.
-        pub fn search(objs: *@This(), id: SearchFieldType) ?ObjectId {
+        pub inline fn search(objs: *@This(), id: SearchFieldType) ?ObjectId {
             return objs.internal.object_lut.get(id);
         }
 
-        pub fn slice(objs: *@This()) Slice {
+        pub inline fn slice(objs: *@This()) Slice {
             return .{
                 .index = 0,
                 .objs = objs,

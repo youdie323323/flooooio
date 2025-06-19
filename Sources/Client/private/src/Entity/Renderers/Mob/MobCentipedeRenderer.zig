@@ -21,12 +21,12 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
     const acolor = rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#333333"));
 
-    const fcolor = switch (mob.type.get()) {
+    const fcolor = rctx.blendEffectColors(switch (mob.type.get()) {
         inline @intFromEnum(MobType.centipede) => comptime Color.comptimeFromHexColorCode("#8ac255"),
         inline @intFromEnum(MobType.centipede_desert) => comptime Color.comptimeFromHexColorCode("#d3c66d"),
         inline @intFromEnum(MobType.centipede_evil) => comptime Color.comptimeFromHexColorCode("#8f5db0"),
         inline else => comptime Color.comptimeFromHexColorCode("#ffffff"),
-    };
+    });
     const scolor = fcolor.darkened(skin_darken);
 
     ctx.rotate(entity.angle);

@@ -7,7 +7,7 @@ const Entity = @import("../Entity.zig").Entity;
 const main = @import("../../main.zig");
 
 /// Factor used for darken a skin color.
-pub const skin_darken: f32 = 0.1875;
+pub const skin_darken: f32 = 1 - (41.0/51.0);
 
 /// Factor used for darken a body color.
 pub const body_darken: f32 = 0.1;

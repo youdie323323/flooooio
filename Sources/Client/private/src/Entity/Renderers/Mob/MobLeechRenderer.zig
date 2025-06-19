@@ -16,30 +16,32 @@ const Points = []const Point;
 
 // TODO: somewhere broken and rendering a leech will panics
 
-fn collectLeechSegmentPoints(mobs: *Mobs, leech: *MobSuper, scale: MobSuper.Vector2) !Points {
-    var bodies = std.ArrayList(Point).init(allocator);
-    errdefer bodies.deinit();
+/// Collect the segment points from leech.
+/// Caller must guarantees lock objects (mobs).
+fn collectLeechSegmentPoints(mobs: *Mobs, leech: *const MobSuper, scale: MobSuper.Vector2) !Points {
+    var bodies: std.ArrayListUnmanaged(Point) = .{};
+    errdefer bodies.deinit(allocator);
 
-    try bodies.append(leech.pos / scale);
+    var stack: std.ArrayListUnmanaged(*const MobSuper) = .{};
+    defer stack.deinit(allocator);
 
-    if (leech.impl.connected_segments) |s| {
-        // Iterate over connected segments
-        var it = s.keyIterator();
+    try stack.append(allocator, leech);
 
-        while (it.next()) |key| {
-            var mob = mobs.getValue(key.*);
+    while (stack.pop()) |current_leech| {
+        try bodies.append(allocator, current_leech.pos / scale);
 
-            // Recursively get linked bodies and append them
-            const linked_bodies = try collectLeechSegmentPoints(mobs, &mob, scale);
+        if (current_leech.impl.connected_segments) |s| {
+            var it = s.keyIterator();
 
-            try bodies.appendSlice(linked_bodies);
+            while (it.next()) |key| {
+                const inner_leech = mobs.getValue(key.*);
 
-            // Free the slice returned by the recursive call, as it's now copied
-            allocator.free(linked_bodies);
+                try stack.append(allocator, &inner_leech);
+            }
         }
     }
 
-    return bodies.toOwnedSlice();
+    return bodies.toOwnedSlice(allocator);
 }
 
 fn render(rctx: RenderContext(MobSuper)) void {
@@ -52,6 +54,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
     const mobs = rctx.mobs;
 
     if (!is_specimen)
+        // If this leech is body, do nothing
         if (entity.impl.connecting_segment) |_|
             return;
 
@@ -75,20 +78,11 @@ fn render(rctx: RenderContext(MobSuper)) void {
             ctx.setLineWidth(4);
             ctx.strokeColor(comptime Color.comptimeFromHexColorCode("#292929"));
 
-            { // Upper beak
+            inline for (.{ -1, 1 }) |dir| {
                 ctx.beginPath();
 
-                ctx.moveTo(0, 10);
-                ctx.quadraticCurveTo(11, 10, 22, 5);
-
-                ctx.stroke();
-            }
-
-            { // Lower beak
-                ctx.beginPath();
-
-                ctx.moveTo(0, -10);
-                ctx.quadraticCurveTo(11, -10, 22, -5);
+                ctx.moveTo(0, comptime (10 * dir));
+                ctx.quadraticCurveTo(11, comptime (10 * dir), 22, comptime (5 * dir));
 
                 ctx.stroke();
             }
@@ -120,32 +114,28 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
         const beak_angle = mob.calculateBeakAngle();
 
-        { // Upper beak
+        inline for (.{ -1, 1 }) |dir| {
+            ctx.save();
+            defer ctx.restore();
+
             ctx.beginPath();
 
-            ctx.rotate(beak_angle);
+            ctx.rotate(beak_angle * dir);
 
-            ctx.moveTo(0, 10);
-            ctx.quadraticCurveTo(11, 10, 22, 5);
-
-            ctx.stroke();
-        }
-
-        { // Lower beak
-            ctx.beginPath();
-
-            ctx.rotate(-beak_angle * 2);
-
-            ctx.moveTo(0, -10);
-            ctx.quadraticCurveTo(11, -10, 22, -5);
+            ctx.moveTo(0, comptime (10 * dir));
+            ctx.quadraticCurveTo(11, comptime (10 * dir), 22, comptime (5 * dir));
 
             ctx.stroke();
         }
     }
 
-    {
+    { // Draw leech bodies include this mob
+        mobs.lock();
+        defer mobs.unlock();
+
         const bodies =
-            collectLeechSegmentPoints(mobs, entity, @splat(scale)) catch unreachable;
+            collectLeechSegmentPoints(mobs, entity, @splat(scale)) catch return;
+        defer allocator.free(bodies);
 
         const first_body_x, const first_body_y = bodies[0];
 
@@ -209,14 +199,17 @@ inline fn prepareNPointCurve(rctx: RenderContext(MobSuper), points: Points) void
 inline fn strokeBodyCurve(rctx: RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
 
+    const fcolor = rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#333333"));
+    const scolor = fcolor.darkened(skin_darken);
+
     // Body outline
     ctx.setLineWidth(25);
-    ctx.strokeColor(rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#292929")));
+    ctx.strokeColor(scolor);
     ctx.stroke();
 
     // Body
     ctx.setLineWidth(22);
-    ctx.strokeColor(rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#333333")));
+    ctx.strokeColor(fcolor);
     ctx.stroke();
 }
 

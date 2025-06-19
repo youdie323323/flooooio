@@ -35,7 +35,7 @@ const tile = @import("Tile/TileRenderer.zig");
 
 const allocator = @import("mem.zig").allocator;
 
-/// Global context of this application.
+/// Global canvas context of this application.
 var ctx: *CanvasContext = undefined;
 
 var tile_ctx: *CanvasContext = undefined;
@@ -321,8 +321,8 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
                         is_poisoned: bool,
                     });
 
-                    if (players.search(player_id)) |o| {
-                        var player = players.getValue(o);
+                    if (players.search(player_id)) |obj_id| {
+                        var player = players.getValue(obj_id);
 
                         { // Update next properties
                             player.next_pos[0] = player_x;
@@ -368,7 +368,7 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
 
                         player.update_t = 0;
 
-                        players.setValue(o, player);
+                        players.setValue(obj_id, player);
                     } else {
                         const player = PlayerImpl.Super.init(
                             PlayerImpl.init(
@@ -417,8 +417,8 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
                         mob_connecting_segment = mobs.search(mob_connecting_segment_id);
                     }
 
-                    if (mobs.search(mob_id)) |o| {
-                        var mob = mobs.getValue(o);
+                    if (mobs.search(mob_id)) |obj_id| {
+                        var mob = mobs.getValue(obj_id);
 
                         { // Update next properties
                             mob.next_pos[0] = mob_x;
@@ -460,7 +460,7 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
 
                         mob.update_t = 0;
 
-                        mobs.setValue(o, mob);
+                        mobs.setValue(obj_id, mob);
                     } else {
                         const mob = MobImpl.Super.init(
                             MobImpl.init(
@@ -481,13 +481,18 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
                         _ = try mobs.new(mob);
                     }
 
-                    if (mob_connecting_segment) |o| {
-                        var mob = mobs.getValue(o);
+                    // TODO: this is broken, because the mob_connecting_segment was not updated before this mob gets an zero object
+                    if (mob_connecting_segment) |obj_id| {
+                        var mob = mobs.getValue(obj_id);
 
-                        if (!mob.impl.isConnectedBy(mob_id))
+                        // If connected segment mob hasnt this mob as connected segment, add it then update
+                        if (!mob.impl.isConnectedBy(mob_id)) {
+                            std.log.debug("mom: {}", .{mob_id});
+
                             try mob.impl.addConnectedSegment(mob_id);
 
-                        mobs.setValue(o, mob);
+                            mobs.setValue(obj_id, mob);
+                        }
                     }
                 },
 
@@ -512,8 +517,8 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
 
                     const petal_rarity = try stream.readEnum(EntityRarity, .little);
 
-                    if (mobs.search(petal_id)) |o| {
-                        var petal = mobs.getValue(o);
+                    if (mobs.search(petal_id)) |obj_id| {
+                        var petal = mobs.getValue(obj_id);
 
                         { // Update next properties
                             petal.next_pos[0] = petal_x;
@@ -547,7 +552,7 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
 
                         petal.update_t = 0;
 
-                        mobs.setValue(o, petal);
+                        mobs.setValue(obj_id, petal);
                     } else {
                         const petal = MobImpl.Super.init(
                             MobImpl.init(
@@ -660,8 +665,8 @@ fn draw(_: f32) callconv(.c) void {
     const height_relative = height / base_scale;
 
     const self_player =
-        if (players.search(wave_self_id)) |o|
-            players.getValue(o)
+        if (players.search(wave_self_id)) |obj_id|
+            players.getValue(obj_id)
         else
             null;
 
@@ -716,8 +721,8 @@ fn draw(_: f32) callconv(.c) void {
 
             var slice = mobs.slice();
 
-            while (slice.next()) |o| {
-                var mob = mobs.getValue(o);
+            while (slice.next()) |obj_id| {
+                var mob = mobs.getValue(obj_id);
 
                 mob.update(delta_time);
 
@@ -725,19 +730,20 @@ fn draw(_: f32) callconv(.c) void {
                 if (mob.is_dead and mob.dead_t > 1) {
                     var inner_slice = mobs.slice();
 
-                    while (inner_slice.next()) |inner_o| {
-                        var inner_mob = mobs.getValue(inner_o);
+                    // TODO: currently this operation is O(n) but having connecting segment in mob, this can done in O(1)
+                    while (inner_slice.next()) |inner_obj_id| {
+                        var inner_mob = mobs.getValue(inner_obj_id);
 
-                        if (inner_mob.impl.isConnectedBy(o)) {
-                            inner_mob.impl.removeConnectedSegment(o);
+                        if (inner_mob.impl.isConnectedBy(obj_id)) {
+                            inner_mob.impl.removeConnectedSegment(obj_id);
 
-                            mobs.setValue(inner_o, inner_mob);
+                            mobs.setValue(inner_obj_id, inner_mob);
                         }
                     }
 
                     mob.deinit(allocator);
 
-                    mobs.delete(o);
+                    mobs.delete(obj_id);
 
                     continue;
                 }
@@ -750,7 +756,7 @@ fn draw(_: f32) callconv(.c) void {
                     .mobs = &mobs,
                 });
 
-                mobs.setValue(o, mob);
+                mobs.setValue(obj_id, mob);
             }
         }
 
@@ -760,8 +766,8 @@ fn draw(_: f32) callconv(.c) void {
 
             var slice = players.slice();
 
-            while (slice.next()) |o| {
-                var player = players.getValue(o);
+            while (slice.next()) |obj_id| {
+                var player = players.getValue(obj_id);
 
                 player.update(delta_time);
 
@@ -769,7 +775,7 @@ fn draw(_: f32) callconv(.c) void {
                 if (player.impl.was_eliminated and player.dead_t > 1) {
                     player.deinit(allocator);
 
-                    players.delete(o);
+                    players.delete(obj_id);
 
                     continue;
                 }
@@ -782,7 +788,7 @@ fn draw(_: f32) callconv(.c) void {
                     .mobs = &mobs,
                 });
 
-                players.setValue(o, player);
+                players.setValue(obj_id, player);
             }
         }
     }
