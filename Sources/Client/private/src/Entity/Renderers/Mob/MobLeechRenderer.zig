@@ -14,6 +14,8 @@ const Color = @import("../../../WebAssembly/Interop/Canvas2D/Color.zig");
 const Point = @Vector(2, f32);
 const Points = []const Point;
 
+// TODO: somewhere broken and rendering a leech will panics
+
 fn collectLeechSegmentPoints(mobs: *Mobs, leech: *MobSuper, scale: MobSuper.Vector2) !Points {
     var bodies = std.ArrayList(Point).init(allocator);
     errdefer bodies.deinit();
