@@ -101,6 +101,8 @@ pub fn Entity(comptime Impl: type) type {
             const delta_time_200 = delta_time_100 * 0.5;
 
             self.update_t += delta_time_100;
+
+            // Limit in the 1 to safely use lerp
             self.t = @min(1, self.update_t);
 
             if (self.hurt_t > 0) {
