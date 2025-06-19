@@ -5,6 +5,16 @@ pub const EntityId = u32;
 
 pub fn Entity(comptime Impl: type) type {
     return struct {
+        inline fn calculateAngleDistance(start_angle: f32, end_angle: f32) f32 {
+            const angle_diff = @mod(end_angle - start_angle, math.tau);
+
+            return @mod(angle_diff * 2, math.tau) - angle_diff;
+        }
+
+        inline fn interpolateAngle(start_angle: f32, end_angle: f32, progress: f32) f32 {
+            return @mulAdd(f32, calculateAngleDistance(start_angle, end_angle), progress, start_angle);
+        }
+
         pub const Vector2 = @Vector(2, f32);
 
         impl: Impl,
@@ -111,7 +121,7 @@ pub fn Entity(comptime Impl: type) type {
                 self.size = math.lerp(self.old_size, self.next_size, self.t);
 
                 { // Angle
-                    self.angle = math.lerp(self.old_angle, self.next_angle, self.t);
+                    self.angle = interpolateAngle(self.old_angle, self.next_angle, self.t);
 
                     { // Eye pos
                         const next_eye_pos: Vector2 = .{ @cos(self.next_angle), @sin(self.next_angle) };

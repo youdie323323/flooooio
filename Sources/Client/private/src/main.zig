@@ -118,15 +118,17 @@ var self_mood: pmood.MoodBitSet = .initEmpty();
 fn onMouseEvent(event_type: event.EventType, e: *const event.MouseEvent) callconv(.c) bool {
     switch (event_type) {
         .mouse_move => {
+            const center = Vector2{
+                width,
+                height,
+            } / two_vector;
+
             mouse_x_offset, mouse_y_offset =
                 Vector2{
                     @floatFromInt(e.client_x),
                     @floatFromInt(e.client_y),
                 } -
-                (Vector2{
-                    width,
-                    height,
-                } / two_vector);
+                center;
 
             const angle = math.atan2(mouse_y_offset, mouse_x_offset);
             const distance = math.hypot(mouse_x_offset, mouse_y_offset) / base_scale;
@@ -140,28 +142,21 @@ fn onMouseEvent(event_type: event.EventType, e: *const event.MouseEvent) callcon
             ) catch return false;
         },
 
-        .mouse_down => { // Update mood
-            self_mood.set(@intFromEnum(
-                if (e.button == 0)
-                    pmood.MoodFlags.angry
-                else if (e.button == 2)
-                    pmood.MoodFlags.sad
-                else
-                    return true,
-            ));
+        .mouse_down, .mouse_up => { // Update mood
+            const target_mood: usize =
+                @intFromEnum(
+                    if (e.button == 0)
+                        pmood.MoodFlags.angry
+                    else if (e.button == 2)
+                        pmood.MoodFlags.sad
+                    else
+                        return true,
+                );
 
-            client.serverbound.sendWaveChangeMood(self_mood) catch return false;
-        },
-
-        .mouse_up => {
-            self_mood.unset(@intFromEnum(
-                if (e.button == 0)
-                    pmood.MoodFlags.angry
-                else if (e.button == 2)
-                    pmood.MoodFlags.sad
-                else
-                    return true,
-            ));
+            if (event_type == .mouse_down)
+                self_mood.set(target_mood)
+            else
+                self_mood.unset(target_mood);
 
             client.serverbound.sendWaveChangeMood(self_mood) catch return false;
         },
@@ -351,8 +346,6 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
 
                         { // Update common properties
                             player.impl.mood.mask = player_mood_mask;
-
-                            std.log.debug("{}", .{player_mood_mask});
 
                             player.impl.name = player_name;
 
