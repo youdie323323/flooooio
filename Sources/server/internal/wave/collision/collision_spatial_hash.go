@@ -16,10 +16,6 @@ type Node interface {
 
 	SetOldPos(x, y float32)
 	GetOldPos() (float32, float32)
-
-	GetMagnitude() float32
-
-	GetAngle() float32
 }
 
 func ToNodeSlice[T Node](entities []T) []Node {
@@ -51,10 +47,11 @@ func NewSpatialHash(cellSize float32) *SpatialHash {
 }
 
 // bucket is a thread-safe set implementation for Node objects.
+// TODO: maybe sync.Map faster than *xsync.Map[uint32, Node]? elucidate later.
 type bucket struct{ nodes *xsync.Map[uint32, Node] }
 
 // newBucket creates a new node set.
-func newBucket() *bucket { return &bucket{nodes: xsync.NewMap[uint32, Node]()} }
+func newBucket() *bucket { return &bucket{xsync.NewMap[uint32, Node]()} }
 
 // Add adds a node to the set.
 func (s *bucket) Add(n Node) {
@@ -86,7 +83,6 @@ func (sh *SpatialHash) calculatePositionKey(x, y float32) int {
 // Put adds a node to the spatial hash.
 func (sh *SpatialHash) Put(n Node) {
 	x, y := n.GetX(), n.GetY()
-
 	key := sh.calculatePositionKey(x, y)
 
 	// Get or create bucket
@@ -103,7 +99,6 @@ func (sh *SpatialHash) Put(n Node) {
 // Remove removes a node from the spatial hash.
 func (sh *SpatialHash) Remove(n Node) {
 	x, y := n.GetX(), n.GetY()
-
 	key := sh.calculatePositionKey(x, y)
 
 	if bucket, ok := sh.buckets.Load(key); ok {
@@ -114,25 +109,19 @@ func (sh *SpatialHash) Remove(n Node) {
 // Update updates a node's position in the spatial hash.
 func (sh *SpatialHash) Update(n Node) {
 	x, y := n.GetX(), n.GetY()
+	oldX, oldY := n.GetOldPos()
 
-	{ // Delete old node from buckets
-		old_x, old_y := n.GetOldPos()
-		old_key := sh.calculatePositionKey(old_x, old_y)
+	key := sh.calculatePositionKey(x, y)
+	oldKey := sh.calculatePositionKey(oldX, oldY)
 
-		if bucket, ok := sh.buckets.Load(old_key); ok {
+	if oldKey != key { // Only update if cell is different from previous update
+		// Delete old node from bucket
+		if bucket, ok := sh.buckets.Load(oldKey); ok {
 			bucket.Delete(n)
 		}
 
-		// Set old pos to use later
-		n.SetOldPos(x, y)
-	}
-
-	{ // Add new node to new bucket
-		key := sh.calculatePositionKey(x, y)
-
-		// Get or create bucket
-		bucket, exists := sh.buckets.Load(key)
-		if !exists {
+		bucket, ok := sh.buckets.Load(key)
+		if !ok {
 			bucket = newBucket()
 
 			sh.buckets.Store(key, bucket)
@@ -140,6 +129,9 @@ func (sh *SpatialHash) Update(n Node) {
 
 		bucket.Add(n)
 	}
+
+	// Set old position for next update
+	n.SetOldPos(x, y)
 }
 
 // searchResultPool is shared collision searchResultPool between Search.
@@ -170,7 +162,7 @@ func (sh *SpatialHash) Search(x, y, radius float32) []Node {
 						nodes = append(nodes, n)
 					}
 
-					return true;
+					return true
 				})
 			}
 		}
@@ -208,7 +200,7 @@ func (sh *SpatialHash) SearchRect(x, y, width, height float32, filter func(n Nod
 						nodes = append(nodes, n)
 					}
 
-					return true;
+					return true
 				})
 			}
 		}

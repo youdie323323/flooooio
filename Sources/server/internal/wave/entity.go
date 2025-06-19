@@ -181,14 +181,6 @@ func (e *Entity) GetOldPos() (float32, float32) {
 	return e.oldX, e.oldY
 }
 
-func (e *Entity) GetMagnitude() float32 {
-	return e.Magnitude
-}
-
-func (e *Entity) GetAngle() float32 {
-	return e.Angle
-}
-
 // IsDeadNode determine if Node is dead.
 func IsDeadNode(wp *WavePool, n collision.Node) bool {
 	switch e := n.(type) {

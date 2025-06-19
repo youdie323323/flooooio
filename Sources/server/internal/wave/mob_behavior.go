@@ -134,7 +134,7 @@ func predictInterceptionAngle(dx, dy, vtx, vty, currentAngle float32) *float32 {
 	currentRad := currentAngle / angleFactor
 	angleDiff := math32.Abs(normalizeAngle(targetAngle - currentRad))
 
-	var interpolationTime float32 = 2 /* - log(0.01) */ / angleInterpolationFactor
+	var interpolationTime float32 = 2 /* -log(0.01) */ / angleInterpolationFactor
 	if angleDiff > 1e-3 {
 		interpolationTime *= (1 - math32.Exp(-angleInterpolationFactor*angleDiff))
 	}
@@ -155,6 +155,7 @@ func predictInterceptionAngle(dx, dy, vtx, vty, currentAngle float32) *float32 {
 
 	// Predict final position using average velocity
 	totalTime := t + interpolationTime
+	
 	xf := dx + vtx*totalTime
 	yf := dy + vty*totalTime
 
@@ -185,7 +186,7 @@ func predictInterceptionAngleToPlayer(dx, dy float32, p *Player, currentAngle fl
 	return predictInterceptionAngle(dx, dy, vtx, vty, currentAngle)
 }
 
-func (m *Mob) getDetectRange() float32 {
+func (m *Mob) detectRange() float32 {
 	return 2000
 }
 
@@ -359,7 +360,7 @@ func (m *Mob) MobBehavior(wp *WavePool, now time.Time) {
 			} else if m.LastAttackedEntity != nil {
 				targetEntity = m.LastAttackedEntity
 			} else {
-				targetEntity = FindNearestEntityWithLimitedDistance(m, m.GetTrackingTargets(wp), m.getDetectRange())
+				targetEntity = FindNearestEntityWithLimitedDistance(m, m.GetTrackingTargets(wp), m.detectRange())
 				if targetEntity == nil {
 					return
 				}
