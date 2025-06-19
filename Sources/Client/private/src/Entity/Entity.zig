@@ -125,9 +125,8 @@ pub fn Entity(comptime Impl: type) type {
 
                     { // Eye pos
                         const next_eye_pos: Vector2 = .{ @cos(self.next_angle), @sin(self.next_angle) };
-                        const eye_t: Vector2 = @splat(@min(1, delta_time_100));
 
-                        self.eye_pos = math.lerp(self.eye_pos, next_eye_pos, eye_t);
+                        self.eye_pos = math.lerp(self.eye_pos, next_eye_pos, t_vector);
                     }
 
                     {
@@ -141,8 +140,10 @@ pub fn Entity(comptime Impl: type) type {
                 { // Health
                     self.health = math.lerp(self.old_health, self.next_health, self.t);
 
+                    const delta_time_200_safelerp = @min(1, delta_time_200);
+
                     // Hp alpha
-                    if (self.health < 1) self.hp_alpha = math.lerp(self.hp_alpha, 1, delta_time_200);
+                    if (self.health < 1) self.hp_alpha = math.lerp(self.hp_alpha, 1, delta_time_200_safelerp);
 
                     { // Red health
                         if (self.red_health_timer > 0) {
@@ -152,7 +153,7 @@ pub fn Entity(comptime Impl: type) type {
                         }
 
                         if (self.red_health_timer == 0)
-                            self.red_health = math.lerp(self.red_health, self.health, delta_time_200);
+                            self.red_health = math.lerp(self.red_health, self.health, delta_time_200_safelerp);
                     }
                 }
             }

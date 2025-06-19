@@ -4,7 +4,7 @@ const Renderer = @import("../Renderer.zig").Renderer;
 const RenderContext = @import("../Renderer.zig").RenderContext;
 const PlayerSuper = @import("../../Player.zig").Super;
 
-const darkened_base = @import("../Renderer.zig").darkened_base;
+const skin_darken = @import("../Renderer.zig").skin_darken;
 
 const Color = @import("../../../WebAssembly/Interop/Canvas2D/Color.zig");
 
@@ -41,7 +41,7 @@ fn render(rctx: RenderContext(PlayerSuper)) void {
     const player = entity.impl;
 
     const fcolor = rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#ffe763"));
-    const scolor = fcolor.darkened(darkened_base);
+    const scolor = fcolor.darkened(skin_darken);
 
     ctx.setLineJoin(.round);
     ctx.setLineCap(.round);

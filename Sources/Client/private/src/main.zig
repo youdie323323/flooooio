@@ -66,10 +66,10 @@ inline fn drawMovementHelper(self_player: *const PlayerImpl.Super, delta_time: f
     if (self_player.is_dead) return;
 
     { // Interpolate mouse x and y
-        const delta_time_50 = delta_time * 0.02;
+        const delta_time_50_safelerp = @min(1, delta_time * 0.02);
 
-        interpolated_mouse_x = math.lerp(interpolated_mouse_x, mouse_x_offset / antenna_scale, delta_time_50);
-        interpolated_mouse_y = math.lerp(interpolated_mouse_y, mouse_y_offset / antenna_scale, delta_time_50);
+        interpolated_mouse_x = math.lerp(interpolated_mouse_x, mouse_x_offset / antenna_scale, delta_time_50_safelerp);
+        interpolated_mouse_y = math.lerp(interpolated_mouse_y, mouse_y_offset / antenna_scale, delta_time_50_safelerp);
     }
 
     const distance = math.hypot(interpolated_mouse_x, interpolated_mouse_y) / base_scale;
@@ -604,7 +604,7 @@ export fn main() c_int {
 
         event.addEventListener(.window, .screen_resize, onScreenEvent, false);
 
-        { // Invoke event to correct init size
+        { // Force fire event to correct init size
             var pseudo_screen_event = std.mem.zeroes(event.ScreenEvent);
 
             pseudo_screen_event.inner_width = dom.clientWidth();

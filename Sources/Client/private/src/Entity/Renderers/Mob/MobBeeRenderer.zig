@@ -2,7 +2,7 @@ const std = @import("std");
 const math = std.math;
 const time = std.time;
 const Renderer = @import("../Renderer.zig").Renderer;
-const darkened_base = @import("../Renderer.zig").darkened_base;
+const skin_darken = @import("../Renderer.zig").skin_darken;
 const RenderContext = @import("../Renderer.zig").RenderContext;
 const MobSuper = @import("../../Mob.zig").Super;
 
@@ -15,7 +15,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
     const bcolor = rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#333333"));
 
     const fcolor = rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#ffe763"));
-    const scolor = fcolor.darkened(darkened_base);
+    const scolor = fcolor.darkened(skin_darken);
 
     ctx.rotate(entity.angle);
 
@@ -29,7 +29,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
     { // Stinger
         ctx.fillColor(bcolor);
-        ctx.strokeColor(bcolor.darkened(darkened_base));
+        ctx.strokeColor(bcolor.darkened(skin_darken));
 
         ctx.beginPath();
 

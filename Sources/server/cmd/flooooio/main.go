@@ -42,7 +42,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Slots: wave.StaticPetalSlots{
 				Surface: []wave.StaticPetalData{
 					{
-						Type:   native.PetalTypeBasic,
+						Type:   native.PetalTypeMagnet,
 						Rarity: native.RarityUltra,
 					},
 					{

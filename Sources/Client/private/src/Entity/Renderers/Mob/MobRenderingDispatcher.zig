@@ -33,6 +33,9 @@ const basicRender = PetalBasicRenderer.render;
 const PetalFasterRenderer = @import("../Petal/PetalFasterRenderer.zig").PetalFasterRenderer;
 const fasterRender = PetalFasterRenderer.render;
 
+const PetalMagnetRenderer = @import("../Petal/PetalMagnetRenderer.zig").PetalMagnetRenderer;
+const magnetRender = PetalMagnetRenderer.render;
+
 const ProjectileMissileRenderer = @import("ProjectileMissileRenderer.zig").ProjectileMissileRenderer;
 const missileRender = ProjectileMissileRenderer.render;
 
@@ -70,6 +73,7 @@ fn init(allocator: std.mem.Allocator) void {
             { // Petal
                 type_to_renderer.put(@intFromEnum(PetalType.basic), basicRender) catch unreachable;
                 type_to_renderer.put(@intFromEnum(PetalType.faster), fasterRender) catch unreachable;
+                type_to_renderer.put(@intFromEnum(PetalType.magnet), magnetRender) catch unreachable;
             }
         }
 
@@ -91,6 +95,7 @@ fn init(allocator: std.mem.Allocator) void {
             { // Petal
                 PetalBasicRenderer.staticInit(allocator);
                 PetalFasterRenderer.staticInit(allocator);
+                PetalMagnetRenderer.staticInit(allocator);
             }
         }
 

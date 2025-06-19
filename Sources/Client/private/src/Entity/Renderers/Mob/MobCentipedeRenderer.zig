@@ -3,7 +3,7 @@ const math = std.math;
 const time = std.time;
 const Path2D = @import("../../../WebAssembly/Interop/Canvas2D/Path2D.zig");
 const Renderer = @import("../Renderer.zig").Renderer;
-const darkened_base = @import("../Renderer.zig").darkened_base;
+const skin_darken = @import("../Renderer.zig").skin_darken;
 const RenderContext = @import("../Renderer.zig").RenderContext;
 const MobSuper = @import("../../Mob.zig").Super;
 const MobType = @import("../../EntityType.zig").MobType;
@@ -27,7 +27,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
         inline @intFromEnum(MobType.centipede_evil) => comptime Color.comptimeFromHexColorCode("#8f5db0"),
         inline else => comptime Color.comptimeFromHexColorCode("#ffffff"),
     };
-    const scolor = fcolor.darkened(darkened_base);
+    const scolor = fcolor.darkened(skin_darken);
 
     ctx.rotate(entity.angle);
 

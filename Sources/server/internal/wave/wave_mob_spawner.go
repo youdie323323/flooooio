@@ -262,9 +262,11 @@ func CalculateWaveLuck(progress WaveProgress) float64 {
 	return math.Pow(1.3, float64(progress)) - 1
 }
 
+const two_over_three float64 = 2.0 / 3.0;
+
 // CalculateSpawnWave calculate spawn wave by best wave progression of this wave.
 func CalculateSpawnWave(bestWave WaveProgress) WaveProgress {
-	return WaveProgress(math.Ceil(2 / 3 * float64(bestWave)))
+	return WaveProgress(math.Ceil(two_over_three * float64(bestWave)))
 }
 
 func CalculateWaveLength(x float32) float32 {

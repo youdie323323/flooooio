@@ -6,9 +6,11 @@ const MobType = @import("../EntityType.zig").MobType;
 const Entity = @import("../Entity.zig").Entity;
 const main = @import("../../main.zig");
 
-/// Factor for darken skin color.
-/// Mainly used with body stroke color.
-pub const darkened_base: f32 = 0.1875;
+/// Factor used for darken a skin color.
+pub const skin_darken: f32 = 0.1875;
+
+/// Factor used for darken a body color.
+pub const body_darken: f32 = 0.1;
 
 pub fn RenderContext(comptime AnyEntity: type) type {
     return *const struct {

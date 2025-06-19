@@ -150,7 +150,7 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
                 objs.internal.thrown_on_the_floor = 0;
             }
 
-            const value_search_field = @field(value, @tagName(search_field));
+            const value_search_field: SearchFieldType = @field(value, @tagName(search_field));
 
             if (recycling_bin.pop()) |index| {
                 // Reuse a free slot from the recycling bin
@@ -251,7 +251,7 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
             dead.set(unpacked.index);
         }
 
-        /// Search for an object by matching a specific field value.
+        /// Search for an object by matching a specific field.
         pub fn search(objs: *@This(), id: SearchFieldType) ?ObjectId {
             return objs.internal.object_lut.get(id);
         }

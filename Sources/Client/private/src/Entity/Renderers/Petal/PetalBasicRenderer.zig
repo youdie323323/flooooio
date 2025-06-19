@@ -2,7 +2,7 @@ const std = @import("std");
 const math = std.math;
 const time = std.time;
 const Renderer = @import("../Renderer.zig").Renderer;
-const darkened_base = @import("../Renderer.zig").darkened_base;
+const skin_darken = @import("../Renderer.zig").skin_darken;
 const RenderContext = @import("../Renderer.zig").RenderContext;
 const MobSuper = @import("../../Mob.zig").Super;
 
@@ -18,7 +18,7 @@ pub inline fn drawBasicLike(
     const entity = rctx.entity;
 
     const fcolor = rctx.blendEffectColors(color);
-    const scolor = fcolor.darkened(darkened_base);
+    const scolor = fcolor.darkened(skin_darken);
 
     ctx.rotate(entity.angle);
 
