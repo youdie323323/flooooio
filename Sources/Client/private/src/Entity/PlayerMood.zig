@@ -12,8 +12,8 @@ pub const MoodFlags = enum(u1) {
 /// Decode mood flags into array of booleans.
 pub fn decodeMood(flags: MoodBitSet) [2]bool {
     return .{
-        flags.isSet(@intFromEnum(MoodFlags.angry)),
-        flags.isSet(@intFromEnum(MoodFlags.sad)),
+        flags.isSet(comptime @intFromEnum(MoodFlags.angry)),
+        flags.isSet(comptime @intFromEnum(MoodFlags.sad)),
     };
 }
 

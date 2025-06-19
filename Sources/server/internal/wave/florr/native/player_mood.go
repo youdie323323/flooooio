@@ -3,11 +3,13 @@ package native
 type Mood uint8
 
 const (
-	MoodAngry       = 0
-	MoodSad         = 1
+	MoodNormal Mood = 0
+	MoodAngry       = 1
+	MoodSad         = 2
 )
 
 var ValidMoodFlags = []Mood{
+	MoodNormal,
 	MoodAngry,
 	MoodSad,
 	MoodAngry | MoodSad,

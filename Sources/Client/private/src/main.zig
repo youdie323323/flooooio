@@ -62,7 +62,8 @@ var interpolated_mouse_y: f32 = 0;
 const movement_helper_start_distance: f32 = 30;
 
 inline fn drawMovementHelper(self_player: *const PlayerImpl.Super, delta_time: f32) void {
-    _ = self_player;
+    // Dont draw if player is dead
+    if (self_player.is_dead) return;
 
     { // Interpolate mouse x and y
         const delta_time_50 = delta_time * 0.02;
@@ -71,8 +72,7 @@ inline fn drawMovementHelper(self_player: *const PlayerImpl.Super, delta_time: f
         interpolated_mouse_y = math.lerp(interpolated_mouse_y, mouse_y_offset / antenna_scale, delta_time_50);
     }
 
-    const distance =
-        math.hypot(interpolated_mouse_x, interpolated_mouse_y) / base_scale;
+    const distance = math.hypot(interpolated_mouse_x, interpolated_mouse_y) / base_scale;
 
     const alpha: f32 =
         if (100 > distance)
@@ -111,7 +111,9 @@ inline fn drawMovementHelper(self_player: *const PlayerImpl.Super, delta_time: f
 
 const Vector2 = @Vector(2, f32);
 
-const two_vector = @as(Vector2, @splat(2));
+const two_vector: Vector2 = @splat(2);
+
+var self_mood: pmood.MoodBitSet = .initEmpty();
 
 fn onMouseEvent(event_type: event.EventType, e: *const event.MouseEvent) callconv(.c) bool {
     switch (event_type) {
@@ -135,12 +137,33 @@ fn onMouseEvent(event_type: event.EventType, e: *const event.MouseEvent) callcon
                     distance / 100
                 else
                     1,
-            ) catch
-                return false;
+            ) catch return false;
+        },
+
+        .mouse_down => { // Update mood
+            self_mood.set(@intFromEnum(
+                if (e.button == 0)
+                    pmood.MoodFlags.angry
+                else if (e.button == 2)
+                    pmood.MoodFlags.sad
+                else
+                    return true,
+            ));
+
+            client.serverbound.sendWaveChangeMood(self_mood) catch return false;
         },
 
         .mouse_up => {
-            antenna_scale -= 0.025;
+            self_mood.unset(@intFromEnum(
+                if (e.button == 0)
+                    pmood.MoodFlags.angry
+                else if (e.button == 2)
+                    pmood.MoodFlags.sad
+                else
+                    return true,
+            ));
+
+            client.serverbound.sendWaveChangeMood(self_mood) catch return false;
         },
 
         else => {},
@@ -328,6 +351,8 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
 
                         { // Update common properties
                             player.impl.mood.mask = player_mood_mask;
+
+                            std.log.debug("{}", .{player_mood_mask});
 
                             player.impl.name = player_name;
 
@@ -582,6 +607,7 @@ export fn main() c_int {
     { // Initialize dom events
         event.addEventListenerBySelector("canvas", .mouse_move, onMouseEvent, false);
         event.addEventListenerBySelector("canvas", .mouse_up, onMouseEvent, false);
+        event.addEventListenerBySelector("canvas", .mouse_down, onMouseEvent, false);
 
         event.addEventListener(.window, .screen_resize, onScreenEvent, false);
 
