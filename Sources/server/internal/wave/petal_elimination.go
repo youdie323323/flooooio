@@ -40,26 +40,26 @@ func (p *Petal) ForceEliminate(wp *WavePool) {
 	p.onEliminate(wp)
 }
 
-func (p *Petal) SafeForceEliminate(wp *WavePool) {
-	p.Mu.Lock()
+// CompletelyRemove is like ForceEliminate, but remove it binding too.
+func (p *Petal) CompletelyRemove(wp *WavePool) {
+	p.Mu.Lock() // Lock for wave.ResetPlayerBindings()
 
-	p.ForceEliminate(wp)
-
-	p.Mu.Unlock()
-}
-
-func (p *Petal) FullyRemove(wp *WavePool) {
-	// Remove petal itself
 	if !p.WasEliminated(wp) {
+		// Remove summoned mob
+		if p.SummonedPets != nil {
+			for _, m := range p.SummonedPets {
+				m.Mu.Lock() // Lock for wave.ResetPlayerBindings()
+
+				if m != nil && !m.WasEliminated(wp) {
+					m.ForceEliminate(wp)
+				}
+
+				m.Mu.Unlock()
+			}
+		}
+
 		p.ForceEliminate(wp)
 	}
 
-	// Remove summoned mob
-	if p.SummonedPets != nil {
-		for _, p := range p.SummonedPets {
-			if p != nil && !p.WasEliminated(wp) {
-				p.ForceEliminate(wp)
-			}
-		}
-	}
+	p.Mu.Unlock()
 }

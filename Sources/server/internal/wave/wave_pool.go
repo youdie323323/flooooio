@@ -74,8 +74,10 @@ type WavePool struct {
 
 	lightningBounces [][][2]float32
 
-	updateTicker *time.Ticker
-	frameCount   *xsync.Counter
+	updateTicker       *time.Ticker
+	updateTickerStopCh chan struct{}
+
+	frameCount *xsync.Counter
 
 	SpatialHash *collision.SpatialHash
 
@@ -107,8 +109,10 @@ func NewWavePool(wr *WaveRoom, wd *WaveData) *WavePool {
 
 		lightningBounces: make([][][2]float32, 0),
 
-		updateTicker: nil,
-		frameCount:   xsync.NewCounter(),
+		updateTicker:       nil,
+		updateTickerStopCh: make(chan struct{}),
+
+		frameCount: xsync.NewCounter(),
 
 		SpatialHash: collision.NewSpatialHash(spatialHashGridSize),
 
@@ -124,6 +128,10 @@ func NewWavePool(wr *WaveRoom, wd *WaveData) *WavePool {
 func (wp *WavePool) StartWave(candidates WaveRoomCandidates) {
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
+
+	if wp.wasDisposed.Load() {
+		return
+	}
 
 	buf := SharedBufPool.Get()
 	at := 0
@@ -170,36 +178,40 @@ func (wp *WavePool) Dispose() {
 
 	wp.wasDisposed.Store(true)
 
-	if wp.updateTicker != nil {
-		wp.updateTicker.Stop()
+	// Send stop signal
+	close(wp.updateTickerStopCh)
 
-		wp.updateTicker = nil
-	}
+	close(wp.commandQueue)
 
 	// Execute all pending commands
-	for {
-		select {
-		case cmd := <-wp.commandQueue:
-			cmd()
-
-		default:
-			goto Done
-		}
+	for cmd := range wp.commandQueue {
+		cmd()
 	}
-Done:
 
-	wp.playerPool.Range(func(id EntityId, _ *Player) bool {
-		wp.RemovePlayer(id)
+	wp.playerPool.Range(func(_ EntityId, p *Player) bool {
+		p.Mu.Lock()
 
-		return true
-	})
-	wp.mobPool.Range(func(id EntityId, _ *Mob) bool {
-		wp.RemoveMob(id)
+		p.Dispose()
+
+		p.Mu.Unlock()
 
 		return true
 	})
-	wp.petalPool.Range(func(id EntityId, _ *Petal) bool {
-		wp.RemovePetal(id)
+	wp.mobPool.Range(func(_ EntityId, m *Mob) bool {
+		m.Mu.Lock()
+
+		m.Dispose()
+
+		m.Mu.Unlock()
+
+		return true
+	})
+	wp.petalPool.Range(func(_ EntityId, p *Petal) bool {
+		p.Mu.Lock()
+
+		p.Dispose()
+
+		p.Mu.Unlock()
 
 		return true
 	})
@@ -256,9 +268,16 @@ func (wp *WavePool) broadcastSeldIdPacket() {
 
 func (wp *WavePool) startUpdate() {
 	wp.updateTicker = time.NewTicker(time.Second / WaveUpdateFPS)
+	defer wp.updateTicker.Stop()
 
-	for range wp.updateTicker.C {
-		wp.update()
+	for {
+		select {
+		case <-wp.updateTickerStopCh:
+			return
+
+		case <-wp.updateTicker.C:
+			wp.update()
+		}
 	}
 }
 
@@ -266,10 +285,6 @@ func (wp *WavePool) update() {
 	if wp.wasDisposed.Load() {
 		return
 	}
-
-	// Comment out this because update not called from multiple goroutine
-	// wp.mu.Lock()
-	// defer wp.mu.Unlock()
 
 	// Execute all commands
 	for {
@@ -473,6 +488,8 @@ const (
 type FiniteObjectCount = uint16
 
 func (wp *WavePool) broadcastUpdatePacket() {
+	wp.mu.Lock()
+
 	staticPacket, staticAt := wp.createStaticUpdatePacket()
 	defer SharedBufPool.Put(staticPacket)
 
@@ -482,7 +499,12 @@ func (wp *WavePool) broadcastUpdatePacket() {
 
 		at := 0
 
+		// RLock before write window
+		p.Mu.RLock()
+
 		window := p.Window
+
+		p.Mu.RUnlock()
 
 		toSend := wp.SpatialHash.SearchRect(
 			p.X, p.Y,
@@ -632,6 +654,8 @@ func (wp *WavePool) broadcastUpdatePacket() {
 
 		return true
 	})
+
+	wp.mu.Unlock()
 }
 
 // createStaticUpdatePacket creates static section for update packet.
@@ -727,7 +751,7 @@ func (wp *WavePool) GeneratePlayer(
 				// Force require reload
 				for _, p := range player.Slots.Surface[i] {
 					if p != nil {
-						p.SafeForceEliminate(wp)
+						p.CompletelyRemove(wp)
 					}
 				}
 			}
@@ -780,9 +804,10 @@ func (wp *WavePool) RemovePlayer(id EntityId) {
 
 func (wp *WavePool) SafeRemovePlayer(id EntityId) {
 	wp.mu.Lock()
-	defer wp.mu.Unlock()
 
 	wp.RemovePlayer(id)
+
+	wp.mu.Unlock()
 }
 
 func (wp *WavePool) FindPlayer(id EntityId) *Player {
@@ -918,9 +943,10 @@ func (wp *WavePool) RemoveMob(id EntityId) {
 
 func (wp *WavePool) SafeRemoveMob(id EntityId) {
 	wp.mu.Lock()
-	defer wp.mu.Unlock()
 
 	wp.RemoveMob(id)
+
+	wp.mu.Unlock()
 }
 
 func (wp *WavePool) FindMob(id EntityId) *Mob {
@@ -1123,9 +1149,10 @@ func (wp *WavePool) RemovePetal(id EntityId) {
 
 func (wp *WavePool) SafeRemovePetal(id EntityId) {
 	wp.mu.Lock()
-	defer wp.mu.Unlock()
 
 	wp.RemovePetal(id)
+
+	wp.mu.Unlock()
 }
 
 func (wp *WavePool) FindPetal(id EntityId) *Petal {
@@ -1341,7 +1368,7 @@ func (wp *WavePool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 	bouncedIds = nil
 
 	// Remove lightning
-	lightning.SafeForceEliminate(wp)
+	lightning.ForceEliminate(wp)
 
 	if len(bouncePoints) > 0 {
 		wp.lightningBounces = append(wp.lightningBounces, bouncePoints)
@@ -1457,7 +1484,7 @@ func (wp *WavePool) HandleChatMessage(wPId EntityId, chatMsg string) {
 		if os.Getenv("TOGGLE_DEV_SALT") == hex.EncodeToString(hash.Sum(nil)) {
 			player.IsDev = !player.IsDev
 
-			// Dont forgot this lol
+			// Dont forget this lol
 			return
 		}
 

@@ -120,9 +120,9 @@ fn render(rctx: RenderContext(PlayerSuper)) void {
 
             ctx.beginPath();
 
-            ctx.arc(7 + eye_x * 2, -5 + eye_y * 3.5, 3.1, 0, math.tau, false);
+            ctx.arc(normal_left_eye_x + eye_x * 2, normal_left_eye_y + eye_y * 3.5, 3.1, 0, math.tau, false);
             ctx.moveTo(-7, -5);
-            ctx.arc(-7 + eye_x * 2, -5 + eye_y * 3.5, 3.1, 0, math.tau, false);
+            ctx.arc(normal_right_eye_x + eye_x * 2, normal_right_eye_y + eye_y * 3.5, 3.1, 0, math.tau, false);
 
             ctx.fillColor(comptime Color.comptimeFromHexColorCode("#eeeeee"));
             ctx.fill();

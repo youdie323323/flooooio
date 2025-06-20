@@ -23,7 +23,7 @@ func NewWaveRoomService() *WaveRoomService {
 
 // JoinPublicWaveRoom adds a player to an existing public wave room or creates a new one if none exists.
 func (s *WaveRoomService) JoinPublicWaveRoom(pd *PlayerData, biome native.Biome) *WaveRoomPlayerId {
-	// Place this before lock so doesnt double call lock
+	// Place this before locking to avoid deadlock
 	s.LeaveCurrentWaveRoom(pd)
 
 	s.mu.Lock()
@@ -44,7 +44,7 @@ func (s *WaveRoomService) JoinPublicWaveRoom(pd *PlayerData, biome native.Biome)
 
 // JoinWaveRoom adds a player to a private wave room using a room code.
 func (s *WaveRoomService) JoinWaveRoom(pd *PlayerData, code WaveRoomCode) *WaveRoomPlayerId {
-	// Place this before lock so doesnt double call lock
+	// Place this before locking to avoid deadlock
 	s.LeaveCurrentWaveRoom(pd)
 
 	s.mu.Lock()
@@ -105,7 +105,7 @@ func (s *WaveRoomService) LeaveCurrentWaveRoom(pd *PlayerData) (ok bool) {
 
 // NewPublicWaveRoom creates a new public wave room with initial player.
 func (s *WaveRoomService) NewPublicWaveRoom(pd *PlayerData, biome native.Biome) *WaveRoomPlayerId {
-	// Place this before lock so doesnt double call lock
+	// Place this before locking to avoid deadlock
 	s.LeaveCurrentWaveRoom(pd)
 
 	s.mu.Lock()
@@ -188,17 +188,20 @@ func (s *WaveRoomService) isPlayerJoinable(pd *PlayerData) bool {
 func RemovePlayerFromService(pd *PlayerData) {
 	if pd.WrPId != nil && pd.WPId != nil {
 		wr := WrService.FindPlayerRoom(*pd.WrPId)
-
 		if wr != nil {
 			wp := wr.WavePool
-
 			if wp != nil {
-				player := wp.FindPlayer(*pd.WPId)
+				p := wp.SafeFindPlayer(*pd.WPId)
+				if p != nil {
+					{
+						p.Mu.Lock()
 
-				if player != nil {
-					ResetBindings(wp, player)
+						ResetPlayerBindings(wp, p)
 
-					wp.RemovePlayer(*pd.WPId)
+						p.Mu.Unlock()
+					}
+
+					wp.SafeRemovePlayer(*pd.WPId)
 
 					pd.WPId = nil
 				}

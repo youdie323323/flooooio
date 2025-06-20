@@ -143,12 +143,13 @@ func NewWaveRoom(b native.Biome, v WaveRoomVisibility) *WaveRoom {
 
 // RegisterPlayer adds new player candidate.
 func (w *WaveRoom) RegisterPlayer(sp *StaticPlayer[StaticPetalSlots]) *WaveRoomPlayerId {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-
+	// Check this before lock, isNewPlayerRegisterable calling rlock
 	if !w.isNewPlayerRegisterable() {
 		return nil
 	}
+
+	w.mu.Lock()
+	defer w.mu.Unlock()
 
 	id := rand.Uint32()
 
@@ -317,7 +318,7 @@ func (w *WaveRoom) Dispose() {
 	defer w.mu.Unlock()
 
 	w.WavePool.Dispose()
-	// Set nil because circular struct
+
 	w.WavePool = nil
 
 	w.updatePacketBroadcastTicker.Stop()
@@ -383,6 +384,9 @@ func (w *WaveRoom) createUpdatePacket() []byte {
 }
 
 func (w *WaveRoom) isNewPlayerRegisterable() bool {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+
 	return len(w.candidates) < waveRoomMaxPlayerAmount &&
 		w.state == RoomStateWaiting
 }

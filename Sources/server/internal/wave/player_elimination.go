@@ -32,19 +32,19 @@ func RevivePlayer(wp *WavePool, p *Player) {
 	}
 }
 
-func ResetBindings(wp *WavePool, p *Player) {
+func ResetPlayerBindings(wp *WavePool, p *Player) {
 	// Remove all petals
-	for _, petals := range p.Slots.Surface {
-		if petals == nil {
+	for _, ps := range p.Slots.Surface {
+		if ps == nil {
 			continue
 		}
 
-		for _, petal := range petals {
-			if petal == nil {
+		for _, p := range ps {
+			if p == nil {
 				continue
 			}
 
-			petal.FullyRemove(wp)
+			p.CompletelyRemove(wp)
 		}
 	}
 
@@ -66,6 +66,6 @@ func (p *Player) PlayerElimination(wp *WavePool, now time.Time) {
 
 		p.IsPoisoned.Store(false)
 
-		ResetBindings(wp, p)
+		ResetPlayerBindings(wp, p)
 	}
 }

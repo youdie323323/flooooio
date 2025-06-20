@@ -138,9 +138,9 @@ pub fn comptimeFromAnyString(comptime str: []const u8) Color {
     }
 }
 
-const HexColorCode = *const ["#abcdef".len]u8;
+pub const HexColorCode = *const ["#AbCdEf".len]u8;
 
-const HexColor = u24;
+pub const HexColor = u24;
 
 inline fn comptimeIsValidHexColorCode(comptime code: HexColorCode) bool {
     comptime {

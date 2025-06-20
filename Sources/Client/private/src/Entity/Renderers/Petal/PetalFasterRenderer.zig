@@ -13,7 +13,7 @@ const drawBasicLike = @import("PetalBasicRenderer.zig").drawBasicLike;
 fn render(rctx: RenderContext(MobSuper)) void {
     drawBasicLike(
         rctx,
-        comptime Color.comptimeFromHexColorCode("#feffc9"),
+        0xfeffc9,
         15,
         4,
     );

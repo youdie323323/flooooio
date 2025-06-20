@@ -357,8 +357,13 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 
 			width, height = clampWindowSize(width, height)
 
+			// Lock before write window
+			player.Mu.Lock()
+
 			player.Window[0] = width
 			player.Window[1] = height
+
+			player.Mu.Unlock()
 		}
 	}
 }

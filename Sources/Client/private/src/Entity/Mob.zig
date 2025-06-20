@@ -93,10 +93,8 @@ pub fn init(
 }
 
 pub fn deinit(self: *MobImpl, _: std.mem.Allocator, _: *Super) void {
-    self.connecting_segment = undefined;
-    if (self.connected_segments) |*s| s.deinit();
-
-    self.leg_distances = undefined;
+    if (self.connected_segments) |*s|
+        s.deinit();
 
     self.* = undefined;
 }
@@ -111,9 +109,10 @@ pub inline fn calculateBeakAngle(self: MobImpl) f32 {
 }
 
 /// Returns a stat within this mob.
-pub inline fn stat(self: MobImpl, allocator: std.mem.Allocator) !?json.Value {
-    const type_value_string = try std.fmt.allocPrint(allocator, "{}", .{self.type.get()});
-    defer allocator.free(type_value_string);
+pub inline fn stat(self: MobImpl) !?json.Value {
+    var buf: [3]u8 = undefined;
+
+    const type_value_string = try std.fmt.bufPrint(&buf, "{}", .{self.type.get()});
 
     const profiles =
         if (self.type.isMob())
@@ -122,8 +121,7 @@ pub inline fn stat(self: MobImpl, allocator: std.mem.Allocator) !?json.Value {
             EntityProfiles.petalProfiles();
 
     return if (profiles.value.object.get(type_value_string)) |prof| blk: {
-        const rarity_value_string = try std.fmt.allocPrint(allocator, "{}", .{@intFromEnum(self.rarity)});
-        defer allocator.free(rarity_value_string);
+        const rarity_value_string = try std.fmt.bufPrint(&buf, "{}", .{@intFromEnum(self.rarity)});
 
         break :blk prof.object.get(rarity_value_string);
     } else null;

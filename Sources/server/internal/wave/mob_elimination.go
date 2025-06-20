@@ -61,11 +61,3 @@ func (m *Mob) ForceEliminate(wp *WavePool) {
 
 	m.onEliminate(wp)
 }
-
-func (m *Mob) SafeForceEliminate(wp *WavePool) {
-	m.Mu.Lock()
-
-	m.ForceEliminate(wp)
-
-	m.Mu.Unlock()
-}

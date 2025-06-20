@@ -7,7 +7,7 @@ const Entity = @import("../Entity.zig").Entity;
 const main = @import("../../main.zig");
 
 /// Factor used for darken a skin color.
-pub const skin_darken: f32 = 1 - (41.0/51.0);
+pub const skin_darken: f32 = 0.2;
 
 /// Factor used for darken a body color.
 pub const body_darken: f32 = 0.1;
@@ -29,7 +29,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         mobs: *main.Mobs,
 
         /// Returns real typed entity.
-        pub inline fn castedEntity(self: @This()) *Entity(AnyImpl) {
+        pub inline fn castedAnyEntity(self: @This()) *Entity(AnyImpl) {
             return self.entity;
         }
 
@@ -40,7 +40,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
 
         /// Returns whether this render context should rendered.
         pub inline fn shouldRender(self: @This()) bool {
-            const entity = self.castedEntity();
+            const entity = self.castedAnyEntity();
             const is_specimen = self.is_specimen;
 
             return !(!is_specimen and entity.is_dead and entity.dead_t > 1);
@@ -49,7 +49,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         /// Apply death animation with this render context.
         pub inline fn applyDeathAnimation(self: @This()) void {
             const ctx = self.ctx;
-            const entity = self.castedEntity();
+            const entity = self.castedAnyEntity();
             const impl = entity.impl;
 
             if (entity.is_dead) {
@@ -79,7 +79,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         /// Blend colors based on this render context entity effect values.
         /// All effect values should in [0, 1].
         pub inline fn blendEffectColors(self: @This(), color: Color) Color {
-            const entity = self.castedEntity();
+            const entity = self.castedAnyEntity();
 
             const hurt_t = entity.hurt_t;
             const poison_t = entity.poison_t;
@@ -111,7 +111,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         /// Draw the entity statuses (e.g. health bar).
         pub inline fn drawEntityStatuses(self: @This()) void {
             const ctx = self.ctx;
-            const entity = self.castedEntity();
+            const entity = self.castedAnyEntity();
             const impl = entity.impl;
 
             const is_mob = self.isMob();
@@ -226,7 +226,7 @@ pub fn Renderer(
         pub fn render(rctx: RenderContext(AnyEntity)) void {
             if (comptime is_ancestor) {
                 const ctx = rctx.ctx;
-                const entity = rctx.castedEntity();
+                const entity = rctx.castedAnyEntity();
                 const is_specimen = rctx.is_specimen;
 
                 const x, const y = entity.pos;

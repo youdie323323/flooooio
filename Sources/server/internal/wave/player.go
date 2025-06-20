@@ -159,7 +159,7 @@ func (c *SwapPetalCommand) Execute(wp *WavePool, p *Player) {
 				continue
 			}
 
-			p.FullyRemove(wp)
+			p.CompletelyRemove(wp)
 		}
 
 		p.Slots.Surface[at] = p.Slots.Bottom[at]
@@ -240,8 +240,6 @@ Done:
 }
 
 func (p *Player) Dispose() {
-	p.Mu.Lock()
-
 	// Close and clear command queue
 	close(p.commandQueue)
 
@@ -299,8 +297,6 @@ func (p *Player) Dispose() {
 
 		p.OrbitPetalSpins = nil
 	}
-
-	p.Mu.Unlock()
 }
 
 const PlayerSize = 15

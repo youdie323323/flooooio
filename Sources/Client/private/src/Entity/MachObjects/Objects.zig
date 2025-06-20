@@ -232,7 +232,7 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
 
             return data.get(unpacked.index);
         }
-
+        
         pub fn delete(objs: *@This(), id: ObjectId) void {
             const dead = &objs.internal.dead;
             const data = &objs.internal.data;

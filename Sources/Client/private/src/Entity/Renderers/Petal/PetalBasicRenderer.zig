@@ -10,14 +10,14 @@ const Color = @import("../../../WebAssembly/Interop/Canvas2D/Color.zig");
 
 pub inline fn drawBasicLike(
     rctx: RenderContext(MobSuper),
-    comptime color: Color,
+    comptime color: Color.HexColor,
     comptime fraction: f32,
     comptime outlineWidth: f32,
 ) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
 
-    const fcolor = rctx.blendEffectColors(color);
+    const fcolor = rctx.blendEffectColors(comptime Color.comptimeFromHex(color));
     const scolor = fcolor.darkened(skin_darken);
 
     ctx.rotate(entity.angle);
@@ -39,7 +39,7 @@ pub inline fn drawBasicLike(
 fn render(rctx: RenderContext(MobSuper)) void {
     drawBasicLike(
         rctx,
-        comptime Color.comptimeFromHexColorCode("#ffffff"),
+        0xffffff,
         15,
         5,
     );
