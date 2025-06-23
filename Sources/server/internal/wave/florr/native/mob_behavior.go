@@ -56,8 +56,10 @@ var EachMobBehaviorDefinition = map[MobType]RarityMobBehaviorDefinition{
 		RarityLegendary: NeutralBehavior,
 		RarityMythic:    NeutralBehavior,
 	},
-	MobTypeSpider: fullyHostileDefinition,
-	MobTypeHornet: fullyHostileDefinition,
+	MobTypeSpider:    fullyHostileDefinition,
+	MobTypeHornet:    fullyHostileDefinition,
+	MobTypeBabyAnt:   fullyPassiveDefinition,
+	MobTypeWorkerAnt: fullyNeutralDefinition,
 
 	MobTypeBeetle:       fullyHostileDefinition,
 	MobTypeSandstorm:    fullyChaoticDefinition,

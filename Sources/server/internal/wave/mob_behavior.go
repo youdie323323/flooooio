@@ -21,7 +21,7 @@ const (
 	jellyfishCautionRadius = 3
 )
 
-type JudgementFunc = func(m *Mob, distanceToTarget float32) bool
+type JudgementFunc = func(m *Mob, distanceToTargetDot float32) bool
 
 func createCautionJudger(radiusMultiplier float32) JudgementFunc {
 	return func(m *Mob, distanceToTargetDot float32) bool {
@@ -53,10 +53,12 @@ func FindNearestEntity(me collision.Node, entities []collision.Node) collision.N
 	for _, current := range entities[1:] {
 		dx = current.GetX() - meX
 		dy = current.GetY() - meY
+
 		distanceSqToCurrent = dx*dx + dy*dy
 
 		dx = nearest.GetX() - meX
 		dy = nearest.GetY() - meY
+		
 		distanceSqToNearest = dx*dx + dy*dy
 
 		if distanceSqToCurrent < distanceSqToNearest {
@@ -85,6 +87,7 @@ func FindNearestEntityWithLimitedDistance(me collision.Node, entities []collisio
 	for _, current := range entities {
 		dx = current.GetX() - meX
 		dy = current.GetY() - meY
+		
 		dot = dx*dx + dy*dy
 
 		if dot <= maxDistanceSq && (nearest == nil || dot < nearestDistanceSq) {

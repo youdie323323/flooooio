@@ -1,0 +1,89 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const PetalRenderer_1 = __importDefault(require("./PetalRenderer"));
+const fangBody = (function () {
+    const path = new Path2D();
+    path.moveTo(13, 0);
+    path.lineTo(4.949747562408447, 4.949747562408447);
+    path.quadraticCurveTo(2.8994948863983154, 7, 0, 7);
+    path.quadraticCurveTo(-2.8994948863983154, 7, -4.949747562408447, 4.949747562408447);
+    path.lineTo(-13, 0);
+    path.lineTo(-4.9497480392456055, -4.949747085571289);
+    path.quadraticCurveTo(-2.8994956016540527, -6.999999523162842, -8.344650268554688e-7, -6.999999523162842);
+    path.quadraticCurveTo(2.89949369430542, -7, 4.949746608734131, -4.949748516082764);
+    path.lineTo(13, 0);
+    path.closePath();
+    return path;
+})();
+const fangBodyStroke = (function () {
+    const path = new Path2D();
+    path.moveTo(13.785655975341797, 1.2777888774871826);
+    path.lineTo(5.735404014587402, 6.227536201477051);
+    path.lineTo(4.949747562408447, 4.949747562408447);
+    path.lineTo(6.010407447814941, 6.010407447814941);
+    path.quadraticCurveTo(3.520814895629883, 8.5, 0, 8.5);
+    path.quadraticCurveTo(-3.520814895629883, 8.5, -6.010407447814941, 6.010407447814941);
+    path.lineTo(-4.949747562408447, 4.949747562408447);
+    path.lineTo(-5.735404014587402, 6.227536201477051);
+    path.lineTo(-13.785655975341797, 1.2777888774871826);
+    path.quadraticCurveTo(-14.314932823181152, 0.9523593187332153, -14.459075927734375, 0.3479902744293213);
+    path.quadraticCurveTo(-14.603217124938965, -0.25637882947921753, -14.277789115905762, -0.7856563329696655);
+    path.quadraticCurveTo(-14.185396194458008, -0.9359256625175476, -14.060661315917969, -1.0606603622436523);
+    path.quadraticCurveTo(-13.93592643737793, -1.1853950023651123, -13.785655975341797, -1.2777888774871826);
+    path.lineTo(-5.7354044914245605, -6.227536201477051);
+    path.lineTo(-4.9497480392456055, -4.949747085571289);
+    path.lineTo(-6.010408401489258, -6.010407447814941);
+    path.quadraticCurveTo(-3.520815849304199, -8.5, -8.125939530145843e-7, -8.5);
+    path.quadraticCurveTo(3.5208170413970947, -8.500000953674316, 6.010407447814941, -6.010409355163574);
+    path.lineTo(4.949746608734131, -4.949748516082764);
+    path.lineTo(5.735403060913086, -6.227537155151367);
+    path.lineTo(13.785655975341797, -1.277788758277893);
+    path.quadraticCurveTo(14.314932823181152, -0.952359139919281, 14.459075927734375, -0.34799012541770935);
+    path.quadraticCurveTo(14.603217124938965, 0.2563789486885071, 14.277789115905762, 0.7856563925743103);
+    path.quadraticCurveTo(14.185396194458008, 0.9359257221221924, 14.060661315917969, 1.0606603622436523);
+    path.quadraticCurveTo(13.93592643737793, 1.1853950023651123, 13.785655975341797, 1.2777888774871826);
+    path.closePath();
+    path.moveTo(12.214344024658203, -1.2777888774871826);
+    path.lineTo(13, 0);
+    path.lineTo(12.214344024658203, 1.277788758277893);
+    path.lineTo(4.164090156555176, -3.67195987701416);
+    path.quadraticCurveTo(4.089213848114014, -3.7179982662200928, 4.020226955413818, -3.7724668979644775);
+    path.quadraticCurveTo(3.951240062713623, -3.8269355297088623, 3.889086961746216, -3.8890886306762695);
+    path.quadraticCurveTo(2.27817440032959, -5.500000953674316, -3.0470491196865623e-7, -5.5);
+    path.quadraticCurveTo(-2.2781758308410645, -5.499999046325684, -3.889087677001953, -3.889086961746216);
+    path.quadraticCurveTo(-3.9512410163879395, -3.8269338607788086, -4.020228385925293, -3.772465229034424);
+    path.quadraticCurveTo(-4.089215278625488, -3.717996597290039, -4.16409158706665, -3.6719582080841064);
+    path.lineTo(-12.214344024658203, 1.2777888774871826);
+    path.lineTo(-13, 0);
+    path.lineTo(-12.214344024658203, -1.2777888774871826);
+    path.lineTo(-4.164091110229492, 3.6719589233398438);
+    path.quadraticCurveTo(-4.08921480178833, 3.7179973125457764, -4.020227432250977, 3.772465705871582);
+    path.quadraticCurveTo(-3.9512407779693604, 3.826934337615967, -3.889087438583374, 3.889086961746216);
+    path.quadraticCurveTo(-2.278174877166748, 5.5, 0, 5.499999523162842);
+    path.quadraticCurveTo(2.2781753540039062, 5.499999523162842, 3.889087200164795, 3.889087200164795);
+    path.quadraticCurveTo(3.9512405395507812, 3.826934337615967, 4.020227909088135, 3.772465705871582);
+    path.quadraticCurveTo(4.08921480178833, 3.7179970741271973, 4.164091110229492, 3.6719586849212646);
+    path.lineTo(12.214344024658203, -1.2777888774871826);
+    path.closePath();
+    return path;
+})();
+class PetalRendererFang extends PetalRenderer_1.default {
+    render(context) {
+        // Non-recursive renderer
+        // super.render(context);
+        const { ctx, entity } = context;
+        // Change angle
+        ctx.rotate(entity.angle);
+        const scale = entity.size / 10;
+        ctx.scale(scale, scale);
+        ctx.lineJoin = "round";
+        ctx.fillStyle = "#9C1010";
+        ctx.fill(fangBody, "nonzero");
+        ctx.fillStyle = "#7E0D0D";
+        ctx.fill(fangBodyStroke, "nonzero");
+    }
+}
+exports.default = PetalRendererFang;

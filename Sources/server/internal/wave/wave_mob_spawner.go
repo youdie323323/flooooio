@@ -30,9 +30,11 @@ const (
 
 var mobSpawnRules = map[native.Biome]map[native.MobType]MobSpawnRule{
 	native.BiomeGarden: {
-		native.MobTypeBee:    {1, 50, 1},
-		native.MobTypeSpider: {3, 50, 1},
-		native.MobTypeHornet: {3, 50, 1},
+		native.MobTypeBee:       {1, 50, 1},
+		native.MobTypeSpider:    {3, 50, 1},
+		native.MobTypeHornet:    {3, 50, 1},
+		native.MobTypeBabyAnt:   {1, 50, 1},
+		native.MobTypeWorkerAnt: {2, 50, 1},
 
 		native.MobTypeCentipede:     {2, 1, centipedePoint},
 		native.MobTypeCentipedeEvil: {3, 1, centipedePoint},
@@ -70,7 +72,7 @@ type SpawnGroup = []native.MobType
 
 var specialWaveMobGroups = map[native.Biome][]SpawnGroup{
 	native.BiomeGarden: {
-		// {BABY ANT, WORKER ANT, ROCK},
+		{native.MobTypeBabyAnt, native.MobTypeWorkerAnt /* ROCK */},
 		{native.MobTypeBee /* LADYBUG */},
 		{native.MobTypeHornet},
 		{native.MobTypeHornet, native.MobTypeBee},
@@ -164,7 +166,7 @@ func getRandomMobType(diff uint16, b native.Biome, sg *SpawnGroup) native.MobTyp
 
 		// Select mob from special group
 		random := rand.Float64() * totalWeight
-		
+
 		for _, t := range *sg {
 			if r, exists := mobSpawnRules[b][t]; exists && r.SpawnAfter <= diff {
 				random -= r.Weight
@@ -262,7 +264,7 @@ func CalculateWaveLuck(progress WaveProgress) float64 {
 	return math.Pow(1.3, float64(progress)) - 1
 }
 
-const two_over_three float64 = 2.0 / 3.0;
+const two_over_three float64 = 2.0 / 3.0
 
 // CalculateSpawnWave calculate spawn wave by best wave progression of this wave.
 func CalculateSpawnWave(bestWave WaveProgress) WaveProgress {

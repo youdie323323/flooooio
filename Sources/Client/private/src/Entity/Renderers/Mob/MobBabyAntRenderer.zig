@@ -1,0 +1,66 @@
+const std = @import("std");
+const math = std.math;
+const time = std.time;
+const Renderer = @import("../Renderer.zig").Renderer;
+const skin_darken = @import("../Renderer.zig").skin_darken;
+const RenderContext = @import("../Renderer.zig").RenderContext;
+const MobSuper = @import("../../Mob.zig").Super;
+
+const Color = @import("../../../WebAssembly/Interop/Canvas2D/Color.zig");
+
+fn render(rctx: RenderContext(MobSuper)) void {
+    const ctx = rctx.ctx;
+    const entity = rctx.entity;
+    const mob = entity.impl;
+
+    const bcolor = rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#292929"));
+
+    const fcolor = rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#555555"));
+    const scolor = fcolor.darkened(skin_darken);
+
+    ctx.rotate(entity.angle);
+
+    const scale = entity.size / 30;
+    ctx.scale(scale, scale);
+
+    ctx.setLineJoin(.round);
+    ctx.setLineCap(.round);
+
+    ctx.setLineWidth(7);
+
+    ctx.strokeColor(bcolor);
+
+    const beak_angle = mob.calculateBeakAngle(0.05);
+
+    inline for (.{ -1, 1 }) |dir| {
+        ctx.save();
+        defer ctx.restore();
+
+        ctx.beginPath();
+
+        ctx.rotate(beak_angle * dir);
+
+        ctx.moveTo(0, comptime (7 * dir));
+        ctx.quadraticCurveTo(11, comptime (10 * dir), 22, comptime (5 * dir));
+
+        ctx.stroke();
+    }
+
+    // Body outline
+    ctx.beginPath();
+
+    ctx.arc(0, 0, 17.5, 0, math.tau, false);
+
+    ctx.fillColor(scolor);
+    ctx.fill();
+
+    // Body
+    ctx.beginPath();
+
+    ctx.arc(0, 0, 10.5, 0, math.tau, false);
+
+    ctx.fillColor(fcolor);
+    ctx.fill();
+}
+
+pub const MobBabyAntRenderer = Renderer(MobSuper, false, render, null);

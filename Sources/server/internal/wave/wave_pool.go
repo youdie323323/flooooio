@@ -39,7 +39,7 @@ const (
 	GB = 1024 * MB
 )
 
-// TODO: if buffer index overflow, may will panic
+// TODO: if buffer index is above buf len, would panic
 var SharedBufPool = zeropool.New(func() []byte { return make([]byte, 256*KB) })
 
 func writeCString[T ~string](buf []byte, at int, s T) int {
@@ -286,8 +286,7 @@ func (wp *WavePool) update() {
 		return
 	}
 
-	// Execute all commands
-	for {
+	for { // Execute all commands
 		select {
 		case cmd := <-wp.commandQueue:
 			cmd()

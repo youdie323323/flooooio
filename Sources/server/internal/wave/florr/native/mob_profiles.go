@@ -175,6 +175,80 @@ var MobProfiles = map[MobType]MobData{
 			},
 		},
 	},
+	MobTypeBabyAnt: {
+		Common: MobStat{
+			Health:     10,
+			BodyDamage: 10,
+		},
+		Unusual: MobStat{
+			Health:     16,
+			BodyDamage: 11,
+		},
+		Rare: MobStat{
+			Health:     25,
+			BodyDamage: 13,
+		},
+		Epic: MobStat{
+			Health:     40,
+			BodyDamage: 16,
+		},
+		Legendary: MobStat{
+			Health:     250,
+			BodyDamage: 20,
+		},
+		Mythic: MobStat{
+			Health:     500,
+			BodyDamage: 25,
+		},
+		BaseSize: 25,
+		EntityData: EntityData[MobI18n]{
+			I18n: MobI18n{
+				Name:        "Baby Ant",
+				Description: "Fuck you.",
+			},
+			Collision: EntityCollision{
+				Fraction: 30,
+				Radius:   20,
+			},
+		},
+	},
+	MobTypeWorkerAnt: {
+		Common: MobStat{
+			Health:     25,
+			BodyDamage: 10,
+		},
+		Unusual: MobStat{
+			Health:     40,
+			BodyDamage: 11,
+		},
+		Rare: MobStat{
+			Health:     62.5,
+			BodyDamage: 13,
+		},
+		Epic: MobStat{
+			Health:     100,
+			BodyDamage: 16,
+		},
+		Legendary: MobStat{
+			Health:     625,
+			BodyDamage: 20,
+		},
+		Mythic: MobStat{
+			Health:     1250,
+			BodyDamage: 25,
+		},
+		BaseSize: 25,
+		EntityData: EntityData[MobI18n]{
+			I18n: MobI18n{
+				Name:        "Worker Ant",
+				Description: "Fuck you.",
+			},
+			Collision: EntityCollision{
+				Fraction: 30,
+				Radius:   20,
+			},
+		},
+	},
 	MobTypeBeetle: {
 		Common: MobStat{
 			Health:     40,

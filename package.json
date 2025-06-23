@@ -14,6 +14,7 @@
     "@basementuniverse/utils": "^1.7.0",
     "@basementuniverse/vec": "^2.2.2",
     "@stylistic/eslint-plugin": "^4.1.0",
+    "@types/jsdom": "^21.1.7",
     "canvg": "^4.0.3",
     "dotenv": "^16.4.7",
     "esbuild": "0.24.0",
@@ -30,5 +31,9 @@
     "svgo": "^3.3.2",
     "typescript-eslint": "^8.18.0",
     "ws": "^8.18.0"
+  },
+  "dependencies": {
+    "jsdom": "^26.1.0",
+    "undici": "^7.10.0"
   }
 }

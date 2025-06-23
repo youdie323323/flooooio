@@ -26,5 +26,6 @@
     "Playground/**/*",
     "eslint.config.mjs",
     "esbuild.mjs",
+    "hello.ts",
   ]
 }

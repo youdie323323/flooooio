@@ -1,5 +1,5 @@
 {
-  "20": {
+  "22": {
     "i18n": {
       "name": "Basic",
       "description": "A nice petal, not too strong but not too weak."
@@ -51,7 +51,7 @@
       "count": 1
     }
   },
-  "21": {
+  "23": {
     "i18n": {
       "name": "Faster",
       "description": "It's so light it makes your other petals spin faster."
@@ -124,7 +124,7 @@
       }
     }
   },
-  "22": {
+  "24": {
     "i18n": {
       "name": "Beetle Egg",
       "description": "Something interesting might pop out of this."
@@ -183,7 +183,7 @@
       "count": 1
     }
   },
-  "23": {
+  "25": {
     "i18n": {
       "name": "Bubble",
       "description": "Physics are for the weak."
@@ -242,7 +242,7 @@
       "count": 1
     }
   },
-  "24": {
+  "26": {
     "i18n": {
       "name": "Yin Yang",
       "description": "This mysterious petal affects the rotation of your petals in unpredictable ways."
@@ -294,7 +294,7 @@
       "count": 1
     }
   },
-  "25": {
+  "27": {
     "i18n": {
       "name": "Stick",
       "description": "I DONT KNOW SHITTTT"
@@ -353,7 +353,7 @@
       "count": 1
     }
   },
-  "26": {
+  "28": {
     "i18n": {
       "name": "Sand",
       "description": "A bunch of sand particles."
@@ -405,7 +405,7 @@
       "count": 4
     }
   },
-  "27": {
+  "29": {
     "i18n": {
       "name": "Lightning",
       "description": "Strikes several nearby enemies."
@@ -485,7 +485,7 @@
       }
     }
   },
-  "28": {
+  "30": {
     "i18n": {
       "name": "Claw",
       "description": "Deals extra damage if victim is above 80% health. -50percentDamage versus other flowers."
@@ -565,7 +565,7 @@
       }
     }
   },
-  "29": {
+  "31": {
     "i18n": {
       "name": "Fangs",
       "description": "Heals based on damage dealt by this petal."
@@ -638,7 +638,7 @@
       }
     }
   },
-  "30": {
+  "32": {
     "i18n": {
       "name": "Yggdrasil",
       "description": "A dried leaf from the Yggdrasil tree. Rumored to be able to bring the fallen back to life."
@@ -697,7 +697,7 @@
       "count": 1
     }
   },
-  "31": {
+  "33": {
     "i18n": {
       "name": "Web",
       "description": "It's really sticky."
@@ -784,7 +784,7 @@
       }
     }
   },
-  "32": {
+  "34": {
     "i18n": {
       "name": "Stinger",
       "description": "Fuck you."
@@ -836,7 +836,7 @@
       "count": 5
     }
   },
-  "33": {
+  "35": {
     "i18n": {
       "name": "Wing",
       "description": "Fuck you."
@@ -888,7 +888,7 @@
       "count": 1
     }
   },
-  "34": {
+  "36": {
     "i18n": {
       "name": "Magnet",
       "description": "Fuck you."

@@ -16,8 +16,7 @@ const (
 	webSlowPercent = (100. - 75.) / 100.
 )
 
-// Define reusable circle
-var (
+var ( // Define reusable circle
 	c0mob collision.Circle
 	c1mob collision.Circle
 )
@@ -81,7 +80,8 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 					continue
 				}
 
-				// This is most simple lag mitigation but this constrain the all MagnitudeMultiplier is unique
+				// This is most simple lag mitigation, but this constrain the all MagnitudeMultiplier must unique
+				//
 				// Avoid redundant calculation if mob is already slowed this frame
 				if mIsWeb && nearEntity.MagnitudeMultiplier == webSlowPercent {
 					continue
@@ -102,12 +102,12 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 				nearEntityIsAlly := !nearEntityIsEnemy
 
 				if mIsProjectile || nearEntityIsProjectile {
-					// Enemy missile cant collide to enemy mob
+					// Enemy missile cannot collide to enemy mob
 					if mIsEnemy && nearEntityIsEnemy {
 						continue
 					}
 
-					// Friendly missile cant collide to friendly mob
+					// Friendly missile cannot collide to friendly mob
 					if mIsAlly && nearEntityIsAlly {
 						continue
 					}
@@ -121,7 +121,7 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 				if ok {
 					// Slows mob which colliding
 					if mIsWeb {
-						// TODO: enemy web not slows pets
+						// TODO: enemy web not slows pets?
 						if nearEntity.IsOrganismEnemy() && (mIsEnemy != nearEntityIsEnemy) {
 							nearEntity.MagnitudeMultiplier = webSlowPercent
 						}

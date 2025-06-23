@@ -45,9 +45,9 @@ inline fn isWithinBound(
 
     // zig fmt: off
     return !(
-        x + size_width < 0 or
-        x > bound_width or
-        y + size_height < 0 or
+        x + size_width   < 0 or
+        x > bound_width      or
+        y + size_height  < 0 or
         y > bound_height
     );
     // zig fmt: on

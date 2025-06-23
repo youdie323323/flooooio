@@ -112,7 +112,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
         ctx.strokeColor(rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#292929")));
         ctx.setLineWidth(4);
 
-        const beak_angle = mob.calculateBeakAngle();
+        const beak_angle = mob.calculateBeakAngle(0.1);
 
         inline for (.{ -1, 1 }) |dir| {
             ctx.save();

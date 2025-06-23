@@ -115,3 +115,6 @@ package-lock.json
 .DS_Store
 
 Sources/Client/private/.zig-cache/
+
+hello.ts
+downloaded_images_*/

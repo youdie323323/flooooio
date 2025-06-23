@@ -21,6 +21,12 @@ const hornetRender = MobHornetRenderer.render;
 const MobSpiderRenderer = @import("MobSpiderRenderer.zig").MobSpiderRenderer;
 const spiderRender = MobSpiderRenderer.render;
 
+const MobBabyAntRenderer = @import("MobBabyAntRenderer.zig").MobBabyAntRenderer;
+const babyAntRender = MobBabyAntRenderer.render;
+
+const MobWorkerAntRenderer = @import("MobWorkerAntRenderer.zig").MobWorkerAntRenderer;
+const workerAntRender = MobWorkerAntRenderer.render;
+
 const MobCentipedeRenderer = @import("MobCentipedeRenderer.zig").MobCentipedeRenderer;
 const centipedeRender = MobCentipedeRenderer.render;
 
@@ -49,8 +55,6 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
     if (type_to_renderer.get(mob.type.get())) |r|
         r(rctx);
-    // else
-    //     log(@src(), .debug, "Unrendered mob: {}", .{mob.type});
 }
 
 fn init(allocator: std.mem.Allocator) void {
@@ -63,6 +67,8 @@ fn init(allocator: std.mem.Allocator) void {
             type_to_renderer.put(@intFromEnum(MobType.bee), beeRender) catch unreachable;
             type_to_renderer.put(@intFromEnum(MobType.hornet), hornetRender) catch unreachable;
             type_to_renderer.put(@intFromEnum(MobType.spider), spiderRender) catch unreachable;
+            type_to_renderer.put(@intFromEnum(MobType.baby_ant), babyAntRender) catch unreachable;
+            type_to_renderer.put(@intFromEnum(MobType.worker_ant), workerAntRender) catch unreachable;
 
             type_to_renderer.put(@intFromEnum(MobType.centipede), centipedeRender) catch unreachable;
             type_to_renderer.put(@intFromEnum(MobType.centipede_desert), centipedeRender) catch unreachable;
@@ -86,6 +92,8 @@ fn init(allocator: std.mem.Allocator) void {
         { // Pure
             MobStarfishRenderer.staticInit(allocator);
             MobBeeRenderer.staticInit(allocator);
+            MobBabyAntRenderer.staticInit(allocator);
+            MobWorkerAntRenderer.staticInit(allocator);
             MobLeechRenderer.staticInit(allocator);
             MobHornetRenderer.staticInit(allocator);
             MobSpiderRenderer.staticInit(allocator);

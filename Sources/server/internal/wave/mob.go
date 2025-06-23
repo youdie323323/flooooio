@@ -308,6 +308,8 @@ var MobSpeed = map[native.MobType]float32{
 	native.MobTypeBee:    2.8,
 	native.MobTypeSpider: 5,
 	native.MobTypeHornet: 3,
+	native.MobTypeBabyAnt: 3,
+	native.MobTypeWorkerAnt: 3,
 
 	native.MobTypeBeetle:       2.8,
 	native.MobTypeSandstorm:    2,

@@ -104,8 +104,8 @@ pub fn update(self: *@This(), _: *Super, delta_time: f32) void {
 }
 
 /// Calculate beak angle for mob.
-pub inline fn calculateBeakAngle(self: MobImpl) f32 {
-    return @sin(self.total_t) * 0.1;
+pub inline fn calculateBeakAngle(self: MobImpl, comptime multiplier: f32) f32 {
+    return @sin(self.total_t) * multiplier;
 }
 
 /// Returns a stat within this mob.

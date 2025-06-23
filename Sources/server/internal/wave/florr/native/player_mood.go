@@ -4,8 +4,8 @@ type Mood uint8
 
 const (
 	MoodNormal Mood = 0
-	MoodAngry       = 1
-	MoodSad         = 2
+	MoodAngry  Mood = 1
+	MoodSad    Mood = 2
 )
 
 var ValidMoodFlags = []Mood{

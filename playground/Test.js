@@ -5,173 +5,135 @@ const TAU = 2 * Math.PI;
 const PI2 = Math.PI / 2;
 
 ctx.translate(500, 500);
-ctx.scale(15, 15);
+ctx.scale(2, 2);
 
-ctx.direction = "ltr";
-ctx.globalAlpha = 1;
-ctx.lineWidth = 1;
-ctx.miterLimit = 10;
-ctx.font = "700 10px Game, Microsoft YaHei, sans-serif";
-ctx.imageSmoothingEnabled = true;
-ctx.clearRect(0, 0, 256, 256);
-ctx.globalCompositeOperation = "source-over";
-ctx.save();
-ctx.lineJoin = "round";
+ctx.lineJoin = ctx.lineCap = "round";
 
-ctx.save();
-
-ctx.save();
 ctx.lineWidth = 7;
-ctx.lineCap = "round";
-ctx.fillStyle = "#333333";
-ctx.beginPath();
-ctx.setTransform(-1.086116075515747, -1.086115837097168, 1.086115837097168, -1.086116075515747, 204.02813720703125, 204.02810668945312);
-ctx.arc(0, -30, 15, 0, 6.283185307179586, false);
-ctx.fill();
-ctx.beginPath();
-ctx.arc(0, 30, 15, 0, 6.283185307179586, false);
-ctx.fill();
-ctx.fillStyle = "#8AC255";
-ctx.fill(function () {
-    const path = new Path2D();
-    path.moveTo(35, 0);
-    path.quadraticCurveTo(34.999996185302734, 14.49747371673584, 24.748735427856445, 24.748735427856445);
-    path.quadraticCurveTo(14.49747371673584, 34.999996185302734, 0, 35);
-    path.quadraticCurveTo(-14.49747371673584, 34.999996185302734, -24.748735427856445, 24.748735427856445);
-    path.quadraticCurveTo(-34.999996185302734, 14.49747371673584, -35, 0);
-    path.quadraticCurveTo(-34.999996185302734, -14.49747371673584, -24.748735427856445, -24.748735427856445);
-    path.quadraticCurveTo(-14.49747371673584, -34.999996185302734, 0, -35);
-    path.quadraticCurveTo(14.49747371673584, -34.999996185302734, 24.748735427856445, -24.748735427856445);
-    path.quadraticCurveTo(34.999996185302734, -14.49747371673584, 35, 0);
-    return path;
-}(), "nonzero");
-ctx.fillStyle = "#709D45";
-ctx.fill(function () {
-    const path = new Path2D();
-    path.moveTo(38.5, 0);
-    path.quadraticCurveTo(38.5, 15.947223663330078, 27.22361183166504, 27.22361183166504);
-    path.quadraticCurveTo(15.947227478027344, 38.5, 0, 38.5);
-    path.quadraticCurveTo(-15.947223663330078, 38.5, -27.22361183166504, 27.22361183166504);
-    path.quadraticCurveTo(-38.5, 15.947227478027344, -38.5, 0);
-    path.quadraticCurveTo(-38.5, -15.947223663330078, -27.22361183166504, -27.22361183166504);
-    path.quadraticCurveTo(-15.947227478027344, -38.5, 0, -38.5);
-    path.quadraticCurveTo(15.947223663330078, -38.5, 27.22361183166504, -27.22361183166504);
-    path.quadraticCurveTo(38.5, -15.947227478027344, 38.5, 0);
-    path.quadraticCurveTo(38.499996185302734, 1.4497473239898682, 37.47487258911133, 2.4748735427856445);
-    path.quadraticCurveTo(36.449745178222656, 3.499999761581421, 35, 3.5);
-    path.quadraticCurveTo(33.55025100708008, 3.499999761581421, 32.525123596191406, 2.4748735427856445);
-    path.quadraticCurveTo(31.5, 1.4497473239898682, 31.5, 0);
-    path.quadraticCurveTo(31.5, -13.047721862792969, 22.273862838745117, -22.273862838745117);
-    path.quadraticCurveTo(13.047724723815918, -31.5, 0, -31.5);
-    path.quadraticCurveTo(-13.047721862792969, -31.5, -22.273862838745117, -22.273862838745117);
-    path.quadraticCurveTo(-31.5, -13.047724723815918, -31.5, 0);
-    path.quadraticCurveTo(-31.5, 13.047721862792969, -22.273862838745117, 22.273862838745117);
-    path.quadraticCurveTo(-13.047724723815918, 31.5, 0, 31.5);
-    path.quadraticCurveTo(13.047721862792969, 31.5, 22.273862838745117, 22.273862838745117);
-    path.quadraticCurveTo(31.5, 13.047724723815918, 31.5, 0);
-    path.quadraticCurveTo(31.5, -1.4497473239898682, 32.525123596191406, -2.4748735427856445);
-    path.quadraticCurveTo(33.55025100708008, -3.499999761581421, 35, -3.5);
-    path.quadraticCurveTo(36.449745178222656, -3.499999761581421, 37.47486877441406, -2.4748735427856445);
-    path.quadraticCurveTo(38.499996185302734, -1.4497473239898682, 38.5, 0);
-    path.closePath();
-    return path;
-}(), "nonzero");
-ctx.restore();
+
+{
+    ctx.save();
+
+    ctx.translate(-8, 0);
+
+    ctx.beginPath();
+
+    ctx.arc(-8, 0, 13.5, 0, TAU);
+
+    ctx.fillStyle = "#454545";
+    ctx.fill();
+
+    ctx.beginPath();
+
+    ctx.arc(-8, 0, 6.5, 0, TAU);
+
+    ctx.fillStyle = "#555555";
+    ctx.fill();
+
+    ctx.restore();
+}
+
+{
+    ctx.save();
+
+    ctx.strokeStyle = "#292929";
+
+    ctx.beginPath();
+
+    ctx.moveTo(0, -7);
+    ctx.quadraticCurveTo(11, -10, 22, -5);
+
+    ctx.stroke();
+
+    ctx.beginPath();
+
+    ctx.moveTo(0, 7);
+    ctx.quadraticCurveTo(11, 10, 22, 5);
+
+    ctx.stroke();
+
+    ctx.beginPath();
+
+    ctx.arc(0, 0, 17.5, 0, TAU);
+
+    ctx.fillStyle = "#454545";
+    ctx.fill();
+
+    ctx.beginPath();
+
+    ctx.arc(0, 0, 10.5, 0, TAU);
+
+    ctx.fillStyle = "#555555";
+    ctx.fill();
+
+    ctx.restore();
+}
+
+ctx.translate(200, 200);
+
+ctx.lineJoin = ctx.lineCap = "round";
+
 ctx.lineWidth = 7;
-ctx.lineCap = "round";
-ctx.fillStyle = "#333333";
-ctx.beginPath();
-ctx.setTransform(-1.086116075515747, -1.086115837097168, 1.086115837097168, -1.086116075515747, 128, 128);
-ctx.arc(0, -30, 15, 0, 6.283185307179586, false);
-ctx.fill();
-ctx.beginPath();
-ctx.arc(0, 30, 15, 0, 6.283185307179586, false);
-ctx.fill();
-ctx.fillStyle = "#8AC255";
-ctx.fill(function () {
-    const path = new Path2D();
-    path.moveTo(35, 0);
-    path.quadraticCurveTo(34.999996185302734, 14.49747371673584, 24.748735427856445, 24.748735427856445);
-    path.quadraticCurveTo(14.49747371673584, 34.999996185302734, 0, 35);
-    path.quadraticCurveTo(-14.49747371673584, 34.999996185302734, -24.748735427856445, 24.748735427856445);
-    path.quadraticCurveTo(-34.999996185302734, 14.49747371673584, -35, 0);
-    path.quadraticCurveTo(-34.999996185302734, -14.49747371673584, -24.748735427856445, -24.748735427856445);
-    path.quadraticCurveTo(-14.49747371673584, -34.999996185302734, 0, -35);
-    path.quadraticCurveTo(14.49747371673584, -34.999996185302734, 24.748735427856445, -24.748735427856445);
-    path.quadraticCurveTo(34.999996185302734, -14.49747371673584, 35, 0);
-    return path;
-}(), "nonzero");
-ctx.fillStyle = "#709D45";
-ctx.fill(function () {
-    const path = new Path2D();
-    path.moveTo(38.5, 0);
-    path.quadraticCurveTo(38.5, 15.947223663330078, 27.22361183166504, 27.22361183166504);
-    path.quadraticCurveTo(15.947227478027344, 38.5, 0, 38.5);
-    path.quadraticCurveTo(-15.947223663330078, 38.5, -27.22361183166504, 27.22361183166504);
-    path.quadraticCurveTo(-38.5, 15.947227478027344, -38.5, 0);
-    path.quadraticCurveTo(-38.5, -15.947223663330078, -27.22361183166504, -27.22361183166504);
-    path.quadraticCurveTo(-15.947227478027344, -38.5, 0, -38.5);
-    path.quadraticCurveTo(15.947223663330078, -38.5, 27.22361183166504, -27.22361183166504);
-    path.quadraticCurveTo(38.5, -15.947227478027344, 38.5, 0);
-    path.quadraticCurveTo(38.499996185302734, 1.4497473239898682, 37.47487258911133, 2.4748735427856445);
-    path.quadraticCurveTo(36.449745178222656, 3.499999761581421, 35, 3.5);
-    path.quadraticCurveTo(33.55025100708008, 3.499999761581421, 32.525123596191406, 2.4748735427856445);
-    path.quadraticCurveTo(31.5, 1.4497473239898682, 31.5, 0);
-    path.quadraticCurveTo(31.5, -13.047721862792969, 22.273862838745117, -22.273862838745117);
-    path.quadraticCurveTo(13.047724723815918, -31.5, 0, -31.5);
-    path.quadraticCurveTo(-13.047721862792969, -31.5, -22.273862838745117, -22.273862838745117);
-    path.quadraticCurveTo(-31.5, -13.047724723815918, -31.5, 0);
-    path.quadraticCurveTo(-31.5, 13.047721862792969, -22.273862838745117, 22.273862838745117);
-    path.quadraticCurveTo(-13.047724723815918, 31.5, 0, 31.5);
-    path.quadraticCurveTo(13.047721862792969, 31.5, 22.273862838745117, 22.273862838745117);
-    path.quadraticCurveTo(31.5, 13.047724723815918, 31.5, 0);
-    path.quadraticCurveTo(31.5, -1.4497473239898682, 32.525123596191406, -2.4748735427856445);
-    path.quadraticCurveTo(33.55025100708008, -3.499999761581421, 35, -3.5);
-    path.quadraticCurveTo(36.449745178222656, -3.499999761581421, 37.47486877441406, -2.4748735427856445);
-    path.quadraticCurveTo(38.499996185302734, -1.4497473239898682, 38.5, 0);
-    path.closePath();
-    return path;
-}(), "nonzero");
-ctx.fillStyle = "#333333";
-ctx.fill(function () {
-    const path = new Path2D();
-    path.moveTo(60, -30);
-    path.quadraticCurveTo(59.99999237060547, -27.92892837524414, 58.53553009033203, -26.46446418762207);
-    path.quadraticCurveTo(57.07106018066406, -25, 55, -25);
-    path.quadraticCurveTo(54.74510955810547, -25, 54.49153518676758, -25.025920867919922);
-    path.quadraticCurveTo(54.23796081542969, -25.051843643188477, 53.988338470458984, -25.103416442871094);
-    path.quadraticCurveTo(43.683990478515625, -8.5, 25, -8.5);
-    path.quadraticCurveTo(24.378677368164062, -8.5, 23.93933868408203, -8.939339637756348);
-    path.quadraticCurveTo(23.5, -9.378679275512695, 23.5, -10);
-    path.quadraticCurveTo(23.5, -10.621319770812988, 23.93933868408203, -11.060659408569336);
-    path.quadraticCurveTo(24.378677368164062, -11.5, 25, -11.5);
-    path.quadraticCurveTo(41.910125732421875, -11.5, 51.362449645996094, -26.569515228271484);
-    path.quadraticCurveTo(50.70615768432617, -27.26542091369629, 50.35307693481445, -28.154430389404297);
-    path.quadraticCurveTo(50, -29.043441772460938, 50, -30);
-    path.quadraticCurveTo(49.999996185302734, -32.07106399536133, 51.46446228027344, -33.53553009033203);
-    path.quadraticCurveTo(52.928924560546875, -34.999996185302734, 55, -35);
-    path.quadraticCurveTo(57.07106018066406, -34.999996185302734, 58.53553009033203, -33.53553009033203);
-    path.quadraticCurveTo(59.99999237060547, -32.07106399536133, 60, -30);
-    path.closePath();
-    path.moveTo(50, 30);
-    path.quadraticCurveTo(50, 29.043441772460938, 50.35308074951172, 28.154430389404297);
-    path.quadraticCurveTo(50.70615768432617, 27.26542091369629, 51.362449645996094, 26.569515228271484);
-    path.quadraticCurveTo(41.910125732421875, 11.5, 25, 11.5);
-    path.quadraticCurveTo(24.378677368164062, 11.5, 23.93933868408203, 11.060659408569336);
-    path.quadraticCurveTo(23.5, 10.621319770812988, 23.5, 10);
-    path.quadraticCurveTo(23.5, 9.378679275512695, 23.93933868408203, 8.939339637756348);
-    path.quadraticCurveTo(24.378677368164062, 8.5, 25, 8.5);
-    path.quadraticCurveTo(43.683990478515625, 8.5, 53.988338470458984, 25.103416442871094);
-    path.quadraticCurveTo(54.23796081542969, 25.051843643188477, 54.491539001464844, 25.025922775268555);
-    path.quadraticCurveTo(54.74510955810547, 25, 55, 25);
-    path.quadraticCurveTo(57.07106018066406, 25, 58.53553009033203, 26.464462280273438);
-    path.quadraticCurveTo(59.99999237060547, 27.92892837524414, 60, 30);
-    path.quadraticCurveTo(59.99999237060547, 32.07106399536133, 58.53553009033203, 33.53553009033203);
-    path.quadraticCurveTo(57.07106018066406, 34.999996185302734, 55, 35);
-    path.quadraticCurveTo(52.928924560546875, 34.999996185302734, 51.46446228027344, 33.53553009033203);
-    path.quadraticCurveTo(49.999996185302734, 32.07106399536133, 50, 30);
-    path.closePath();
-    return path;
-}(), "evenodd");
-ctx.restore();
-ctx.restore();
+
+{
+    ctx.save();
+
+    ctx.translate(10.861160278320312, 10.861160278320312);
+    ctx.rotate(-2.356194577998286);
+    ctx.scale(1.919999852501179, 1.919999852501179);
+
+    ctx.beginPath();
+
+    ctx.arc(-8, 0, 13.5, 0, TAU);
+
+    ctx.fillStyle = "#454545";
+    ctx.fill();
+
+    ctx.beginPath();
+
+    ctx.arc(-8, 0, 6.5, 0, TAU);
+
+    ctx.fillStyle = "#555555";
+    ctx.fill();
+
+    ctx.restore();
+}
+
+{
+    ctx.save();
+
+    ctx.rotate(-2.356194577998286);
+    ctx.scale(1.919999852501179, 1.919999852501179);
+
+    ctx.strokeStyle = "#292929";
+
+    ctx.beginPath();
+
+    ctx.moveTo(0, -7);
+    ctx.quadraticCurveTo(11, -10, 22, -5);
+
+    ctx.stroke();
+
+    ctx.beginPath();
+
+    ctx.moveTo(0, 7);
+    ctx.quadraticCurveTo(11, 10, 22, 5);
+
+    ctx.stroke();
+
+    ctx.beginPath();
+
+    ctx.arc(0, 0, 17.5, 0, 2 * Math.PI);
+
+    ctx.fillStyle = "#454545";
+    ctx.fill();
+
+    ctx.beginPath();
+
+    ctx.arc(0, 0, 10.5, 0, 2 * Math.PI);
+
+    ctx.fillStyle = "#555555";
+    ctx.fill();
+
+    ctx.restore();
+}

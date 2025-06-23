@@ -14,11 +14,12 @@ func (p *Petal) PetalCoordinateBoundary(wp *WavePool, _ time.Time) {
 	mapRadius := float32(wp.Wd.MapRadius)
 
 	desiredMapRadius := mapRadius - p.CalculateRadius()
+	desiredMapRadiusSq := desiredMapRadius * desiredMapRadius
 
 	dx := p.X - mapRadius
 	dy := p.Y - mapRadius
 
-	if math32.Hypot(dx, dy) > desiredMapRadius {
+	if (dx*dx + dy*dy) > desiredMapRadiusSq {
 		collisionAngle := math32.Atan2(dy, dx)
 
 		p.X = mapRadius + math32.Cos(collisionAngle)*desiredMapRadius

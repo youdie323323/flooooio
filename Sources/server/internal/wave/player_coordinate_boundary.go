@@ -19,6 +19,7 @@ func (p *Player) PlayerCoordinateBoundary(wp *WavePool, _ time.Time) {
 
 	dx := p.X - mapRadius
 	dy := p.Y - mapRadius
+	
 	distanceFromCenter := math32.Hypot(dx, dy)
 
 	if distanceFromCenter > desiredMapRadius {

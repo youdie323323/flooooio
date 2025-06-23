@@ -8,6 +8,8 @@ const (
 	MobTypeBee MobType = iota
 	MobTypeSpider
 	MobTypeHornet
+	MobTypeBabyAnt
+	MobTypeWorkerAnt
 
 	MobTypeBeetle
 	MobTypeSandstorm

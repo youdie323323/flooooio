@@ -14,8 +14,7 @@ var PlayerCollision = native.EntityCollision{
 
 const playerToPlayerKnockbackMultiplier = 2.5
 
-// Define reusable circle
-var (
+var ( // Define reusable circle
 	c0player collision.Circle
 	c1player collision.Circle
 )
@@ -35,6 +34,7 @@ func (p *Player) PlayerCollision(wp *WavePool, _ time.Time) {
 	nearby := wp.SpatialHash.Search(p.X, p.Y, searchRadius)
 
 	for _, n := range nearby {
+		// Player -> PLayer
 		op, ok := n.(*Player)
 		if !ok {
 			continue
