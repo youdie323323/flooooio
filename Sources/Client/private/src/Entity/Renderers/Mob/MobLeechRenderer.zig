@@ -58,8 +58,6 @@ fn render(rctx: RenderContext(MobSuper)) void {
         if (entity.impl.connecting_segment) |_|
             return;
 
-    ctx.rotate(entity.angle);
-
     const scale = entity.size / 20;
     ctx.scale(scale, scale);
 
@@ -115,12 +113,16 @@ fn render(rctx: RenderContext(MobSuper)) void {
         const beak_angle = mob.calculateBeakAngle(0.1);
 
         inline for (.{ -1, 1 }) |dir| {
-            ctx.save();
-            defer ctx.restore();
-
             ctx.beginPath();
 
-            ctx.rotate(beak_angle * dir);
+            ctx.rotate(
+                (beak_angle * dir) +
+                    // Add for negative dir
+                    if (comptime dir == 1)
+                        beak_angle
+                    else
+                        0,
+            );
 
             ctx.moveTo(0, comptime (10 * dir));
             ctx.quadraticCurveTo(11, comptime (10 * dir), 22, comptime (5 * dir));
@@ -150,6 +152,8 @@ fn render(rctx: RenderContext(MobSuper)) void {
     }
 }
 
+const one_over_six_vector: Point = @splat(1.0 / 6.0);
+
 inline fn prepareNPointCurve(rctx: RenderContext(MobSuper), points: Points) void {
     const ctx = rctx.ctx;
 
@@ -157,42 +161,39 @@ inline fn prepareNPointCurve(rctx: RenderContext(MobSuper), points: Points) void
 
     if (points.len == 0) return;
 
-    const first_point = points[0];
-    const len_points = points.len;
+    const p_0 = points[0];
+    const points_len = points.len;
 
-    const first_point_x, const first_point_y = first_point;
+    const x_p_0, const y_p_0 = p_0;
 
-    if (len_points > 1) {
-        ctx.moveTo(first_point_x, first_point_y);
+    if (points_len > 1) {
+        ctx.moveTo(x_p_0, y_p_0);
 
-        for (0..len_points - 1) |i| {
-            const p0 = if (i >= 1) points[i - 1] else first_point;
-            const p1 = points[i];
-            const p2 = points[i + 1];
-            const p3 = if (i != len_points - 2) points[i + 2] else p2;
+        for (0..points_len - 1) |i| {
+            const p_isub1 = if (i >= 1) points[i - 1] else p_0;
+            const p_i = points[i];
+            const p_iadd1 = points[i + 1];
+            const p_iadd2 = if (i != points_len - 2) points[i + 2] else p_iadd1;
 
-            const p0_x, const p0_y = p0;
-            const p1_x, const p1_y = p1;
-            const p2_x, const p2_y = p2;
-            const p3_x, const p3_y = p3;
+            const x_p_iadd1, const y_p_iadd1 = p_iadd1;
 
-            const cp1x = p1_x + (p2_x - p0_x) / 6;
-            const cp1y = p1_y + (p2_y - p0_y) / 6;
+            const vector_p_isub1_to_p_iadd1 = p_iadd1 - p_isub1;
+            const vector_p_i_to_p_iadd2 = p_iadd2 - p_i;
 
-            const cp2x = p2_x - (p3_x - p1_x) / 6;
-            const cp2y = p2_y - (p3_y - p1_y) / 6;
+            const cp1x, const cp1y = p_i + vector_p_isub1_to_p_iadd1 * one_over_six_vector;
+            const cp2x, const cp2y = p_iadd1 - vector_p_i_to_p_iadd2 * one_over_six_vector;
 
             ctx.bezierCurveTo(
                 cp1x,
                 cp1y,
                 cp2x,
                 cp2y,
-                p2_x,
-                p2_y,
+                x_p_iadd1,
+                y_p_iadd1,
             );
         }
     } else {
-        ctx.arc(first_point_x, first_point_y, 1, 0, math.tau, false);
+        ctx.arc(x_p_0, y_p_0, 1, 0, math.tau, false);
     }
 }
 

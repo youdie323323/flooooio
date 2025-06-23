@@ -80,12 +80,16 @@ fn render(rctx: RenderContext(MobSuper)) void {
             const x, const y = comptime .{ 5 * dir, 15 * dir };
 
             ctx.beginPath();
+
             ctx.moveTo(25, x);
             ctx.quadraticCurveTo(35, x, 40, y);
+
             ctx.stroke();
 
             ctx.beginPath();
+            
             ctx.arc(40, y, 5, 0, math.tau, false);
+
             ctx.fill();
         }
     }

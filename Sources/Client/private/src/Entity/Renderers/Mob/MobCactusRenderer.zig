@@ -57,12 +57,13 @@ fn render(rctx: RenderContext(MobSuper)) void {
         }
     }
 
-    // Body
     ctx.scale(0.8, 0.8);
 
+    // Body
     ctx.fillColor(fcolor);
     ctx.fillPath(body, .nonzero);
 
+    // Body outline
     ctx.fillColor(scolor);
     ctx.fillPath(body_stroke, .nonzero);
 }

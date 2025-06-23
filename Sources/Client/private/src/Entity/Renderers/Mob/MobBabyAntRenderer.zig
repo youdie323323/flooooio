@@ -32,18 +32,27 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
     const beak_angle = mob.calculateBeakAngle(0.05);
 
-    inline for (.{ -1, 1 }) |dir| {
+    { // Beak
         ctx.save();
         defer ctx.restore();
 
-        ctx.beginPath();
+        inline for (.{ -1, 1 }) |dir| {
+            ctx.beginPath();
 
-        ctx.rotate(beak_angle * dir);
+            ctx.rotate(
+                (beak_angle * dir) +
+                    // Add for negative dir
+                    if (comptime dir == 1)
+                        beak_angle
+                    else
+                        0,
+            );
 
-        ctx.moveTo(0, comptime (7 * dir));
-        ctx.quadraticCurveTo(11, comptime (10 * dir), 22, comptime (5 * dir));
+            ctx.moveTo(0, comptime (7 * dir));
+            ctx.quadraticCurveTo(11, comptime (10 * dir), 22, comptime (5 * dir));
 
-        ctx.stroke();
+            ctx.stroke();
+        }
     }
 
     // Body outline

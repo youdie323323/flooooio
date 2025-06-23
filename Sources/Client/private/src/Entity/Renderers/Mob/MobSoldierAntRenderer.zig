@@ -10,6 +10,8 @@ const Color = @import("../../../WebAssembly/Interop/Canvas2D/Color.zig");
 
 const pi10 = math.pi / 10.0;
 
+const soldier_beak_mul: f32 = 0.05;
+
 fn render(rctx: RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
@@ -32,25 +34,35 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
     ctx.strokeColor(bcolor);
 
-    const beak_angle = mob.calculateBeakAngle(0.05);
-    const beak_angle_positive = beak_angle + 0.05;
+    const beak_angle = mob.calculateBeakAngle(soldier_beak_mul);
+    const beak_angle_positive = beak_angle + soldier_beak_mul;
 
-    inline for (.{ -1, 1 }) |dir| {
+    { // Beak
         ctx.save();
         defer ctx.restore();
 
-        ctx.beginPath();
+        inline for (.{ -1, 1 }) |dir| {
+            ctx.beginPath();
 
-        ctx.rotate(beak_angle * dir);
+            ctx.rotate(
+                (beak_angle * dir) +
+                    // Add for negative dir
+                    if (comptime dir == 1)
+                        beak_angle
+                    else
+                        0,
+            );
 
-        ctx.moveTo(0, comptime (7 * dir));
-        ctx.quadraticCurveTo(11, comptime (10 * dir), 22, comptime (5 * dir));
+            ctx.moveTo(0, comptime (7 * dir));
+            ctx.quadraticCurveTo(11, comptime (10 * dir), 22, comptime (5 * dir));
 
-        ctx.stroke();
+            ctx.stroke();
+        }
     }
 
     { // Body connected ball (lol?)
         ctx.save();
+        defer ctx.restore();
 
         ctx.translate(-8, 0);
 
@@ -77,20 +89,22 @@ fn render(rctx: RenderContext(MobSuper)) void {
             ctx.fillColor(rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#EEEEEE")));
 
             inline for (.{ -1, 1 }) |dir| {
-                ctx.save();
-                defer ctx.restore();
-
                 ctx.beginPath();
 
-                ctx.rotate(4 * beak_angle_positive * dir);
+                ctx.rotate(
+                    (beak_angle_positive * comptime (3 * dir)) +
+                        // Add for negative dir
+                        if (comptime dir == 1)
+                            beak_angle_positive * 3
+                        else
+                            0,
+                );
 
-                ctx.ellipse(-7, 8 * dir, 15, 7, -pi10 * dir, 0, math.tau, false);
+                ctx.ellipse(-7, comptime (8 * dir), 15, 7, comptime (-pi10 * dir), 0, math.tau, false);
 
                 ctx.fill();
             }
         }
-
-        ctx.restore();
     }
 
     // Body outline
