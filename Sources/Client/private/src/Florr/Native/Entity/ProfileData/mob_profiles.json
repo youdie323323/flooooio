@@ -79,6 +79,45 @@
   },
   "10": {
     "i18n": {
+      "name": "Shiny Ladybug",
+      "description": "Shiny, cute and mostly harmless."
+    },
+    "collision": {
+      "fraction": 30,
+      "radius": 30
+    },
+    "baseSize": 30,
+    "0": {
+      "health": 35,
+      "bodyDamage": 10
+    },
+    "1": {
+      "health": 56,
+      "bodyDamage": 11
+    },
+    "2": {
+      "health": 87.5,
+      "bodyDamage": 13
+    },
+    "3": {
+      "health": 140,
+      "bodyDamage": 16
+    },
+    "4": {
+      "health": 875,
+      "bodyDamage": 20
+    },
+    "5": {
+      "health": 1750,
+      "bodyDamage": 25
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
+    }
+  },
+  "11": {
+    "i18n": {
       "name": "Starfish",
       "description": "His name is Patrick"
     },
@@ -116,7 +155,7 @@
       "bodyDamage": 0
     }
   },
-  "11": {
+  "12": {
     "i18n": {
       "name": "Jellyfish",
       "description": "Makes the most delicious jam."
@@ -179,7 +218,7 @@
       "bodyDamage": 0
     }
   },
-  "12": {
+  "13": {
     "i18n": {
       "name": "Bubble",
       "description": "Pop"
@@ -218,7 +257,7 @@
       "bodyDamage": 0
     }
   },
-  "13": {
+  "14": {
     "i18n": {
       "name": "Sponge",
       "description": "Bob"
@@ -257,7 +296,7 @@
       "bodyDamage": 0
     }
   },
-  "14": {
+  "15": {
     "i18n": {
       "name": "Shell",
       "description": "Not an advertisement."
@@ -296,7 +335,7 @@
       "bodyDamage": 0
     }
   },
-  "15": {
+  "16": {
     "i18n": {
       "name": "Crab",
       "description": "Mr. Crab"
@@ -335,7 +374,7 @@
       "bodyDamage": 0
     }
   },
-  "16": {
+  "17": {
     "i18n": {
       "name": "Leech",
       "description": "Slurp slurp."
@@ -392,7 +431,7 @@
       "bodyDamage": 0
     }
   },
-  "17": {
+  "18": {
     "i18n": {
       "name": "Centipede",
       "description": "It's just there doing its thing."
@@ -431,49 +470,10 @@
       "bodyDamage": 0
     }
   },
-  "18": {
-    "i18n": {
-      "name": "Centipede",
-      "description": "This one loves flowers."
-    },
-    "collision": {
-      "fraction": 35,
-      "radius": 35
-    },
-    "baseSize": 25,
-    "0": {
-      "health": 50,
-      "bodyDamage": 10
-    },
-    "1": {
-      "health": 80,
-      "bodyDamage": 11
-    },
-    "2": {
-      "health": 125,
-      "bodyDamage": 13
-    },
-    "3": {
-      "health": 200,
-      "bodyDamage": 16
-    },
-    "4": {
-      "health": 1250,
-      "bodyDamage": 20
-    },
-    "5": {
-      "health": 2500,
-      "bodyDamage": 25
-    },
-    "6": {
-      "health": 0,
-      "bodyDamage": 0
-    }
-  },
   "19": {
     "i18n": {
       "name": "Centipede",
-      "description": "Gotta go fast."
+      "description": "This one loves flowers."
     },
     "collision": {
       "fraction": 35,
@@ -550,6 +550,45 @@
   },
   "20": {
     "i18n": {
+      "name": "Centipede",
+      "description": "Gotta go fast."
+    },
+    "collision": {
+      "fraction": 35,
+      "radius": 35
+    },
+    "baseSize": 25,
+    "0": {
+      "health": 50,
+      "bodyDamage": 10
+    },
+    "1": {
+      "health": 80,
+      "bodyDamage": 11
+    },
+    "2": {
+      "health": 125,
+      "bodyDamage": 13
+    },
+    "3": {
+      "health": 200,
+      "bodyDamage": 16
+    },
+    "4": {
+      "health": 1250,
+      "bodyDamage": 20
+    },
+    "5": {
+      "health": 2500,
+      "bodyDamage": 25
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
+    }
+  },
+  "21": {
+    "i18n": {
       "name": "Missile",
       "description": "How did you see this?"
     },
@@ -587,7 +626,7 @@
       "bodyDamage": 0
     }
   },
-  "21": {
+  "22": {
     "i18n": {
       "name": "Web",
       "description": "How did you see this?"
@@ -706,6 +745,45 @@
   },
   "5": {
     "i18n": {
+      "name": "Soldier Ant",
+      "description": "Fuck you."
+    },
+    "collision": {
+      "fraction": 30,
+      "radius": 20
+    },
+    "baseSize": 25,
+    "0": {
+      "health": 40,
+      "bodyDamage": 10
+    },
+    "1": {
+      "health": 64,
+      "bodyDamage": 11
+    },
+    "2": {
+      "health": 100,
+      "bodyDamage": 13
+    },
+    "3": {
+      "health": 160,
+      "bodyDamage": 16
+    },
+    "4": {
+      "health": 1000,
+      "bodyDamage": 20
+    },
+    "5": {
+      "health": 2000,
+      "bodyDamage": 25
+    },
+    "6": {
+      "health": 0,
+      "bodyDamage": 0
+    }
+  },
+  "6": {
+    "i18n": {
       "name": "Beetle",
       "description": "It's hungry and flowers are its favorite meal."
     },
@@ -743,7 +821,7 @@
       "bodyDamage": 0
     }
   },
-  "6": {
+  "7": {
     "i18n": {
       "name": "Sandstorm",
       "description": "Darude (1999)"
@@ -782,7 +860,7 @@
       "bodyDamage": 0
     }
   },
-  "7": {
+  "8": {
     "i18n": {
       "name": "Cactus",
       "description": "Avoid touching it, it hurts"
@@ -821,7 +899,7 @@
       "bodyDamage": 0
     }
   },
-  "8": {
+  "9": {
     "i18n": {
       "name": "Scorpion",
       "description": "IT STINGS"
@@ -878,45 +956,6 @@
         "poisonDPS": 37.5,
         "totalPoison": 125
       }
-    },
-    "6": {
-      "health": 0,
-      "bodyDamage": 0
-    }
-  },
-  "9": {
-    "i18n": {
-      "name": "Shiny Ladybug",
-      "description": "Shiny, cute and mostly harmless."
-    },
-    "collision": {
-      "fraction": 30,
-      "radius": 30
-    },
-    "baseSize": 30,
-    "0": {
-      "health": 35,
-      "bodyDamage": 10
-    },
-    "1": {
-      "health": 56,
-      "bodyDamage": 11
-    },
-    "2": {
-      "health": 87.5,
-      "bodyDamage": 13
-    },
-    "3": {
-      "health": 140,
-      "bodyDamage": 16
-    },
-    "4": {
-      "health": 875,
-      "bodyDamage": 20
-    },
-    "5": {
-      "health": 1750,
-      "bodyDamage": 25
     },
     "6": {
       "health": 0,

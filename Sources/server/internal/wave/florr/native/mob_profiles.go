@@ -249,6 +249,43 @@ var MobProfiles = map[MobType]MobData{
 			},
 		},
 	},
+	MobTypeSoldierAnt: {
+		Common: MobStat{
+			Health:     40,
+			BodyDamage: 10,
+		},
+		Unusual: MobStat{
+			Health:     64,
+			BodyDamage: 11,
+		},
+		Rare: MobStat{
+			Health:     100,
+			BodyDamage: 13,
+		},
+		Epic: MobStat{
+			Health:     160,
+			BodyDamage: 16,
+		},
+		Legendary: MobStat{
+			Health:     1000,
+			BodyDamage: 20,
+		},
+		Mythic: MobStat{
+			Health:     2000,
+			BodyDamage: 25,
+		},
+		BaseSize: 25,
+		EntityData: EntityData[MobI18n]{
+			I18n: MobI18n{
+				Name:        "Soldier Ant",
+				Description: "Fuck you.",
+			},
+			Collision: EntityCollision{
+				Fraction: 30,
+				Radius:   20,
+			},
+		},
+	},
 	MobTypeBeetle: {
 		Common: MobStat{
 			Health:     40,

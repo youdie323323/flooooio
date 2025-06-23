@@ -56,7 +56,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
         ctx.arc(-8, 0, 13.5, 0, math.tau, false);
 
-        ctx.fillColor(fcolor);
+        ctx.fillColor(scolor);
         ctx.fill();
 
         // Body connected ball
@@ -64,7 +64,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
         ctx.arc(-8, 0, 6.5, 0, math.tau, false);
 
-        ctx.fillColor(scolor);
+        ctx.fillColor(fcolor);
         ctx.fill();
 
         ctx.restore();

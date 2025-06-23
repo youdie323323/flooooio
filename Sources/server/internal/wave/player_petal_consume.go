@@ -17,9 +17,9 @@ const (
 
 var summonPetsData = map[native.PetalType]map[native.Rarity]StaticMobData{
 	native.PetalTypeEggBeetle: {
-		native.RarityCommon:    StaticMobData{native.MobTypeBeetle, native.RarityCommon},  // TODO: should be common baby ant
-		native.RarityUnusual:   StaticMobData{native.MobTypeBeetle, native.RarityUnusual}, // TODO: should be unusual worker ant
-		native.RarityRare:      StaticMobData{native.MobTypeBeetle, native.RarityUnusual}, // TODO: should be unusual solider ant
+		native.RarityCommon:    StaticMobData{native.MobTypeBabyAnt, native.RarityCommon},
+		native.RarityUnusual:   StaticMobData{native.MobTypeWorkerAnt, native.RarityUnusual},
+		native.RarityRare:      StaticMobData{native.MobTypeSoldierAnt, native.RarityUnusual},
 		native.RarityEpic:      StaticMobData{native.MobTypeBeetle, native.RarityUnusual},
 		native.RarityLegendary: StaticMobData{native.MobTypeBeetle, native.RarityRare},
 		native.RarityMythic:    StaticMobData{native.MobTypeBeetle, native.RarityLegendary},

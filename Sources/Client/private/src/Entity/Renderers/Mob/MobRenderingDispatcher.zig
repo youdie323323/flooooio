@@ -27,6 +27,9 @@ const babyAntRender = MobBabyAntRenderer.render;
 const MobWorkerAntRenderer = @import("MobWorkerAntRenderer.zig").MobWorkerAntRenderer;
 const workerAntRender = MobWorkerAntRenderer.render;
 
+const MobSoldierAntRenderer = @import("MobSoldierAntRenderer.zig").MobSoldierAntRenderer;
+const soldierAntRender = MobSoldierAntRenderer.render;
+
 const MobCentipedeRenderer = @import("MobCentipedeRenderer.zig").MobCentipedeRenderer;
 const centipedeRender = MobCentipedeRenderer.render;
 
@@ -69,6 +72,7 @@ fn init(allocator: std.mem.Allocator) void {
             type_to_renderer.put(@intFromEnum(MobType.spider), spiderRender) catch unreachable;
             type_to_renderer.put(@intFromEnum(MobType.baby_ant), babyAntRender) catch unreachable;
             type_to_renderer.put(@intFromEnum(MobType.worker_ant), workerAntRender) catch unreachable;
+            type_to_renderer.put(@intFromEnum(MobType.soldier_ant), soldierAntRender) catch unreachable;
 
             type_to_renderer.put(@intFromEnum(MobType.centipede), centipedeRender) catch unreachable;
             type_to_renderer.put(@intFromEnum(MobType.centipede_desert), centipedeRender) catch unreachable;
@@ -94,6 +98,7 @@ fn init(allocator: std.mem.Allocator) void {
             MobBeeRenderer.staticInit(allocator);
             MobBabyAntRenderer.staticInit(allocator);
             MobWorkerAntRenderer.staticInit(allocator);
+            MobSoldierAntRenderer.staticInit(allocator);
             MobLeechRenderer.staticInit(allocator);
             MobHornetRenderer.staticInit(allocator);
             MobSpiderRenderer.staticInit(allocator);

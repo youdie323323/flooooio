@@ -97,7 +97,7 @@ pub fn Entity(comptime Impl: type) type {
 
         pub fn update(self: *@This(), delta_time: f32) void {
             const delta_time_100 = delta_time * 0.01;
-            const delta_time_150 = delta_time_100 * (2.0 / 3.0);
+            const delta_time_150 = delta_time_100 * comptime (2.0 / 3.0);
             const delta_time_200 = delta_time_100 * 0.5;
 
             self.update_t += delta_time_100;

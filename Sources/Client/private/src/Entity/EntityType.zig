@@ -7,6 +7,7 @@ pub const MobType = enum(u8) {
     hornet,
     baby_ant,
     worker_ant,
+    soldier_ant,
 
     beetle,
     sandstorm,

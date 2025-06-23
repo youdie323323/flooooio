@@ -30,11 +30,12 @@ const (
 
 var mobSpawnRules = map[native.Biome]map[native.MobType]MobSpawnRule{
 	native.BiomeGarden: {
-		native.MobTypeBee:       {1, 50, 1},
-		native.MobTypeSpider:    {3, 50, 1},
-		native.MobTypeHornet:    {3, 50, 1},
-		native.MobTypeBabyAnt:   {1, 50, 1},
-		native.MobTypeWorkerAnt: {2, 50, 1},
+		native.MobTypeBee:        {1, 50, 1},
+		native.MobTypeSpider:     {3, 50, 1},
+		native.MobTypeHornet:     {3, 50, 1},
+		native.MobTypeBabyAnt:    {1, 50, 1},
+		native.MobTypeWorkerAnt:  {2, 50, 1},
+		native.MobTypeSoldierAnt: {3, 50, 1},
 
 		native.MobTypeCentipede:     {2, 1, centipedePoint},
 		native.MobTypeCentipedeEvil: {3, 1, centipedePoint},
@@ -72,7 +73,7 @@ type SpawnGroup = []native.MobType
 
 var specialWaveMobGroups = map[native.Biome][]SpawnGroup{
 	native.BiomeGarden: {
-		{native.MobTypeBabyAnt, native.MobTypeWorkerAnt /* ROCK */},
+		{native.MobTypeBabyAnt, native.MobTypeWorkerAnt, native.MobTypeSoldierAnt /* ROCK */},
 		{native.MobTypeBee /* LADYBUG */},
 		{native.MobTypeHornet},
 		{native.MobTypeHornet, native.MobTypeBee},

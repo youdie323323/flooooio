@@ -100,12 +100,12 @@ pub fn deinit(self: *MobImpl, _: std.mem.Allocator, _: *Super) void {
 }
 
 pub fn update(self: *@This(), _: *Super, delta_time: f32) void {
-    self.total_t += delta_time / 40;
+    self.total_t += delta_time * 0.025;
 }
 
 /// Calculate beak angle for mob.
 pub inline fn calculateBeakAngle(self: MobImpl, comptime multiplier: f32) f32 {
-    return @sin(self.total_t) * multiplier;
+    return @sin(@mod(self.total_t, math.tau)) * multiplier;
 }
 
 /// Returns a stat within this mob.
