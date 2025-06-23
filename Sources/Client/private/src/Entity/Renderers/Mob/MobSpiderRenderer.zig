@@ -65,9 +65,9 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
     const size_fraction: f32 =
         if (is_specimen)
-            60
+            60.0
         else
-            25;
+            25.0;
 
     const scale = entity.size / size_fraction;
     ctx.scale(scale, scale);
@@ -75,10 +75,15 @@ fn render(rctx: RenderContext(MobSuper)) void {
     ctx.setLineCap(.round);
 
     { // Legs
+        ctx.save();
+        defer ctx.restore();
+
         ctx.setLineWidth(10);
         ctx.strokeColor(rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#323032")));
 
         const move_counter = entity.move_counter / 1.25;
+
+        var prev_neg_angle: f32 = 0;
 
         inline for (leg_curves, 0..) |lc, i| {
             const dir = comptime lc.dir;
@@ -87,17 +92,18 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
             const i_f32: f32 = comptime @floatFromInt(i);
 
-            ctx.save();
-            defer ctx.restore();
+            const angle = 0.2 * @sin(move_counter + i_f32) * dir;
 
             ctx.beginPath();
 
-            ctx.rotate(0.2 * @sin(move_counter + i_f32) * dir);
+            ctx.rotate(angle - prev_neg_angle);
 
             ctx.moveTo(start_x, start_y);
             ctx.quadraticCurveTo(curve_cpx, curve_cpy, curve_x, curve_y);
 
             ctx.stroke();
+
+            prev_neg_angle = angle;
         }
     }
 

@@ -35,7 +35,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
     ctx.rotate(entity.angle);
 
-    const scale = entity.size / 25;
+    const scale = entity.size * comptime (1.0 / 25.0);
     ctx.scale(scale, scale);
 
     ctx.setLineJoin(.round);

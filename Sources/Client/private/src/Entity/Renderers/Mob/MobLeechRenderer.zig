@@ -58,7 +58,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
         if (entity.impl.connecting_segment) |_|
             return;
 
-    const scale = entity.size / 20;
+    const scale = entity.size * comptime (1.0 / 20.0);
     ctx.scale(scale, scale);
 
     ctx.setLineCap(.round);
@@ -89,7 +89,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
         {
             ctx.beginPath();
 
-            ctx.rotate(-2.356194599949769);
+            ctx.rotate(comptime -math.degreesToRadians(135));
 
             ctx.moveTo(50, 0);
             ctx.quadraticCurveTo(0, -30, -50, 0);

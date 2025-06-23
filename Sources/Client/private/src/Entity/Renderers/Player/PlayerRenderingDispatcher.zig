@@ -13,7 +13,7 @@ fn render(rctx: RenderContext(PlayerSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
 
-    const scale = entity.size / 25;
+    const scale = entity.size * comptime (1.0 / 25.0);
     ctx.scale(scale, scale);
 
     if (entity.impl.is_developer) {

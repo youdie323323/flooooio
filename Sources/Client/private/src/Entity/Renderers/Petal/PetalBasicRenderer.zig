@@ -12,7 +12,7 @@ pub inline fn drawBasicLike(
     rctx: RenderContext(MobSuper),
     comptime color: Color.HexColor,
     comptime fraction: f32,
-    comptime outlineWidth: f32,
+    comptime outline_width: f32,
 ) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
@@ -22,16 +22,16 @@ pub inline fn drawBasicLike(
 
     ctx.rotate(entity.angle);
 
-    const scale = entity.size / fraction;
+    const scale = entity.size * comptime (1.0 / fraction);
     ctx.scale(scale, scale);
 
     ctx.beginPath();
 
     ctx.arc(0, 0, 15, 0, math.tau, false);
 
+    ctx.setLineWidth(outline_width);
     ctx.fillColor(fcolor);
     ctx.strokeColor(scolor);
-    ctx.setLineWidth(outlineWidth);
     ctx.fill();
     ctx.stroke();
 }

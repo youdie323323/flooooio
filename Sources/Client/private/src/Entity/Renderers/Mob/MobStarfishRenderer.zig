@@ -53,7 +53,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
     ctx.rotate(entity.angle);
 
-    const scale = entity.size / 120;
+    const scale = entity.size * comptime (1.0 / 120.0);
     ctx.scale(scale, scale);
 
     const rotation =
