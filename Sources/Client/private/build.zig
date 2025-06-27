@@ -4,7 +4,7 @@ const src_folder = "src";
 
 const c_src_folder = "src-c";
 
-pub const memory = 4096 * std.wasm.page_size;
+const wasm_memory = 4096 * std.wasm.page_size;
 
 pub fn build(b: *std.Build) !void {
     const is_production = b.option(
@@ -21,7 +21,7 @@ pub fn build(b: *std.Build) !void {
         },
     });
 
-    const exe = b.addExecutable(.{
+    const wasm = b.addExecutable(.{
         .name = "client",
         .root_module = b.createModule(
             if (is_production) .{
@@ -41,18 +41,18 @@ pub fn build(b: *std.Build) !void {
         ),
     });
 
-    exe.export_memory = true;
+    wasm.export_memory = true;
 
-    exe.initial_memory = memory;
-    exe.max_memory = memory;
+    wasm.initial_memory = wasm_memory;
+    wasm.max_memory = wasm_memory;
 
-    exe.export_table = true;
+    wasm.export_table = true;
 
-    exe.entry = .disabled;
+    wasm.entry = .disabled;
 
-    exe.rdynamic = true;
+    wasm.rdynamic = true;
 
-    exe.want_lto = true;
+    wasm.want_lto = true;
 
     // exe.linkLibCpp();
     // exe.addIncludePath(b.path(c_src_folder));
@@ -79,16 +79,16 @@ pub fn build(b: *std.Build) !void {
         const boost_artifact = boost_dep.artifact("boost");
 
         for (boost_artifact.root_module.include_dirs.items) |include_dir| {
-            try exe.root_module.include_dirs.append(b.allocator, include_dir);
+            try wasm.root_module.include_dirs.append(b.allocator, include_dir);
         }
 
         // If not header-only, link library
-        exe.linkLibrary(boost_artifact);
+        wasm.linkLibrary(boost_artifact);
 
         // exe.root_module.addCMacro("BOOST_NO_RTTI", "");
         // exe.root_module.addCMacro("BOOST_NO_EXCEPTIONS", "");
         // exe.root_module.addCMacro("BOOST_EXCEPTION_DISABLE", "");
     }
 
-    b.installArtifact(exe);
+    b.installArtifact(wasm);
 }

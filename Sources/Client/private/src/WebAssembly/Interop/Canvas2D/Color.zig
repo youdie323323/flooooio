@@ -33,7 +33,7 @@ pub inline fn init(rgb: Rgb) Color {
 inline fn mulSafe(self: Color, comptime strength: FloatingRgb) Rgb {
     const result = toFloatingRgb(self.rgb) * strength;
 
-    // Clamping lower bound redundant here since xy (x >= 0, y >= 0) always >= 0
+    // Clamping lower bound is redundant here since xy (x >= 0, y >= 0) always >= 0
 
     return toRgb(@min(result, fwhite));
 }
@@ -51,7 +51,7 @@ test "mulSafe @select vs @min" {
     var random = prng.random();
 
     while (i < iterations) : (i += 1) {
-        const result: FloatingRgb = .{ random.float(f32), random.float(f32), random.float(f32) };
+        const result: FloatingRgb = @splat(random.float(f32));
 
         {
             timer.reset();
@@ -113,7 +113,7 @@ pub inline fn interpolate(self: Color, other: Color, t: f32) Color {
 }
 
 /// N-dimensionally interpolates colors.
-pub fn multiColorInterpolate(colors: []const Color, t: f32) Color {
+pub fn nColorInterpolation(colors: []const Color, t: f32) Color {
     const last = colors.len - 1;
 
     const segment = t * @as(f32, @floatFromInt(last));
@@ -138,20 +138,20 @@ pub fn comptimeFromAnyString(comptime str: []const u8) Color {
     }
 }
 
-pub const HexColorCode = *const ["#AbCdEf".len]u8;
+pub const HexColorCode = *const ["#blahbl".len]u8;
 
 pub const HexColor = u24;
 
 inline fn comptimeIsValidHexColorCode(comptime code: HexColorCode) bool {
     comptime {
-        // Checking length here is redundant because already constrained with type
+        // Checking length is redundant here because we already constrained length with type
         return mem.startsWith(u8, code, "#") and for (code[1..]) |c| {
             if (!std.ascii.isHex(c)) break false;
         } else true;
     }
 }
 
-/// Convert hex color code to Color.
+/// Converts hex color code to Color.
 pub fn comptimeFromHexColorCode(comptime code: HexColorCode) Color {
     comptime {
         if (!comptimeIsValidHexColorCode(code)) @compileError("color code " ++ code ++ " is not valid");
@@ -163,7 +163,7 @@ pub fn comptimeFromHexColorCode(comptime code: HexColorCode) Color {
     }
 }
 
-/// Convert u24 representation of color code to Color.
+/// Converts u24 representation of color code to Color.
 pub fn comptimeFromHex(comptime hex: HexColor) Color {
     comptime {
         const r: u8 = (hex >> 16) & 0xFF;

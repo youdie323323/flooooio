@@ -2,15 +2,23 @@ const std = @import("std");
 const meta = std.meta;
 const mem = std.mem;
 
+const Generation = u16;
+const Index = u16;
+
 /// An ID representing a object. This is an opaque identifier which effectively encodes:
 ///
 /// * An array index that can be used to O(1) lookup the actual data / struct fields of the object.
 /// * The generation (or 'version') of the object, enabling detecting use-after-object-delete in
 ///   many (but not all) cases.
-pub const ObjectId = u48;
+pub const ObjectId = u32;
 
-pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type {
-    const SearchFieldType = meta.FieldType(T, search_field);
+const PackedObjectId = packed struct(ObjectId) {
+    generation: Generation,
+    index: Index,
+};
+
+pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Object)) type {
+    const SearchFieldType = meta.FieldType(Object, search_field);
 
     return struct {
         internal: struct {
@@ -21,7 +29,7 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
             mu: std.Thread.Mutex = .{},
 
             /// The actual object data.
-            data: std.MultiArrayList(T) = .{},
+            data: std.MultiArrayList(Object) = .{},
 
             /// Whether a given slot in data[i] is dead or not.
             dead: std.bit_set.DynamicBitSetUnmanaged = .{},
@@ -42,17 +50,9 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
             object_lut: std.AutoHashMapUnmanaged(SearchFieldType, ObjectId) = .{},
         },
 
-        const Generation = u16;
-        const Index = u32;
-
-        const PackedId = packed struct(ObjectId) {
-            generation: Generation,
-            index: Index,
-        };
-
         pub const Slice = struct {
             index: Index,
-            objs: *Objects(T, search_field),
+            objs: *Objects(Object, search_field),
 
             pub fn next(self: *Slice) ?ObjectId {
                 const dead = &self.objs.internal.dead;
@@ -69,7 +69,7 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
                     defer self.index += 1;
 
                     if (!dead.isSet(self.index))
-                        return @bitCast(PackedId{
+                        return @bitCast(PackedObjectId{
                             .generation = generation.items[self.index],
                             .index = self.index,
                         });
@@ -118,7 +118,7 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
             objs.internal.mu.unlock();
         }
 
-        pub fn new(objs: *@This(), value: T) !ObjectId {
+        pub fn new(objs: *@This(), value: Object) !ObjectId {
             const allocator = objs.internal.allocator;
             const data = &objs.internal.data;
             const dead = &objs.internal.dead;
@@ -156,11 +156,12 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
                 dead.unset(index);
 
                 const gen = generation.items[index] + 1;
+
                 generation.items[index] = gen;
 
                 data.set(index, value);
 
-                const obj_id: ObjectId = @bitCast(PackedId{
+                const obj_id: ObjectId = @bitCast(PackedObjectId{
                     .generation = gen,
                     .index = index,
                 });
@@ -181,7 +182,7 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
             dead.unset(index);
             generation.appendAssumeCapacity(0);
 
-            const obj_id: ObjectId = @bitCast(PackedId{
+            const obj_id: ObjectId = @bitCast(PackedObjectId{
                 .generation = 0,
                 .index = @intCast(index),
             });
@@ -195,7 +196,7 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
         ///
         /// Unlike set(), this method does not respect any mach.Objects tracking
         /// options, so changes made to an object through this method will not be tracked.
-        pub fn set(objs: *@This(), id: ObjectId, comptime field: meta.FieldEnum(T), value: meta.FieldType(T, field)) void {
+        pub fn set(objs: *@This(), id: ObjectId, comptime field: meta.FieldEnum(Object), value: meta.FieldType(Object, field)) void {
             const data = &objs.internal.data;
 
             const unpacked = objs.validateAndUnpack(id, @src());
@@ -207,7 +208,7 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
         ///
         /// Unlike setAll(), this method does not respect any mach.Objects tracking
         /// options, so changes made to an object through this method will not be tracked.
-        pub fn setValue(objs: *@This(), id: ObjectId, value: T) void {
+        pub fn setValue(objs: *@This(), id: ObjectId, value: Object) void {
             const data = &objs.internal.data;
 
             const unpacked = objs.validateAndUnpack(id, @src());
@@ -216,7 +217,7 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
         }
 
         /// Gets a single field.
-        pub fn get(objs: *@This(), id: ObjectId, comptime field: meta.FieldEnum(T)) meta.FieldType(T, field) {
+        pub fn get(objs: *@This(), id: ObjectId, comptime field: meta.FieldEnum(Object)) meta.FieldType(Object, field) {
             const data = &objs.internal.data;
 
             const unpacked = objs.validateAndUnpack(id, @src());
@@ -225,14 +226,14 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
         }
 
         /// Gets all fields.
-        pub fn getValue(objs: *@This(), id: ObjectId) T {
+        pub fn getValue(objs: *@This(), id: ObjectId) Object {
             const data = &objs.internal.data;
 
             const unpacked = objs.validateAndUnpack(id, @src());
 
             return data.get(unpacked.index);
         }
-        
+
         pub fn delete(objs: *@This(), id: ObjectId) void {
             const dead = &objs.internal.dead;
             const data = &objs.internal.data;
@@ -264,7 +265,7 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
 
         /// Validates the given object is from this list (type check) and alive (not a use after delete
         /// situation).
-        inline fn validateAndUnpack(objs: *const @This(), id: ObjectId, comptime src: std.builtin.SourceLocation) PackedId {
+        inline fn validateAndUnpack(objs: *const @This(), id: ObjectId, comptime src: std.builtin.SourceLocation) PackedObjectId {
             const dead = &objs.internal.dead;
             const generation = &objs.internal.generation;
 
@@ -272,13 +273,13 @@ pub fn Objects(comptime T: type, comptime search_field: meta.FieldEnum(T)) type 
 
             // TODO(object): decide whether to disable safety checks like this in some conditions,
             // e.g. in release builds
-            const unpacked: PackedId = @bitCast(id);
+            const unpacked: PackedObjectId = @bitCast(id);
 
             if (unpacked.generation != generation.items[unpacked.index])
-                @panic(comptime (fn_name ++ "() called with a dead object (use after delete, recycled slot)"));
+                @panic(comptime (fn_name ++ "(...) called with a dead object (use after delete, recycled slot)"));
 
             if (dead.isSet(unpacked.index))
-                @panic(comptime (fn_name ++ "() called with a dead object (use after delete)"));
+                @panic(comptime (fn_name ++ "(...) called with a dead object (use after delete)"));
 
             return unpacked;
         }

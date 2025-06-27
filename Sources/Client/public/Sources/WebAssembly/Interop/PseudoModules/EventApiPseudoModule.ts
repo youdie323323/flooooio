@@ -38,6 +38,8 @@ const enum EventType {
     MOUSE_UP = 6,
 
     SCREEN_RESIZE = 10,
+
+    WHEEL = 9,
 }
 
 function writeMouseEventToMemory(
@@ -47,29 +49,27 @@ function writeMouseEventToMemory(
 ) {
     HEAPF64[ptr >> 3] = event.timeStamp;
 
-    ptr >>= 2;
+    HEAP32[(ptr + 8) >> 2] = event.screenX;
+    HEAP32[(ptr + 12) >> 2] = event.screenY;
 
-    HEAP32[ptr + 2] = event.screenX;
-    HEAP32[ptr + 3] = event.screenY;
+    HEAP32[(ptr + 16) >> 2] = event.clientX;
+    HEAP32[(ptr + 20) >> 2] = event.clientY;
 
-    HEAP32[ptr + 4] = event.clientX;
-    HEAP32[ptr + 5] = event.clientY;
+    HEAP32[(ptr + 24) >> 2] = +event.ctrlKey;
+    HEAP32[(ptr + 28) >> 2] = +event.shiftKey;
+    HEAP32[(ptr + 32) >> 2] = +event.altKey;
+    HEAP32[(ptr + 36) >> 2] = +event.metaKey;
 
-    HEAP32[ptr + 6] = +event.ctrlKey;
-    HEAP32[ptr + 7] = +event.shiftKey;
-    HEAP32[ptr + 8] = +event.altKey;
-    HEAP32[ptr + 9] = +event.metaKey;
+    HEAP16[(ptr + 40) >> 1] = event.button;
+    HEAP16[(ptr + 42) >> 1] = event.buttons;
 
-    HEAP16[2 * ptr + 20] = event.button;
-    HEAP16[2 * ptr + 21] = event.buttons;
-
-    HEAP32[ptr + 11] = event.movementX;
-    HEAP32[ptr + 12] = event.movementY;
+    HEAP32[(ptr + 48) >> 2] = event.movementX;
+    HEAP32[(ptr + 52) >> 2] = event.movementY;
 
     const rect = getElementBounds(target);
 
-    HEAP32[ptr + 13] = event.clientX - rect.left;
-    HEAP32[ptr + 14] = event.clientY - rect.top;
+    HEAP32[(ptr + 56) >> 2] = event.clientX - rect.left;
+    HEAP32[(ptr + 60) >> 2] = event.clientY - rect.top;
 }
 
 let mouseEventPtr: number | null = null;
@@ -149,6 +149,41 @@ function addScreenEventListener(
     });
 }
 
+let wheelEventPtr: number | null = null;
+
+function addWheelEventListener(
+    eventTargetType: EventTargetType,
+    useCapture: boolean,
+    ptrOrRemoveListener: number,
+    eventType: EventType,
+    eventName: string,
+) {
+    wheelEventPtr ??= malloc(96);
+
+    const target = getEventTarget(eventTargetType);
+
+    eventManager.addOrRemoveEventListener({
+        target,
+        eventName,
+        ptrOrRemoveListener,
+        callback(e) {
+            e = e || event;
+
+            writeMouseEventToMemory(wheelEventPtr, <WheelEvent>e, target);
+
+            HEAPF64[(wheelEventPtr + 64) >> 3] = (<WheelEvent>e).deltaX;
+            HEAPF64[(wheelEventPtr + 72) >> 3] = (<WheelEvent>e).deltaY;
+            HEAPF64[(wheelEventPtr + 80) >> 3] = (<WheelEvent>e).deltaZ;
+            HEAP32[(wheelEventPtr + 88) >> 2] = (<WheelEvent>e).deltaMode;
+
+            // Here, using pointerOremoveListener as pointer is no problem, because removing listener wont require callback
+            getWebAssemblyFunction(ptrOrRemoveListener)(eventType, wheelEventPtr) &&
+                e.preventDefault();
+        },
+        useCapture,
+    });
+}
+
 export const createEventApiPseudoModule = ((...[]: PseudoModuleFactoryArguments): WebAssemblyPseudoModule => {
     return {
         moduleName: "1",
@@ -187,6 +222,12 @@ export const createEventApiPseudoModule = ((...[]: PseudoModuleFactoryArguments)
                 // bd(a, b, c, d, 10, "resize", e);
 
                 addScreenEventListener(eventTargetType, useCapture, ptrOrRemoveListener, EventType.SCREEN_RESIZE, "resize");
+            },
+
+            6: (eventTargetType: EventTargetType, useCapture: boolean, ptrOrRemoveListener: number) => {
+                // dd(a, b, c, d, 9, "wheel", e)
+
+                addWheelEventListener(eventTargetType, useCapture, ptrOrRemoveListener, EventType.WHEEL, "wheel");
             },
         },
     } as const satisfies WebAssemblyPseudoModule;

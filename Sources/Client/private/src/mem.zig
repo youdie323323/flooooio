@@ -79,33 +79,3 @@ pub fn freeCString(ptr: CStringPointer) void {
 
     allocator.free(ptr[0..len]);
 }
-
-// https://zigbin.io/9a46a9
-pub const comptime_allocator: Allocator = .{
-    .ptr = undefined,
-    .vtable = &.{ .alloc = &comptimeAlloc, .resize = &comptimeResize, .remap = &comptimeRemap, .free = &Allocator.noFree },
-};
-
-fn comptimeAlloc(_: *anyopaque, len: usize, alignment: Alignment, ra: usize) ?[*]u8 {
-    _ = ra;
-    if (!@inComptime()) @panic("comptimeAlloc called at runtime");
-    var buf: [len]u8 align(alignment.toByteUnits()) = undefined;
-    return &buf;
-}
-
-fn comptimeResize(_: *anyopaque, mem: []u8, alignment: Alignment, new_len: usize, ra: usize) bool {
-    _ = alignment;
-    _ = ra;
-    if (!@inComptime()) @panic("comptimeResize called at runtime");
-    return new_len <= mem.len; // allow shrinking in-place
-}
-
-fn comptimeRemap(_: *anyopaque, mem: []u8, alignment: Alignment, new_len: usize, ra: usize) ?[*]u8 {
-    _ = alignment;
-    _ = ra;
-    if (!@inComptime()) @panic("comptimeRemap called at runtime");
-    return if (new_len <= mem.len) mem.ptr else null; // allow shrinking in-place
-}
-
-const Allocator = std.mem.Allocator;
-const Alignment = std.mem.Alignment;

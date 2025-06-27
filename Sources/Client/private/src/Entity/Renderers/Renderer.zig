@@ -14,6 +14,8 @@ pub const body_darken: f32 = 0.1;
 
 pub fn RenderContext(comptime AnyEntity: type) type {
     return *const struct {
+        // TODO: checksum AnyEntity
+
         const AnyImpl = @FieldType(AnyEntity, "impl");
 
         /// Canvas context to render this render context.
@@ -94,7 +96,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
                 if (poison_t > 0) applied = poison_target_color.interpolate(applied, 0.75 * (1 - poison_t));
             }
 
-            applied = Color.multiColorInterpolate(&.{ applied, hurt_target_color_middle, hurt_target_color_last }, 1 - hurt_t);
+            applied = Color.nColorInterpolation(&.{ applied, hurt_target_color_middle, hurt_target_color_last }, 1 - hurt_t);
 
             return applied.interpolate(color, 0.5);
         }

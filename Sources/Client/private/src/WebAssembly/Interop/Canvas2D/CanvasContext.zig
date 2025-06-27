@@ -91,7 +91,7 @@ pub const CompositeOperator = enum(u5) {
 };
 
 pub inline fn calculateStrokeWidth(comptime width: f32) comptime_float {
-    return width / 8.333333830038736;
+    return comptime (width / 8.333333830038736);
 }
 
 /// Utilities definition for context.
@@ -116,7 +116,7 @@ pub usingnamespace UtilityMethods;
 
 /// Getter/setter methods which is similar to ctx.blahblah = blah, ctx.blahblah
 const AccessorMethods = struct {
-    pub const Properties = packed struct {
+    pub const Properties = packed struct(u141) {
         /// Current lineWidth of this context.
         /// Default value is 1 px.
         line_width: f32 = 1.0,
@@ -595,21 +595,30 @@ extern "0" fn @"55"(id: Id, enabled: u8) void;
 
 /// Sets width and height.
 extern "0" fn @"56"(id: Id, width: u16, height: u16) void;
-/// Get width and height.
+/// Gets width and height.
 extern "0" fn @"57"(id: Id, w_addr: *u16, h_addr: *u16) void;
 
-pub inline fn createCanvasContext(allocator: std.mem.Allocator, width: f32, height: f32, comptime is_discardable: bool) *CanvasContext {
+pub inline fn createCanvasContext(
+    allocator: std.mem.Allocator,
+    width: f32,
+    height: f32,
+    comptime is_discardable: bool,
+) *CanvasContext {
     const id = @"0"(width, height, comptime @intFromBool(is_discardable));
 
     return CanvasContext.init(allocator, id);
 }
 
-pub inline fn createCanvasContextFromElement(allocator: std.mem.Allocator, comptime element_id: []const u8, comptime alpha: bool) *CanvasContext {
-    const str = mem.allocCString(element_id);
+pub inline fn createCanvasContextBySelector(
+    allocator: std.mem.Allocator,
+    comptime selector: []const u8,
+    comptime alpha: bool,
+) *CanvasContext {
+    const selector_ptr = mem.allocCString(selector);
 
-    const id = @"1"(str, comptime @intFromBool(alpha));
+    const id = @"1"(selector_ptr, comptime @intFromBool(alpha));
 
-    mem.freeCString(str);
+    mem.freeCString(selector_ptr);
 
     return CanvasContext.init(allocator, id);
 }

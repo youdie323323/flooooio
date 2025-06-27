@@ -1,6 +1,7 @@
 const std = @import("std");
 const builtin = std.builtin;
 const math = std.math;
+const leb = std.leb;
 
 const event = @import("WebAssembly/Interop/Event.zig");
 const dom = @import("WebAssembly/Interop/Dom.zig");
@@ -133,7 +134,7 @@ fn onMouseEvent(event_type: event.EventType, e: *const event.MouseEvent) callcon
             const angle = math.atan2(mouse_y_offset, mouse_x_offset);
             const distance = math.hypot(mouse_x_offset, mouse_y_offset) / base_scale;
 
-            client.serverbound.sendWaveChangeMove(
+            client.out.sendWaveChangeMove(
                 angle,
                 if (100 > distance)
                     distance / 100
@@ -158,7 +159,7 @@ fn onMouseEvent(event_type: event.EventType, e: *const event.MouseEvent) callcon
             else
                 self_mood.unset(target_mood);
 
-            client.serverbound.sendWaveChangeMood(self_mood) catch return false;
+            client.out.sendWaveChangeMood(self_mood) catch return false;
         },
 
         else => {},
@@ -207,11 +208,11 @@ inline fn internalAngleToRadians(angle: f32) f32 {
 
 var wave_self_id: EntityId = undefined;
 
-fn handleWaveSelfId(stream: *ws.Clientbound.Reader) anyerror!void {
-    wave_self_id = try ws.Clientbound.readVarUint32(stream);
+fn handleWaveSelfId(stream: *ws.Reader) anyerror!void {
+    wave_self_id = try leb.readUleb128(u32, stream);
 }
 
-/// Possible objects length.
+/// Possible abstract objects length.
 const FiniteObjectCount = u16;
 
 var wave_progress: u16 = 0;
@@ -224,17 +225,17 @@ var wave_ended: bool = false;
 
 var wave_map_radius: u16 = 0;
 
-fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
+fn handleWaveUpdate(stream: *ws.Reader) anyerror!void {
     { // Read wave informations
-        wave_progress = try ws.Clientbound.readVarUint16(stream);
+        wave_progress = try leb.readUleb128(u16, stream);
 
-        wave_progress_timer = try ws.Clientbound.readFloat32(stream);
+        wave_progress_timer = try ws.readFloat32(stream);
 
-        wave_progress_red_gage_timer = try ws.Clientbound.readFloat32(stream);
+        wave_progress_red_gage_timer = try ws.readFloat32(stream);
 
-        wave_ended = try ws.Clientbound.readBool(stream);
+        wave_ended = try ws.readBool(stream);
 
-        wave_map_radius = try ws.Clientbound.readVarUint16(stream);
+        wave_map_radius = try leb.readUleb128(u16, stream);
     }
 
     // Lock objects
@@ -246,7 +247,7 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
     defer players.unlock();
 
     { // Read eliminated entities
-        const eliminated_entities_count: FiniteObjectCount = try ws.Clientbound.readVarUint16(stream);
+        const eliminated_entities_count = try leb.readUleb128(FiniteObjectCount, stream);
 
         for (0..eliminated_entities_count) |_| {
             const entity_id = try stream.readInt(EntityId, .little);
@@ -280,20 +281,20 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
     }
 
     { // Read lighning bounces
-        const lightning_bounces_count: FiniteObjectCount = try ws.Clientbound.readVarUint16(stream);
+        const lightning_bounces_count = try leb.readUleb128(FiniteObjectCount, stream);
 
         for (0..lightning_bounces_count) |_| {
-            const points_count: FiniteObjectCount = try ws.Clientbound.readVarUint16(stream);
+            const points_count = try leb.readUleb128(FiniteObjectCount, stream);
 
             for (0..points_count) |_| {
-                _ = try ws.Clientbound.readFloat32(stream); // X
-                _ = try ws.Clientbound.readFloat32(stream); // Y
+                _ = try ws.readFloat32(stream); // X
+                _ = try ws.readFloat32(stream); // Y
             }
         }
     }
 
     { // Read entities
-        const entities_count: FiniteObjectCount = try ws.Clientbound.readVarUint16(stream);
+        const entities_count = try leb.readUleb128(FiniteObjectCount, stream);
 
         for (0..entities_count) |_| {
             const entity_kind = try stream.readEnum(EntityKind, .little);
@@ -302,18 +303,18 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
                 .player => {
                     const player_id = try stream.readInt(EntityId, .little);
 
-                    const player_x = try ws.Clientbound.readFloat32(stream);
-                    const player_y = try ws.Clientbound.readFloat32(stream);
+                    const player_x = try ws.readFloat32(stream);
+                    const player_y = try ws.readFloat32(stream);
 
-                    const player_angle = internalAngleToRadians(try ws.Clientbound.readFloat32(stream));
+                    const player_angle = internalAngleToRadians(try ws.readFloat32(stream));
 
-                    const player_health = try ws.Clientbound.readFloat32(stream);
+                    const player_health = try ws.readFloat32(stream);
 
-                    const player_size = try ws.Clientbound.readFloat32(stream);
+                    const player_size = try ws.readFloat32(stream);
 
                     const player_mood_mask: pmood.MoodBitSet.MaskInt = @intCast(try stream.readByte());
 
-                    const player_name = try ws.Clientbound.readCString(stream);
+                    const player_name = try ws.readCString(stream);
 
                     const player_bool_flags = try stream.readStruct(packed struct {
                         is_dead: bool,
@@ -389,14 +390,14 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
                 .mob => {
                     const mob_id = try stream.readInt(EntityId, .little);
 
-                    const mob_x = try ws.Clientbound.readFloat32(stream);
-                    const mob_y = try ws.Clientbound.readFloat32(stream);
+                    const mob_x = try ws.readFloat32(stream);
+                    const mob_y = try ws.readFloat32(stream);
 
-                    const mob_angle = internalAngleToRadians(try ws.Clientbound.readFloat32(stream));
+                    const mob_angle = internalAngleToRadians(try ws.readFloat32(stream));
 
-                    const mob_health = try ws.Clientbound.readFloat32(stream);
+                    const mob_health = try ws.readFloat32(stream);
 
-                    const mob_size = try ws.Clientbound.readFloat32(stream);
+                    const mob_size = try ws.readFloat32(stream);
 
                     const mob_type: EntityType = .{ .mob = try stream.readEnum(MobType, .little) };
 
@@ -504,14 +505,14 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
                     // That chance is 1 / math.maxInt(u32) but that possibly collidable (and can cause error)
                     const petal_id = try stream.readInt(EntityId, .little);
 
-                    const petal_x = try ws.Clientbound.readFloat32(stream);
-                    const petal_y = try ws.Clientbound.readFloat32(stream);
+                    const petal_x = try ws.readFloat32(stream);
+                    const petal_y = try ws.readFloat32(stream);
 
-                    const petal_angle = internalAngleToRadians(try ws.Clientbound.readFloat32(stream));
+                    const petal_angle = internalAngleToRadians(try ws.readFloat32(stream));
 
-                    const petal_health = try ws.Clientbound.readFloat32(stream);
+                    const petal_health = try ws.readFloat32(stream);
 
-                    const petal_size = try ws.Clientbound.readFloat32(stream);
+                    const petal_size = try ws.readFloat32(stream);
 
                     const petal_type: EntityType = .{ .petal = try stream.readEnum(PetalType, .little) };
 
@@ -577,11 +578,189 @@ fn handleWaveUpdate(stream: *ws.Clientbound.Reader) anyerror!void {
         }
     }
 
-    try client.serverbound.sendAck(
+    try client.out.sendAck(
         @intFromFloat(width),
         @intFromFloat(height),
     );
 }
+
+var ui_talent: UITalent = .{};
+
+const wheel_t_multiplier: f32 = 1.0 / 5_000.0;
+
+fn onWheel(_: event.EventType, e: *const event.WheelEvent) callconv(.c) bool {
+    const delta_y_f32: f32 = @floatCast(e.delta_y);
+
+    ui_talent.target_t += delta_y_f32 * wheel_t_multiplier;
+    ui_talent.target_t = math.clamp(ui_talent.target_t, 0, 1);
+
+    return true;
+}
+
+const UITalent = struct {
+    const k: f32 = 5;
+
+    const talent_radius: f32 = 25;
+
+    const time_interpolation_factor: f32 = 0.05;
+
+    const pi2: f32 = math.pi / 2.0;
+
+    comptime columns: [14][3]bool = .{
+        // Col 1
+        .{
+            true,
+            false,
+            true,
+        },
+        // Col 2
+        .{
+            false,
+            false,
+            true,
+        },
+        // Col 3
+        .{
+            true,
+            true,
+            true,
+        },
+        // Col 3
+        .{
+            true,
+            true,
+            true,
+        },
+        // Col 3
+        .{
+            true,
+            true,
+            true,
+        },
+        // Col 3
+        .{
+            true,
+            true,
+            true,
+        },
+        // Col 3
+        .{
+            true,
+            true,
+            true,
+        },
+        // Col 3
+        .{
+            true,
+            true,
+            true,
+        },
+        // Col 3
+        .{
+            true,
+            true,
+            true,
+        },
+        // Col 3
+        .{
+            true,
+            true,
+            true,
+        },
+        // Col 3
+        .{
+            true,
+            true,
+            true,
+        },
+        // Col 3
+        .{
+            true,
+            true,
+            true,
+        },
+        // Col 3
+        .{
+            true,
+            true,
+            true,
+        },
+        // Col 3
+        .{
+            true,
+            true,
+            true,
+        },
+    },
+
+    /// Camera position.
+    camera: Vector2 = .{ 300, 300 },
+
+    t: f32 = 0,
+    target_t: f32 = 0,
+
+    /// Calculate column n ratio.
+    inline fn calculateCnT(self: UITalent, n: f32) f32 {
+        const columns_len_f32: f32 = @floatFromInt(self.columns.len + 1);
+
+        return n / columns_len_f32;
+    }
+
+    /// Calculate delta t using global t and t_{C_{n}}.
+    inline fn calculateCnDeltaT(self: UITalent, n: f32) f32 {
+        return self.calculateCnT(n) - self.t;
+    }
+
+    /// Calculate theta of C_{n}.
+    inline fn calculateThetaCn(self: UITalent, n: f32) ?f32 {
+        const delta_t = self.calculateCnDeltaT(n);
+        if (0 > delta_t) return null;
+
+        return pi2 - k * delta_t;
+    }
+
+    pub fn render(self: *UITalent) void {
+        // Interpolate time
+        self.t = math.lerp(self.t, self.target_t, time_interpolation_factor);
+
+        ctx.save();
+        defer ctx.restore();
+
+        ctx.fillColor(comptime Color.comptimeFromHexColorCode("#ff0000"));
+
+        for (self.columns, 0..) |column, j| {
+            const n_f32: f32 = @floatFromInt(j + 1);
+
+            const column_theta = self.calculateThetaCn(n_f32) orelse continue;
+
+            const column_len = column.len - 1;
+
+            const column_delta_t = @abs(pi2 - column_theta);
+            const column_delta_t_vector: Vector2 = .{ 0, 0 };
+
+            const column_camera = self.camera + column_delta_t_vector;
+
+            const row_space = 2 * (4 - column_delta_t * 0.5) * talent_radius;
+
+            const column_vector: Vector2 = .{ @sin(column_theta), @cos(column_theta) };
+
+            for (column, 0..) |row, i| {
+                if (!row) continue;
+
+                const i_invert: f32 = @floatFromInt(column_len - i);
+                const row_render_position_multiplier: Vector2 = @splat(i_invert * row_space + 50);
+
+                const rx, const ry = column_camera + column_vector * row_render_position_multiplier;
+
+                ctx.beginPath();
+
+                ctx.arc(rx, ry, talent_radius, 0, math.tau, false);
+
+                ctx.fill();
+            }
+        }
+    }
+};
 
 // This function overrides C main
 // main(_: c_int, _: [*][*]u8) c_int
@@ -591,13 +770,13 @@ export fn main() c_int {
     // Init entity profiles
     EntityProfiles.staticInit();
 
-    ctx = CanvasContext.createCanvasContextFromElement(allocator, "canvas", false);
+    ctx = CanvasContext.createCanvasContextBySelector(allocator, "canvas", false);
 
     { // Initialize client websocket
         client = ws.ClientWebSocket.init(allocator) catch unreachable;
 
-        client.clientbound.putHandler(ws.opcode.Clientbound.wave_self_id, handleWaveSelfId) catch unreachable;
-        client.clientbound.putHandler(ws.opcode.Clientbound.wave_update, handleWaveUpdate) catch unreachable;
+        client.in.putHandler(ws.opcode.Clientbound.wave_self_id, handleWaveSelfId) catch unreachable;
+        client.in.putHandler(ws.opcode.Clientbound.wave_update, handleWaveUpdate) catch unreachable;
 
         client.connect("localhost:8080") catch unreachable;
     }
@@ -610,13 +789,15 @@ export fn main() c_int {
         event.addEventListener(.window, .screen_resize, onScreenEvent, false);
 
         { // Force fire event to correct init size
-            var pseudo_screen_event = std.mem.zeroes(event.ScreenEvent);
+            var virtual_screen_event = std.mem.zeroes(event.ScreenEvent);
 
-            pseudo_screen_event.inner_width = dom.clientWidth();
-            pseudo_screen_event.inner_height = dom.clientHeight();
+            virtual_screen_event.inner_width = dom.clientWidth();
+            virtual_screen_event.inner_height = dom.clientHeight();
 
-            _ = onScreenEvent(.screen_resize, &pseudo_screen_event);
+            _ = onScreenEvent(.screen_resize, &virtual_screen_event);
         }
+
+        event.addEventListenerBySelector("canvas", .wheel, onWheel, false);
     }
 
     { // Initialize ui
@@ -695,6 +876,8 @@ fn draw(_: f32) callconv(.c) void {
 
     if (self_player) |*p| // Draw movement helper
         drawMovementHelper(p, delta_time);
+
+    ui_talent.render();
 
     { // Render entities
         const center_width = width / 2;

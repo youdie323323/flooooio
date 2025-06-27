@@ -16,11 +16,10 @@ fn render(rctx: RenderContext(PlayerSuper)) void {
     const scale = entity.size * comptime (1.0 / 25.0);
     ctx.scale(scale, scale);
 
-    if (entity.impl.is_developer) {
-        developerRender(rctx);
-    } else {
+    if (entity.impl.is_developer)
+        developerRender(rctx)
+    else
         normalRender(rctx);
-    }
 }
 
 fn init(allocator: std.mem.Allocator) void {

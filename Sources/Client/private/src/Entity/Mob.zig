@@ -32,16 +32,16 @@ const linkable_mob_types = [_]MobType{
     .leech,
 };
 
-/// Type of mob.
+/// Type of this mob.
 type: EntityType,
 
-/// Rarity of mob.
+/// Rarity of this mob.
 rarity: EntityRarity,
 
 /// Whether this mob is pet.
 is_pet: bool,
 
-/// Total time that increases continuously constantly, not affected by moving counter or something.
+/// Total time increases continuously constantly, that not affected by moving counter or something.
 total_t: f32 = 0,
 
 /// Whether this mob is first generated segment in segment chain.
@@ -52,7 +52,7 @@ connecting_segment: ?ObjectId,
 connected_segments: ?Segments,
 
 /// Leg distances of starfish.
-/// Value is null if mob is not starfish.
+/// Value is null if this mob is not starfish.
 leg_distances: ?StarfishLegDistances,
 
 pub fn init(
@@ -110,21 +110,22 @@ pub inline fn calculateBeakAngle(self: MobImpl, comptime multiplier: f32) f32 {
 
 /// Returns a stat within this mob.
 pub inline fn stat(self: MobImpl) !?json.Value {
-    var buf: [3]u8 = undefined;
-
-    const type_value_string = try std.fmt.bufPrint(&buf, "{}", .{self.type.get()});
-
     const profiles =
         if (self.type.isMob())
             EntityProfiles.mobProfiles()
         else
             EntityProfiles.petalProfiles();
 
-    return if (profiles.value.object.get(type_value_string)) |prof| blk: {
-        const rarity_value_string = try std.fmt.bufPrint(&buf, "{}", .{@intFromEnum(self.rarity)});
+    var buf: [3]u8 = undefined;
 
-        break :blk prof.object.get(rarity_value_string);
-    } else null;
+    return if (profiles.value.object.get(
+        try std.fmt.bufPrint(&buf, "{}", .{self.type.get()}),
+    )) |prof|
+        prof.object.get(
+            try std.fmt.bufPrint(&buf, "{}", .{@intFromEnum(self.rarity)}),
+        )
+    else
+        null;
 }
 
 /// Basic operation of connected_segments.
