@@ -20,17 +20,11 @@ const one_over_three_vector: Vector2 = @splat(1.0 / 3.0);
 
 const MapRenderingOptions = struct {
     ctx: *CanvasContext,
-
     tileset: Tileset,
-
     tile_size: Vector2,
-
     radius: Vector2 = @splat(1),
-
     pos: Vector2,
-
     screen: Vector2,
-
     scale: Vector2,
 };
 
@@ -119,7 +113,7 @@ pub fn renderGameTileset(options: MapRenderingOptions) void {
     const scale = options.scale;
 
     const grid_size = radius / eighty_vector;
-    const grid_size_usize: U16Vector2 = @intFromFloat(grid_size);
+    const grid_size_u16: U16Vector2 = @intFromFloat(grid_size);
 
     const scaled_tile_size = tile_size * scale;
 
@@ -127,8 +121,8 @@ pub fn renderGameTileset(options: MapRenderingOptions) void {
 
     const start = center - (grid_size / two_vector * scaled_tile_size);
 
-    for (0..grid_size_usize[0]) |i| {
-        for (0..grid_size_usize[1]) |j| {
+    for (0..grid_size_u16[0]) |i| {
+        for (0..grid_size_u16[1]) |j| {
             const ij_vector: Vector2 = .{
                 @floatFromInt(i),
                 @floatFromInt(j),

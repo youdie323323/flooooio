@@ -69,7 +69,9 @@ pub fn addEventListener(
     comptime callback: EventCallback(EventFromEventType(event_type)),
     comptime use_capture: bool,
 ) void {
-    (comptime getEventRegistererFromEventType(event_type))(comptime @intFromEnum(target), use_capture, callback);
+    const registerer = comptime getEventRegistererFromEventType(event_type);
+
+    registerer(comptime @intFromEnum(target), use_capture, callback);
 }
 
 /// Adds event listener to an element by selector.
@@ -79,9 +81,11 @@ pub fn addEventListenerBySelector(
     comptime callback: EventCallback(EventFromEventType(event_type)),
     comptime use_capture: bool,
 ) void {
+    const registerer = comptime getEventRegistererFromEventType(event_type);
+
     const selector_ptr = mem.allocCString(selector);
 
-    (comptime getEventRegistererFromEventType(event_type))(@intFromPtr(selector_ptr), use_capture, callback);
+    registerer(@intFromPtr(selector_ptr), use_capture, callback);
 
     mem.freeCString(selector_ptr);
 }
@@ -91,7 +95,9 @@ pub fn removeEventListener(
     comptime target: GlobalEventTarget,
     comptime event_type: EventType,
 ) void {
-    (comptime getEventRegistererFromEventType(event_type))(comptime @intFromEnum(target), false, @ptrFromInt(0));
+    const registerer = comptime getEventRegistererFromEventType(event_type);
+
+    registerer(comptime @intFromEnum(target), false, @ptrFromInt(0));
 }
 
 /// Removes event listener of element by selector.
@@ -99,9 +105,11 @@ pub fn removeEventListenerBySelector(
     comptime selector: []const u8,
     comptime event_type: EventType,
 ) void {
+    const registerer = comptime getEventRegistererFromEventType(event_type);
+
     const selector_ptr = mem.allocCString(selector);
 
-    (comptime getEventRegistererFromEventType(event_type))(@intFromPtr(selector_ptr), false, @ptrFromInt(0));
+    registerer(@intFromPtr(selector_ptr), false, @ptrFromInt(0));
 
     mem.freeCString(selector_ptr);
 }

@@ -192,23 +192,8 @@ pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Obje
             return obj_id;
         }
 
-        /// Sets a single field of the given object to the given value.
-        ///
-        /// Unlike set(), this method does not respect any mach.Objects tracking
-        /// options, so changes made to an object through this method will not be tracked.
-        pub fn set(objs: *@This(), id: ObjectId, comptime field: meta.FieldEnum(Object), value: meta.FieldType(Object, field)) void {
-            const data = &objs.internal.data;
-
-            const unpacked = objs.validateAndUnpack(id, @src());
-
-            data.items(field)[unpacked.index] = value;
-        }
-
         /// Sets all fields of the given object to the given value.
-        ///
-        /// Unlike setAll(), this method does not respect any mach.Objects tracking
-        /// options, so changes made to an object through this method will not be tracked.
-        pub fn setValue(objs: *@This(), id: ObjectId, value: Object) void {
+        pub fn set(objs: *@This(), id: ObjectId, value: Object) void {
             const data = &objs.internal.data;
 
             const unpacked = objs.validateAndUnpack(id, @src());
@@ -216,17 +201,8 @@ pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Obje
             data.set(unpacked.index, value);
         }
 
-        /// Gets a single field.
-        pub fn get(objs: *@This(), id: ObjectId, comptime field: meta.FieldEnum(Object)) meta.FieldType(Object, field) {
-            const data = &objs.internal.data;
-
-            const unpacked = objs.validateAndUnpack(id, @src());
-
-            return data.items(field)[unpacked.index];
-        }
-
         /// Gets all fields.
-        pub fn getValue(objs: *@This(), id: ObjectId) Object {
+        pub fn get(objs: *@This(), id: ObjectId) Object {
             const data = &objs.internal.data;
 
             const unpacked = objs.validateAndUnpack(id, @src());
@@ -234,6 +210,7 @@ pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Obje
             return data.get(unpacked.index);
         }
 
+        /// Deletes a given object.
         pub fn delete(objs: *@This(), id: ObjectId) void {
             const dead = &objs.internal.dead;
             const recycling_bin = &objs.internal.recycling_bin;
@@ -241,9 +218,10 @@ pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Obje
 
             const unpacked = objs.validateAndUnpack(id, @src());
 
-            if (recycling_bin.items.len < recycling_bin.capacity) {
-                recycling_bin.appendAssumeCapacity(unpacked.index);
-            } else objs.internal.thrown_on_the_floor += 1;
+            if (recycling_bin.items.len < recycling_bin.capacity)
+                recycling_bin.appendAssumeCapacity(unpacked.index)
+            else
+                objs.internal.thrown_on_the_floor += 1;
 
             _ = object_lut.remove(id);
 
@@ -268,17 +246,17 @@ pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Obje
             const dead = &objs.internal.dead;
             const generation = &objs.internal.generation;
 
-            const fn_name = comptime src.fn_name;
+            const fn_str = comptime (src.fn_name ++ "(...)");
 
             // TODO(object): decide whether to disable safety checks like this in some conditions,
             // e.g. in release builds
             const unpacked: PackedObjectId = @bitCast(id);
 
             if (unpacked.generation != generation.items[unpacked.index])
-                @panic(comptime (fn_name ++ "(...) called with a dead object (use after delete, recycled slot)"));
+                @panic(comptime (fn_str ++ " called with a dead object (use after delete, recycled slot)"));
 
             if (dead.isSet(unpacked.index))
-                @panic(comptime (fn_name ++ "(...) called with a dead object (use after delete)"));
+                @panic(comptime (fn_str ++ " called with a dead object (use after delete)"));
 
             return unpacked;
         }

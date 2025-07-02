@@ -48,6 +48,6 @@ const kick_reason_messages = std.StaticStringMap([]const u8).initComptime(.{
     .{ @tagName(ClientboundConnectionKickReason.cheat_detected), "Cheat detected" },
 });
 
-pub inline fn getKickReasonMessage(reason: ClientboundConnectionKickReason) ?[]const u8 {
+pub inline fn kickReasonMessage(reason: ClientboundConnectionKickReason) ?[]const u8 {
     return kick_reason_messages.get(@tagName(reason));
 }

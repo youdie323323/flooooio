@@ -36,10 +36,10 @@ const rarity_colors = std.StaticStringMap(Color).initComptime(.{
     .{ @tagName(EntityRarity.ultra), Color.comptimeFromHexColorCode("#373737") },
 });
 
-pub inline fn nameOf(rarity: EntityRarity) ?[]const u8 {
+pub inline fn rarityName(rarity: EntityRarity) ?[]const u8 {
     return rarity_names.get(@tagName(rarity));
 }
 
-pub inline fn colorOf(rarity: EntityRarity) ?Color {
+pub inline fn rarityColor(rarity: EntityRarity) ?Color {
     return rarity_colors.get(@tagName(rarity));
 }

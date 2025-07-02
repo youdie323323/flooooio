@@ -34,7 +34,7 @@ fn collectLeechSegmentPoints(mobs: *Mobs, leech: *const MobSuper, scale: MobSupe
             var it = s.keyIterator();
 
             while (it.next()) |key| {
-                const inner_leech = mobs.getValue(key.*);
+                const inner_leech = mobs.get(key.*);
 
                 try stack.append(allocator, &inner_leech);
             }

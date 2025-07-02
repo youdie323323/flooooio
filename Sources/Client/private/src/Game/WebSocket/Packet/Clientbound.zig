@@ -22,7 +22,7 @@ var shared_buf: [256]u8 = undefined;
 // Prepare fbs of shared_buf
 var shared_fbs = io.fixedBufferStream(&shared_buf);
 
-pub inline fn readCString(reader: *Reader) (NoEofError || error{StreamTooLong} || @TypeOf(shared_fbs).Writer.Error)![]const u8 {
+pub fn readCString(reader: *Reader) (NoEofError || error{StreamTooLong} || @TypeOf(shared_fbs).Writer.Error)![]const u8 {
     defer shared_fbs.reset();
 
     try reader.streamUntilDelimiter(shared_fbs.writer(), 0, shared_buf.len);
@@ -30,8 +30,8 @@ pub inline fn readCString(reader: *Reader) (NoEofError || error{StreamTooLong} |
     return shared_fbs.getWritten();
 }
 
-/// Reads a f16 from stream, consumes 2 byte.
-pub inline fn readFloat16(stream: *Reader) NoEofError!f16 {
+/// Reads a float16 from stream.
+pub fn readFloat16(stream: *Reader) NoEofError!f16 {
     var buffer: [2]u8 align(@alignOf(f16)) = undefined;
 
     _ = try stream.readAll(&buffer);
@@ -39,8 +39,8 @@ pub inline fn readFloat16(stream: *Reader) NoEofError!f16 {
     return std.mem.bytesAsValue(f16, &buffer).*;
 }
 
-/// Reads a f32 from stream, consumes 4 byte.
-pub inline fn readFloat32(stream: *Reader) NoEofError!f32 {
+/// Reads a float32 from stream.
+pub fn readFloat32(stream: *Reader) NoEofError!f32 {
     var buffer: [4]u8 align(@alignOf(f32)) = undefined;
 
     _ = try stream.readAll(&buffer);
@@ -48,8 +48,8 @@ pub inline fn readFloat32(stream: *Reader) NoEofError!f32 {
     return std.mem.bytesAsValue(f32, &buffer).*;
 }
 
-/// Reads a f64 from stream, consumes 8 byte.
-pub inline fn readFloat64(stream: *Reader) NoEofError!f64 {
+/// Reads a float64 from stream.
+pub fn readFloat64(stream: *Reader) NoEofError!f64 {
     var buffer: [8]u8 align(@alignOf(f64)) = undefined;
 
     _ = try stream.readAll(&buffer);
@@ -80,7 +80,7 @@ pub fn deinit(self: *Clientbound) void {
     self.* = undefined;
 }
 
-pub fn read(self: Clientbound, data: []const u8) !void {
+pub fn read(self: *const Clientbound, data: []const u8) !void {
     var fbs = io.fixedBufferStream(data);
     var stream = fbs.reader();
 
@@ -94,7 +94,7 @@ pub fn read(self: Clientbound, data: []const u8) !void {
 }
 
 /// Puts custom handler.
-pub fn putHandler(
+pub inline fn putHandler(
     self: *Clientbound,
     op: opcode.Clientbound,
     handler: Handler,
@@ -103,16 +103,16 @@ pub fn putHandler(
 }
 
 /// Clear all custom handlers.
-pub fn clearHandlers(self: *Clientbound) void {
+pub inline fn clearHandlers(self: *Clientbound) void {
     self.handlers.clearRetainingCapacity();
 }
 
 /// Puts all default handlers.
-fn putDefaultHandlers(self: *Clientbound) mem.Allocator.Error!void {
+inline fn putDefaultHandlers(self: *Clientbound) mem.Allocator.Error!void {
     try self.default_handlers.put(.connection_kicked, handleConnectionKick);
 }
 
-fn handleConnectionKick(stream: *Reader) !void {
+inline fn handleConnectionKick(stream: *Reader) !void {
     const reason = try stream.readEnum(opcode.ClientboundConnectionKickReason, .little);
 
     switch (reason) {

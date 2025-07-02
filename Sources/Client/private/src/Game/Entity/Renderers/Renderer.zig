@@ -18,7 +18,10 @@ pub fn RenderContext(comptime AnyEntity: type) type {
             if (@hasField(AnyEntity, "impl"))
                 @FieldType(AnyEntity, "impl")
             else
-                @compileError("AnyEntity must have implementation");
+                @compileError("AnyEntity must have an implementation");
+
+        const is_mob_impl = @hasField(AnyImpl, "type");
+        const is_player_impl = !is_mob_impl;
 
         /// Canvas context to render this render context.
         ctx: *CanvasContext,
@@ -33,17 +36,12 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         mobs: *main.Mobs,
 
         /// Returns real typed entity.
-        pub inline fn castedAnyEntity(self: @This()) *Entity(AnyImpl) {
+        pub inline fn castedAnyEntity(self: *const @This()) *Entity(AnyImpl) {
             return self.entity;
         }
 
-        /// Returns whether this render context entity is mob.
-        pub inline fn isMob(_: @This()) bool {
-            return comptime @hasField(AnyImpl, "type");
-        }
-
         /// Returns whether this render context should rendered.
-        pub inline fn shouldRender(self: @This()) bool {
+        pub inline fn shouldRender(self: *const @This()) bool {
             const entity = self.castedAnyEntity();
             const is_specimen = self.is_specimen;
 
@@ -51,14 +49,14 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         }
 
         /// Apply death animation with this render context.
-        pub inline fn applyDeathAnimation(self: @This()) void {
+        pub inline fn applyDeathAnimation(self: *const @This()) void {
             const ctx = self.ctx;
             const entity = self.castedAnyEntity();
             const impl = entity.impl;
 
             if (entity.is_dead) {
                 const is_leech =
-                    self.isMob() and impl.type.isMobTypeOf(.leech);
+                    is_mob_impl and impl.type.isMobTypeOf(.leech);
 
                 const sin_waved_dead_t = @sin(entity.dead_t * math.pi / @as(
                     f32,
@@ -82,7 +80,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
 
         /// Blend colors based on this render context entity effect values.
         /// All effect values should in [0, 1].
-        pub inline fn blendEffectColors(self: @This(), color: Color) Color {
+        pub inline fn blendEffectColors(self: *const @This(), color: Color) Color {
             const entity = self.castedAnyEntity();
 
             const hurt_t = entity.hurt_t;
@@ -113,15 +111,12 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         const hp_bar_max_width = 45;
 
         /// Draw the entity statuses (e.g. health bar).
-        pub inline fn drawEntityStatuses(self: @This()) void {
+        pub inline fn drawEntityStatuses(self: *const @This()) void {
             const ctx = self.ctx;
             const entity = self.castedAnyEntity();
             const impl = entity.impl;
 
-            const is_mob = self.isMob();
-            const is_player = !is_mob;
-
-            if (is_mob and (impl.type.isPetal() or impl.type.isMobTypeOf(.missile_projectile)))
+            if (is_mob_impl and (impl.type.isPetal() or impl.type.isMobTypeOf(.missile_projectile)))
                 return;
 
             if (entity.hp_alpha <= 0) return;
@@ -149,7 +144,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
                 defer ctx.restore();
 
                 const line_width: f32 =
-                    if (is_player) blk: {
+                    if (is_player_impl) blk: {
                         ctx.translate(0, entity.size);
                         ctx.translate(-hp_bar_max_width / 2, 9 / 2 + 5);
 
@@ -254,9 +249,9 @@ pub fn renderEntity(comptime Impl: type, rctx: RenderContext(Impl.Super)) void {
     // Validate implementation
     comptime validateEntityImplementation(Impl);
 
-    const ctx = rctx.ctx;
-
     if (!rctx.shouldRender()) return;
+
+    const ctx = rctx.ctx;
 
     ctx.save();
     defer ctx.restore();

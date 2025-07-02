@@ -20,10 +20,10 @@ const biome_colors = std.StaticStringMap(Color).initComptime(.{
     .{ @tagName(Biome.ocean), Color.comptimeFromHexColorCode("#4e77a7") },
 });
 
-pub inline fn nameOf(biome: Biome) ?[]const u8 {
+pub inline fn name(biome: Biome) ?[]const u8 {
     return biome_names.get(@tagName(biome));
 }
 
-pub inline fn colorOf(biome: Biome) ?Color {
+pub inline fn color(biome: Biome) ?Color {
     return biome_colors.get(@tagName(biome));
 }

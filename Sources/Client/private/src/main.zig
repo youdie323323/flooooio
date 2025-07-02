@@ -253,19 +253,19 @@ fn handleWaveUpdate(stream: *ws.Reader) anyerror!void {
             const entity_id = try stream.readInt(EntityId, .little);
 
             if (mobs.search(entity_id)) |o| {
-                var mob = mobs.getValue(o);
+                var mob = mobs.get(o);
 
                 mob.is_dead = true;
 
                 mob.dead_t = 0;
 
-                mobs.setValue(o, mob);
+                mobs.set(o, mob);
 
                 continue;
             }
 
             if (players.search(entity_id)) |o| {
-                var player = players.getValue(o);
+                var player = players.get(o);
 
                 player.impl.was_eliminated = true;
 
@@ -273,7 +273,7 @@ fn handleWaveUpdate(stream: *ws.Reader) anyerror!void {
 
                 player.dead_t = 0;
 
-                players.setValue(o, player);
+                players.set(o, player);
 
                 continue;
             }
@@ -323,7 +323,7 @@ fn handleWaveUpdate(stream: *ws.Reader) anyerror!void {
                     });
 
                     if (players.search(player_id)) |obj_id| {
-                        var player = players.getValue(obj_id);
+                        var player = players.get(obj_id);
 
                         { // Update next properties
                             player.next_pos[0] = player_x;
@@ -369,7 +369,7 @@ fn handleWaveUpdate(stream: *ws.Reader) anyerror!void {
 
                         player.update_t = 0;
 
-                        players.setValue(obj_id, player);
+                        players.set(obj_id, player);
                     } else {
                         const player = PlayerImpl.Super.init(
                             PlayerImpl.init(
@@ -419,7 +419,7 @@ fn handleWaveUpdate(stream: *ws.Reader) anyerror!void {
                     }
 
                     if (mobs.search(mob_id)) |obj_id| {
-                        var mob = mobs.getValue(obj_id);
+                        var mob = mobs.get(obj_id);
 
                         { // Update next properties
                             mob.next_pos[0] = mob_x;
@@ -461,7 +461,7 @@ fn handleWaveUpdate(stream: *ws.Reader) anyerror!void {
 
                         mob.update_t = 0;
 
-                        mobs.setValue(obj_id, mob);
+                        mobs.set(obj_id, mob);
                     } else {
                         const mob = MobImpl.Super.init(
                             MobImpl.init(
@@ -484,13 +484,13 @@ fn handleWaveUpdate(stream: *ws.Reader) anyerror!void {
 
                     // TODO: this is broken, because the mob_connecting_segment was not updated before this mob gets an zero object
                     if (mob_connecting_segment) |obj_id| {
-                        var mob = mobs.getValue(obj_id);
+                        var mob = mobs.get(obj_id);
 
                         // If connected segment mob hasnt this mob as connected segment, add it then update
                         if (!mob.impl.isConnectedBy(mob_id)) {
                             try mob.impl.addConnectedSegment(mob_id);
 
-                            mobs.setValue(obj_id, mob);
+                            mobs.set(obj_id, mob);
                         }
                     }
                 },
@@ -517,7 +517,7 @@ fn handleWaveUpdate(stream: *ws.Reader) anyerror!void {
                     const petal_rarity = try stream.readEnum(EntityRarity, .little);
 
                     if (mobs.search(petal_id)) |obj_id| {
-                        var petal = mobs.getValue(obj_id);
+                        var petal = mobs.get(obj_id);
 
                         { // Update next properties
                             petal.next_pos[0] = petal_x;
@@ -551,7 +551,7 @@ fn handleWaveUpdate(stream: *ws.Reader) anyerror!void {
 
                         petal.update_t = 0;
 
-                        mobs.setValue(obj_id, petal);
+                        mobs.set(obj_id, petal);
                     } else {
                         const petal = MobImpl.Super.init(
                             MobImpl.init(
@@ -581,184 +581,6 @@ fn handleWaveUpdate(stream: *ws.Reader) anyerror!void {
         @intFromFloat(height),
     );
 }
-
-var ui_talent: UITalent = .{};
-
-const wheel_t_multiplier: f32 = 1.0 / 5_000.0;
-
-fn onWheel(_: event.EventType, e: *const event.WheelEvent) callconv(.c) bool {
-    const delta_y_f32: f32 = @floatCast(e.delta_y);
-
-    ui_talent.target_t += delta_y_f32 * wheel_t_multiplier;
-    ui_talent.target_t = math.clamp(ui_talent.target_t, 0, 1);
-
-    return true;
-}
-
-const UITalent = struct {
-    const k: f32 = 5;
-
-    const talent_radius: f32 = 25;
-
-    const time_interpolation_factor: f32 = 0.05;
-
-    const pi2: f32 = math.pi / 2.0;
-
-    comptime columns: [14][3]bool = .{
-        // Col 1
-        .{
-            true,
-            false,
-            true,
-        },
-        // Col 2
-        .{
-            false,
-            false,
-            true,
-        },
-        // Col 3
-        .{
-            true,
-            true,
-            true,
-        },
-        // Col 3
-        .{
-            true,
-            true,
-            true,
-        },
-        // Col 3
-        .{
-            true,
-            true,
-            true,
-        },
-        // Col 3
-        .{
-            true,
-            true,
-            true,
-        },
-        // Col 3
-        .{
-            true,
-            true,
-            true,
-        },
-        // Col 3
-        .{
-            true,
-            true,
-            true,
-        },
-        // Col 3
-        .{
-            true,
-            true,
-            true,
-        },
-        // Col 3
-        .{
-            true,
-            true,
-            true,
-        },
-        // Col 3
-        .{
-            true,
-            true,
-            true,
-        },
-        // Col 3
-        .{
-            true,
-            true,
-            true,
-        },
-        // Col 3
-        .{
-            true,
-            true,
-            true,
-        },
-        // Col 3
-        .{
-            true,
-            true,
-            true,
-        },
-    },
-
-    /// Camera position.
-    camera: Vector2 = .{ 300, 300 },
-
-    t: f32 = 0,
-    target_t: f32 = 0,
-
-    /// Calculate column n ratio.
-    inline fn calculateCnT(self: UITalent, n: f32) f32 {
-        const columns_len_f32: f32 = @floatFromInt(self.columns.len + 1);
-
-        return n / columns_len_f32;
-    }
-
-    /// Calculate delta t using global t and t_{C_{n}}.
-    inline fn calculateCnDeltaT(self: UITalent, n: f32) f32 {
-        return self.calculateCnT(n) - self.t;
-    }
-
-    /// Calculate theta of C_{n}.
-    inline fn calculateThetaCn(self: UITalent, n: f32) ?f32 {
-        const delta_t = self.calculateCnDeltaT(n);
-        if (0 > delta_t) return null;
-
-        return pi2 - k * delta_t;
-    }
-
-    pub fn render(self: *UITalent) void {
-        // Interpolate time
-        self.t = math.lerp(self.t, self.target_t, time_interpolation_factor);
-
-        ctx.save();
-        defer ctx.restore();
-
-        ctx.fillColor(comptime Color.comptimeFromHexColorCode("#ff0000"));
-
-        for (self.columns, 0..) |column, j| {
-            const n_f32: f32 = @floatFromInt(j + 1);
-
-            const column_theta = self.calculateThetaCn(n_f32) orelse continue;
-
-            const column_len = column.len - 1;
-
-            const column_delta_t = @abs(pi2 - column_theta);
-            const column_delta_t_vector: Vector2 = .{ 0, 0 };
-
-            const column_camera = self.camera + column_delta_t_vector;
-
-            const row_space = 2 * (4 - column_delta_t * 0.5) * talent_radius;
-
-            const column_vector: Vector2 = .{ @sin(column_theta), @cos(column_theta) };
-
-            for (column, 0..) |row, i| {
-                if (!row) continue;
-
-                const i_invert: f32 = @floatFromInt(column_len - i);
-                const row_render_position_multiplier: Vector2 = @splat(i_invert * row_space + 50);
-
-                const rx, const ry = column_camera + column_vector * row_render_position_multiplier;
-
-                ctx.beginPath();
-
-                ctx.arc(rx, ry, talent_radius, 0, math.tau, false);
-
-                ctx.fill();
-            }
-        }
-    }
-};
 
 // This function overrides C main
 // main(_: c_int, _: [*][*]u8) c_int
@@ -794,8 +616,6 @@ export fn main() c_int {
 
             _ = onScreenEvent(.screen_resize, &virtual_screen_event);
         }
-
-        event.addEventListenerBySelector("canvas", .wheel, onWheel, false);
     }
 
     { // Initialize ui
@@ -845,7 +665,7 @@ fn draw(_: f32) callconv(.c) void {
 
     const self_player =
         if (players.search(wave_self_id)) |obj_id|
-            players.getValue(obj_id)
+            players.get(obj_id)
         else
             null;
 
@@ -875,8 +695,6 @@ fn draw(_: f32) callconv(.c) void {
     if (self_player) |*p| // Draw movement helper
         drawMovementHelper(p, delta_time);
 
-    ui_talent.render();
-
     { // Render entities
         const center_width = width / 2;
         const center_height = height / 2;
@@ -903,7 +721,7 @@ fn draw(_: f32) callconv(.c) void {
             var slice = mobs.slice();
 
             while (slice.next()) |obj_id| {
-                var mob = mobs.getValue(obj_id);
+                var mob = mobs.get(obj_id);
 
                 mob.update(delta_time);
 
@@ -913,12 +731,12 @@ fn draw(_: f32) callconv(.c) void {
 
                     // TODO: currently this operation is O(n) but having connecting segment in mob, this can done in O(1)
                     while (inner_slice.next()) |inner_obj_id| {
-                        var inner_mob = mobs.getValue(inner_obj_id);
+                        var inner_mob = mobs.get(inner_obj_id);
 
                         if (inner_mob.impl.isConnectedBy(obj_id)) {
                             inner_mob.impl.removeConnectedSegment(obj_id);
 
-                            mobs.setValue(inner_obj_id, inner_mob);
+                            mobs.set(inner_obj_id, inner_mob);
                         }
                     }
 
@@ -937,7 +755,7 @@ fn draw(_: f32) callconv(.c) void {
                     .mobs = &mobs,
                 });
 
-                mobs.setValue(obj_id, mob);
+                mobs.set(obj_id, mob);
             }
         }
 
@@ -948,7 +766,7 @@ fn draw(_: f32) callconv(.c) void {
             var slice = players.slice();
 
             while (slice.next()) |obj_id| {
-                var player = players.getValue(obj_id);
+                var player = players.get(obj_id);
 
                 player.update(delta_time);
 
@@ -969,7 +787,7 @@ fn draw(_: f32) callconv(.c) void {
                     .mobs = &mobs,
                 });
 
-                players.setValue(obj_id, player);
+                players.set(obj_id, player);
             }
         }
     }

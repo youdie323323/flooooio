@@ -97,7 +97,7 @@ pub inline fn calculateStrokeWidth(comptime width: f32) comptime_float {
 /// Utilities definition for context.
 /// Utility means these are not pure canvas call operations.
 const UtilityMethods = struct {
-    pub inline fn drawSVG(self: CanvasContext, svg: []const u8) void {
+    pub inline fn drawSVG(self: *const CanvasContext, svg: []const u8) void {
         @"2"(self.id, svg.ptr, svg.len);
     }
 
@@ -107,7 +107,7 @@ const UtilityMethods = struct {
         self.strokeColor(comptime Color.comptimeFromHexColorCode("#000000"));
     }
 
-    pub inline fn clearContextRect(self: CanvasContext) void {
+    pub inline fn clearContextRect(self: *const CanvasContext) void {
         @"17"(self.id);
     }
 };
@@ -116,7 +116,7 @@ pub usingnamespace UtilityMethods;
 
 /// Getter/setter methods which is similar to ctx.blahblah = blah, ctx.blahblah
 const AccessorMethods = struct {
-    pub const Properties = packed struct(u141) {
+    pub const Properties = struct {
         /// Current lineWidth of this context.
         /// Default value is 1 px.
         line_width: f32 = 1.0,
@@ -154,13 +154,13 @@ const AccessorMethods = struct {
         image_smoothing_enabled: bool = true,
     };
 
-    pub inline fn strokeColor(self: CanvasContext, color: Color) void {
+    pub inline fn strokeColor(self: *const CanvasContext, color: Color) void {
         const r, const g, const b = color.rgb;
 
         @"22"(self.id, r, g, b);
     }
 
-    pub inline fn fillColor(self: CanvasContext, color: Color) void {
+    pub inline fn fillColor(self: *const CanvasContext, color: Color) void {
         const r, const g, const b = color.rgb;
 
         @"21"(self.id, r, g, b);
@@ -172,7 +172,7 @@ const AccessorMethods = struct {
         @"33"(self.id, width);
     }
 
-    pub inline fn lineWidth(self: CanvasContext) f32 {
+    pub inline fn lineWidth(self: *const CanvasContext) f32 {
         return self.properties.line_width;
     }
 
@@ -186,7 +186,7 @@ const AccessorMethods = struct {
         }
     }
 
-    pub inline fn lineCap(self: CanvasContext) LineCap {
+    pub inline fn lineCap(self: *const CanvasContext) LineCap {
         return self.properties.line_cap;
     }
 
@@ -200,7 +200,7 @@ const AccessorMethods = struct {
         }
     }
 
-    pub inline fn lineJoin(self: CanvasContext) LineJoin {
+    pub inline fn lineJoin(self: *const CanvasContext) LineJoin {
         return self.properties.line_join;
     }
 
@@ -210,12 +210,12 @@ const AccessorMethods = struct {
         @"47"(self.id, limit);
     }
 
-    pub inline fn miterLimit(self: CanvasContext) f32 {
+    pub inline fn miterLimit(self: *const CanvasContext) f32 {
         return self.properties.miter_limit;
     }
 
     /// Do setLineDash([]) on context.
-    pub inline fn setLineSolid(self: CanvasContext) void {
+    pub inline fn setLineSolid(self: *const CanvasContext) void {
         @"48"(self.id);
     }
 
@@ -225,7 +225,7 @@ const AccessorMethods = struct {
         @"49"(self.id, offset);
     }
 
-    pub inline fn lineDashOffset(self: CanvasContext) f32 {
+    pub inline fn lineDashOffset(self: *const CanvasContext) f32 {
         return self.properties.line_dash_offset;
     }
 
@@ -235,11 +235,11 @@ const AccessorMethods = struct {
         @"23"(self.id, alpha);
     }
 
-    pub inline fn globalAlpha(self: CanvasContext) f32 {
+    pub inline fn globalAlpha(self: *const CanvasContext) f32 {
         return self.properties.global_alpha;
     }
 
-    pub inline fn setStandardFont(self: CanvasContext, comptime pixel: f32) void {
+    pub inline fn setStandardFont(self: *const CanvasContext, comptime pixel: f32) void {
         // No need to store the pixel because if really want to get previous font pixel, you need to parse the font
         // But that not really
 
@@ -259,7 +259,7 @@ const AccessorMethods = struct {
         }
     }
 
-    pub inline fn globalCompositeOperation(self: CanvasContext) CompositeOperator {
+    pub inline fn globalCompositeOperation(self: *const CanvasContext) CompositeOperator {
         return self.properties.global_composite_operation;
     }
 
@@ -277,7 +277,7 @@ const AccessorMethods = struct {
         @"41"(self.id, align_string.ptr, align_string.len);
     }
 
-    pub inline fn textAlign(self: CanvasContext) TextAlign {
+    pub inline fn textAlign(self: *const CanvasContext) TextAlign {
         return self.properties.text_align;
     }
 
@@ -287,7 +287,7 @@ const AccessorMethods = struct {
         @"55"(self.id, comptime @intFromBool(enabled));
     }
 
-    pub inline fn imageSmoothingEnabled(self: CanvasContext) bool {
+    pub inline fn imageSmoothingEnabled(self: *const CanvasContext) bool {
         return self.properties.image_smoothing_enabled;
     }
 };
@@ -296,31 +296,31 @@ pub usingnamespace AccessorMethods;
 
 /// Context path methods.
 const PathMethods = struct {
-    pub inline fn closePath(self: CanvasContext) void {
+    pub inline fn closePath(self: *const CanvasContext) void {
         @"15"(self.id);
     }
 
-    pub inline fn moveTo(self: CanvasContext, x: f32, y: f32) void {
+    pub inline fn moveTo(self: *const CanvasContext, x: f32, y: f32) void {
         @"24"(self.id, x, y);
     }
 
-    pub inline fn lineTo(self: CanvasContext, x: f32, y: f32) void {
+    pub inline fn lineTo(self: *const CanvasContext, x: f32, y: f32) void {
         @"25"(self.id, x, y);
     }
 
-    pub inline fn quadraticCurveTo(self: CanvasContext, cpx: f32, cpy: f32, x: f32, y: f32) void {
+    pub inline fn quadraticCurveTo(self: *const CanvasContext, cpx: f32, cpy: f32, x: f32, y: f32) void {
         @"29"(self.id, cpx, cpy, x, y);
     }
 
-    pub inline fn bezierCurveTo(self: CanvasContext, cp1x: f32, cp1y: f32, cp2x: f32, cp2y: f32, x: f32, y: f32) void {
+    pub inline fn bezierCurveTo(self: *const CanvasContext, cp1x: f32, cp1y: f32, cp2x: f32, cp2y: f32, x: f32, y: f32) void {
         @"30"(self.id, cp1x, cp1y, cp2x, cp2y, x, y);
     }
 
-    pub inline fn arc(self: CanvasContext, x: f32, y: f32, radius: f32, start_angle: f32, end_angle: f32, comptime anticlockwise: bool) void {
+    pub inline fn arc(self: *const CanvasContext, x: f32, y: f32, radius: f32, start_angle: f32, end_angle: f32, comptime anticlockwise: bool) void {
         @"31"(self.id, x, y, radius, start_angle, end_angle, comptime @intFromBool(anticlockwise));
     }
 
-    pub inline fn ellipse(self: CanvasContext, x: f32, y: f32, radius_x: f32, radius_y: f32, rotation: f32, start_angle: f32, end_angle: f32, comptime anticlockwise: bool) void {
+    pub inline fn ellipse(self: *const CanvasContext, x: f32, y: f32, radius_x: f32, radius_y: f32, rotation: f32, start_angle: f32, end_angle: f32, comptime anticlockwise: bool) void {
         @"32"(self.id, x, y, radius_x, radius_y, rotation, start_angle, end_angle, comptime @intFromBool(anticlockwise));
     }
 
@@ -344,16 +344,16 @@ pub usingnamespace PathMethods;
 
 id: Id,
 
+/// Internal context property values.
+/// This should not accessed directly, if you want get value, call method that named with field name.
+properties: AccessorMethods.Properties = .{},
+
 /// Internal context frames.
 /// This should not accessed directly.
 frames: [32]AccessorMethods.Properties = undefined,
 
 /// Current depth of context frames.
 frames_depth: usize = 0,
-
-/// Internal context property values.
-/// This should not accessed directly, if you want get value, call method that named with field name.
-properties: AccessorMethods.Properties = .{},
 
 pub inline fn init(allocator: std.mem.Allocator, id: Id) *CanvasContext {
     const ctx = allocator.create(CanvasContext) catch unreachable;
@@ -391,99 +391,99 @@ pub inline fn restore(self: *CanvasContext) void {
     }
 }
 
-pub inline fn resetTransform(self: CanvasContext) void {
+pub inline fn resetTransform(self: *const CanvasContext) void {
     @"6"(self.id);
 }
 
-pub inline fn setTransform(self: CanvasContext, m11: f32, m12: f32, m21: f32, m22: f32, dx: f32, dy: f32) void {
+pub inline fn setTransform(self: *const CanvasContext, m11: f32, m12: f32, m21: f32, m22: f32, dx: f32, dy: f32) void {
     @"7"(self.id, m11, m12, m21, m22, dx, dy);
 }
 
-pub inline fn beginPath(self: CanvasContext) void {
+pub inline fn beginPath(self: *const CanvasContext) void {
     @"14"(self.id);
 }
 
-pub inline fn fill(self: CanvasContext) void {
+pub inline fn fill(self: *const CanvasContext) void {
     @"8"(self.id);
 }
 
-pub inline fn fillPath(self: CanvasContext, path: Path2D, comptime winding: FillType) void {
+pub inline fn fillPath(self: *const CanvasContext, path: Path2D, comptime winding: FillType) void {
     @"9"(self.id, path.id, comptime @intFromBool(winding == .nonzero));
 }
 
-pub inline fn stroke(self: CanvasContext) void {
+pub inline fn stroke(self: *const CanvasContext) void {
     @"10"(self.id);
 }
 
-pub inline fn strokePath(self: CanvasContext, path: Path2D) void {
+pub inline fn strokePath(self: *const CanvasContext, path: Path2D) void {
     @"11"(self.id, path.id);
 }
 
-pub inline fn clip(self: CanvasContext) void {
+pub inline fn clip(self: *const CanvasContext) void {
     @"12"(self.id);
 }
 
-pub inline fn clipPath(self: CanvasContext, path: Path2D) void {
+pub inline fn clipPath(self: *const CanvasContext, path: Path2D) void {
     @"13"(self.id, path.id);
 }
 
-pub inline fn rect(self: CanvasContext, x: f32, y: f32, width: f32, height: f32) void {
+pub inline fn rect(self: *const CanvasContext, x: f32, y: f32, width: f32, height: f32) void {
     @"16"(self.id, x, y, width, height);
 }
 
-pub inline fn fillRect(self: CanvasContext, x: f32, y: f32, width: f32, height: f32) void {
+pub inline fn fillRect(self: *const CanvasContext, x: f32, y: f32, width: f32, height: f32) void {
     @"66"(self.id, x, y, width, height);
 }
 
-pub inline fn clearRect(self: CanvasContext, x: f32, y: f32, width: f32, height: f32) void {
+pub inline fn clearRect(self: *const CanvasContext, x: f32, y: f32, width: f32, height: f32) void {
     @"18"(self.id, x, y, width, height);
 }
 
-pub inline fn fillPixel(self: CanvasContext) void {
+pub inline fn fillPixel(self: *const CanvasContext) void {
     @"19"(self.id);
 }
 
-pub inline fn strokeRect(self: CanvasContext, width: f32, height: f32) void {
+pub inline fn strokeRect(self: *const CanvasContext, width: f32, height: f32) void {
     @"20"(self.id, width, height);
 }
 
-pub inline fn translate(self: CanvasContext, x: f32, y: f32) void {
+pub inline fn translate(self: *const CanvasContext, x: f32, y: f32) void {
     @"26"(self.id, x, y);
 }
 
-pub inline fn scale(self: CanvasContext, x: f32, y: f32) void {
+pub inline fn scale(self: *const CanvasContext, x: f32, y: f32) void {
     @"27"(self.id, x, y);
 }
 
-pub inline fn rotate(self: CanvasContext, angle: f32) void {
+pub inline fn rotate(self: *const CanvasContext, angle: f32) void {
     @"28"(self.id, angle);
 }
 
-pub inline fn copyCanvas(self: CanvasContext, src_context: *CanvasContext, dx: f32, dy: f32) void {
+pub inline fn copyCanvas(self: *const CanvasContext, src_context: *CanvasContext, dx: f32, dy: f32) void {
     @"34"(self.id, src_context.id, dx, dy);
 }
 
-pub inline fn copyCanvasAsOnePixel(self: CanvasContext, src_context: *CanvasContext, dx: f32, dy: f32) void {
+pub inline fn copyCanvasAsOnePixel(self: *const CanvasContext, src_context: *CanvasContext, dx: f32, dy: f32) void {
     @"35"(self.id, src_context.id, dx, dy);
 }
 
-pub inline fn copyCanvasWithScale(self: CanvasContext, src_context: *CanvasContext, dx: f32, dy: f32, dw: f32, dh: f32) void {
+pub inline fn copyCanvasWithScale(self: *const CanvasContext, src_context: *CanvasContext, dx: f32, dy: f32, dw: f32, dh: f32) void {
     @"36"(self.id, src_context.id, dx, dy, dw, dh);
 }
 
-pub inline fn fillText(self: CanvasContext, text: []const u8, x: f32, y: f32) void {
+pub inline fn fillText(self: *const CanvasContext, text: []const u8, x: f32, y: f32) void {
     @"37"(self.id, text.ptr, text.len, x, y);
 }
 
-pub inline fn strokeText(self: CanvasContext, text: []const u8, x: f32, y: f32) void {
+pub inline fn strokeText(self: *const CanvasContext, text: []const u8, x: f32, y: f32) void {
     @"38"(self.id, text.ptr, text.len, x, y);
 }
 
-pub inline fn setSize(self: CanvasContext, width: u16, height: u16) void {
+pub inline fn setSize(self: *const CanvasContext, width: u16, height: u16) void {
     @"56"(self.id, width, height);
 }
 
-pub inline fn size(self: CanvasContext) @Vector(2, u16) {
+pub inline fn size(self: *const CanvasContext) @Vector(2, u16) {
     var width: u16 = undefined;
     var height: u16 = undefined;
 
@@ -511,15 +511,15 @@ extern "0" fn @"7"(id: Id, m11: f32, m12: f32, m21: f32, m22: f32, dx: f32, dy: 
 /// Performs fill.
 extern "0" fn @"8"(id: Id) void;
 /// Performs path fill.
-extern "0" fn @"9"(id: Id, path_id: Path2D.PathId, is_non_zero: u8) void;
+extern "0" fn @"9"(id: Id, path_id: Path2D.Id, is_non_zero: u8) void;
 /// Performs stroke.
 extern "0" fn @"10"(id: Id) void;
 /// Performs path stroke.
-extern "0" fn @"11"(id: Id, path_id: Path2D.PathId) void;
+extern "0" fn @"11"(id: Id, path_id: Path2D.Id) void;
 /// Performs clip.
 extern "0" fn @"12"(id: Id) void;
 /// Performs path clip.
-extern "0" fn @"13"(id: Id, path_id: Path2D.PathId) void;
+extern "0" fn @"13"(id: Id, path_id: Path2D.Id) void;
 /// Performs beginPath.
 extern "0" fn @"14"(id: Id) void;
 /// Performs rect.

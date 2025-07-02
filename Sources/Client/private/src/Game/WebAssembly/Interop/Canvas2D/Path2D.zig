@@ -1,9 +1,9 @@
 //! This namespace provide minimal path2d operations for wasm.
 const Path2D = @This();
 
-pub const PathId = u32;
+pub const Id = u16;
 
-id: PathId,
+id: Id,
 
 pub inline fn init() Path2D {
     return .{ .id = @"59"() };
@@ -34,16 +34,16 @@ pub inline fn bezierCurveTo(self: Path2D, comptime cp1x: f32, comptime cp1y: f32
 }
 
 /// Destroys a Path2D object.
-extern "0" fn @"58"(path_id: PathId) void;
+extern "0" fn @"58"(path_id: Id) void;
 /// Creates a new Path2D object and returns its Id.
-extern "0" fn @"59"() PathId;
+extern "0" fn @"59"() Id;
 /// Performs moveTo on path.
-extern "0" fn @"60"(path_id: PathId, x: f32, y: f32) void;
+extern "0" fn @"60"(path_id: Id, x: f32, y: f32) void;
 /// Performs lineTo on path.
-extern "0" fn @"61"(path_id: PathId, x: f32, y: f32) void;
+extern "0" fn @"61"(path_id: Id, x: f32, y: f32) void;
 /// Performs quadraticCurveTo on path.
-extern "0" fn @"62"(path_id: PathId, cpx: f32, cpy: f32, x: f32, y: f32) void;
+extern "0" fn @"62"(path_id: Id, cpx: f32, cpy: f32, x: f32, y: f32) void;
 /// Performs bezierCurveTo on path.
-extern "0" fn @"63"(path_id: PathId, cp1x: f32, cp1y: f32, cp2x: f32, cp2y: f32, x: f32, y: f32) void;
+extern "0" fn @"63"(path_id: Id, cp1x: f32, cp1y: f32, cp2x: f32, cp2y: f32, x: f32, y: f32) void;
 /// Performs closePath on path.
-extern "0" fn @"64"(path_id: PathId) void;
+extern "0" fn @"64"(path_id: Id) void;
