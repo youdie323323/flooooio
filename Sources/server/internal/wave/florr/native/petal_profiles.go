@@ -1109,7 +1109,7 @@ var PetalProfiles = map[PetalType]PetalData{
 }
 
 func init() {
-	data, err := json.MarshalIndent(PetalProfiles, "", "  ")
+	data, err := json.Marshal(PetalProfiles)
 	if err != nil {
 		panic(err)
 	}
@@ -1119,7 +1119,7 @@ func init() {
 		panic(err)
 	}
 
-	err = os.WriteFile("../Client/private/src/Florr/Native/Entity/ProfileData/petal_profiles.json", data, 0o644)
+	err = os.WriteFile("../Client/private/src/Game/Florr/Native/Entity/ProfileData/petal_profiles.json", data, 0o644)
 	if err != nil {
 		panic(err)
 	}

@@ -3,36 +3,36 @@ const builtin = std.builtin;
 const math = std.math;
 const leb = std.leb;
 
-const event = @import("WebAssembly/Interop/Event.zig");
-const dom = @import("WebAssembly/Interop/Dom.zig");
-const ws = @import("WebSocket/ws.zig");
+const event = @import("Game/WebAssembly/Interop/Event.zig");
+const dom = @import("Game/WebAssembly/Interop/Dom.zig");
+const ws = @import("Game/WebSocket/ws.zig");
 
-const CanvasContext = @import("WebAssembly/Interop/Canvas2D/CanvasContext.zig");
-const Color = @import("WebAssembly/Interop/Canvas2D/Color.zig");
-const Path2D = @import("WebAssembly/Interop/Canvas2D/Path2D.zig");
+const CanvasContext = @import("Game/WebAssembly/Interop/Canvas2D/CanvasContext.zig");
+const Color = @import("Game/WebAssembly/Interop/Canvas2D/Color.zig");
+const Path2D = @import("Game/WebAssembly/Interop/Canvas2D/Path2D.zig");
 
-const timer = @import("WebAssembly/Interop/Timer.zig");
+const timer = @import("Game/WebAssembly/Interop/Timer.zig");
 
-const UI = @import("UI/UI.zig");
+const UI = @import("Game/UI/UI.zig");
 
-const EntityId = @import("Entity/Entity.zig").EntityId;
-const EntityType = @import("Entity/EntityType.zig").EntityType;
-const MobType = @import("Entity/EntityType.zig").MobType;
-const PetalType = @import("Entity/EntityType.zig").PetalType;
-const EntityRarity = @import("Entity/EntityRarity.zig").EntityRarity;
+const EntityId = @import("Game/Entity/Entity.zig").EntityId;
+const EntityType = @import("Game/Entity/EntityType.zig").EntityType;
+const MobType = @import("Game/Entity/EntityType.zig").MobType;
+const PetalType = @import("Game/Entity/EntityType.zig").PetalType;
+const EntityRarity = @import("Game/Entity/EntityRarity.zig").EntityRarity;
 
-const PlayerImpl = @import("Entity/Player.zig");
-const pmood = @import("Entity/PlayerMood.zig");
+const PlayerImpl = @import("Game/Entity/Player.zig");
+const pmood = @import("Game/Entity/PlayerMood.zig");
 
-const MobImpl = @import("Entity/Mob.zig");
-const renderEntity = @import("Entity/Renderers/Renderer.zig").renderEntity;
-const MobRenderingDispatcher = @import("Entity/Renderers/Mob/MobRenderingDispatcher.zig").MobRenderingDispatcher;
+const MobImpl = @import("Game/Entity/Mob.zig");
+const renderEntity = @import("Game/Entity/Renderers/Renderer.zig").renderEntity;
+const MobRenderingDispatcher = @import("Game/Entity/Renderers/Mob/MobRenderingDispatcher.zig").MobRenderingDispatcher;
 
-const mach_objects = @import("Entity/MachObjects/objs.zig");
+const mach_objects = @import("Game/Entity/MachObjects/objs.zig");
 
-const EntityProfiles = @import("Florr/Native/Entity/EntityProfiles.zig");
+const EntityProfiles = @import("Game/Florr/Native/Entity/EntityProfiles.zig");
 
-const tile = @import("Tile/TileRenderer.zig");
+const tile = @import("Game/Tile/TileRenderer.zig");
 
 const allocator = @import("mem.zig").allocator;
 
@@ -488,8 +488,6 @@ fn handleWaveUpdate(stream: *ws.Reader) anyerror!void {
 
                         // If connected segment mob hasnt this mob as connected segment, add it then update
                         if (!mob.impl.isConnectedBy(mob_id)) {
-                            std.log.debug("mom: {}", .{mob_id});
-
                             try mob.impl.addConnectedSegment(mob_id);
 
                             mobs.setValue(obj_id, mob);
@@ -817,7 +815,7 @@ export fn main() c_int {
     { // Initialize tile map
         tile_ctx = CanvasContext.createCanvasContext(allocator, 256 * 4, 256 * 4, false);
 
-        tile_ctx.drawSVG(@embedFile("Tile/Tiles/desert_c_2.svg"));
+        tile_ctx.drawSVG(@embedFile("Game/Tile/Tiles/desert_c_2.svg"));
     }
 
     draw(-1);

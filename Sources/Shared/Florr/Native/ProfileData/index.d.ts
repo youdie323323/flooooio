@@ -1,15 +1,11 @@
-import type { MobType, PetalType } from "../../Client/Public/Sources/Game/Entity/EntityType";
-import type { MobData } from "../Entity/Statics/Mob/MobData";
-import type { PetalData } from "../Entity/Statics/Mob/Petal/PetalData";
-
-declare module 'mob_profiles.json' {
-    const value: Record<MobType, MobData>;
+declare module "mob_profiles.json" {
+    const value: Record<{}, {}>;
 
     export = value;
 }
 
-declare module 'petal_profiles.json' {
-    const value: Record<PetalType, PetalData>;
-    
+declare module "petal_profiles.json" {
+    const value: Record<{}, {}>;
+
     export = value;
 }

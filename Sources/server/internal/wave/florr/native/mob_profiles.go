@@ -1006,7 +1006,7 @@ var MobProfiles = map[MobType]MobData{
 }
 
 func init() {
-	data, err := json.MarshalIndent(MobProfiles, "", "  ")
+	data, err := json.Marshal(MobProfiles)
 	if err != nil {
 		panic(err)
 	}
@@ -1016,7 +1016,7 @@ func init() {
 		panic(err)
 	}
 
-	err = os.WriteFile("../Client/private/src/Florr/Native/Entity/ProfileData/mob_profiles.json", data, 0o644)
+	err = os.WriteFile("../Client/private/src/Game/Florr/Native/Entity/ProfileData/mob_profiles.json", data, 0o644)
 	if err != nil {
 		panic(err)
 	}

@@ -69,26 +69,26 @@ pub fn build(b: *std.Build) !void {
     //     },
     // });
 
-    const optimize = b.standardOptimizeOption(.{});
+    // const optimize = b.standardOptimizeOption(.{});
 
-    {
-        const boost_dep = b.dependency("boost", .{
-            .target = target,
-            .optimize = optimize,
-        });
-        const boost_artifact = boost_dep.artifact("boost");
+    // {
+    //     const boost_dep = b.dependency("boost", .{
+    //         .target = target,
+    //         .optimize = optimize,
+    //     });
+    //     const boost_artifact = boost_dep.artifact("boost");
 
-        for (boost_artifact.root_module.include_dirs.items) |include_dir| {
-            try wasm.root_module.include_dirs.append(b.allocator, include_dir);
-        }
+    //     for (boost_artifact.root_module.include_dirs.items) |include_dir| {
+    //         try wasm.root_module.include_dirs.append(b.allocator, include_dir);
+    //     }
 
-        // If not header-only, link library
-        wasm.linkLibrary(boost_artifact);
+    //     // If not header-only, link library
+    //     wasm.linkLibrary(boost_artifact);
 
-        // exe.root_module.addCMacro("BOOST_NO_RTTI", "");
-        // exe.root_module.addCMacro("BOOST_NO_EXCEPTIONS", "");
-        // exe.root_module.addCMacro("BOOST_EXCEPTION_DISABLE", "");
-    }
+    //     // exe.root_module.addCMacro("BOOST_NO_RTTI", "");
+    //     // exe.root_module.addCMacro("BOOST_NO_EXCEPTIONS", "");
+    //     // exe.root_module.addCMacro("BOOST_EXCEPTION_DISABLE", "");
+    // }
 
     b.installArtifact(wasm);
 }
