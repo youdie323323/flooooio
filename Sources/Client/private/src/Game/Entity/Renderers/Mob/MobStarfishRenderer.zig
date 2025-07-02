@@ -8,17 +8,18 @@ const MobSuper = @import("../../Mob.zig").Super;
 
 const Color = @import("../../../WebAssembly/Interop/Canvas2D/Color.zig");
 
-pub const leg_amount: usize = 5;
+pub const leg_amount: comptime_int = 5;
+pub const leg_amount_f32: comptime_float = @floatFromInt(leg_amount);
 
-pub const destroyed_leg_distance: f32 = 100.0;
-pub const undestroyed_leg_distance: f32 = 175.0;
+pub const destroyed_leg_distance: comptime_float = 100.0;
+pub const undestroyed_leg_distance: comptime_float = 175.0;
 
-const distance_lerp_factor: f32 = 0.2;
+const distance_lerp_factor: comptime_float = 0.2;
 
-const spots_per_leg: usize = 3;
-const spots_per_leg_f32: f32 = @floatFromInt(spots_per_leg);
+const spots_per_leg: comptime_int = 3;
+const spots_per_leg_f32: comptime_float = @floatFromInt(spots_per_leg);
 
-const epsilon: f32 = 0.9999;
+const epsilon: comptime_float = 0.9999;
 
 const leg_angles = blk: {
     var angles: [leg_amount][4]f32 = undefined;
@@ -26,8 +27,8 @@ const leg_angles = blk: {
     for (0..leg_amount) |i| {
         const i_f32: f32 = @floatFromInt(i);
 
-        const mid_angle = (i_f32 + 0.5) / leg_amount * math.tau;
-        const end_angle = (i_f32 + 1) / leg_amount * math.tau;
+        const mid_angle = (i_f32 + 0.5) / leg_amount_f32 * math.tau;
+        const end_angle = (i_f32 + 1) / leg_amount_f32 * math.tau;
 
         angles[i] = .{
             @cos(mid_angle) * 15,
@@ -88,7 +89,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
         const old_distance = leg_distances[i];
 
-        const to =
+        const to: f32 =
             if (i < remaining_leg_amount)
                 undestroyed_leg_distance
             else
@@ -127,15 +128,15 @@ fn render(rctx: RenderContext(MobSuper)) void {
         ctx.beginPath();
 
         inline for (0..leg_amount) |i| {
-            const i_f32: f32 = comptime @floatFromInt(i);
+            const i_f32: comptime_float = comptime @floatFromInt(i);
 
-            const leg_rotation = comptime (math.tau * i_f32 / leg_amount);
+            const leg_rotation = comptime (math.tau * i_f32 / leg_amount_f32);
 
             const distance = leg_distances[i];
 
             const length_ratio = distance / undestroyed_leg_distance;
 
-            const num_spots =
+            const num_spots: u2 =
                 if (length_ratio > epsilon)
                     spots_per_leg
                 else

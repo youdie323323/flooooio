@@ -51,8 +51,8 @@ var height: f32 = 0;
 var base_scale: f32 = 1;
 var antenna_scale: f32 = 1;
 
-const base_width: f32 = 1300;
-const base_height: f32 = 650;
+const base_width: comptime_float = 1300;
+const base_height: comptime_float = 650;
 
 var mouse_x_offset: f32 = 0;
 var mouse_y_offset: f32 = 0;
@@ -60,7 +60,7 @@ var mouse_y_offset: f32 = 0;
 var interpolated_mouse_x: f32 = 0;
 var interpolated_mouse_y: f32 = 0;
 
-const movement_helper_start_distance: f32 = 30;
+const movement_helper_start_distance: comptime_float = 30;
 
 inline fn drawMovementHelper(self_player: *const PlayerImpl.Super, delta_time: f32) void {
     // Dont draw if player is dead

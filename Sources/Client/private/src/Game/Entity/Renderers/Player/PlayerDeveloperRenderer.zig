@@ -10,18 +10,18 @@ const Color = @import("../../../WebAssembly/Interop/Canvas2D/Color.zig");
 
 const drawDeadEyes = @import("PlayerNormalRenderer.zig").drawDeadEyes;
 
-const body_x = 25;
-const body_y = -0.5;
+const body_x: comptime_float = 25;
+const body_y: comptime_float = -0.5;
 
-const developer_left_eye_x = 10;
-const developer_left_eye_y = 8;
+const developer_left_eye_x: comptime_float = 10;
+const developer_left_eye_y: comptime_float = 8;
 
-const developer_right_eye_x = -10;
-const developer_right_eye_y = -8;
+const developer_right_eye_x: comptime_float = -10;
+const developer_right_eye_y: comptime_float = -8;
 
 fn drawEyeOutline(
     rctx: RenderContext(PlayerSuper),
-    comptime offset: f32,
+    comptime offset: comptime_float,
 ) void {
     const ctx = rctx.ctx;
 

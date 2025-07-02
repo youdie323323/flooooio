@@ -13,44 +13,48 @@ const Color = @import("../../../WebAssembly/Interop/Canvas2D/Color.zig");
 
 const Vector2 = @Vector(2, f32);
 
-const body_size: f32 = 25;
+const body_size: comptime_float = 25;
 const body_size_vector: Vector2 = @splat(body_size);
 
 const LegCurve = struct {
+    const joint_length: comptime_float = 23;
+
     dir: f32,
     start: Vector2,
     curve: @Vector(4, f32),
 
-    pub fn init(angle: f32, dir: f32, offset: f32) LegCurve {
-        const angle_vector: Vector2 = .{ @cos(angle), @sin(angle) };
-        const cos_angle, const sin_angle = angle_vector;
+    pub fn initComptime(angle: comptime_float, dir: comptime_float, offset: comptime_float) LegCurve {
+        comptime {
+            const angle_vector: Vector2 = .{ @cos(angle), @sin(angle) };
+            const cos_angle, const sin_angle = angle_vector;
 
-        const start = angle_vector * body_size_vector;
-        const start_x, const start_y = start;
+            const start = angle_vector * body_size_vector;
+            const start_x, const start_y = start;
 
-        return .{
-            .dir = dir,
-            .start = start,
-            .curve = .{
-                start_x + 23 * cos_angle + -sin_angle * dir * offset,
-                start_y + 23 * sin_angle + cos_angle * dir * offset,
-                start_x + 46 * cos_angle,
-                start_y + 46 * sin_angle,
-            },
-        };
+            return .{
+                .dir = dir,
+                .start = start,
+                .curve = .{
+                    start_x + joint_length * cos_angle + -sin_angle * dir * offset,
+                    start_y + joint_length * sin_angle + cos_angle * dir * offset,
+                    start_x + 2 * joint_length * cos_angle,
+                    start_y + 2 * joint_length * sin_angle,
+                },
+            };
+        }
     }
 };
 
 const leg_curves: [8]LegCurve = .{
-    .init((math.pi / 180.0) * 40, -1, 6),
-    .init((math.pi / 180.0) * 75, -1, 3),
-    .init((math.pi / 180.0) * 105, 1, 3),
-    .init((math.pi / 180.0) * 140, 1, 6),
+    .initComptime((math.pi / 180.0) * 40, -1, 6),
+    .initComptime((math.pi / 180.0) * 75, -1, 3),
+    .initComptime((math.pi / 180.0) * 105, 1, 3),
+    .initComptime((math.pi / 180.0) * 140, 1, 6),
 
-    .init((-math.pi / 180.0) * 40, 1, 6),
-    .init((-math.pi / 180.0) * 75, 1, 3),
-    .init((-math.pi / 180.0) * 105, -1, 3),
-    .init((-math.pi / 180.0) * 140, -1, 6),
+    .initComptime((-math.pi / 180.0) * 40, 1, 6),
+    .initComptime((-math.pi / 180.0) * 75, 1, 3),
+    .initComptime((-math.pi / 180.0) * 105, -1, 3),
+    .initComptime((-math.pi / 180.0) * 140, -1, 6),
 };
 
 fn render(rctx: RenderContext(MobSuper)) void {
@@ -90,7 +94,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
             const start_x, const start_y = comptime lc.start;
             const curve_cpx, const curve_cpy, const curve_x, const curve_y = comptime lc.curve;
 
-            const i_f32: f32 = comptime @floatFromInt(i);
+            const i_f32: comptime_float = comptime @floatFromInt(i);
 
             const angle = 0.2 * @sin(move_counter + i_f32) * dir;
 

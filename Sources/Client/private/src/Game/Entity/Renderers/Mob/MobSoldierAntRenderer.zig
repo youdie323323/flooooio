@@ -8,9 +8,9 @@ const MobSuper = @import("../../Mob.zig").Super;
 
 const Color = @import("../../../WebAssembly/Interop/Canvas2D/Color.zig");
 
-const pi10 = math.pi / 10.0;
+const pi10: comptime_float = math.pi / 10.0;
 
-const soldier_beak_mul: f32 = 0.05;
+const beak_mul: comptime_float = 0.05;
 
 fn render(rctx: RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
@@ -34,8 +34,8 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
     ctx.strokeColor(bcolor);
 
-    const beak_angle = mob.calculateBeakAngle(soldier_beak_mul);
-    const beak_angle_positive = beak_angle + soldier_beak_mul;
+    const beak_angle = mob.calculateBeakAngle(beak_mul);
+    const beak_angle_positive = beak_angle + beak_mul;
 
     { // Beak
         ctx.save();

@@ -8,12 +8,12 @@ const skin_darken = @import("../Renderer.zig").skin_darken;
 
 const Color = @import("../../../WebAssembly/Interop/Canvas2D/Color.zig");
 
-const dead_eye_length: f32 = 4;
+const dead_eye_length: comptime_float = 4;
 
 pub fn drawDeadEyes(
     rctx: RenderContext(PlayerSuper),
-    comptime eye_x: f32,
-    comptime eye_y: f32,
+    comptime eye_x: comptime_float,
+    comptime eye_y: comptime_float,
 ) void {
     const ctx = rctx.ctx;
 
@@ -31,19 +31,19 @@ pub fn drawDeadEyes(
 
 fn drawEyeShape(
     rctx: RenderContext(PlayerSuper),
-    comptime center_x: f32,
-    comptime center_y: f32,
-    comptime width_radius: f32,
-    comptime height_radius: f32,
+    comptime center_x: comptime_float,
+    comptime center_y: comptime_float,
+    comptime width_radius: comptime_float,
+    comptime height_radius: comptime_float,
     anger_offset: f32,
     comptime flag: bool,
 ) void {
     const ctx = rctx.ctx;
 
-    const flag_u1: u1 = comptime @intFromBool(flag);
+    const flag_u1: comptime_int = comptime @intFromBool(flag);
 
-    const flag_f32: f32 = comptime @floatFromInt(flag_u1);
-    const flipped_flag: f32 = comptime @floatFromInt(flag_u1 ^ 1);
+    const flag_f32: comptime_float = comptime @floatFromInt(flag_u1);
+    const flipped_flag: comptime_float = comptime @floatFromInt(flag_u1 ^ 1);
 
     ctx.moveTo(center_x - width_radius, center_y - height_radius + flag_f32 * anger_offset);
     ctx.lineTo(center_x + width_radius, center_y - height_radius + flipped_flag * anger_offset + flag_f32);
@@ -52,15 +52,15 @@ fn drawEyeShape(
     ctx.lineTo(center_x - width_radius, center_y - height_radius);
 }
 
-const normal_left_eye_x = 7;
-const normal_left_eye_y = -5;
+const normal_left_eye_x: comptime_float = 7;
+const normal_left_eye_y: comptime_float = -5;
 
-const normal_right_eye_x = -7;
-const normal_right_eye_y = -5;
+const normal_right_eye_x: comptime_float = -7;
+const normal_right_eye_y: comptime_float = -5;
 
 fn drawEyeOutline(
     rctx: RenderContext(PlayerSuper),
-    comptime offset: f32,
+    comptime offset: comptime_float,
 ) void {
     const ctx = rctx.ctx;
 

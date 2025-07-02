@@ -14,9 +14,9 @@ var spine: Path2D = undefined;
 var body: Path2D = undefined;
 var body_stroke: Path2D = undefined;
 
-const spine_count: usize = 10;
+const spine_count: comptime_int = 10;
 
-const spine_vector_length: f32 = 38.3971;
+const spine_vector_length: comptime_float = 38.3971;
 
 fn render(rctx: RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
@@ -38,7 +38,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
         ctx.fillColor(bcolor);
 
         inline for (0..spine_count) |i| {
-            const i_f32: f32 = comptime @floatFromInt(i);
+            const i_f32: comptime_float = comptime @floatFromInt(i);
 
             const angle = comptime (-math.pi + (math.pi / 5.0) * i_f32);
 

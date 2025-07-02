@@ -83,7 +83,7 @@ test "mulSafe @select vs @min" {
     std.debug.print("Ratio (select/min): {d:.2}\n", .{avg_select / avg_min});
 }
 
-pub inline fn darkened(self: Color, comptime strength: f32) Color {
+pub inline fn darkened(self: Color, comptime strength: comptime_float) Color {
     comptime debug.assert(strength <= 1);
 
     const strength_c: FloatingRgb = comptime @splat(1 - strength);
@@ -91,7 +91,7 @@ pub inline fn darkened(self: Color, comptime strength: f32) Color {
     return init(self.mulSafe(strength_c));
 }
 
-pub inline fn lightened(self: Color, comptime strength: f32) Color {
+pub inline fn lightened(self: Color, comptime strength: comptime_float) Color {
     comptime debug.assert(strength > 0);
 
     const strength_a: FloatingRgb = comptime @splat(1 + strength);
@@ -113,7 +113,7 @@ pub inline fn interpolate(self: Color, other: Color, t: f32) Color {
 }
 
 /// N-dimensionally interpolates colors.
-pub fn nColorInterpolation(colors: []const Color, t: f32) Color {
+pub fn nColorInterpolate(colors: []const Color, t: f32) Color {
     const last = colors.len - 1;
 
     const segment = t * @as(f32, @floatFromInt(last));

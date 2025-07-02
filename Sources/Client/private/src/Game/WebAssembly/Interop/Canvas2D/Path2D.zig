@@ -17,19 +17,19 @@ pub inline fn closePath(self: Path2D) void {
     @"64"(self.id);
 }
 
-pub inline fn moveTo(self: Path2D, comptime x: f32, comptime y: f32) void {
+pub inline fn moveTo(self: Path2D, comptime x: comptime_float, comptime y: comptime_float) void {
     @"60"(self.id, x, y);
 }
 
-pub inline fn lineTo(self: Path2D, comptime x: f32, comptime y: f32) void {
+pub inline fn lineTo(self: Path2D, comptime x: comptime_float, comptime y: comptime_float) void {
     @"61"(self.id, x, y);
 }
 
-pub inline fn quadraticCurveTo(self: Path2D, comptime cpx: f32, comptime cpy: f32, comptime x: f32, comptime y: f32) void {
+pub inline fn quadraticCurveTo(self: Path2D, comptime cpx: comptime_float, comptime cpy: comptime_float, comptime x: comptime_float, comptime y: comptime_float) void {
     @"62"(self.id, cpx, cpy, x, y);
 }
 
-pub inline fn bezierCurveTo(self: Path2D, comptime cp1x: f32, comptime cp1y: f32, comptime cp2x: f32, comptime cp2y: f32, comptime x: f32, comptime y: f32) void {
+pub inline fn bezierCurveTo(self: Path2D, comptime cp1x: comptime_float, comptime cp1y: comptime_float, comptime cp2x: comptime_float, comptime cp2y: comptime_float, comptime x: comptime_float, comptime y: comptime_float) void {
     @"63"(self.id, cp1x, cp1y, cp2x, cp2y, x, y);
 }
 

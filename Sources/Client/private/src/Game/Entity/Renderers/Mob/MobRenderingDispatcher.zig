@@ -36,6 +36,9 @@ const centipedeRender = MobCentipedeRenderer.render;
 const MobCactusRenderer = @import("MobCactusRenderer.zig").MobCactusRenderer;
 const cactusRender = MobCactusRenderer.render;
 
+const MobScorpionRenderer = @import("MobScorpionRenderer.zig").MobScorpionRenderer;
+const scorpionRender = MobScorpionRenderer.render;
+
 const PetalBasicRenderer = @import("../Petal/PetalBasicRenderer.zig").PetalBasicRenderer;
 const basicRender = PetalBasicRenderer.render;
 
@@ -79,6 +82,7 @@ fn init(allocator: std.mem.Allocator) void {
             type_to_renderer.put(@intFromEnum(MobType.centipede_evil), centipedeRender) catch unreachable;
 
             type_to_renderer.put(@intFromEnum(MobType.cactus), cactusRender) catch unreachable;
+            type_to_renderer.put(@intFromEnum(MobType.scorpion), scorpionRender) catch unreachable;
 
             { // Petal
                 type_to_renderer.put(@intFromEnum(PetalType.basic), basicRender) catch unreachable;
@@ -104,6 +108,7 @@ fn init(allocator: std.mem.Allocator) void {
             MobSpiderRenderer.staticInit(allocator);
             MobCentipedeRenderer.staticInit(allocator);
             MobCactusRenderer.staticInit(allocator);
+            MobScorpionRenderer.staticInit(allocator);
 
             { // Petal
                 PetalBasicRenderer.staticInit(allocator);

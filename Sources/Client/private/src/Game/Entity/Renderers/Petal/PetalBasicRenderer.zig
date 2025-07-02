@@ -11,8 +11,8 @@ const Color = @import("../../../WebAssembly/Interop/Canvas2D/Color.zig");
 pub inline fn drawBasicLike(
     rctx: RenderContext(MobSuper),
     comptime color: Color.HexColor,
-    comptime fraction: f32,
-    comptime outline_width: f32,
+    comptime fraction: comptime_float,
+    comptime outline_width: comptime_float,
 ) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;

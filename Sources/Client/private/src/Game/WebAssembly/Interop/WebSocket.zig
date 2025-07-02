@@ -73,7 +73,7 @@ pub fn WebSocket(comptime Context: type) type {
             self.* = undefined;
         }
 
-        /// Returns whther ready for interact.
+        /// Returns whether ready for interact.
         pub inline fn isReady(self: *const @This()) bool {
             return @"3"(self.id);
         }

@@ -90,7 +90,7 @@ pub const CompositeOperator = enum(u5) {
     luminosity,
 };
 
-pub inline fn calculateStrokeWidth(comptime width: f32) comptime_float {
+pub inline fn calculateStrokeWidth(comptime width: comptime_float) comptime_float {
     return comptime (width / 8.333333830038736);
 }
 
@@ -101,7 +101,7 @@ const UtilityMethods = struct {
         @"2"(self.id, svg.ptr, svg.len);
     }
 
-    pub inline fn prepareFontProperties(self: *CanvasContext, comptime pixel: f32) void {
+    pub inline fn prepareFontProperties(self: *CanvasContext, comptime pixel: comptime_float) void {
         self.setStandardFont(pixel);
         self.setLineWidth(comptime calculateStrokeWidth(pixel));
         self.strokeColor(comptime Color.comptimeFromHexColorCode("#000000"));
@@ -204,7 +204,7 @@ const AccessorMethods = struct {
         return self.properties.line_join;
     }
 
-    pub inline fn setMiterLimit(self: *CanvasContext, comptime limit: f32) void {
+    pub inline fn setMiterLimit(self: *CanvasContext, comptime limit: comptime_float) void {
         self.properties.miter_limit = limit;
 
         @"47"(self.id, limit);
@@ -219,7 +219,7 @@ const AccessorMethods = struct {
         @"48"(self.id);
     }
 
-    pub inline fn setLineDashOffset(self: *CanvasContext, comptime offset: f32) void {
+    pub inline fn setLineDashOffset(self: *CanvasContext, comptime offset: comptime_float) void {
         self.properties.line_dash_offset = offset;
 
         @"49"(self.id, offset);
@@ -267,11 +267,11 @@ const AccessorMethods = struct {
         self.properties.text_align = @"align";
 
         const align_string = comptime switch (@"align") {
-            inline .left => "left",
-            inline .right => "right",
-            inline .center => return @"40"(self.id),
-            inline .start => "start",
-            inline .end => "end",
+            .left => "left",
+            .right => "right",
+            .center => return @"40"(self.id),
+            .start => "start",
+            .end => "end",
         };
 
         @"41"(self.id, align_string.ptr, align_string.len);

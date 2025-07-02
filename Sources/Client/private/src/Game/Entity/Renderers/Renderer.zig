@@ -1,5 +1,7 @@
 const std = @import("std");
 const math = std.math;
+const debug = std.debug;
+
 const CanvasContext = @import("../../WebAssembly/Interop/Canvas2D/CanvasContext.zig");
 const Color = @import("../../WebAssembly/Interop/Canvas2D/Color.zig");
 const MobType = @import("../EntityType.zig").MobType;
@@ -7,10 +9,10 @@ const Entity = @import("../Entity.zig").Entity;
 const main = @import("../../../main.zig");
 
 /// Factor used for darken a skin color.
-pub const skin_darken: f32 = 0.2;
+pub const skin_darken: comptime_float = 0.2;
 
 /// Factor used for darken a body color.
-pub const body_darken: f32 = 0.1;
+pub const body_darken: comptime_float = 0.1;
 
 pub fn RenderContext(comptime AnyEntity: type) type {
     return *const struct {
@@ -20,14 +22,22 @@ pub fn RenderContext(comptime AnyEntity: type) type {
             else
                 @compileError("AnyEntity must have an implementation");
 
-        const is_mob_impl = @hasField(AnyImpl, "type");
+        const TypedAnyEntity = Entity(AnyImpl);
+        const TypedAnyImpl = @FieldType(TypedAnyEntity, "impl");
+
+        comptime { // Ensure they are same type
+            debug.assert(TypedAnyEntity == AnyEntity);
+            debug.assert(TypedAnyImpl == AnyImpl);
+        }
+
+        const is_mob_impl = @hasField(TypedAnyImpl, "type");
         const is_player_impl = !is_mob_impl;
 
         /// Canvas context to render this render context.
         ctx: *CanvasContext,
 
         /// A entity used to render this render context.
-        entity: *AnyEntity,
+        entity: *TypedAnyEntity,
 
         /// Whether this render context is specimen.
         is_specimen: bool,
@@ -35,14 +45,9 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         players: *main.Players,
         mobs: *main.Mobs,
 
-        /// Returns real typed entity.
-        pub inline fn castedAnyEntity(self: *const @This()) *Entity(AnyImpl) {
-            return self.entity;
-        }
-
         /// Returns whether this render context should rendered.
         pub inline fn shouldRender(self: *const @This()) bool {
-            const entity = self.castedAnyEntity();
+            const entity = self.entity;
             const is_specimen = self.is_specimen;
 
             return !(!is_specimen and entity.is_dead and entity.dead_t > 1);
@@ -51,7 +56,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         /// Apply death animation with this render context.
         pub inline fn applyDeathAnimation(self: *const @This()) void {
             const ctx = self.ctx;
-            const entity = self.castedAnyEntity();
+            const entity = self.entity;
             const impl = entity.impl;
 
             if (entity.is_dead) {
@@ -81,7 +86,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         /// Blend colors based on this render context entity effect values.
         /// All effect values should in [0, 1].
         pub inline fn blendEffectColors(self: *const @This(), color: Color) Color {
-            const entity = self.castedAnyEntity();
+            const entity = self.entity;
 
             const hurt_t = entity.hurt_t;
             const poison_t = entity.poison_t;
@@ -96,12 +101,12 @@ pub fn RenderContext(comptime AnyEntity: type) type {
                 if (poison_t > 0) applied = poison_target_color.interpolate(applied, 0.75 * (1 - poison_t));
             }
 
-            applied = Color.nColorInterpolation(&.{ applied, hurt_target_color_middle, hurt_target_color_last }, 1 - hurt_t);
+            applied = Color.nColorInterpolate(&.{ applied, hurt_target_color_middle, hurt_target_color_last }, 1 - hurt_t);
 
             return applied.interpolate(color, 0.5);
         }
 
-        pub inline fn fadeValue(x: f32, comptime after: f32) f32 {
+        pub inline fn fadeValue(x: f32, comptime after: comptime_float) f32 {
             return if (x < after)
                 x / after
             else
@@ -113,7 +118,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         /// Draw the entity statuses (e.g. health bar).
         pub inline fn drawEntityStatuses(self: *const @This()) void {
             const ctx = self.ctx;
-            const entity = self.castedAnyEntity();
+            const entity = self.entity;
             const impl = entity.impl;
 
             if (is_mob_impl and (impl.type.isPetal() or impl.type.isMobTypeOf(.missile_projectile)))
@@ -225,7 +230,7 @@ pub fn Renderer(
         pub fn render(rctx: RenderContext(AnyEntity)) void {
             if (comptime is_ancestor) {
                 const ctx = rctx.ctx;
-                const entity = rctx.castedAnyEntity();
+                const entity = rctx.entity;
                 const is_specimen = rctx.is_specimen;
 
                 const x, const y = entity.pos;
