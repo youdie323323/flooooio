@@ -8,9 +8,9 @@ const heap = std.heap;
 
 // Use fba for no-growed memory (growing memory disposes memory buffer and heaps cant used anymore)
 // Maybe too big size?
-var buffer: [std.wasm.page_size * 512]u8 = undefined;
+var buffer: [512 * std.wasm.page_size]u8 = undefined;
 
-var fba = std.heap.FixedBufferAllocator.init(&buffer);
+var fba: std.heap.FixedBufferAllocator = .init(&buffer);
 pub const allocator = fba.allocator();
 
 // Setting up the free/alloc functions also overrides malloc and free in C

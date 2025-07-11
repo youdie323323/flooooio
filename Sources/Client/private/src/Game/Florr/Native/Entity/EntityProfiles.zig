@@ -1,25 +1,25 @@
 const std = @import("std");
 const json = std.json;
-const MobType = @import("../../../Entity/EntityType.zig").MobType;
-const allocator = @import("../../../../mem.zig").allocator;
+const MobType = @import("../../../UI/Shared/Entity/EntityType.zig").MobType;
+const allocator = @import("../../../../Mem.zig").allocator;
 
 const EntityProfiles = json.Parsed(json.Value);
 
 pub var mob_profiles: EntityProfiles = undefined;
 
 /// Returns pointer to mob profiles to access from outside of this file.
-pub inline fn mobProfiles() *EntityProfiles {
+pub fn mobProfiles() *EntityProfiles {
     return &mob_profiles;
 }
 
 pub var petal_profiles: EntityProfiles = undefined;
 
 /// Returns pointer to petal profiles to access from outside of this file.
-pub inline fn petalProfiles() *EntityProfiles {
+pub fn petalProfiles() *EntityProfiles {
     return &petal_profiles;
 }
 
-pub fn staticInit() void {
+pub fn initStatic() void {
     mob_profiles = json.parseFromSlice(
         json.Value,
         allocator,

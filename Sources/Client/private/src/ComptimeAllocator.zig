@@ -19,14 +19,14 @@ fn comptimeResize(_: *anyopaque, mem: []u8, alignment: Alignment, new_len: usize
     _ = alignment;
     _ = ra;
     if (!@inComptime()) @panic("comptimeResize called at runtime");
-    return new_len <= mem.len; // allow shrinking in-place
+    return new_len <= mem.len; // Allow shrinking in-place
 }
 
 fn comptimeRemap(_: *anyopaque, mem: []u8, alignment: Alignment, new_len: usize, ra: usize) ?[*]u8 {
     _ = alignment;
     _ = ra;
     if (!@inComptime()) @panic("comptimeRemap called at runtime");
-    return if (new_len <= mem.len) mem.ptr else null; // allow shrinking in-place
+    return if (new_len <= mem.len) mem.ptr else null; // Allow shrinking in-place
 }
 
 comptime {

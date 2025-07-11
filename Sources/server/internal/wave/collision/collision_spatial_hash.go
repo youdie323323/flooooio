@@ -47,7 +47,7 @@ func NewSpatialHash(cellSize float32) *SpatialHash {
 }
 
 // bucket is a thread-safe set implementation for Node objects.
-// TODO: maybe sync.Map faster than *xsync.Map[uint32, Node]? elucidate later.
+// TODO: maybe sync.Map faster than *xsync.Map[uint32, Node]? clarify later
 type bucket struct{ nodes *xsync.Map[uint32, Node] }
 
 // newBucket creates a new node set.

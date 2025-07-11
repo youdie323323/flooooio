@@ -54,10 +54,10 @@ pub fn build(b: *std.Build) !void {
 
     wasm.want_lto = true;
 
-    // exe.linkLibCpp();
-    // exe.addIncludePath(b.path(c_src_folder));
-    // exe.addCSourceFile(.{
-    //     .file = b.path(c_src_folder ++ "/parse_svg.cpp"),
+    // wasm.linkLibCpp();
+    // wasm.addIncludePath(b.path(c_src_folder));
+    // wasm.addCSourceFile(.{
+    //     .file = b.path(c_src_folder ++ "/webgpu/webgpu_cpp.h"),
     //     .flags = &.{
     //         "-s",
     //         "-fno-stack-protector",

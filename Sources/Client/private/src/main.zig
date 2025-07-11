@@ -3,47 +3,44 @@ const builtin = std.builtin;
 const math = std.math;
 const leb = std.leb;
 
-const event = @import("Game/WebAssembly/Interop/Event.zig");
-const dom = @import("Game/WebAssembly/Interop/Dom.zig");
-const ws = @import("Game/WebSocket/ws.zig");
+const Event = @import("Game/Kernel/WebAssembly/Interop/Event.zig");
+const Dom = @import("Game/Kernel/WebAssembly/Interop/Dom.zig");
+const Timer = @import("Game/Kernel/WebAssembly/Interop/Timer.zig");
 
-const CanvasContext = @import("Game/WebAssembly/Interop/Canvas2D/CanvasContext.zig");
-const Color = @import("Game/WebAssembly/Interop/Canvas2D/Color.zig");
-const Path2D = @import("Game/WebAssembly/Interop/Canvas2D/Path2D.zig");
+const Network = @import("Game/UI/Shared/Network/Network.zig");
 
-const timer = @import("Game/WebAssembly/Interop/Timer.zig");
+const CanvasContext = @import("Game/Kernel/WebAssembly/Interop/Canvas2D/CanvasContext.zig");
+const Color = @import("Game/Kernel/WebAssembly/Interop/Canvas2D/Color.zig");
+const Path2D = @import("Game/Kernel/WebAssembly/Interop/Canvas2D/Path2D.zig");
 
-const UI = @import("Game/UI/UI.zig");
+const EntityId = @import("Game/UI/Shared/Entity/Entity.zig").EntityId;
+const EntityType = @import("Game/UI/Shared/Entity/EntityType.zig").EntityType;
+const MobType = @import("Game/UI/Shared/Entity/EntityType.zig").MobType;
+const PetalType = @import("Game/UI/Shared/Entity/EntityType.zig").PetalType;
+const EntityRarity = @import("Game/UI/Shared/Entity/EntityRarity.zig").EntityRarity;
+const Rarity = @import("Game/UI/Shared/Entity/EntityRarity.zig");
 
-const EntityId = @import("Game/Entity/Entity.zig").EntityId;
-const EntityType = @import("Game/Entity/EntityType.zig").EntityType;
-const MobType = @import("Game/Entity/EntityType.zig").MobType;
-const PetalType = @import("Game/Entity/EntityType.zig").PetalType;
-const EntityRarity = @import("Game/Entity/EntityRarity.zig").EntityRarity;
+const PlayerImpl = @import("Game/UI/Shared/Entity/Player.zig");
+const PlayerMood = @import("Game/UI/Shared/Entity/PlayerMood.zig");
 
-const PlayerImpl = @import("Game/Entity/Player.zig");
-const pmood = @import("Game/Entity/PlayerMood.zig");
+const MobImpl = @import("Game/UI/Shared/Entity/Mob.zig");
+const renderEntity = @import("Game/UI/Shared/Entity/Renderers/Renderer.zig").renderEntity;
+const MobRenderingDispatcher = @import("Game/UI/Shared/Entity/Renderers/Mob/MobRenderingDispatcher.zig").MobRenderingDispatcher;
 
-const MobImpl = @import("Game/Entity/Mob.zig");
-const renderEntity = @import("Game/Entity/Renderers/Renderer.zig").renderEntity;
-const MobRenderingDispatcher = @import("Game/Entity/Renderers/Mob/MobRenderingDispatcher.zig").MobRenderingDispatcher;
-
-const mach_objects = @import("Game/Entity/MachObjects/objs.zig");
+const mach_objects = @import("Game/UI/Shared/Entity/MachObjects/objs.zig");
 
 const EntityProfiles = @import("Game/Florr/Native/Entity/EntityProfiles.zig");
 
-const tile = @import("Game/Tile/TileRenderer.zig");
+const TileRenderer = @import("Game/UI/Shared/Tile/TileRenderer.zig");
 
-const allocator = @import("mem.zig").allocator;
+const allocator = @import("Mem.zig").allocator;
 
 /// Global canvas context of this application.
 var ctx: *CanvasContext = undefined;
 
 var tile_ctx: *CanvasContext = undefined;
 
-var ui: UI = undefined;
-
-var client: *ws.ClientWebSocket = undefined;
+var client: *Network.NetworkClient = undefined;
 
 var width: f32 = 0;
 var height: f32 = 0;
@@ -62,7 +59,7 @@ var interpolated_mouse_y: f32 = 0;
 
 const movement_helper_start_distance: comptime_float = 30;
 
-inline fn drawMovementHelper(self_player: *const PlayerImpl.Super, delta_time: f32) void {
+fn drawMovementHelper(self_player: *const PlayerImpl.Super, delta_time: f32) void {
     // Dont draw if player is dead
     if (self_player.is_dead) return;
 
@@ -114,9 +111,9 @@ const Vector2 = @Vector(2, f32);
 
 const two_vector: Vector2 = @splat(2);
 
-var self_mood: pmood.MoodBitSet = .initEmpty();
+var self_mood: PlayerMood.MoodBitSet = .initEmpty();
 
-fn onMouseEvent(event_type: event.EventType, e: *const event.MouseEvent) callconv(.c) bool {
+fn onMouseEvent(event_type: Event.EventType, e: *const Event.MouseEvent) callconv(.c) bool {
     switch (event_type) {
         .mouse_move => {
             const center = Vector2{
@@ -147,9 +144,9 @@ fn onMouseEvent(event_type: event.EventType, e: *const event.MouseEvent) callcon
             const target_mood: usize =
                 @intFromEnum(
                     if (e.button == 0)
-                        pmood.MoodFlags.angry
+                        PlayerMood.MoodFlags.angry
                     else if (e.button == 2)
-                        pmood.MoodFlags.sad
+                        PlayerMood.MoodFlags.sad
                     else
                         return true,
                 );
@@ -168,8 +165,8 @@ fn onMouseEvent(event_type: event.EventType, e: *const event.MouseEvent) callcon
     return true;
 }
 
-fn onScreenEvent(_: event.EventType, e: *const event.ScreenEvent) callconv(.c) bool {
-    const dpr: Vector2 = @splat(dom.devicePixelRatio());
+fn onScreenEvent(_: Event.EventType, e: *const Event.ScreenEvent) callconv(.c) bool {
+    const dpr: Vector2 = @splat(Dom.devicePixelRatio());
 
     width, height =
         Vector2{
@@ -190,30 +187,20 @@ fn onScreenEvent(_: event.EventType, e: *const event.ScreenEvent) callconv(.c) b
     return true;
 }
 
-pub const Players = mach_objects.Objects(PlayerImpl.Super, .id);
-pub const Mobs = mach_objects.Objects(MobImpl.Super, .id);
+var wave_self_id: EntityId = undefined;
 
-var players: Players = undefined;
-var mobs: Mobs = undefined;
+fn handleWaveSelfId(stream: *Network.Reader) anyerror!void {
+    wave_self_id = try leb.readUleb128(u32, stream);
+}
+
+/// Possible abstract objects length.
+const FiniteObjectCount = u16;
 
 const EntityKind = enum(u8) {
     player = 0,
     mob = 1,
     petal = 2,
 };
-
-inline fn internalAngleToRadians(angle: f32) f32 {
-    return (angle / 255) * math.tau;
-}
-
-var wave_self_id: EntityId = undefined;
-
-fn handleWaveSelfId(stream: *ws.Reader) anyerror!void {
-    wave_self_id = try leb.readUleb128(u32, stream);
-}
-
-/// Possible abstract objects length.
-const FiniteObjectCount = u16;
 
 var wave_progress: u16 = 0;
 
@@ -225,15 +212,25 @@ var wave_ended: bool = false;
 
 var wave_map_radius: u16 = 0;
 
-fn handleWaveUpdate(stream: *ws.Reader) anyerror!void {
+pub const Players = mach_objects.Objects(PlayerImpl.Super, .id);
+pub const Mobs = mach_objects.Objects(MobImpl.Super, .id);
+
+var players: Players = undefined;
+var mobs: Mobs = undefined;
+
+fn byteToRadians(angle: f32) f32 {
+    return (angle / 255) * math.tau;
+}
+
+fn handleWaveUpdate(stream: *Network.Reader) anyerror!void {
     { // Read wave informations
         wave_progress = try leb.readUleb128(u16, stream);
 
-        wave_progress_timer = try ws.readFloat32(stream);
+        wave_progress_timer = try Network.readFloat32(stream);
 
-        wave_progress_red_gage_timer = try ws.readFloat32(stream);
+        wave_progress_red_gage_timer = try Network.readFloat32(stream);
 
-        wave_ended = try ws.readBool(stream);
+        wave_ended = try Network.readBool(stream);
 
         wave_map_radius = try leb.readUleb128(u16, stream);
     }
@@ -287,8 +284,8 @@ fn handleWaveUpdate(stream: *ws.Reader) anyerror!void {
             const points_count = try leb.readUleb128(FiniteObjectCount, stream);
 
             for (0..points_count) |_| {
-                _ = try ws.readFloat32(stream); // X
-                _ = try ws.readFloat32(stream); // Y
+                _ = try Network.readFloat32(stream); // X
+                _ = try Network.readFloat32(stream); // Y
             }
         }
     }
@@ -300,21 +297,21 @@ fn handleWaveUpdate(stream: *ws.Reader) anyerror!void {
             const entity_kind = try stream.readEnum(EntityKind, .little);
 
             switch (entity_kind) {
-                .player => {
+                inline .player => {
                     const player_id = try stream.readInt(EntityId, .little);
 
-                    const player_x = try ws.readFloat32(stream);
-                    const player_y = try ws.readFloat32(stream);
+                    const player_x = try Network.readFloat32(stream);
+                    const player_y = try Network.readFloat32(stream);
 
-                    const player_angle = internalAngleToRadians(try ws.readFloat32(stream));
+                    const player_angle = byteToRadians(try Network.readFloat32(stream));
 
-                    const player_health = try ws.readFloat32(stream);
+                    const player_health = try Network.readFloat32(stream);
 
-                    const player_size = try ws.readFloat32(stream);
+                    const player_size = try Network.readFloat32(stream);
 
-                    const player_mood_mask: pmood.MoodBitSet.MaskInt = @intCast(try stream.readByte());
+                    const player_mood_mask: PlayerMood.MoodBitSet.MaskInt = @intCast(try stream.readByte());
 
-                    const player_name = try ws.readCString(stream);
+                    const player_name = try Network.readCString(stream);
 
                     const player_bool_flags = try stream.readStruct(packed struct {
                         is_dead: bool,
@@ -371,8 +368,8 @@ fn handleWaveUpdate(stream: *ws.Reader) anyerror!void {
 
                         players.set(obj_id, player);
                     } else {
-                        const player = PlayerImpl.Super.init(
-                            PlayerImpl.init(
+                        const player: PlayerImpl.Super = .init(
+                            .init(
                                 allocator,
                                 player_name,
                             ),
@@ -387,17 +384,17 @@ fn handleWaveUpdate(stream: *ws.Reader) anyerror!void {
                     }
                 },
 
-                .mob => {
+                inline .mob => {
                     const mob_id = try stream.readInt(EntityId, .little);
 
-                    const mob_x = try ws.readFloat32(stream);
-                    const mob_y = try ws.readFloat32(stream);
+                    const mob_x = try Network.readFloat32(stream);
+                    const mob_y = try Network.readFloat32(stream);
 
-                    const mob_angle = internalAngleToRadians(try ws.readFloat32(stream));
+                    const mob_angle = byteToRadians(try Network.readFloat32(stream));
 
-                    const mob_health = try ws.readFloat32(stream);
+                    const mob_health = try Network.readFloat32(stream);
 
-                    const mob_size = try ws.readFloat32(stream);
+                    const mob_size = try Network.readFloat32(stream);
 
                     const mob_type: EntityType = .{ .mob = try stream.readEnum(MobType, .little) };
 
@@ -463,8 +460,8 @@ fn handleWaveUpdate(stream: *ws.Reader) anyerror!void {
 
                         mobs.set(obj_id, mob);
                     } else {
-                        const mob = MobImpl.Super.init(
-                            MobImpl.init(
+                        const mob: MobImpl.Super = .init(
+                            .init(
                                 allocator,
                                 mob_type,
                                 mob_rarity,
@@ -495,7 +492,7 @@ fn handleWaveUpdate(stream: *ws.Reader) anyerror!void {
                     }
                 },
 
-                .petal => {
+                inline .petal => {
                     // Petal treated as mob
 
                     // TODO: in server, the id may collide between player, mob, petal because their pool is separated
@@ -503,14 +500,14 @@ fn handleWaveUpdate(stream: *ws.Reader) anyerror!void {
                     // That chance is 1 / math.maxInt(u32) but that possibly collidable (and can cause error)
                     const petal_id = try stream.readInt(EntityId, .little);
 
-                    const petal_x = try ws.readFloat32(stream);
-                    const petal_y = try ws.readFloat32(stream);
+                    const petal_x = try Network.readFloat32(stream);
+                    const petal_y = try Network.readFloat32(stream);
 
-                    const petal_angle = internalAngleToRadians(try ws.readFloat32(stream));
+                    const petal_angle = byteToRadians(try Network.readFloat32(stream));
 
-                    const petal_health = try ws.readFloat32(stream);
+                    const petal_health = try Network.readFloat32(stream);
 
-                    const petal_size = try ws.readFloat32(stream);
+                    const petal_size = try Network.readFloat32(stream);
 
                     const petal_type: EntityType = .{ .petal = try stream.readEnum(PetalType, .little) };
 
@@ -553,8 +550,8 @@ fn handleWaveUpdate(stream: *ws.Reader) anyerror!void {
 
                         mobs.set(obj_id, petal);
                     } else {
-                        const petal = MobImpl.Super.init(
-                            MobImpl.init(
+                        const petal: MobImpl.Super = .init(
+                            .init(
                                 allocator,
                                 petal_type,
                                 petal_rarity,
@@ -588,38 +585,34 @@ export fn main() c_int {
     std.log.debug("main()", .{});
 
     // Init entity profiles
-    EntityProfiles.staticInit();
+    EntityProfiles.initStatic();
 
     ctx = CanvasContext.createCanvasContextBySelector(allocator, "canvas", false);
 
     { // Initialize client websocket
-        client = ws.ClientWebSocket.init(allocator) catch unreachable;
+        client = Network.NetworkClient.init(allocator) catch unreachable;
 
-        client.in.putHandler(ws.opcode.Clientbound.wave_self_id, handleWaveSelfId) catch unreachable;
-        client.in.putHandler(ws.opcode.Clientbound.wave_update, handleWaveUpdate) catch unreachable;
+        client.in.putHandler(.wave_self_id, handleWaveSelfId) catch unreachable;
+        client.in.putHandler(.wave_update, handleWaveUpdate) catch unreachable;
 
         client.connect("localhost:8080") catch unreachable;
     }
 
     { // Initialize dom events
-        event.addEventListenerBySelector("canvas", .mouse_move, onMouseEvent, false);
-        event.addEventListenerBySelector("canvas", .mouse_up, onMouseEvent, false);
-        event.addEventListenerBySelector("canvas", .mouse_down, onMouseEvent, false);
+        Event.addEventListenerBySelector("canvas", .mouse_move, onMouseEvent, false);
+        Event.addEventListenerBySelector("canvas", .mouse_up, onMouseEvent, false);
+        Event.addEventListenerBySelector("canvas", .mouse_down, onMouseEvent, false);
 
-        event.addEventListener(.window, .screen_resize, onScreenEvent, false);
+        Event.addEventListener(.window, .screen_resize, onScreenEvent, false);
 
         { // Force fire event to correct init size
-            var virtual_screen_event = std.mem.zeroes(event.ScreenEvent);
+            var virtual_screen_event = std.mem.zeroes(Event.ScreenEvent);
 
-            virtual_screen_event.inner_width = dom.clientWidth();
-            virtual_screen_event.inner_height = dom.clientHeight();
+            virtual_screen_event.inner_width = Dom.clientWidth();
+            virtual_screen_event.inner_height = Dom.clientHeight();
 
             _ = onScreenEvent(.screen_resize, &virtual_screen_event);
         }
-    }
-
-    { // Initialize ui
-        ui = UI.init(allocator, ctx) catch unreachable;
     }
 
     { // Initialize DOD models
@@ -635,7 +628,7 @@ export fn main() c_int {
     { // Initialize tile map
         tile_ctx = CanvasContext.createCanvasContext(allocator, 256 * 4, 256 * 4, false);
 
-        tile_ctx.drawSVG(@embedFile("Game/Tile/Tiles/desert_c_2.svg"));
+        tile_ctx.drawSvg(@embedFile("Game/UI/Shared/Tile/Tiles/desert_c_2.svg"));
     }
 
     draw(-1);
@@ -670,7 +663,7 @@ fn draw(_: f32) callconv(.c) void {
             null;
 
     if (self_player) |p|
-        tile.renderGameTileset(.{
+        TileRenderer.renderGameTileset(.{
             .ctx = ctx,
 
             .tileset = &.{tile_ctx},
@@ -688,9 +681,6 @@ fn draw(_: f32) callconv(.c) void {
 
             .scale = @splat(antenna_scale),
         });
-
-    // Render ui
-    ui.render();
 
     if (self_player) |*p| // Draw movement helper
         drawMovementHelper(p, delta_time);
