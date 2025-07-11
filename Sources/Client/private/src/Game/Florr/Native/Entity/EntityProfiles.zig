@@ -1,8 +1,3 @@
-const std = @import("std");
-const json = std.json;
-const MobType = @import("../../../UI/Shared/Entity/EntityType.zig").MobType;
-const allocator = @import("../../../../Mem.zig").allocator;
-
 const EntityProfiles = json.Parsed(json.Value);
 
 pub var mob_profiles: EntityProfiles = undefined;
@@ -42,3 +37,10 @@ pub fn initStatic() void {
         unreachable;
     };
 }
+
+const std = @import("std");
+const json = std.json;
+
+const MobType = @import("../../../UI/Shared/Entity/EntityType.zig").MobType;
+
+const allocator = @import("../../../../Mem.zig").allocator;

@@ -1,14 +1,3 @@
-const std = @import("std");
-const Renderer = @import("../../Renderers/Renderer.zig").Renderer;
-const RenderContext = @import("../../Renderers/Renderer.zig").RenderContext;
-const PlayerSuper = @import("../../Player.zig").Super;
-
-const PlayerNormalRenderer = @import("PlayerNormalRenderer.zig").PlayerNormalRenderer;
-const normalRender = PlayerNormalRenderer.render;
-
-const PlayerDeveloperRenderer = @import("PlayerDeveloperRenderer.zig").PlayerDeveloperRenderer;
-const developerRender = PlayerDeveloperRenderer.render;
-
 fn render(rctx: RenderContext(PlayerSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
@@ -29,3 +18,15 @@ fn init(allocator: std.mem.Allocator) void {
 }
 
 pub const PlayerRenderingDispatcher = Renderer(PlayerSuper, true, render, init);
+
+const std = @import("std");
+
+const Renderer = @import("../../Renderers/Renderer.zig").Renderer;
+const RenderContext = @import("../../Renderers/Renderer.zig").RenderContext;
+const PlayerSuper = @import("../../Player.zig").Super;
+
+const PlayerNormalRenderer = @import("PlayerNormalRenderer.zig").PlayerNormalRenderer;
+const normalRender = PlayerNormalRenderer.render;
+
+const PlayerDeveloperRenderer = @import("PlayerDeveloperRenderer.zig").PlayerDeveloperRenderer;
+const developerRender = PlayerDeveloperRenderer.render;

@@ -1,7 +1,3 @@
-const std = @import("std");
-const testing = std.testing;
-const heap = std.heap;
-
 // IF SOME WEIRD BUG APPEARS, MUST CHECK BUFFER SIZE
 // I WAS GOT STRESSED OUT FOR 2 WEEKS BECAUSE OF THAT
 // 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡
@@ -79,3 +75,7 @@ pub fn freeCString(ptr: CStringPointer) void {
 
     allocator.free(ptr[0..len]);
 }
+
+const std = @import("std");
+const testing = std.testing;
+const heap = std.heap;

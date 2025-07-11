@@ -1,14 +1,3 @@
-const std = @import("std");
-const io = std.io;
-const mem = std.mem;
-const math = std.math;
-const leb = std.leb;
-const wr = @import("../../../Florr/Native/Wave/WaveRoom.zig");
-const Biome = @import("../../../Florr/Native/Biome.zig").Biome;
-const PlayerMood = @import("../Entity/PlayerMood.zig");
-const Opcode = @import("NetworkPacketOpcode.zig");
-const NetworkClient = @import("NetworkClient.zig");
-
 const Serverbound = @This();
 
 pub const Writer = NetworkClient.DefaultPacketStream.Writer;
@@ -120,7 +109,7 @@ pub fn sendWaveRoomFindPublic(self: *const Serverbound, biome: Biome) !void {
     shared_fbs.reset();
 }
 
-pub fn sendWaveRoomChangeReady(self: *const Serverbound, state: wr.PlayerReadyState) !void {
+pub fn sendWaveRoomChangeReady(self: *const Serverbound, state: Wr.PlayerReadyState) !void {
     try shared_stream.writeByte(comptime @intFromEnum(Opcode.Serverbound.wave_room_change_ready));
 
     try shared_stream.writeByte(@intFromEnum(state));
@@ -130,7 +119,7 @@ pub fn sendWaveRoomChangeReady(self: *const Serverbound, state: wr.PlayerReadySt
     shared_fbs.reset();
 }
 
-pub fn sendWaveRoomChangeVisible(self: *const Serverbound, state: wr.VisibleState) !void {
+pub fn sendWaveRoomChangeVisible(self: *const Serverbound, state: Wr.VisibleState) !void {
     try shared_stream.writeByte(comptime @intFromEnum(Opcode.Serverbound.wave_room_change_visible));
 
     try shared_stream.writeByte(@intFromEnum(state));
@@ -176,3 +165,15 @@ pub fn sendAck(self: *const Serverbound, width: u16, height: u16) !void {
 
     shared_fbs.reset();
 }
+
+const std = @import("std");
+const io = std.io;
+const mem = std.mem;
+const math = std.math;
+const leb = std.leb;
+
+const Wr = @import("../../../Florr/Native/Wave/WaveRoom.zig");
+const Biome = @import("../../../Florr/Native/Biome.zig").Biome;
+const PlayerMood = @import("../Entity/PlayerMood.zig");
+const NetworkClient = @import("NetworkClient.zig");
+const Opcode = @import("NetworkPacketOpcode.zig");

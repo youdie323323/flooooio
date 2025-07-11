@@ -1,9 +1,3 @@
-const std = @import("std");
-const io = std.io;
-const mem = std.mem;
-const Opcode = @import("NetworkPacketOpcode.zig");
-const NetworkClient = @import("NetworkClient.zig");
-
 const Clientbound = @This();
 
 pub const Reader = NetworkClient.DefaultPacketStream.Reader;
@@ -121,3 +115,10 @@ fn handleConnectionKick(stream: *Reader) !void {
         .cheat_detected => {},
     }
 }
+
+const std = @import("std");
+const io = std.io;
+const mem = std.mem;
+
+const NetworkClient = @import("NetworkClient.zig");
+const Opcode = @import("NetworkPacketOpcode.zig");

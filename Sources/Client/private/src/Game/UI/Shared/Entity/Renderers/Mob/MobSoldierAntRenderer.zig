@@ -1,13 +1,3 @@
-const std = @import("std");
-const math = std.math;
-const time = std.time;
-const Renderer = @import("../Renderer.zig").Renderer;
-const skin_darken = @import("../Renderer.zig").skin_darken;
-const RenderContext = @import("../Renderer.zig").RenderContext;
-const MobSuper = @import("../../Mob.zig").Super;
-
-const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");
-
 const pi10: comptime_float = math.pi / 10.0;
 
 const beak_mul: comptime_float = 0.05;
@@ -125,3 +115,13 @@ fn render(rctx: RenderContext(MobSuper)) void {
 }
 
 pub const MobSoldierAntRenderer = Renderer(MobSuper, false, render, null);
+
+const std = @import("std");
+const math = std.math;
+const time = std.time;
+const Renderer = @import("../Renderer.zig").Renderer;
+const skin_darken = @import("../Renderer.zig").skin_darken;
+const RenderContext = @import("../Renderer.zig").RenderContext;
+const MobSuper = @import("../../Mob.zig").Super;
+
+const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");

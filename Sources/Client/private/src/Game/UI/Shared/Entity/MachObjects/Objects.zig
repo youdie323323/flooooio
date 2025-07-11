@@ -1,7 +1,3 @@
-const std = @import("std");
-const meta = std.meta;
-const mem = std.mem;
-
 const Generation = u16;
 const Index = u16;
 
@@ -260,3 +256,7 @@ pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Obje
         }
     };
 }
+
+const std = @import("std");
+const meta = std.meta;
+const mem = std.mem;

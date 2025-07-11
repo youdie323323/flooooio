@@ -1,15 +1,3 @@
-const std = @import("std");
-const math = std.math;
-const Renderer = @import("../Renderer.zig").Renderer;
-const RenderContext = @import("../Renderer.zig").RenderContext;
-const PlayerSuper = @import("../../Player.zig").Super;
-
-const skin_darken = @import("../Renderer.zig").skin_darken;
-
-const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");
-
-const drawDeadEyes = @import("PlayerNormalRenderer.zig").drawDeadEyes;
-
 const body_x: comptime_float = 25;
 const body_y: comptime_float = -0.5;
 
@@ -113,3 +101,15 @@ fn render(rctx: RenderContext(PlayerSuper)) void {
 }
 
 pub const PlayerDeveloperRenderer = Renderer(PlayerSuper, false, render, null);
+
+const std = @import("std");
+const math = std.math;
+const Renderer = @import("../Renderer.zig").Renderer;
+const RenderContext = @import("../Renderer.zig").RenderContext;
+const PlayerSuper = @import("../../Player.zig").Super;
+
+const skin_darken = @import("../Renderer.zig").skin_darken;
+
+const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");
+
+const drawDeadEyes = @import("PlayerNormalRenderer.zig").drawDeadEyes;

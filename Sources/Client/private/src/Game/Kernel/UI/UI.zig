@@ -1,8 +1,3 @@
-const std = @import("std");
-const mem = std.mem;
-const CanvasContext = @import("../WebAssembly/Interop/Canvas2D/CanvasContext.zig");
-const Component = @import("Layout/Components/Component.zig");
-const Color = @import("../WebAssembly/Interop/Canvas2D/Color.zig");
 const UI = @This();
 
 pub const Point = @Vector(2, f32);
@@ -73,3 +68,11 @@ pub fn destroy(self: *UI) void {
 
     self.components.clear();
 }
+
+const std = @import("std");
+const mem = std.mem;
+
+const Component = @import("Layout/Components/Component.zig");
+
+const CanvasContext = @import("../WebAssembly/Interop/Canvas2D/CanvasContext.zig");
+const Color = @import("../WebAssembly/Interop/Canvas2D/Color.zig");

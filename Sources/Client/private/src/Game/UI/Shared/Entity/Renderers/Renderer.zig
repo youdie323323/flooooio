@@ -1,13 +1,3 @@
-const std = @import("std");
-const math = std.math;
-const debug = std.debug;
-
-const CanvasContext = @import("../../../../Kernel/WebAssembly/Interop/Canvas2D/CanvasContext.zig");
-const Color = @import("../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");
-const MobType = @import("../EntityType.zig").MobType;
-const Entity = @import("../Entity.zig").Entity;
-const Main = @import("../../../../../main.zig");
-
 /// Factor used to darken skin colors.
 pub const skin_darken: comptime_float = 0.2;
 
@@ -267,3 +257,13 @@ pub fn validateEntityImplementation(comptime Impl: type) void {
     if (!@hasDecl(Impl, "Renderer"))
         @compileError("entity implementation must have a Renderer declaration");
 }
+
+const std = @import("std");
+const math = std.math;
+const debug = std.debug;
+
+const CanvasContext = @import("../../../../Kernel/WebAssembly/Interop/Canvas2D/CanvasContext.zig");
+const Color = @import("../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");
+const MobType = @import("../EntityType.zig").MobType;
+const Entity = @import("../Entity.zig").Entity;
+const Main = @import("../../../../../main.zig");

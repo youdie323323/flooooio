@@ -1,11 +1,7 @@
 //! Event handling module.
 //! Provides functionality for registering and managing event listeners
 //! in a web context.
-const std = @import("std");
-const Mem = @import("../../../../Mem.zig");
-
-const event = @This();
-
+//! 
 pub const GlobalEventTarget = enum(u8) {
     document = 0,
     window = 1,
@@ -33,15 +29,15 @@ fn EventRegisterer(comptime Event: type) type {
 fn getEventRegistererFromEventType(comptime event_type: EventType) EventRegisterer(EventFromEventType(event_type)) {
     comptime {
         return switch (event_type) {
-            .mouse_down => event.@"0",
-            .mouse_enter => event.@"1",
-            .mouse_leave => event.@"2",
-            .mouse_move => event.@"3",
-            .mouse_up => event.@"4",
+            .mouse_down => @This().@"0",
+            .mouse_enter => @This().@"1",
+            .mouse_leave => @This().@"2",
+            .mouse_move => @This().@"3",
+            .mouse_up => @This().@"4",
 
-            .screen_resize => event.@"5",
+            .screen_resize => @This().@"5",
 
-            .wheel => event.@"6",
+            .wheel => @This().@"6",
         };
     }
 }
@@ -49,11 +45,11 @@ fn getEventRegistererFromEventType(comptime event_type: EventType) EventRegister
 /// Gets the appropriate event for the given event type.
 fn EventFromEventType(comptime event_type: EventType) type {
     return comptime switch (event_type) {
-        .mouse_down, .mouse_enter, .mouse_leave, .mouse_move, .mouse_up => event.MouseEvent,
+        .mouse_down, .mouse_enter, .mouse_leave, .mouse_move, .mouse_up => @This().MouseEvent,
 
-        .screen_resize => event.ScreenEvent,
+        .screen_resize => @This().ScreenEvent,
 
-        .wheel => event.WheelEvent,
+        .wheel => @This().WheelEvent,
     };
 }
 
@@ -213,3 +209,7 @@ pub usingnamespace struct {
 
     pub extern "1" fn @"6"(target: usize, use_capture: bool, callback: EventCallback(WheelEvent)) callconv(.c) void;
 };
+
+const std = @import("std");
+
+const Mem = @import("../../../../Mem.zig");

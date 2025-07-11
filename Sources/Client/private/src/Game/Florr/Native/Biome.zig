@@ -1,7 +1,3 @@
-const std = @import("std");
-const meta = std.meta;
-const Color = @import("../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");
-
 pub const Biome = enum {
     garden,
     desert,
@@ -27,3 +23,8 @@ pub fn name(biome: Biome) ?[]const u8 {
 pub fn color(biome: Biome) ?Color {
     return biome_colors.get(biome);
 }
+
+const std = @import("std");
+const meta = std.meta;
+
+const Color = @import("../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");

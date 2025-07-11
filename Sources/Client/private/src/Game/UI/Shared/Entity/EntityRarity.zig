@@ -1,7 +1,3 @@
-const std = @import("std");
-const meta = std.meta;
-const Color = @import("../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");
-
 pub const EntityRarity = enum(u8) {
     common,
     unusual,
@@ -43,3 +39,8 @@ pub fn rarityName(rarity: EntityRarity) ?[]const u8 {
 pub fn rarityColor(rarity: EntityRarity) ?Color {
     return rarity_colors.get(rarity);
 }
+
+const std = @import("std");
+const meta = std.meta;
+
+const Color = @import("../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");

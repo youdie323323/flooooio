@@ -1,15 +1,3 @@
-const std = @import("std");
-const math = std.math;
-const time = std.time;
-const Path2D = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Path2D.zig");
-const Renderer = @import("../Renderer.zig").Renderer;
-const skin_darken = @import("../Renderer.zig").skin_darken;
-const RenderContext = @import("../Renderer.zig").RenderContext;
-const MobSuper = @import("../../Mob.zig").Super;
-const MobType = @import("../../EntityType.zig").MobType;
-
-const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");
-
 var antennas: Path2D = undefined;
 
 fn render(rctx: RenderContext(MobSuper)) void {
@@ -116,3 +104,16 @@ fn init(_: std.mem.Allocator) void {
 }
 
 pub const MobCentipedeRenderer = Renderer(MobSuper, false, render, init);
+
+const std = @import("std");
+const math = std.math;
+const time = std.time;
+
+const Path2D = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Path2D.zig");
+const Renderer = @import("../Renderer.zig").Renderer;
+const skin_darken = @import("../Renderer.zig").skin_darken;
+const RenderContext = @import("../Renderer.zig").RenderContext;
+const MobSuper = @import("../../Mob.zig").Super;
+const MobType = @import("../../EntityType.zig").MobType;
+
+const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");

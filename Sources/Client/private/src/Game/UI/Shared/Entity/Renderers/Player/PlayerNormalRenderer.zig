@@ -1,12 +1,3 @@
-const std = @import("std");
-const math = std.math;
-const Renderer = @import("../Renderer.zig").Renderer;
-const RenderContext = @import("../Renderer.zig").RenderContext;
-const PlayerSuper = @import("../../Player.zig").Super;
-const skin_darken = @import("../Renderer.zig").skin_darken;
-
-const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");
-
 const dead_eye_length: comptime_float = 4;
 
 pub fn drawDeadEyes(
@@ -145,3 +136,13 @@ fn render(rctx: RenderContext(PlayerSuper)) void {
 }
 
 pub const PlayerNormalRenderer = Renderer(PlayerSuper, false, render, null);
+
+const std = @import("std");
+const math = std.math;
+
+const Renderer = @import("../Renderer.zig").Renderer;
+const RenderContext = @import("../Renderer.zig").RenderContext;
+const PlayerSuper = @import("../../Player.zig").Super;
+const skin_darken = @import("../Renderer.zig").skin_darken;
+
+const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");

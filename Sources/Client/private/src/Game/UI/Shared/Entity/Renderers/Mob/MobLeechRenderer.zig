@@ -1,16 +1,3 @@
-const std = @import("std");
-const math = std.math;
-const time = std.time;
-const Renderer = @import("../../Renderers/Renderer.zig").Renderer;
-const skin_darken = @import("../../Renderers/Renderer.zig").skin_darken;
-const RenderContext = @import("../../Renderers/Renderer.zig").RenderContext;
-const Mob = @import("../../Mob.zig");
-const MobSuper = Mob.Super;
-const Mobs = @import("../../../../../../main.zig").Mobs;
-const allocator = @import("../../../../../../Mem.zig").allocator;
-
-const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");
-
 const Point = @Vector(2, f32);
 const Points = []const Point;
 
@@ -216,3 +203,17 @@ fn strokeBodyCurve(rctx: RenderContext(MobSuper)) void {
 }
 
 pub const MobLeechRenderer = Renderer(MobSuper, false, render, null);
+
+const std = @import("std");
+const math = std.math;
+const time = std.time;
+
+const Renderer = @import("../../Renderers/Renderer.zig").Renderer;
+const skin_darken = @import("../../Renderers/Renderer.zig").skin_darken;
+const RenderContext = @import("../../Renderers/Renderer.zig").RenderContext;
+const Mob = @import("../../Mob.zig");
+const MobSuper = Mob.Super;
+const Mobs = @import("../../../../../../main.zig").Mobs;
+const allocator = @import("../../../../../../Mem.zig").allocator;
+
+const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");

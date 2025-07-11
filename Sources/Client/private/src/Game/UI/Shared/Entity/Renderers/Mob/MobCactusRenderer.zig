@@ -1,14 +1,3 @@
-const std = @import("std");
-const math = std.math;
-const time = std.time;
-const Path2D = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Path2D.zig");
-const Renderer = @import("../Renderer.zig").Renderer;
-const skin_darken = @import("../Renderer.zig").skin_darken;
-const RenderContext = @import("../Renderer.zig").RenderContext;
-const MobSuper = @import("../../Mob.zig").Super;
-
-const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");
-
 var spine: Path2D = undefined;
 
 var body: Path2D = undefined;
@@ -174,3 +163,15 @@ fn init(_: std.mem.Allocator) void {
 }
 
 pub const MobCactusRenderer = Renderer(MobSuper, false, render, init);
+
+const std = @import("std");
+const math = std.math;
+const time = std.time;
+
+const Path2D = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Path2D.zig");
+const Renderer = @import("../Renderer.zig").Renderer;
+const skin_darken = @import("../Renderer.zig").skin_darken;
+const RenderContext = @import("../Renderer.zig").RenderContext;
+const MobSuper = @import("../../Mob.zig").Super;
+
+const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");

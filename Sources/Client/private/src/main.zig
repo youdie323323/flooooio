@@ -1,40 +1,3 @@
-const std = @import("std");
-const builtin = std.builtin;
-const math = std.math;
-const leb = std.leb;
-
-const Event = @import("Game/Kernel/WebAssembly/Interop/Event.zig");
-const Dom = @import("Game/Kernel/WebAssembly/Interop/Dom.zig");
-const Timer = @import("Game/Kernel/WebAssembly/Interop/Timer.zig");
-
-const Network = @import("Game/UI/Shared/Network/Network.zig");
-
-const CanvasContext = @import("Game/Kernel/WebAssembly/Interop/Canvas2D/CanvasContext.zig");
-const Color = @import("Game/Kernel/WebAssembly/Interop/Canvas2D/Color.zig");
-const Path2D = @import("Game/Kernel/WebAssembly/Interop/Canvas2D/Path2D.zig");
-
-const EntityId = @import("Game/UI/Shared/Entity/Entity.zig").EntityId;
-const EntityType = @import("Game/UI/Shared/Entity/EntityType.zig").EntityType;
-const MobType = @import("Game/UI/Shared/Entity/EntityType.zig").MobType;
-const PetalType = @import("Game/UI/Shared/Entity/EntityType.zig").PetalType;
-const EntityRarity = @import("Game/UI/Shared/Entity/EntityRarity.zig").EntityRarity;
-const Rarity = @import("Game/UI/Shared/Entity/EntityRarity.zig");
-
-const PlayerImpl = @import("Game/UI/Shared/Entity/Player.zig");
-const PlayerMood = @import("Game/UI/Shared/Entity/PlayerMood.zig");
-
-const MobImpl = @import("Game/UI/Shared/Entity/Mob.zig");
-const renderEntity = @import("Game/UI/Shared/Entity/Renderers/Renderer.zig").renderEntity;
-const MobRenderingDispatcher = @import("Game/UI/Shared/Entity/Renderers/Mob/MobRenderingDispatcher.zig").MobRenderingDispatcher;
-
-const mach_objects = @import("Game/UI/Shared/Entity/MachObjects/objs.zig");
-
-const EntityProfiles = @import("Game/Florr/Native/Entity/EntityProfiles.zig");
-
-const TileRenderer = @import("Game/UI/Shared/Tile/TileRenderer.zig");
-
-const allocator = @import("Mem.zig").allocator;
-
 /// Global canvas context of this application.
 var ctx: *CanvasContext = undefined;
 
@@ -212,8 +175,8 @@ var wave_ended: bool = false;
 
 var wave_map_radius: u16 = 0;
 
-pub const Players = mach_objects.Objects(PlayerImpl.Super, .id);
-pub const Mobs = mach_objects.Objects(MobImpl.Super, .id);
+pub const Players = Objs.Objects(PlayerImpl.Super, .id);
+pub const Mobs = Objs.Objects(MobImpl.Super, .id);
 
 var players: Players = undefined;
 var mobs: Mobs = undefined;
@@ -407,7 +370,7 @@ fn handleWaveUpdate(stream: *Network.Reader) anyerror!void {
                         is_poisoned: bool,
                     });
 
-                    var mob_connecting_segment: ?mach_objects.ObjectId = null;
+                    var mob_connecting_segment: ?Objs.ObjectId = null;
 
                     if (mob_bool_flags.has_connecting_segment) {
                         const mob_connecting_segment_id = try stream.readInt(EntityId, .little);
@@ -786,3 +749,38 @@ fn draw(_: f32) callconv(.c) void {
 
     _ = CanvasContext.requestAnimationFrame(draw);
 }
+
+const std = @import("std");
+const builtin = std.builtin;
+const math = std.math;
+const leb = std.leb;
+
+const Event = @import("Game/Kernel/WebAssembly/Interop/Event.zig");
+const Dom = @import("Game/Kernel/WebAssembly/Interop/Dom.zig");
+const Timer = @import("Game/Kernel/WebAssembly/Interop/Timer.zig");
+
+const Network = @import("Game/UI/Shared/Network/Network.zig");
+
+const CanvasContext = @import("Game/Kernel/WebAssembly/Interop/Canvas2D/CanvasContext.zig");
+const Color = @import("Game/Kernel/WebAssembly/Interop/Canvas2D/Color.zig");
+const Path2D = @import("Game/Kernel/WebAssembly/Interop/Canvas2D/Path2D.zig");
+
+const EntityId = @import("Game/UI/Shared/Entity/Entity.zig").EntityId;
+const EntityType = @import("Game/UI/Shared/Entity/EntityType.zig").EntityType;
+const MobType = @import("Game/UI/Shared/Entity/EntityType.zig").MobType;
+const PetalType = @import("Game/UI/Shared/Entity/EntityType.zig").PetalType;
+const EntityRarity = @import("Game/UI/Shared/Entity/EntityRarity.zig").EntityRarity;
+
+const PlayerImpl = @import("Game/UI/Shared/Entity/Player.zig");
+const PlayerMood = @import("Game/UI/Shared/Entity/PlayerMood.zig");
+
+const MobImpl = @import("Game/UI/Shared/Entity/Mob.zig");
+const renderEntity = @import("Game/UI/Shared/Entity/Renderers/Renderer.zig").renderEntity;
+
+const Objs = @import("Game/UI/Shared/Entity/MachObjects/objs.zig");
+
+const EntityProfiles = @import("Game/Florr/Native/Entity/EntityProfiles.zig");
+
+const TileRenderer = @import("Game/UI/Shared/Tile/TileRenderer.zig");
+
+const allocator = @import("Mem.zig").allocator;

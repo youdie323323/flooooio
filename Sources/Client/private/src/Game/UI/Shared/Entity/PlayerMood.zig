@@ -1,5 +1,3 @@
-const std = @import("std");
-
 /// Mood bit flags.
 pub const MoodBitSet = std.bit_set.IntegerBitSet(2);
 
@@ -45,3 +43,5 @@ test MoodBitSet {
 
     try std.testing.expectEqual(decodeMood(both), .{ true, true });
 }
+
+const std = @import("std");

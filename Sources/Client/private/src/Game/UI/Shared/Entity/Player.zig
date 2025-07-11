@@ -1,14 +1,8 @@
-const std = @import("std");
-const math = std.math;
-const Entity = @import("Entity.zig").Entity;
-const PlayerMood = @import("PlayerMood.zig");
-const PureRenderer = @import("Renderers/Renderer.zig");
-
 const PlayerImpl = @This();
 
 pub const Super = Entity(PlayerImpl);
 
-pub const Renderer = @import("Renderers/Player/PlayerRenderingDispatcher.zig").PlayerRenderingDispatcher;
+pub const Renderer = PlayerRenderingDispatcher;
 
 comptime { // Validate
     PureRenderer.validateEntityImplementation(PlayerImpl);
@@ -59,3 +53,11 @@ pub fn update(self: *PlayerImpl, entity: *Super, delta_time: f32) void {
         self.sad_t = math.clamp(self.sad_t + (if (!is_angry and is_sad) mouth_mood_speed else -mouth_mood_speed), 0, 1);
     }
 }
+
+const std = @import("std");
+const math = std.math;
+
+const Entity = @import("Entity.zig").Entity;
+const PlayerMood = @import("PlayerMood.zig");
+const PureRenderer = @import("Renderers/Renderer.zig");
+const PlayerRenderingDispatcher = @import("Renderers/Player/PlayerRenderingDispatcher.zig").PlayerRenderingDispatcher;

@@ -1,6 +1,3 @@
-const std = @import("std");
-const math = std.math;
-
 pub const EntityId = u32;
 
 pub fn Entity(comptime Impl: type) type {
@@ -177,3 +174,6 @@ pub fn Entity(comptime Impl: type) type {
         }
     };
 }
+
+const std = @import("std");
+const math = std.math;

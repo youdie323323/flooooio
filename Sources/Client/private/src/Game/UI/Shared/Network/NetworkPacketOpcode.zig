@@ -1,5 +1,3 @@
-const std = @import("std");
-
 pub const Serverbound = enum(u8) {
     wave_change_move,
     wave_change_mood,
@@ -50,3 +48,5 @@ pub const Clientbound = enum(u8) {
 
     connection_kicked,
 };
+
+const std = @import("std");

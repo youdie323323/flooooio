@@ -1,28 +1,14 @@
-const std = @import("std");
-const math = std.math;
-const json = std.json;
-const fmt = std.fmt;
-const ObjectId = @import("MachObjects/objs.zig").ObjectId;
-const Entity = @import("Entity.zig").Entity;
-const EntityType = @import("EntityType.zig").EntityType;
-const PureEntityType = @import("EntityType.zig").PureEntityType;
-const MobType = @import("EntityType.zig").MobType;
-const EntityRarity = @import("EntityRarity.zig").EntityRarity;
-const EntityProfiles = @import("../../../Florr/Native/Entity/EntityProfiles.zig");
-const PureRenderer = @import("Renderers/Renderer.zig");
-const starfish = @import("Renderers/Mob/MobStarfishRenderer.zig");
-
 const MobImpl = @This();
 
 pub const Super = Entity(MobImpl);
 
-pub const Renderer = @import("Renderers/Mob/MobRenderingDispatcher.zig").MobRenderingDispatcher;
+pub const Renderer = MobRenderingDispatcher;
 
 comptime { // Validate
     PureRenderer.validateEntityImplementation(MobImpl);
 }
 
-const StarfishLegDistances = [starfish.leg_amount]f32;
+const StarfishLegDistances = [MobStarfishRenderer.leg_amount]f32;
 
 const Segments = std.AutoHashMap(ObjectId, void);
 
@@ -88,7 +74,7 @@ pub fn init(
 
         .leg_distances = if (@"type".get() == @intFromEnum(MobType.starfish))
             // Splat doesnt allow nullable type
-            @as(StarfishLegDistances, @splat(starfish.undestroyed_leg_distance))
+            @as(StarfishLegDistances, @splat(MobStarfishRenderer.undestroyed_leg_distance))
         else
             null,
     };
@@ -149,3 +135,19 @@ pub fn removeConnectedSegment(self: *MobImpl, segment: ObjectId) void {
     if (self.connected_segments) |*s|
         _ = s.remove(segment);
 }
+
+const std = @import("std");
+const math = std.math;
+const json = std.json;
+const fmt = std.fmt;
+
+const ObjectId = @import("MachObjects/objs.zig").ObjectId;
+const Entity = @import("Entity.zig").Entity;
+const EntityType = @import("EntityType.zig").EntityType;
+const PureEntityType = @import("EntityType.zig").PureEntityType;
+const MobType = @import("EntityType.zig").MobType;
+const EntityRarity = @import("EntityRarity.zig").EntityRarity;
+const EntityProfiles = @import("../../../Florr/Native/Entity/EntityProfiles.zig");
+const PureRenderer = @import("Renderers/Renderer.zig");
+const MobStarfishRenderer = @import("Renderers/Mob/MobStarfishRenderer.zig");
+const MobRenderingDispatcher = @import("Renderers/Mob/MobRenderingDispatcher.zig").MobRenderingDispatcher;

@@ -1,7 +1,3 @@
-const std = @import("std");
-const Mem = @import("../../../../Mem.zig");
-const allocator = Mem.allocator;
-
 pub fn WebSocket(comptime Context: type) type {
     return struct {
         var websocket_instances: std.AutoHashMap(Id, *@This()) =
@@ -81,7 +77,7 @@ pub fn WebSocket(comptime Context: type) type {
         /// Sends a binary data.
         pub fn send(self: *const @This(), data: []const u8) bool {
             // This would slow the code
-            // if (!self.isReady()) 
+            // if (!self.isReady())
             //     return error.WebSocketNotReady;
 
             return @"4"(self.id, data.ptr, data.len) != 0;
@@ -145,3 +141,8 @@ pub fn WebSocket(comptime Context: type) type {
         extern "3" fn @"5"(id: Id, ptr_addr: *Mem.MemoryPtr, size_addr: *usize) u8;
     };
 }
+
+const std = @import("std");
+
+const Mem = @import("../../../../Mem.zig");
+const allocator = Mem.allocator;

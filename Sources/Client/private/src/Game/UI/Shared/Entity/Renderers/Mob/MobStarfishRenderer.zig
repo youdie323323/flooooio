@@ -1,13 +1,3 @@
-const std = @import("std");
-const math = std.math;
-const time = std.time;
-const Renderer = @import("../Renderer.zig").Renderer;
-const skin_darken = @import("../Renderer.zig").skin_darken;
-const RenderContext = @import("../Renderer.zig").RenderContext;
-const MobSuper = @import("../../Mob.zig").Super;
-
-const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");
-
 pub const leg_amount: comptime_int = 5;
 pub const leg_amount_f32: comptime_float = @floatFromInt(leg_amount);
 
@@ -168,3 +158,14 @@ fn render(rctx: RenderContext(MobSuper)) void {
 }
 
 pub const MobStarfishRenderer = Renderer(MobSuper, false, render, null);
+
+const std = @import("std");
+const math = std.math;
+const time = std.time;
+
+const Renderer = @import("../Renderer.zig").Renderer;
+const skin_darken = @import("../Renderer.zig").skin_darken;
+const RenderContext = @import("../Renderer.zig").RenderContext;
+const MobSuper = @import("../../Mob.zig").Super;
+
+const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");

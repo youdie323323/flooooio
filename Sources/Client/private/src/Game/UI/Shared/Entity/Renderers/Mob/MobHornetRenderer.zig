@@ -1,14 +1,3 @@
-const std = @import("std");
-const math = std.math;
-const time = std.time;
-const Path2D = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Path2D.zig");
-const Renderer = @import("../../Renderers/Renderer.zig").Renderer;
-const skin_darken = @import("../../Renderers/Renderer.zig").skin_darken;
-const RenderContext = @import("../../Renderers/Renderer.zig").RenderContext;
-const MobSuper = @import("../../Mob.zig").Super;
-
-const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");
-
 var missile_body: Path2D = undefined;
 var missile_body_stroke: Path2D = undefined;
 
@@ -166,3 +155,15 @@ fn init(_: std.mem.Allocator) void {
 }
 
 pub const MobHornetRenderer = Renderer(MobSuper, false, render, init);
+
+const std = @import("std");
+const math = std.math;
+const time = std.time;
+
+const Path2D = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Path2D.zig");
+const Renderer = @import("../../Renderers/Renderer.zig").Renderer;
+const skin_darken = @import("../../Renderers/Renderer.zig").skin_darken;
+const RenderContext = @import("../../Renderers/Renderer.zig").RenderContext;
+const MobSuper = @import("../../Mob.zig").Super;
+
+const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");

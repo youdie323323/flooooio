@@ -1,13 +1,3 @@
-const std = @import("std");
-const math = std.math;
-const time = std.time;
-const Renderer = @import("../Renderer.zig").Renderer;
-const skin_darken = @import("../Renderer.zig").skin_darken;
-const RenderContext = @import("../Renderer.zig").RenderContext;
-const MobSuper = @import("../../Mob.zig").Super;
-
-const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");
-
 fn render(rctx: RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
@@ -96,3 +86,14 @@ fn render(rctx: RenderContext(MobSuper)) void {
 }
 
 pub const MobBeeRenderer = Renderer(MobSuper, false, render, null);
+
+const std = @import("std");
+const math = std.math;
+const time = std.time;
+
+const Renderer = @import("../Renderer.zig").Renderer;
+const skin_darken = @import("../Renderer.zig").skin_darken;
+const RenderContext = @import("../Renderer.zig").RenderContext;
+const MobSuper = @import("../../Mob.zig").Super;
+
+const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");

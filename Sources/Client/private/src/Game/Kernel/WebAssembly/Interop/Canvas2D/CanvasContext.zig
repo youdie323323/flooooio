@@ -1,9 +1,4 @@
 //! Provides minimal canvas operations for wasm.
-const std = @import("std");
-const Path2D = @import("Path2D.zig");
-const Color = @import("Color.zig");
-const Mem = @import("../../../../../Mem.zig");
-
 const CanvasContext = @This();
 
 pub const Id = u16;
@@ -616,3 +611,11 @@ extern "0" fn @"65"(callback: RAFCallback) u32;
 pub inline fn requestAnimationFrame(callback: RAFCallback) u32 {
     return @"65"(callback);
 }
+
+const std = @import("std");
+
+const Path2D = @import("Path2D.zig");
+
+const Color = @import("Color.zig");
+
+const Mem = @import("../../../../../Mem.zig");

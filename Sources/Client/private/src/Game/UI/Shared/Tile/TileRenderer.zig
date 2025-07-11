@@ -1,8 +1,3 @@
-const std = @import("std");
-const math = std.math;
-const CanvasContext = @import("../../../Kernel/WebAssembly/Interop/Canvas2D/CanvasContext.zig");
-const Color = @import("../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");
-
 const Tile = *CanvasContext;
 
 /// Array of tiles.
@@ -143,3 +138,9 @@ pub fn renderGameTileset(options: MapRenderingOptions) void {
         scale,
     );
 }
+
+const std = @import("std");
+const math = std.math;
+
+const CanvasContext = @import("../../../Kernel/WebAssembly/Interop/Canvas2D/CanvasContext.zig");
+const Color = @import("../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");

@@ -1,6 +1,3 @@
-const std = @import("std");
-const meta = std.meta;
-
 pub const PureEntityType = u8;
 
 pub const MobType = enum(PureEntityType) {
@@ -111,3 +108,6 @@ pub const petal_types = [_]PetalType{
     .wing,
     .magnet,
 };
+
+const std = @import("std");
+const meta = std.meta;

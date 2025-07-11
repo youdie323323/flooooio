@@ -1,9 +1,3 @@
-const std = @import("std");
-const ascii = std.ascii;
-const debug = std.debug;
-const mem = std.mem;
-const math = std.math;
-
 const Color = @This();
 
 const Rgb = @Vector(3, u8);
@@ -110,7 +104,7 @@ fn comptimeIsValidHexColorCode(comptime code: HexColorCode) bool {
 pub fn comptimeFromHexColorCode(comptime code: HexColorCode) Color {
     comptime {
         @setEvalBranchQuota(100000);
-        
+
         if (!comptimeIsValidHexColorCode(code)) @compileError("color code " ++ code ++ " is not valid");
 
         const value = std.fmt.parseInt(HexColor, code[1..], 16) catch
@@ -326,3 +320,9 @@ pub fn comptimeFromCSSColorName(comptime name: []const u8) Color {
         @compileError("css color name " ++ name ++ " is not valid");
     }
 }
+
+const std = @import("std");
+const ascii = std.ascii;
+const debug = std.debug;
+const mem = std.mem;
+const math = std.math;
