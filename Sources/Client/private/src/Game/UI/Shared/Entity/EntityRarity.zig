@@ -1,4 +1,37 @@
 pub const EntityRarity = enum(u8) {
+    const names: std.EnumMap(EntityRarity, []const u8) = .init(.{
+        .common = "Common",
+        .unusual = "Unusual",
+        .rare = "Rare",
+        .epic = "Epic",
+        .legendary = "Legendary",
+        .mythic = "Mythic",
+        .ultra = "Ultra",
+    });
+
+    const colors: std.EnumMap(EntityRarity, Color) = .init(.{
+        .common = .comptimeFromHexColorCode("#7EEF6D"),
+        .unusual = .comptimeFromHexColorCode("#FFE65D"),
+        .rare = .comptimeFromHexColorCode("#4D52E3"),
+        .epic = .comptimeFromHexColorCode("#861FDE"),
+        .legendary = .comptimeFromHexColorCode("#DE1F1F"),
+        .mythic = .comptimeFromHexColorCode("#1FDBDE"),
+        .ultra = .comptimeFromHexColorCode("#373737"),
+    });
+
+    pub fn name(self: EntityRarity) ?[]const u8 {
+        return names.get(self);
+    }
+
+    pub fn color(self: EntityRarity) ?Color {
+        return colors.get(self);
+    }
+
+    /// Converts EntityRarity to MobRarity.
+    pub fn toMobRarity(self: EntityRarity) MobRarity {
+        return @enumFromInt(@intFromEnum(self));
+    }
+
     common,
     unusual,
     rare,
@@ -6,39 +39,19 @@ pub const EntityRarity = enum(u8) {
     legendary,
     mythic,
     ultra,
+
+    /// Rarity definition especially for mob, since ultra+ mob cannot be spawned.
+    /// This should not used for something like function arguments, since mob and petal using same EntityRarity as its rarity declaration.
+    /// Just for comptime operations.
+    pub const MobRarity = enum(u8) {
+        common,
+        unusual,
+        rare,
+        epic,
+        legendary,
+        mythic,
+    };
 };
-
-const rarity_fields = meta.fields(EntityRarity);
-
-pub const max_rarities = rarity_fields[rarity_fields.len - 1].value;
-
-const rarity_names: std.EnumMap(EntityRarity, []const u8) = .init(.{
-    .common = "Common",
-    .unusual = "Unusual",
-    .rare = "Rare",
-    .epic = "Epic",
-    .legendary = "Legendary",
-    .mythic = "Mythic",
-    .ultra = "Ultra",
-});
-
-const rarity_colors: std.EnumMap(EntityRarity, Color) = .init(.{
-    .common = .comptimeFromHexColorCode("#7EEF6D"),
-    .unusual = .comptimeFromHexColorCode("#FFE65D"),
-    .rare = .comptimeFromHexColorCode("#4D52E3"),
-    .epic = .comptimeFromHexColorCode("#861FDE"),
-    .legendary = .comptimeFromHexColorCode("#DE1F1F"),
-    .mythic = .comptimeFromHexColorCode("#1FDBDE"),
-    .ultra = .comptimeFromHexColorCode("#373737"),
-});
-
-pub fn rarityName(rarity: EntityRarity) ?[]const u8 {
-    return rarity_names.get(rarity);
-}
-
-pub fn rarityColor(rarity: EntityRarity) ?Color {
-    return rarity_colors.get(rarity);
-}
 
 const std = @import("std");
 const meta = std.meta;

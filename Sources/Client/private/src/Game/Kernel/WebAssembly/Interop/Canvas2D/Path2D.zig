@@ -5,31 +5,31 @@ pub const Id = u16;
 
 id: Id,
 
-pub inline fn init() Path2D {
+pub fn init() Path2D {
     return .{ .id = @"59"() };
 }
 
-pub inline fn deinit(self: Path2D) void {
+pub fn deinit(self: Path2D) void {
     @"58"(self.id);
 }
 
-pub inline fn closePath(self: Path2D) void {
+pub fn closePath(self: Path2D) void {
     @"64"(self.id);
 }
 
-pub inline fn moveTo(self: Path2D, comptime x: comptime_float, comptime y: comptime_float) void {
+pub fn moveTo(self: Path2D, comptime x: comptime_float, comptime y: comptime_float) void {
     @"60"(self.id, x, y);
 }
 
-pub inline fn lineTo(self: Path2D, comptime x: comptime_float, comptime y: comptime_float) void {
+pub fn lineTo(self: Path2D, comptime x: comptime_float, comptime y: comptime_float) void {
     @"61"(self.id, x, y);
 }
 
-pub inline fn quadraticCurveTo(self: Path2D, comptime cpx: comptime_float, comptime cpy: comptime_float, comptime x: comptime_float, comptime y: comptime_float) void {
+pub fn quadraticCurveTo(self: Path2D, comptime cpx: comptime_float, comptime cpy: comptime_float, comptime x: comptime_float, comptime y: comptime_float) void {
     @"62"(self.id, cpx, cpy, x, y);
 }
 
-pub inline fn bezierCurveTo(self: Path2D, comptime cp1x: comptime_float, comptime cp1y: comptime_float, comptime cp2x: comptime_float, comptime cp2y: comptime_float, comptime x: comptime_float, comptime y: comptime_float) void {
+pub fn bezierCurveTo(self: Path2D, comptime cp1x: comptime_float, comptime cp1y: comptime_float, comptime cp2x: comptime_float, comptime cp2y: comptime_float, comptime x: comptime_float, comptime y: comptime_float) void {
     @"63"(self.id, cp1x, cp1y, cp2x, cp2y, x, y);
 }
 

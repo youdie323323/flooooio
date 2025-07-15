@@ -21,7 +21,7 @@ type PetalStat struct {
 	Extra EntityExtra `json:"extra,omitempty"`
 }
 
-// GetDamage returns damage within PetalStat.
+// GetDamage returns damage within this PetalStat.
 func (s PetalStat) GetDamage() float32 {
 	return s.Damage
 }
@@ -1115,11 +1115,6 @@ func init() {
 	}
 
 	err = os.WriteFile("../Shared/Florr/Native/ProfileData/petal_profiles.json", data, 0o644)
-	if err != nil {
-		panic(err)
-	}
-
-	err = os.WriteFile("../Client/private/src/Game/Florr/Native/Entity/ProfileData/petal_profiles.json", data, 0o644)
 	if err != nil {
 		panic(err)
 	}

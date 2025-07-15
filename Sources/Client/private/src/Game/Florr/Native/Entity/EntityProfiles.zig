@@ -1,46 +1,17 @@
-const EntityProfiles = json.Parsed(json.Value);
+pub const EntityCollision = struct {
+    /// Division factor of the size of the scaling that is pre-invoked when drawing. 1 means no scaling.
+    fraction: f32,
+    /// Radius of circle.
+    radius: f32,
+};
 
-pub var mob_profiles: EntityProfiles = undefined;
+pub const EntityExtra = std.StaticStringMap(f32);
 
-/// Returns pointer to mob profiles to access from outside of this file.
-pub fn mobProfiles() *EntityProfiles {
-    return &mob_profiles;
-}
-
-pub var petal_profiles: EntityProfiles = undefined;
-
-/// Returns pointer to petal profiles to access from outside of this file.
-pub fn petalProfiles() *EntityProfiles {
-    return &petal_profiles;
-}
-
-pub fn initStatic() void {
-    mob_profiles = json.parseFromSlice(
-        json.Value,
-        allocator,
-        @embedFile("ProfileData/mob_profiles.json"),
-        .{},
-    ) catch |e| {
-        std.debug.print("error occured during parse mob profiles: {}\n", .{e});
-
-        unreachable;
-    };
-
-    petal_profiles = json.parseFromSlice(
-        json.Value,
-        allocator,
-        @embedFile("ProfileData/petal_profiles.json"),
-        .{},
-    ) catch |e| {
-        std.debug.print("error occured during parse petal profiles: {}\n", .{e});
-
-        unreachable;
-    };
+/// Returns stat map using stat specified.
+pub fn EntityStats(comptime Stat: type) type {
+    return std.EnumMap(EntityRarity, Stat);
 }
 
 const std = @import("std");
-const json = std.json;
 
-const MobType = @import("../../../UI/Shared/Entity/EntityType.zig").MobType;
-
-const allocator = @import("../../../../Mem.zig").allocator;
+const EntityRarity = @import("../../../UI/Shared/Entity/EntityRarity.zig").EntityRarity;

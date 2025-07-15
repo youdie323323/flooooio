@@ -68,7 +68,7 @@ pub fn init(
         .is_first_segment = is_first_segment,
         .connecting_segment = connecting_segment,
         .connected_segments = if (is_linkable)
-            Segments.init(allocator)
+            .init(allocator)
         else
             null,
 
@@ -87,34 +87,43 @@ pub fn deinit(self: *MobImpl, _: std.mem.Allocator, _: *Super) void {
     self.* = undefined;
 }
 
-pub fn update(self: *@This(), _: *Super, delta_time: f32) void {
+pub fn update(self: *MobImpl, _: *Super, delta_time: f32) void {
     self.total_t += delta_time * 0.025;
 }
 
 /// Calculate beak angle for mob.
-pub fn calculateBeakAngle(self: MobImpl, comptime multiplier: comptime_float) f32 {
+pub fn calculateBeakAngle(self: *const MobImpl, comptime multiplier: comptime_float) f32 {
     // No need to modulo self.total_t in 0~τ since sin allow τ+
 
     return @sin(self.total_t) * multiplier;
 }
 
-/// Returns a stat within this mob.
-pub fn stat(self: MobImpl) !?json.Value {
-    const profiles =
-        if (self.type.isMob())
-            EntityProfiles.mobProfiles()
-        else
-            EntityProfiles.petalProfiles();
+/// Returns a mob profile within this mob.
+/// Caller must guarantees this mob is mob.
+pub fn mobProfile(self: *const MobImpl) ?MobData {
+    debug.assert(self.type.isMob());
 
-    var buf: [fmt.comptimePrint("{}", .{PureEntityType}).len]u8 = undefined;
+    return mob_profiles.get(self.type.mob);
+}
 
-    const type_str = try std.fmt.bufPrint(&buf, "{}", .{self.type.get()});
+/// Returns a mob stat within this mob.
+/// Caller must guarantees this mob is mob.
+pub fn mobStat(self: *const MobImpl) ?MobStat {
+    return self.mobProfile().?.statByRarity(self.rarity);
+}
 
-    return if (profiles.value.object.get(type_str)) |prof| blk: {
-        const rarity_str = try std.fmt.bufPrint(&buf, "{}", .{@intFromEnum(self.rarity)});
+/// Returns a petal profile within this petal.
+/// Caller must guarantees this mob is petal.
+pub fn petalProfile(self: *const MobImpl) ?PetalData {
+    debug.assert(self.type.isPetal());
 
-        break :blk prof.object.get(rarity_str);
-    } else null;
+    return petal_profiles.get(self.type.petal);
+}
+
+/// Returns a petal stat within this petal.
+/// Caller must guarantees this mob is petal.
+pub fn petalStat(self: *const MobImpl) ?PetalStat {
+    return self.petalProfile().?.statByRarity(self.rarity);
 }
 
 // Define segment methods
@@ -140,14 +149,23 @@ const std = @import("std");
 const math = std.math;
 const json = std.json;
 const fmt = std.fmt;
+const debug = std.debug;
 
-const ObjectId = @import("MachObjects/objs.zig").ObjectId;
+const ObjectId = @import("../../../../Mach/Mach.zig").ObjectId;
+
 const Entity = @import("Entity.zig").Entity;
 const EntityType = @import("EntityType.zig").EntityType;
 const PureEntityType = @import("EntityType.zig").PureEntityType;
 const MobType = @import("EntityType.zig").MobType;
 const EntityRarity = @import("EntityRarity.zig").EntityRarity;
-const EntityProfiles = @import("../../../Florr/Native/Entity/EntityProfiles.zig");
+
+const mob_profiles = @import("../../../Florr/Native/Entity/MobProfiles.zig").mob_profiles;
+const MobStat = @import("../../../Florr/Native/Entity/MobProfiles.zig").MobStat;
+const MobData = @import("../../../Florr/Native/Entity/MobProfiles.zig").MobData;
+const petal_profiles = @import("../../../Florr/Native/Entity/PetalProfiles.zig").petal_profiles;
+const PetalStat = @import("../../../Florr/Native/Entity/PetalProfiles.zig").PetalStat;
+const PetalData = @import("../../../Florr/Native/Entity/PetalProfiles.zig").PetalData;
+
 const PureRenderer = @import("Renderers/Renderer.zig");
 const MobStarfishRenderer = @import("Renderers/Mob/MobStarfishRenderer.zig");
 const MobRenderingDispatcher = @import("Renderers/Mob/MobRenderingDispatcher.zig").MobRenderingDispatcher;

@@ -1,7 +1,7 @@
 const Clientbound = @This();
 
 pub const Reader = NetworkClient.DefaultPacketStream.Reader;
-pub const Handler = *const fn (stream: *Reader) anyerror!void;
+pub const Handler = *const fn (stream: *const Reader) anyerror!void;
 
 const NoEofError = NetworkClient.DefaultPacketStream.Reader.NoEofError;
 
@@ -36,7 +36,7 @@ var shared_buf: [256]u8 = undefined;
 // Prepare fbs of shared_buf
 var shared_fbs = io.fixedBufferStream(&shared_buf);
 
-pub fn readCString(reader: *Reader) (NoEofError || error{StreamTooLong} || @TypeOf(shared_fbs).Writer.Error)![]const u8 {
+pub fn readCString(reader: *const Reader) (NoEofError || error{StreamTooLong} || @TypeOf(shared_fbs).Writer.Error)![]const u8 {
     defer shared_fbs.reset();
 
     try reader.streamUntilDelimiter(shared_fbs.writer(), 0, shared_buf.len);
@@ -45,7 +45,7 @@ pub fn readCString(reader: *Reader) (NoEofError || error{StreamTooLong} || @Type
 }
 
 /// Reads a float16 from stream.
-pub fn readFloat16(stream: *Reader) NoEofError!f16 {
+pub fn readFloat16(stream: *const Reader) NoEofError!f16 {
     var buffer: [2]u8 align(@alignOf(f16)) = undefined;
 
     _ = try stream.readAll(&buffer);
@@ -54,7 +54,7 @@ pub fn readFloat16(stream: *Reader) NoEofError!f16 {
 }
 
 /// Reads a float32 from stream.
-pub fn readFloat32(stream: *Reader) NoEofError!f32 {
+pub fn readFloat32(stream: *const Reader) NoEofError!f32 {
     var buffer: [4]u8 align(@alignOf(f32)) = undefined;
 
     _ = try stream.readAll(&buffer);
@@ -63,7 +63,7 @@ pub fn readFloat32(stream: *Reader) NoEofError!f32 {
 }
 
 /// Reads a float64 from stream.
-pub fn readFloat64(stream: *Reader) NoEofError!f64 {
+pub fn readFloat64(stream: *const Reader) NoEofError!f64 {
     var buffer: [8]u8 align(@alignOf(f64)) = undefined;
 
     _ = try stream.readAll(&buffer);
@@ -71,14 +71,14 @@ pub fn readFloat64(stream: *Reader) NoEofError!f64 {
     return std.mem.bytesAsValue(f64, &buffer).*;
 }
 
-/// Reads a bool from stream, consumes one byte.
-pub fn readBool(stream: *Reader) NoEofError!bool {
+/// Reads a bool from stream.
+pub fn readBool(stream: *const Reader) NoEofError!bool {
     return try stream.readByte() != 0;
 }
 
 pub fn read(self: *const Clientbound, data: []const u8) !void {
     var fbs = io.fixedBufferStream(data);
-    var stream = fbs.reader();
+    const stream = fbs.reader();
 
     const packet_type = try stream.readEnum(Opcode.Clientbound, .little);
 
@@ -111,8 +111,8 @@ fn handleConnectionKick(stream: *Reader) !void {
     const reason = try stream.readEnum(Opcode.ClientboundConnectionKickReason, .little);
 
     switch (reason) {
-        .outdated_client => {},
-        .cheat_detected => {},
+        inline .outdated_client => {},
+        inline .cheat_detected => {},
     }
 }
 

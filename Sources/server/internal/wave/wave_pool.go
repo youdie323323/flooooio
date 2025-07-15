@@ -374,7 +374,7 @@ func (wp *WavePool) stepWaveData() {
 
 			if ok {
 				if slices.Contains(LinkableMobTypes, dmd.Type) {
-					wp.MobSegmentation(
+					wp.LinkedMobSegmentation(
 						dmd.Type,
 
 						dmd.Rarity,
@@ -983,7 +983,7 @@ func (wp *WavePool) SafeGetMobsWithCondition(condition func(*Mob) bool) []*Mob {
 	return wp.GetMobsWithCondition(condition)
 }
 
-func (wp *WavePool) MobSegmentation(
+func (wp *WavePool) LinkedMobSegmentation(
 	mType native.MobType,
 
 	rarity native.Rarity,
@@ -1026,7 +1026,7 @@ func (wp *WavePool) MobSegmentation(
 	}
 }
 
-func (wp *WavePool) SafeMobSegmentation(
+func (wp *WavePool) SafeLinkedMobSegmentation(
 	mType native.MobType,
 
 	rarity native.Rarity,
@@ -1041,7 +1041,7 @@ func (wp *WavePool) SafeMobSegmentation(
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
 
-	wp.MobSegmentation(
+	wp.LinkedMobSegmentation(
 		mType,
 
 		rarity,

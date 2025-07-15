@@ -226,6 +226,14 @@ func NewMob(
 	connectingSegment collision.Node,
 	isFirstSegment bool,
 ) *Mob {
+	// Ultra+ stats is not defined for mob
+	// TODO: returning here maybe can accidentally crash application? check later
+	if rarity >= native.RarityUltra {
+		return nil
+	}
+
+	// TODO: add field that notify health should be randomized in ±5
+
 	profile := native.MobProfiles[mType]
 
 	var size float32
@@ -301,7 +309,6 @@ var MobSizeFactor = map[native.Rarity]float32{
 	native.RarityEpic:      1.9,
 	native.RarityLegendary: 3.0,
 	native.RarityMythic:    5.0,
-	native.RarityUltra:     8.0,
 }
 
 var MobSpeed = map[native.MobType]float32{

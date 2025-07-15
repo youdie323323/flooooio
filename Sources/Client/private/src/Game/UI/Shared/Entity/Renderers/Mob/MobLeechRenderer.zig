@@ -1,34 +1,31 @@
 const Point = @Vector(2, f32);
-const Points = []const Point;
-
-// TODO: somewhere broken and render a leech will panics
+const Points = std.BoundedArray(Point, 10);
 
 /// Collect the segment points from leech.
-/// Caller must guarantees lock objects (mobs).
-fn collectLeechSegmentPoints(mobs: *Mobs, leech: *const MobSuper, scale: MobSuper.Vector2) !Points {
-    var bodies: std.ArrayListUnmanaged(Point) = .{};
-    errdefer bodies.deinit(allocator);
+/// Caller must lock mobs before call this.
+fn collectLeechSegmentPoints(
+    mobs: *Mobs,
+    leech: *const MobSuper,
+    scale: MobSuper.Vector2,
+) !Points {
+    var bodies: Points = .{};
+    var stack: std.BoundedArray(*const MobSuper, 1) = .{};
 
-    var stack: std.ArrayListUnmanaged(*const MobSuper) = .{};
-    defer stack.deinit(allocator);
-
-    try stack.append(allocator, leech);
+    try stack.append(leech);
 
     while (stack.pop()) |current_leech| {
-        try bodies.append(allocator, current_leech.pos / scale);
+        try bodies.append(current_leech.pos / scale);
 
         if (current_leech.impl.connected_segments) |s| {
             var it = s.keyIterator();
 
             while (it.next()) |key| {
-                const inner_leech = mobs.get(key.*);
-
-                try stack.append(allocator, &inner_leech);
+                try stack.append(&mobs.get(key.*));
             }
         }
     }
 
-    return bodies.toOwnedSlice(allocator);
+    return bodies;
 }
 
 fn render(rctx: RenderContext(MobSuper)) void {
@@ -119,71 +116,66 @@ fn render(rctx: RenderContext(MobSuper)) void {
     }
 
     { // Draw leech bodies include this mob
-        // No need to lock since locking before rendering this mob
+        // No need to lock since locked before rendering this mob
         // mobs.lock();
         // defer mobs.unlock();
 
         const bodies =
             collectLeechSegmentPoints(mobs, entity, @splat(scale)) catch return;
-        defer allocator.free(bodies);
 
-        const first_body_x, const first_body_y = bodies[0];
+        const points = bodies.constSlice();
+
+        const points_len = points.len;
+
+        if (points_len == 0) return;
+
+        const first_body = points[0];
+        const first_body_x, const first_body_y = first_body;
 
         ctx.translate(
             -first_body_x,
             -first_body_y,
         );
 
-        prepareNPointCurve(rctx, bodies);
+        { // Draw bodies
+            ctx.beginPath();
+
+            if (points_len > 1) {
+                ctx.moveTo(first_body_x, first_body_y);
+
+                for (0..points_len - 1) |i| {
+                    const p_isub1 = if (i >= 1) points[i - 1] else first_body;
+                    const p_i = points[i];
+                    const p_iadd1 = points[i + 1];
+                    const p_iadd2 = if (i != points_len - 2) points[i + 2] else p_iadd1;
+
+                    const x_p_iadd1, const y_p_iadd1 = p_iadd1;
+
+                    const vector_p_isub1_to_p_iadd1 = p_iadd1 - p_isub1;
+                    const vector_p_i_to_p_iadd2 = p_iadd2 - p_i;
+
+                    const cp1x, const cp1y = p_i + vector_p_isub1_to_p_iadd1 * one_over_six_vector;
+                    const cp2x, const cp2y = p_iadd1 - vector_p_i_to_p_iadd2 * one_over_six_vector;
+
+                    ctx.bezierCurveTo(
+                        cp1x,
+                        cp1y,
+                        cp2x,
+                        cp2y,
+                        x_p_iadd1,
+                        y_p_iadd1,
+                    );
+                }
+            } else {
+                ctx.arc(first_body_x, first_body_y, 1, 0, math.tau, false);
+            }
+        }
 
         strokeBodyCurve(rctx);
     }
 }
 
 const one_over_six_vector: Point = @splat(1.0 / 6.0);
-
-fn prepareNPointCurve(rctx: RenderContext(MobSuper), points: Points) void {
-    const ctx = rctx.ctx;
-
-    ctx.beginPath();
-
-    if (points.len == 0) return;
-
-    const p_0 = points[0];
-    const points_len = points.len;
-
-    const x_p_0, const y_p_0 = p_0;
-
-    if (points_len > 1) {
-        ctx.moveTo(x_p_0, y_p_0);
-
-        for (0..points_len - 1) |i| {
-            const p_isub1 = if (i >= 1) points[i - 1] else p_0;
-            const p_i = points[i];
-            const p_iadd1 = points[i + 1];
-            const p_iadd2 = if (i != points_len - 2) points[i + 2] else p_iadd1;
-
-            const x_p_iadd1, const y_p_iadd1 = p_iadd1;
-
-            const vector_p_isub1_to_p_iadd1 = p_iadd1 - p_isub1;
-            const vector_p_i_to_p_iadd2 = p_iadd2 - p_i;
-
-            const cp1x, const cp1y = p_i + vector_p_isub1_to_p_iadd1 * one_over_six_vector;
-            const cp2x, const cp2y = p_iadd1 - vector_p_i_to_p_iadd2 * one_over_six_vector;
-
-            ctx.bezierCurveTo(
-                cp1x,
-                cp1y,
-                cp2x,
-                cp2y,
-                x_p_iadd1,
-                y_p_iadd1,
-            );
-        }
-    } else {
-        ctx.arc(x_p_0, y_p_0, 1, 0, math.tau, false);
-    }
-}
 
 fn strokeBodyCurve(rctx: RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;

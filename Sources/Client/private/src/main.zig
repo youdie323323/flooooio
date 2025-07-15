@@ -9,7 +9,7 @@ var width: f32 = 0;
 var height: f32 = 0;
 
 var base_scale: f32 = 1;
-var antenna_scale: f32 = 1;
+var antenna_scale: f32 = 0.6;
 
 const base_width: comptime_float = 1300;
 const base_height: comptime_float = 650;
@@ -150,12 +150,6 @@ fn onScreenEvent(_: Event.EventType, e: *const Event.ScreenEvent) callconv(.c) b
     return true;
 }
 
-var wave_self_id: EntityId = undefined;
-
-fn handleWaveSelfId(stream: *Network.Reader) anyerror!void {
-    wave_self_id = try leb.readUleb128(u32, stream);
-}
-
 /// Possible abstract objects length.
 const FiniteObjectCount = u16;
 
@@ -175,8 +169,8 @@ var wave_ended: bool = false;
 
 var wave_map_radius: u16 = 0;
 
-pub const Players = Objs.Objects(PlayerImpl.Super, .id);
-pub const Mobs = Objs.Objects(MobImpl.Super, .id);
+pub const Players = Mach.Objects(PlayerImpl.Super, .id);
+pub const Mobs = Mach.Objects(MobImpl.Super, .id);
 
 var players: Players = undefined;
 var mobs: Mobs = undefined;
@@ -185,7 +179,13 @@ fn byteToRadians(angle: f32) f32 {
     return (angle / 255) * math.tau;
 }
 
-fn handleWaveUpdate(stream: *Network.Reader) anyerror!void {
+var wave_self_id: EntityId = undefined;
+
+fn handleWaveSelfId(stream: *const Network.Reader) anyerror!void {
+    wave_self_id = try leb.readUleb128(u32, stream);
+}
+
+fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
     { // Read wave informations
         wave_progress = try leb.readUleb128(u16, stream);
 
@@ -370,7 +370,7 @@ fn handleWaveUpdate(stream: *Network.Reader) anyerror!void {
                         is_poisoned: bool,
                     });
 
-                    var mob_connecting_segment: ?Objs.ObjectId = null;
+                    var mob_connecting_segment: ?Mach.ObjectId = null;
 
                     if (mob_bool_flags.has_connecting_segment) {
                         const mob_connecting_segment_id = try stream.readInt(EntityId, .little);
@@ -378,7 +378,11 @@ fn handleWaveUpdate(stream: *Network.Reader) anyerror!void {
                         mob_connecting_segment = mobs.search(mob_connecting_segment_id);
                     }
 
+                    var this_mob_obj_id: Mach.ObjectId = undefined;
+
                     if (mobs.search(mob_id)) |obj_id| {
+                        this_mob_obj_id = obj_id;
+
                         var mob = mobs.get(obj_id);
 
                         { // Update next properties
@@ -439,16 +443,15 @@ fn handleWaveUpdate(stream: *Network.Reader) anyerror!void {
                             mob_health,
                         );
 
-                        _ = try mobs.new(mob);
+                        this_mob_obj_id = try mobs.new(mob);
                     }
 
-                    // TODO: this is broken, because the mob_connecting_segment was not updated before this mob gets an zero object
                     if (mob_connecting_segment) |obj_id| {
                         var mob = mobs.get(obj_id);
 
-                        // If connected segment mob hasnt this mob as connected segment, add it then update
-                        if (!mob.impl.isConnectedBy(mob_id)) {
-                            try mob.impl.addConnectedSegment(mob_id);
+                        // If connected segment mob havent this mob as connected segment, add it then update
+                        if (!mob.impl.isConnectedBy(this_mob_obj_id)) {
+                            try mob.impl.addConnectedSegment(this_mob_obj_id);
 
                             mobs.set(obj_id, mob);
                         }
@@ -546,9 +549,6 @@ fn handleWaveUpdate(stream: *Network.Reader) anyerror!void {
 // main(_: c_int, _: [*][*]u8) c_int
 export fn main() c_int {
     std.log.debug("main()", .{});
-
-    // Init entity profiles
-    EntityProfiles.initStatic();
 
     ctx = CanvasContext.createCanvasContextBySelector(allocator, "canvas", false);
 
@@ -777,7 +777,7 @@ const PlayerMood = @import("Game/UI/Shared/Entity/PlayerMood.zig");
 const MobImpl = @import("Game/UI/Shared/Entity/Mob.zig");
 const renderEntity = @import("Game/UI/Shared/Entity/Renderers/Renderer.zig").renderEntity;
 
-const Objs = @import("Game/UI/Shared/Entity/MachObjects/objs.zig");
+const Mach = @import("Mach/Mach.zig");
 
 const EntityProfiles = @import("Game/Florr/Native/Entity/EntityProfiles.zig");
 

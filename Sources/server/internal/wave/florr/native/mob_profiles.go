@@ -14,11 +14,11 @@ type MobStat struct {
 	Health     float32 `json:"health"`
 	BodyDamage float32 `json:"bodyDamage"`
 
-	// Maybe this should bee any but ok now
+	// Maybe this should be any but ok now
 	Extra EntityExtra `json:"extra,omitempty"`
 }
 
-// GetDamage returns damage within MobStat.
+// GetDamage returns damage within this MobStat.
 func (s MobStat) GetDamage() float32 {
 	return s.BodyDamage
 }
@@ -58,6 +58,7 @@ func (d MobData) StatFromRarity(r Rarity) MobStat {
 	case RarityMythic:
 		return d.Mythic
 
+	// Ultra (it wont happed but, just guarantees no error)
 	default:
 		return d.Common
 	}
@@ -1012,11 +1013,6 @@ func init() {
 	}
 
 	err = os.WriteFile("../Shared/Florr/Native/ProfileData/mob_profiles.json", data, 0o644)
-	if err != nil {
-		panic(err)
-	}
-
-	err = os.WriteFile("../Client/private/src/Game/Florr/Native/Entity/ProfileData/mob_profiles.json", data, 0o644)
 	if err != nil {
 		panic(err)
 	}

@@ -1,7 +1,7 @@
 //! Event handling module.
 //! Provides functionality for registering and managing event listeners
 //! in a web context.
-//! 
+
 pub const GlobalEventTarget = enum(u8) {
     document = 0,
     window = 1,

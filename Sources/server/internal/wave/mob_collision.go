@@ -39,8 +39,6 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 	mProfile := native.MobProfiles[mType]
 	mStat := mProfile.StatFromRarity(m.Rarity)
 
-	mCollision := mProfile.Collision
-
 	mToDamage := m.GetMobToDamage(wp)
 
 	// Hmm health should only used mMobToDamage?
@@ -62,7 +60,7 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 	c0mob.Y = m.Y
 	c0mob.R = m.CalculateRadius()
 
-	searchRadius := CalculateSearchRadius(mCollision, m.Size)
+	searchRadius := SearchRadiusMultiplier * c0mob.R
 
 	nearby := wp.SpatialHash.Search(m.X, m.Y, searchRadius)
 

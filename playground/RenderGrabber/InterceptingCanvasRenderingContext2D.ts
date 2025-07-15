@@ -74,9 +74,8 @@ export default class InterceptingCanvasRenderingContext2D implements CanvasRende
 
         return args.map((arg: any) => {
             // Arg is proxied path2d, proceed to get original instance
-            if (window.pathReferences.has(arg)) {
+            if (window.pathReferences.has(arg))
                 return window.pathReferences.get(arg).originalPath;
-            }
 
             return arg;
         }) as U;

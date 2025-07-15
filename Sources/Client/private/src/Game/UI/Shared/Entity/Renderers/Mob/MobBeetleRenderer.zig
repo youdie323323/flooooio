@@ -2,7 +2,7 @@ var body: Path2D = undefined;
 
 const beak_mul: comptime_float = 0.1;
 
-const body_points: [3]@Vector(2, f32) = .{
+const body_points: [3]MobSuper.Vector2 = .{
     .{ -17, -12 },
     .{ 17, -12 },
     .{ 0, -15 },

@@ -70,13 +70,13 @@ pub fn RenderContext(comptime AnyEntity: type) type {
             }
         }
 
-        const hurt_target_color_middle = Color.comptimeFromRgbString("rgb(255, 0, 0)");
-        const hurt_target_color_last = Color.comptimeFromRgbString("rgb(255, 255, 255)");
+        const hurt_target_color_middle: Color = .comptimeFromRgbString("rgb(255, 0, 0)");
+        const hurt_target_color_last: Color = .comptimeFromRgbString("rgb(255, 255, 255)");
 
-        const poison_target_color = Color.comptimeFromRgbString("rgb(189, 80, 255)");
+        const poison_target_color: Color = .comptimeFromRgbString("rgb(189, 80, 255)");
 
         /// Blend colors based on this render context entity effect values.
-        /// All effect values should in [0, 1].
+        /// All effect values should ranged in [0, 1].
         pub fn blendEffectColors(self: *const @This(), color: Color) Color {
             const entity = self.entity;
 
@@ -108,12 +108,12 @@ pub fn RenderContext(comptime AnyEntity: type) type {
                 1;
         }
 
-        /// Maximum width of the health bar in pixels.
-        const hp_bar_max_width = 45;
+        const hp_bar_line_width: comptime_float = 5;
+        const hp_bar_info_size: comptime_float = hp_bar_line_width + 1;
 
         /// Renders entity status indicators like health bars.
         pub fn drawEntityStatuses(self: *const @This()) void {
-            const ctx = self.ctx;
+            var ctx = self.ctx;
             const entity = self.entity;
             const impl = entity.impl;
 
@@ -126,26 +126,48 @@ pub fn RenderContext(comptime AnyEntity: type) type {
                 ctx.save();
                 defer ctx.restore();
 
-                const line_width: f32 =
-                    if (is_player_impl) blk: {
-                        ctx.translate(0, entity.size);
-                        ctx.translate(-hp_bar_max_width / 2, 9 / 2 + 5);
+                var hp_bar_max_width: f32 = 0;
 
-                        break :blk 5;
-                    } else blk: {
-                        // TODO: めんどくっせ！
-                        //
-                        // const { collision: { radius, fraction } }: MobData = MOB_PROFILES[entity.type];
-                        // const scale = (entity.size * radius) / (15 * fraction);
-                        //
-                        // ctx.scale(scale, scale);
-                        // ctx.translate(-HP_BAR_MAX_WIDTH / 2, 25);
+                if (is_player_impl) {
+                    hp_bar_max_width = 45;
 
-                        ctx.scale(5, 5);
-                        ctx.translate(-hp_bar_max_width / 2, 25);
+                    ctx.translate(0, entity.size);
+                    ctx.translate(-hp_bar_max_width / 2.0, 9.0 / 2.0 + 5);
+                } else {
+                    const profile = impl.mobProfile() orelse return;
+                    const name = profile.i18n.name;
+                    const collision = profile.collision;
+                    const radius = collision.radius;
+                    const fraction = collision.fraction;
 
-                        break :blk 6.5;
-                    };
+                    // Diameter
+                    hp_bar_max_width = 2 * (1.2 * radius);
+
+                    const y_translate = 40 * (entity.size / fraction);
+
+                    ctx.translate(-hp_bar_max_width / 2.0, y_translate);
+
+                    if (is_mob_impl) {
+                        ctx.setTextAlign(.left);
+                        setupFont(ctx, hp_bar_info_size);
+                        ctx.fillColor(comptime Color.comptimeFromHexColorCode("#ffffff"));
+
+                        ctx.strokeText(name, -1, comptime (-hp_bar_info_size + 2));
+                        ctx.fillText(name, -1, comptime (-hp_bar_info_size + 2));
+
+                        if (entity.impl.rarity.color()) |rarity_color| {
+                            if (entity.impl.rarity.name()) |rarity_name| {
+                                const rarity_name_translate_x = hp_bar_max_width + 2;
+                                
+                                ctx.setTextAlign(.right);
+                                ctx.fillColor(rarity_color);
+
+                                ctx.strokeText(rarity_name, rarity_name_translate_x, comptime (hp_bar_info_size + 2));
+                                ctx.fillText(rarity_name, rarity_name_translate_x, comptime (hp_bar_info_size + 2));
+                            }
+                        }
+                    }
+                }
 
                 ctx.setLineCap(.round);
                 ctx.setGlobalAlpha(entity.hp_alpha);
@@ -156,7 +178,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
                     ctx.moveTo(0, 0);
                     ctx.lineTo(hp_bar_max_width, 0);
 
-                    ctx.setLineWidth(line_width);
+                    ctx.setLineWidth(hp_bar_line_width);
                     ctx.strokeColor(comptime Color.comptimeFromHexColorCode("#222222"));
                     ctx.stroke();
                 }
@@ -169,7 +191,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
                     ctx.moveTo(0, 0);
                     ctx.lineTo(hp_bar_max_width * entity.red_health, 0);
 
-                    ctx.setLineWidth(line_width * 0.44);
+                    ctx.setLineWidth(hp_bar_line_width * 0.44);
                     ctx.strokeColor(comptime Color.comptimeFromHexColorCode("#ff2222"));
                     ctx.stroke();
                 }
@@ -182,7 +204,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
                     ctx.moveTo(0, 0);
                     ctx.lineTo(hp_bar_max_width * entity.health, 0);
 
-                    ctx.setLineWidth(line_width * 0.66);
+                    ctx.setLineWidth(hp_bar_line_width * 0.66);
                     ctx.strokeColor(comptime Color.comptimeFromHexColorCode("#75dd34"));
                     ctx.stroke();
                 }
@@ -267,3 +289,4 @@ const Color = @import("../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig
 const MobType = @import("../EntityType.zig").MobType;
 const Entity = @import("../Entity.zig").Entity;
 const Main = @import("../../../../../main.zig");
+const setupFont = @import("../../../../Kernel/UI/Layout/Components/WellKnown/Text.zig").setupFont;
