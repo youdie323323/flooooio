@@ -133,6 +133,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
                     1;
 
             ctx.save();
+            defer ctx.restore();
 
             ctx.rotate(leg_rotation);
 
@@ -148,8 +149,6 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
                 spot_pos += spot_size * 2 + length_ratio * 5;
             }
-
-            ctx.restore();
         }
 
         ctx.fillColor(rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#d3756b")));

@@ -15,9 +15,9 @@ fn drawEyeOutline(
 
     ctx.beginPath();
 
-    ctx.ellipse(developer_left_eye_x, developer_left_eye_y, offset + 2.4, offset + 5.6, -0.1, 0, math.tau, false);
+    ctx.ellipse(developer_left_eye_x, developer_left_eye_y, comptime (offset + 2.4), comptime (offset + 5.6), -0.1, 0, math.tau, false);
     ctx.moveTo(-8, -5);
-    ctx.ellipse(developer_right_eye_x, developer_right_eye_y, offset + 2.4, offset + 5.6, -0.1, 0, math.tau, false);
+    ctx.ellipse(developer_right_eye_x, developer_right_eye_y, comptime (offset + 2.4), comptime (offset + 5.6), -0.1, 0, math.tau, false);
 
     ctx.fillColor(comptime Color.comptimeFromHexColorCode("#000000"));
     ctx.fill();

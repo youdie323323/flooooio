@@ -140,10 +140,10 @@ pub fn RenderContext(comptime AnyEntity: type) type {
                     const radius = collision.radius;
                     const fraction = collision.fraction;
 
-                    // Diameter
-                    hp_bar_max_width = 2 * (1.2 * radius);
+                    // Diameter, same as server-side
+                    hp_bar_max_width = 2 * (radius * (entity.size / fraction));
 
-                    const y_translate = 40 * (entity.size / fraction);
+                    const y_translate = 8 * (entity.size * radius) / (5 * fraction);
 
                     ctx.translate(-hp_bar_max_width / 2.0, y_translate);
 
@@ -158,7 +158,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
                         if (entity.impl.rarity.color()) |rarity_color| {
                             if (entity.impl.rarity.name()) |rarity_name| {
                                 const rarity_name_translate_x = hp_bar_max_width + 2;
-                                
+
                                 ctx.setTextAlign(.right);
                                 ctx.fillColor(rarity_color);
 
@@ -249,7 +249,6 @@ pub fn Renderer(
                 }
             }
 
-            // This will inlined since RenderFn is marked inline
             render_fn(rctx);
         }
     };

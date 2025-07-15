@@ -41,7 +41,7 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 
 	mToDamage := m.GetMobToDamage(wp)
 
-	// Hmm health should only used mMobToDamage?
+	// Hmm health should only use mMobToDamage?
 	// NOTE: yea because mMaxHealth is used as
 	// mMobToDamage.Health -= somedamage / mMaxHealth
 	mMaxHealth := mToDamage.GetMaxHealth()

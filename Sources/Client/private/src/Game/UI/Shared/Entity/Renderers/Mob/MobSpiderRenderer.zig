@@ -10,7 +10,11 @@ const LegCurve = struct {
     start: Vector2,
     curve: @Vector(4, f32),
 
-    pub fn initComptime(angle: comptime_float, dir: comptime_float, offset: comptime_float) LegCurve {
+    pub fn initComptime(
+        comptime angle: comptime_float,
+        comptime dir: comptime_float,
+        comptime offset: comptime_float,
+    ) LegCurve {
         comptime {
             const angle_vector: Vector2 = .{ @cos(angle), @sin(angle) };
             const cos_angle, const sin_angle = angle_vector;
