@@ -2,25 +2,37 @@ const UI = @This();
 
 pub const Point = @Vector(2, f32);
 
-pub const Components = std.BoundedArray(*Component, std.math.pow(usize, 2, 8));
+pub const VTable = struct {
+    /// Function to be called when this base UI initialization is done.
+    on_initialize: *const fn (*anyopaque) void,
+
+    /// Render the implementation-depending components.
+    render: *const fn (*anyopaque, *CanvasContext) void,
+
+    /// Deinits implementation properties.
+    deinit: *const fn (*anyopaque) void,
+};
+
+/// The type erased pointer to the ui implementation.
+///
+/// Any comparison of this field may result in illegal behavior, since it may
+/// be set to `undefined` in cases where the allocator implementation does not
+/// have any associated state.
+ptr: *anyopaque,
+vtable: *const VTable,
 
 allocator: mem.Allocator,
 
-ctx: *CanvasContext,
-components: Components,
-mouse_position: Point,
+components: std.BoundedArray(*Component, std.math.pow(usize, 2, 8)) = .{},
+mouse_position: Point = .{ 0, 0 },
 
 hovered_component: ?*Component = null,
 clicked_component: ?*Component = null,
 
-pub fn init(allocator: mem.Allocator, ctx: *CanvasContext) !UI {
-    return .{
-        .allocator = allocator,
-
-        .ctx = ctx,
-        .components = try Components.init(0),
-        .mouse_position = .{ 0, 0 },
-    };
+/// Pseudo initialize for setup properties of this base UI.
+/// This method is intended to be called from implementation of an `UI`.
+pub fn init(self: *UI) void {
+    self.rawOnInitialize();
 }
 
 pub fn addComponent(self: *UI, component: *Component) !void {
@@ -37,7 +49,7 @@ pub fn removeComponent(self: *UI, component: *Component) void {
     }
 }
 
-fn isPointInComponent(p: Point, component: *Component) bool {
+fn isPointOverlapsComponent(p: Point, component: *Component) bool {
     const p_x, const p_y = p;
 
     // zig fmt: off
@@ -50,13 +62,19 @@ fn isPointInComponent(p: Point, component: *Component) bool {
     // zig fmt: on
 }
 
-pub fn render(self: *UI) void {
+pub fn render(self: *const UI, ctx: *CanvasContext) void {
+    self.rawRender(ctx);
+}
+
+/// Render all components.
+/// This method is intended to be called from implementation of an `UI`.
+pub fn renderComponents(self: *const UI, ctx: *CanvasContext) void {
     // Render all components
     for (self.components.constSlice()) |component| {
         if (component.is_visible) {
-            self.ctx.fillColor(comptime (Color.comptimeFromCSSColorName("mintcream").lightened(0.1)));
-            self.ctx.rect(component.x, component.y, component.w, component.h);
-            self.ctx.fill();
+            ctx.fillColor(comptime (Color.comptimeFromCSSColorName("mintcream").lightened(0.1)));
+            ctx.rect(component.x, component.y, component.w, component.h);
+            ctx.fill();
         }
     }
 }
@@ -67,6 +85,28 @@ pub fn destroy(self: *UI) void {
     }
 
     self.components.clear();
+
+    self.rawDeinit();
+
+    self.* = undefined;
+}
+
+/// This function is not intended to be called except from within the
+/// implementation of an `UI`.
+pub inline fn rawOnInitialize(self: *const UI) void {
+    self.vtable.on_initialize(self.ptr);
+}
+
+/// This function is not intended to be called except from within the
+/// implementation of an `UI`.
+pub inline fn rawRender(self: *const UI, ctx: *CanvasContext) void {
+    self.vtable.render(self.ptr, ctx);
+}
+
+/// This function is not intended to be called except from within the
+/// implementation of an `UI`.
+pub inline fn rawDeinit(self: *const UI) void {
+    self.vtable.deinit(self.ptr);
 }
 
 const std = @import("std");

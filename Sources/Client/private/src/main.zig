@@ -550,6 +550,8 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
 export fn main() c_int {
     std.log.debug("main()", .{});
 
+    _ = UITitle.init(allocator);
+
     ctx = CanvasContext.createCanvasContextBySelector(allocator, "canvas", false);
 
     { // Initialize client websocket
@@ -782,5 +784,7 @@ const Mach = @import("Mach/Mach.zig");
 const EntityProfiles = @import("Game/Florr/Native/Entity/EntityProfiles.zig");
 
 const TileRenderer = @import("Game/UI/Shared/Tile/TileRenderer.zig");
+
+const UITitle = @import("Game/UI/Title/UITitle.zig");
 
 const allocator = @import("Mem.zig").allocator;

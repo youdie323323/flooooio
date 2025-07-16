@@ -59,7 +59,6 @@ pub fn layout(options: LayoutOptions, context: LayoutContext) LayoutResult {
             .percentage => |p| {
                 x = parseSize(.{ .percentage = p }, context.container_w);
             },
-            
             .number => |n| {
                 x = n;
 
@@ -80,7 +79,6 @@ pub fn layout(options: LayoutOptions, context: LayoutContext) LayoutResult {
             .percentage => |p| {
                 y = parseSize(.{ .percentage = p }, context.container_h);
             },
-
             .number => |n| {
                 y = n;
 
@@ -95,7 +93,7 @@ pub fn layout(options: LayoutOptions, context: LayoutContext) LayoutResult {
         }
     }
 
-    return LayoutResult{
+    return .{
         .x = x + context.origin_x,
         .y = y + context.origin_y,
         .w = w,

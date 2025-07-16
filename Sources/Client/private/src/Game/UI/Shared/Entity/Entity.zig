@@ -102,7 +102,7 @@ pub fn Entity(comptime Impl: type) type {
 
             self.update_t += delta_time_100;
 
-            // Limit in the 1 to safely use lerp
+            // Limit in the 1 to safely use for lerp
             self.t = @min(1, self.update_t);
 
             if (self.hurt_t > 0) {
@@ -169,7 +169,7 @@ pub fn Entity(comptime Impl: type) type {
                 self.poison_t = math.clamp(self.poison_t, 0, 1);
             }
 
-            if (comptime @hasDecl(Impl, "update")) // Call implementation update
+            if (comptime @hasDecl(Impl, "update")) // Call update of implementation
                 self.impl.update(self, delta_time);
         }
     };

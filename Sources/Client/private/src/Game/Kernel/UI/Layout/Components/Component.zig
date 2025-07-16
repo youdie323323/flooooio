@@ -7,7 +7,6 @@ h: f32 = 0,
 
 is_visible: bool = true,
 
-/// This is similar to class inheritance, but more simple.
 pub const VTable = struct {
     alloc: *const fn (*anyopaque) void,
 };

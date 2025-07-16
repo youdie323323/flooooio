@@ -328,7 +328,7 @@ pub usingnamespace PathMethods;
 id: Id,
 
 /// Internal context property values.
-/// This should not accessed directly, if you want get value, call method that named with field name.
+/// This should not accessed directly, if you want to get value, call method that named with field name.
 properties: Accessors.Properties = .{},
 
 /// Internal context frames.
