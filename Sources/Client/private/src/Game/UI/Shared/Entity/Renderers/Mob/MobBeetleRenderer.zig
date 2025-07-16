@@ -13,13 +13,13 @@ fn render(rctx: RenderContext(MobSuper)) void {
     const entity = rctx.entity;
     const mob = entity.impl;
 
-    const bcolor = rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#333333"));
+    const bcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#333333"));
 
     const fcolor = rctx.blendEffectColors(
         if (mob.is_pet)
-            comptime Color.comptimeFromHexColorCode("#ffe667")
+            comptime .comptimeFromHexColorCode("#ffe667")
         else
-            comptime Color.comptimeFromHexColorCode("#8f5db0"),
+            comptime .comptimeFromHexColorCode("#8f5db0"),
     );
     const scolor = fcolor.darkened(skin_darken);
 
@@ -122,5 +122,3 @@ const Renderer = @import("../Renderer.zig").Renderer;
 const skin_darken = @import("../Renderer.zig").skin_darken;
 const RenderContext = @import("../Renderer.zig").RenderContext;
 const MobSuper = @import("../../Mob.zig").Super;
-
-const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");

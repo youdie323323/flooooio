@@ -39,7 +39,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
     var leg_distances = mob.leg_distances.?;
 
-    const fcolor = rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#d0504e"));
+    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#d0504e"));
     const scolor = fcolor.darkened(skin_darken);
 
     ctx.rotate(entity.angle);
@@ -151,7 +151,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
             }
         }
 
-        ctx.fillColor(rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#d3756b")));
+        ctx.fillColor(rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#d3756b")));
         ctx.fill();
     }
 }
@@ -166,5 +166,3 @@ const Renderer = @import("../Renderer.zig").Renderer;
 const skin_darken = @import("../Renderer.zig").skin_darken;
 const RenderContext = @import("../Renderer.zig").RenderContext;
 const MobSuper = @import("../../Mob.zig").Super;
-
-const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");

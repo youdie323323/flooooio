@@ -27,19 +27,17 @@ fn EventRegisterer(comptime Event: type) type {
 
 /// Gets the appropriate event register function for the given event type.
 fn getEventRegistererFromEventType(comptime event_type: EventType) EventRegisterer(EventFromEventType(event_type)) {
-    comptime {
-        return switch (event_type) {
-            .mouse_down => @This().@"0",
-            .mouse_enter => @This().@"1",
-            .mouse_leave => @This().@"2",
-            .mouse_move => @This().@"3",
-            .mouse_up => @This().@"4",
+    return comptime switch (event_type) {
+        .mouse_down => @This().@"0",
+        .mouse_enter => @This().@"1",
+        .mouse_leave => @This().@"2",
+        .mouse_move => @This().@"3",
+        .mouse_up => @This().@"4",
 
-            .screen_resize => @This().@"5",
+        .screen_resize => @This().@"5",
 
-            .wheel => @This().@"6",
-        };
-    }
+        .wheel => @This().@"6",
+    };
 }
 
 /// Gets the appropriate event for the given event type.
@@ -57,7 +55,7 @@ fn EventFromEventType(comptime event_type: EventType) type {
 /// Returns true to indicate the event was handled.
 /// Null pointer of this will removing a handler.
 pub fn EventCallback(comptime Event: type) type {
-    return *allowzero const fn (event_type: EventType, event: *const Event) callconv(.c) bool;
+    return *allowzero const fn (@"type": EventType, event: *const Event) callconv(.c) bool;
 }
 
 /// Adds event listener to a target element or global target.

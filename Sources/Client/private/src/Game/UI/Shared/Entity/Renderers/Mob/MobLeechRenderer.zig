@@ -58,7 +58,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
             ctx.rotate(-1.6561946489531953);
 
             ctx.setLineWidth(4);
-            ctx.strokeColor(comptime Color.comptimeFromHexColorCode("#292929"));
+            ctx.strokeColor(comptime .comptimeFromHexColorCode("#292929"));
 
             inline for (.{ -1, 1 }) |dir| {
                 ctx.beginPath();
@@ -91,7 +91,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
         // Change angle
         ctx.rotate(entity.angle);
 
-        ctx.strokeColor(rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#292929")));
+        ctx.strokeColor(rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#292929")));
         ctx.setLineWidth(4);
 
         const beak_angle = mob.calculateBeakAngle(0.1);
@@ -180,7 +180,7 @@ const one_over_six_vector: Point = @splat(1.0 / 6.0);
 fn strokeBodyCurve(rctx: RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
 
-    const fcolor = rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#333333"));
+    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#333333"));
     const scolor = fcolor.darkened(skin_darken);
 
     // Body outline
@@ -207,5 +207,3 @@ const Mob = @import("../../Mob.zig");
 const MobSuper = Mob.Super;
 const Mobs = @import("../../../../../../main.zig").Mobs;
 const allocator = @import("../../../../../../Mem.zig").allocator;
-
-const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");

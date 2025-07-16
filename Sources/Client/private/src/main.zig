@@ -66,7 +66,7 @@ fn drawMovementHelper(self_player: *const PlayerImpl.Super, delta_time: f32) voi
     ctx.setLineCap(.round);
     ctx.setGlobalAlpha(alpha * 0.2);
     ctx.setLineWidth(12);
-    ctx.strokeColor(comptime Color.comptimeFromHexColorCode("#000000"));
+    ctx.strokeColor(comptime .comptimeFromHexColorCode("#000000"));
     ctx.stroke();
 }
 
@@ -74,22 +74,25 @@ const Vector2 = @Vector(2, f32);
 
 const two_vector: Vector2 = @splat(2);
 
+/// Client-sided self player mood.
 var self_mood: PlayerMood.MoodBitSet = .initEmpty();
 
-fn onMouseEvent(event_type: Event.EventType, e: *const Event.MouseEvent) callconv(.c) bool {
-    switch (event_type) {
-        .mouse_move => {
-            const center = Vector2{
+fn onMouseEvent(@"type": Event.EventType, event: *const Event.MouseEvent) callconv(.c) bool {
+    switch (@"type") {
+        inline .mouse_move => {
+            const screen_vector: Vector2 = .{
                 width,
                 height,
-            } / two_vector;
+            };
+            const screen_center_vector = screen_vector / two_vector;
+
+            const mouse_pos_vector: Vector2 = .{
+                @floatFromInt(event.client_x),
+                @floatFromInt(event.client_y),
+            };
 
             mouse_x_offset, mouse_y_offset =
-                Vector2{
-                    @floatFromInt(e.client_x),
-                    @floatFromInt(e.client_y),
-                } -
-                center;
+                mouse_pos_vector - screen_center_vector;
 
             const angle = math.atan2(mouse_y_offset, mouse_x_offset);
             const distance = math.hypot(mouse_x_offset, mouse_y_offset) / base_scale;
@@ -103,18 +106,18 @@ fn onMouseEvent(event_type: Event.EventType, e: *const Event.MouseEvent) callcon
             ) catch return false;
         },
 
-        .mouse_down, .mouse_up => { // Update mood
+        inline .mouse_down, .mouse_up => { // Update mood
             const target_mood: usize =
                 @intFromEnum(
-                    if (e.button == 0)
+                    if (event.button == 0)
                         PlayerMood.MoodFlags.angry
-                    else if (e.button == 2)
+                    else if (event.button == 2)
                         PlayerMood.MoodFlags.sad
                     else
                         return true,
                 );
 
-            if (event_type == .mouse_down)
+            if (@"type" == .mouse_down)
                 self_mood.set(target_mood)
             else
                 self_mood.unset(target_mood);
@@ -122,19 +125,19 @@ fn onMouseEvent(event_type: Event.EventType, e: *const Event.MouseEvent) callcon
             client.out.sendWaveChangeMood(self_mood) catch return false;
         },
 
-        else => {},
+        inline else => return false,
     }
 
     return true;
 }
 
-fn onScreenEvent(_: Event.EventType, e: *const Event.ScreenEvent) callconv(.c) bool {
+fn onScreenEvent(_: Event.EventType, event: *const Event.ScreenEvent) callconv(.c) bool {
     const dpr: Vector2 = @splat(Dom.devicePixelRatio());
 
     width, height =
         Vector2{
-            @floatFromInt(e.inner_width),
-            @floatFromInt(e.inner_height),
+            @floatFromInt(event.inner_width),
+            @floatFromInt(event.inner_height),
         } * dpr;
 
     base_scale = @max(
@@ -764,7 +767,6 @@ const Timer = @import("Game/Kernel/WebAssembly/Interop/Timer.zig");
 const Network = @import("Game/UI/Shared/Network/Network.zig");
 
 const CanvasContext = @import("Game/Kernel/WebAssembly/Interop/Canvas2D/CanvasContext.zig");
-const Color = @import("Game/Kernel/WebAssembly/Interop/Canvas2D/Color.zig");
 const Path2D = @import("Game/Kernel/WebAssembly/Interop/Canvas2D/Path2D.zig");
 
 const EntityId = @import("Game/UI/Shared/Entity/Entity.zig").EntityId;

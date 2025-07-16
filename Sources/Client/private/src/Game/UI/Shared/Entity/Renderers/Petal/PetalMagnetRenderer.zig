@@ -1,21 +1,11 @@
-const std = @import("std");
-const math = std.math;
-const time = std.time;
-const Renderer = @import("../Renderer.zig").Renderer;
-const body_darken = @import("../Renderer.zig").body_darken;
-const RenderContext = @import("../Renderer.zig").RenderContext;
-const MobSuper = @import("../../Mob.zig").Super;
-
-const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");
-
 fn render(rctx: RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
 
-    const n_fcolor = rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#A44343"));
+    const n_fcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#A44343"));
     const n_scolor = n_fcolor.darkened(body_darken);
 
-    const s_fcolor = rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#363685"));
+    const s_fcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#363685"));
     const s_scolor = s_fcolor.darkened(body_darken);
 
     ctx.rotate(entity.angle);
@@ -108,3 +98,11 @@ fn render(rctx: RenderContext(MobSuper)) void {
 }
 
 pub const PetalMagnetRenderer = Renderer(MobSuper, false, render, null);
+
+const std = @import("std");
+const math = std.math;
+const time = std.time;
+const Renderer = @import("../Renderer.zig").Renderer;
+const body_darken = @import("../Renderer.zig").body_darken;
+const RenderContext = @import("../Renderer.zig").RenderContext;
+const MobSuper = @import("../../Mob.zig").Super;

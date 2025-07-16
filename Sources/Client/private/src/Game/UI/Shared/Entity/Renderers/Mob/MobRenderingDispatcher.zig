@@ -1,52 +1,45 @@
-/// HashMap that maps entity types to their render functions.
-const TypeToRendererFn = std.AutoHashMap(u8, RenderFn(MobSuper));
+/// Global enum map storing all renderer functions.
+const type_to_renderer: std.EnumMap(EntityType.Mixed, RenderFn(MobSuper)) = .init(.{
+    // Mobs
 
-/// Global map storing all renderer functions.
-var type_to_renderer: TypeToRendererFn = undefined;
+    .mob_starfish = starfishRender,
+    .mob_leech = leechRender,
+    .mob_bee = beeRender,
+    .mob_hornet = hornetRender,
+    .mob_spider = spiderRender,
+    .mob_baby_ant = babyAntRender,
+    .mob_worker_ant = workerAntRender,
+    .mob_soldier_ant = soldierAntRender,
+
+    .mob_centipede = centipedeRender,
+    .mob_centipede_desert = centipedeRender,
+    .mob_centipede_evil = centipedeRender,
+
+    .mob_cactus = cactusRender,
+    .mob_scorpion = scorpionRender,
+    .mob_beetle = beetleRender,
+
+    // Petals
+
+    .petal_basic = basicRender,
+    .petal_faster = fasterRender,
+    .petal_magnet = magnetRender,
+
+    // Projectiles
+
+    .mob_missile_projectile = missileRender,
+});
 
 /// Main render function that dispatches to appropriate renderer based on mob type.
 fn render(rctx: RenderContext(MobSuper)) void {
     const entity = rctx.entity;
     const mob = entity.impl;
 
-    if (type_to_renderer.get(mob.type.get())) |r|
+    if (type_to_renderer.get(mob.type.getMixed())) |r|
         r(rctx);
 }
 
 fn init(allocator: std.mem.Allocator) void {
-    type_to_renderer = .init(allocator);
-
-    { // Put renderers
-        { // Pure
-            type_to_renderer.put(@intFromEnum(MobType.starfish), starfishRender) catch unreachable;
-            type_to_renderer.put(@intFromEnum(MobType.leech), leechRender) catch unreachable;
-            type_to_renderer.put(@intFromEnum(MobType.bee), beeRender) catch unreachable;
-            type_to_renderer.put(@intFromEnum(MobType.hornet), hornetRender) catch unreachable;
-            type_to_renderer.put(@intFromEnum(MobType.spider), spiderRender) catch unreachable;
-            type_to_renderer.put(@intFromEnum(MobType.baby_ant), babyAntRender) catch unreachable;
-            type_to_renderer.put(@intFromEnum(MobType.worker_ant), workerAntRender) catch unreachable;
-            type_to_renderer.put(@intFromEnum(MobType.soldier_ant), soldierAntRender) catch unreachable;
-
-            type_to_renderer.put(@intFromEnum(MobType.centipede), centipedeRender) catch unreachable;
-            type_to_renderer.put(@intFromEnum(MobType.centipede_desert), centipedeRender) catch unreachable;
-            type_to_renderer.put(@intFromEnum(MobType.centipede_evil), centipedeRender) catch unreachable;
-
-            type_to_renderer.put(@intFromEnum(MobType.cactus), cactusRender) catch unreachable;
-            type_to_renderer.put(@intFromEnum(MobType.scorpion), scorpionRender) catch unreachable;
-            type_to_renderer.put(@intFromEnum(MobType.beetle), beetleRender) catch unreachable;
-
-            { // Petal
-                type_to_renderer.put(@intFromEnum(PetalType.basic), basicRender) catch unreachable;
-                type_to_renderer.put(@intFromEnum(PetalType.faster), fasterRender) catch unreachable;
-                type_to_renderer.put(@intFromEnum(PetalType.magnet), magnetRender) catch unreachable;
-            }
-        }
-
-        { // Projectile
-            type_to_renderer.put(@intFromEnum(MobType.missile_projectile), missileRender) catch unreachable;
-        }
-    }
-
     { // Init child renderers
         { // Pure
             MobStarfishRenderer.staticInit(allocator);
@@ -83,6 +76,7 @@ const Renderer = @import("../Renderer.zig").Renderer;
 const RenderFn = @import("../Renderer.zig").RenderFn;
 const RenderContext = @import("../Renderer.zig").RenderContext;
 const MobSuper = @import("../../Mob.zig").Super;
+const EntityType = @import("../../EntityType.zig").EntityType;
 const MobType = @import("../../EntityType.zig").MobType;
 const PetalType = @import("../../EntityType.zig").PetalType;
 

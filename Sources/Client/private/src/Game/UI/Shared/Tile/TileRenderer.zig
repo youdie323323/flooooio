@@ -93,7 +93,7 @@ fn renderBoundaryCircle(
 
     ctx.setGlobalAlpha(0.15);
     ctx.setLineWidth(line_width);
-    ctx.strokeColor(comptime Color.comptimeFromHexColorCode("#000000"));
+    ctx.strokeColor(comptime .comptimeFromHexColorCode("#000000"));
     ctx.stroke();
 }
 
@@ -143,4 +143,3 @@ const std = @import("std");
 const math = std.math;
 
 const CanvasContext = @import("../../../Kernel/WebAssembly/Interop/Canvas2D/CanvasContext.zig");
-const Color = @import("../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");

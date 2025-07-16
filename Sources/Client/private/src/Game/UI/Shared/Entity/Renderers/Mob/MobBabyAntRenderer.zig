@@ -3,9 +3,9 @@ fn render(rctx: RenderContext(MobSuper)) void {
     const entity = rctx.entity;
     const mob = entity.impl;
 
-    const bcolor = rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#292929"));
+    const bcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#292929"));
 
-    const fcolor = rctx.blendEffectColors(comptime Color.comptimeFromHexColorCode("#555555"));
+    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#555555"));
     const scolor = fcolor.darkened(skin_darken);
 
     ctx.rotate(entity.angle);
@@ -72,5 +72,3 @@ const Renderer = @import("../Renderer.zig").Renderer;
 const skin_darken = @import("../Renderer.zig").skin_darken;
 const RenderContext = @import("../Renderer.zig").RenderContext;
 const MobSuper = @import("../../Mob.zig").Super;
-
-const Color = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");

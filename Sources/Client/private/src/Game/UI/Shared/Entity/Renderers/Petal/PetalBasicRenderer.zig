@@ -7,7 +7,7 @@ pub fn drawBasicLike(
     const ctx = rctx.ctx;
     const entity = rctx.entity;
 
-    const fcolor = rctx.blendEffectColors(comptime Color.comptimeFromHex(color));
+    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHex(color));
     const scolor = fcolor.darkened(skin_darken);
 
     ctx.rotate(entity.angle);

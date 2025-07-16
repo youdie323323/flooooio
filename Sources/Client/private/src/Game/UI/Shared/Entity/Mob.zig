@@ -101,7 +101,7 @@ pub fn calculateBeakAngle(self: *const MobImpl, comptime multiplier: comptime_fl
 /// Returns a mob profile within this mob.
 /// Caller must guarantees this mob is mob.
 pub fn mobProfile(self: *const MobImpl) ?MobData {
-    debug.assert(self.type.isMob());
+    assert(self.type.isMob());
 
     return mob_profiles.get(self.type.mob);
 }
@@ -115,7 +115,7 @@ pub fn mobStat(self: *const MobImpl) ?MobStat {
 /// Returns a petal profile within this petal.
 /// Caller must guarantees this mob is petal.
 pub fn petalProfile(self: *const MobImpl) ?PetalData {
-    debug.assert(self.type.isPetal());
+    assert(self.type.isPetal());
 
     return petal_profiles.get(self.type.petal);
 }
@@ -149,7 +149,7 @@ const std = @import("std");
 const math = std.math;
 const json = std.json;
 const fmt = std.fmt;
-const debug = std.debug;
+const assert = std.debug.assert;
 
 const ObjectId = @import("../../../../Mach/Mach.zig").ObjectId;
 

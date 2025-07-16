@@ -9,7 +9,7 @@ pub fn setupFont(ctx: *CanvasContext, comptime pixel: comptime_float) void {
     ctx.setLineCap(.round);
     ctx.setStandardFont(pixel);
     ctx.setLineWidth(comptime calculateStrokeWidth(pixel));
-    ctx.strokeColor(comptime Color.comptimeFromHexColorCode("#000000"));
+    ctx.strokeColor(comptime .comptimeFromHexColorCode("#000000"));
 }
 
 const std = @import("std");
