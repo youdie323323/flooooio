@@ -63,7 +63,7 @@ function prepareLightningBouncePath({ points }: LightningBounce): Path2D {
         return value + (randomFactor * magnitude);
     };
 
-    // If point is just one, add distorted first point to render correctly
+    // If lightning points length is equals to one, add distorted that one point, to render correctly
     if (points.length === 1) {
         const [x, y] = points[0];
 

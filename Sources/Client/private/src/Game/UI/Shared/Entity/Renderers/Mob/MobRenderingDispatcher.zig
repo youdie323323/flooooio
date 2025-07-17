@@ -4,6 +4,7 @@ const type_to_renderer: std.EnumMap(EntityType.Mixed, RenderFn(MobSuper)) = .ini
 
     .mob_starfish = starfishRender,
     .mob_leech = leechRender,
+    .mob_sponge = spongeRender,
     .mob_bee = beeRender,
     .mob_hornet = hornetRender,
     .mob_spider = spiderRender,
@@ -24,6 +25,7 @@ const type_to_renderer: std.EnumMap(EntityType.Mixed, RenderFn(MobSuper)) = .ini
     .petal_basic = basicRender,
     .petal_faster = fasterRender,
     .petal_magnet = magnetRender,
+    .petal_lightning = lightningRender,
 
     // Projectiles
 
@@ -48,6 +50,7 @@ fn init(allocator: std.mem.Allocator) void {
             MobWorkerAntRenderer.staticInit(allocator);
             MobSoldierAntRenderer.staticInit(allocator);
             MobLeechRenderer.staticInit(allocator);
+            MobSpongeRenderer.staticInit(allocator);
             MobHornetRenderer.staticInit(allocator);
             MobSpiderRenderer.staticInit(allocator);
             MobCentipedeRenderer.staticInit(allocator);
@@ -59,6 +62,7 @@ fn init(allocator: std.mem.Allocator) void {
                 PetalBasicRenderer.staticInit(allocator);
                 PetalFasterRenderer.staticInit(allocator);
                 PetalMagnetRenderer.staticInit(allocator);
+                PetalLightningRenderer.staticInit(allocator);
             }
         }
 
@@ -88,6 +92,9 @@ const beeRender = MobBeeRenderer.render;
 
 const MobLeechRenderer = @import("MobLeechRenderer.zig").MobLeechRenderer;
 const leechRender = MobLeechRenderer.render;
+
+const MobSpongeRenderer = @import("MobSpongeRenderer.zig").MobSpongeRenderer;
+const spongeRender = MobSpongeRenderer.render;
 
 const MobHornetRenderer = @import("MobHornetRenderer.zig").MobHornetRenderer;
 const hornetRender = MobHornetRenderer.render;
@@ -124,6 +131,9 @@ const fasterRender = PetalFasterRenderer.render;
 
 const PetalMagnetRenderer = @import("../Petal/PetalMagnetRenderer.zig").PetalMagnetRenderer;
 const magnetRender = PetalMagnetRenderer.render;
+
+const PetalLightningRenderer = @import("../Petal/PetalLightningRenderer.zig").PetalLightningRenderer;
+const lightningRender = PetalLightningRenderer.render;
 
 const ProjectileMissileRenderer = @import("ProjectileMissileRenderer.zig").ProjectileMissileRenderer;
 const missileRender = ProjectileMissileRenderer.render;

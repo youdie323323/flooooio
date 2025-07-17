@@ -11,7 +11,7 @@ pub fn missileBodyStroke() *Path2D {
     return &missile_body_stroke;
 }
 
-var hornet_antennae: Path2D = undefined;
+var antennae: Path2D = undefined;
 
 fn render(rctx: RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
@@ -82,7 +82,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
             ctx.translate(25, comptime (5 * dir));
             ctx.scale(1, dir);
 
-            ctx.fillPath(hornet_antennae, .evenodd);
+            ctx.fillPath(antennae, .evenodd);
         }
     }
 }
@@ -93,7 +93,7 @@ fn init(_: std.mem.Allocator) void {
             missile_body = .init();
             missile_body_stroke = .init();
 
-            hornet_antennae = .init();
+            antennae = .init();
         }
 
         {
@@ -138,18 +138,18 @@ fn init(_: std.mem.Allocator) void {
         }
 
         {
-            hornet_antennae.moveTo(-0.47434163093566895, 1.4230250120162964);
-            hornet_antennae.quadraticCurveTo(-0.9337265491485596, 1.2698967456817627, -1.2168631553649902, 0.8770654201507568);
-            hornet_antennae.quadraticCurveTo(-1.5, 0.4842342138290405, -1.5, 0);
-            hornet_antennae.quadraticCurveTo(-1.5, -0.6213203072547913, -1.0606601238250732, -1.0606601238250732);
-            hornet_antennae.quadraticCurveTo(-0.6213203072547913, -1.5, 0, -1.5);
-            hornet_antennae.quadraticCurveTo(15.621322631835938, -1.5, 26.060659408569336, 8.939339637756348);
-            hornet_antennae.quadraticCurveTo(26.403064727783203, 9.281744956970215, 26.48063087463379, 9.759726524353027);
-            hornet_antennae.quadraticCurveTo(26.558197021484375, 10.23770809173584, 26.34164047241211, 10.670820236206055);
-            hornet_antennae.quadraticCurveTo(26.06377601623535, 11.226545333862305, 25.47433853149414, 11.423023223876953);
-            hornet_antennae.quadraticCurveTo(24.884902954101562, 11.619503021240234, 24.329179763793945, 11.34164047241211);
-            hornet_antennae.quadraticCurveTo(14.424531936645508, 6.389315605163574, -0.47434163093566895, 1.4230250120162964);
-            hornet_antennae.closePath();
+            antennae.moveTo(-0.47434163093566895, 1.4230250120162964);
+            antennae.quadraticCurveTo(-0.9337265491485596, 1.2698967456817627, -1.2168631553649902, 0.8770654201507568);
+            antennae.quadraticCurveTo(-1.5, 0.4842342138290405, -1.5, 0);
+            antennae.quadraticCurveTo(-1.5, -0.6213203072547913, -1.0606601238250732, -1.0606601238250732);
+            antennae.quadraticCurveTo(-0.6213203072547913, -1.5, 0, -1.5);
+            antennae.quadraticCurveTo(15.621322631835938, -1.5, 26.060659408569336, 8.939339637756348);
+            antennae.quadraticCurveTo(26.403064727783203, 9.281744956970215, 26.48063087463379, 9.759726524353027);
+            antennae.quadraticCurveTo(26.558197021484375, 10.23770809173584, 26.34164047241211, 10.670820236206055);
+            antennae.quadraticCurveTo(26.06377601623535, 11.226545333862305, 25.47433853149414, 11.423023223876953);
+            antennae.quadraticCurveTo(24.884902954101562, 11.619503021240234, 24.329179763793945, 11.34164047241211);
+            antennae.quadraticCurveTo(14.424531936645508, 6.389315605163574, -0.47434163093566895, 1.4230250120162964);
+            antennae.closePath();
         }
     }
 }

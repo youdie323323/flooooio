@@ -151,13 +151,14 @@ fn render(rctx: RenderContext(MobSuper)) void {
             const spot_angle = comptime spot_angles[i];
 
             const i_isize: isize = comptime @intCast(i);
+            const i_isize_sub_1 = i_isize - 1;
 
             // This is similar to i_isize mod (leg_amount - 1) but supports minus index
             const leg_distance_i =
-                comptime if ((i_isize - 1) == -1)
+                comptime if (i_isize_sub_1 == -1)
                     leg_amount - 1
                 else
-                    i_isize - 1;
+                    i_isize_sub_1;
 
             const distance = leg_distances[leg_distance_i];
             const distance_ratio = distance / undestroyed_leg_distance;

@@ -70,11 +70,11 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 						Rarity: native.RarityUltra,
 					},
 					{
-						Type:   native.PetalTypeBasic,
+						Type:   native.PetalTypeLightning,
 						Rarity: native.RarityUltra,
 					},
 					{
-						Type:   native.PetalTypeBasic,
+						Type:   native.PetalTypeLightning,
 						Rarity: native.RarityUltra,
 					},
 					{

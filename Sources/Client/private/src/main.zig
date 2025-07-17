@@ -190,6 +190,8 @@ fn handleWaveSelfId(stream: *const Network.Reader) anyerror!void {
     wave_self_id = try leb.readUleb128(u32, stream);
 }
 
+var lightning_bounces: std.ArrayListUnmanaged(UIWaveLightningBounce) = .{};
+
 fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
     { // Read wave informations
         wave_progress = try leb.readUleb128(u16, stream);
@@ -251,10 +253,16 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
         for (0..lightning_bounces_count) |_| {
             const points_count = try leb.readUleb128(FiniteObjectCount, stream);
 
+            var points: std.ArrayListUnmanaged(UIWaveLightningBounce.Vector2) = .{};
+
             for (0..points_count) |_| {
-                _ = try Network.readFloat32(stream); // X
-                _ = try Network.readFloat32(stream); // Y
+                try points.append(allocator, .{
+                    try Network.readFloat32(stream),
+                    try Network.readFloat32(stream),
+                });
             }
+
+            try lightning_bounces.append(allocator, try .init(allocator, &points));
         }
     }
 
@@ -601,6 +609,9 @@ export fn main() c_int {
         tile_ctx.drawSvg(@embedFile("Game/UI/Shared/Tile/Tiles/desert_c_2.svg"));
     }
 
+    // Initialize lightning bounce
+    UIWaveLightningBounce.staticInit();
+
     draw(-1);
 
     return 0;
@@ -689,7 +700,6 @@ fn draw(_: f32) callconv(.c) void {
                 if (mob.is_dead and mob.dead_t > 1) {
                     var inner_slice = mobs.slice();
 
-                    // TODO: currently this operation is O(n) but having connecting segment in mob, this can done in O(1)
                     while (inner_slice.next()) |inner_obj_id| {
                         var inner_mob = mobs.get(inner_obj_id);
 
@@ -750,6 +760,33 @@ fn draw(_: f32) callconv(.c) void {
                 players.set(obj_id, player);
             }
         }
+
+        { // Lightning bounces
+            ctx.strokeColor(comptime .comptimeFromHexColorCode("#FFFFFF"));
+            ctx.setLineCap(.round);
+
+            const delta_time_500 = delta_time * 0.002;
+
+            var i = lightning_bounces.items.len;
+
+            while (i > 0) : (i -= 1) {
+                const i_sub_1 = i - 1;
+
+                const bounce = &lightning_bounces.items[i_sub_1];
+
+                bounce.t -= delta_time_500;
+
+                if (bounce.t <= 0) {
+                    _ = lightning_bounces.orderedRemove(i_sub_1);
+
+                    continue;
+                }
+
+                ctx.setGlobalAlpha(bounce.t);
+                ctx.setLineWidth(5 * bounce.t);
+                ctx.strokePath(bounce.path);
+            }
+        }
     }
 
     ctx.restore();
@@ -790,5 +827,7 @@ const EntityProfiles = @import("Game/Florr/Native/Entity/EntityProfiles.zig");
 const TileRenderer = @import("Game/UI/Shared/Tile/TileRenderer.zig");
 
 const UITitle = @import("Game/UI/Title/UITitle.zig");
+
+const UIWaveLightningBounce = @import("Game/UI/Wave/UIWaveLightningBounce.zig");
 
 const allocator = @import("Mem.zig").allocator;
