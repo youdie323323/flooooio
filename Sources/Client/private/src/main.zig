@@ -134,11 +134,13 @@ fn onMouseEvent(@"type": Event.EventType, event: *const Event.MouseEvent) callco
 fn onScreenEvent(_: Event.EventType, event: *const Event.ScreenEvent) callconv(.c) bool {
     const dpr: Vector2 = @splat(Dom.devicePixelRatio());
 
+    const inner_screen_vector: Vector2 = .{
+        @floatFromInt(event.inner_width),
+        @floatFromInt(event.inner_height),
+    };
+
     width, height =
-        Vector2{
-            @floatFromInt(event.inner_width),
-            @floatFromInt(event.inner_height),
-        } * dpr;
+        inner_screen_vector * dpr;
 
     base_scale = @max(
         width / base_width,
@@ -657,7 +659,7 @@ fn draw(_: f32) callconv(.c) void {
         const center_width = width / 2;
         const center_height = height / 2;
 
-        if (self_player) |p| {
+        if (self_player) |*p| {
             const x, const y = p.pos;
 
             const view_scale = base_scale * antenna_scale;

@@ -13,7 +13,7 @@ const beak_mul: comptime_float = 0.1;
 fn render(rctx: RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
-    const mob = entity.impl;
+    const mob = &entity.impl;
 
     const bcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#333333"));
     const wcolor = bcolor.darkened(skin_darken);

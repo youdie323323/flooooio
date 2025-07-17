@@ -1,7 +1,7 @@
 fn render(rctx: RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
-    const mob = entity.impl;
+    const mob = &entity.impl;
 
     const bcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#292929"));
 

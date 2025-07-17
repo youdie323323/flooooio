@@ -9,20 +9,22 @@ fn collectLeechSegmentPoints(
     scale: MobSuper.Vector2,
 ) !Points {
     var bodies: Points = .{};
-    var stack: std.BoundedArray(*const MobSuper, 1) = .{};
+    var current_leech = leech;
 
-    try stack.append(leech);
-
-    while (stack.pop()) |current_leech| {
+    while (true) {
         try bodies.append(current_leech.pos / scale);
 
         if (current_leech.impl.connected_segments) |s| {
             var it = s.keyIterator();
+            
+            if (it.next()) |key| {
+                current_leech = &mobs.get(key.*);
 
-            while (it.next()) |key| {
-                try stack.append(&mobs.get(key.*));
+                continue;
             }
         }
+
+        break;
     }
 
     return bodies;
@@ -33,13 +35,13 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
     const ctx = rctx.ctx;
     const entity = rctx.entity;
-    const mob = entity.impl;
+    const mob = &entity.impl;
     const is_specimen = rctx.is_specimen;
     const mobs = rctx.mobs;
 
     if (!is_specimen)
         // If this leech is body, do nothing
-        if (entity.impl.connecting_segment) |_|
+        if (mob.connecting_segment) |_|
             return;
 
     const scale = entity.size * comptime (1.0 / 20.0);
@@ -84,7 +86,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
         return;
     }
 
-    if (entity.impl.is_first_segment) { // Beak
+    if (mob.is_first_segment) { // Beak
         ctx.save();
         defer ctx.restore();
 

@@ -1,15 +1,16 @@
 pub const leg_amount: comptime_int = 5;
 pub const leg_amount_f32: comptime_float = @floatFromInt(leg_amount);
 
-pub const destroyed_leg_distance: comptime_float = 100.0;
-pub const undestroyed_leg_distance: comptime_float = 175.0;
+pub const undestroyed_leg_distance: comptime_float = 30.0;
+pub const destroyed_leg_distance: comptime_float = undestroyed_leg_distance / 2.0;
 
 const distance_lerp_factor: comptime_float = 0.2;
 
 const spots_per_leg: comptime_int = 3;
 const spots_per_leg_f32: comptime_float = @floatFromInt(spots_per_leg);
 
-const epsilon: comptime_float = 0.9999;
+/// Solving arccos(1.963525414466858 / x) = π / 5 for x will lead to 2.426877872787264.
+const leg_valley_depth_between: comptime_float = 2.426877872787264;
 
 const leg_angles = blk: {
     var angles: [leg_amount][4]f32 = undefined;
@@ -21,8 +22,8 @@ const leg_angles = blk: {
         const end_angle = (i_f32 + 1) / leg_amount_f32 * math.tau;
 
         angles[i] = .{
-            @cos(mid_angle) * 15,
-            @sin(mid_angle) * 15,
+            @cos(mid_angle) * leg_valley_depth_between,
+            @sin(mid_angle) * leg_valley_depth_between,
             @cos(end_angle),
             @sin(end_angle),
         };
@@ -31,128 +32,154 @@ const leg_angles = blk: {
     break :blk angles;
 };
 
+const spot_angles = blk: {
+    const Vector2 = @Vector(2, f32);
+
+    var angles: [leg_amount][spots_per_leg]Vector2 = undefined;
+
+    for (0..leg_amount) |i| {
+        const i_f32: f32 = @floatFromInt(i);
+
+        const leg_rotation = i_f32 / leg_amount_f32 * math.tau;
+        const leg_rotation_vector: Vector2 = .{
+            @cos(leg_rotation),
+            @sin(leg_rotation),
+        };
+
+        var spot_pos: f32 = 25;
+
+        for (0..spots_per_leg) |j| {
+            angles[i][j] = leg_rotation_vector * @as(Vector2, @splat(spot_pos));
+
+            switch (j) {
+                0 => spot_pos -= 7,
+                1 => spot_pos -= 9,
+                else => {},
+            }
+        }
+    }
+
+    break :blk angles;
+};
+
 fn render(rctx: RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
-    const mob = entity.impl;
+    const mob = &entity.impl;
     const is_specimen = rctx.is_specimen;
 
-    var leg_distances = mob.leg_distances.?;
+    const leg_distances = &(mob.leg_distances.?);
 
-    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#d0504e"));
+    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#D14F4D"));
     const scolor = fcolor.darkened(skin_darken);
 
     ctx.rotate(entity.angle);
 
-    const scale = entity.size * comptime (1.0 / 120.0);
+    const scale = entity.size * comptime (1.0 / 25.0);
     ctx.scale(scale, scale);
 
     const rotation =
-        @mod(
-            @as(f32, @floatFromInt(
-                if (is_specimen)
-                    2000
-                else
-                    time.milliTimestamp(),
-            )) / 2000,
-            math.tau,
-        ) + entity.move_counter * 0.4;
+        mob.total_t * 0.2;
 
     ctx.rotate(rotation);
 
-    const remaining_leg_amount =
+    const remaining_leg_amount: u3 =
         if (is_specimen)
             leg_amount
         else
             (if (entity.is_dead)
                 0
             else
-                @round(
+                @intFromFloat(@floor(
                     // Use pure health value (0 ~ 1)
-                    entity.next_health * leg_amount,
-                ));
+                    entity.next_health * leg_amount_f32,
+                )));
 
     ctx.beginPath();
 
-    inline for (0..leg_amount) |i| {
-        const mid_cos, const mid_sin, const end_cos, const end_sin = comptime leg_angles[i];
-
-        const old_distance = leg_distances[i];
-
+    inline for (leg_angles, 0..leg_amount) |leg_angle, i| {
         const to: f32 =
-            if (i < remaining_leg_amount)
+            if (remaining_leg_amount > i)
                 undestroyed_leg_distance
             else
                 destroyed_leg_distance;
 
-        const distance = old_distance + (to - old_distance) * distance_lerp_factor;
+        const old_distance = leg_distances[i];
+
+        const distance = math.lerp(old_distance, to, distance_lerp_factor);
 
         leg_distances[i] = distance;
 
-        if (comptime (i == 0)) ctx.moveTo(distance, 0);
+        if (comptime (i == 0))
+            ctx.moveTo(leg_distances[comptime (leg_amount - 1)], 0);
+
+        const mid_cos, const mid_sin, const end_cos, const end_sin = leg_angle;
+
+        const end_cos_dynamic = end_cos * distance;
+        const end_sin_dynamic = end_sin * distance;
 
         ctx.quadraticCurveTo(
             mid_cos,
             mid_sin,
-            end_cos * distance,
-            end_sin * distance,
+            end_cos_dynamic,
+            end_sin_dynamic,
         );
+
+        if (comptime (i != (leg_amount - 1)))
+            ctx.lineTo(end_cos_dynamic, end_sin_dynamic);
     }
 
     ctx.setLineJoin(.round);
     ctx.setLineCap(.round);
 
     // Body outline
-    ctx.setLineWidth(52);
+    ctx.setLineWidth(10);
     ctx.strokeColor(scolor);
     ctx.stroke();
 
     // Body
-    ctx.setLineWidth(26);
+    ctx.setLineWidth(5);
     ctx.fillColor(fcolor);
     ctx.strokeColor(fcolor);
     ctx.fill();
     ctx.stroke();
 
-    {
-        ctx.beginPath();
+    { // Balls
+        ctx.fillColor(rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#D4766C")));
 
         inline for (0..leg_amount) |i| {
-            const i_f32: comptime_float = comptime @floatFromInt(i);
+            const spot_angle = comptime spot_angles[i];
 
-            const leg_rotation: comptime_float = comptime (math.tau * i_f32 / leg_amount_f32);
+            const i_isize: isize = comptime @intCast(i);
 
-            const distance = leg_distances[i];
-
-            const length_ratio = distance / undestroyed_leg_distance;
-
-            const num_spots: u2 =
-                if (length_ratio > epsilon)
-                    spots_per_leg
+            // This is similar to i_isize mod (leg_amount - 1) but supports minus index
+            const leg_distance_i =
+                comptime if ((i_isize - 1) == -1)
+                    leg_amount - 1
                 else
-                    1;
+                    i_isize - 1;
 
-            ctx.save();
-            defer ctx.restore();
+            const distance = leg_distances[leg_distance_i];
+            const distance_ratio = distance / undestroyed_leg_distance;
 
-            ctx.rotate(leg_rotation);
+            // Leaching 2 only possible when distance_ratio is 0.5, but distance
+            // never be destroyed_leg_distance since lerped, so add 0.5 to spots_per_leg
+            const spots_reduce: usize = @intFromFloat(@round((1 - distance_ratio) * comptime (spots_per_leg + 0.5)));
 
-            var spot_pos: f32 = 52;
+            for (0..spots_per_leg) |j| {
+                if (spots_reduce > j) continue;
 
-            for (0..num_spots) |j| {
-                const j_f32: f32 = @floatFromInt(j);
+                const spot_size: f32 = @floatFromInt(j + 2);
 
-                const spot_size = (1 - j_f32 / spots_per_leg_f32 * 0.8) * 24;
+                const spot_x, const spot_y = spot_angle[j];
 
-                ctx.moveTo(spot_pos, 0);
-                ctx.arc(spot_pos, 0, spot_size, 0, math.tau, false);
+                ctx.beginPath();
 
-                spot_pos += spot_size * 2 + length_ratio * 5;
+                ctx.arc(spot_x, spot_y, spot_size, 0, math.tau, false);
+
+                ctx.fill();
             }
         }
-
-        ctx.fillColor(rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#d3756b")));
-        ctx.fill();
     }
 }
 

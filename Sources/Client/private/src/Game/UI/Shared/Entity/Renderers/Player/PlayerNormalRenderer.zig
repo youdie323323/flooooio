@@ -67,7 +67,7 @@ fn drawEyeOutline(
 fn render(rctx: RenderContext(PlayerSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
-    const player = entity.impl;
+    const player = &entity.impl;
 
     const fcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#ffe763"));
     const scolor = fcolor.darkened(skin_darken);

@@ -49,7 +49,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         pub fn applyDeathAnimation(self: *const @This()) void {
             const ctx = self.ctx;
             const entity = self.entity;
-            const impl = entity.impl;
+            const impl = &entity.impl;
 
             if (entity.is_dead) {
                 const is_leech =
@@ -115,7 +115,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         pub fn drawEntityStatuses(self: *const @This()) void {
             var ctx = self.ctx;
             const entity = self.entity;
-            const impl = entity.impl;
+            const impl = &entity.impl;
 
             if (is_mob_impl and (impl.type.isPetal() or impl.type.isMobTypeOf(.missile_projectile)))
                 return;
@@ -155,8 +155,8 @@ pub fn RenderContext(comptime AnyEntity: type) type {
                         ctx.strokeText(name, -1, comptime (-hp_bar_info_size + 2));
                         ctx.fillText(name, -1, comptime (-hp_bar_info_size + 2));
 
-                        if (entity.impl.rarity.color()) |rarity_color| {
-                            if (entity.impl.rarity.name()) |rarity_name| {
+                        if (impl.rarity.color()) |rarity_color| {
+                            if (impl.rarity.name()) |rarity_name| {
                                 const rarity_name_translate_x = hp_bar_max_width + 2;
 
                                 ctx.setTextAlign(.right);

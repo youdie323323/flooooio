@@ -534,8 +534,8 @@ var MobProfiles = map[MobType]MobData{
 				Description: "His name is Patrick",
 			},
 			Collision: EntityCollision{
-				Fraction: 120,
-				Radius:   100,
+				Fraction: 25,
+				Radius:   20,
 			},
 		},
 	},
