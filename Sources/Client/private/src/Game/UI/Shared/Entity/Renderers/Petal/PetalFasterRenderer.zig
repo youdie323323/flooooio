@@ -1,4 +1,4 @@
-fn render(rctx: RenderContext(MobSuper)) void {
+fn render(rctx: *RenderContext(MobSuper)) void {
     drawBasicLike(
         rctx,
         0xfeffc9,

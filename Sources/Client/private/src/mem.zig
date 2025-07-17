@@ -1,10 +1,9 @@
-// IF SOME WEIRD BUG APPEARS, MUST CHECK BUFFER SIZE
-// I WAS GOT STRESSED OUT FOR 2 WEEKS BECAUSE OF THAT
+// IF SOME WEIRD BUG APPEARS, YOU MUST CHECK BUFFER SIZE
+// I STRESSED OUT FOR 2 WEEKS BECAUSE OF THAT
 // 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡 🤡
 
-// Use fba for no-growed memory (growing memory disposes memory buffer and heaps cant used anymore)
-// Maybe too big size?
-var buffer: [512 * std.wasm.page_size]u8 = undefined;
+// Use fba for avoid growing the memory (growing memory disposes memory buffer and heaps cant be used anymore)
+var buffer: [256 * std.wasm.page_size]u8 = undefined;
 
 var fba: std.heap.FixedBufferAllocator = .init(&buffer);
 pub const allocator = fba.allocator();

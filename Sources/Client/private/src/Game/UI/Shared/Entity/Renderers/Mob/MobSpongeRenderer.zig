@@ -3,7 +3,7 @@ var body_stroke: Path2D = undefined;
 
 var spots: Path2D = undefined;
 
-fn render(rctx: RenderContext(MobSuper)) void {
+fn render(rctx: *RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
     const is_specimen = rctx.is_specimen;

@@ -10,7 +10,7 @@ const whatthefuck: comptime_float = 3.8014068603515625;
 
 const beak_mul: comptime_float = 0.1;
 
-fn render(rctx: RenderContext(MobSuper)) void {
+fn render(rctx: *RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
     const mob = &entity.impl;

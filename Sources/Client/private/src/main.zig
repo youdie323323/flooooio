@@ -177,8 +177,15 @@ var wave_map_radius: u16 = 0;
 pub const Players = Mach.Objects(PlayerImpl.Super, .id);
 pub const Mobs = Mach.Objects(MobImpl.Super, .id);
 
-var players: Players = undefined;
 var mobs: Mobs = undefined;
+var petals: Mobs = undefined;
+var players: Players = undefined;
+
+/// Reusable mob render context between entity renders.
+var mob_rctx: RenderContext(MobImpl.Super) = undefined;
+
+/// Reusable player render context between entity renders.
+var player_rctx: RenderContext(PlayerImpl.Super) = undefined;
 
 fn byteToRadians(angle: f32) f32 {
     return (angle / 255) * math.tau;
@@ -190,7 +197,7 @@ fn handleWaveSelfId(stream: *const Network.Reader) anyerror!void {
     wave_self_id = try leb.readUleb128(EntityId, stream);
 }
 
-var lightning_bounces: std.ArrayListUnmanaged(UIWaveLightningBounce) = .{};
+var lightning_bounces: std.ArrayListUnmanaged(UIWaveLightningBounce) = .empty;
 
 fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
     { // Read wave informations
@@ -210,6 +217,9 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
     mobs.lock();
     defer mobs.unlock();
 
+    petals.lock();
+    defer petals.unlock();
+
     players.lock();
     defer players.unlock();
 
@@ -227,6 +237,18 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                 mob.dead_t = 0;
 
                 mobs.set(o, mob);
+
+                continue;
+            }
+
+            if (petals.search(entity_id)) |o| {
+                var petal = petals.get(o);
+
+                petal.is_dead = true;
+
+                petal.dead_t = 0;
+
+                petals.set(o, petal);
 
                 continue;
             }
@@ -253,7 +275,7 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
         for (0..lightning_bounces_count) |_| {
             const points_count = try leb.readUleb128(FiniteObjectCount, stream);
 
-            var points: std.ArrayListUnmanaged(UIWaveLightningBounce.Vector2) = .{};
+            var points: std.ArrayListUnmanaged(UIWaveLightningBounce.Vector2) = .empty;
 
             for (0..points_count) |_| {
                 try points.append(allocator, .{
@@ -273,93 +295,6 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
             const entity_kind = try stream.readEnum(EntityKind, .little);
 
             switch (entity_kind) {
-                inline .player => {
-                    const player_id = try leb.readUleb128(EntityId, stream);
-
-                    const player_x = try Network.readFloat32(stream);
-                    const player_y = try Network.readFloat32(stream);
-
-                    const player_angle = byteToRadians(try Network.readFloat32(stream));
-
-                    const player_health = try Network.readFloat32(stream);
-
-                    const player_size = try Network.readFloat32(stream);
-
-                    const player_mood_mask: PlayerMood.MoodBitSet.MaskInt = @intCast(try stream.readByte());
-
-                    const player_name = try Network.readCString(stream);
-
-                    const player_bool_flags = try stream.readStruct(packed struct {
-                        is_dead: bool,
-                        is_developer: bool,
-                        is_poisoned: bool,
-                    });
-
-                    if (players.search(player_id)) |obj_id| {
-                        var player = players.get(obj_id);
-
-                        { // Update next properties
-                            player.next_pos[0] = player_x;
-                            player.next_pos[1] = player_y;
-
-                            player.next_angle = player_angle;
-
-                            player.next_size = player_size;
-                        }
-
-                        { // Update health properties
-                            if (!player.is_poisoned and player_health < player.next_health) {
-                                player.red_health_timer = 1;
-                                player.hurt_t = 1;
-                            } else if (player_health > player.next_health) {
-                                player.red_health_timer = 0;
-                            }
-
-                            player.next_health = player_health;
-                        }
-
-                        { // Update common properties
-                            player.impl.mood.mask = player_mood_mask;
-
-                            player.impl.name = player_name;
-
-                            player.is_dead = player_bool_flags.is_dead;
-
-                            player.impl.is_developer = player_bool_flags.is_developer;
-
-                            player.is_poisoned = player_bool_flags.is_poisoned;
-                        }
-
-                        { // Update old properties
-                            player.old_pos = player.pos;
-
-                            player.old_angle = player.angle;
-
-                            player.old_size = player.size;
-
-                            player.old_health = player.health;
-                        }
-
-                        player.update_t = 0;
-
-                        players.set(obj_id, player);
-                    } else {
-                        const player: PlayerImpl.Super = .init(
-                            .init(
-                                allocator,
-                                player_name,
-                            ),
-                            player_id,
-                            .{ player_x, player_y },
-                            player_angle,
-                            player_size,
-                            player_health,
-                        );
-
-                        _ = try players.new(player);
-                    }
-                },
-
                 inline .mob => {
                     const mob_id = try leb.readUleb128(EntityId, stream);
 
@@ -492,8 +427,8 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
 
                     const petal_rarity = try stream.readEnum(EntityRarity, .little);
 
-                    if (mobs.search(petal_id)) |obj_id| {
-                        var petal = mobs.get(obj_id);
+                    if (petals.search(petal_id)) |obj_id| {
+                        var petal = petals.get(obj_id);
 
                         { // Update next properties
                             petal.next_pos[0] = petal_x;
@@ -527,7 +462,7 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
 
                         petal.update_t = 0;
 
-                        mobs.set(obj_id, petal);
+                        petals.set(obj_id, petal);
                     } else {
                         const petal: MobImpl.Super = .init(
                             .init(
@@ -545,7 +480,94 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                             petal_health,
                         );
 
-                        _ = try mobs.new(petal);
+                        _ = try petals.new(petal);
+                    }
+                },
+
+                inline .player => {
+                    const player_id = try leb.readUleb128(EntityId, stream);
+
+                    const player_x = try Network.readFloat32(stream);
+                    const player_y = try Network.readFloat32(stream);
+
+                    const player_angle = byteToRadians(try Network.readFloat32(stream));
+
+                    const player_health = try Network.readFloat32(stream);
+
+                    const player_size = try Network.readFloat32(stream);
+
+                    const player_mood_mask: PlayerMood.MoodBitSet.MaskInt = @intCast(try stream.readByte());
+
+                    const player_name = try Network.readCString(stream);
+
+                    const player_bool_flags = try stream.readStruct(packed struct {
+                        is_dead: bool,
+                        is_developer: bool,
+                        is_poisoned: bool,
+                    });
+
+                    if (players.search(player_id)) |obj_id| {
+                        var player = players.get(obj_id);
+
+                        { // Update next properties
+                            player.next_pos[0] = player_x;
+                            player.next_pos[1] = player_y;
+
+                            player.next_angle = player_angle;
+
+                            player.next_size = player_size;
+                        }
+
+                        { // Update health properties
+                            if (!player.is_poisoned and player_health < player.next_health) {
+                                player.red_health_timer = 1;
+                                player.hurt_t = 1;
+                            } else if (player_health > player.next_health) {
+                                player.red_health_timer = 0;
+                            }
+
+                            player.next_health = player_health;
+                        }
+
+                        { // Update common properties
+                            player.impl.mood.mask = player_mood_mask;
+
+                            player.impl.name = player_name;
+
+                            player.is_dead = player_bool_flags.is_dead;
+
+                            player.impl.is_developer = player_bool_flags.is_developer;
+
+                            player.is_poisoned = player_bool_flags.is_poisoned;
+                        }
+
+                        { // Update old properties
+                            player.old_pos = player.pos;
+
+                            player.old_angle = player.angle;
+
+                            player.old_size = player.size;
+
+                            player.old_health = player.health;
+                        }
+
+                        player.update_t = 0;
+
+                        players.set(obj_id, player);
+                    } else {
+                        const player: PlayerImpl.Super = .init(
+                            .init(
+                                allocator,
+                                player_name,
+                            ),
+                            player_id,
+                            .{ player_x, player_y },
+                            player_angle,
+                            player_size,
+                            player_health,
+                        );
+
+                        _ = try players.new(player);
                     }
                 },
             }
@@ -563,9 +585,10 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
 export fn main() c_int {
     std.log.debug("main()", .{});
 
-    _ = UITitle.init(allocator);
-
+    // Initialize main canvas context
     ctx = CanvasContext.createCanvasContextBySelector(allocator, "canvas", false);
+
+    _ = UITitle.init(allocator);
 
     { // Initialize client websocket
         client = Network.NetworkClient.init(allocator) catch unreachable;
@@ -595,12 +618,33 @@ export fn main() c_int {
 
     { // Initialize DOD models
         // Initalize objects
-        players.init(allocator);
         mobs.init(allocator);
+        petals.init(allocator);
+        players.init(allocator);
 
         // Initialize renderer static values
         PlayerImpl.Renderer.staticInit(allocator);
         MobImpl.Renderer.staticInit(allocator);
+
+        // Setup render contexts
+
+        mob_rctx = .{
+            .ctx = ctx,
+            .entity = undefined,
+            .is_specimen = false,
+            .players = &players,
+            .mobs = &mobs,
+            .petals = &petals,
+        };
+
+        player_rctx = .{
+            .ctx = ctx,
+            .entity = undefined,
+            .is_specimen = false,
+            .players = &players,
+            .mobs = &mobs,
+            .petals = &petals,
+        };
     }
 
     { // Initialize tile map
@@ -696,7 +740,6 @@ fn draw(_: f32) callconv(.c) void {
 
                 mob.update(delta_time);
 
-                // Only remove when disconnected
                 if (mob.is_dead and mob.dead_t > 1) {
                     var inner_slice = mobs.slice();
 
@@ -717,15 +760,38 @@ fn draw(_: f32) callconv(.c) void {
                     continue;
                 }
 
-                renderEntity(MobImpl, &.{
-                    .ctx = ctx,
-                    .entity = &mob,
-                    .is_specimen = false,
-                    .players = &players,
-                    .mobs = &mobs,
-                });
+                mob_rctx.entity = &mob;
+
+                renderEntity(MobImpl, &mob_rctx);
 
                 mobs.set(obj_id, mob);
+            }
+        }
+
+        {
+            petals.lock();
+            defer petals.unlock();
+
+            var slice = petals.slice();
+
+            while (slice.next()) |obj_id| {
+                var petal = petals.get(obj_id);
+
+                petal.update(delta_time);
+
+                if (petal.is_dead and petal.dead_t > 1) {
+                    petal.deinit(allocator);
+
+                    petals.delete(obj_id);
+
+                    continue;
+                }
+
+                mob_rctx.entity = &petal;
+
+                renderEntity(MobImpl, &mob_rctx);
+
+                petals.set(obj_id, petal);
             }
         }
 
@@ -749,13 +815,9 @@ fn draw(_: f32) callconv(.c) void {
                     continue;
                 }
 
-                renderEntity(PlayerImpl, &.{
-                    .ctx = ctx,
-                    .entity = &player,
-                    .is_specimen = false,
-                    .players = &players,
-                    .mobs = &mobs,
-                });
+                player_rctx.entity = &player;
+
+                renderEntity(PlayerImpl, &player_rctx);
 
                 players.set(obj_id, player);
             }
@@ -819,6 +881,7 @@ const PlayerMood = @import("Game/UI/Shared/Entity/PlayerMood.zig");
 
 const MobImpl = @import("Game/UI/Shared/Entity/Mob.zig");
 const renderEntity = @import("Game/UI/Shared/Entity/Renderers/Renderer.zig").renderEntity;
+const RenderContext = @import("Game/UI/Shared/Entity/Renderers/Renderer.zig").RenderContext;
 
 const Mach = @import("Mach/Mach.zig");
 

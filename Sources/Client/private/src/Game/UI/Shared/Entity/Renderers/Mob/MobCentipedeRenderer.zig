@@ -1,6 +1,6 @@
 var antennas: Path2D = undefined;
 
-fn render(rctx: RenderContext(MobSuper)) void {
+fn render(rctx: *RenderContext(MobSuper)) void {
     @setEvalBranchQuota(100_000);
 
     const ctx = rctx.ctx;

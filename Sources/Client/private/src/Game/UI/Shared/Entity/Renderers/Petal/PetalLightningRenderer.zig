@@ -1,7 +1,7 @@
 var body: Path2D = undefined;
 var body_stroke: Path2D = undefined;
 
-fn render(rctx: RenderContext(MobSuper)) void {
+fn render(rctx: *RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
 

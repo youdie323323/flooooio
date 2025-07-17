@@ -8,7 +8,7 @@ const developer_right_eye_x: comptime_float = -10;
 const developer_right_eye_y: comptime_float = -8;
 
 fn drawEyeOutline(
-    rctx: RenderContext(PlayerSuper),
+    rctx: *RenderContext(PlayerSuper),
     comptime offset: comptime_float,
 ) void {
     const ctx = rctx.ctx;
@@ -23,7 +23,7 @@ fn drawEyeOutline(
     ctx.fill();
 }
 
-fn render(rctx: RenderContext(PlayerSuper)) void {
+fn render(rctx: *RenderContext(PlayerSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
     const player = &entity.impl;

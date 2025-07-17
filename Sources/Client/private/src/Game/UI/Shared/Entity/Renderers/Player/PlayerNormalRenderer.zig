@@ -1,7 +1,7 @@
 const dead_eye_length: comptime_float = 4;
 
 pub fn drawDeadEyes(
-    rctx: RenderContext(PlayerSuper),
+    rctx: *RenderContext(PlayerSuper),
     comptime eye_x: comptime_float,
     comptime eye_y: comptime_float,
 ) void {
@@ -20,7 +20,7 @@ pub fn drawDeadEyes(
 }
 
 fn drawEyeShape(
-    rctx: RenderContext(PlayerSuper),
+    rctx: *RenderContext(PlayerSuper),
     comptime center_x: comptime_float,
     comptime center_y: comptime_float,
     comptime width_radius: comptime_float,
@@ -49,7 +49,7 @@ const normal_right_eye_x: comptime_float = -7;
 const normal_right_eye_y: comptime_float = -5;
 
 fn drawEyeOutline(
-    rctx: RenderContext(PlayerSuper),
+    rctx: *RenderContext(PlayerSuper),
     comptime offset: comptime_float,
 ) void {
     const ctx = rctx.ctx;
@@ -64,7 +64,7 @@ fn drawEyeOutline(
     ctx.fill();
 }
 
-fn render(rctx: RenderContext(PlayerSuper)) void {
+fn render(rctx: *RenderContext(PlayerSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
     const player = &entity.impl;

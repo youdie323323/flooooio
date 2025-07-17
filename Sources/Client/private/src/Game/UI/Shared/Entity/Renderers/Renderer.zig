@@ -6,7 +6,7 @@ pub const body_darken: comptime_float = 0.1;
 
 /// Creates a render context for the specified entity type.
 pub fn RenderContext(comptime AnyEntity: type) type {
-    return *const struct {
+    return struct {
         const AnyImpl =
             if (@hasField(AnyEntity, "impl"))
                 @FieldType(AnyEntity, "impl")
@@ -35,6 +35,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
 
         players: *Main.Players,
         mobs: *Main.Mobs,
+        petals: *Main.Mobs,
 
         /// Determines if the entity should be rendered based on its state.
         /// Returns false if the entity is dead and past its death animation time.
@@ -215,7 +216,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
 
 /// Defines a function type for entity renderers.
 pub fn RenderFn(comptime AnyEntity: type) type {
-    return *const fn (rctx: RenderContext(AnyEntity)) void;
+    return *const fn (rctx: *RenderContext(AnyEntity)) void;
 }
 
 /// Creates a renderer type with initialization and render methods.
@@ -232,7 +233,7 @@ pub fn Renderer(
         }
 
         /// Renders an entity using the specified render context.
-        pub fn render(rctx: RenderContext(AnyEntity)) void {
+        pub fn render(rctx: *RenderContext(AnyEntity)) void {
             if (comptime is_ancestor) {
                 const ctx = rctx.ctx;
                 const entity = rctx.entity;
@@ -255,7 +256,7 @@ pub fn Renderer(
 }
 
 /// Renders an entity using its implementation's renderer.
-pub fn renderEntity(comptime Impl: type, rctx: RenderContext(Impl.Super)) void {
+pub fn renderEntity(comptime Impl: type, rctx: *RenderContext(Impl.Super)) void {
     // Validate implementation
     comptime validateEntityImplementation(Impl);
 

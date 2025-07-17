@@ -2,7 +2,7 @@ const pi10: comptime_float = math.pi / 10.0;
 
 const beak_mul: comptime_float = 0.05;
 
-fn render(rctx: RenderContext(MobSuper)) void {
+fn render(rctx: *RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
     const mob = &entity.impl;

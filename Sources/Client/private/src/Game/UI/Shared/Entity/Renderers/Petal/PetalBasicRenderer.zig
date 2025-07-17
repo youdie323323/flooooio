@@ -1,5 +1,5 @@
 pub fn drawBasicLike(
-    rctx: RenderContext(MobSuper),
+    rctx: *RenderContext(MobSuper),
     comptime color: Color.HexColor,
     comptime fraction: comptime_float,
     comptime outline_width: comptime_float,
@@ -26,7 +26,7 @@ pub fn drawBasicLike(
     ctx.stroke();
 }
 
-fn render(rctx: RenderContext(MobSuper)) void {
+fn render(rctx: *RenderContext(MobSuper)) void {
     drawBasicLike(
         rctx,
         0xffffff,

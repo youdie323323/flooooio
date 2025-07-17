@@ -16,7 +16,7 @@ fn collectLeechSegmentPoints(
 
         if (current_leech.impl.connected_segments) |s| {
             var it = s.keyIterator();
-            
+
             if (it.next()) |key| {
                 current_leech = &mobs.get(key.*);
 
@@ -30,7 +30,7 @@ fn collectLeechSegmentPoints(
     return bodies;
 }
 
-fn render(rctx: RenderContext(MobSuper)) void {
+fn render(rctx: *RenderContext(MobSuper)) void {
     @setEvalBranchQuota(10_000);
 
     const ctx = rctx.ctx;
@@ -179,7 +179,7 @@ fn render(rctx: RenderContext(MobSuper)) void {
 
 const one_over_six_vector: Point = @splat(1.0 / 6.0);
 
-fn strokeBodyCurve(rctx: RenderContext(MobSuper)) void {
+fn strokeBodyCurve(rctx: *RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
 
     const fcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#333333"));

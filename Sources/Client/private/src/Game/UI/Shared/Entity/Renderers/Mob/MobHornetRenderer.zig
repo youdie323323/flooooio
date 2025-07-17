@@ -13,7 +13,7 @@ pub fn missileBodyStroke() *Path2D {
 
 var antennae: Path2D = undefined;
 
-fn render(rctx: RenderContext(MobSuper)) void {
+fn render(rctx: *RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
 

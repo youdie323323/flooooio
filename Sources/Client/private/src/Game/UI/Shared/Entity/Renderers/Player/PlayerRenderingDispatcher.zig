@@ -1,4 +1,4 @@
-fn render(rctx: RenderContext(PlayerSuper)) void {
+fn render(rctx: *RenderContext(PlayerSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
 

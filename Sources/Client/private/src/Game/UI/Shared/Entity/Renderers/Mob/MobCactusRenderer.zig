@@ -7,7 +7,7 @@ const spine_count: comptime_int = 10;
 
 const spine_vector_length: comptime_float = 38.3971;
 
-fn render(rctx: RenderContext(MobSuper)) void {
+fn render(rctx: *RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
 

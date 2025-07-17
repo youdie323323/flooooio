@@ -33,7 +33,7 @@ const type_to_renderer: std.EnumMap(EntityType.Mixed, RenderFn(MobSuper)) = .ini
 });
 
 /// Main render function that dispatches to appropriate renderer based on mob type.
-fn render(rctx: RenderContext(MobSuper)) void {
+fn render(rctx: *RenderContext(MobSuper)) void {
     const entity = rctx.entity;
     const mob = &entity.impl;
 

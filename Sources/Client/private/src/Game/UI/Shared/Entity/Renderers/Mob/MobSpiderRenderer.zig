@@ -48,7 +48,7 @@ const leg_curves: [8]LegCurve = .{
     .initComptime((-math.pi / 180.0) * 140, -1, 6),
 };
 
-fn render(rctx: RenderContext(MobSuper)) void {
+fn render(rctx: *RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
     const is_specimen = rctx.is_specimen;
