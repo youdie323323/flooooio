@@ -21,7 +21,7 @@ pub fn staticInit() void {
 }
 
 fn distortValue(value: f32) f32 {
-    return value + (4 * rand.float(f32) + 2);
+    return value + (5 * rand.float(f32) + 5);
 }
 
 const jitter_amount: f32 = 25;
@@ -38,8 +38,7 @@ pub fn init(allocator: mem.Allocator, points: *std.ArrayListUnmanaged(Vector2)) 
     const first_point = points.items[0];
     const first_x, const first_y = first_point;
 
-    // If lightning points length is equals to one, add distorted that one point, to render correctly
-    if (len == 1) {
+    if (len == 1) { // If lightning points length is equals to one, add distorted that one point, to render correctly
         try points.append(allocator, .{
             distortValue(first_x),
             distortValue(first_y),
@@ -62,7 +61,7 @@ pub fn init(allocator: mem.Allocator, points: *std.ArrayListUnmanaged(Vector2)) 
         while (current_distance < total_distance) {
             const ratio_vector: Vector2 = @splat(current_distance / total_distance);
 
-            const jitter_vector: Vector2 = @as(Vector2, .{
+            const jitter_vector = @as(Vector2, .{
                 rand.float(f32) * 2 - 1,
                 rand.float(f32) * 2 - 1,
             }) * jitter_amount_vector;

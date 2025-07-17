@@ -114,7 +114,7 @@ pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Obje
             objs.internal.mu.unlock();
         }
 
-        pub fn new(objs: *@This(), value: Object) !ObjectId {
+        pub fn new(objs: *@This(), obj: Object) !ObjectId {
             const allocator = objs.internal.allocator;
             const data = &objs.internal.data;
             const dead = &objs.internal.dead;
@@ -145,7 +145,7 @@ pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Obje
                 objs.internal.thrown_on_the_floor = 0;
             }
 
-            const value_search_field: SearchFieldType = @field(value, @tagName(search_field));
+            const value_search_field: SearchFieldType = @field(obj, @tagName(search_field));
 
             if (recycling_bin.pop()) |index| {
                 // Reuse a free slot from the recycling bin
@@ -155,7 +155,7 @@ pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Obje
 
                 generation.items[index] = gen;
 
-                data.set(index, value);
+                data.set(index, obj);
 
                 const obj_id: ObjectId = @bitCast(PackedObject{
                     .generation = gen,
@@ -174,7 +174,7 @@ pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Obje
 
             const index = data.len;
 
-            data.appendAssumeCapacity(value);
+            data.appendAssumeCapacity(obj);
             dead.unset(index);
             generation.appendAssumeCapacity(0);
 
@@ -189,12 +189,12 @@ pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Obje
         }
 
         /// Sets all fields of the given object to the given value.
-        pub fn set(objs: *@This(), id: ObjectId, value: Object) void {
+        pub fn set(objs: *@This(), id: ObjectId, obj: Object) void {
             const data = &objs.internal.data;
 
             const unpacked = objs.validateAndUnpack(id, @src());
 
-            data.set(unpacked.index, value);
+            data.set(unpacked.index, obj);
         }
 
         /// Gets all fields.
@@ -211,15 +211,19 @@ pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Obje
             const dead = &objs.internal.dead;
             const recycling_bin = &objs.internal.recycling_bin;
             const object_lut = &objs.internal.object_lut;
+            const data = &objs.internal.data;
 
             const unpacked = objs.validateAndUnpack(id, @src());
+
+            const obj = data.get(unpacked.index);
+            const value_search_field: SearchFieldType = @field(obj, @tagName(search_field));
+
+            _ = object_lut.remove(value_search_field);
 
             if (recycling_bin.items.len < recycling_bin.capacity)
                 recycling_bin.appendAssumeCapacity(unpacked.index)
             else
                 objs.internal.thrown_on_the_floor += 1;
-
-            _ = object_lut.remove(id);
 
             dead.set(unpacked.index);
         }

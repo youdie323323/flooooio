@@ -9,7 +9,7 @@ import (
 
 // Node represents an interface entity.
 type Node interface {
-	GetId() uint32
+	GetId() uint16
 
 	GetX() float32
 	GetY() float32
@@ -47,11 +47,11 @@ func NewSpatialHash(cellSize float32) *SpatialHash {
 }
 
 // bucket is a thread-safe set implementation for Node objects.
-// TODO: maybe sync.Map faster than *xsync.Map[uint32, Node]? clarify later
-type bucket struct{ nodes *xsync.Map[uint32, Node] }
+// TODO: maybe sync.Map faster than *xsync.Map[uint16, Node]? clarify later
+type bucket struct{ nodes *xsync.Map[uint16, Node] }
 
 // newBucket creates a new node set.
-func newBucket() *bucket { return &bucket{xsync.NewMap[uint32, Node]()} }
+func newBucket() *bucket { return &bucket{xsync.NewMap[uint16, Node]()} }
 
 // Add adds a node to the set.
 func (s *bucket) Add(n Node) {
@@ -64,7 +64,7 @@ func (s *bucket) Delete(n Node) {
 }
 
 // ForEach iterates over all nodes in the set.
-func (s *bucket) ForEach(f func(_ uint32, n Node) bool) {
+func (s *bucket) ForEach(f func(_ uint16, n Node) bool) {
 	s.nodes.Range(f)
 }
 
@@ -154,7 +154,7 @@ func (sh *SpatialHash) Search(x, y, radius float32) []Node {
 			key := pairPoint(xx, yy)
 
 			if bucket, ok := sh.buckets.Load(key); ok {
-				bucket.ForEach(func(_ uint32, n Node) bool {
+				bucket.ForEach(func(_ uint16, n Node) bool {
 					dx := n.GetX() - x
 					dy := n.GetY() - y
 
@@ -195,7 +195,7 @@ func (sh *SpatialHash) SearchRect(x, y, width, height float32, filter func(n Nod
 			key := pairPoint(xx, yy)
 
 			if bucket, ok := sh.buckets.Load(key); ok {
-				bucket.ForEach(func(_ uint32, n Node) bool {
+				bucket.ForEach(func(_ uint16, n Node) bool {
 					if filter(n) {
 						nodes = append(nodes, n)
 					}

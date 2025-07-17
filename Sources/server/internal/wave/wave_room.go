@@ -1,7 +1,6 @@
 package wave
 
 import (
-	"encoding/binary"
 	"math/rand/v2"
 	"slices"
 	"sync"
@@ -20,7 +19,7 @@ const (
 	waveRoomUpdatePacketSendIntervalMS = 30
 )
 
-type WaveRoomPlayerId = uint32
+type WaveRoomPlayerId = uint16
 
 // StaticWaveRoomCandidatePlayer is static candidate player data to generate the dynamic player instance.
 type StaticWaveRoomCandidatePlayer struct {
@@ -86,8 +85,7 @@ func (pd *PlayerData) AssignWaveRoomPlayerId(id *WaveRoomPlayerId) {
 	pd.mu.Lock()
 
 	if id != nil {
-		binary.LittleEndian.PutUint32(buf[at:], uint32(*id))
-		at += 4
+		at += PutUvarint16(buf[at:], *id)
 
 		pd.WrPId = id
 	}
@@ -151,7 +149,7 @@ func (w *WaveRoom) RegisterPlayer(sp *StaticPlayer[StaticPetalSlots]) *WaveRoomP
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	id := rand.Uint32()
+	id := rand.N[uint16](65535)
 
 	for _, c := range w.candidates {
 		if c != nil && c.Id == id {
@@ -358,8 +356,7 @@ func (w *WaveRoom) createUpdatePacket() []byte {
 	at++
 
 	for _, c := range w.candidates {
-		binary.LittleEndian.PutUint32(buf[at:], c.Id)
-		at += 4
+		at += PutUvarint16(buf[at:], c.Id)
 
 		// Write name
 		at = writeCString(buf, at, c.Name)

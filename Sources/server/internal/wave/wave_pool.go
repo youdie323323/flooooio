@@ -70,7 +70,7 @@ type WavePool struct {
 
 	Ms *WaveMobSpawner
 
-	eliminatedEntityIds []uint32
+	eliminatedEntityIds []uint16
 
 	lightningBounces [][][2]float32
 
@@ -105,7 +105,7 @@ func NewWavePool(wr *WaveRoom, wd *WaveData) *WavePool {
 
 		Ms: s,
 
-		eliminatedEntityIds: make([]uint32, 0),
+		eliminatedEntityIds: make([]uint16, 0),
 
 		lightningBounces: make([][][2]float32, 0),
 
@@ -256,7 +256,7 @@ func (wp *WavePool) broadcastSeldIdPacket() {
 	buf[0] = network.ClientboundWaveSelfId
 
 	wp.playerPool.Range(func(id EntityId, p *Player) bool {
-		i := 1 + PutUvarint32(buf[1:], id)
+		i := 1 + PutUvarint16(buf[1:], id)
 
 		p.SafeWriteMessage(websocket.BinaryMessage, buf[:i])
 
@@ -525,7 +525,7 @@ func (wp *WavePool) broadcastUpdatePacket() {
 
 					n.Mu.RLock()
 
-					at += WriteUint32(dynamicPacket[at:], *n.Id)
+					at += PutUvarint16(dynamicPacket[at:], *n.Id)
 
 					at += WriteFloat32(dynamicPacket[at:], n.X)
 					at += WriteFloat32(dynamicPacket[at:], n.Y)
@@ -570,7 +570,7 @@ func (wp *WavePool) broadcastUpdatePacket() {
 					dynamicPacket[at] = updatedEntityKindMob
 					at++
 
-					at += WriteUint32(dynamicPacket[at:], *n.Id)
+					at += PutUvarint16(dynamicPacket[at:], *n.Id)
 
 					at += WriteFloat32(dynamicPacket[at:], n.X)
 					at += WriteFloat32(dynamicPacket[at:], n.Y)
@@ -615,7 +615,7 @@ func (wp *WavePool) broadcastUpdatePacket() {
 					at++
 
 					if hasConnectingSegment {
-						at += WriteUint32(dynamicPacket[at:], n.ConnectingSegment.GetId())
+						at += PutUvarint16(dynamicPacket[at:], n.ConnectingSegment.GetId())
 					}
 				}
 
@@ -624,7 +624,7 @@ func (wp *WavePool) broadcastUpdatePacket() {
 					dynamicPacket[at] = updatedEntityKindPetal
 					at++
 
-					at += WriteUint32(dynamicPacket[at:], *n.Id)
+					at += PutUvarint16(dynamicPacket[at:], *n.Id)
 
 					at += WriteFloat32(dynamicPacket[at:], n.X)
 					at += WriteFloat32(dynamicPacket[at:], n.Y)
@@ -691,7 +691,7 @@ func (wp *WavePool) createStaticUpdatePacket() ([]byte, int) {
 		at += PutUvarint16(buf[at:], FiniteObjectCount(len(wp.eliminatedEntityIds)))
 
 		for _, e := range wp.eliminatedEntityIds {
-			at += WriteUint32(buf[at:], e)
+			at += PutUvarint16(buf[at:], e)
 		}
 
 		wp.eliminatedEntityIds = nil

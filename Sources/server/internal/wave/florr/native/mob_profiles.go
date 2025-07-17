@@ -535,7 +535,7 @@ var MobProfiles = map[MobType]MobData{
 			},
 			Collision: EntityCollision{
 				Fraction: 25,
-				Radius:   15,
+				Radius:   20,
 			},
 		},
 	},

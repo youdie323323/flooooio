@@ -187,7 +187,7 @@ fn byteToRadians(angle: f32) f32 {
 var wave_self_id: EntityId = undefined;
 
 fn handleWaveSelfId(stream: *const Network.Reader) anyerror!void {
-    wave_self_id = try leb.readUleb128(u32, stream);
+    wave_self_id = try leb.readUleb128(EntityId, stream);
 }
 
 var lightning_bounces: std.ArrayListUnmanaged(UIWaveLightningBounce) = .{};
@@ -217,7 +217,7 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
         const eliminated_entities_count = try leb.readUleb128(FiniteObjectCount, stream);
 
         for (0..eliminated_entities_count) |_| {
-            const entity_id = try stream.readInt(EntityId, .little);
+            const entity_id = try leb.readUleb128(EntityId, stream);
 
             if (mobs.search(entity_id)) |o| {
                 var mob = mobs.get(o);
@@ -274,7 +274,7 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
 
             switch (entity_kind) {
                 inline .player => {
-                    const player_id = try stream.readInt(EntityId, .little);
+                    const player_id = try leb.readUleb128(EntityId, stream);
 
                     const player_x = try Network.readFloat32(stream);
                     const player_y = try Network.readFloat32(stream);
@@ -361,7 +361,7 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                 },
 
                 inline .mob => {
-                    const mob_id = try stream.readInt(EntityId, .little);
+                    const mob_id = try leb.readUleb128(EntityId, stream);
 
                     const mob_x = try Network.readFloat32(stream);
                     const mob_y = try Network.readFloat32(stream);
@@ -386,7 +386,7 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                     var mob_connecting_segment: ?Mach.ObjectId = null;
 
                     if (mob_bool_flags.has_connecting_segment) {
-                        const mob_connecting_segment_id = try stream.readInt(EntityId, .little);
+                        const mob_connecting_segment_id = try leb.readUleb128(EntityId, stream);
 
                         mob_connecting_segment = mobs.search(mob_connecting_segment_id);
                     }
@@ -476,8 +476,8 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
 
                     // TODO: in server, the id may collide between player, mob, petal because their pool is separated
                     // So may need to separate mobs objects for petals
-                    // That chance is 1 / math.maxInt(u32) but that possibly collidable (and can cause error)
-                    const petal_id = try stream.readInt(EntityId, .little);
+                    // That chance is 1 / math.maxInt(u16) but that possibly collidable (and can cause error)
+                    const petal_id = try leb.readUleb128(EntityId, stream);
 
                     const petal_x = try Network.readFloat32(stream);
                     const petal_y = try Network.readFloat32(stream);

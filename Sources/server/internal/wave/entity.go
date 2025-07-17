@@ -13,7 +13,7 @@ import (
 
 type Velocity = [2]float32
 
-type EntityId = uint32
+type EntityId = uint16
 
 type Entity struct {
 	// Id is unique identifier of entity.
@@ -74,8 +74,8 @@ func GetRandomAngle() float32 {
 }
 
 // GetRandomId returns random id.
-func GetRandomId() uint32 {
-	return rand.Uint32()
+func GetRandomId() uint16 {
+	return rand.N[uint16](65535)
 }
 
 func NewEntity(
@@ -160,7 +160,7 @@ func GetRandomCoordinate(cx, cy, spawnRadius float32) (float32, float32) {
 
 // Methods that satisfies spatial hashes Node
 
-func (e *Entity) GetId() uint32 {
+func (e *Entity) GetId() uint16 {
 	return *e.Id
 }
 

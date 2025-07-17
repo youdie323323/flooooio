@@ -1,4 +1,4 @@
-pub const EntityId = u32;
+pub const EntityId = u16;
 
 pub fn Entity(comptime Impl: type) type {
     return struct {
