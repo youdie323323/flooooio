@@ -2,23 +2,26 @@
 const type_to_renderer: std.EnumMap(EntityType.Mixed, RenderFn(MobSuper)) = .init(.{
     // Mobs
 
-    .mob_starfish = starfishRender,
-    .mob_leech = leechRender,
-    .mob_sponge = spongeRender,
     .mob_bee = beeRender,
-    .mob_hornet = hornetRender,
     .mob_spider = spiderRender,
+    .mob_hornet = hornetRender,
     .mob_baby_ant = babyAntRender,
     .mob_worker_ant = workerAntRender,
     .mob_soldier_ant = soldierAntRender,
 
+    .mob_beetle = beetleRender,
+    .mob_cactus = cactusRender,
+    .mob_scorpion = scorpionRender,
+
+    .mob_starfish = starfishRender,
+    .mob_jellyfish = jellyfishRender,
+    .mob_sponge = spongeRender,
+    .mob_shell = shellRender,
+    .mob_leech = leechRender,
+
     .mob_centipede = centipedeRender,
     .mob_centipede_desert = centipedeRender,
     .mob_centipede_evil = centipedeRender,
-
-    .mob_cactus = cactusRender,
-    .mob_scorpion = scorpionRender,
-    .mob_beetle = beetleRender,
 
     // Petals
 
@@ -37,8 +40,8 @@ fn render(rctx: *RenderContext(MobSuper)) void {
     const entity = rctx.entity;
     const mob = &entity.impl;
 
-    if (type_to_renderer.get(mob.type.getMixed())) |r|
-        r(rctx);
+    if (type_to_renderer.get(mob.type.getMixed())) |renderer|
+        renderer(rctx);
 }
 
 fn init(allocator: std.mem.Allocator) void {
@@ -57,6 +60,8 @@ fn init(allocator: std.mem.Allocator) void {
             MobCactusRenderer.staticInit(allocator);
             MobScorpionRenderer.staticInit(allocator);
             MobBeetleRenderer.staticInit(allocator);
+            MobJellyfishRenderer.staticInit(allocator);
+            MobShellRenderer.staticInit(allocator);
 
             { // Petal
                 PetalBasicRenderer.staticInit(allocator);
@@ -122,6 +127,12 @@ const scorpionRender = MobScorpionRenderer.render;
 
 const MobBeetleRenderer = @import("MobBeetleRenderer.zig").MobBeetleRenderer;
 const beetleRender = MobBeetleRenderer.render;
+
+const MobJellyfishRenderer = @import("MobJellyfishRenderer.zig").MobJellyfishRenderer;
+const jellyfishRender = MobJellyfishRenderer.render;
+
+const MobShellRenderer = @import("MobShellRenderer.zig").MobShellRenderer;
+const shellRender = MobShellRenderer.render;
 
 const PetalBasicRenderer = @import("../Petal/PetalBasicRenderer.zig").PetalBasicRenderer;
 const basicRender = PetalBasicRenderer.render;

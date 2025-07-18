@@ -80,12 +80,12 @@ fn render(rctx: *RenderContext(MobSuper)) void {
         ctx.beginPath();
 
         inline for (.{ -1, 1 }) |dir| {
-            inline for (body_points) |p| {
-                const p_x, const p_y = p;
-                const p_y_relative: comptime_float = comptime (p_y * dir);
+            inline for (body_points) |point| {
+                const x, const y = point;
+                const y_relative: comptime_float = comptime (y * dir);
 
-                ctx.moveTo(p_x, p_y_relative);
-                ctx.arc(p_x, p_y_relative, 5, 0, math.tau, false);
+                ctx.moveTo(x, y_relative);
+                ctx.arc(x, y_relative, 5, 0, math.tau, false);
             }
         }
 

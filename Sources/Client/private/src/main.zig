@@ -22,9 +22,9 @@ var interpolated_mouse_y: f32 = 0;
 
 const movement_helper_start_distance: comptime_float = 30;
 
-fn drawMovementHelper(self_player: *const PlayerImpl.Super, delta_time: f32) void {
+fn drawMovementHelper(player: *const PlayerImpl.Super, delta_time: f32) void {
     // Dont draw if player is dead
-    if (self_player.is_dead) return;
+    if (player.is_dead) return;
 
     { // Interpolate mouse x and y
         const delta_time_50_safelerp = @min(1, delta_time * 0.02);
@@ -134,13 +134,13 @@ fn onMouseEvent(@"type": Event.EventType, event: *const Event.MouseEvent) callco
 fn onScreenEvent(_: Event.EventType, event: *const Event.ScreenEvent) callconv(.c) bool {
     const dpr: Vector2 = @splat(Dom.devicePixelRatio());
 
-    const inner_screen_vector: Vector2 = .{
+    const screen_vector: Vector2 = .{
         @floatFromInt(event.inner_width),
         @floatFromInt(event.inner_height),
     };
 
     width, height =
-        inner_screen_vector * dpr;
+        screen_vector * dpr;
 
     base_scale = @max(
         width / base_width,
@@ -229,32 +229,32 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
         for (0..eliminated_entities_count) |_| {
             const entity_id = try leb.readUleb128(EntityId, stream);
 
-            if (mobs.search(entity_id)) |o| {
-                var mob = mobs.get(o);
+            if (mobs.search(entity_id)) |obj_id| {
+                var mob = mobs.get(obj_id);
 
                 mob.is_dead = true;
 
                 mob.dead_t = 0;
 
-                mobs.set(o, mob);
+                mobs.set(obj_id, mob);
 
                 continue;
             }
 
-            if (petals.search(entity_id)) |o| {
-                var petal = petals.get(o);
+            if (petals.search(entity_id)) |obj_id| {
+                var petal = petals.get(obj_id);
 
                 petal.is_dead = true;
 
                 petal.dead_t = 0;
 
-                petals.set(o, petal);
+                petals.set(obj_id, petal);
 
                 continue;
             }
 
-            if (players.search(entity_id)) |o| {
-                var player = players.get(o);
+            if (players.search(entity_id)) |obj_id| {
+                var player = players.get(obj_id);
 
                 player.impl.was_eliminated = true;
 
@@ -262,7 +262,7 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
 
                 player.dead_t = 0;
 
-                players.set(o, player);
+                players.set(obj_id, player);
 
                 continue;
             }
@@ -687,7 +687,7 @@ fn draw(_: f32) callconv(.c) void {
         else
             null;
 
-    if (self_player) |p|
+    if (self_player) |*player|
         TileRenderer.renderGameTileset(.{
             .ctx = ctx,
 
@@ -697,7 +697,7 @@ fn draw(_: f32) callconv(.c) void {
 
             .radius = @splat(@floatFromInt(wave_map_radius)),
 
-            .pos = p.pos,
+            .pos = player.pos,
 
             .screen = .{
                 width_relative,
@@ -707,15 +707,15 @@ fn draw(_: f32) callconv(.c) void {
             .scale = @splat(antenna_scale),
         });
 
-    if (self_player) |*p| // Draw movement helper
-        drawMovementHelper(p, delta_time);
+    if (self_player) |*player| // Draw movement helper
+        drawMovementHelper(player, delta_time);
 
     { // Render entities
         const center_width = width / 2;
         const center_height = height / 2;
 
-        if (self_player) |*p| {
-            const x, const y = p.pos;
+        if (self_player) |*player| {
+            const x, const y = player.pos;
 
             const view_scale = base_scale * antenna_scale;
 

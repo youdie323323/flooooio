@@ -59,12 +59,12 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 		R: m.CalculateRadius(),
 	}
 
+	// Define reusable circle
+	c1mob := collision.Circle{}
+
 	searchRadius := SearchRadiusMultiplier * c0mob.R
 
 	nearby := wp.SpatialHash.Search(m.X, m.Y, searchRadius)
-
-	// Define reusable circle
-	c1mob := collision.Circle{}
 
 	for _, n := range nearby {
 		switch nearEntity := n.(type) {

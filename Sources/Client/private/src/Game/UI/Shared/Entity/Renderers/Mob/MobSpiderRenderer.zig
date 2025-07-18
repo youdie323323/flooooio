@@ -80,14 +80,14 @@ fn render(rctx: *RenderContext(MobSuper)) void {
 
         var prev_neg_angle: f32 = 0;
 
-        inline for (leg_curves, 0..) |lc, i| {
-            const dir = comptime lc.dir;
-            const start_x, const start_y = comptime lc.start;
-            const curve_cpx, const curve_cpy, const curve_x, const curve_y = comptime lc.curve;
+        inline for (leg_curves, 0..) |leg_curve, i| {
+            const dir = comptime leg_curve.dir;
+            const start_x, const start_y = comptime leg_curve.start;
+            const curve_cpx, const curve_cpy, const curve_x, const curve_y = comptime leg_curve.curve;
 
-            const i_f32: comptime_float = comptime @floatFromInt(i);
+            const i_float: comptime_float = comptime @floatFromInt(i);
 
-            const angle = 0.2 * @sin(move_counter + i_f32) * dir;
+            const angle = 0.2 * dir * @sin(move_counter + i_float);
 
             ctx.beginPath();
 

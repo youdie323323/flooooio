@@ -46,9 +46,12 @@ pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Obje
             object_lut: std.AutoHashMapUnmanaged(SearchFieldType, ObjectId) = .empty,
         },
 
+        /// Let child structs use our struct type.
+        const OwnObjectPtr = *@This();
+
         pub const Slice = struct {
             index: Index,
-            objs: *Objects(Object, search_field),
+            objs: OwnObjectPtr,
 
             pub fn next(self: *Slice) ?ObjectId {
                 const dead = &self.objs.internal.dead;
@@ -128,18 +131,18 @@ pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Obje
             if (objs.internal.thrown_on_the_floor >= (data.len / 10)) {
                 var iter = dead.iterator(.{ .kind = .set });
 
-                dead_object_loop: while (iter.next()) |index| {
+                dead_object_loop: while (iter.next()) |i| {
                     // We need to check if this index is already in the recycling bin since
                     // if it is, it could get recycled a second time while still
                     // in use
-                    for (recycling_bin.items) |recycled_index| {
-                        if (index == recycled_index) continue :dead_object_loop;
+                    for (recycling_bin.items) |i_recycled| {
+                        if (i == i_recycled) continue :dead_object_loop;
                     }
 
-                    // dead bitset contains data.capacity number of entries, we only care about ones that are in data.len range
-                    if (index > data.len - 1) break;
+                    // Dead bitset contains data.capacity number of entries, we only care about ones that are in data.len range
+                    if (i > data.len - 1) break;
 
-                    try recycling_bin.append(allocator, @intCast(index));
+                    try recycling_bin.append(allocator, @intCast(i));
                 }
 
                 objs.internal.thrown_on_the_floor = 0;
@@ -147,19 +150,19 @@ pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Obje
 
             const value_search_field: SearchFieldType = @field(obj, @tagName(search_field));
 
-            if (recycling_bin.pop()) |index| {
+            if (recycling_bin.pop()) |i| {
                 // Reuse a free slot from the recycling bin
-                dead.unset(index);
+                dead.unset(i);
 
-                const gen = generation.items[index] + 1;
+                const gen = generation.items[i] + 1;
 
-                generation.items[index] = gen;
+                generation.items[i] = gen;
 
-                data.set(index, obj);
+                data.set(i, obj);
 
                 const obj_id: ObjectId = @bitCast(PackedObject{
                     .generation = gen,
-                    .index = index,
+                    .index = i,
                 });
 
                 try object_lut.put(allocator, value_search_field, obj_id);

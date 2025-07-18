@@ -27,9 +27,9 @@ fn render(rctx: *RenderContext(MobSuper)) void {
         ctx.fillColor(bcolor);
 
         inline for (0..spine_count) |i| {
-            const i_f32: comptime_float = comptime @floatFromInt(i);
+            const i_float: comptime_float = comptime @floatFromInt(i);
 
-            const angle = comptime (-math.pi + (math.pi / 5.0) * i_f32);
+            const angle = comptime (-math.pi + (math.pi / 5.0) * i_float);
 
             const x, const y = comptime .{
                 spine_vector_length * @cos(angle),

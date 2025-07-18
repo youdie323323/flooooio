@@ -28,12 +28,12 @@ func (p *Player) PlayerCollision(wp *WavePool, _ time.Time) {
 		R: p.Size,
 	}
 
+	// Define reusable circle
+	c1player := collision.Circle{}
+
 	searchRadius := CalculateSearchRadius(PlayerCollision, p.Size)
 
 	nearby := wp.SpatialHash.Search(p.X, p.Y, searchRadius)
-
-	// Define reusable circle
-	c1player := collision.Circle{}
 
 	for _, n := range nearby {
 		// Player -> PLayer

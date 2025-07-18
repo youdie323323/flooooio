@@ -80,9 +80,9 @@ fn render(rctx: *RenderContext(MobSuper)) void {
             ctx.beginPath();
 
             inline for (0..8) |i| {
-                const i_f32: comptime_float = comptime @floatFromInt(i);
+                const i_float: comptime_float = comptime @floatFromInt(i);
 
-                const leg_chaos: comptime_float = comptime 4.52141 * i_f32;
+                const leg_chaos: comptime_float = comptime 4.52141 * i_float;
 
                 const dir: comptime_float =
                     comptime if (4 > i)
@@ -90,7 +90,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
                     else
                         -1;
 
-                const base_theta: comptime_float = comptime (0.25 + @mod(i_f32, 4) * 0.15) * math.pi;
+                const base_theta: comptime_float = comptime (0.25 + @mod(i_float, 4) * 0.15) * math.pi;
 
                 const theta = (base_theta + @sin(leg_chaos + entity.move_counter * 0.75) * 0.2) * dir;
 

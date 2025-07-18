@@ -103,9 +103,9 @@ pub fn WebSocket(comptime Context: type) type {
 
         export fn pollHandle(id: Id) void {
             if (websocket_instances.get(id)) |ws| {
-                if (poll(id)) |event| {
+                if (poll(id)) |*event| {
                     switch (event.type) {
-                        .message => {
+                        inline .message => {
                             if (ws.on_message) |handler| {
                                 if (event.data_ptr) |ptr| {
                                     const data = @as([*]const u8, @ptrCast(ptr))[0..event.data_size];
@@ -116,12 +116,9 @@ pub fn WebSocket(comptime Context: type) type {
                                 }
                             }
                         },
-
-                        .open => if (ws.on_open) |handler| handler(ws),
-
-                        .@"error" => if (ws.on_error) |handler| handler(ws),
-
-                        .close => if (ws.on_close) |handler| handler(ws),
+                        inline .open => if (ws.on_open) |handler| handler(ws),
+                        inline .@"error" => if (ws.on_error) |handler| handler(ws),
+                        inline .close => if (ws.on_close) |handler| handler(ws),
                     }
                 }
             }

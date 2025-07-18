@@ -1,5 +1,5 @@
 pub const leg_amount: comptime_int = 5;
-pub const leg_amount_f32: comptime_float = @floatFromInt(leg_amount);
+pub const leg_amount_float: comptime_float = @floatFromInt(leg_amount);
 
 pub const undestroyed_leg_distance: comptime_float = 30.0;
 pub const destroyed_leg_distance: comptime_float = undestroyed_leg_distance / 2.0;
@@ -7,7 +7,7 @@ pub const destroyed_leg_distance: comptime_float = undestroyed_leg_distance / 2.
 const distance_lerp_factor: comptime_float = 0.2;
 
 const spots_per_leg: comptime_int = 3;
-const spots_per_leg_f32: comptime_float = @floatFromInt(spots_per_leg);
+const spots_per_leg_float: comptime_float = @floatFromInt(spots_per_leg);
 
 /// Solving arccos(1.963525414466858 / x) = π / 5 for x will lead to 2.426877872787264.
 const leg_valley_depth_between: comptime_float = 2.426877872787264;
@@ -18,8 +18,8 @@ const leg_angles = blk: {
     for (0..leg_amount) |i| {
         const i_f32: f32 = @floatFromInt(i);
 
-        const mid_angle = (i_f32 + 0.5) / leg_amount_f32 * math.tau;
-        const end_angle = (i_f32 + 1) / leg_amount_f32 * math.tau;
+        const mid_angle = (i_f32 + 0.5) / leg_amount_float * math.tau;
+        const end_angle = (i_f32 + 1) / leg_amount_float * math.tau;
 
         angles[i] = .{
             @cos(mid_angle) * leg_valley_depth_between,
@@ -40,7 +40,7 @@ const spot_angles = blk: {
     for (0..leg_amount) |i| {
         const i_f32: f32 = @floatFromInt(i);
 
-        const leg_rotation = i_f32 / leg_amount_f32 * math.tau;
+        const leg_rotation = i_f32 / leg_amount_float * math.tau;
         const leg_rotation_vector: Vector2 = .{
             @cos(leg_rotation),
             @sin(leg_rotation),
@@ -92,7 +92,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
             else
                 @intFromFloat(@floor(
                     // Use pure health value (0 ~ 1)
-                    entity.next_health * leg_amount_f32,
+                    entity.next_health * leg_amount_float,
                 )));
 
     ctx.beginPath();

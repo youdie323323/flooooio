@@ -171,7 +171,7 @@ func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
 
 				maxHealth := m.GetMaxHealth()
 
-				healAmount := float32(m.Rarity) / maxHealth
+				healAmount := float32(m.Rarity) / (2 * maxHealth)
 
 				m.Health = min(1, m.Health+healAmount)
 				if m.Health >= 1 {

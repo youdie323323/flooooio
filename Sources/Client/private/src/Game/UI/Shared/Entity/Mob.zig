@@ -129,7 +129,7 @@ pub fn petalStat(self: *const MobImpl) ?PetalStat {
 // Define segment methods
 
 pub fn isConnectedBy(self: *MobImpl, other: ObjectId) bool {
-    if (self.connected_segments) |s|
+    if (self.connected_segments) |*s|
         return s.contains(other);
 
     return false;

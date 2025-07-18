@@ -65,13 +65,13 @@ fn statsByConstantContinunous(
             const mob_rarity = rarity.toMobRarity();
 
             const needed_field = supplied_fields.get(mob_rarity) orelse
-                @compileLog(fmt.comptimePrint("Mob needed field not defined with rarity: {any}", mob_rarity));
+                @compileError(fmt.comptimePrint("Mob needed field not defined with rarity: {any}", mob_rarity));
 
             const power_factor = mob_power_factor.get(mob_rarity) orelse
-                @compileLog(fmt.comptimePrint("Mob power factor not defined with rarity: {any}", mob_rarity));
+                @compileError(fmt.comptimePrint("Mob power factor not defined with rarity: {any}", mob_rarity));
 
             const health_factor = mob_health_factor.get(mob_rarity) orelse
-                @compileLog(fmt.comptimePrint("Mob health factor not defined with rarity: {any}", mob_rarity));
+                @compileError(fmt.comptimePrint("Mob health factor not defined with rarity: {any}", mob_rarity));
 
             stats.put(rarity, .{
                 .damage = power_factor * base_damage,

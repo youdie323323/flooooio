@@ -40,8 +40,8 @@ pub fn addComponent(self: *UI, component: *Component) !void {
 }
 
 pub fn removeComponent(self: *UI, component: *Component) void {
-    for (self.components.constSlice(), 0..) |c, i| {
-        if (std.meta.eql(c, component)) {
+    for (self.components.constSlice(), 0..) |inner_component, i| {
+        if (std.meta.eql(inner_component, component)) {
             _ = self.components.orderedRemove(i);
 
             break;

@@ -30,13 +30,13 @@ fn drawEyeShape(
 ) void {
     const ctx = rctx.ctx;
 
-    const flag_u1: comptime_int = comptime @intFromBool(flag);
+    const flag_int: comptime_int = comptime @intFromBool(flag);
 
-    const flag_f32: comptime_float = comptime @floatFromInt(flag_u1);
-    const flipped_flag: comptime_float = comptime @floatFromInt(flag_u1 ^ 1);
+    const flag_float: comptime_float = comptime @floatFromInt(flag_int);
+    const flipped_flag: comptime_float = comptime @floatFromInt(flag_int ^ 1);
 
-    ctx.moveTo(center_x - width_radius, center_y - height_radius + flag_f32 * anger_offset);
-    ctx.lineTo(center_x + width_radius, center_y - height_radius + flipped_flag * anger_offset + flag_f32);
+    ctx.moveTo(center_x - width_radius, center_y - height_radius + flag_float * anger_offset);
+    ctx.lineTo(center_x + width_radius, center_y - height_radius + flipped_flag * anger_offset + flag_float);
     ctx.lineTo(center_x + width_radius, center_y + height_radius);
     ctx.lineTo(center_x - width_radius, center_y + height_radius);
     ctx.lineTo(center_x - width_radius, center_y - height_radius);

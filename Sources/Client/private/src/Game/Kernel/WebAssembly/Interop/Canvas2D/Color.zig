@@ -87,7 +87,7 @@ pub fn comptimeFromAnyString(comptime str: []const u8) Color {
     }
 }
 
-pub const HexColorCode = *const ["#blahbl".len]u8;
+pub const HexColorCode = *const ["#ABCDEF".len]u8;
 
 pub const HexColor = u24;
 

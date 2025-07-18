@@ -68,13 +68,13 @@ fn statsByConstantContinunous(
             const rarity = @field(EntityRarity, field.name);
 
             const supplied_field = supplied_fields.get(rarity) orelse
-                @compileLog(fmt.comptimePrint("Petal needed field not defined with rarity: {any}", rarity));
+                @compileError(fmt.comptimePrint("Petal needed field not defined with rarity: {any}", rarity));
 
             const power_factor = petal_power_factor.get(rarity) orelse
-                @compileLog(fmt.comptimePrint("Petal power factor not defined with rarity: {any}", rarity));
+                @compileError(fmt.comptimePrint("Petal power factor not defined with rarity: {any}", rarity));
 
             const health_factor = petal_health_factor.get(rarity) orelse
-                @compileLog(fmt.comptimePrint("Petal health factor not defined with rarity: {any}", rarity));
+                @compileError(fmt.comptimePrint("Petal health factor not defined with rarity: {any}", rarity));
 
             stats.put(rarity, .{
                 .damage = power_factor * base_damage,
