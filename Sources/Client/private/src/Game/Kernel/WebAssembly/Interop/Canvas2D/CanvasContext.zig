@@ -86,7 +86,7 @@ pub const CompositeOperator = enum(u5) {
 };
 
 /// Getter/setter methods which is similar to ctx.blahblah = blah, ctx.blahblah
-const Accessors = struct {
+const AccessorMethods = struct {
     pub const Properties = struct {
         /// Current lineWidth of this context.
         /// Default value is 1 px.
@@ -275,7 +275,7 @@ const Accessors = struct {
     }
 };
 
-pub usingnamespace Accessors;
+pub usingnamespace AccessorMethods;
 
 /// Context path methods.
 const PathMethods = struct {
@@ -329,11 +329,11 @@ id: Id,
 
 /// Internal context property values.
 /// This should not accessed directly, if you want to get value, call method that named with field name.
-properties: Accessors.Properties = .{},
+properties: AccessorMethods.Properties = .{},
 
 /// Internal context frames.
 /// This should not accessed directly.
-frames: [8]Accessors.Properties = undefined,
+frames: [8]AccessorMethods.Properties = undefined,
 
 /// Current depth of context frames.
 frames_depth: usize = 0,
