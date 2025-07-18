@@ -93,7 +93,7 @@ fn renderBoundaryCircle(
 
     ctx.setGlobalAlpha(0.15);
     ctx.setLineWidth(line_width);
-    ctx.strokeColor(comptime .comptimeFromHexColorCode("#000000"));
+    ctx.strokeColor(comptime .comptimeFromHex(0x000000));
     ctx.stroke();
 }
 

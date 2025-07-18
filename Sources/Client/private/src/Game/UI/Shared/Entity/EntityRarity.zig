@@ -10,13 +10,13 @@ pub const EntityRarity = enum(u8) {
     });
 
     const colors: std.EnumMap(EntityRarity, Color) = .init(.{
-        .common = .comptimeFromHexColorCode("#7EEF6D"),
-        .unusual = .comptimeFromHexColorCode("#FFE65D"),
-        .rare = .comptimeFromHexColorCode("#4D52E3"),
-        .epic = .comptimeFromHexColorCode("#861FDE"),
-        .legendary = .comptimeFromHexColorCode("#DE1F1F"),
-        .mythic = .comptimeFromHexColorCode("#1FDBDE"),
-        .ultra = .comptimeFromHexColorCode("#373737"),
+        .common = .comptimeFromHex(0x7EEF6D),
+        .unusual = .comptimeFromHex(0xFFE65D),
+        .rare = .comptimeFromHex(0x4D52E3),
+        .epic = .comptimeFromHex(0x861FDE),
+        .legendary = .comptimeFromHex(0xDE1F1F),
+        .mythic = .comptimeFromHex(0x1FDBDE),
+        .ultra = .comptimeFromHex(0x373737),
     });
 
     pub fn name(self: EntityRarity) ?[]const u8 {

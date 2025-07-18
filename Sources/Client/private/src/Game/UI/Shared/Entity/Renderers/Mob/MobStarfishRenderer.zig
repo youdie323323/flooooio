@@ -70,7 +70,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
 
     const leg_distances = &(mob.leg_distances.?);
 
-    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#D14F4D"));
+    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHex(0xD14F4D));
     const scolor = fcolor.darkened(skin_darken);
 
     ctx.rotate(entity.angle);
@@ -145,7 +145,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
     ctx.stroke();
 
     { // Balls
-        ctx.fillColor(rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#D4766C")));
+        ctx.fillColor(rctx.blendEffectColors(comptime .comptimeFromHex(0xD4766C)));
 
         inline for (0..leg_amount) |i| {
             const spot_angle = comptime spot_angles[i];

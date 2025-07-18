@@ -7,9 +7,9 @@ fn render(rctx: *RenderContext(MobSuper)) void {
     const entity = rctx.entity;
     const mob = &entity.impl;
 
-    const bcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#292929"));
+    const bcolor = rctx.blendEffectColors(comptime .comptimeFromHex(0x292929));
 
-    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#555555"));
+    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHex(0x555555));
     const scolor = fcolor.darkened(skin_darken);
 
     ctx.rotate(entity.angle);
@@ -76,7 +76,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
             const prev_global_alpha = ctx.globalAlpha();
 
             ctx.setGlobalAlpha(prev_global_alpha * 0.5);
-            ctx.fillColor(rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#EEEEEE")));
+            ctx.fillColor(rctx.blendEffectColors(comptime .comptimeFromHex(0xEEEEEE)));
 
             inline for (.{ -1, 1 }) |dir| {
                 ctx.beginPath();

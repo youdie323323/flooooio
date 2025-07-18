@@ -14,7 +14,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
     const entity = rctx.entity;
     const is_specimen = rctx.is_specimen;
 
-    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#FCDD86"));
+    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHex(0xFCDD86));
     const scolor = fcolor.darkened(skin_darken);
 
     ctx.rotate(entity.angle);

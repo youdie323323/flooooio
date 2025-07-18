@@ -77,10 +77,6 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 						Type:   native.PetalTypeLightning,
 						Rarity: native.RarityUltra,
 					},
-					{
-						Type:   native.PetalTypeFaster,
-						Rarity: native.RarityUltra,
-					},
 				},
 				Bottom: []wave.StaticPetalData{
 					{

@@ -53,7 +53,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
     const entity = rctx.entity;
     const is_specimen = rctx.is_specimen;
 
-    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#403525"));
+    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHex(0x403525));
     const scolor = fcolor.darkened(skin_darken);
 
     ctx.rotate(entity.angle);
@@ -74,7 +74,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
         defer ctx.restore();
 
         ctx.setLineWidth(10);
-        ctx.strokeColor(rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#323032")));
+        ctx.strokeColor(rctx.blendEffectColors(comptime .comptimeFromHex(0x323032)));
 
         const move_counter = entity.move_counter / 1.25;
 

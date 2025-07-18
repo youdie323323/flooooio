@@ -9,7 +9,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
 
     const old_global_alpha = ctx.globalAlpha();
 
-    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#ffffff"));
+    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHex(0xFFFFFF));
 
     ctx.rotate(entity.angle);
 

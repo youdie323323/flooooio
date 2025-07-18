@@ -15,13 +15,13 @@ fn render(rctx: *RenderContext(MobSuper)) void {
     const entity = rctx.entity;
     const mob = &entity.impl;
 
-    const bcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#333333"));
+    const bcolor = rctx.blendEffectColors(comptime .comptimeFromHex(0x333333));
     const wcolor = bcolor.darkened(skin_darken);
 
-    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#C69A2D"));
+    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHex(0xC69A2D));
     const scolor = fcolor.darkened(skin_darken);
 
-    const tcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#DBAB32"));
+    const tcolor = rctx.blendEffectColors(comptime .comptimeFromHex(0xDBAB32));
     const ecolor = tcolor.darkened(skin_darken);
 
     ctx.rotate(entity.angle);

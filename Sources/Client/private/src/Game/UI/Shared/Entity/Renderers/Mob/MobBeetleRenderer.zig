@@ -13,13 +13,13 @@ fn render(rctx: *RenderContext(MobSuper)) void {
     const entity = rctx.entity;
     const mob = &entity.impl;
 
-    const bcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#333333"));
+    const bcolor = rctx.blendEffectColors(comptime .comptimeFromHex(0x333333));
 
     const fcolor = rctx.blendEffectColors(
         if (mob.is_pet)
-            comptime .comptimeFromHexColorCode("#ffe667")
+            comptime .comptimeFromHex(0xFFE667)
         else
-            comptime .comptimeFromHexColorCode("#8f5db0"),
+            comptime .comptimeFromHex(0x8F5DB0),
     );
     const scolor = fcolor.darkened(skin_darken);
 

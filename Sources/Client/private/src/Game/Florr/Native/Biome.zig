@@ -11,9 +11,9 @@ const biome_names: std.EnumMap(Biome, []const u8) = .init(.{
 });
 
 const biome_colors: std.EnumMap(Biome, Color) = .init(.{
-    .garden = .comptimeFromHexColorCode("#1ea761"),
-    .desert = .comptimeFromHexColorCode("#ecdcb8"),
-    .ocean = .comptimeFromHexColorCode("#4e77a7"),
+    .garden = .comptimeFromHex(0x1EA761),
+    .desert = .comptimeFromHex(0xECDCb8),
+    .ocean = .comptimeFromHex(0x4E77A7),
 });
 
 pub fn name(biome: Biome) ?[]const u8 {

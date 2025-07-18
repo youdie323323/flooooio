@@ -7,7 +7,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
     const scale = entity.size * comptime (1.0 / 25.0);
     ctx.scale(scale, scale);
 
-    ctx.fillColor(rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#333333")));
+    ctx.fillColor(rctx.blendEffectColors(comptime .comptimeFromHex(0x333333)));
     ctx.fillPath(missileBody().*, .nonzero);
     ctx.fillPath(missileBodyStroke().*, .nonzero);
 }

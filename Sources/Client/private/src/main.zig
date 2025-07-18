@@ -66,7 +66,7 @@ fn drawMovementHelper(player: *const PlayerImpl.Super, delta_time: f32) void {
     ctx.setLineCap(.round);
     ctx.setGlobalAlpha(alpha * 0.2);
     ctx.setLineWidth(12);
-    ctx.strokeColor(comptime .comptimeFromHexColorCode("#000000"));
+    ctx.strokeColor(comptime .comptimeFromHex(0x000000));
     ctx.stroke();
 }
 
@@ -824,7 +824,7 @@ fn draw(_: f32) callconv(.c) void {
         }
 
         { // Lightning bounces
-            ctx.strokeColor(comptime .comptimeFromHexColorCode("#FFFFFF"));
+            ctx.strokeColor(comptime .comptimeFromHex(0xFFFFFF));
             ctx.setLineCap(.round);
 
             const delta_time_500 = delta_time * 0.002;

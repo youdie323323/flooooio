@@ -2,9 +2,9 @@ fn render(rctx: *RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
 
-    const bcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#333333"));
+    const bcolor = rctx.blendEffectColors(comptime .comptimeFromHex(0x333333));
 
-    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#ffe763"));
+    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHex(0xFFE763));
     const scolor = fcolor.darkened(skin_darken);
 
     ctx.rotate(entity.angle);

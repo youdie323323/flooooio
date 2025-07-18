@@ -5,7 +5,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
 
-    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#29F2E5"));
+    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHex(0x29F2E5));
     const scolor = fcolor.darkened(body_darken);
 
     ctx.rotate(entity.angle);

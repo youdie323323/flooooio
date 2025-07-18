@@ -151,7 +151,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
                     if (is_mob_impl) {
                         ctx.setTextAlign(.left);
                         setupFont(ctx, hp_bar_info_size);
-                        ctx.fillColor(comptime .comptimeFromHexColorCode("#ffffff"));
+                        ctx.fillColor(comptime .comptimeFromHex(0xFFFFFF));
 
                         ctx.strokeText(name, -1, comptime (-hp_bar_info_size + 2));
                         ctx.fillText(name, -1, comptime (-hp_bar_info_size + 2));
@@ -180,7 +180,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
                     ctx.lineTo(hp_bar_max_width, 0);
 
                     ctx.setLineWidth(hp_bar_line_width);
-                    ctx.strokeColor(comptime .comptimeFromHexColorCode("#222222"));
+                    ctx.strokeColor(comptime .comptimeFromHex(0x222222));
                     ctx.stroke();
                 }
 
@@ -193,7 +193,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
                     ctx.lineTo(hp_bar_max_width * entity.red_health, 0);
 
                     ctx.setLineWidth(hp_bar_line_width * 0.44);
-                    ctx.strokeColor(comptime .comptimeFromHexColorCode("#ff2222"));
+                    ctx.strokeColor(comptime .comptimeFromHex(0xFF2222));
                     ctx.stroke();
                 }
 
@@ -206,7 +206,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
                     ctx.lineTo(hp_bar_max_width * entity.health, 0);
 
                     ctx.setLineWidth(hp_bar_line_width * 0.66);
-                    ctx.strokeColor(comptime .comptimeFromHexColorCode("#75dd34"));
+                    ctx.strokeColor(comptime .comptimeFromHex(0x75DD34));
                     ctx.stroke();
                 }
             }

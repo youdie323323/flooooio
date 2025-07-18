@@ -2,10 +2,10 @@ fn render(rctx: *RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
     const entity = rctx.entity;
 
-    const n_fcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#A44343"));
+    const n_fcolor = rctx.blendEffectColors(comptime .comptimeFromHex(0xA44343));
     const n_scolor = n_fcolor.darkened(body_darken);
 
-    const s_fcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#363685"));
+    const s_fcolor = rctx.blendEffectColors(comptime .comptimeFromHex(0x363685));
     const s_scolor = s_fcolor.darkened(body_darken);
 
     ctx.rotate(entity.angle);

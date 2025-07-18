@@ -65,7 +65,7 @@ fn onMessage(ws: *OwnContextWebSocket, data: []const u8) void {
 }
 
 fn onOpen(ws: *OwnContextWebSocket) void {
-    ws.ctx.out.sendWaveRoomFindPublic(.ocean) catch return;
+    ws.ctx.out.sendWaveRoomFindPublic(.desert) catch return;
     ws.ctx.out.sendWaveRoomChangeReady(.ready) catch return;
 }
 

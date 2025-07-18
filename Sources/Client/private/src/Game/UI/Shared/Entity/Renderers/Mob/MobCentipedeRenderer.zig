@@ -7,13 +7,13 @@ fn render(rctx: *RenderContext(MobSuper)) void {
     const entity = rctx.entity;
     const mob = &entity.impl;
 
-    const acolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#333333"));
+    const acolor = rctx.blendEffectColors(comptime .comptimeFromHex(0x333333));
 
     const fcolor = rctx.blendEffectColors(switch (mob.type.mob) {
-        inline .centipede => comptime .comptimeFromHexColorCode("#8ac255"),
-        inline .centipede_desert => comptime .comptimeFromHexColorCode("#d3c66d"),
-        inline .centipede_evil => comptime .comptimeFromHexColorCode("#8f5db0"),
-        inline else => comptime .comptimeFromHexColorCode("#ffffff"),
+        inline .centipede => comptime .comptimeFromHex(0x8AC255),
+        inline .centipede_desert => comptime .comptimeFromHex(0xD3C66D),
+        inline .centipede_evil => comptime .comptimeFromHex(0x8F5DB0),
+        inline else => comptime .comptimeFromHex(0xFFFFFF),
     });
     const scolor = fcolor.darkened(skin_darken);
 

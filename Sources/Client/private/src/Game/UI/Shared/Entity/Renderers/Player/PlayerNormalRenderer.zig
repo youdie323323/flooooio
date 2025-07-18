@@ -15,7 +15,7 @@ pub fn drawDeadEyes(
     ctx.lineTo(eye_x - dead_eye_length, eye_y + dead_eye_length);
 
     ctx.setLineWidth(3);
-    ctx.strokeColor(comptime .comptimeFromHexColorCode("#000000"));
+    ctx.strokeColor(comptime .comptimeFromHex(0x000000));
     ctx.stroke();
 }
 
@@ -60,7 +60,7 @@ fn drawEyeOutline(
     ctx.moveTo(-7, -5);
     ctx.ellipse(normal_right_eye_x, normal_right_eye_y, offset + 2.4, offset + 5.6, 0, 0, math.tau, false);
 
-    ctx.fillColor(comptime .comptimeFromHexColorCode("#000000"));
+    ctx.fillColor(comptime .comptimeFromHex(0x000000));
     ctx.fill();
 }
 
@@ -69,7 +69,7 @@ fn render(rctx: *RenderContext(PlayerSuper)) void {
     const entity = rctx.entity;
     const player = &entity.impl;
 
-    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHexColorCode("#ffe763"));
+    const fcolor = rctx.blendEffectColors(comptime .comptimeFromHex(0xFFE763));
     const scolor = fcolor.darkened(skin_darken);
 
     ctx.setLineCap(.round);
@@ -114,7 +114,7 @@ fn render(rctx: *RenderContext(PlayerSuper)) void {
             ctx.moveTo(-7, -5);
             ctx.arc(normal_right_eye_x + eye_x * 2, normal_right_eye_y + eye_y * 3.5, 3.1, 0, math.tau, false);
 
-            ctx.fillColor(comptime .comptimeFromHexColorCode("#eeeeee"));
+            ctx.fillColor(comptime .comptimeFromHex(0xEEEEEE));
             ctx.fill();
         }
     }
@@ -130,7 +130,7 @@ fn render(rctx: *RenderContext(PlayerSuper)) void {
         ctx.quadraticCurveTo(0, vertic_rise, 6.1, 0);
 
         ctx.setLineWidth(1.5);
-        ctx.strokeColor(comptime .comptimeFromHexColorCode("#000000"));
+        ctx.strokeColor(comptime .comptimeFromHex(0x000000));
         ctx.stroke();
     }
 }

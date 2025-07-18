@@ -10,11 +10,11 @@ fn render(rctx: *RenderContext(MobSuper)) void {
 
     const fcolor = rctx.blendEffectColors(
         if (is_specimen)
-            comptime .comptimeFromHexColorCode("#EFC99A")
+            comptime .comptimeFromHex(0xEFC99A)
         else switch (entity.id % 3) {
-            inline 0 => comptime .comptimeFromHexColorCode("#EFC99A"),
-            inline 1 => comptime .comptimeFromHexColorCode("#a7829c"),
-            inline 2 => comptime .comptimeFromHexColorCode("#8d6ca5"),
+            inline 0 => comptime .comptimeFromHex(0xEFC99A),
+            inline 1 => comptime .comptimeFromHex(0xA7829C),
+            inline 2 => comptime .comptimeFromHex(0x8D6CA5),
             else => unreachable,
         },
     );
