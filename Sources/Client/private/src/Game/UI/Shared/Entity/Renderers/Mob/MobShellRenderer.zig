@@ -1,15 +1,13 @@
-const tau5 = math.tau / 5.0;
-
 const Vector2 = @Vector(2, f32);
 
-const body_size: comptime_float = 30;
+const tau5 = math.tau / 5.0;
+const tau5_angle_vector: Vector2 = .{
+    @cos(tau5),
+    @sin(tau5),
+};
 
-const vertex =
-    @as(Vector2, .{
-        @cos(tau5),
-        @sin(tau5),
-    }) *
-    @as(Vector2, @splat(body_size));
+const body_size: comptime_float = 30;
+const body_size_vector: Vector2 = @splat(body_size);
 
 fn render(rctx: *RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
@@ -56,14 +54,17 @@ fn render(rctx: *RenderContext(MobSuper)) void {
     // Body
     ctx.beginPath();
 
+    const vertex_x, const vertex_y =
+        comptime (tau5_angle_vector * body_size_vector);
+
     ctx.arc(0, 0, body_size, -tau5, tau5, false);
     ctx.quadraticCurveTo(0, 20, -15, 8);
     ctx.quadraticCurveTo(-20, 0, -15, -8);
     ctx.quadraticCurveTo(
         0,
         -20,
-        comptime vertex[0],
-        comptime -vertex[1],
+        vertex_x,
+        -vertex_y,
     );
 
     ctx.closePath();
