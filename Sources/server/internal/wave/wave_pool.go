@@ -86,7 +86,8 @@ type WavePool struct {
 	hasBeenEnded atomic.Bool
 
 	// commandQueue is command queue to run command with atomic.
-	commandQueue chan func()
+	// If command fn is returning true, command execution will force ends.
+	commandQueue chan func() bool
 
 	Wd *WaveData
 
@@ -116,7 +117,7 @@ func NewWavePool(wr *WaveRoom, wd *WaveData) *WavePool {
 
 		SpatialHash: collision.NewSpatialHash(spatialHashGridSize),
 
-		commandQueue: make(chan func(), 8),
+		commandQueue: make(chan func() bool, 8),
 
 		Wd: wd,
 
@@ -171,63 +172,66 @@ func (wp *WavePool) EndWave() {
 	wp.hasBeenEnded.Store(true)
 }
 
-// Dispose completely remove all values from memory.
+// Dispose completely removes all values.
 func (wp *WavePool) Dispose() {
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
 
-	wp.wasDisposed.Store(true)
+	// Inqueue dispose fn
+	select {
+	case wp.commandQueue <- func() bool {
+		wp.wasDisposed.Store(true)
 
-	// Send stop signal
-	close(wp.updateTickerStopCh)
+		// Send stop signal
+		close(wp.updateTickerStopCh)
 
-	close(wp.commandQueue)
+		wp.playerPool.Range(func(_ EntityId, p *Player) bool {
+			p.Mu.Lock()
 
-	// Execute all pending commands
-	for cmd := range wp.commandQueue {
-		cmd()
+			p.Dispose()
+
+			p.Mu.Unlock()
+
+			return true
+		})
+		wp.mobPool.Range(func(_ EntityId, m *Mob) bool {
+			m.Mu.Lock()
+
+			m.Dispose()
+
+			m.Mu.Unlock()
+
+			return true
+		})
+		wp.petalPool.Range(func(_ EntityId, p *Petal) bool {
+			p.Mu.Lock()
+
+			p.Dispose()
+
+			p.Mu.Unlock()
+
+			return true
+		})
+
+		wp.playerPool.Clear()
+		wp.mobPool.Clear()
+		wp.petalPool.Clear()
+
+		wp.eliminatedEntityIds = nil
+
+		wp.lightningBounces = nil
+
+		wp.SpatialHash.Reset()
+
+		// Set nil because circular struct
+		wp.Wr = nil
+
+		return true
+	}:
+
+	default:
+		fmt.Println("Command queue is full or unavailable")
 	}
-
-	wp.playerPool.Range(func(_ EntityId, p *Player) bool {
-		p.Mu.Lock()
-
-		p.Dispose()
-
-		p.Mu.Unlock()
-
-		return true
-	})
-	wp.mobPool.Range(func(_ EntityId, m *Mob) bool {
-		m.Mu.Lock()
-
-		m.Dispose()
-
-		m.Mu.Unlock()
-
-		return true
-	})
-	wp.petalPool.Range(func(_ EntityId, p *Petal) bool {
-		p.Mu.Lock()
-
-		p.Dispose()
-
-		p.Mu.Unlock()
-
-		return true
-	})
-
-	wp.playerPool.Clear()
-	wp.mobPool.Clear()
-	wp.petalPool.Clear()
-
-	wp.eliminatedEntityIds = nil
-
-	wp.lightningBounces = nil
-
-	wp.SpatialHash.Reset()
-
-	// Set nil because circular struct
-	wp.Wr = nil
 }
 
 func (wp *WavePool) IsAllPlayersDead() bool {
@@ -288,8 +292,16 @@ func (wp *WavePool) update() {
 
 	for { // Execute all commands
 		select {
-		case cmd := <-wp.commandQueue:
-			cmd()
+		case cmd, ok := <-wp.commandQueue:
+			if !ok {
+				return
+			}
+
+			if cmd() {
+				close(wp.commandQueue)
+
+				return
+			}
 
 		default:
 			// Channel is empty, leave loop
@@ -443,25 +455,6 @@ func (wp *WavePool) stepWaveData() {
 func WriteFloat32(buf []byte, x float32) int {
 	binary.LittleEndian.PutUint32(buf, math.Float32bits(x))
 	return 4
-}
-
-// WriteUint32 writes uint32 into buf.
-func WriteUint32(buf []byte, x uint32) int {
-	binary.LittleEndian.PutUint32(buf, x)
-	return 4
-}
-
-// PutUvarint32 encodes a uint32 into buf and returns the number of bytes written.
-// If the buffer is too small, PutUvarint32 will panic.
-func PutUvarint32(buf []byte, x uint32) int {
-	i := 0
-	for x >= 0x80 {
-		buf[i] = byte(x) | 0x80
-		x >>= 7
-		i++
-	}
-	buf[i] = byte(x)
-	return i + 1
 }
 
 // PutUvarint16 encodes a uint16 into buf and returns the number of bytes written.
@@ -1461,7 +1454,7 @@ func (wp *WavePool) HandleChatMessage(wPId EntityId, chatMsg string) {
 
 		// Inqueue command run func to queue
 		select {
-		case wp.commandQueue <- func() {
+		case wp.commandQueue <- func() bool {
 			err = ctx.Run(&Context{
 				Operator: player,
 				Wp:       wp,
@@ -1469,6 +1462,8 @@ func (wp *WavePool) HandleChatMessage(wPId EntityId, chatMsg string) {
 			if err != nil {
 				wp.UnicastChatReceivPacket(player, err.Error())
 			}
+
+			return false
 		}:
 
 		default:

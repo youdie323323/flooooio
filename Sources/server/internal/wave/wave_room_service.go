@@ -44,7 +44,7 @@ func (s *WaveRoomService) JoinPublicWaveRoom(pd *PlayerData, biome native.Biome)
 
 // JoinWaveRoom adds a player to a private wave room using a room code.
 func (s *WaveRoomService) JoinWaveRoom(pd *PlayerData, code WaveRoomCode) *WaveRoomPlayerId {
-	// Place this before locking to avoid deadlock
+	// Place this before lock to avoid deadlock
 	s.LeaveCurrentWaveRoom(pd)
 
 	s.mu.Lock()

@@ -16,11 +16,6 @@ const (
 	webSlowPercent = (100. - 75.) / 100.
 )
 
-var ( // Define reusable circle
-	c0mob collision.Circle
-	c1mob collision.Circle
-)
-
 // Clamp returns f clamped to [low, high].
 func Clamp[T cmp.Ordered](f, low, high T) T {
 	return min(max(f, low), high)
@@ -33,6 +28,8 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 
 	// Turn back to original multiplier
 	m.MagnitudeMultiplier = 1
+
+	mId := m.Id
 
 	mType := m.Type
 
@@ -56,20 +53,25 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 	mIsEnemy := m.IsEnemy()
 	mIsAlly := !mIsEnemy
 
-	c0mob.X = m.X
-	c0mob.Y = m.Y
-	c0mob.R = m.CalculateRadius()
+	c0mob := collision.Circle{
+		X: m.X,
+		Y: m.Y,
+		R: m.CalculateRadius(),
+	}
 
 	searchRadius := SearchRadiusMultiplier * c0mob.R
 
 	nearby := wp.SpatialHash.Search(m.X, m.Y, searchRadius)
+
+	// Define reusable circle
+	c1mob := collision.Circle{}
 
 	for _, n := range nearby {
 		switch nearEntity := n.(type) {
 		// Mob -> Mob
 		case *Mob:
 			{
-				if nearEntity.Id == m.Id {
+				if nearEntity.Id == mId {
 					continue
 				}
 
