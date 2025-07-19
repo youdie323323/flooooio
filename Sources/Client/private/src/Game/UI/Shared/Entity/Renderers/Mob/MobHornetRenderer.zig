@@ -88,7 +88,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
 }
 
 fn init(_: std.mem.Allocator) void {
-    { // Init paths & commands
+    { // Initialize paths & commands
         {
             missile_body = .init();
             missile_body_stroke = .init();

@@ -420,7 +420,10 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                             mob_id,
                             .{ mob_x, mob_y },
                             mob_angle,
-                            mob_size,
+                            if (mob_type.get() == @intFromEnum(MobType.web_projectile))
+                                0
+                            else
+                                mob_size,
                             mob_health,
                         );
 
@@ -633,7 +636,7 @@ export fn main() c_int {
         client = Network.NetworkClient.init(allocator) catch unreachable;
 
         client.in.putHandler(.wave_room_update, handleWaveRoomUpdate) catch unreachable;
-        
+
         client.in.putHandler(.wave_self_id, handleWaveSelfId) catch unreachable;
         client.in.putHandler(.wave_update, handleWaveUpdate) catch unreachable;
 
@@ -700,6 +703,9 @@ var last_timestamp: i64 = 0;
 var prev_timestamp: i64 = 0;
 
 fn draw(_: f32) callconv(.c) void {
+    // Ensure next frame with defer
+    defer _ = CanvasContext.requestAnimationFrame(draw);
+
     last_timestamp = std.time.milliTimestamp();
 
     const delta_time: f32 = @floatFromInt(last_timestamp - prev_timestamp);
@@ -771,7 +777,19 @@ fn draw(_: f32) callconv(.c) void {
             mobs.lock();
             defer mobs.unlock();
 
-            var slice = mobs.slice();
+            var slice = mobs.sortedSlice(
+                allocator,
+                struct {
+                    pub fn impl(lhs: MobImpl.Super, rhs: MobImpl.Super) bool {
+                        return lhs.impl.type.mob == .web_projectile and
+                            rhs.impl.type.mob != .web_projectile;
+                    }
+                }.impl,
+            ) catch
+                // We using defer for next raf, so this is ok
+                return;
+                
+            defer slice.deinit();
 
             while (slice.next()) |obj_id| {
                 var mob = mobs.get(obj_id);
@@ -890,8 +908,6 @@ fn draw(_: f32) callconv(.c) void {
     }
 
     ctx.restore();
-
-    _ = CanvasContext.requestAnimationFrame(draw);
 }
 
 const std = @import("std");

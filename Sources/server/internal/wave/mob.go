@@ -227,10 +227,10 @@ func NewMob(
 	isFirstSegment bool,
 ) *Mob {
 	// Ultra+ stats is not defined for mob
-	// TODO: returning here maybe can accidentally crash application? check later
-	if rarity >= native.RarityUltra {
-		return nil
-	}
+	// This will broke web projectile since they are using their rarity for petal profile
+	// if rarity >= native.RarityUltra {
+	// 	return nil
+	// }
 
 	// TODO: add field that notify health should be randomized in ±5
 

@@ -15,9 +15,9 @@ fn collectLeechSegmentPoints(
         try bodies.append(current_leech.pos / scale);
 
         if (current_leech.impl.connected_segments) |*s| {
-            var it = s.keyIterator();
+            var iter = s.keyIterator();
 
-            if (it.next()) |key| {
+            if (iter.next()) |key| {
                 current_leech = &mobs.get(key.*);
 
                 continue;

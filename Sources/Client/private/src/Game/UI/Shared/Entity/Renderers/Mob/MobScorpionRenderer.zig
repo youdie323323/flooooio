@@ -209,7 +209,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
 }
 
 fn init(_: std.mem.Allocator) void {
-    { // Init paths & commands
+    { // Initialize paths & commands
         {
             tail = .init();
             tail_stroke = .init();

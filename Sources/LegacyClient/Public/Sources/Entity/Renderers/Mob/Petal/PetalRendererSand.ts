@@ -20,11 +20,11 @@ export default class PetalRendererSand extends AbstractPetalRenderer {
         ctx.beginPath();
 
         ctx.moveTo(7, 0);
-        ctx.lineTo(3.499999761581421, 6.062178134918213);
-        ctx.lineTo(-3.500000476837158, 6.062177658081055);
+        ctx.lineTo(3.5, 6.062178134918213);
+        ctx.lineTo(-3.5, 6.062177658081055);
         ctx.lineTo(-7, -6.119594218034763e-7);
-        ctx.lineTo(-3.4999992847442627, -6.062178134918213);
-        ctx.lineTo(3.4999992847442627, -6.062178134918213);
+        ctx.lineTo(-3.5, -6.062178134918213);
+        ctx.lineTo(3.5, -6.062178134918213);
 
         ctx.closePath();
         

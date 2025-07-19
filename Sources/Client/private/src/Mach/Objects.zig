@@ -17,6 +17,9 @@ pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Obje
     const SearchFieldType = meta.FieldType(Object, search_field);
 
     return struct {
+        // MultiArrayList storing the actual object data.
+        const Data = std.MultiArrayList(Object);
+
         internal: struct {
             allocator: mem.Allocator,
 
@@ -25,7 +28,7 @@ pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Obje
             mu: std.Thread.Mutex = .{},
 
             /// The actual object data.
-            data: std.MultiArrayList(Object) = .empty,
+            data: Data = .empty,
 
             /// Whether a given slot in data[i] is dead or not.
             dead: std.bit_set.DynamicBitSetUnmanaged = .{},
@@ -44,6 +47,9 @@ pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Obje
 
             /// Hashmap for searching and get object id from search field value.
             object_lut: std.AutoHashMapUnmanaged(SearchFieldType, ObjectId) = .empty,
+
+            sort_buffer: std.ArrayListUnmanaged(Index) = .empty,
+            sort_buffer_capacity: usize = 0,
         },
 
         /// Let child structs use our struct type.
@@ -73,6 +79,40 @@ pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Obje
                             .index = self.index,
                         });
                 }
+            }
+        };
+
+        pub const Comparator = fn (lhs: Object, rhs: Object) bool;
+
+        pub const SortedSlice = struct {
+            allocator: mem.Allocator,
+
+            index: usize,
+            objs: OwnObjectPtr,
+
+            sorted_indices: []Index,
+
+            pub fn deinit(self: *SortedSlice) void {
+                self.allocator.free(self.sorted_indices);
+            }
+
+            pub fn next(self: *SortedSlice) ?ObjectId {
+                const dead = &self.objs.internal.dead;
+                const generation = &self.objs.internal.generation;
+
+                while (self.index < self.sorted_indices.len) {
+                    const idx = self.sorted_indices[self.index];
+
+                    self.index += 1;
+
+                    if (!dead.isSet(idx))
+                        return @bitCast(PackedObject{
+                            .generation = generation.items[idx],
+                            .index = idx,
+                        });
+                }
+
+                return null;
             }
         };
 
@@ -240,6 +280,53 @@ pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Obje
             return .{
                 .index = 0,
                 .objs = objs,
+            };
+        }
+
+        pub fn sortedSlice(
+            objs: *@This(),
+            allocator: mem.Allocator,
+            comptime comparator: Comparator,
+        ) !SortedSlice {
+            const dead = &objs.internal.dead;
+            const data = &objs.internal.data;
+
+            const live_count = data.len - dead.count();
+            
+            var sorted_indices = try allocator.alloc(Index, live_count);
+            errdefer allocator.free(sorted_indices);
+
+            var pos: usize = 0;
+
+            var iter = dead.iterator(.{ .kind = .unset });
+
+            while (iter.next()) |i| {
+                if (i >= data.len) break;
+
+                sorted_indices[pos] = @intCast(i);
+
+                pos += 1;
+            }
+
+            const Context = struct {
+                data: *Data,
+
+                pub fn lessThan(ctx: *@This(), a: Index, b: Index) bool {
+                    return comparator(ctx.data.get(a), ctx.data.get(b));
+                }
+            };
+
+            var ctx: Context = .{ .data = data };
+
+            mem.sort(Index, sorted_indices, &ctx, Context.lessThan);
+
+            return .{
+                .allocator = allocator,
+
+                .index = 0,
+                .objs = objs,
+
+                .sorted_indices = sorted_indices,
             };
         }
 

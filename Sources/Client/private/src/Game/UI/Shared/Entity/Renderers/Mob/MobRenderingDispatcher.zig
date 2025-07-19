@@ -33,10 +33,16 @@ const type_to_renderer: std.EnumMap(EntityType.Mixed, RenderFn(MobSuper)) = .ini
     .petal_mysterious_stick = mysteriousStickRender,
     .petal_wing = wingRender,
     .petal_missile = missileRender,
+    .petal_yin_yang = yinYangRender,
+    .petal_claw = clawRender,
+    .petal_sand = sandRender,
+    .petal_stinger = stingerRender,
+    .petal_web = petalWebRender,
 
     // Projectiles
 
     .mob_missile_projectile = projectileMissileRender,
+    .mob_web_projectile = projectileWebRender,
 });
 
 /// Main render function that dispatches to appropriate renderer based on mob type.
@@ -76,11 +82,17 @@ fn init(allocator: std.mem.Allocator) void {
                 PetalMysteriousStickRenderer.staticInit(allocator);
                 PetalWingRenderer.staticInit(allocator);
                 PetalMissileRenderer.staticInit(allocator);
+                PetalYinYangRenderer.staticInit(allocator);
+                PetalClawRenderer.staticInit(allocator);
+                PetalSandRenderer.staticInit(allocator);
+                PetalStingerRenderer.staticInit(allocator);
+                PetalWebRenderer.staticInit(allocator);
             }
         }
 
         { // Projectile
             ProjectileMissileRenderer.staticInit(allocator);
+            ProjectileWebRenderer.staticInit(allocator);
         }
     }
 }
@@ -160,11 +172,29 @@ const lightningRender = PetalLightningRenderer.render;
 const PetalMysteriousStickRenderer = @import("../Petal/PetalMysteriousStickRenderer.zig").PetalMysteriousStickRenderer;
 const mysteriousStickRender = PetalMysteriousStickRenderer.render;
 
+const PetalYinYangRenderer = @import("../Petal/PetalYinYangRenderer.zig").PetalYinYangRenderer;
+const yinYangRender = PetalYinYangRenderer.render;
+
 const PetalWingRenderer = @import("../Petal/PetalWingRenderer.zig").PetalWingRenderer;
 const wingRender = PetalWingRenderer.render;
 
+const PetalClawRenderer = @import("../Petal/PetalClawRenderer.zig").PetalClawRenderer;
+const clawRender = PetalClawRenderer.render;
+
+const PetalSandRenderer = @import("../Petal/PetalSandRenderer.zig").PetalSandRenderer;
+const sandRender = PetalSandRenderer.render;
+
+const PetalStingerRenderer = @import("../Petal/PetalStingerRenderer.zig").PetalStingerRenderer;
+const stingerRender = PetalStingerRenderer.render;
+
+const PetalWebRenderer = @import("../Petal/PetalWebRenderer.zig").PetalWebRenderer;
+const petalWebRender = PetalWebRenderer.render;
+
 const ProjectileMissileRenderer = @import("ProjectileMissileRenderer.zig").ProjectileMissileRenderer;
 const projectileMissileRender = ProjectileMissileRenderer.render;
+
+const ProjectileWebRenderer = @import("ProjectileWebRenderer.zig").ProjectileWebRenderer;
+const projectileWebRender = ProjectileWebRenderer.render;
 
 const PetalMissileRenderer = @import("../Petal/PetalMissileRenderer.zig").PetalMissileRenderer;
 const missileRender = PetalMissileRenderer.render;

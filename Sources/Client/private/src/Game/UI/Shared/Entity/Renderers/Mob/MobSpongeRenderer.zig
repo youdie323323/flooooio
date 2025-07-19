@@ -36,7 +36,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
 }
 
 fn init(_: std.mem.Allocator) void {
-    { // Init paths & commands
+    { // Initialize paths & commands
         {
             body = .init();
             body_stroke = .init();
