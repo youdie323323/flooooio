@@ -5,7 +5,7 @@ type HelpCmd struct{}
 var helpString = GetCliHelp(cli{})
 
 func (h *HelpCmd) Run(ctx *Context) error {
-	ctx.Wp.UnicastChatReceivPacket(ctx.Operator, helpString)
+	ctx.Wp.UnicastChatReceivePacket(ctx.Operator, helpString)
 
 	return nil
 }

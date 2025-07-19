@@ -44,7 +44,7 @@ pub const Clientbound = enum(u8) {
 
     wave_started,
 
-    wave_chat_receiv,
+    wave_chat_receive,
 
     connection_kicked,
 };

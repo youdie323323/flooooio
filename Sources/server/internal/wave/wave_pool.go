@@ -1414,13 +1414,13 @@ func (wp *WavePool) staticPetalToDynamicPetal(
 	return dp
 }
 
-func (wp *WavePool) createChatReceivPacket(msg string) []byte {
+func (wp *WavePool) createChatReceivePacket(msg string) []byte {
 	buf := SharedBufPool.Get()
 	defer SharedBufPool.Put(buf)
 
 	at := 0
 
-	buf[at] = network.ClientboundWaveChatReceiv
+	buf[at] = network.ClientboundWaveChatReceive
 	at++
 
 	// Write chat message
@@ -1429,8 +1429,8 @@ func (wp *WavePool) createChatReceivPacket(msg string) []byte {
 	return buf[:at]
 }
 
-func (wp *WavePool) BroadcastChatReceivPacket(msg string) {
-	buf := wp.createChatReceivPacket(msg)
+func (wp *WavePool) BroadcastChatReceivePacket(msg string) {
+	buf := wp.createChatReceivePacket(msg)
 
 	wp.playerPool.Range(func(_ EntityId, p *Player) bool {
 		p.SafeWriteMessage(websocket.BinaryMessage, buf)
@@ -1439,8 +1439,8 @@ func (wp *WavePool) BroadcastChatReceivPacket(msg string) {
 	})
 }
 
-func (wp *WavePool) UnicastChatReceivPacket(player *Player, msg string) {
-	buf := wp.createChatReceivPacket(msg)
+func (wp *WavePool) UnicastChatReceivePacket(player *Player, msg string) {
+	buf := wp.createChatReceivePacket(msg)
 
 	player.SafeWriteMessage(websocket.BinaryMessage, buf)
 }
@@ -1461,7 +1461,7 @@ func (wp *WavePool) HandleChatMessage(wPId EntityId, chatMsg string) {
 	if strings.HasPrefix(chatMsg, CommandPrefix) {
 		ctx, err := ParseCommand(chatMsg)
 		if err != nil {
-			wp.UnicastChatReceivPacket(player, err.Error())
+			wp.UnicastChatReceivePacket(player, err.Error())
 
 			return
 		}
@@ -1474,14 +1474,14 @@ func (wp *WavePool) HandleChatMessage(wPId EntityId, chatMsg string) {
 				Wp:       wp,
 			})
 			if err != nil {
-				wp.UnicastChatReceivPacket(player, err.Error())
+				wp.UnicastChatReceivePacket(player, err.Error())
 			}
 
 			return false
 		}:
 
 		default:
-			wp.UnicastChatReceivPacket(player, "Command queue is full or unavailable")
+			wp.UnicastChatReceivePacket(player, "Command queue is full or unavailable")
 		}
 	} else {
 		hash := sha256.New()
@@ -1496,6 +1496,6 @@ func (wp *WavePool) HandleChatMessage(wPId EntityId, chatMsg string) {
 			return
 		}
 
-		wp.BroadcastChatReceivPacket(fmt.Sprintf("%s: %s", player.Name, chatMsg))
+		wp.BroadcastChatReceivePacket(fmt.Sprintf("%s: %s", player.Name, chatMsg))
 	}
 }

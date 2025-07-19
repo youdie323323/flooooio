@@ -12,7 +12,7 @@ const (
 
 	ClientboundWaveStarted
 
-	ClientboundWaveChatReceiv
+	ClientboundWaveChatReceive
 
 	ClientboundConnectionKicked
 )

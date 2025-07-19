@@ -147,7 +147,6 @@ func (w *WaveRoom) RegisterPlayer(sp *StaticPlayer[StaticPetalSlots]) *WaveRoomP
 	}
 
 	w.mu.Lock()
-	defer w.mu.Unlock()
 
 	id := rand.N[uint16](65535)
 
@@ -165,6 +164,11 @@ func (w *WaveRoom) RegisterPlayer(sp *StaticPlayer[StaticPetalSlots]) *WaveRoomP
 	})
 
 	w.CheckAndUpdateRoomState()
+
+	w.mu.Unlock()
+
+	// Guarantees registered candidate will receive update packet
+	w.broadcastUpdatePacket()
 
 	return &id
 }
@@ -324,7 +328,7 @@ func (w *WaveRoom) Dispose() {
 	w.candidates = nil
 }
 
-// startBroadcastUpdatePacket starts sending update packets on an interval.
+// startBroadcastUpdatePacket starts broadcasting an update packets.
 func (w *WaveRoom) startBroadcastUpdatePacket() {
 	for range w.updatePacketBroadcastTicker.C {
 		w.broadcastUpdatePacket()

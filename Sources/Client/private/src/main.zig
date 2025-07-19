@@ -1,8 +1,6 @@
 /// Global canvas context of this application.
 var ctx: *CanvasContext = undefined;
 
-var tile_ctx: *CanvasContext = undefined;
-
 var client: *Network.NetworkClient = undefined;
 
 var width: f32 = 0;
@@ -153,6 +151,42 @@ fn onScreenEvent(_: Event.EventType, event: *const Event.ScreenEvent) callconv(.
     );
 
     return true;
+}
+
+var wave_room_biome: Biome = .garden;
+
+fn handleWaveRoomUpdate(stream: *const Network.Reader) anyerror!void {
+    { // Read player informations
+        const players_count = try stream.readByte();
+
+        for (0..players_count) |_| {
+            const player_id = try leb.readUleb128(WaveRoom.PlayerId, stream);
+
+            const player_name = try Network.readCString(stream);
+
+            const player_ready_state = try stream.readEnum(WaveRoom.PlayerReadyState, .little);
+
+            _ = player_id;
+
+            _ = player_name;
+
+            _ = player_ready_state;
+        }
+    }
+
+    const wave_room_code = try Network.readCString(stream);
+
+    const wave_room_state = try stream.readEnum(WaveRoom.State, .little);
+
+    const wave_room_visibility = try stream.readEnum(WaveRoom.Visibility, .little);
+
+    wave_room_biome = try stream.readEnum(Biome, .little);
+
+    _ = wave_room_code;
+
+    _ = wave_room_state;
+
+    _ = wave_room_visibility;
 }
 
 /// Possible abstract objects length.
@@ -587,6 +621,9 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
 export fn main() c_int {
     std.log.debug("main()", .{});
 
+    // Initialize tilesets
+    Biome.initTilesets(allocator);
+
     // Initialize main canvas context
     ctx = CanvasContext.createCanvasContextBySelector(allocator, "canvas", false);
 
@@ -595,6 +632,8 @@ export fn main() c_int {
     { // Initialize client websocket
         client = Network.NetworkClient.init(allocator) catch unreachable;
 
+        client.in.putHandler(.wave_room_update, handleWaveRoomUpdate) catch unreachable;
+        
         client.in.putHandler(.wave_self_id, handleWaveSelfId) catch unreachable;
         client.in.putHandler(.wave_update, handleWaveUpdate) catch unreachable;
 
@@ -649,12 +688,6 @@ export fn main() c_int {
         };
     }
 
-    { // Initialize tile map
-        tile_ctx = CanvasContext.createCanvasContext(allocator, 256 * 4, 256 * 4, false);
-
-        tile_ctx.drawSvg(@embedFile("Game/UI/Shared/Tile/Tiles/desert_c_2.svg"));
-    }
-
     // Initialize lightning bounce
     UIWaveLightningBounce.staticInit();
 
@@ -689,11 +722,13 @@ fn draw(_: f32) callconv(.c) void {
         else
             null;
 
-    if (self_player) |*player|
+    if (self_player) |*player| blk: {
+        const tileset = wave_room_biome.tileset() orelse break :blk;
+
         TileRenderer.renderGameTileset(.{
             .ctx = ctx,
 
-            .tileset = &.{tile_ctx},
+            .tileset = tileset,
 
             .tile_size = @splat(300),
 
@@ -708,6 +743,7 @@ fn draw(_: f32) callconv(.c) void {
 
             .scale = @splat(antenna_scale),
         });
+    }
 
     if (self_player) |*player| // Draw movement helper
         drawMovementHelper(player, delta_time);
@@ -888,6 +924,10 @@ const RenderContext = @import("Game/UI/Shared/Entity/Renderers/Renderer.zig").Re
 const Mach = @import("Mach/Mach.zig");
 
 const EntityProfiles = @import("Game/Florr/Native/Entity/EntityProfiles.zig");
+
+const WaveRoom = @import("Game/Florr/Native/Wave/WaveRoom.zig");
+
+const Biome = @import("Game/Florr/Native/Biome.zig").Biome;
 
 const TileRenderer = @import("Game/UI/Shared/Tile/TileRenderer.zig");
 

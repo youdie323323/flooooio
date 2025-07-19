@@ -442,16 +442,16 @@ pub fn rotate(self: *const CanvasContext, angle: f32) void {
     @"28"(self.id, angle);
 }
 
-pub fn copyCanvas(self: *const CanvasContext, src_context: *CanvasContext, dx: f32, dy: f32) void {
-    @"34"(self.id, src_context.id, dx, dy);
+pub fn copyCanvas(self: *const CanvasContext, src_ctx: *CanvasContext, dx: f32, dy: f32) void {
+    @"34"(self.id, src_ctx.id, dx, dy);
 }
 
-pub fn copyCanvasAsOnePixel(self: *const CanvasContext, src_context: *CanvasContext, dx: f32, dy: f32) void {
-    @"35"(self.id, src_context.id, dx, dy);
+pub fn copyCanvasAsOnePixel(self: *const CanvasContext, src_ctx: *CanvasContext, dx: f32, dy: f32) void {
+    @"35"(self.id, src_ctx.id, dx, dy);
 }
 
-pub fn copyCanvasWithScale(self: *const CanvasContext, src_context: *CanvasContext, dx: f32, dy: f32, dw: f32, dh: f32) void {
-    @"36"(self.id, src_context.id, dx, dy, dw, dh);
+pub fn copyCanvasWithScale(self: *const CanvasContext, src_ctx: *CanvasContext, dx: f32, dy: f32, dw: f32, dh: f32) void {
+    @"36"(self.id, src_ctx.id, dx, dy, dw, dh);
 }
 
 pub fn fillText(self: *const CanvasContext, text: []const u8, x: f32, y: f32) void {
@@ -586,7 +586,7 @@ pub fn createCanvasContext(
 ) *CanvasContext {
     const id = @"0"(width, height, comptime @intFromBool(is_discardable));
 
-    return CanvasContext.init(allocator, id);
+    return init(allocator, id);
 }
 
 pub fn createCanvasContextBySelector(
@@ -600,7 +600,7 @@ pub fn createCanvasContextBySelector(
 
     Mem.freeCString(selector_ptr);
 
-    return CanvasContext.init(allocator, id);
+    return init(allocator, id);
 }
 
 /// Function signature for rAF (requestAnimationFrame) event handler.

@@ -9,7 +9,7 @@ const destroyedContextIds: Array<number> = new Array();
 const paths: Array<Path2D> = new Array();
 const destroyedPathIds: Array<number> = new Array();
 
-const LINE_DASH_REAL_LINE: Iterable<number> = [];
+const LINE_DASH_REAL_LINE: Iterable<number> = new Array();
 
 type Uint1 = 0 | 1;
 

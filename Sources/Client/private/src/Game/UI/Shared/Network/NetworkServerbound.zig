@@ -119,7 +119,7 @@ pub fn sendWaveRoomChangeReady(self: *const Serverbound, state: Wr.PlayerReadySt
     shared_fbs.reset();
 }
 
-pub fn sendWaveRoomChangeVisible(self: *const Serverbound, state: Wr.VisibleState) !void {
+pub fn sendWaveRoomChangeVisible(self: *const Serverbound, state: Wr.Visibility) !void {
     try shared_stream.writeByte(comptime @intFromEnum(Opcode.Serverbound.wave_room_change_visible));
 
     try shared_stream.writeByte(@intFromEnum(state));

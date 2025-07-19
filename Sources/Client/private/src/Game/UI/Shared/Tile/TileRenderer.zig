@@ -1,19 +1,21 @@
-const Tile = *CanvasContext;
+pub const Tile = *CanvasContext;
 
 /// Array of tiles.
-const Tileset = []const Tile;
+pub const Tileset = []const Tile;
 
-const Vector2 = @Vector(2, f32);
+pub const Vector2 = @Vector(2, f32);
 
-const U16Vector2 = @Vector(2, u16);
+/// Hashes loop index to single usize value.
+fn hashGridPosition(i: usize, j: usize) usize {
+    const p1: usize = 73856093;
+    const p2: usize = 19349663;
 
-const two_vector: Vector2 = @splat(2);
+    return (i *% p1) +% (j *% p2);
+}
 
-const eighty_vector: Vector2 = @splat(80);
+pub const U16Vector2 = @Vector(2, u16);
 
-const one_over_three_vector: Vector2 = @splat(1.0 / 3.0);
-
-const MapRenderingOptions = struct {
+pub const MapRenderingOptions = struct {
     ctx: *CanvasContext,
     tileset: Tileset,
     tile_size: Vector2,
@@ -22,6 +24,12 @@ const MapRenderingOptions = struct {
     screen: Vector2,
     scale: Vector2,
 };
+
+const two_vector: Vector2 = @splat(2);
+
+const eighty_vector: Vector2 = @splat(80);
+
+const one_over_three_vector: Vector2 = @splat(1.0 / 3.0);
 
 fn isWithinBound(
     pos: Vector2,
@@ -107,6 +115,8 @@ pub fn renderGameTileset(options: MapRenderingOptions) void {
     const screen = options.screen;
     const scale = options.scale;
 
+    const tileset_len = tileset.len;
+
     const grid_size = radius / eighty_vector;
     const grid_size_u16: U16Vector2 = @intFromFloat(grid_size);
 
@@ -125,8 +135,12 @@ pub fn renderGameTileset(options: MapRenderingOptions) void {
 
             const tile_pos = @mulAdd(Vector2, ij_vector, scaled_tile_size, start);
 
-            if (isWithinBound(tile_pos, scaled_tile_size, screen))
-                renderTile(ctx, tileset[0], tile_pos, scaled_tile_size, one_over_three_vector);
+            if (isWithinBound(tile_pos, scaled_tile_size, screen)) {
+                const grid_pos_hash = hashGridPosition(i, j);
+                const tile = tileset[grid_pos_hash % tileset_len];
+
+                renderTile(ctx, tile, tile_pos, scaled_tile_size, one_over_three_vector);
+            }
         }
     }
 
