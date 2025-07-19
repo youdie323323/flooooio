@@ -420,6 +420,7 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                             mob_id,
                             .{ mob_x, mob_y },
                             mob_angle,
+                            // Set initial size as zero if web projectile, since its spawns like animated similar to original game
                             if (mob_type.get() == @intFromEnum(MobType.web_projectile))
                                 0
                             else
@@ -786,9 +787,9 @@ fn draw(_: f32) callconv(.c) void {
                     }
                 }.impl,
             ) catch
-                // We using defer for next raf, so this is ok
+                // We're using defer for next raf, so this is ok
                 return;
-                
+
             defer slice.deinit();
 
             while (slice.next()) |obj_id| {
