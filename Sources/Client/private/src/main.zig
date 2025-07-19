@@ -316,6 +316,7 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                         is_first_segment: bool,
                         has_connecting_segment: bool,
                         is_poisoned: bool,
+                        was_proper_damaged: bool,
                     });
 
                     var mob_connecting_segment: ?Mach.ObjectId = null;
@@ -345,11 +346,9 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                         { // Update health properties
                             // TODO: not same as original code
 
-                            if (!mob.is_poisoned and mob_health < mob.next_health) {
+                            if (mob_bool_flags.was_proper_damaged) {
                                 mob.red_health_timer = 1;
                                 mob.hurt_t = 1;
-                            } else if (mob_health > mob.next_health) {
-                                mob.red_health_timer = 0;
                             }
 
                             mob.next_health = mob_health;
@@ -427,6 +426,10 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
 
                     const petal_rarity = try stream.readEnum(EntityRarity, .little);
 
+                    const petal_bool_flags = try stream.readStruct(packed struct {
+                        was_proper_damaged: bool,
+                    });
+
                     if (petals.search(petal_id)) |obj_id| {
                         var petal = petals.get(obj_id);
 
@@ -440,11 +443,9 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                         }
 
                         { // Update health properties
-                            if (petal_health < petal.next_health) {
+                            if (petal_bool_flags.was_proper_damaged) {
                                 petal.red_health_timer = 1;
                                 petal.hurt_t = 1;
-                            } else if (petal_health > petal.next_health) {
-                                petal.red_health_timer = 0;
                             }
 
                             petal.next_health = petal_health;
@@ -504,6 +505,7 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                         is_dead: bool,
                         is_developer: bool,
                         is_poisoned: bool,
+                        was_proper_damaged: bool,
                     });
 
                     if (players.search(player_id)) |obj_id| {
@@ -519,11 +521,11 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                         }
 
                         { // Update health properties
-                            if (!player.is_poisoned and player_health < player.next_health) {
+                            // TODO: we need to identify damage type which poison damage and normal damage,
+                            // since we want damage effect in poison effect applied
+                            if (player_bool_flags.was_proper_damaged) {
                                 player.red_health_timer = 1;
                                 player.hurt_t = 1;
-                            } else if (player_health > player.next_health) {
-                                player.red_health_timer = 0;
                             }
 
                             player.next_health = player_health;

@@ -74,7 +74,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         const hurt_target_color_middle: Color = .comptimeFromRgbString("rgb(255, 0, 0)");
         const hurt_target_color_last: Color = .comptimeFromRgbString("rgb(255, 255, 255)");
 
-        const poison_target_color: Color = .comptimeFromRgbString("rgb(189, 80, 255)");
+        const poison_target_color: Color = .comptimeFromRgbString("rgb(208, 112, 207)");
 
         /// Blend colors based on this render context entity effect values.
         /// All effect values should ranged in [0, 1].
@@ -84,21 +84,26 @@ pub fn RenderContext(comptime AnyEntity: type) type {
             const hurt_t = entity.hurt_t;
             const poison_t = entity.poison_t;
 
+            const hurt_t_equal_zero = hurt_t == 0;
+            const poison_t_equal_zero = poison_t == 0;
+
             // No effects to apply
-            if (hurt_t == 0 and poison_t == 0) return color;
+            if (hurt_t_equal_zero and poison_t_equal_zero) return color;
 
             // Copy color
             var applied: Color = color;
 
-            { // Apply effects
-                // Poison effect
-                if (poison_t > 0) applied = applied.interpolate(poison_target_color, 1 - poison_t);
+            if (!poison_t_equal_zero) // Poison effect
+                applied = applied.interpolate(poison_target_color, poison_t);
 
-                // Damage effect
+            if (!hurt_t_equal_zero) { // Damage effect
                 applied = .nColorInterpolate(&.{ applied, hurt_target_color_middle, hurt_target_color_last }, 1 - hurt_t);
+
+                if (poison_t_equal_zero) // Only blend with original color when hurt effect is active and no poison
+                    applied = applied.interpolate(color, 0.5);
             }
 
-            return applied.interpolate(color, 0.5);
+            return applied;
         }
 
         /// Calculates a fade value based on a threshold.

@@ -516,7 +516,7 @@ func (wp *WavePool) broadcastUpdatePacket() {
 					dynamicPacket[at] = updatedEntityKindPlayer
 					at++
 
-					n.Mu.RLock()
+					n.Mu.Lock()
 
 					at += PutUvarint16(dynamicPacket[at:], *n.Id)
 
@@ -552,7 +552,12 @@ func (wp *WavePool) broadcastUpdatePacket() {
 						bFlags |= 4
 					}
 
-					n.Mu.RUnlock()
+					// Player is proper-damaged, or not
+					if n.ConsumeWasProperDamage() {
+						bFlags |= 8
+					}
+
+					n.Mu.Unlock()
 
 					dynamicPacket[at] = bFlags
 					at++
@@ -604,6 +609,11 @@ func (wp *WavePool) broadcastUpdatePacket() {
 						bFlags |= 8
 					}
 
+					// Mob is proper-damaged, or not
+					if n.ConsumeWasProperDamage() {
+						bFlags |= 16
+					}
+
 					dynamicPacket[at] = bFlags
 					at++
 
@@ -632,6 +642,16 @@ func (wp *WavePool) broadcastUpdatePacket() {
 					at++
 
 					dynamicPacket[at] = n.Rarity
+					at++
+
+					var bFlags uint8 = 0
+
+					// Petal is proper-damaged, or not
+					if n.ConsumeWasProperDamage() {
+						bFlags |= 1
+					}
+
+					dynamicPacket[at] = bFlags
 					at++
 				}
 			}
@@ -1225,7 +1245,7 @@ Loop:
 
 				playerMaxHealth := targetEntity.GetMaxHealth()
 
-				targetEntity.Health -= lightningDamage / playerMaxHealth
+				targetEntity.TakeProperDamage(lightningDamage / playerMaxHealth)
 
 				bounceTargets := jellyfish.GetLightningBounceTargets(wp, bouncedIds)
 
@@ -1244,7 +1264,7 @@ Loop:
 				{
 					mobMaxHealth := targetEntity.GetMaxHealth()
 
-					targetEntity.Health -= lightningDamage / mobMaxHealth
+					targetEntity.TakeProperDamage(lightningDamage / mobMaxHealth)
 				}
 
 				// No hit after magnet
@@ -1271,7 +1291,7 @@ Loop:
 
 					mobMaxHealth := targetEntityToDamage.GetMaxHealth()
 
-					targetEntityToDamage.Health -= lightningDamage / mobMaxHealth
+					targetEntityToDamage.TakeProperDamage(lightningDamage / mobMaxHealth)
 
 					// Or just dont?
 					targetEntityToDamage.LastAttackedEntity = jellyfish
@@ -1344,7 +1364,7 @@ func (wp *WavePool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 
 			targetMobMaxHealth := targetMobToDamage.GetMaxHealth()
 
-			targetMobToDamage.Health -= lightningDamage / targetMobMaxHealth
+			targetMobToDamage.TakeProperDamage(lightningDamage / targetMobMaxHealth)
 
 			targetMobToDamage.LastAttackedEntity = lightning.Master
 		}

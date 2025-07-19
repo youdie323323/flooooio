@@ -65,7 +65,7 @@ func calculateRotationDelta(
 }
 
 func doPetalOrbit(
-	p *Petal,
+	petal *Petal,
 
 	tx float32,
 	ty float32,
@@ -79,25 +79,25 @@ func doPetalOrbit(
 	chaseX := tx + lazyCosTable[angleIdx]*hr
 	chaseY := ty + lazySinTable[angleIdx]*hr
 
-	diffX := chaseX - p.X
-	diffY := chaseY - p.Y
+	diffX := chaseX - petal.X
+	diffY := chaseY - petal.Y
 
-	p.Velocity[0] += petalVelocityAcceleration * diffX
-	p.Velocity[1] += petalVelocityAcceleration * diffY
+	petal.Velocity[0] += petalVelocityAcceleration * diffX
+	petal.Velocity[1] += petalVelocityAcceleration * diffY
 }
 
 // doPetalSpin do petal spin on mob.
 func doPetalSpin(
 	wp *WavePool,
 
-	pe *Petal,
+	petal *Petal,
 
-	pss [][]float32,
+	spins [][]float32,
 	i int,
 	j int,
 ) {
 	mobToSpin, ok := FindNearestEntity(
-		pe,
+		petal,
 		collision.ToNodeSlice(wp.GetMobsWithCondition(func(m *Mob) bool {
 			if !m.IsOrganismEnemy() {
 				return false
@@ -106,8 +106,8 @@ func doPetalSpin(
 			spinDetectRad := m.CalculateRadius() * spinNearestSizeCoef
 			spinDetectRadSq := spinDetectRad * spinDetectRad
 
-			dx := m.X - pe.X
-			dy := m.Y - pe.Y
+			dx := m.X - petal.X
+			dy := m.Y - petal.Y
 
 			return (dx*dx + dy*dy) <= spinDetectRadSq
 		})),
@@ -116,36 +116,36 @@ func doPetalSpin(
 		return
 	}
 
-	wasSpinning := pe.SpinningOnMob
+	wasSpinning := petal.SpinningOnMob
 
-	pe.SpinningOnMob = mobToSpin != nil
+	petal.SpinningOnMob = mobToSpin != nil
 
-	if pe.SpinningOnMob {
+	if petal.SpinningOnMob {
 		if !wasSpinning {
 			targetAngle := math32.Atan2(
-				pe.Y-mobToSpin.Y,
-				pe.X-mobToSpin.X,
+				petal.Y-mobToSpin.Y,
+				petal.X-mobToSpin.X,
 			)
 
-			angleDiff := targetAngle - pss[i][j]
+			angleDiff := targetAngle - spins[i][j]
 
 			angleDiff = math32.Mod(math32.Mod(angleDiff, Tau)+Tau, Tau)
 			if angleDiff > math32.Pi {
 				angleDiff -= Tau
 			}
 
-			pss[i][j] = math32.Mod(pss[i][j]+angleDiff, Tau)
+			spins[i][j] = math32.Mod(spins[i][j]+angleDiff, Tau)
 		}
 
-		spinAngleIdx := calcTableIndex(pss[i][j])
+		spinAngleIdx := calcTableIndex(spins[i][j])
 
 		mobToSpinDesiredSize := mobToSpin.CalculateRadius() * 1.1
 
 		targetX := mobToSpin.X + lazyCosTable[spinAngleIdx]*mobToSpinDesiredSize
 		targetY := mobToSpin.Y + lazySinTable[spinAngleIdx]*mobToSpinDesiredSize
 
-		pe.X += (targetX - pe.X) * spingInterpolationSpeed
-		pe.Y += (targetY - pe.Y) * spingInterpolationSpeed
+		petal.X += (targetX - petal.X) * spingInterpolationSpeed
+		petal.Y += (targetY - petal.Y) * spingInterpolationSpeed
 	}
 }
 

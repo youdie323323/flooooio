@@ -36,7 +36,11 @@ type Entity struct {
 
 	// Health is health of entity.
 	// Range will be [0, 1] float.
+	// If you want to take proper-damage (not likely poison damage), use TakeProperDamage.
 	Health float32
+
+	// WasProperDamaged whether this entity is proper-damaged this frame.
+	WasProperDamaged bool
 
 	Mu sync.RWMutex
 }
@@ -58,6 +62,22 @@ func NewPoisonable() Poisonable {
 		TotalPoison:  0,
 		StopAtPoison: 0,
 	}
+}
+
+func (e *Entity) TakeProperDamage(damage float32) {
+	e.Health -= damage
+
+	e.WasProperDamaged = true
+}
+
+// ConsumeWasProperDamage consumes WasDamaged.
+// This method should only called once for each one frame step.
+func (e *Entity) ConsumeWasProperDamage() bool {
+	wasDamaged := e.WasProperDamaged
+
+	e.WasProperDamaged = false
+
+	return wasDamaged
 }
 
 // TODO: wrap all poison damages into TakePoisonDamage
