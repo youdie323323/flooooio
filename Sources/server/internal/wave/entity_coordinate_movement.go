@@ -13,5 +13,5 @@ func VelocityWithinEpsilon(v Velocity) bool {
 }
 
 func angleToRadian(angle float32) float32 {
-	return angle / 255 * Tau
+	return angle / 255 * Tau32
 }

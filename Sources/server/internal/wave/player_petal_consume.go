@@ -99,12 +99,12 @@ func (p *Player) PlayerPetalConsume(wp *WavePool, now time.Time) {
 			case native.PetalTypeYggdrasil:
 				{
 					// Already used yggdrasil
-					if petal.DetachedFromOrbit {
+					if petal.Detached {
 						continue
 					}
 
 					// Detach
-					petal.DetachedFromOrbit = true
+					petal.Detached = true
 
 					{
 						dx := petal.X - p.X
@@ -167,7 +167,7 @@ func (p *Player) PlayerPetalConsume(wp *WavePool, now time.Time) {
 
 			case native.PetalTypeWeb:
 				{
-					if petal.DetachedFromOrbit {
+					if petal.Detached {
 						// Detached, use web if stop
 						if VelocityWithinEpsilon(petal.Velocity) {
 							wp.GenerateMob(
@@ -196,12 +196,12 @@ func (p *Player) PlayerPetalConsume(wp *WavePool, now time.Time) {
 					}
 
 					// Already used web
-					if petal.DetachedFromOrbit {
+					if petal.Detached {
 						continue
 					}
 
 					// Detach
-					petal.DetachedFromOrbit = true
+					petal.Detached = true
 
 					dx := petal.X - p.X
 					dy := petal.Y - p.Y
@@ -211,6 +211,28 @@ func (p *Player) PlayerPetalConsume(wp *WavePool, now time.Time) {
 
 					petal.Velocity[0] += 20 * math32.Cos(angle)
 					petal.Velocity[1] += 20 * math32.Sin(angle)
+				}
+
+			case native.PetalTypeMissile:
+				{
+					if !isSad {
+						continue
+					}
+
+					// Already used missile
+					if petal.Detached {
+						continue
+					}
+
+					// Detach
+					petal.Detached = true
+
+					p.Slots.SurfaceSupplies[i][j] = &StaticPetalData{
+						Type:   petal.Type,
+						Rarity: petal.Rarity,
+					}
+
+					petals[j] = nil
 				}
 			}
 

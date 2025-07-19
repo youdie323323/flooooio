@@ -10,6 +10,7 @@ const type_to_renderer: std.EnumMap(EntityType.Mixed, RenderFn(MobSuper)) = .ini
     .mob_soldier_ant = soldierAntRender,
 
     .mob_beetle = beetleRender,
+    .mob_sandstorm = sandstormRender,
     .mob_cactus = cactusRender,
     .mob_scorpion = scorpionRender,
 
@@ -29,10 +30,13 @@ const type_to_renderer: std.EnumMap(EntityType.Mixed, RenderFn(MobSuper)) = .ini
     .petal_faster = fasterRender,
     .petal_magnet = magnetRender,
     .petal_lightning = lightningRender,
+    .petal_mysterious_stick = mysteriousStickRender,
+    .petal_wing = wingRender,
+    .petal_missile = missileRender,
 
     // Projectiles
 
-    .mob_missile_projectile = missileRender,
+    .mob_missile_projectile = projectileMissileRender,
 });
 
 /// Main render function that dispatches to appropriate renderer based on mob type.
@@ -62,12 +66,16 @@ fn init(allocator: std.mem.Allocator) void {
             MobBeetleRenderer.staticInit(allocator);
             MobJellyfishRenderer.staticInit(allocator);
             MobShellRenderer.staticInit(allocator);
+            MobSandstormRenderer.staticInit(allocator);
 
             { // Petal
                 PetalBasicRenderer.staticInit(allocator);
                 PetalFasterRenderer.staticInit(allocator);
                 PetalMagnetRenderer.staticInit(allocator);
                 PetalLightningRenderer.staticInit(allocator);
+                PetalMysteriousStickRenderer.staticInit(allocator);
+                PetalWingRenderer.staticInit(allocator);
+                PetalMissileRenderer.staticInit(allocator);
             }
         }
 
@@ -131,6 +139,9 @@ const beetleRender = MobBeetleRenderer.render;
 const MobJellyfishRenderer = @import("MobJellyfishRenderer.zig").MobJellyfishRenderer;
 const jellyfishRender = MobJellyfishRenderer.render;
 
+const MobSandstormRenderer = @import("MobSandstormRenderer.zig").MobSandstormRenderer;
+const sandstormRender = MobSandstormRenderer.render;
+
 const MobShellRenderer = @import("MobShellRenderer.zig").MobShellRenderer;
 const shellRender = MobShellRenderer.render;
 
@@ -146,5 +157,14 @@ const magnetRender = PetalMagnetRenderer.render;
 const PetalLightningRenderer = @import("../Petal/PetalLightningRenderer.zig").PetalLightningRenderer;
 const lightningRender = PetalLightningRenderer.render;
 
+const PetalMysteriousStickRenderer = @import("../Petal/PetalMysteriousStickRenderer.zig").PetalMysteriousStickRenderer;
+const mysteriousStickRender = PetalMysteriousStickRenderer.render;
+
+const PetalWingRenderer = @import("../Petal/PetalWingRenderer.zig").PetalWingRenderer;
+const wingRender = PetalWingRenderer.render;
+
 const ProjectileMissileRenderer = @import("ProjectileMissileRenderer.zig").ProjectileMissileRenderer;
-const missileRender = ProjectileMissileRenderer.render;
+const projectileMissileRender = ProjectileMissileRenderer.render;
+
+const PetalMissileRenderer = @import("../Petal/PetalMissileRenderer.zig").PetalMissileRenderer;
+const missileRender = PetalMissileRenderer.render;

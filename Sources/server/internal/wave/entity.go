@@ -1,6 +1,7 @@
 package wave
 
 import (
+	"math"
 	"math/rand/v2"
 	"sync"
 	"sync/atomic"
@@ -130,14 +131,15 @@ type LightningEmitter interface {
 	GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node
 }
 
-const Tau = 2 * math32.Pi
+const Tau32 = 2 * math32.Pi
+const Tau = 2 * math.Pi
 
 // GetRandomSafeCoordinate generates a random safe position.
 func GetRandomSafeCoordinate(mapRadius float32, safetyDistance float32, clients []*Player) (float32, float32, bool) {
 	const maxAttempts = 100
 
 	for range maxAttempts {
-		angle := rand.Float32() * Tau
+		angle := rand.Float32() * Tau32
 		distance := rand.Float32() * (mapRadius - safetyDistance)
 
 		x := mapRadius + math32.Cos(angle)*distance
@@ -169,7 +171,7 @@ func GetRandomSafeCoordinate(mapRadius float32, safetyDistance float32, clients 
 
 // GetRandomCoordinate generates a random position.
 func GetRandomCoordinate(cx, cy, spawnRadius float32) (float32, float32) {
-	angle := rand.Float32() * Tau
+	angle := rand.Float32() * Tau32
 	distance := (0.5 + 0.5*rand.Float32()) * spawnRadius
 
 	x := spawnRadius + math32.Cos(angle)*distance

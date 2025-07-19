@@ -18,7 +18,7 @@ type Petal struct {
 	Master       *Player
 	SummonedPets []*Mob
 
-	DetachedFromOrbit bool
+	Detached bool
 
 	SpinningOnMob bool
 
@@ -68,13 +68,10 @@ func (p *Petal) GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) 
 func (p *Petal) OnUpdateTick(wp *WavePool, now time.Time) {
 	p.Mu.Lock()
 
-	// Unneeded for petal
-	// m.EntityCoordinateMovement(wp, now)
-
+	p.PetalAngleRotation(wp, now)
 	p.PetalCoordinateBoundary(wp, now)
-	p.PetalSpecialAngle(wp, now)
-	p.PetalFasterRaging(wp, now)
 	p.PetalCoordinateMovement(wp, now)
+	p.PetalUniqueTalent(wp, now)
 
 	p.PetalElimination(wp, now)
 
@@ -128,7 +125,7 @@ func NewPetal(
 		Master:       master,
 		SummonedPets: make([]*Mob, 0),
 
-		DetachedFromOrbit: false,
+		Detached: false,
 
 		SpinningOnMob: false,
 

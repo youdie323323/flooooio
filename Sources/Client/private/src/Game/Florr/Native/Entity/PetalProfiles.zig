@@ -882,6 +882,22 @@ pub const petal_profiles: std.EnumMap(PetalType, PetalData) = blk: {
                 },
             })),
         },
+        .missile = .{
+            .i18n = .{
+                .name = "Missile",
+                .description = "Fuck you.",
+            },
+
+            .collision = .{
+                .fraction = 8,
+                .radius = 12,
+            },
+
+            .stats = statsByConstantContinunous(25, 2, .initFull(.{
+                .reload = 1,
+                .usage_reload = 0.5,
+            })),
+        },
     });
 };
 

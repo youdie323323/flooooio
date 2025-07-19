@@ -48,4 +48,5 @@ const (
 	PetalTypeStinger
 	PetalTypeWing
 	PetalTypeMagnet
+	PetalTypeMissile
 )

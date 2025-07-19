@@ -15,7 +15,7 @@ const (
 	RotationCounterGoal = 500
 )
 
-var talentDisabledMobTypes = []native.MobType{
+var untalentedMobTypes = []native.MobType{
 	native.MobTypeShell,
 	native.MobTypeBubble,
 	native.MobTypeCactus,
@@ -30,7 +30,7 @@ const (
 var beeSinusoidalWave = NewSinusoidalWave(200)
 
 func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
-	if slices.Contains(talentDisabledMobTypes, m.Type) {
+	if slices.Contains(untalentedMobTypes, m.Type) {
 		return
 	}
 

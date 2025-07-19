@@ -65,6 +65,8 @@ type DynamicPetalSlots struct {
 	Surface []DynamicPetal
 	Bottom  []DynamicPetal
 
+	SurfaceSupplies [][]*StaticPetalData
+
 	ReloadCooldownGrid [][]time.Time
 	UsageCooldownGrid  [][]time.Time
 }
@@ -267,6 +269,18 @@ func (p *Player) Dispose() {
 		p.Slots.Bottom = nil
 	}
 
+	{ // Dispose surface supplies
+		for i := range p.Slots.SurfaceSupplies {
+			for j := range p.Slots.SurfaceSupplies[i] {
+				p.Slots.SurfaceSupplies[i][j] = nil
+			}
+
+			p.Slots.SurfaceSupplies[i] = nil
+		}
+
+		p.Slots.SurfaceSupplies = nil
+	}
+
 	{
 		for i := range p.Slots.ReloadCooldownGrid {
 			p.Slots.ReloadCooldownGrid[i] = nil
@@ -334,6 +348,8 @@ func NewPlayer(
 			Slots: DynamicPetalSlots{
 				Surface: nil,
 				Bottom:  nil,
+
+				SurfaceSupplies: nil,
 
 				ReloadCooldownGrid: GeneratePetalCooldownGrid(len(sp.Slots.Surface)),
 				UsageCooldownGrid:  GeneratePetalCooldownGrid(len(sp.Slots.Surface)),

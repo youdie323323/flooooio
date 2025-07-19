@@ -60,7 +60,7 @@ func (m *Mob) MobBodyConnection(wp *WavePool, _ time.Time) {
 
 	{
 		m.Magnitude = 0
-		m.Angle = math32.Mod((math32.Atan2(dy, dx)/Tau)*255+255, 255)
+		m.Angle = math32.Mod((math32.Atan2(dy, dx)/Tau32)*255+255, 255)
 
 		ratio := 1 - (segmentDia / currentDistance)
 

@@ -46,6 +46,7 @@ pub const PetalType = enum(PureEntityType) {
     stinger,
     wing,
     magnet,
+    missile,
 };
 
 pub const EntityType = union(enum(PureEntityType)) {

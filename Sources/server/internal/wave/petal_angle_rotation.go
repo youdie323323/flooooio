@@ -8,8 +8,8 @@ import (
 	"github.com/chewxy/math32"
 )
 
-func (p *Petal) PetalSpecialAngle(wp *WavePool, _ time.Time) {
-	if p.DetachedFromOrbit {
+func (p *Petal) PetalAngleRotation(wp *WavePool, _ time.Time) {
+	if p.Detached {
 		return
 	}
 
@@ -28,6 +28,21 @@ func (p *Petal) PetalSpecialAngle(wp *WavePool, _ time.Time) {
 	case native.PetalTypeMagnet:
 		{
 			p.Angle += 0.6
+		}
+
+	case native.PetalTypeMissile:
+		{
+			if p.Detached {
+				return
+			}
+
+			dx := p.X - p.Master.X
+			dy := p.Y - p.Master.Y
+
+			// Calculate angle from player to petal
+			angle := math32.Mod(math32.Atan2(dy, dx)*angleFactor, 255)
+
+			p.Angle = angle
 		}
 
 	default:

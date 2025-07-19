@@ -1,6 +1,7 @@
 package wave
 
 import (
+	"math"
 	"slices"
 	"time"
 
@@ -23,7 +24,7 @@ var (
 
 func init() {
 	for i := range precalcSize {
-		angle := (float32(i) * Tau) / precalcSize
+		angle := (float32(i) * Tau32) / precalcSize
 
 		lazyCosTable[i] = math32.Cos(angle)
 		lazySinTable[i] = math32.Sin(angle)
@@ -53,7 +54,7 @@ const (
 )
 
 func calcTableIndex(i float32) int {
-	return int(math32.Mod(math32.Mod(i, Tau)+Tau, Tau) * 180 / math32.Pi)
+	return int(math32.Mod(math32.Mod(i, Tau32)+Tau32, Tau32) * 180 / math32.Pi)
 }
 
 func calculateRotationDelta(
@@ -129,12 +130,12 @@ func doPetalSpin(
 
 			angleDiff := targetAngle - spins[i][j]
 
-			angleDiff = math32.Mod(math32.Mod(angleDiff, Tau)+Tau, Tau)
+			angleDiff = math32.Mod(math32.Mod(angleDiff, Tau32)+Tau32, Tau32)
 			if angleDiff > math32.Pi {
-				angleDiff -= Tau
+				angleDiff -= Tau32
 			}
 
-			spins[i][j] = math32.Mod(spins[i][j]+angleDiff, Tau)
+			spins[i][j] = math32.Mod(spins[i][j]+angleDiff, Tau32)
 		}
 
 		spinAngleIdx := calcTableIndex(spins[i][j])
@@ -173,7 +174,7 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 		p.OrbitRadiusVelocities = make([]float32, surfaceLen)
 
 		p.OrbitPetalSpins = make([][]float32, surfaceLen)
-		
+
 		for i := range p.OrbitPetalSpins {
 			p.OrbitPetalSpins[i] = make([]float32, PetalMaxClusterAmount)
 		}
@@ -184,12 +185,12 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 
 	var numYinYang float32 = 0.
 
-	for _, v := range surface {
-		if v == nil {
+	for _, petals := range surface {
+		if petals == nil {
 			continue
 		}
 
-		if len(v) > 0 && v[0].Type == native.PetalTypeYinYang {
+		if len(petals) > 0 && petals[0] != nil && petals[0].Type == native.PetalTypeYinYang {
 			numYinYang++
 		}
 	}
@@ -232,7 +233,7 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 
 	targetRadius += ((p.Size / PlayerSize) - 1) * PlayerCollision.Radius
 
-	wingAddition := 200 * math32.Sin(math32.Mod(float32(now.UnixMilli())/300, math32.Pi))
+	milli := float64(now.UnixMilli())
 
 	for i, petals := range surface {
 		if petals == nil {
@@ -260,6 +261,8 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 			springForce = (DefaultMoodRadius - p.OrbitPetalRadii[i]) * radiusSpringStrength
 
 		case isAngry && firstPetal.Type == native.PetalTypeWing:
+			wingAddition := float32(130 * (math.Sin(math.Mod((milli+float64(*firstPetal.Id))/200, Tau)) + 1))
+
 			springForce = (targetRadius + wingAddition - p.OrbitPetalRadii[i]) * radiusSpringStrength
 
 		default:
@@ -274,7 +277,7 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 
 		multipliedRotation := p.OrbitRotation * (1 + ((ringIdx - (numRings - 1)) * 0.1))
 
-		baseAngle := Tau*math32.Mod(currAngleIdx, realLength)/realLength + multipliedRotation
+		baseAngle := Tau32*math32.Mod(currAngleIdx, realLength)/realLength + multipliedRotation
 		currAngleIdx++
 
 		if IsClusterPetal(petals) {
@@ -288,12 +291,12 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 					continue
 				}
 
-				if petal.DetachedFromOrbit {
+				if petal.Detached {
 					continue
 				}
 
 				// Bit faster than normal orbit
-				petalAngle := Tau*float32(j)/float32(len(petals)) + multipliedRotation*1.3
+				petalAngle := Tau32*float32(j)/float32(len(petals)) + multipliedRotation*1.3
 
 				doPetalOrbit(
 					petal,
@@ -332,7 +335,7 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 				continue
 			}
 
-			if petal.DetachedFromOrbit {
+			if petal.Detached {
 				continue
 			}
 
@@ -373,6 +376,6 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 
 	// Limit in the tau
 	if math32.Abs(p.OrbitRotation) >= math32.MaxFloat32 {
-		p.OrbitRotation = math32.Mod(p.OrbitRotation, Tau)
+		p.OrbitRotation = math32.Mod(p.OrbitRotation, Tau32)
 	}
 }

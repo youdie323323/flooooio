@@ -13,7 +13,7 @@ var ProjectileMobTypes = []native.MobType{
 	native.MobTypeWebProjectile,
 }
 
-const missileEliminateRadiusMultiplier = 1.5
+const DeadzoneRadiusMultiplier = 1.5
 
 func (m *Mob) MobCoordinateBoundary(wp *WavePool, _ time.Time) {
 	mapRadius := float32(wp.Wd.MapRadius)
@@ -25,19 +25,18 @@ func (m *Mob) MobCoordinateBoundary(wp *WavePool, _ time.Time) {
 
 	dot := dx*dx + dy*dy
 
-	if m.IsProjectile() {
-		// Eliminate if missile above desiredMapRadius * 1.5
-		projectileLimit := desiredMapRadius * missileEliminateRadiusMultiplier
+	deadzone := desiredMapRadius * DeadzoneRadiusMultiplier
 
-		if dot > projectileLimit*projectileLimit {
-			m.ForceEliminate(wp)
-		}
-	} else {
-		if dot > desiredMapRadius*desiredMapRadius {
-			collisionAngle := math32.Atan2(dy, dx)
+	if dot > deadzone*deadzone {
+		m.ForceEliminate(wp)
 
-			m.X = mapRadius + math32.Cos(collisionAngle)*desiredMapRadius
-			m.Y = mapRadius + math32.Sin(collisionAngle)*desiredMapRadius
-		}
+		return
+	}
+
+	if !m.IsProjectile() && dot > desiredMapRadius*desiredMapRadius {
+		collisionAngle := math32.Atan2(dy, dx)
+
+		m.X = mapRadius + math32.Cos(collisionAngle)*desiredMapRadius
+		m.Y = mapRadius + math32.Sin(collisionAngle)*desiredMapRadius
 	}
 }

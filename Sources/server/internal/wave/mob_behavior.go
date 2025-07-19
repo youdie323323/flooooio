@@ -58,7 +58,7 @@ func FindNearestEntity(me collision.Node, entities []collision.Node) collision.N
 
 		dx = nearest.GetX() - meX
 		dy = nearest.GetY() - meY
-		
+
 		distanceSqToNearest = dx*dx + dy*dy
 
 		if distanceSqToCurrent < distanceSqToNearest {
@@ -87,7 +87,7 @@ func FindNearestEntityWithLimitedDistance(me collision.Node, entities []collisio
 	for _, current := range entities {
 		dx = current.GetX() - meX
 		dy = current.GetY() - meY
-		
+
 		dot = dx*dx + dy*dy
 
 		if dot <= maxDistanceSq && (nearest == nil || dot < nearestDistanceSq) {
@@ -99,7 +99,7 @@ func FindNearestEntityWithLimitedDistance(me collision.Node, entities []collisio
 	return nearest
 }
 
-const angleFactor = 255 / Tau // 255/(2*PI)
+const angleFactor = 255 / Tau32 // 255/(2*PI)
 
 const angleInterpolationFactor = .05
 
@@ -119,12 +119,12 @@ func CalculateInterpolatedAngleToEntity(thisAngle, dx, dy float32) float32 {
 }
 
 func normalizeAngle(angle float32) float32 {
-	angle = math32.Mod(angle, Tau)
+	angle = math32.Mod(angle, Tau32)
 
 	if angle > math32.Pi {
-		angle -= Tau
+		angle -= Tau32
 	} else if angle < -math32.Pi {
-		angle += Tau
+		angle += Tau32
 	}
 
 	return angle
@@ -158,7 +158,7 @@ func predictInterceptionAngle(dx, dy, vtx, vty, currentAngle float32) *float32 {
 
 	// Predict final position using average velocity
 	totalTime := t + interpolationTime
-	
+
 	xf := dx + vtx*totalTime
 	yf := dy + vty*totalTime
 

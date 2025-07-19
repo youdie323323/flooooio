@@ -5,6 +5,7 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"slices"
 	"sync"
 
 	"flooooio/internal/wave"
@@ -40,48 +41,12 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		StaticPlayer: &wave.StaticPlayer[wave.StaticPetalSlots]{
 			Name: "pdfodwahfioahwfwapihugwaiugaifuwafgwailfgalifaguagtwaiufgwa",
 			Slots: wave.StaticPetalSlots{
-				Surface: []wave.StaticPetalData{
+				Surface: slices.Repeat([]wave.StaticPetalData{
 					{
-						Type:   native.PetalTypeMagnet,
+						Type:   native.PetalTypeMissile,
 						Rarity: native.RarityUltra,
 					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeBasic,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeFaster,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeLightning,
-						Rarity: native.RarityUltra,
-					},
-					{
-						Type:   native.PetalTypeLightning,
-						Rarity: native.RarityUltra,
-					},
-				},
+				}, 1000),
 				Bottom: []wave.StaticPetalData{
 					{
 						Type:   native.PetalTypeWeb,

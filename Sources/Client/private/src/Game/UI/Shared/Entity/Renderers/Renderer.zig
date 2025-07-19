@@ -229,17 +229,18 @@ pub fn Renderer(
     comptime AnyEntity: type,
     comptime is_ancestor: bool,
     comptime render_fn: RenderFn(AnyEntity),
-    comptime static_init_fn: ?*const fn (allocator: std.mem.Allocator) void,
+    comptime static_init_fn: ?*const fn (allocator: mem.Allocator) void,
 ) type {
     return struct {
         /// Performs any necessary static initialization for the renderer.
-        pub fn staticInit(allocator: std.mem.Allocator) void {
-            if (comptime static_init_fn) |f| f(allocator);
+        pub fn staticInit(allocator: mem.Allocator) void {
+            if (static_init_fn) |f|
+                f(allocator);
         }
 
         /// Renders an entity using the specified render context.
         pub fn render(rctx: *RenderContext(AnyEntity)) void {
-            if (comptime is_ancestor) {
+            if (is_ancestor) {
                 const ctx = rctx.ctx;
                 const entity = rctx.entity;
                 const is_specimen = rctx.is_specimen;
@@ -286,6 +287,7 @@ pub fn validateEntityImplementation(comptime Impl: type) void {
 }
 
 const std = @import("std");
+const mem = std.mem;
 const math = std.math;
 const debug = std.debug;
 

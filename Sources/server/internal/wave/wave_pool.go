@@ -770,6 +770,18 @@ func (wp *WavePool) GeneratePlayer(
 				player.Slots.Bottom[i] = wp.staticPetalToDynamicPetal(s, player, false)
 			}
 		}
+
+		{ // Prepare surface supplies
+			player.Slots.SurfaceSupplies = make([][]*StaticPetalData, len(sp.Slots.Surface))
+
+			for i := range player.Slots.SurfaceSupplies {
+				player.Slots.SurfaceSupplies[i] = make([]*StaticPetalData, PetalMaxClusterAmount)
+
+				for j := range player.Slots.SurfaceSupplies[i] {
+					player.Slots.SurfaceSupplies[i][j] = nil
+				}
+			}
+		}
 	}
 
 	wp.playerPool.Store(id, player)

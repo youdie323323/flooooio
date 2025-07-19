@@ -385,7 +385,7 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                                 mob.hurt_t = 1;
                             }
 
-                            mob.next_health = mob_health;
+                            mob.next_health = @max(0, mob_health);
                         }
 
                         { // Update common properties
@@ -482,7 +482,7 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                                 petal.hurt_t = 1;
                             }
 
-                            petal.next_health = petal_health;
+                            petal.next_health = @max(0, petal_health);
                         }
 
                         { // Update old properties
@@ -562,7 +562,7 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                                 player.hurt_t = 1;
                             }
 
-                            player.next_health = player_health;
+                            player.next_health = @max(0, player_health);
                         }
 
                         { // Update common properties

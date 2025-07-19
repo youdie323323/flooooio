@@ -6,7 +6,7 @@ func generateSinusoidalWaveTable(sampleRate int) []float32 {
 	samples := make([]float32, sampleRate)
 
 	for i := range sampleRate {
-		samples[i] = math32.Sin((float32(i) / float32(sampleRate)) * Tau)
+		samples[i] = math32.Sin((float32(i) / float32(sampleRate)) * Tau32)
 	}
 
 	return samples
