@@ -482,16 +482,15 @@ type FiniteObjectCount = uint16
 func (wp *WavePool) broadcastUpdatePacket() {
 	wp.mu.Lock()
 
-	staticPacket, staticAt := wp.createStaticUpdatePacket()
-	defer SharedBufPool.Put(staticPacket)
+	packet := SharedBufPool.Get()
+	defer SharedBufPool.Put(packet)
+
+	at := wp.writeStaticUpdatePacket(packet)
 
 	wp.playerPool.Range(func(_ EntityId, p *Player) bool {
-		dynamicPacket := SharedBufPool.Get()
-		defer SharedBufPool.Put(dynamicPacket)
+		dynamicAt := at
 
-		at := 0
-
-		// RLock before write window
+		// RLock before read window
 		p.Mu.RLock()
 
 		window := p.Window
@@ -507,33 +506,33 @@ func (wp *WavePool) broadcastUpdatePacket() {
 		)
 
 		// Write entity count
-		at += PutUvarint16(dynamicPacket[at:], FiniteObjectCount(len(toSend)))
+		dynamicAt += PutUvarint16(packet[dynamicAt:], FiniteObjectCount(len(toSend)))
 
 		for _, e := range toSend {
 			switch n := e.(type) {
 			case *Player:
 				{
-					dynamicPacket[at] = updatedEntityKindPlayer
-					at++
+					packet[dynamicAt] = updatedEntityKindPlayer
+					dynamicAt++
 
 					n.Mu.Lock()
 
-					at += PutUvarint16(dynamicPacket[at:], *n.Id)
+					dynamicAt += PutUvarint16(packet[dynamicAt:], *n.Id)
 
-					at += WriteFloat32(dynamicPacket[at:], n.X)
-					at += WriteFloat32(dynamicPacket[at:], n.Y)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], n.X)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Y)
 
-					at += WriteFloat32(dynamicPacket[at:], n.Angle)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Angle)
 
-					at += WriteFloat32(dynamicPacket[at:], n.Health)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Health)
 
-					at += WriteFloat32(dynamicPacket[at:], n.Size)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Size)
 
-					dynamicPacket[at] = byte(n.Mood)
-					at++
+					packet[dynamicAt] = byte(n.Mood)
+					dynamicAt++
 
 					// Write name
-					at = writeCString(dynamicPacket, at, n.Name)
+					dynamicAt = writeCString(packet, dynamicAt, n.Name)
 
 					var bFlags uint8 = 0
 
@@ -559,31 +558,31 @@ func (wp *WavePool) broadcastUpdatePacket() {
 
 					n.Mu.Unlock()
 
-					dynamicPacket[at] = bFlags
-					at++
+					packet[dynamicAt] = bFlags
+					dynamicAt++
 				}
 
 			case *Mob:
 				{
-					dynamicPacket[at] = updatedEntityKindMob
-					at++
+					packet[dynamicAt] = updatedEntityKindMob
+					dynamicAt++
 
-					at += PutUvarint16(dynamicPacket[at:], *n.Id)
+					dynamicAt += PutUvarint16(packet[dynamicAt:], *n.Id)
 
-					at += WriteFloat32(dynamicPacket[at:], n.X)
-					at += WriteFloat32(dynamicPacket[at:], n.Y)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], n.X)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Y)
 
-					at += WriteFloat32(dynamicPacket[at:], n.Angle)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Angle)
 
-					at += WriteFloat32(dynamicPacket[at:], n.Health)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Health)
 
-					at += WriteFloat32(dynamicPacket[at:], n.Size)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Size)
 
-					dynamicPacket[at] = n.Type
-					at++
+					packet[dynamicAt] = n.Type
+					dynamicAt++
 
-					dynamicPacket[at] = n.Rarity
-					at++
+					packet[dynamicAt] = n.Rarity
+					dynamicAt++
 
 					var bFlags uint8 = 0
 
@@ -614,35 +613,35 @@ func (wp *WavePool) broadcastUpdatePacket() {
 						bFlags |= 16
 					}
 
-					dynamicPacket[at] = bFlags
-					at++
+					packet[dynamicAt] = bFlags
+					dynamicAt++
 
 					if hasConnectingSegment {
-						at += PutUvarint16(dynamicPacket[at:], n.ConnectingSegment.GetId())
+						dynamicAt += PutUvarint16(packet[dynamicAt:], n.ConnectingSegment.GetId())
 					}
 				}
 
 			case *Petal:
 				{
-					dynamicPacket[at] = updatedEntityKindPetal
-					at++
+					packet[dynamicAt] = updatedEntityKindPetal
+					dynamicAt++
 
-					at += PutUvarint16(dynamicPacket[at:], *n.Id)
+					dynamicAt += PutUvarint16(packet[dynamicAt:], *n.Id)
 
-					at += WriteFloat32(dynamicPacket[at:], n.X)
-					at += WriteFloat32(dynamicPacket[at:], n.Y)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], n.X)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Y)
 
-					at += WriteFloat32(dynamicPacket[at:], n.Angle)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Angle)
 
-					at += WriteFloat32(dynamicPacket[at:], n.Health)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Health)
 
-					at += WriteFloat32(dynamicPacket[at:], n.Size)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Size)
 
-					dynamicPacket[at] = n.Type
-					at++
+					packet[dynamicAt] = n.Type
+					dynamicAt++
 
-					dynamicPacket[at] = n.Rarity
-					at++
+					packet[dynamicAt] = n.Rarity
+					dynamicAt++
 
 					var bFlags uint8 = 0
 
@@ -651,18 +650,15 @@ func (wp *WavePool) broadcastUpdatePacket() {
 						bFlags |= 1
 					}
 
-					dynamicPacket[at] = bFlags
-					at++
+					packet[dynamicAt] = bFlags
+					dynamicAt++
 				}
 			}
 		}
 
 		toSend = nil
 
-		p.SafeWriteMessage(websocket.BinaryMessage, slices.Concat(
-			staticPacket[:staticAt],
-			dynamicPacket[:at],
-		))
+		p.SafeWriteMessage(websocket.BinaryMessage, packet[:dynamicAt])
 
 		return true
 	})
@@ -670,11 +666,9 @@ func (wp *WavePool) broadcastUpdatePacket() {
 	wp.mu.Unlock()
 }
 
-// createStaticUpdatePacket creates static section for update packet.
-// Caller gurantees release buffer.
-func (wp *WavePool) createStaticUpdatePacket() ([]byte, int) {
-	buf := SharedBufPool.Get()
-
+// writeStaticUpdatePacket writes static section of update packet.
+// Caller guarantees release buffer.
+func (wp *WavePool) writeStaticUpdatePacket(buf []byte) int {
 	at := 0
 
 	buf[at] = network.ClientboundWaveUpdate
@@ -725,7 +719,7 @@ func (wp *WavePool) createStaticUpdatePacket() ([]byte, int) {
 		wp.lightningBounces = nil
 	}
 
-	return buf, at
+	return at
 }
 
 func (wp *WavePool) GeneratePlayer(

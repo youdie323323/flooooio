@@ -71,7 +71,7 @@ func (e *Entity) TakeProperDamage(damage float32) {
 }
 
 // ConsumeWasProperDamage consumes WasDamaged.
-// This method should only called once for each one frame step.
+// This method should only called once for each frame step.
 func (e *Entity) ConsumeWasProperDamage() bool {
 	wasDamaged := e.WasProperDamaged
 
