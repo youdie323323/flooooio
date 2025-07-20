@@ -18,7 +18,7 @@ const DeadzoneRadiusMultiplier = 1.5
 func (m *Mob) MobCoordinateBoundary(wp *WavePool, _ time.Time) {
 	mapRadius := float32(wp.Wd.MapRadius)
 
-	desiredMapRadius := mapRadius - m.CalculateRadius()
+	desiredMapRadius := mapRadius - m.Radius()
 
 	dx := m.X - mapRadius
 	dy := m.Y - mapRadius

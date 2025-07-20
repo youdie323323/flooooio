@@ -50,7 +50,7 @@ pub fn readFloat16(stream: *const Reader) NoEofError!f16 {
 
     _ = try stream.readAll(&buffer);
 
-    return std.mem.bytesAsValue(f16, &buffer).*;
+    return mem.bytesAsValue(f16, &buffer).*;
 }
 
 /// Reads a float32 from stream.
@@ -59,7 +59,7 @@ pub fn readFloat32(stream: *const Reader) NoEofError!f32 {
 
     _ = try stream.readAll(&buffer);
 
-    return std.mem.bytesAsValue(f32, &buffer).*;
+    return mem.bytesAsValue(f32, &buffer).*;
 }
 
 /// Reads a float64 from stream.
@@ -68,7 +68,7 @@ pub fn readFloat64(stream: *const Reader) NoEofError!f64 {
 
     _ = try stream.readAll(&buffer);
 
-    return std.mem.bytesAsValue(f64, &buffer).*;
+    return mem.bytesAsValue(f64, &buffer).*;
 }
 
 /// Reads a bool from stream.

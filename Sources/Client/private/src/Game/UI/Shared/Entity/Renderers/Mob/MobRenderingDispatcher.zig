@@ -54,45 +54,45 @@ fn render(rctx: *RenderContext(MobSuper)) void {
         renderer(rctx);
 }
 
-fn init(allocator: std.mem.Allocator) void {
+fn init(allocator: mem.Allocator) void {
     { // Init child renderers
         { // Pure
-            MobStarfishRenderer.staticInit(allocator);
-            MobBeeRenderer.staticInit(allocator);
-            MobBabyAntRenderer.staticInit(allocator);
-            MobWorkerAntRenderer.staticInit(allocator);
-            MobSoldierAntRenderer.staticInit(allocator);
-            MobLeechRenderer.staticInit(allocator);
-            MobSpongeRenderer.staticInit(allocator);
-            MobHornetRenderer.staticInit(allocator);
-            MobSpiderRenderer.staticInit(allocator);
-            MobCentipedeRenderer.staticInit(allocator);
-            MobCactusRenderer.staticInit(allocator);
-            MobScorpionRenderer.staticInit(allocator);
-            MobBeetleRenderer.staticInit(allocator);
-            MobJellyfishRenderer.staticInit(allocator);
-            MobShellRenderer.staticInit(allocator);
-            MobSandstormRenderer.staticInit(allocator);
+            MobStarfishRenderer.initStatic(allocator);
+            MobBeeRenderer.initStatic(allocator);
+            MobBabyAntRenderer.initStatic(allocator);
+            MobWorkerAntRenderer.initStatic(allocator);
+            MobSoldierAntRenderer.initStatic(allocator);
+            MobLeechRenderer.initStatic(allocator);
+            MobSpongeRenderer.initStatic(allocator);
+            MobHornetRenderer.initStatic(allocator);
+            MobSpiderRenderer.initStatic(allocator);
+            MobCentipedeRenderer.initStatic(allocator);
+            MobCactusRenderer.initStatic(allocator);
+            MobScorpionRenderer.initStatic(allocator);
+            MobBeetleRenderer.initStatic(allocator);
+            MobJellyfishRenderer.initStatic(allocator);
+            MobShellRenderer.initStatic(allocator);
+            MobSandstormRenderer.initStatic(allocator);
 
             { // Petal
-                PetalBasicRenderer.staticInit(allocator);
-                PetalFasterRenderer.staticInit(allocator);
-                PetalMagnetRenderer.staticInit(allocator);
-                PetalLightningRenderer.staticInit(allocator);
-                PetalMysteriousStickRenderer.staticInit(allocator);
-                PetalWingRenderer.staticInit(allocator);
-                PetalMissileRenderer.staticInit(allocator);
-                PetalYinYangRenderer.staticInit(allocator);
-                PetalClawRenderer.staticInit(allocator);
-                PetalSandRenderer.staticInit(allocator);
-                PetalStingerRenderer.staticInit(allocator);
-                PetalWebRenderer.staticInit(allocator);
+                PetalBasicRenderer.initStatic(allocator);
+                PetalFasterRenderer.initStatic(allocator);
+                PetalMagnetRenderer.initStatic(allocator);
+                PetalLightningRenderer.initStatic(allocator);
+                PetalMysteriousStickRenderer.initStatic(allocator);
+                PetalWingRenderer.initStatic(allocator);
+                PetalMissileRenderer.initStatic(allocator);
+                PetalYinYangRenderer.initStatic(allocator);
+                PetalClawRenderer.initStatic(allocator);
+                PetalSandRenderer.initStatic(allocator);
+                PetalStingerRenderer.initStatic(allocator);
+                PetalWebRenderer.initStatic(allocator);
             }
         }
 
         { // Projectile
-            ProjectileMissileRenderer.staticInit(allocator);
-            ProjectileWebRenderer.staticInit(allocator);
+            ProjectileMissileRenderer.initStatic(allocator);
+            ProjectileWebRenderer.initStatic(allocator);
         }
     }
 }
@@ -100,6 +100,7 @@ fn init(allocator: std.mem.Allocator) void {
 pub const MobRenderingDispatcher = Renderer(MobSuper, true, render, init);
 
 const std = @import("std");
+const mem = std.mem;
 
 const Renderer = @import("../Renderer.zig").Renderer;
 const RenderFn = @import("../Renderer.zig").RenderFn;

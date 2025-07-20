@@ -15,6 +15,7 @@ func (p *Player) PlayerCoordinateBoundary(wp *WavePool, _ time.Time) {
 	}
 
 	mapRadius := float32(wp.Wd.MapRadius)
+	
 	desiredMapRadius := mapRadius - p.Size
 
 	dx := p.X - mapRadius

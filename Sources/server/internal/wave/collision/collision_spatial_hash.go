@@ -7,9 +7,11 @@ import (
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
+type NodeId = uint16
+
 // Node represents an interface entity.
 type Node interface {
-	GetId() uint16
+	GetId() NodeId
 
 	GetX() float32
 	GetY() float32
@@ -48,10 +50,10 @@ func NewSpatialHash(cellSize float32) *SpatialHash {
 
 // bucket is a thread-safe set implementation for Node objects.
 // TODO: maybe sync.Map faster than *xsync.Map[uint16, Node]? clarify later
-type bucket struct{ nodes *xsync.Map[uint16, Node] }
+type bucket struct{ nodes *xsync.Map[NodeId, Node] }
 
 // newBucket creates a new node set.
-func newBucket() *bucket { return &bucket{xsync.NewMap[uint16, Node]()} }
+func newBucket() *bucket { return &bucket{xsync.NewMap[NodeId, Node]()} }
 
 // Add adds a node to the set.
 func (s *bucket) Add(n Node) {
@@ -64,7 +66,7 @@ func (s *bucket) Delete(n Node) {
 }
 
 // ForEach iterates over all nodes in the set.
-func (s *bucket) ForEach(f func(_ uint16, n Node) bool) {
+func (s *bucket) ForEach(f func(_ NodeId, n Node) bool) {
 	s.nodes.Range(f)
 }
 
@@ -154,7 +156,7 @@ func (sh *SpatialHash) Search(x, y, radius float32) []Node {
 			key := pairPoint(xx, yy)
 
 			if bucket, ok := sh.buckets.Load(key); ok {
-				bucket.ForEach(func(_ uint16, n Node) bool {
+				bucket.ForEach(func(_ NodeId, n Node) bool {
 					dx := n.GetX() - x
 					dy := n.GetY() - y
 
@@ -176,8 +178,8 @@ func (sh *SpatialHash) Search(x, y, radius float32) []Node {
 	return finalResult
 }
 
-// SearchRect finds all nodes within the specified rectangular area centered on a player.
-func (sh *SpatialHash) SearchRect(x, y, width, height float32, filter func(n Node) bool) []Node {
+// QueryRect finds all nodes within the specified rectangular area centered on a point.
+func (sh *SpatialHash) QueryRect(x, y, width, height float32, filter func(n Node) bool) []Node {
 	// Calculate rectangle bounds
 	halfWidth := width * 0.5
 	halfHeight := height * 0.5
@@ -195,7 +197,7 @@ func (sh *SpatialHash) SearchRect(x, y, width, height float32, filter func(n Nod
 			key := pairPoint(xx, yy)
 
 			if bucket, ok := sh.buckets.Load(key); ok {
-				bucket.ForEach(func(_ uint16, n Node) bool {
+				bucket.ForEach(func(_ NodeId, n Node) bool {
 					if filter(n) {
 						nodes = append(nodes, n)
 					}

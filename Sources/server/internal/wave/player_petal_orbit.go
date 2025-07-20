@@ -53,32 +53,32 @@ const (
 	AngryMoodRadius   = 80
 )
 
-func calcTableIndex(i float32) int {
-	return int(math32.Mod(math32.Mod(i, Tau32)+Tau32, Tau32) * 180 / math32.Pi)
+func calculateTableIndex(angle float32) int {
+	return int(math32.Mod(math32.Mod(angle, Tau32)+Tau32, Tau32) * 180 / math32.Pi)
 }
 
 func calculateRotationDelta(
-	ts float32,
+	speed float32,
 
-	cw float32,
+	clockwise float32,
 ) float32 {
-	return (ts * cw) * DeltaT
+	return (speed * clockwise) * DeltaT
 }
 
 func doPetalOrbit(
 	petal *Petal,
 
-	tx float32,
-	ty float32,
+	targetX float32,
+	targetY float32,
 
-	hr float32,
+	radius float32,
 
-	ang float32,
+	angle float32,
 ) {
-	angleIdx := calcTableIndex(ang)
+	angleIndex := calculateTableIndex(angle)
 
-	chaseX := tx + lazyCosTable[angleIdx]*hr
-	chaseY := ty + lazySinTable[angleIdx]*hr
+	chaseX := targetX + lazyCosTable[angleIndex]*radius
+	chaseY := targetY + lazySinTable[angleIndex]*radius
 
 	diffX := chaseX - petal.X
 	diffY := chaseY - petal.Y
@@ -104,7 +104,7 @@ func doPetalSpin(
 				return false
 			}
 
-			spinDetectRad := m.CalculateRadius() * spinNearestSizeCoef
+			spinDetectRad := m.Radius() * spinNearestSizeCoef
 			spinDetectRadSq := spinDetectRad * spinDetectRad
 
 			dx := m.X - petal.X
@@ -138,12 +138,12 @@ func doPetalSpin(
 			spins[i][j] = math32.Mod(spins[i][j]+angleDiff, Tau32)
 		}
 
-		spinAngleIdx := calcTableIndex(spins[i][j])
+		spinAngleIndex := calculateTableIndex(spins[i][j])
 
-		mobToSpinDesiredSize := mobToSpin.CalculateRadius() * 1.1
+		mobToSpinDesiredSize := 1.1 * mobToSpin.Radius()
 
-		targetX := mobToSpin.X + lazyCosTable[spinAngleIdx]*mobToSpinDesiredSize
-		targetY := mobToSpin.Y + lazySinTable[spinAngleIdx]*mobToSpinDesiredSize
+		targetX := mobToSpin.X + lazyCosTable[spinAngleIndex]*mobToSpinDesiredSize
+		targetY := mobToSpin.Y + lazySinTable[spinAngleIndex]*mobToSpinDesiredSize
 
 		petal.X += (targetX - petal.X) * spingInterpolationSpeed
 		petal.Y += (targetY - petal.Y) * spingInterpolationSpeed
@@ -154,10 +154,10 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 	p.OrbitHistoryX[p.OrbitHistoryIndex] = p.X
 	p.OrbitHistoryY[p.OrbitHistoryIndex] = p.Y
 
-	historyTargetIdx := (p.OrbitHistoryIndex + 6) % OrbitHistorySize
+	historyTargetIndex := (p.OrbitHistoryIndex + 6) % OrbitHistorySize
 
-	targetX := p.OrbitHistoryX[historyTargetIdx]
-	targetY := p.OrbitHistoryY[historyTargetIdx]
+	targetX := p.OrbitHistoryX[historyTargetIndex]
+	targetY := p.OrbitHistoryY[historyTargetIndex]
 
 	p.OrbitHistoryIndex = (p.OrbitHistoryIndex + 1) % OrbitHistorySize
 
@@ -216,7 +216,7 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 
 	realLength = math32.Ceil(realLength / numRings)
 
-	var currAngleIdx float32 = 0.
+	var currentAngleIndex float32 = 0.
 
 	var totalSpeed float32 = defaultRotateSpeed
 
@@ -276,19 +276,19 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 		p.OrbitRadiusVelocities[i] = p.OrbitRadiusVelocities[i]*radiusFriction + springForce
 		p.OrbitPetalRadii[i] += p.OrbitRadiusVelocities[i]
 
-		ringIdx := math32.Floor(currAngleIdx / realLength)
-		rad := p.OrbitPetalRadii[i] * (1 + (ringIdx * 0.5))
+		ringIndex := math32.Floor(currentAngleIndex / realLength)
+		radius := p.OrbitPetalRadii[i] * ((0.5 * ringIndex) + 1)
 
-		multipliedRotation := p.OrbitRotation * (1 + ((ringIdx - (numRings - 1)) * 0.1))
+		multipliedRotation := p.OrbitRotation * (1 + ((ringIndex - (numRings - 1)) * 0.1))
 
-		baseAngle := Tau32*math32.Mod(currAngleIdx, realLength)/realLength + multipliedRotation
-		currAngleIdx++
+		baseAngle := Tau32*math32.Mod(currentAngleIndex, realLength)/realLength + multipliedRotation
+		currentAngleIndex++
 
 		if IsClusterPetal(petals) {
-			angleIdx := calcTableIndex(baseAngle)
+			angleIndex := calculateTableIndex(baseAngle)
 
-			slotBaseX := targetX + lazyCosTable[angleIdx]*rad
-			slotBaseY := targetY + lazySinTable[angleIdx]*rad
+			slotBaseX := targetX + lazyCosTable[angleIndex]*radius
+			slotBaseY := targetY + lazySinTable[angleIndex]*radius
 
 			for j, petal := range petals {
 				if petal == nil {
@@ -340,6 +340,7 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 			}
 		} else {
 			petal := petals[0]
+			
 			if petal == nil {
 				continue
 			}
@@ -354,7 +355,7 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 				targetX,
 				targetY,
 
-				rad,
+				radius,
 
 				baseAngle,
 			)

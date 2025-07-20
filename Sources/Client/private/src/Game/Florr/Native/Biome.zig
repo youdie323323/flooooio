@@ -20,7 +20,7 @@ pub const Biome = enum(u8) {
     const tile_size = 256 * 4;
 
     /// Statically-initializes tilesets.
-    /// Without inline, the application will start causing fancy errors.
+    /// Without inline, the program start causing fancy errors.
     /// Might be related: https://github.com/ziglang/zig/issues/11650.
     pub inline fn initTilesets(allocator: mem.Allocator) void {
         const garden_tile_1 = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);

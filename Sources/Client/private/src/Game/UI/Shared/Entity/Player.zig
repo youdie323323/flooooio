@@ -25,13 +25,13 @@ was_eliminated: bool = false,
 is_developer: bool = false,
 
 pub fn init(
-    _: std.mem.Allocator,
+    _: mem.Allocator,
     name: []const u8,
 ) PlayerImpl {
     return .{ .name = name };
 }
 
-pub fn deinit(self: *PlayerImpl, _: std.mem.Allocator, _: *Super) void {
+pub fn deinit(self: *PlayerImpl, _: mem.Allocator, _: *Super) void {
     self.* = undefined;
 }
 
@@ -56,6 +56,7 @@ pub fn update(self: *PlayerImpl, entity: *Super, delta_time: f32) void {
 
 const std = @import("std");
 const math = std.math;
+const mem = std.mem;
 
 const Entity = @import("Entity.zig").Entity;
 const PlayerMood = @import("PlayerMood.zig");

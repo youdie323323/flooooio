@@ -361,13 +361,39 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                         mob_connecting_segment = mobs.search(mob_connecting_segment_id);
                     }
 
-                    var this_mob_obj_id: Mach.ObjectId = undefined;
+                    var mob: MobImpl.Super = undefined;
 
-                    if (mobs.search(mob_id)) |obj_id| {
-                        this_mob_obj_id = obj_id;
+                    var outer_obj_id: Mach.ObjectId = undefined;
 
-                        var mob = mobs.get(obj_id);
+                    if (mobs.search(mob_id)) |inner_obj_id| {
+                        mob = mobs.get(inner_obj_id);
 
+                        outer_obj_id = inner_obj_id;
+                    } else {
+                        mob = .init(
+                            .init(
+                                allocator,
+                                mob_type,
+                                mob_rarity,
+                                mob_bool_flags.is_pet,
+                                mob_bool_flags.is_first_segment,
+                                mob_connecting_segment,
+                            ),
+                            mob_id,
+                            .{ mob_x, mob_y },
+                            mob_angle,
+                            // Set initial size as zero if web projectile, since its spawns like animated similar to original game
+                            if (mob_type.get() == @intFromEnum(MobType.web_projectile))
+                                0
+                            else
+                                mob_size,
+                            mob_health,
+                        );
+
+                        outer_obj_id = try mobs.new(mob);
+                    }
+
+                    { // Update
                         { // Update next properties
                             mob.next_pos[0] = mob_x;
                             mob.next_pos[1] = mob_y;
@@ -406,39 +432,17 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
 
                         mob.update_t = 0;
 
-                        mobs.set(obj_id, mob);
-                    } else {
-                        const mob: MobImpl.Super = .init(
-                            .init(
-                                allocator,
-                                mob_type,
-                                mob_rarity,
-                                mob_bool_flags.is_pet,
-                                mob_bool_flags.is_first_segment,
-                                mob_connecting_segment,
-                            ),
-                            mob_id,
-                            .{ mob_x, mob_y },
-                            mob_angle,
-                            // Set initial size as zero if web projectile, since its spawns like animated similar to original game
-                            if (mob_type.get() == @intFromEnum(MobType.web_projectile))
-                                0
-                            else
-                                mob_size,
-                            mob_health,
-                        );
-
-                        this_mob_obj_id = try mobs.new(mob);
+                        mobs.set(outer_obj_id, mob);
                     }
 
-                    if (mob_connecting_segment) |obj_id| {
-                        var mob = mobs.get(obj_id);
+                    if (mob_connecting_segment) |inner_obj_id| {
+                        var inner_mob = mobs.get(inner_obj_id);
 
                         // If connected segment mob havent this mob as connected segment, add it then update
-                        if (!mob.impl.isConnectedBy(this_mob_obj_id)) {
-                            try mob.impl.addConnectedSegment(this_mob_obj_id);
+                        if (!inner_mob.impl.isConnectedBy(outer_obj_id)) {
+                            try inner_mob.impl.addConnectedSegment(outer_obj_id);
 
-                            mobs.set(obj_id, mob);
+                            mobs.set(inner_obj_id, inner_mob);
                         }
                     }
                 },
@@ -468,9 +472,35 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                         was_proper_damaged: bool,
                     });
 
-                    if (petals.search(petal_id)) |obj_id| {
-                        var petal = petals.get(obj_id);
+                    var petal: MobImpl.Super = undefined;
 
+                    var outer_obj_id: Mach.ObjectId = undefined;
+
+                    if (petals.search(petal_id)) |inner_obj_id| {
+                        petal = petals.get(inner_obj_id);
+
+                        outer_obj_id = inner_obj_id;
+                    } else {
+                        petal = .init(
+                            .init(
+                                allocator,
+                                petal_type,
+                                petal_rarity,
+                                false,
+                                false,
+                                null,
+                            ),
+                            petal_id,
+                            .{ petal_x, petal_y },
+                            petal_angle,
+                            petal_size,
+                            petal_health,
+                        );
+
+                        outer_obj_id = try petals.new(petal);
+                    }
+
+                    { // Update
                         { // Update next properties
                             petal.next_pos[0] = petal_x;
                             petal.next_pos[1] = petal_y;
@@ -501,25 +531,7 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
 
                         petal.update_t = 0;
 
-                        petals.set(obj_id, petal);
-                    } else {
-                        const petal: MobImpl.Super = .init(
-                            .init(
-                                allocator,
-                                petal_type,
-                                petal_rarity,
-                                false,
-                                false,
-                                null,
-                            ),
-                            petal_id,
-                            .{ petal_x, petal_y },
-                            petal_angle,
-                            petal_size,
-                            petal_health,
-                        );
-
-                        _ = try petals.new(petal);
+                        petals.set(outer_obj_id, petal);
                     }
                 },
 
@@ -546,9 +558,31 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                         was_proper_damaged: bool,
                     });
 
-                    if (players.search(player_id)) |obj_id| {
-                        var player = players.get(obj_id);
+                    var player: PlayerImpl.Super = undefined;
 
+                    var outer_obj_id: Mach.ObjectId = undefined;
+
+                    if (players.search(player_id)) |inner_obj_id| {
+                        player = players.get(inner_obj_id);
+
+                        outer_obj_id = inner_obj_id;
+                    } else {
+                        player = .init(
+                            .init(
+                                allocator,
+                                player_name,
+                            ),
+                            player_id,
+                            .{ player_x, player_y },
+                            player_angle,
+                            player_size,
+                            player_health,
+                        );
+
+                        outer_obj_id = try players.new(player);
+                    }
+
+                    { // Update
                         { // Update next properties
                             player.next_pos[0] = player_x;
                             player.next_pos[1] = player_y;
@@ -593,21 +627,7 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
 
                         player.update_t = 0;
 
-                        players.set(obj_id, player);
-                    } else {
-                        const player: PlayerImpl.Super = .init(
-                            .init(
-                                allocator,
-                                player_name,
-                            ),
-                            player_id,
-                            .{ player_x, player_y },
-                            player_angle,
-                            player_size,
-                            player_health,
-                        );
-
-                        _ = try players.new(player);
+                        players.set(outer_obj_id, player);
                     }
                 },
             }
@@ -651,7 +671,7 @@ export fn main() c_int {
         Event.addEventListener(.window, .screen_resize, onScreenEvent, false);
 
         { // Force fire event to correct init size
-            var virtual_screen_event = std.mem.zeroes(Event.ScreenEvent);
+            var virtual_screen_event = mem.zeroes(Event.ScreenEvent);
 
             virtual_screen_event.inner_width = Dom.clientWidth();
             virtual_screen_event.inner_height = Dom.clientHeight();
@@ -667,8 +687,8 @@ export fn main() c_int {
         players.init(allocator);
 
         // Initialize renderer static values
-        PlayerImpl.Renderer.staticInit(allocator);
-        MobImpl.Renderer.staticInit(allocator);
+        PlayerImpl.Renderer.initStatic(allocator);
+        MobImpl.Renderer.initStatic(allocator);
 
         // Setup render contexts
 
@@ -692,7 +712,7 @@ export fn main() c_int {
     }
 
     // Initialize lightning bounce
-    UIWaveLightningBounce.staticInit();
+    UIWaveLightningBounce.initStatic();
 
     draw(-1);
 
@@ -919,6 +939,7 @@ const std = @import("std");
 const builtin = std.builtin;
 const math = std.math;
 const leb = std.leb;
+const mem = std.mem;
 
 const Event = @import("Game/Kernel/WebAssembly/Interop/Event.zig");
 const Dom = @import("Game/Kernel/WebAssembly/Interop/Dom.zig");

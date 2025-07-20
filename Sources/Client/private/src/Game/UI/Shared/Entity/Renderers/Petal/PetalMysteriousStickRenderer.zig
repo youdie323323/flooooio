@@ -22,7 +22,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
     ctx.fillPath(body_stroke, .nonzero);
 }
 
-fn init(_: std.mem.Allocator) void {
+fn init(_: mem.Allocator) void {
     { // Initialize paths & commands
         {
             body = .init();
@@ -102,6 +102,8 @@ pub const PetalMysteriousStickRenderer = Renderer(MobSuper, false, render, init)
 const std = @import("std");
 const math = std.math;
 const time = std.time;
+const mem = std.mem;
+
 const Renderer = @import("../Renderer.zig").Renderer;
 const body_darken = @import("../Renderer.zig").body_darken;
 const RenderContext = @import("../Renderer.zig").RenderContext;

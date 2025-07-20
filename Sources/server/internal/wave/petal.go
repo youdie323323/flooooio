@@ -22,42 +22,42 @@ type Petal struct {
 
 	SpinningOnMob bool
 
-	Velocity Velocity
+	Velocity Vector2
 
 	// petal_faster_raging.go struct field definitions
 	LastVelocityApplied time.Time
 }
 
-// CalculateRadius return radius (display size).
-func (p *Petal) CalculateRadius() float32 {
+// Radius returns radius (display size).
+func (p *Petal) Radius() float32 {
 	profile := native.PetalProfiles[p.Type]
 	collision := profile.Collision
 
 	return collision.Radius * (p.Size / collision.Fraction)
 }
 
-// CalculateDiameter return diameter (display size).
-func (m *Petal) CalculateDiameter() float32 {
-	return 2 * m.CalculateRadius()
+// Diameter returns diameter (display size).
+func (m *Petal) Diameter() float32 {
+	return 2 * m.Radius()
 }
 
-// GetMaxHealth calculates max hp of petal.
-func (p *Petal) GetMaxHealth() float32 {
+// MaxHealth calculates max hp of petal.
+func (p *Petal) MaxHealth() float32 {
 	profile := native.PetalProfiles[p.Type]
 
 	return profile.StatFromRarity(p.Rarity).Health
 }
 
-// MasterRealPosition returns real position of master by petal, since petal has movement lag because of OrbitHistory**.
+// MasterRealPosition returns real position of master by petal, since petal has movement lag because of OrbitHistoryXX.
 func (p *Petal) MasterRealPosition() (x, y float32) {
 	master := p.Master
 
-	historyTargetIdx := (master.OrbitHistoryIndex + 6) % OrbitHistorySize
+	historyTargetIndex := (master.OrbitHistoryIndex + 6) % OrbitHistorySize
 
-	return master.OrbitHistoryX[historyTargetIdx], master.OrbitHistoryY[historyTargetIdx]
+	return master.OrbitHistoryX[historyTargetIndex], master.OrbitHistoryY[historyTargetIndex]
 }
 
-// WasEliminated determine if petal is eliminated.
+// WasEliminated returns whether if petal is eliminated.
 // This method exists because struct pointer petal reference doesnt nil'ed when removed.
 func (p *Petal) WasEliminated(wp *WavePool) bool {
 	return wp.FindPetal(*p.Id) == nil
@@ -138,7 +138,7 @@ func NewPetal(
 
 		SpinningOnMob: false,
 
-		Velocity: Velocity{0, 0},
+		Velocity: Vector2{0, 0},
 
 		LastVelocityApplied: time.Time{},
 	}

@@ -26,11 +26,10 @@ import (
 const (
 	spatialHashGridSize = 512
 
-	WaveUpdateFPS = 60
+	WaveUpdatePerSec     = 60
+	WaveDataUpdatePerSec = WaveUpdatePerSec / 2
 
-	DeltaT = 1. / WaveUpdateFPS
-
-	WaveDataUpdateFPS = WaveUpdateFPS / 2
+	DeltaT = 1. / WaveUpdatePerSec
 )
 
 const (
@@ -271,7 +270,7 @@ func (wp *WavePool) broadcastSeldIdPacket() {
 }
 
 func (wp *WavePool) startUpdate() {
-	wp.updateTicker = time.NewTicker(time.Second / WaveUpdateFPS)
+	wp.updateTicker = time.NewTicker(time.Second / WaveUpdatePerSec)
 	defer wp.updateTicker.Stop()
 
 	for {
@@ -497,7 +496,7 @@ func (wp *WavePool) broadcastUpdatePacket() {
 
 		p.Mu.RUnlock()
 
-		toSend := wp.SpatialHash.SearchRect(
+		toSend := wp.SpatialHash.QueryRect(
 			p.X, p.Y,
 			float32(window[0]), float32(window[1]),
 			func(n collision.Node) bool {
@@ -1268,7 +1267,7 @@ Loop:
 				bouncedIds = append(bouncedIds, targetEntity.Id)
 
 				{
-					mobMaxHealth := targetEntity.GetMaxHealth()
+					mobMaxHealth := targetEntity.MaxHealth()
 
 					targetEntity.TakeProperDamage(lightningDamage / mobMaxHealth)
 				}
@@ -1280,7 +1279,7 @@ Loop:
 
 				bounceTargets := jellyfish.SearchLightningBounceTargets(wp, bouncedIds)
 
-				targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, 2*targetEntity.CalculateDiameter())
+				targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, 2*targetEntity.Diameter())
 				if targetNode == nil {
 					break Loop
 				}
@@ -1295,7 +1294,7 @@ Loop:
 				{
 					targetEntityToDamage := targetEntity.MobToDamage(wp)
 
-					mobMaxHealth := targetEntityToDamage.GetMaxHealth()
+					mobMaxHealth := targetEntityToDamage.MaxHealth()
 
 					targetEntityToDamage.TakeProperDamage(lightningDamage / mobMaxHealth)
 
@@ -1305,7 +1304,7 @@ Loop:
 
 				bounceTargets := jellyfish.SearchLightningBounceTargets(wp, bouncedIds)
 
-				targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, 2*targetEntity.CalculateDiameter())
+				targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, 2*targetEntity.Diameter())
 				if targetNode == nil {
 					break Loop
 				}
@@ -1368,7 +1367,7 @@ func (wp *WavePool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 		{
 			targetMobToDamage := targetMob.MobToDamage(wp)
 
-			targetMobMaxHealth := targetMobToDamage.GetMaxHealth()
+			targetMobMaxHealth := targetMobToDamage.MaxHealth()
 
 			targetMobToDamage.TakeProperDamage(lightningDamage / targetMobMaxHealth)
 
@@ -1377,7 +1376,7 @@ func (wp *WavePool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 
 		bounceTargets := lightning.SearchLightningBounceTargets(wp, bouncedIds)
 
-		targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, 2*targetMob.CalculateDiameter())
+		targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, 2*targetMob.Diameter())
 		if targetNode == nil {
 			break
 		}

@@ -306,7 +306,7 @@ func (s *WaveMobSpawner) Next(data *WaveData, groupIndex *int) {
 }
 
 const (
-	spawnDelay int = WaveDataUpdateFPS * 0.8
+	spawnDelay int = WaveDataUpdatePerSec * 0.8
 )
 
 func (s *WaveMobSpawner) ComputeDynamicMobData(data *WaveData) *DynamicMobData {

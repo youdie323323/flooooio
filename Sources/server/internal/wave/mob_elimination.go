@@ -21,7 +21,7 @@ func removeConnectedSegmentTraversal(wp *WavePool, m *Mob) {
 }
 
 func (m *Mob) onEliminate(wp *WavePool) {
-	// Leech kill all bodies when main dies
+	// Leech kill all bodies when head dies
 	if m.Type == native.MobTypeLeech {
 		removeConnectedSegmentTraversal(wp, m)
 	}

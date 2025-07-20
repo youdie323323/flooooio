@@ -36,7 +36,7 @@ func (p *Player) PlayerCollision(wp *WavePool, _ time.Time) {
 	nearby := wp.SpatialHash.Search(p.X, p.Y, searchRadius)
 
 	for _, n := range nearby {
-		// Player -> PLayer
+		// Player -> Player
 		op, ok := n.(*Player)
 		if !ok {
 			continue

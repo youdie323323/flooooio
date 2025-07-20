@@ -33,8 +33,8 @@ type Player struct {
 
 	IsDead bool
 
-	Acceleration Velocity
-	Velocity     Velocity
+	Acceleration Vector2
+	Velocity     Vector2
 
 	// Window is current window size of user.
 	// This should not calculated within antenna scale, that will proceed by server.
@@ -367,8 +367,8 @@ func NewPlayer(
 
 		IsDead: false,
 
-		Acceleration: Velocity{0, 0},
-		Velocity:     Velocity{0, 0},
+		Acceleration: Vector2{0, 0},
+		Velocity:     Vector2{0, 0},
 
 		Window: [2]uint16{1920, 1080},
 

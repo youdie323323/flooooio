@@ -33,7 +33,7 @@ const resolution = 4;
 const size = base_size * resolution;
 const half_size = size / 2.0;
 
-fn createWebProjectileCanvas(allocator: std.mem.Allocator, comptime is_pet: bool) *CanvasContext {
+fn createWebProjectileCanvas(allocator: mem.Allocator, comptime is_pet: bool) *CanvasContext {
     const ctx = CanvasContext.createCanvasContext(allocator, size, size, false);
 
     ctx.setImageSmoothingEnabled(true);
@@ -53,7 +53,7 @@ fn createWebProjectileCanvas(allocator: std.mem.Allocator, comptime is_pet: bool
     return ctx;
 }
 
-fn init(allocator: std.mem.Allocator) void {
+fn init(allocator: mem.Allocator) void {
     { // Initialize paths & commands
         {
             body = .init();
@@ -780,6 +780,7 @@ pub const ProjectileWebRenderer = Renderer(MobSuper, false, render, init);
 const std = @import("std");
 const math = std.math;
 const time = std.time;
+const mem = std.mem;
 
 const CanvasContext = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/CanvasContext.zig");
 const Path2D = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Path2D.zig");

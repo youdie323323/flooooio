@@ -11,15 +11,16 @@ fn render(rctx: *RenderContext(PlayerSuper)) void {
         normalRender(rctx);
 }
 
-fn init(allocator: std.mem.Allocator) void {
+fn init(allocator: mem.Allocator) void {
     // Init child renderers
-    PlayerNormalRenderer.staticInit(allocator);
-    PlayerDeveloperRenderer.staticInit(allocator);
+    PlayerNormalRenderer.initStatic(allocator);
+    PlayerDeveloperRenderer.initStatic(allocator);
 }
 
 pub const PlayerRenderingDispatcher = Renderer(PlayerSuper, true, render, init);
 
 const std = @import("std");
+const mem = std.mem;
 
 const Renderer = @import("../../Renderers/Renderer.zig").Renderer;
 const RenderContext = @import("../../Renderers/Renderer.zig").RenderContext;

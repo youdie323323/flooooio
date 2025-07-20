@@ -338,7 +338,7 @@ frames: [8]AccessorMethods.Properties = undefined,
 /// Current depth of context frames.
 frames_depth: usize = 0,
 
-pub fn init(allocator: std.mem.Allocator, id: Id) *CanvasContext {
+pub fn init(allocator: mem.Allocator, id: Id) *CanvasContext {
     const ctx = allocator.create(CanvasContext) catch unreachable;
 
     ctx.* = .{ .id = id };
@@ -346,7 +346,7 @@ pub fn init(allocator: std.mem.Allocator, id: Id) *CanvasContext {
     return ctx;
 }
 
-pub fn deinit(self: *CanvasContext, allocator: std.mem.Allocator) void {
+pub fn deinit(self: *CanvasContext, allocator: mem.Allocator) void {
     @"3"(self.id);
 
     allocator.destroy(self);
@@ -579,7 +579,7 @@ extern "0" fn @"56"(id: Id, width: u16, height: u16) void;
 extern "0" fn @"57"(id: Id, w_addr: *u16, h_addr: *u16) void;
 
 pub fn createCanvasContext(
-    allocator: std.mem.Allocator,
+    allocator: mem.Allocator,
     width: f32,
     height: f32,
     comptime is_discardable: bool,
@@ -590,7 +590,7 @@ pub fn createCanvasContext(
 }
 
 pub fn createCanvasContextBySelector(
-    allocator: std.mem.Allocator,
+    allocator: mem.Allocator,
     comptime selector: []const u8,
     comptime alpha: bool,
 ) *CanvasContext {
@@ -613,6 +613,7 @@ pub fn requestAnimationFrame(callback: RAFCallback) u32 {
 }
 
 const std = @import("std");
+const mem = std.mem;
 
 const Path2D = @import("Path2D.zig");
 

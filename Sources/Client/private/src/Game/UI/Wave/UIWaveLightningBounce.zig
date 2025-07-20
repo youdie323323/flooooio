@@ -9,7 +9,7 @@ path: Path2D,
 
 var rand: Random = undefined;
 
-pub fn staticInit() void {
+pub fn initStatic() void {
     var seed: u64 = undefined;
 
     posix.getrandom(mem.asBytes(&seed)) catch |err|

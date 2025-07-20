@@ -25,7 +25,7 @@ type JudgementFunc = func(m *Mob, distanceToTargetDot float32) bool
 
 func createCautionJudger(radiusMultiplier float32) JudgementFunc {
 	return func(m *Mob, distanceToTargetDot float32) bool {
-		cautionRad := m.CalculateRadius() * radiusMultiplier
+		cautionRad := m.Radius() * radiusMultiplier
 
 		return m.TargetEntity != nil && (cautionRad*cautionRad) > distanceToTargetDot
 	}
@@ -207,7 +207,7 @@ func (m *Mob) TrackingTargets(wp *WavePool) []collision.Node {
 	}
 }
 
-var missileSpeed = SpeedOf(native.MobTypeMissileProjectile)
+var missileSpeed = MobSpeedOf(native.MobTypeMissileProjectile)
 
 func (m *Mob) MobBehavior(wp *WavePool, now time.Time) {
 	// If body, dont do anything
@@ -285,7 +285,7 @@ func (m *Mob) MobBehavior(wp *WavePool, now time.Time) {
 
 			angleRad := angleToRadian(m.Angle)
 
-			mRadius := m.CalculateRadius()
+			mRadius := m.Radius()
 			mRadiusSq := mRadius * mRadius
 
 			shootX := m.X + math32.Cos(angleRad)*mRadius
@@ -334,7 +334,7 @@ func (m *Mob) MobBehavior(wp *WavePool, now time.Time) {
 					false,
 				)
 
-				missile.Magnitude = SpeedOf(missile.Type) * 255
+				missile.Magnitude = MobSpeedOf(missile.Type) * 255
 				missile.Angle = m.Angle
 
 				m.HornetLastMissileShoot = now
@@ -352,7 +352,7 @@ func (m *Mob) MobBehavior(wp *WavePool, now time.Time) {
 		{
 			m.Angle = math32.Mod(m.Angle+generateValleyDistribution(-25, 25), 255)
 
-			m.Magnitude = SpeedOf(m.Type) * 255
+			m.Magnitude = MobSpeedOf(m.Type) * 255
 		}
 
 	case native.HostileBehavior:
@@ -385,7 +385,7 @@ func (m *Mob) MobBehavior(wp *WavePool, now time.Time) {
 			if shouldStop {
 				magnitude = 0
 			} else {
-				magnitude = SpeedOf(m.Type) * 255
+				magnitude = MobSpeedOf(m.Type) * 255
 			}
 
 			m.Magnitude = magnitude
@@ -407,7 +407,7 @@ func (m *Mob) MobBehavior(wp *WavePool, now time.Time) {
 					)
 				}
 
-				m.Magnitude = SpeedOf(m.Type) * 255
+				m.Magnitude = MobSpeedOf(m.Type) * 255
 
 				m.TargetEntity = m.LastAttackedEntity
 			}

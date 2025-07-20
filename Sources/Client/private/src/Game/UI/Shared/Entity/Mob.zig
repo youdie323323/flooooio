@@ -44,7 +44,7 @@ connected_segments: ?Segments,
 leg_distances: ?StarfishLegDistances,
 
 pub fn init(
-    allocator: std.mem.Allocator,
+    allocator: mem.Allocator,
     @"type": EntityType,
     rarity: EntityRarity,
     is_pet: bool,
@@ -53,7 +53,7 @@ pub fn init(
 ) MobImpl {
     const is_linkable =
         if (@"type".isMob())
-            std.mem.indexOfScalar(MobType, &linkable_mob_types, @"type".mob) != null
+            mem.indexOfScalar(MobType, &linkable_mob_types, @"type".mob) != null
         else
             false;
 
@@ -80,7 +80,7 @@ pub fn init(
     };
 }
 
-pub fn deinit(self: *MobImpl, _: std.mem.Allocator, _: *Super) void {
+pub fn deinit(self: *MobImpl, _: mem.Allocator, _: *Super) void {
     if (self.connected_segments) |*s|
         s.deinit();
 
@@ -148,6 +148,7 @@ pub fn removeConnectedSegment(self: *MobImpl, segment: ObjectId) void {
 const std = @import("std");
 const math = std.math;
 const json = std.json;
+const mem = std.mem;
 const fmt = std.fmt;
 const assert = std.debug.assert;
 

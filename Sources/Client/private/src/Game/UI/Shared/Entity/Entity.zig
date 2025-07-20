@@ -2,16 +2,6 @@ pub const EntityId = u16;
 
 pub fn Entity(comptime Impl: type) type {
     return struct {
-        fn calculateAngleDistance(start_angle: f32, end_angle: f32) f32 {
-            const angle_diff = @mod(end_angle - start_angle, math.tau);
-
-            return @mod(angle_diff * 2, math.tau) - angle_diff;
-        }
-
-        fn interpolateAngle(start_angle: f32, end_angle: f32, progress: f32) f32 {
-            return @mulAdd(f32, calculateAngleDistance(start_angle, end_angle), progress, start_angle);
-        }
-
         pub const Vector2 = @Vector(2, f32);
 
         impl: Impl,
@@ -85,7 +75,7 @@ pub fn Entity(comptime Impl: type) type {
             };
         }
 
-        pub fn deinit(self: *@This(), allocator: std.mem.Allocator) void {
+        pub fn deinit(self: *@This(), allocator: mem.Allocator) void {
             if (comptime @hasDecl(Impl, "deinit")) // Call implementation deinit
                 self.impl.deinit(allocator, self);
 
@@ -172,8 +162,20 @@ pub fn Entity(comptime Impl: type) type {
             if (comptime @hasDecl(Impl, "update")) // Call update of implementation
                 self.impl.update(self, delta_time);
         }
+
+        fn calculateAngleDistance(start_angle: f32, end_angle: f32) f32 {
+            const angle_diff = @mod(end_angle - start_angle, math.tau);
+
+            return @mod(angle_diff * 2, math.tau) - angle_diff;
+        }
+
+        fn interpolateAngle(start_angle: f32, end_angle: f32, progress: f32) f32 {
+            return @mulAdd(f32, calculateAngleDistance(start_angle, end_angle), progress, start_angle);
+        }
     };
 }
 
 const std = @import("std");
 const math = std.math;
+const heap = std.heap;
+const mem = std.mem;

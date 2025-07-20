@@ -56,7 +56,7 @@ func (m *Mob) MobBodyConnection(wp *WavePool, _ time.Time) {
 
 	currentDistance := math32.Hypot(dx, dy)
 
-	segmentDia := m.CalculateDiameter()
+	segmentDia := m.Diameter()
 
 	{
 		m.Magnitude = 0

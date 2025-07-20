@@ -87,7 +87,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
     }
 }
 
-fn init(_: std.mem.Allocator) void {
+fn init(_: mem.Allocator) void {
     { // Initialize paths & commands
         {
             missile_body = .init();
@@ -159,6 +159,7 @@ pub const MobHornetRenderer = Renderer(MobSuper, false, render, init);
 const std = @import("std");
 const math = std.math;
 const time = std.time;
+const mem = std.mem;
 
 const Path2D = @import("../../../../../Kernel/WebAssembly/Interop/Canvas2D/Path2D.zig");
 const Renderer = @import("../../Renderers/Renderer.zig").Renderer;

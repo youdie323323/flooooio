@@ -12,8 +12,6 @@ import (
 	"flooooio/internal/wave/florr/native"
 )
 
-type Velocity = [2]float32
-
 type EntityId = uint16
 
 type Entity struct {
@@ -45,6 +43,8 @@ type Entity struct {
 
 	Mu sync.RWMutex
 }
+
+type Vector2 = [2]float32
 
 type Poisonable struct {
 	IsPoisoned atomic.Bool
@@ -131,8 +131,10 @@ type LightningEmitter interface {
 	SearchLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node
 }
 
-const Tau32 = 2 * math32.Pi
-const Tau = 2 * math.Pi
+const (
+	Tau32 = 2 * math32.Pi
+	Tau   = 2 * math.Pi
+)
 
 // GetRandomSafeCoordinate generates a random safe position.
 func GetRandomSafeCoordinate(mapRadius float32, safetyDistance float32, clients []*Player) (float32, float32, bool) {
@@ -181,6 +183,8 @@ func GetRandomCoordinate(cx, cy, spawnRadius float32) (float32, float32) {
 }
 
 // Methods that satisfies spatial hashes Node
+
+var _ collision.Node = (*Entity)(nil) // *Entity must implement collision.Node
 
 func (e *Entity) GetId() uint16 {
 	return *e.Id

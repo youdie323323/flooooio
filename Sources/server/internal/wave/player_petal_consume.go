@@ -169,7 +169,7 @@ func (p *Player) PlayerPetalConsume(wp *WavePool, now time.Time) {
 				{
 					if petal.Detached {
 						// Detached, use web if stop
-						if VelocityWithinEpsilon(petal.Velocity) {
+						if VectorWithinEpsilon(petal.Velocity) {
 							wp.GenerateMob(
 								native.MobTypeWebProjectile,
 

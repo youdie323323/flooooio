@@ -70,7 +70,7 @@ pub fn allocCString(slice: []const u8) CStringPointer {
 }
 
 pub fn freeCString(ptr: CStringPointer) void {
-    const len = std.mem.len(ptr) + 1;
+    const len = mem.len(ptr) + 1;
 
     allocator.free(ptr[0..len]);
 }
@@ -78,3 +78,4 @@ pub fn freeCString(ptr: CStringPointer) void {
 const std = @import("std");
 const testing = std.testing;
 const heap = std.heap;
+const mem = std.mem;

@@ -33,34 +33,37 @@ func (p *Player) PlayerPetalReload(wp *WavePool, now time.Time) {
 		}
 
 		for j, petal := range petals {
-			if petal == nil {
-				supply := p.Slots.SurfaceSupplies[i][j]
-				if supply != nil {
-					peReloadCooldown := reloadCooldownGrid[i]
+			if petal == nil { // If petal is nil and there is appropriate supply for petal, we can use supply for reload
+				supplies := p.Slots.SurfaceSupplies[i]
+				if supplies != nil {
+					supply := supplies[j]
+					if supply != nil {
+						peReloadCooldown := reloadCooldownGrid[i]
 
-					if peReloadCooldown[j].IsZero() {
-						peReloadCooldown[j] = now.Add(
-							time.Duration(native.PetalProfiles[supply.Type].StatFromRarity(supply.Rarity).Reload * float32(time.Second)),
-						)
-					} else if now.After(peReloadCooldown[j]) || now.Equal(peReloadCooldown[j]) {
-						// If cooldown elapsed
+						if peReloadCooldown[j].IsZero() {
+							peReloadCooldown[j] = now.Add(
+								time.Duration(native.PetalProfiles[supply.Type].StatFromRarity(supply.Rarity).Reload * float32(time.Second)),
+							)
+						} else if now.After(peReloadCooldown[j]) || now.Equal(peReloadCooldown[j]) {
+							// If cooldown elapsed
 
-						petals[j] = wp.GeneratePetal(
-							supply.Type,
+							petals[j] = wp.GeneratePetal(
+								supply.Type,
 
-							supply.Rarity,
+								supply.Rarity,
 
-							// Make it player coordinate so its looks like spawning from player body
-							p.X,
-							p.Y,
+								// Make it player coordinate so its looks like spawning from player body
+								p.X,
+								p.Y,
 
-							p,
+								p,
 
-							false,
-						)
+								false,
+							)
 
-						// Zero
-						peReloadCooldown[j] = time.Time{}
+							// Zero
+							peReloadCooldown[j] = time.Time{}
+						}
 					}
 				}
 

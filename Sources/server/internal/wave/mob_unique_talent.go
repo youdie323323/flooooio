@@ -9,37 +9,33 @@ import (
 	"github.com/chewxy/math32"
 )
 
-const (
-	movementTimerDuration = 150.
+const RotationCounterGoal = 500
 
-	RotationCounterGoal = 500
-)
-
-var untalentedMobTypes = []native.MobType{
+var UntalentedMobTypes = []native.MobType{
 	native.MobTypeShell,
 	native.MobTypeBubble,
 	native.MobTypeCactus,
 	native.MobTypeSponge,
 }
 
-const (
-	specialMovementDefaultTimer         = 1
-	specialMovementCentipedeDesertTimer = 2
+const ( // Step added to movementTimer every time step.
+	movementTimerDefaultStep         = DeltaT / 3 // 3 second
+	movementTimerDesertCentipedeStep = DeltaT / 6 // 6 second
 )
 
-var beeSinusoidalWave = NewSinusoidalWave(200)
+var shakeSinusoidalWave = NewSinusoidalWave(200)
 
 func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
-	if slices.Contains(untalentedMobTypes, m.Type) {
+	if slices.Contains(UntalentedMobTypes, m.Type) {
 		return
 	}
 
-	// If projectile mob, dont do anything
+	// If m is projectile mob, dont do anything
 	if m.IsProjectile() {
 		return
 	}
 
-	// If body, dont do anything
+	// If m is body, dont do anything
 	if IsBody(wp, m) {
 		return
 	}
@@ -54,31 +50,27 @@ func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
 		m.RotationCounter++
 
 		if m.IsSpecialMoving {
-			var timer float32
-
-			switch m.Type {
-			case native.MobTypeCentipedeDesert:
-				timer = specialMovementCentipedeDesertTimer
-
-			default:
-				timer = specialMovementDefaultTimer
-			}
-
-			if m.MovementTimer >= timer {
+			if m.MovementTimer >= 1 {
 				m.Magnitude = 0
 
 				m.IsSpecialMoving = false
 			} else {
 				switch m.Type {
 				case native.MobTypeCentipedeDesert:
-					m.Magnitude = SpeedOf(m.Type) * 255
+					m.Magnitude = MobSpeedOf(m.Type) * 255
 					m.Angle += math32.Sin(math32.Pi*m.MovementTimer) / 2
 
 				default:
-					m.Magnitude = math32.Sin(math32.Pi*m.MovementTimer) * (SpeedOf(m.Type) * 255)
+					m.Magnitude = math32.Sin(math32.Pi*m.MovementTimer) * (MobSpeedOf(m.Type) * 255)
 				}
 
-				m.MovementTimer += 1. / movementTimerDuration
+				switch m.Type {
+				case native.MobTypeCentipedeDesert:
+					m.MovementTimer += movementTimerDesertCentipedeStep
+
+				default:
+					m.MovementTimer += movementTimerDefaultStep
+				}
 			}
 		} else {
 			m.IsSpecialMoving = true
@@ -97,7 +89,7 @@ func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
 				dx := m.PetMaster.X - m.X
 				dy := m.PetMaster.Y - m.Y
 
-				dia3 := 3 * m.CalculateDiameter()
+				dia3 := 3 * m.Diameter()
 
 				if (dx*dx + dy*dy) > (dia3 * dia3) {
 					m.Angle = CalculateInterpolatedAngleToEntity(
@@ -106,7 +98,7 @@ func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
 						dy,
 					)
 
-					m.Magnitude = SpeedOf(m.Type) * 255
+					m.Magnitude = MobSpeedOf(m.Type) * 255
 
 					m.PetGoingToMaster = true
 				} else {
@@ -124,20 +116,20 @@ func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
 	// Shake angle
 	case native.MobTypeBee, native.MobTypeHornet:
 		{
-			if m.Type == native.MobTypeHornet && m.TargetEntity != nil {
+			isTargetting := m.TargetEntity != nil
+
+			if m.Type == native.MobTypeHornet && isTargetting {
 				return
 			}
 
-			if m.ShouldShakeAngle() {
-				var shakeMultiplier float32 = 1.
+			var shakeMultiplier float32 = 1.
 
-				if m.TargetEntity != nil {
-					shakeMultiplier = 2.
-				}
-
-				m.Angle += beeSinusoidalWave.At(m.SineWaveIndex) * shakeMultiplier
-				m.SineWaveIndex++
+			if isTargetting {
+				shakeMultiplier = 2.
 			}
+
+			m.Angle += shakeSinusoidalWave.At(m.SineWaveIndex) * shakeMultiplier
+			m.SineWaveIndex++
 		}
 
 	case native.MobTypeSpider:
@@ -169,7 +161,7 @@ func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
 			if m.StarfishRegeningHealth || 0.5 >= m.Health {
 				m.StarfishRegeningHealth = true
 
-				maxHealth := m.GetMaxHealth()
+				maxHealth := m.MaxHealth()
 
 				healAmount := float32(m.Rarity) / (2 * maxHealth)
 
@@ -191,13 +183,9 @@ func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
 						-dy,
 					)
 
-					m.Magnitude = SpeedOf(m.Type) * 255
+					m.Magnitude = MobSpeedOf(m.Type) * 255
 				}
 			}
 		}
 	}
-}
-
-func (m *Mob) ShouldShakeAngle() bool {
-	return m.Type == native.MobTypeBee || m.Type == native.MobTypeHornet
 }

@@ -237,7 +237,7 @@ pub fn Renderer(
 ) type {
     return struct {
         /// Performs any necessary static initialization for the renderer.
-        pub fn staticInit(allocator: mem.Allocator) void {
+        pub fn initStatic(allocator: mem.Allocator) void {
             if (static_init_fn) |f|
                 f(allocator);
         }

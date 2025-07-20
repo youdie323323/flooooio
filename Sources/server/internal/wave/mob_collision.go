@@ -26,7 +26,7 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 		return
 	}
 
-	// Turn back to original multiplier
+	// Set back to original multiplier
 	m.MagnitudeMultiplier = 1
 
 	mId := m.Id
@@ -41,7 +41,7 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 	// Hmm health should only use mMobToDamage?
 	// NOTE: yea because mMaxHealth is used as
 	// mMobToDamage.Health -= somedamage / mMaxHealth
-	mMaxHealth := mToDamage.GetMaxHealth()
+	mMaxHealth := mToDamage.MaxHealth()
 	mDamage := mStat.GetDamage()
 
 	mTraversed := TraverseMobSegments(wp, m)
@@ -56,7 +56,7 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 	c0mob := collision.Circle{
 		X: m.X,
 		Y: m.Y,
-		R: m.CalculateRadius(),
+		R: m.Radius(),
 	}
 
 	// Define reusable circle
@@ -115,7 +115,7 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 
 				c1mob.X = nearEntity.X
 				c1mob.Y = nearEntity.Y
-				c1mob.R = nearEntity.CalculateRadius()
+				c1mob.R = nearEntity.Radius()
 
 				px, py, ok := collision.ComputeCirclePush(c0mob, c1mob)
 				if ok {
@@ -151,7 +151,7 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 
 						nearEntityToDamage := nearEntity.MobToDamage(wp)
 
-						nearEntityMaxHealth := nearEntityToDamage.GetMaxHealth()
+						nearEntityMaxHealth := nearEntityToDamage.MaxHealth()
 						nearEntityDamage := profile1.StatFromRarity(nearEntity.Rarity).GetDamage()
 
 						mToDamage.TakeProperDamage(nearEntityDamage / mMaxHealth)
@@ -188,7 +188,7 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 
 				c1mob.X = nearEntity.X
 				c1mob.Y = nearEntity.Y
-				c1mob.R = nearEntity.CalculateRadius()
+				c1mob.R = nearEntity.Radius()
 
 				px, py, ok := collision.ComputeCirclePush(c0mob, c1mob)
 				if ok {
@@ -204,7 +204,7 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 					{ // Damage
 						nearEntityStat := native.PetalProfiles[nearEntity.Type].StatFromRarity(nearEntity.Rarity)
 
-						nearEntityMaxHealth := nearEntity.GetMaxHealth()
+						nearEntityMaxHealth := nearEntity.MaxHealth()
 						nearEntityDamage := nearEntityStat.GetDamage()
 
 						mToDamage.TakeProperDamage(nearEntityDamage / mMaxHealth)
@@ -333,7 +333,7 @@ func clawTakeExtraDamage(claw *Petal, stat native.PetalStat, hitMob *Mob) {
 		return
 	}
 
-	maxHealth := hitMob.GetMaxHealth()
+	maxHealth := hitMob.MaxHealth()
 
 	hitMob.TakeProperDamage(min(hitMob.Health*(percentDamage/100), limit/maxHealth))
 }

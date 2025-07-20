@@ -52,26 +52,26 @@ type Mob struct {
 	IsSpecialMoving bool
 }
 
-// SpeedOf statically return speed within mob.
-func SpeedOf(mType native.MobType) float32 {
+// MobSpeedOf returns speed of mob type.
+func MobSpeedOf(mType native.MobType) float32 {
 	return MobSpeed[mType]
 }
 
-// CalculateRadius return radius (display size).
-func (m *Mob) CalculateRadius() float32 {
+// Radius returns radius (display size).
+func (m *Mob) Radius() float32 {
 	profile := native.MobProfiles[m.Type]
 	collision := profile.Collision
 
 	return collision.Radius * (m.Size / collision.Fraction)
 }
 
-// CalculateDiameter return diameter (display size).
-func (m *Mob) CalculateDiameter() float32 {
-	return 2 * m.CalculateRadius()
+// Diameter returns diameter (display size).
+func (m *Mob) Diameter() float32 {
+	return 2 * m.Radius()
 }
 
-// GetMaxHealth calculates max hp of mob.
-func (m *Mob) GetMaxHealth() float32 {
+// MaxHealth calculates max hp of mob.
+func (m *Mob) MaxHealth() float32 {
 	profile := native.MobProfiles[m.Type]
 
 	return profile.StatFromRarity(m.Rarity).Health
@@ -173,7 +173,7 @@ func (m *Mob) OnUpdateTick(wp *WavePool, now time.Time) {
 			if m.IsPoisoned.Load() {
 				dp := m.PoisonDPS * DeltaT
 
-				mMaxHealth := m.GetMaxHealth()
+				mMaxHealth := m.MaxHealth()
 
 				m.Health -= dp / mMaxHealth
 				m.Health = max(0, m.Health)
