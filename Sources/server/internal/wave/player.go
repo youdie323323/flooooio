@@ -81,12 +81,13 @@ const maxHpLevel = 75.
 
 // calculatePlayerHp calculate hp by level.
 // 100 * x, x is upgrade.
+// TODO: make this player method and get level by db data
 func calculatePlayerHp(level float32) float32 {
 	return (100 * 100) * math32.Pow(1.02, max(level, maxHpLevel)-1)
 }
 
-// GetMaxHealth calculates max hp of player.
-func (p *Player) GetMaxHealth() float32 {
+// MaxHealth calculates max hp of player.
+func (p *Player) MaxHealth() float32 {
 	return calculatePlayerHp(100)
 }
 
@@ -156,12 +157,10 @@ func (c *SwapPetalCommand) Execute(wp *WavePool, p *Player) {
 
 		temp := p.Slots.Surface[at]
 
-		for _, p := range temp {
-			if p == nil {
-				continue
+		for _, petal := range temp {
+			if petal != nil {
+				petal.CompletelyRemove(wp)
 			}
-
-			p.CompletelyRemove(wp)
 		}
 
 		p.Slots.Surface[at] = p.Slots.Bottom[at]
@@ -222,7 +221,7 @@ Done:
 			if p.IsPoisoned.Load() {
 				dp := p.PoisonDPS * DeltaT
 
-				pMaxHealth := p.GetMaxHealth()
+				pMaxHealth := p.MaxHealth()
 
 				p.Health -= dp / pMaxHealth
 				p.Health = max(0, p.Health)

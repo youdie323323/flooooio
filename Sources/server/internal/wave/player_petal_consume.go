@@ -232,6 +232,8 @@ func (p *Player) PlayerPetalConsume(wp *WavePool, now time.Time) {
 						Rarity: petal.Rarity,
 					}
 
+					// Embed p data into supplies, then set to nil
+					// PlayerPetalReload will recognize SurfaceSupplies and reloads when petals[j] is equals to nil
 					petals[j] = nil
 				}
 			}

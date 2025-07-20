@@ -381,7 +381,7 @@ func (wp *WavePool) stepWaveData() {
 			randX, randY, ok := GetRandomSafeCoordinate(
 				float32(wp.Wd.MapRadius),
 				300,
-				wp.GetPlayersWithCondition(func(p *Player) bool { return !p.IsDead }),
+				wp.FilterPlayersWithCondition(func(p *Player) bool { return !p.IsDead }),
 			)
 
 			if ok {
@@ -420,7 +420,7 @@ func (wp *WavePool) stepWaveData() {
 	waveLength := CalculateWaveLength(float32(wp.Wd.Progress))
 
 	if wp.Wd.ProgressTimer >= waveLength {
-		mobCount := len(wp.GetMobsWithCondition(func(m *Mob) bool { return m.IsEnemy() }))
+		mobCount := len(wp.FilterMobsWithCondition(func(m *Mob) bool { return m.IsEnemy() }))
 
 		if !(wp.Wd.ProgressRedTimer >= waveLength) && mobCount > 4 {
 			wp.Wd.ProgressIsRed = true
@@ -707,12 +707,12 @@ func (wp *WavePool) writeStaticUpdatePacket(buf []byte) int {
 	{ // Write lightning bounces
 		at += PutUvarint16(buf[at:], FiniteObjectCount(len(wp.lightningBounces)))
 
-		for _, ps := range wp.lightningBounces {
-			at += PutUvarint16(buf[at:], FiniteObjectCount(len(ps)))
+		for _, bounces := range wp.lightningBounces {
+			at += PutUvarint16(buf[at:], FiniteObjectCount(len(bounces)))
 
-			for _, p := range ps {
-				at += WriteFloat32(buf[at:], p[0])
-				at += WriteFloat32(buf[at:], p[1])
+			for _, bounce := range bounces {
+				at += WriteFloat32(buf[at:], bounce[0])
+				at += WriteFloat32(buf[at:], bounce[1])
 			}
 		}
 
@@ -755,9 +755,9 @@ func (wp *WavePool) GeneratePlayer(
 				player.Slots.Surface[i] = wp.staticPetalToDynamicPetal(s, player, true)
 
 				// Force require reload
-				for _, p := range player.Slots.Surface[i] {
-					if p != nil {
-						p.CompletelyRemove(wp)
+				for _, petal := range player.Slots.Surface[i] {
+					if petal != nil {
+						petal.CompletelyRemove(wp)
 					}
 				}
 			}
@@ -841,8 +841,8 @@ func (wp *WavePool) SafeFindPlayer(id EntityId) *Player {
 	return wp.FindPlayer(id)
 }
 
-// GetPlayersWithCondition returns conditioned players.
-func (wp *WavePool) GetPlayersWithCondition(condition func(*Player) bool) []*Player {
+// FilterPlayersWithCondition returns conditioned players.
+func (wp *WavePool) FilterPlayersWithCondition(condition func(*Player) bool) []*Player {
 	filtered := make([]*Player, 0, wp.playerPool.Size())
 
 	wp.playerPool.Range(func(_ EntityId, p *Player) bool {
@@ -856,11 +856,11 @@ func (wp *WavePool) GetPlayersWithCondition(condition func(*Player) bool) []*Pla
 	return filtered
 }
 
-func (wp *WavePool) SafeGetPlayersWithCondition(condition func(*Player) bool) []*Player {
+func (wp *WavePool) SafeFilterPlayersWithCondition(condition func(*Player) bool) []*Player {
 	wp.mu.RLock()
 	defer wp.mu.RUnlock()
 
-	return wp.GetPlayersWithCondition(condition)
+	return wp.FilterPlayersWithCondition(condition)
 }
 
 func (wp *WavePool) GenerateMob(
@@ -980,8 +980,8 @@ func (wp *WavePool) SafeFindMob(id EntityId) *Mob {
 	return wp.FindMob(id)
 }
 
-// GetMobsWithCondition returns conditioned mobs.
-func (wp *WavePool) GetMobsWithCondition(condition func(*Mob) bool) []*Mob {
+// FilterMobsWithCondition returns conditioned mobs.
+func (wp *WavePool) FilterMobsWithCondition(condition func(*Mob) bool) []*Mob {
 	filtered := make([]*Mob, 0, wp.mobPool.Size())
 
 	wp.mobPool.Range(func(_ EntityId, m *Mob) bool {
@@ -995,11 +995,11 @@ func (wp *WavePool) GetMobsWithCondition(condition func(*Mob) bool) []*Mob {
 	return filtered
 }
 
-func (wp *WavePool) SafeGetMobsWithCondition(condition func(*Mob) bool) []*Mob {
+func (wp *WavePool) SafeFilterMobsWithCondition(condition func(*Mob) bool) []*Mob {
 	wp.mu.RLock()
 	defer wp.mu.RUnlock()
 
-	return wp.GetMobsWithCondition(condition)
+	return wp.FilterMobsWithCondition(condition)
 }
 
 func (wp *WavePool) LinkedMobSegmentation(
@@ -1186,8 +1186,8 @@ func (wp *WavePool) SafeFindPetal(id EntityId) *Petal {
 	return wp.FindPetal(id)
 }
 
-// GetPetalsWithCondition returns conditioned petals.
-func (wp *WavePool) GetPetalsWithCondition(condition func(*Petal) bool) []*Petal {
+// FilterPetalsWithCondition returns conditioned petals.
+func (wp *WavePool) FilterPetalsWithCondition(condition func(*Petal) bool) []*Petal {
 	filtered := make([]*Petal, 0, wp.petalPool.Size())
 
 	wp.petalPool.Range(func(_ EntityId, p *Petal) bool {
@@ -1201,11 +1201,11 @@ func (wp *WavePool) GetPetalsWithCondition(condition func(*Petal) bool) []*Petal
 	return filtered
 }
 
-func (wp *WavePool) SafeGetPetalsWithCondition(condition func(*Petal) bool) []*Petal {
+func (wp *WavePool) SafeFilterPetalsWithCondition(condition func(*Petal) bool) []*Petal {
 	wp.mu.RLock()
 	defer wp.mu.RUnlock()
 
-	return wp.GetPetalsWithCondition(condition)
+	return wp.FilterPetalsWithCondition(condition)
 }
 
 // MobDoLightningBounce performs lightning bounce effect between players and pets from enemy (mob) side.
@@ -1249,11 +1249,11 @@ Loop:
 
 				bouncedIds = append(bouncedIds, targetEntity.Id)
 
-				playerMaxHealth := targetEntity.GetMaxHealth()
+				playerMaxHealth := targetEntity.MaxHealth()
 
 				targetEntity.TakeProperDamage(lightningDamage / playerMaxHealth)
 
-				bounceTargets := jellyfish.GetLightningBounceTargets(wp, bouncedIds)
+				bounceTargets := jellyfish.SearchLightningBounceTargets(wp, bouncedIds)
 
 				targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, targetEntity.Size*10)
 				if targetNode == nil {
@@ -1278,7 +1278,7 @@ Loop:
 					break Loop
 				}
 
-				bounceTargets := jellyfish.GetLightningBounceTargets(wp, bouncedIds)
+				bounceTargets := jellyfish.SearchLightningBounceTargets(wp, bouncedIds)
 
 				targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, 2*targetEntity.CalculateDiameter())
 				if targetNode == nil {
@@ -1293,7 +1293,7 @@ Loop:
 				bouncedIds = append(bouncedIds, targetEntity.Id)
 
 				{
-					targetEntityToDamage := targetEntity.GetMobToDamage(wp)
+					targetEntityToDamage := targetEntity.MobToDamage(wp)
 
 					mobMaxHealth := targetEntityToDamage.GetMaxHealth()
 
@@ -1303,7 +1303,7 @@ Loop:
 					targetEntityToDamage.LastAttackedEntity = jellyfish
 				}
 
-				bounceTargets := jellyfish.GetLightningBounceTargets(wp, bouncedIds)
+				bounceTargets := jellyfish.SearchLightningBounceTargets(wp, bouncedIds)
 
 				targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, 2*targetEntity.CalculateDiameter())
 				if targetNode == nil {
@@ -1366,7 +1366,7 @@ func (wp *WavePool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 		bouncedIds = append(bouncedIds, targetMob.Id)
 
 		{
-			targetMobToDamage := targetMob.GetMobToDamage(wp)
+			targetMobToDamage := targetMob.MobToDamage(wp)
 
 			targetMobMaxHealth := targetMobToDamage.GetMaxHealth()
 
@@ -1375,7 +1375,7 @@ func (wp *WavePool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 			targetMobToDamage.LastAttackedEntity = lightning.Master
 		}
 
-		bounceTargets := lightning.GetLightningBounceTargets(wp, bouncedIds)
+		bounceTargets := lightning.SearchLightningBounceTargets(wp, bouncedIds)
 
 		targetNode = FindNearestEntityWithLimitedDistance(targetNode, bounceTargets, 2*targetMob.CalculateDiameter())
 		if targetNode == nil {

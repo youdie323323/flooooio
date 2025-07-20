@@ -7,7 +7,7 @@ import (
 
 func RevivePlayer(wp *WavePool, p *Player) {
 	if p.IsDead {
-		alivePlayers := wp.GetPlayersWithCondition(func(p2 *Player) bool {
+		alivePlayers := wp.FilterPlayersWithCondition(func(p2 *Player) bool {
 			return p2.Id != p.Id && !p2.IsDead
 		})
 
@@ -34,17 +34,15 @@ func RevivePlayer(wp *WavePool, p *Player) {
 
 func ResetPlayerBindings(wp *WavePool, p *Player) {
 	// Remove all petals
-	for _, ps := range p.Slots.Surface {
-		if ps == nil {
+	for _, petals := range p.Slots.Surface {
+		if petals == nil {
 			continue
 		}
 
-		for _, p := range ps {
-			if p == nil {
-				continue
+		for _, petal := range petals {
+			if petal != nil {
+				petal.CompletelyRemove(wp)
 			}
-
-			p.CompletelyRemove(wp)
 		}
 	}
 

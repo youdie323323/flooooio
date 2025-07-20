@@ -18,7 +18,7 @@ type MobStat struct {
 	Extra EntityExtra `json:"extra,omitempty"`
 }
 
-// GetDamage returns damage within this MobStat.
+// GetDamage returns damage of this MobStat.
 func (s MobStat) GetDamage() float32 {
 	return s.BodyDamage
 }

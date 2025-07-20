@@ -99,7 +99,7 @@ func FindNearestEntityWithLimitedDistance(me collision.Node, entities []collisio
 	return nearest
 }
 
-const angleFactor = 255 / Tau32 // 255/(2*PI)
+const angleFactor = 255 / Tau32 // 255/2π
 
 const angleInterpolationFactor = .05
 
@@ -189,18 +189,19 @@ func predictInterceptionAngleToPlayer(dx, dy float32, p *Player, currentAngle fl
 	return predictInterceptionAngle(dx, dy, vtx, vty, currentAngle)
 }
 
+// detectRange returns detection range within this mob.
 func (m *Mob) detectRange() float32 {
 	return 2000
 }
 
-// GetTrackingTargets returns target nodes to track.
-func (m *Mob) GetTrackingTargets(wp *WavePool) []collision.Node {
+// TrackingTargets returns target nodes to track.
+func (m *Mob) TrackingTargets(wp *WavePool) []collision.Node {
 	if m.IsEnemy() {
-		return collision.ToNodeSlice(wp.GetPlayersWithCondition(func(p *Player) bool {
+		return collision.ToNodeSlice(wp.FilterPlayersWithCondition(func(p *Player) bool {
 			return !p.IsDead
 		}))
 	} else {
-		return collision.ToNodeSlice(wp.GetMobsWithCondition(func(fm *Mob) bool {
+		return collision.ToNodeSlice(wp.FilterMobsWithCondition(func(fm *Mob) bool {
 			return fm.Id != m.Id && fm.IsEnemy() && !fm.IsProjectile()
 		}))
 	}
@@ -258,7 +259,7 @@ func (m *Mob) MobBehavior(wp *WavePool, now time.Time) {
 				if now.Sub(m.JellyfishLastBounce) >= jellyfishLightningShootMS*time.Millisecond {
 					magnet := FindNearestEntityWithLimitedDistance(
 						m.TargetEntity,
-						collision.ToNodeSlice(wp.GetPetalsWithCondition(func(p *Petal) bool { return p.Type == native.PetalTypeMagnet })),
+						collision.ToNodeSlice(wp.FilterPetalsWithCondition(func(p *Petal) bool { return p.Type == native.PetalTypeMagnet })),
 						AngryMoodRadius,
 					)
 
@@ -363,7 +364,7 @@ func (m *Mob) MobBehavior(wp *WavePool, now time.Time) {
 			} else if m.LastAttackedEntity != nil {
 				targetEntity = m.LastAttackedEntity
 			} else {
-				targetEntity = FindNearestEntityWithLimitedDistance(m, m.GetTrackingTargets(wp), m.detectRange())
+				targetEntity = FindNearestEntityWithLimitedDistance(m, m.TrackingTargets(wp), m.detectRange())
 				if targetEntity == nil {
 					return
 				}

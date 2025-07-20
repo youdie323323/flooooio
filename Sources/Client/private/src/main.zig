@@ -620,8 +620,7 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
     );
 }
 
-// This function overrides C main
-// main(_: c_int, _: [*][*]u8) c_int
+// This function overrides C main too
 export fn main() c_int {
     std.log.debug("main()", .{});
 

@@ -21,7 +21,7 @@ type PetalStat struct {
 	Extra EntityExtra `json:"extra,omitempty"`
 }
 
-// GetDamage returns damage within this PetalStat.
+// GetDamage returns damage of this PetalStat.
 func (s PetalStat) GetDamage() float32 {
 	return s.Damage
 }

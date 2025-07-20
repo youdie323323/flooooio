@@ -48,6 +48,15 @@ func (p *Petal) GetMaxHealth() float32 {
 	return profile.StatFromRarity(p.Rarity).Health
 }
 
+// MasterRealPosition returns real position of master by petal, since petal has movement lag because of OrbitHistory**.
+func (p *Petal) MasterRealPosition() (x, y float32) {
+	master := p.Master
+
+	historyTargetIdx := (master.OrbitHistoryIndex + 6) % OrbitHistorySize
+
+	return master.OrbitHistoryX[historyTargetIdx], master.OrbitHistoryY[historyTargetIdx]
+}
+
 // WasEliminated determine if petal is eliminated.
 // This method exists because struct pointer petal reference doesnt nil'ed when removed.
 func (p *Petal) WasEliminated(wp *WavePool) bool {
@@ -56,9 +65,9 @@ func (p *Petal) WasEliminated(wp *WavePool) bool {
 
 var _ LightningEmitter = (*Petal)(nil) // *Petal must implement LightningEmitter
 
-// GetLightningBounceTargets returns targets to bounce.
-func (p *Petal) GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node {
-	return collision.ToNodeSlice(wp.GetMobsWithCondition(func(m *Mob) bool {
+// SearchLightningBounceTargets returns targets to bounce.
+func (p *Petal) SearchLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node {
+	return collision.ToNodeSlice(wp.FilterMobsWithCondition(func(m *Mob) bool {
 		return !(slices.Contains(bouncedIds, m.Id) ||
 			slices.Contains(ProjectileMobTypes, m.Type)) &&
 			m.IsEnemy()

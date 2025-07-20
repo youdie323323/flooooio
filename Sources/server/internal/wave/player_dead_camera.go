@@ -10,8 +10,8 @@ import (
 // getCameraTargets returns target to camera.
 func getCameraTargets(wp *WavePool) []collision.Node {
 	return slices.Concat(
-		collision.ToNodeSlice(wp.GetMobsWithCondition(func(m *Mob) bool { return m.IsEnemy() })),
-		collision.ToNodeSlice(wp.GetPlayersWithCondition(func(p2 *Player) bool { return !p2.IsDead })),
+		collision.ToNodeSlice(wp.FilterMobsWithCondition(func(m *Mob) bool { return m.IsEnemy() })),
+		collision.ToNodeSlice(wp.FilterPlayersWithCondition(func(p2 *Player) bool { return !p2.IsDead })),
 	)
 }
 

@@ -26,7 +26,7 @@ func (p *Petal) PetalUniqueTalent(wp *WavePool, now time.Time) {
 
 	case native.PetalTypeMissile:
 		{
-			if !p.Detached {
+			if !p.Detached { // Not shooted, returning
 				return
 			}
 

@@ -99,7 +99,7 @@ func doPetalSpin(
 ) {
 	mobToSpin, ok := FindNearestEntity(
 		petal,
-		collision.ToNodeSlice(wp.GetMobsWithCondition(func(m *Mob) bool {
+		collision.ToNodeSlice(wp.FilterMobsWithCondition(func(m *Mob) bool {
 			if !m.IsOrganismEnemy() {
 				return false
 			}
@@ -190,8 +190,12 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 			continue
 		}
 
-		if len(petals) > 0 && petals[0] != nil && petals[0].Type == native.PetalTypeYinYang {
-			numYinYang++
+		for _, petal := range petals {
+			if petal != nil && petal.Type == native.PetalTypeYinYang {
+				numYinYang++
+
+				break
+			}
 		}
 	}
 
@@ -233,7 +237,7 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 
 	targetRadius += ((p.Size / PlayerSize) - 1) * PlayerCollision.Radius
 
-	milli := float64(now.UnixMilli())
+	nowMilli := float64(now.UnixMilli())
 
 	for i, petals := range surface {
 		if petals == nil {
@@ -261,7 +265,7 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 			springForce = (DefaultMoodRadius - p.OrbitPetalRadii[i]) * radiusSpringStrength
 
 		case isAngry && firstPetal.Type == native.PetalTypeWing:
-			wingAddition := float32(130 * (math.Sin(math.Mod((milli+float64(*firstPetal.Id))/200, Tau)) + 1))
+			wingAddition := float32(130 * (math.Sin(math.Mod((nowMilli+float64(*firstPetal.Id))/200, Tau)) + 1))
 
 			springForce = (targetRadius + wingAddition - p.OrbitPetalRadii[i]) * radiusSpringStrength
 
@@ -309,6 +313,11 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 					petalAngle,
 				)
 
+				// Usable petal type never spins on mob
+				if slices.Contains(UsablePetalTypes, petal.Type) {
+					continue
+				}
+
 				spins := p.OrbitPetalSpins
 				if len(spins) > i {
 					spin := spins[i]
@@ -349,6 +358,11 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 
 				baseAngle,
 			)
+
+			// Usable petal type never spins on mob
+			if slices.Contains(UsablePetalTypes, petal.Type) {
+				continue
+			}
 
 			spins := p.OrbitPetalSpins
 			if len(spins) > i {

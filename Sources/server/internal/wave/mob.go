@@ -107,8 +107,8 @@ func (m *Mob) HasConnectingSegment(wp *WavePool) bool {
 	return m.ConnectingSegment != nil && !IsDeadNode(wp, m.ConnectingSegment)
 }
 
-// GetMobToDamage returns mob to damage.
-func (m *Mob) GetMobToDamage(wp *WavePool) *Mob {
+// MobToDamage returns mob to damage.
+func (m *Mob) MobToDamage(wp *WavePool) *Mob {
 	var toDamaged *Mob
 
 	switch m.Type {
@@ -131,21 +131,21 @@ func (m *Mob) WasEliminated(wp *WavePool) bool {
 
 var _ LightningEmitter = (*Mob)(nil) // *Mob must implement LightningEmitter
 
-// GetLightningBounceTargets returns targets to bounce.
-func (m *Mob) GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node {
+// SearchLightningBounceTargets returns targets to bounce.
+func (m *Mob) SearchLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node {
 	if m.IsEnemy() {
 		return slices.Concat(
-			collision.ToNodeSlice(wp.GetPlayersWithCondition(func(p *Player) bool {
+			collision.ToNodeSlice(wp.FilterPlayersWithCondition(func(p *Player) bool {
 				return !slices.Contains(bouncedIds, p.Id)
 			})),
-			collision.ToNodeSlice(wp.GetMobsWithCondition(func(m *Mob) bool {
+			collision.ToNodeSlice(wp.FilterMobsWithCondition(func(m *Mob) bool {
 				return !(slices.Contains(bouncedIds, m.Id) ||
 					slices.Contains(ProjectileMobTypes, m.Type)) &&
 					m.IsAlly()
 			})),
 		)
 	} else {
-		return collision.ToNodeSlice(wp.GetMobsWithCondition(func(m *Mob) bool {
+		return collision.ToNodeSlice(wp.FilterMobsWithCondition(func(m *Mob) bool {
 			return !(slices.Contains(bouncedIds, m.Id) ||
 				slices.Contains(ProjectileMobTypes, m.Type)) &&
 				m.IsEnemy()

@@ -36,8 +36,10 @@ func (p *Petal) PetalAngleRotation(wp *WavePool, _ time.Time) {
 				return
 			}
 
-			dx := p.X - p.Master.X
-			dy := p.Y - p.Master.Y
+			masterX, masterY := p.MasterRealPosition()
+
+			dx := p.X - masterX
+			dy := p.Y - masterY
 
 			// Calculate angle from player to petal
 			angle := math32.Mod(math32.Atan2(dy, dx)*angleFactor, 255)

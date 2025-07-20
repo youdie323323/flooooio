@@ -36,7 +36,7 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 	mProfile := native.MobProfiles[mType]
 	mStat := mProfile.StatFromRarity(m.Rarity)
 
-	mToDamage := m.GetMobToDamage(wp)
+	mToDamage := m.MobToDamage(wp)
 
 	// Hmm health should only use mMobToDamage?
 	// NOTE: yea because mMaxHealth is used as
@@ -149,7 +149,7 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 					{ // Damage
 						profile1 := native.MobProfiles[nearEntity.Type]
 
-						nearEntityToDamage := nearEntity.GetMobToDamage(wp)
+						nearEntityToDamage := nearEntity.MobToDamage(wp)
 
 						nearEntityMaxHealth := nearEntityToDamage.GetMaxHealth()
 						nearEntityDamage := profile1.StatFromRarity(nearEntity.Rarity).GetDamage()
@@ -269,7 +269,7 @@ func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
 					nearEntity.Velocity[1] += Clamp(py*2, -maxMobToPlayerVelocity, maxMobToPlayerVelocity)
 
 					{ // Damage
-						nearEntityMaxHealth := nearEntity.GetMaxHealth()
+						nearEntityMaxHealth := nearEntity.MaxHealth()
 
 						mToDamage.TakeProperDamage(nearEntity.BodyDamage / mMaxHealth)
 						nearEntity.TakeProperDamage(mDamage / nearEntityMaxHealth)
@@ -306,7 +306,7 @@ func fangDoLifesteal(fang *Petal, stat native.PetalStat, damage float32) {
 		return
 	}
 
-	masterMaxHP := master.GetMaxHealth()
+	masterMaxHP := master.MaxHealth()
 	healAmount := damage * (healDamaged / 100)
 
 	master.Health = min(1, master.Health+(healAmount/masterMaxHP))

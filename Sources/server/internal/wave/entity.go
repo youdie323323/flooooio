@@ -128,7 +128,7 @@ func NewEntity(
 
 // LightningEmitter is lightning emitter (like jellyfish, lightning).
 type LightningEmitter interface {
-	GetLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node
+	SearchLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node
 }
 
 const Tau32 = 2 * math32.Pi
