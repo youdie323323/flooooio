@@ -477,7 +477,7 @@ extern "0" fn @"0"(width: f32, height: f32, is_discardable: u8) Id;
 /// Get context by element id.
 extern "0" fn @"1"(ptr: Mem.CStringPointer, alpha: u8) Id;
 /// Draw svg.
-extern "0" fn @"2"(id: Id, ptr: [*]const u8, len: u32) void;
+extern "0" fn @"2"(id: Id, ptr: [*]const u8, len: usize) void;
 /// Destroys the context.
 extern "0" fn @"3"(id: Id) void;
 /// Performs save.
@@ -535,15 +535,15 @@ extern "0" fn @"35"(dst_id: Id, src_id: Id, dx: f32, dy: f32) void;
 /// Performs drawImage (overload 3).
 extern "0" fn @"36"(dst_id: Id, src_id: Id, dx: f32, dy: f32, dw: f32, dh: f32) void;
 /// Performs fillText.
-extern "0" fn @"37"(id: Id, ptr: [*]const u8, len: u32, x: f32, y: f32) void;
+extern "0" fn @"37"(id: Id, ptr: [*]const u8, len: usize, x: f32, y: f32) void;
 /// Performs strokeText.
-extern "0" fn @"38"(id: Id, ptr: [*]const u8, len: u32, x: f32, y: f32) void;
+extern "0" fn @"38"(id: Id, ptr: [*]const u8, len: usize, x: f32, y: f32) void;
 /// Sets font.
 extern "0" fn @"39"(id: Id, pixel: f32) void;
 /// Sets center to textAlign.
 extern "0" fn @"40"(id: Id) void;
 /// Sets textAlign.
-extern "0" fn @"41"(id: Id, ptr: [*]const u8, len: u32) void;
+extern "0" fn @"41"(id: Id, ptr: [*]const u8, len: usize) void;
 /// Sets butt to lineCap.
 extern "0" fn @"42"(id: Id) void;
 /// Sets round to lineCap.

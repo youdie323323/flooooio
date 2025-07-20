@@ -64,7 +64,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
                         3,
                 ));
 
-                const scale = 1 + sin_waved_dead_t;
+                const scale = sin_waved_dead_t + 1;
 
                 ctx.scale(scale, scale);
                 ctx.setGlobalAlpha(ctx.globalAlpha() * (1 - sin_waved_dead_t));
@@ -97,10 +97,14 @@ pub fn RenderContext(comptime AnyEntity: type) type {
                 applied = applied.interpolate(poison_target_color, poison_t);
 
             if (!hurt_t_equal_zero) { // Damage effect
-                applied = .nColorInterpolate(&.{ applied, hurt_target_color_middle, hurt_target_color_last }, 1 - hurt_t);
+                if (poison_t_equal_zero)
+                    applied = .nColorInterpolate(&.{ applied, hurt_target_color_middle, hurt_target_color_last }, 1 - hurt_t)
+                else
+                    applied = applied.interpolate(hurt_target_color_middle, 1 - hurt_t);
 
-                if (poison_t_equal_zero) // Only blend with original color when hurt effect is active and no poison
-                    applied = applied.interpolate(color, 0.5);
+                // Only blend 50% of original color to applied color when hurt effect is active and no poison,
+                // so applied color didn't looks like too affected by effect
+                applied = applied.interpolate(color, if (poison_t_equal_zero) 0.5 else 0.25);
             }
 
             return applied;
@@ -219,7 +223,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
     };
 }
 
-/// Defines a function type for entity renderers.
+/// Function type for entity renderers.
 pub fn RenderFn(comptime AnyEntity: type) type {
     return *const fn (rctx: *RenderContext(AnyEntity)) void;
 }

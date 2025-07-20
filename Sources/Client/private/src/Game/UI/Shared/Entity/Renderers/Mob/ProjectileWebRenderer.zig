@@ -31,14 +31,14 @@ fn render(rctx: *RenderContext(MobSuper)) void {
 const base_size = 13 * 10;
 const resolution = 4;
 const size = base_size * resolution;
-const size2 = size / 2.0;
+const half_size = size / 2.0;
 
 fn createWebProjectileCanvas(allocator: std.mem.Allocator, comptime is_pet: bool) *CanvasContext {
     const ctx = CanvasContext.createCanvasContext(allocator, size, size, false);
 
     ctx.setImageSmoothingEnabled(true);
 
-    ctx.translate(size2, size2);
+    ctx.translate(half_size, half_size);
 
     ctx.scale(resolution, resolution);
 

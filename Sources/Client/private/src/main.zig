@@ -756,8 +756,8 @@ fn draw(_: f32) callconv(.c) void {
         drawMovementHelper(player, delta_time);
 
     { // Render entities
-        const center_width = width / 2;
-        const center_height = height / 2;
+        const center_width = width / 2.0;
+        const center_height = height / 2.0;
 
         if (self_player) |*player| {
             const x, const y = player.pos;
@@ -774,28 +774,14 @@ fn draw(_: f32) callconv(.c) void {
             );
         }
 
-        {
+        { // Draw web projectile first, then draw other mobs
             mobs.lock();
             defer mobs.unlock();
 
-            var slice = mobs.sortedSlice(
-                allocator,
-                struct {
-                    pub fn impl(lhs: MobImpl.Super, rhs: MobImpl.Super) bool {
-                        return lhs.impl.type.mob == .web_projectile and
-                            rhs.impl.type.mob != .web_projectile;
-                    }
-                }.impl,
-            ) catch
-                // We're using defer for next raf, so this is ok
-                return;
-
-            defer slice.deinit();
+            var slice = mobs.slice();
 
             while (slice.next()) |obj_id| {
                 var mob = mobs.get(obj_id);
-
-                mob.update(delta_time);
 
                 if (mob.is_dead and mob.dead_t > 1) {
                     var inner_slice = mobs.slice();
@@ -817,11 +803,30 @@ fn draw(_: f32) callconv(.c) void {
                     continue;
                 }
 
-                mob_rctx.entity = &mob;
+                if (mob.impl.type.mob == .web_projectile) {
+                    mob.update(delta_time);
 
-                renderEntity(MobImpl, &mob_rctx);
+                    mob_rctx.entity = &mob;
 
-                mobs.set(obj_id, mob);
+                    renderEntity(MobImpl, &mob_rctx);
+
+                    mobs.set(obj_id, mob);
+                }
+            }
+
+            // next returns null and set index to zero if reached final object, so we can reuse slice
+            while (slice.next()) |obj_id| {
+                var mob = mobs.get(obj_id);
+
+                if (mob.impl.type.mob != .web_projectile) {
+                    mob.update(delta_time);
+
+                    mob_rctx.entity = &mob;
+
+                    renderEntity(MobImpl, &mob_rctx);
+
+                    mobs.set(obj_id, mob);
+                }
             }
         }
 

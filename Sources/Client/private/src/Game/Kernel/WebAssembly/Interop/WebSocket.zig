@@ -133,7 +133,7 @@ pub fn WebSocket(comptime Context: type) type {
         /// Checks if WebSocket is ready.
         extern "3" fn @"3"(id: Id) bool;
         /// Sends data through WebSocket.
-        extern "3" fn @"4"(id: Id, ptr: [*]const u8, size: u32) u8;
+        extern "3" fn @"4"(id: Id, ptr: [*]const u8, size: usize) u8;
         /// Polls for WebSocket events.
         extern "3" fn @"5"(id: Id, ptr_addr: *Mem.MemoryPtr, size_addr: *usize) u8;
     };

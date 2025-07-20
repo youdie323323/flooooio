@@ -12,15 +12,16 @@ fn render(rctx: *RenderContext(MobSuper)) void {
         else
             5 * mob.total_t;
 
-    const fcolor = rctx.blendEffectColors(
+    const ocolor = rctx.blendEffectColors(
         if (mob.is_pet)
             comptime .comptimeFromHex(0xd4a6a7)
         else
             comptime .comptimeFromHex(0xe9d683),
     );
-    const scolor = fcolor.darkened(skin_darken);
-    const acolor = scolor.darkened(skin_darken);
+    const mcolor = ocolor.darkened(skin_darken);
+    const icolor = mcolor.darkened(skin_darken);
 
+    // Dont rotate with entity angle
     // ctx.rotate(entity.angle);
 
     const scale = entity.size * comptime (1.0 / 20.0);
@@ -29,14 +30,11 @@ fn render(rctx: *RenderContext(MobSuper)) void {
     ctx.setLineJoin(.round);
     ctx.setLineWidth(6);
 
-    {
+    { // Outer
         ctx.save();
         defer ctx.restore();
 
         ctx.rotate(rotation * 0.02);
-
-        ctx.rotate(pi4);
-        ctx.scale(-0.95, 0.95);
 
         ctx.beginPath();
 
@@ -49,13 +47,13 @@ fn render(rctx: *RenderContext(MobSuper)) void {
 
         ctx.closePath();
 
-        ctx.fillColor(fcolor);
-        ctx.strokeColor(fcolor);
+        ctx.fillColor(ocolor);
+        ctx.strokeColor(ocolor);
         ctx.fill();
         ctx.stroke();
     }
 
-    {
+    { // Middle
         ctx.save();
         defer ctx.restore();
 
@@ -72,13 +70,13 @@ fn render(rctx: *RenderContext(MobSuper)) void {
 
         ctx.closePath();
 
-        ctx.fillColor(scolor);
-        ctx.strokeColor(scolor);
+        ctx.fillColor(mcolor);
+        ctx.strokeColor(mcolor);
         ctx.fill();
         ctx.stroke();
     }
 
-    {
+    { // Inner
         ctx.save();
         defer ctx.restore();
 
@@ -95,8 +93,8 @@ fn render(rctx: *RenderContext(MobSuper)) void {
 
         ctx.closePath();
 
-        ctx.fillColor(acolor);
-        ctx.strokeColor(acolor);
+        ctx.fillColor(icolor);
+        ctx.strokeColor(icolor);
         ctx.fill();
         ctx.stroke();
     }

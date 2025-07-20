@@ -230,7 +230,7 @@ pub const mob_profiles: std.EnumMap(MobType, MobData) = blk: {
 
             .collision = .{
                 .fraction = 30,
-                .radius = 27.5,
+                .radius = 25,
             },
 
             .stats = statsByConstantContinunous(10, 60, .init(.{

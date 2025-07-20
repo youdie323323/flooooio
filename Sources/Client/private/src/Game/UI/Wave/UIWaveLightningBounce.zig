@@ -20,10 +20,6 @@ pub fn staticInit() void {
     rand = prng.random();
 }
 
-fn distortValue(value: f32) f32 {
-    return value + (5 * rand.float(f32) + 5);
-}
-
 const jitter_amount: f32 = 25;
 const jitter_amount_vector: Vector2 = @splat(jitter_amount);
 
@@ -36,15 +32,17 @@ pub fn init(allocator: mem.Allocator, points: *std.ArrayListUnmanaged(Vector2)) 
     const len = points.items.len;
 
     const first_point = points.items[0];
-    const first_x, const first_y = first_point;
 
     if (len == 1) { // If lightning points length is equals to one, add distorted that one point, to render correctly
-        try points.append(allocator, .{
-            distortValue(first_x),
-            distortValue(first_y),
-        });
+        const noise_vector: Vector2 = .{
+            rand.float(f32) * 5 + 5,
+            rand.float(f32) * 5 + 5,
+        };
+
+        try points.append(allocator, first_point + noise_vector);
     }
 
+    const first_x, const first_y = first_point;
     bounces_path.moveTo(first_x, first_y);
 
     for (0..(len - 1)) |i| {
@@ -61,12 +59,13 @@ pub fn init(allocator: mem.Allocator, points: *std.ArrayListUnmanaged(Vector2)) 
         while (current_distance < total_distance) {
             const ratio_vector: Vector2 = @splat(current_distance / total_distance);
 
-            const jitter_vector = @as(Vector2, .{
+            const jitter_vector: Vector2 = .{
                 rand.float(f32) * 2 - 1,
                 rand.float(f32) * 2 - 1,
-            }) * jitter_amount_vector;
+            };
+            const jitter_vector_multiplied = jitter_vector * jitter_amount_vector;
 
-            const this_x, const this_y = start_point + ratio_vector * delta_point + jitter_vector;
+            const this_x, const this_y = start_point + ratio_vector * delta_point + jitter_vector_multiplied;
 
             bounces_path.lineTo(this_x, this_y);
 

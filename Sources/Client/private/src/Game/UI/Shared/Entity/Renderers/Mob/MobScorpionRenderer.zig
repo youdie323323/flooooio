@@ -41,7 +41,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
 
         ctx.setLineWidth(6);
 
-        ctx.translate(20, whatthefuck);
+        ctx.translate(20, 0);
         ctx.scale(0.6628867661928461, 0.6628867198043205);
 
         const beak_angle = mob.calculateBeakAngle(beak_mul) - beak_mul;
@@ -73,7 +73,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
 
         ctx.setLineWidth(7);
 
-        ctx.translate(whatthefuck, whatthefuck);
+        ctx.translate(whatthefuck, 0);
         ctx.scale(0.7679999578592127, 0.7679999578592127);
 
         { // Legs
@@ -163,7 +163,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
         ctx.save();
         defer ctx.restore();
 
-        ctx.translate(-34, -7);
+        ctx.translate(-34, -10.801406860351562);
         ctx.scale(0.30719998103634244, 0.30719998103634244);
 
         ctx.fillColor(tcolor);
@@ -177,7 +177,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
         ctx.save();
         defer ctx.restore();
 
-        ctx.translate(whatthefuck, whatthefuck);
+        ctx.translate(whatthefuck, 0);
         ctx.scale(0.7679999578592127, 0.7679999578592127);
 
         ctx.fillColor(ecolor);
@@ -190,7 +190,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
         ctx.save();
         defer ctx.restore();
 
-        ctx.translate(-5, whatthefuck);
+        ctx.translate(-5, 0);
         ctx.scale(0.7679999578592127, 0.7679999578592127);
 
         ctx.beginPath();

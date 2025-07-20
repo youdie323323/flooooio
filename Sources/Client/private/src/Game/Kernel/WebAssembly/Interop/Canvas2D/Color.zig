@@ -33,7 +33,12 @@ fn mulSafe(self: Color, comptime strength: FloatingRgb) Rgb {
 }
 
 pub fn darkened(self: Color, comptime strength: comptime_float) Color {
-    comptime debug.assert(strength <= 1);
+    comptime {
+        // Not changing
+        if (strength == 0) return;
+
+        debug.assert(strength <= 1);
+    }
 
     const strength_c: FloatingRgb = comptime @splat(1 - strength);
 
