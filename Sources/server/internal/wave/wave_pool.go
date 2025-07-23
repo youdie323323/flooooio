@@ -67,9 +67,16 @@ type Pool struct {
 	mobPool    *xsync.Map[EntityId, *Mob]
 	petalPool  *xsync.Map[EntityId, *Petal]
 
-	Ms *MobSpawner
+	// Room is wave room for this wave pool.
+	Room *Room
 
-	eliminatedEntityIds []uint16
+	// Data is current data.
+	Data *Data
+
+	// Spawner is mob spawner.
+	Spawner *MobSpawner
+
+	eliminatedEntityIds []EntityId
 
 	lightningBounces [][][2]float32
 
@@ -80,33 +87,24 @@ type Pool struct {
 
 	SpatialHash *collision.SpatialHash
 
-	wasDisposed atomic.Bool
-
 	hasBeenEnded atomic.Bool
 
 	// commandQueue is command queue to run command with atomic.
 	// If command fn is returns true, command execution will force ends.
 	commandQueue chan func() bool
 
-	Wd *Data
-
-	// Wr is wave room for this wave pool.
-	Wr *Room
-
 	Mu sync.RWMutex
 }
 
 func NewPool(wr *Room, wd *Data) *Pool {
-	s := NewMobSpawner(wd)
-
 	return &Pool{
 		playerPool: xsync.NewMap[EntityId, *Player](),
 		mobPool:    xsync.NewMap[EntityId, *Mob](),
 		petalPool:  xsync.NewMap[EntityId, *Petal](),
 
-		Ms: s,
+		Spawner: NewMobSpawner(wd),
 
-		eliminatedEntityIds: make([]uint16, 0),
+		eliminatedEntityIds: make([]EntityId, 0),
 
 		lightningBounces: make([][][2]float32, 0),
 
@@ -119,9 +117,9 @@ func NewPool(wr *Room, wd *Data) *Pool {
 
 		commandQueue: make(chan func() bool, 8),
 
-		Wd: wd,
+		Data: wd,
 
-		Wr: wr,
+		Room: wr,
 	}
 }
 
@@ -130,22 +128,18 @@ func (wp *Pool) Start(candidates RoomCandidates) {
 	wp.Mu.Lock()
 	defer wp.Mu.Unlock()
 
-	if wp.wasDisposed.Load() {
-		return
-	}
-
 	buf := SharedBufPool.Get()
 	at := 0
 
 	buf[at] = network.ClientboundWaveStarted
 	at++
 
-	buf[at] = wp.Wd.Biome
+	buf[at] = wp.Data.Biome
 	at++
 
 	for _, c := range candidates {
 		if pd, ok := ConnPool.Load(c.Conn); ok {
-			mapRadius := float32(wp.Wd.MapRadius)
+			mapRadius := float32(wp.Data.MapRadius)
 
 			randX, randY := GetRandomCoordinate(mapRadius, mapRadius, mapRadius)
 
@@ -179,8 +173,6 @@ func (wp *Pool) Dispose() {
 
 	select { // Inqueue dispose fn
 	case wp.commandQueue <- func() bool {
-		wp.wasDisposed.Store(true)
-
 		// Send stop signal
 		close(wp.updateTickerStopCh)
 
@@ -223,7 +215,7 @@ func (wp *Pool) Dispose() {
 		wp.SpatialHash.Reset()
 
 		// Set nil because circular struct
-		wp.Wr = nil
+		wp.Room = nil
 
 		return true
 	}:
@@ -285,10 +277,6 @@ func (wp *Pool) startUpdate() {
 }
 
 func (wp *Pool) update() {
-	if wp.wasDisposed.Load() {
-		return
-	}
-
 	for { // Execute all commands
 		select {
 		case cmd, ok := <-wp.commandQueue:
@@ -367,6 +355,7 @@ func (wp *Pool) updateEntities() {
 	})
 }
 
+// stepData steps a data, this function should be called every Δt (= DeltaT) seconds.
 func (wp *Pool) stepData() {
 	if wp.hasBeenEnded.Load() {
 		return
@@ -375,20 +364,20 @@ func (wp *Pool) stepData() {
 	defer func() {
 		// We nil wave room when dispose, so this can cause error,
 		// check room is nil to avoid
-		if wp.Wr != nil {
+		if wp.Room != nil {
 			// CheckAndUpdateState requires resource lock
-			wp.Wr.Mu.Lock()
-			defer wp.Wr.Mu.Unlock()
+			wp.Room.Mu.Lock()
+			defer wp.Room.Mu.Unlock()
 
-			wp.Wr.CheckAndUpdateState()
+			wp.Room.CheckAndUpdateState()
 		}
 	}()
 
-	if !wp.Wd.ProgressIsRed {
-		dmd := wp.Ms.ComputeDynamicMobData(wp.Wd)
+	if !wp.Data.ProgressIsRed {
+		dmd := wp.Spawner.ComputeDynamicMobData(wp.Data)
 		if dmd != nil {
 			randX, randY, ok := GetRandomSafeCoordinate(
-				float32(wp.Wd.MapRadius),
+				float32(wp.Data.MapRadius),
 				300,
 				wp.FilterPlayersWithCondition(func(p *Player) bool { return !p.IsDead }),
 			)
@@ -426,16 +415,16 @@ func (wp *Pool) stepData() {
 		}
 	}
 
-	waveLength := CalculateWaveLength(float32(wp.Wd.Progress))
+	waveLength := CalculateWaveLength(float32(wp.Data.Progress))
 
-	if wp.Wd.ProgressTimer >= waveLength {
+	if wp.Data.ProgressTimer >= waveLength {
 		mobCount := len(wp.FilterMobsWithCondition(func(m *Mob) bool { return m.IsEnemy() }))
 
-		if !(wp.Wd.ProgressRedTimer >= waveLength) && mobCount > 4 {
-			wp.Wd.ProgressIsRed = true
-			wp.Wd.ProgressRedTimer = min(
+		if !(wp.Data.ProgressRedTimer >= waveLength) && mobCount > 4 {
+			wp.Data.ProgressIsRed = true
+			wp.Data.ProgressRedTimer = min(
 				waveLength,
-				wp.Wd.ProgressRedTimer+0.016,
+				wp.Data.ProgressRedTimer+0.016,
 			)
 		} else {
 			wp.playerPool.Range(func(_ EntityId, p *Player) bool {
@@ -444,17 +433,17 @@ func (wp *Pool) stepData() {
 				return true
 			})
 
-			wp.Wd.ProgressIsRed = false
-			wp.Wd.ProgressRedTimer = 0
-			wp.Wd.ProgressTimer = 0
-			wp.Wd.Progress++
+			wp.Data.ProgressIsRed = false
+			wp.Data.ProgressRedTimer = 0
+			wp.Data.ProgressTimer = 0
+			wp.Data.Progress++
 
-			wp.Ms.Next(wp.Wd, nil)
+			wp.Spawner.Next(wp.Data, nil)
 		}
 	} else {
-		wp.Wd.ProgressTimer = min(
+		wp.Data.ProgressTimer = min(
 			waveLength,
-			wp.Wd.ProgressTimer+0.016,
+			wp.Data.ProgressTimer+0.016,
 		)
 	}
 }
@@ -683,11 +672,11 @@ func (wp *Pool) writeStaticUpdatePacket(buf []byte) int {
 	at++
 
 	{ // Write wave data
-		at += PutUvarint16(buf[at:], wp.Wd.Progress)
+		at += PutUvarint16(buf[at:], wp.Data.Progress)
 
-		at += WriteFloat32(buf[at:], wp.Wd.ProgressTimer)
+		at += WriteFloat32(buf[at:], wp.Data.ProgressTimer)
 
-		at += WriteFloat32(buf[at:], wp.Wd.ProgressRedTimer)
+		at += WriteFloat32(buf[at:], wp.Data.ProgressRedTimer)
 
 		{ // Wave is ended or not
 			if wp.hasBeenEnded.Load() {
@@ -699,7 +688,7 @@ func (wp *Pool) writeStaticUpdatePacket(buf []byte) int {
 			at++
 		}
 
-		at += PutUvarint16(buf[at:], wp.Wd.MapRadius)
+		at += PutUvarint16(buf[at:], wp.Data.MapRadius)
 	}
 
 	{ // Write eliminated entities
@@ -736,7 +725,7 @@ func (wp *Pool) GeneratePlayer(
 	x float32,
 	y float32,
 ) *Player {
-	id := GetRandomId()
+	id := RandomId()
 	if _, ok := wp.playerPool.Load(id); ok {
 		return wp.GeneratePlayer(
 			sp,
@@ -884,7 +873,7 @@ func (wp *Pool) GenerateMob(
 	connectingSegment collision.Node,
 	isFirstSegment bool,
 ) *Mob {
-	id := GetRandomId()
+	id := RandomId()
 	if _, ok := wp.mobPool.Load(id); ok {
 		return wp.GenerateMob(
 			mType,
@@ -1094,7 +1083,7 @@ func (wp *Pool) GeneratePetal(
 
 	isDummy bool,
 ) *Petal {
-	id := GetRandomId()
+	id := RandomId()
 	if _, ok := wp.petalPool.Load(id); ok {
 		return wp.GeneratePetal(
 			pType,

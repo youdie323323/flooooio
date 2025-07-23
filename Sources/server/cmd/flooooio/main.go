@@ -96,7 +96,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	wave.ConnPool.Store(conn, pd)
 
-	// On close
+	// On closed
 	defer func() {
 		wave.ConnPool.Delete(conn)
 		_ = conn.Close()

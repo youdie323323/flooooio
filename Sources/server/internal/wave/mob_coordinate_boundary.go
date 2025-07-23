@@ -16,7 +16,7 @@ var ProjectileMobTypes = []native.MobType{
 const DeadzoneRadiusMultiplier = 1.5
 
 func (m *Mob) MobCoordinateBoundary(wp *Pool, _ time.Time) {
-	mapRadius := float32(wp.Wd.MapRadius)
+	mapRadius := float32(wp.Data.MapRadius)
 
 	desiredMapRadius := mapRadius - m.Radius()
 

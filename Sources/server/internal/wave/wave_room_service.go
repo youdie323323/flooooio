@@ -21,7 +21,7 @@ func NewRoomService() *RoomService {
 }
 
 // JoinPublicWaveRoom adds a player to an existing public wave room or creates a new one if none exists.
-func (s *RoomService) JoinPublicWaveRoom(pd *PlayerData, biome native.Biome) *RoomPlayerId {
+func (s *RoomService) JoinPublicWaveRoom(pd *PlayerData, biome native.Biome) *RoomCandidateId {
 	// Place this before locking to avoid deadlock
 	s.LeaveCurrentWaveRoom(pd)
 
@@ -42,7 +42,7 @@ func (s *RoomService) JoinPublicWaveRoom(pd *PlayerData, biome native.Biome) *Ro
 }
 
 // JoinWaveRoom adds a player to a private wave room using a room code.
-func (s *RoomService) JoinWaveRoom(pd *PlayerData, code RoomCode) *RoomPlayerId {
+func (s *RoomService) JoinWaveRoom(pd *PlayerData, code RoomCode) *RoomCandidateId {
 	// Place this before lock to avoid deadlock
 	s.LeaveCurrentWaveRoom(pd)
 
@@ -75,7 +75,7 @@ func (s *RoomService) removeWaveRoom(room *Room) {
 }
 
 // leaveWaveRoom removes a player from their wave room, deletes empty rooms.
-func (s *RoomService) leaveWaveRoom(id RoomPlayerId) (ok bool) {
+func (s *RoomService) leaveWaveRoom(id RoomCandidateId) (ok bool) {
 	for _, room := range s.rooms {
 		if ok := room.DeregisterPlayer(id); ok {
 			if len(room.candidates) == 0 {
@@ -103,7 +103,7 @@ func (s *RoomService) LeaveCurrentWaveRoom(pd *PlayerData) (ok bool) {
 }
 
 // NewPublicWaveRoom creates a new public wave room with initial player.
-func (s *RoomService) NewPublicWaveRoom(pd *PlayerData, biome native.Biome) *RoomPlayerId {
+func (s *RoomService) NewPublicWaveRoom(pd *PlayerData, biome native.Biome) *RoomCandidateId {
 	// Place this before locking to avoid deadlock
 	s.LeaveCurrentWaveRoom(pd)
 
@@ -155,7 +155,7 @@ func (s *RoomService) findPrivateRoom(code RoomCode) *Room {
 }
 
 // FindPlayerRoom finds the wave room that contains a specific player.
-func (s *RoomService) FindPlayerRoom(id RoomPlayerId) *Room {
+func (s *RoomService) FindPlayerRoom(id RoomCandidateId) *Room {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -189,7 +189,7 @@ func (s *RoomService) RemovePlayer(pd *PlayerData) {
 	if pd.WrPId != nil && pd.WPId != nil {
 		wr := s.FindPlayerRoom(*pd.WrPId)
 		if wr != nil {
-			wp := wr.Wp
+			wp := wr.Pool
 			if wp != nil {
 				// commandQueue is thread-safe. No need to do this
 				// wp.Mu.Lock()

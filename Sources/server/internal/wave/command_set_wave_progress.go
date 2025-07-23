@@ -6,12 +6,12 @@ type SetWaveProgressCommand struct {
 }
 
 func (swp *SetWaveProgressCommand) Run(ctx *Context) error {
-	ctx.Wp.Wd.Progress = swp.Progress
-	ctx.Wp.Wd.ProgressIsRed = false
-	ctx.Wp.Wd.ProgressRedTimer = 0
-	ctx.Wp.Wd.ProgressTimer = 0
+	ctx.Wp.Data.Progress = swp.Progress
+	ctx.Wp.Data.ProgressIsRed = false
+	ctx.Wp.Data.ProgressRedTimer = 0
+	ctx.Wp.Data.ProgressTimer = 0
 
-	ctx.Wp.Ms.Next(ctx.Wp.Wd, swp.GroupIndex)
+	ctx.Wp.Spawner.Next(ctx.Wp.Data, swp.GroupIndex)
 
 	return nil
 }

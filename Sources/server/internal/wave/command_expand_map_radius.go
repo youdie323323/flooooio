@@ -5,7 +5,7 @@ type ExpandMapRadiusCmd struct {
 }
 
 func (er *ExpandMapRadiusCmd) Run(ctx *Context) error {
-	ctx.Wp.Wd.MapRadius = er.Radius
+	ctx.Wp.Data.MapRadius = er.Radius
 
 	return nil
 }

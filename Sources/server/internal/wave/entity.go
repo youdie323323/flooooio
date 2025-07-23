@@ -89,14 +89,14 @@ type StaticEntityData[T ~uint8] struct {
 	Rarity native.Rarity
 }
 
-// GetRandomAngle returns random angle of entity.
-func GetRandomAngle() float32 {
+// RandomAngle returns random entity angle.
+func RandomAngle() float32 {
 	return rand.Float32() * 255
 }
 
-// GetRandomId returns random id.
-func GetRandomId() uint16 {
-	return rand.N[uint16](65535)
+// RandomId returns random entity id.
+func RandomId() EntityId {
+	return rand.N[EntityId](65535)
 }
 
 func NewEntity(
@@ -117,7 +117,7 @@ func NewEntity(
 		oldY: y,
 
 		Magnitude: 0,
-		Angle:     GetRandomAngle(),
+		Angle:     RandomAngle(),
 
 		Size: size,
 
@@ -186,7 +186,7 @@ func GetRandomCoordinate(cx, cy, spawnRadius float32) (float32, float32) {
 
 var _ collision.Node = (*Entity)(nil) // *Entity must implement collision.Node
 
-func (e *Entity) GetId() uint16 {
+func (e *Entity) GetId() collision.NodeId {
 	return *e.Id
 }
 

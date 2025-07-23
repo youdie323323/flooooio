@@ -71,11 +71,11 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 				return
 			}
 
-			if wr.Wp == nil {
+			if wr.Pool == nil {
 				return
 			}
 
-			player := wr.Wp.SafeFindPlayer(*pd.WPId)
+			player := wr.Pool.SafeFindPlayer(*pd.WPId)
 			if player == nil {
 				return
 			}
@@ -111,11 +111,11 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 				return
 			}
 
-			if wr.Wp == nil {
+			if wr.Pool == nil {
 				return
 			}
 
-			player := wr.Wp.SafeFindPlayer(*pd.WPId)
+			player := wr.Pool.SafeFindPlayer(*pd.WPId)
 			if player == nil {
 				return
 			}
@@ -141,17 +141,17 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 				return
 			}
 
-			if wr.Wp == nil {
+			if wr.Pool == nil {
 				return
 			}
 
-			player := wr.Wp.SafeFindPlayer(*pd.WPId)
+			player := wr.Pool.SafeFindPlayer(*pd.WPId)
 			if player == nil {
 				return
 			}
 
 			player.SwapPetal(
-				wr.Wp,
+				wr.Pool,
 
 				int(swapAt),
 			)
@@ -172,14 +172,14 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 				return
 			}
 
-			if wr.Wp == nil {
+			if wr.Pool == nil {
 				return
 			}
 
 			var chatMsg string
 			chatMsg, at = readCString(buf, at)
 
-			wr.Wp.HandleChatMessage(*pd.WPId, chatMsg)
+			wr.Pool.HandleChatMessage(*pd.WPId, chatMsg)
 		}
 
 	case network.ServerboundWaveLeave:
@@ -343,11 +343,11 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 				return
 			}
 
-			if wr.Wp == nil {
+			if wr.Pool == nil {
 				return
 			}
 
-			player := wr.Wp.SafeFindPlayer(*pd.WPId)
+			player := wr.Pool.SafeFindPlayer(*pd.WPId)
 			if player == nil {
 				return
 			}

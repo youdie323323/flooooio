@@ -19,9 +19,9 @@ var LinkableMobTypes = []native.MobType{
 }
 
 type MobSpawnRule struct {
-	SpawnAfter uint16
-	Weight     float64
-	Points     int
+	SpawnsAfter uint16
+	Weight      float64
+	Points      int
 }
 
 const (
@@ -153,14 +153,14 @@ func generateRandomMobAmounts() int {
 	return len(amountTable)
 }
 
-func getRandomMobType(diff uint16, b native.Biome, sg *SpawnGroup) native.MobType {
+func getRandomMobType(difficulty uint16, b native.Biome, sg *SpawnGroup) native.MobType {
 	// If special group exists, use it
 	if sg != nil {
 		totalWeight := 0.
 
 		// Calculate total weight for valid mob types in the special group
 		for _, t := range *sg {
-			if r, exists := mobSpawnRules[b][t]; exists && r.SpawnAfter <= diff {
+			if r, exists := mobSpawnRules[b][t]; exists && r.SpawnsAfter <= difficulty {
 				totalWeight += r.Weight
 			}
 		}
@@ -169,7 +169,7 @@ func getRandomMobType(diff uint16, b native.Biome, sg *SpawnGroup) native.MobTyp
 		random := rand.Float64() * totalWeight
 
 		for _, t := range *sg {
-			if r, exists := mobSpawnRules[b][t]; exists && r.SpawnAfter <= diff {
+			if r, exists := mobSpawnRules[b][t]; exists && r.SpawnsAfter <= difficulty {
 				random -= r.Weight
 
 				if random <= 0 {
@@ -183,7 +183,7 @@ func getRandomMobType(diff uint16, b native.Biome, sg *SpawnGroup) native.MobTyp
 
 	// First pass: calculate total weight
 	for _, r := range mobSpawnRules[b] {
-		if r.SpawnAfter <= diff {
+		if r.SpawnsAfter <= difficulty {
 			totalWeight += r.Weight
 		}
 	}
@@ -192,7 +192,7 @@ func getRandomMobType(diff uint16, b native.Biome, sg *SpawnGroup) native.MobTyp
 	random := rand.Float64() * totalWeight
 
 	for t, r := range mobSpawnRules[b] {
-		if r.SpawnAfter <= diff {
+		if r.SpawnsAfter <= difficulty {
 			random -= r.Weight
 
 			if random <= 0 {

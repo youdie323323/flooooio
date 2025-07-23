@@ -42,7 +42,7 @@ func (m *Mob) MobUniqueTalent(wp *Pool, now time.Time) {
 
 	if m.TargetEntity == nil {
 		if m.RotationCounter >= RotationCounterGoal {
-			m.Angle = GetRandomAngle()
+			m.Angle = RandomAngle()
 
 			m.RotationCounter = 0
 		}
