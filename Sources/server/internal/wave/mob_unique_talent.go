@@ -25,7 +25,7 @@ const ( // Step added to movementTimer every time step.
 
 var shakeSinusoidalWave = NewSinusoidalWave(200)
 
-func (m *Mob) MobUniqueTalent(wp *WavePool, now time.Time) {
+func (m *Mob) MobUniqueTalent(wp *Pool, now time.Time) {
 	if slices.Contains(UntalentedMobTypes, m.Type) {
 		return
 	}

@@ -89,7 +89,7 @@ func doPetalOrbit(
 
 // doPetalSpin do petal spin on mob.
 func doPetalSpin(
-	wp *WavePool,
+	wp *Pool,
 
 	petal *Petal,
 
@@ -150,7 +150,7 @@ func doPetalSpin(
 	}
 }
 
-func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
+func (p *Player) PlayerPetalOrbit(wp *Pool, now time.Time) {
 	p.OrbitHistoryX[p.OrbitHistoryIndex] = p.X
 	p.OrbitHistoryY[p.OrbitHistoryIndex] = p.Y
 
@@ -340,7 +340,7 @@ func (p *Player) PlayerPetalOrbit(wp *WavePool, now time.Time) {
 			}
 		} else {
 			petal := petals[0]
-			
+
 			if petal == nil {
 				continue
 			}

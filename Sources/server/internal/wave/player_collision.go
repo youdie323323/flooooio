@@ -14,7 +14,7 @@ var PlayerCollision = native.EntityCollision{
 
 const playerToPlayerKnockbackMultiplier = 2.5
 
-func (p *Player) PlayerCollision(wp *WavePool, _ time.Time) {
+func (p *Player) PlayerCollision(wp *Pool, _ time.Time) {
 	// Dont collide when dead/uncollidable
 	if p.IsDead || !p.IsCollidable() {
 		return

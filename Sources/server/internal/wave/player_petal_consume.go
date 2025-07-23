@@ -36,7 +36,7 @@ var summonPetsData = map[native.PetalType]map[native.Rarity]StaticMobData{
 	},
 }
 
-func (p *Player) PlayerPetalConsume(wp *WavePool, now time.Time) {
+func (p *Player) PlayerPetalConsume(wp *Pool, now time.Time) {
 	if p.IsDead {
 		return
 	}

@@ -8,7 +8,7 @@ import (
 )
 
 // getCameraTargets returns target to camera.
-func getCameraTargets(wp *WavePool) []collision.Node {
+func getCameraTargets(wp *Pool) []collision.Node {
 	return slices.Concat(
 		collision.ToNodeSlice(wp.FilterMobsWithCondition(func(m *Mob) bool { return m.IsEnemy() })),
 		collision.ToNodeSlice(wp.FilterPlayersWithCondition(func(p2 *Player) bool { return !p2.IsDead })),
@@ -17,7 +17,7 @@ func getCameraTargets(wp *WavePool) []collision.Node {
 
 const deadCameraSwitchAfterMS = 500
 
-func (p *Player) PlayerDeadCamera(wp *WavePool, now time.Time) {
+func (p *Player) PlayerDeadCamera(wp *Pool, now time.Time) {
 	if !p.IsDead {
 		return
 	}

@@ -16,7 +16,7 @@ var UsablePetalTypes = []native.PetalType{
 	native.PetalTypeMissile,
 }
 
-func (p *Player) PlayerPetalReload(wp *WavePool, now time.Time) {
+func (p *Player) PlayerPetalReload(wp *Pool, now time.Time) {
 	if p.IsDead {
 		return
 	}

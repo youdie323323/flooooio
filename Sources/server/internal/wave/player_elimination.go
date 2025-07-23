@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func RevivePlayer(wp *WavePool, p *Player) {
+func RevivePlayer(wp *Pool, p *Player) {
 	if p.IsDead {
 		alivePlayers := wp.FilterPlayersWithCondition(func(p2 *Player) bool {
 			return p2.Id != p.Id && !p2.IsDead
@@ -32,7 +32,7 @@ func RevivePlayer(wp *WavePool, p *Player) {
 	}
 }
 
-func ResetPlayerBindings(wp *WavePool, p *Player) {
+func ResetPlayerBindings(wp *Pool, p *Player) {
 	// Remove all petals
 	for _, petals := range p.Slots.Surface {
 		if petals == nil {
@@ -51,7 +51,7 @@ func ResetPlayerBindings(wp *WavePool, p *Player) {
 	p.Slots.UsageCooldownGrid = GeneratePetalCooldownGrid(len(p.Slots.Surface))
 }
 
-func (p *Player) PlayerElimination(wp *WavePool, now time.Time) {
+func (p *Player) PlayerElimination(wp *Pool, now time.Time) {
 	if !p.IsDead && 0 >= p.Health {
 		p.IsDead = true
 

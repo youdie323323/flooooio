@@ -19,26 +19,26 @@ const (
 	waveRoomUpdatePacketSendIntervalMS = 30
 )
 
-type WaveRoomPlayerId = uint16
+type RoomPlayerId = uint16
 
-// StaticWaveRoomCandidatePlayer is static candidate player data to generate the dynamic player instance.
-type StaticWaveRoomCandidatePlayer struct {
+// RoomCandidate is candidate player data to generate the dynamic player instance.
+type RoomCandidate struct {
 	*StaticPlayer[StaticPetalSlots]
 
 	// Id is id of player.
-	Id WaveRoomPlayerId
+	Id RoomPlayerId
 	// State is used for starting wave room.
-	State PlayerState
+	State RoomPlayerReadyState
 	// Owner determinate if player is owner of wave room.
 	Owner bool
 }
 
-type WaveRoomCandidates = []*StaticWaveRoomCandidatePlayer
+type RoomCandidates = []*RoomCandidate
 
 type PlayerData struct {
 	*StaticPlayer[StaticPetalSlots]
 
-	WrPId *WaveRoomPlayerId
+	WrPId *RoomPlayerId
 	WPId  *EntityId
 
 	mu sync.RWMutex
@@ -47,28 +47,28 @@ type PlayerData struct {
 // ConnPool link conn and PlayerData, respectively.
 var ConnPool = xsync.NewMap[*websocket.Conn, *PlayerData]()
 
-type WaveRoom struct {
+type Room struct {
 	// updatePacketBroadcastTicker is ticker to send wave room update packet
 	updatePacketBroadcastTicker *time.Ticker
 
-	// WavePool is main core of wave.
-	WavePool *WavePool
+	// Wp is wave pool of this wave room.
+	Wp *Pool
 
-	// biome is static biome to start.
+	// biome is static biome for start pool.
 	biome native.Biome
-	// code is unique identification.
-	code WaveRoomCode
-	// visibility is visibility state.
-	visibility WaveRoomVisibility
-	// state is state.
-	state WaveRoomState
-	// candidates is static player candidates to start.
-	candidates WaveRoomCandidates
+	// code is unique identification of this room.
+	code RoomCode
+	// visibility is visibility state of this room.
+	visibility RoomVisibility
+	// state is state of this room.
+	state RoomState
+	// candidates is static candidates to start.
+	candidates RoomCandidates
 
-	mu sync.RWMutex
+	Mu sync.RWMutex
 }
 
-func (pd *PlayerData) AssignWaveRoomPlayerId(id *WaveRoomPlayerId) {
+func (pd *PlayerData) AssignWaveRoomPlayerId(id *RoomPlayerId) {
 	var opcode byte
 	if id != nil {
 		opcode = network.ClientboundWaveRoomSelfId
@@ -100,29 +100,28 @@ func (pd *PlayerData) AssignWaveRoomPlayerId(id *WaveRoomPlayerId) {
 func (pd *PlayerData) AssignWavePlayerId(id *EntityId) {
 	if id != nil {
 		pd.mu.Lock()
+		defer pd.mu.Unlock()
 
 		pd.WPId = id
-
-		pd.mu.Unlock()
 	}
 }
 
-func NewWaveRoom(b native.Biome, v WaveRoomVisibility) *WaveRoom {
-	wr := &WaveRoom{
+func NewRoom(b native.Biome, v RoomVisibility) *Room {
+	wr := &Room{
 		updatePacketBroadcastTicker: time.NewTicker(time.Second / waveRoomUpdatePacketSendIntervalMS),
 
-		WavePool: nil,
+		Wp: nil,
 
 		biome:      b,
-		code:       GenerateRandomWaveRoomCode(),
+		code:       GenerateRandomRoomCode(),
 		visibility: v,
 		state:      RoomStateWaiting,
-		candidates: make([]*StaticWaveRoomCandidatePlayer, 0, waveRoomMaxPlayerAmount),
+		candidates: make([]*RoomCandidate, 0, waveRoomMaxPlayerAmount),
 	}
 
 	// WavePool and WaveRoom respectively has circular property,
 	// thus initalize WavePool after initialized WaveRoom
-	wr.WavePool = NewWavePool(wr, &WaveData{
+	wr.Wp = NewPool(wr, &Data{
 		Biome: b,
 
 		Progress:         70,
@@ -140,13 +139,13 @@ func NewWaveRoom(b native.Biome, v WaveRoomVisibility) *WaveRoom {
 }
 
 // RegisterPlayer adds new player candidate.
-func (w *WaveRoom) RegisterPlayer(sp *StaticPlayer[StaticPetalSlots]) *WaveRoomPlayerId {
+func (w *Room) RegisterPlayer(sp *StaticPlayer[StaticPetalSlots]) *RoomPlayerId {
 	// Check this before lock, isNewPlayerRegisterable calling rlock
 	if !w.isNewPlayerRegisterable() {
 		return nil
 	}
 
-	w.mu.Lock()
+	w.Mu.Lock()
 
 	id := rand.N[uint16](65535)
 
@@ -156,16 +155,16 @@ func (w *WaveRoom) RegisterPlayer(sp *StaticPlayer[StaticPetalSlots]) *WaveRoomP
 		}
 	}
 
-	w.candidates = append(w.candidates, &StaticWaveRoomCandidatePlayer{
+	w.candidates = append(w.candidates, &RoomCandidate{
 		StaticPlayer: sp,
 		Id:           id,
-		State:        PlayerStateNotReady,
+		State:        RoomPlayerReadyStateNotReady,
 		Owner:        len(w.candidates) == 0, // First player is the owner
 	})
 
-	w.CheckAndUpdateRoomState()
+	w.CheckAndUpdateState()
 
-	w.mu.Unlock()
+	w.Mu.Unlock()
 
 	// Guarantees registered candidate will receive update packet
 	w.broadcastUpdatePacket()
@@ -174,9 +173,9 @@ func (w *WaveRoom) RegisterPlayer(sp *StaticPlayer[StaticPetalSlots]) *WaveRoomP
 }
 
 // DeregisterPlayer remove candidate and return if it removed.
-func (w *WaveRoom) DeregisterPlayer(id WaveRoomPlayerId) (ok bool) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+func (w *Room) DeregisterPlayer(id RoomPlayerId) (ok bool) {
+	w.Mu.Lock()
+	defer w.Mu.Unlock()
 
 	// If user leave while playing, its not working
 	/*
@@ -198,7 +197,7 @@ func (w *WaveRoom) DeregisterPlayer(id WaveRoomPlayerId) (ok bool) {
 				w.candidates[0].Owner = true
 			}
 
-			w.CheckAndUpdateRoomState()
+			w.CheckAndUpdateState()
 
 			return true
 		}
@@ -208,9 +207,9 @@ func (w *WaveRoom) DeregisterPlayer(id WaveRoomPlayerId) (ok bool) {
 }
 
 // UpdatePlayerState update state of player.
-func (w *WaveRoom) UpdatePlayerState(id WaveRoomPlayerId, s PlayerState) (ok bool) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+func (w *Room) UpdatePlayerState(id RoomPlayerId, s RoomPlayerReadyState) (ok bool) {
+	w.Mu.Lock()
+	defer w.Mu.Unlock()
 
 	if w.state != RoomStateWaiting {
 		return false
@@ -220,7 +219,7 @@ func (w *WaveRoom) UpdatePlayerState(id WaveRoomPlayerId, s PlayerState) (ok boo
 		if c != nil && c.Id == id {
 			c.State = s
 
-			w.CheckAndUpdateRoomState()
+			w.CheckAndUpdateState()
 
 			return true
 		}
@@ -230,9 +229,9 @@ func (w *WaveRoom) UpdatePlayerState(id WaveRoomPlayerId, s PlayerState) (ok boo
 }
 
 // UpdatePlayerName update name of player.
-func (w *WaveRoom) UpdatePlayerName(id WaveRoomPlayerId, name string) (ok bool) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+func (w *Room) UpdatePlayerName(id RoomPlayerId, name string) (ok bool) {
+	w.Mu.Lock()
+	defer w.Mu.Unlock()
 
 	if w.state != RoomStateWaiting {
 		return false
@@ -242,7 +241,7 @@ func (w *WaveRoom) UpdatePlayerName(id WaveRoomPlayerId, name string) (ok bool) 
 		if c != nil && c.Id == id {
 			c.Name = name
 
-			w.CheckAndUpdateRoomState()
+			w.CheckAndUpdateState()
 
 			return true
 		}
@@ -251,10 +250,10 @@ func (w *WaveRoom) UpdatePlayerName(id WaveRoomPlayerId, name string) (ok bool) 
 	return false
 }
 
-// UpdateRoomVisibility update visibility of this wave room.
-func (w *WaveRoom) UpdateRoomVisibility(caller WaveRoomPlayerId, v WaveRoomVisibility) (ok bool) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+// UpdateVisibility update visibility of this wave room.
+func (w *Room) UpdateVisibility(caller RoomPlayerId, v RoomVisibility) (ok bool) {
+	w.Mu.Lock()
+	defer w.Mu.Unlock()
 
 	if w.state != RoomStateWaiting {
 		return false
@@ -264,7 +263,7 @@ func (w *WaveRoom) UpdateRoomVisibility(caller WaveRoomPlayerId, v WaveRoomVisib
 		if c != nil && c.Id == caller && c.Owner {
 			w.visibility = v
 
-			w.CheckAndUpdateRoomState()
+			w.CheckAndUpdateState()
 
 			return true
 		}
@@ -273,11 +272,11 @@ func (w *WaveRoom) UpdateRoomVisibility(caller WaveRoomPlayerId, v WaveRoomVisib
 	return false
 }
 
-func (w *WaveRoom) IsAllCandidateReady() bool {
+func (w *Room) IsAllCandidateReady() bool {
 	candidatesReady := true
 
 	for _, c := range w.candidates {
-		if c != nil && c.State != PlayerStateReady {
+		if c != nil && c.State != RoomPlayerReadyStateReady {
 			candidatesReady = false
 
 			break
@@ -287,41 +286,41 @@ func (w *WaveRoom) IsAllCandidateReady() bool {
 	return candidatesReady
 }
 
-func (w *WaveRoom) CheckAndUpdateRoomState() {
+func (w *Room) CheckAndUpdateState() {
 	if w.state == RoomStateWaiting && len(w.candidates) != 0 && w.IsAllCandidateReady() {
-		w.StartWave()
+		w.Start()
 	}
 
-	if w.state == RoomStatePlaying && w.WavePool.IsAllPlayersDead() {
-		w.EndWave()
+	if w.state == RoomStatePlaying && w.Wp.IsAllPlayersDead() {
+		w.End()
 	}
 }
 
-// StartWave starts a wave.
-func (w *WaveRoom) StartWave() {
+// Start starts a wave.
+func (w *Room) Start() {
 	w.state = RoomStatePlaying
 
 	w.updatePacketBroadcastTicker.Stop()
 
-	w.WavePool.StartWave(w.candidates)
+	w.Wp.Start(w.candidates)
 }
 
-// EndWave ends a wave.
-func (w *WaveRoom) EndWave() {
+// End ends a wave.
+func (w *Room) End() {
 	w.state = RoomStateEnded
 
-	if w.WavePool != nil {
-		w.WavePool.EndWave()
+	if w.Wp != nil {
+		w.Wp.End()
 	}
 }
 
-func (w *WaveRoom) Dispose() {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+func (w *Room) Dispose() {
+	w.Mu.Lock()
+	defer w.Mu.Unlock()
 
-	w.WavePool.Dispose()
+	w.Wp.Dispose()
 
-	w.WavePool = nil
+	w.Wp = nil
 
 	w.updatePacketBroadcastTicker.Stop()
 
@@ -329,15 +328,15 @@ func (w *WaveRoom) Dispose() {
 }
 
 // startBroadcastUpdatePacket starts broadcasting an update packets.
-func (w *WaveRoom) startBroadcastUpdatePacket() {
+func (w *Room) startBroadcastUpdatePacket() {
 	for range w.updatePacketBroadcastTicker.C {
 		w.broadcastUpdatePacket()
 	}
 }
 
-func (w *WaveRoom) broadcastUpdatePacket() {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+func (w *Room) broadcastUpdatePacket() {
+	w.Mu.RLock()
+	defer w.Mu.RUnlock()
 
 	updatePacket := w.createUpdatePacket()
 
@@ -347,7 +346,7 @@ func (w *WaveRoom) broadcastUpdatePacket() {
 }
 
 // createUpdatePacket returns update packet to broadcast. Must rlock before call.
-func (w *WaveRoom) createUpdatePacket() []byte {
+func (w *Room) createUpdatePacket() []byte {
 	buf := SharedBufPool.Get()
 	defer SharedBufPool.Put(buf)
 
@@ -384,9 +383,9 @@ func (w *WaveRoom) createUpdatePacket() []byte {
 	return buf[:at]
 }
 
-func (w *WaveRoom) isNewPlayerRegisterable() bool {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+func (w *Room) isNewPlayerRegisterable() bool {
+	w.Mu.RLock()
+	defer w.Mu.RUnlock()
 
 	return len(w.candidates) < waveRoomMaxPlayerAmount &&
 		w.state == RoomStateWaiting

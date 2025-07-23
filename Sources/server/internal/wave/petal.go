@@ -59,14 +59,14 @@ func (p *Petal) MasterRealPosition() (x, y float32) {
 
 // WasEliminated returns whether if petal is eliminated.
 // This method exists because struct pointer petal reference doesnt nil'ed when removed.
-func (p *Petal) WasEliminated(wp *WavePool) bool {
+func (p *Petal) WasEliminated(wp *Pool) bool {
 	return wp.FindPetal(*p.Id) == nil
 }
 
 var _ LightningEmitter = (*Petal)(nil) // *Petal must implement LightningEmitter
 
 // SearchLightningBounceTargets returns targets to bounce.
-func (p *Petal) SearchLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node {
+func (p *Petal) SearchLightningBounceTargets(wp *Pool, bouncedIds []*EntityId) []collision.Node {
 	return collision.ToNodeSlice(wp.FilterMobsWithCondition(func(m *Mob) bool {
 		return !(slices.Contains(bouncedIds, m.Id) ||
 			slices.Contains(ProjectileMobTypes, m.Type)) &&
@@ -74,7 +74,7 @@ func (p *Petal) SearchLightningBounceTargets(wp *WavePool, bouncedIds []*EntityI
 	}))
 }
 
-func (p *Petal) OnUpdateTick(wp *WavePool, now time.Time) {
+func (p *Petal) OnUpdateTick(wp *Pool, now time.Time) {
 	p.Mu.Lock()
 
 	p.PetalAngleRotation(wp, now)

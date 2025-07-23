@@ -3,10 +3,10 @@ package native
 type MobBehavior int
 
 const (
-	HostileBehavior MobBehavior = iota // AggressiveBehavior behave aggressively.
-	PassiveBehavior                    // PassiveBehavior behave passively.
-	NeutralBehavior                    // NeutralBehavior behave neutrality.
-	ChaoticBehavior                    // ChaoticBehavior behave chaotic.
+	HostileBehavior MobBehavior = iota // AggressiveBehavior behaves aggressively.
+	PassiveBehavior                    // PassiveBehavior behaves passively.
+	NeutralBehavior                    // NeutralBehavior behaves neutrality.
+	ChaoticBehavior                    // ChaoticBehavior behaves chaotic.
 )
 
 type RarityMobBehaviorDefinition = map[Rarity]MobBehavior

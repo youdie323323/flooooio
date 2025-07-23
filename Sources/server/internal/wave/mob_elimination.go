@@ -6,7 +6,7 @@ import (
 	"flooooio/internal/wave/florr/native"
 )
 
-func removeConnectedSegmentTraversal(wp *WavePool, m *Mob) {
+func removeConnectedSegmentTraversal(wp *Pool, m *Mob) {
 	for _, id := range m.ConnectedSegmentIds {
 		if id != nil {
 			toDelete := wp.FindMob(*id)
@@ -20,7 +20,7 @@ func removeConnectedSegmentTraversal(wp *WavePool, m *Mob) {
 	}
 }
 
-func (m *Mob) onEliminate(wp *WavePool) {
+func (m *Mob) onEliminate(wp *Pool) {
 	// Leech kill all bodies when head dies
 	if m.Type == native.MobTypeLeech {
 		removeConnectedSegmentTraversal(wp, m)
@@ -36,7 +36,7 @@ func (m *Mob) onEliminate(wp *WavePool) {
 	wp.RemoveMob(*m.Id)
 }
 
-func (m *Mob) MobElimination(wp *WavePool, _ time.Time) {
+func (m *Mob) MobElimination(wp *Pool, _ time.Time) {
 	// Destroy web projectile if reached time
 	if m.Type == native.MobTypeWebProjectile &&
 		native.PetalProfiles[native.PetalTypeWeb].StatFromRarity(m.Rarity).Extra["duration"] < m.SigmaT {
@@ -56,7 +56,7 @@ func (m *Mob) MobElimination(wp *WavePool, _ time.Time) {
 //
 // Warning: This behaves the same as when this mob is "naturally" removed.
 // This mean binded entities may also be deleted. If this behavior is not desired, use wp.RemovePetal instead.
-func (m *Mob) ForceEliminate(wp *WavePool) {
+func (m *Mob) ForceEliminate(wp *Pool) {
 	m.Health = 0
 
 	m.onEliminate(wp)

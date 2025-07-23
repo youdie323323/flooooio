@@ -8,19 +8,19 @@ import (
 
 const bounaryKnockbackMultiplier = 3
 
-func (p *Player) PlayerCoordinateBoundary(wp *WavePool, _ time.Time) {
+func (p *Player) PlayerCoordinateBoundary(wp *Pool, _ time.Time) {
 	// Dont if uncollidable
 	if !p.IsCollidable() {
 		return
 	}
 
 	mapRadius := float32(wp.Wd.MapRadius)
-	
+
 	desiredMapRadius := mapRadius - p.Size
 
 	dx := p.X - mapRadius
 	dy := p.Y - mapRadius
-	
+
 	distanceFromCenter := math32.Hypot(dx, dy)
 
 	if distanceFromCenter > desiredMapRadius {

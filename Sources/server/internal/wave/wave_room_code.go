@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-type WaveRoomCode string
+type RoomCode string
 
 func generateRandomServerIdentifier() string {
 	chars := make([]string, 3)
-	
+
 	for i := range chars {
 		chars[i] = fmt.Sprintf("%x", rand.IntN(16))
 	}
@@ -29,14 +29,14 @@ func generateRandomMeaninglessIdentifier() string {
 	return strings.Join(chars, "")
 }
 
-func GenerateRandomWaveRoomCode() WaveRoomCode {
+func GenerateRandomRoomCode() RoomCode {
 	serverPart := generateRandomServerIdentifier()
 	meaninglessPart := generateRandomMeaninglessIdentifier()
 
-	return WaveRoomCode(fmt.Sprintf("%s-%s", serverPart, meaninglessPart))
+	return RoomCode(fmt.Sprintf("%s-%s", serverPart, meaninglessPart))
 }
 
-func IsWaveRoomCode(maybeCode string) bool {
+func IsRoomCode(maybeCode string) bool {
 	if len(maybeCode) != 10 {
 		return false
 	}

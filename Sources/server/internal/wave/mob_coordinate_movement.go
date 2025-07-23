@@ -6,7 +6,7 @@ import (
 	"github.com/chewxy/math32"
 )
 
-func (m *Mob) MobCoordinateMovement(wp *WavePool, _ time.Time) {
+func (m *Mob) MobCoordinateMovement(wp *Pool, _ time.Time) {
 	if m.Magnitude > 0 {
 		rad := angleToRadian(m.Angle)
 		speed := (m.MagnitudeMultiplier * m.Magnitude) / 255.

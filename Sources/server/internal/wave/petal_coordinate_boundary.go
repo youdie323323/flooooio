@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-func (p *Petal) PetalCoordinateBoundary(wp *WavePool, _ time.Time) {
+func (p *Petal) PetalCoordinateBoundary(wp *Pool, _ time.Time) {
 	if !p.Detached {
 		return
 	}

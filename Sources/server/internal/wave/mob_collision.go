@@ -21,7 +21,7 @@ func Clamp[T cmp.Ordered](f, low, high T) T {
 	return min(max(f, low), high)
 }
 
-func (m *Mob) MobCollision(wp *WavePool, _ time.Time) {
+func (m *Mob) MobCollision(wp *Pool, _ time.Time) {
 	if m.WasEliminated(wp) {
 		return
 	}

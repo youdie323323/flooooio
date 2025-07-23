@@ -25,7 +25,7 @@ fn drawMovementHelper(player: *const PlayerImpl.Super, delta_time: f32) void {
     if (player.is_dead) return;
 
     { // Interpolate mouse x and y
-        const delta_time_50_safelerp = @min(1, delta_time * 0.02);
+        const delta_time_50_safelerp = @min(1, 0.02 * delta_time);
 
         interpolated_mouse_x = math.lerp(interpolated_mouse_x, mouse_x_offset / antenna_scale, delta_time_50_safelerp);
         interpolated_mouse_y = math.lerp(interpolated_mouse_y, mouse_y_offset / antenna_scale, delta_time_50_safelerp);
@@ -62,7 +62,7 @@ fn drawMovementHelper(player: *const PlayerImpl.Super, delta_time: f32) void {
 
     ctx.setLineJoin(.round);
     ctx.setLineCap(.round);
-    ctx.setGlobalAlpha(alpha * 0.2);
+    ctx.setGlobalAlpha(0.2 * alpha);
     ctx.setLineWidth(12);
     ctx.strokeColor(comptime .comptimeFromHex(0x000000));
     ctx.stroke();
@@ -833,7 +833,7 @@ fn draw(_: f32) callconv(.c) void {
                 }
             }
 
-            // next returns null and set index to zero if reached final object, so we can reuse slice
+            // next returns null and sets index to zero if reached final object, so we can reuse `slice`
             while (slice.next()) |obj_id| {
                 var mob = mobs.get(obj_id);
 
@@ -967,7 +967,7 @@ const Mach = @import("Mach/Mach.zig");
 
 const EntityProfiles = @import("Game/Florr/Native/Entity/EntityProfiles.zig");
 
-const WaveRoom = @import("Game/Florr/Native/Wave/WaveRoom.zig");
+const WaveRoom = @import("Game/UI/Shared/Wave/WaveRoom.zig");
 
 const Biome = @import("Game/Florr/Native/Biome.zig").Biome;
 

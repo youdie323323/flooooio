@@ -128,7 +128,7 @@ func NewEntity(
 
 // LightningEmitter is lightning emitter (like jellyfish, lightning).
 type LightningEmitter interface {
-	SearchLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node
+	SearchLightningBounceTargets(wp *Pool, bouncedIds []*EntityId) []collision.Node
 }
 
 const (
@@ -208,7 +208,7 @@ func (e *Entity) GetOldPos() (float32, float32) {
 }
 
 // IsDeadNode determine if Node is dead.
-func IsDeadNode(wp *WavePool, n collision.Node) bool {
+func IsDeadNode(wp *Pool, n collision.Node) bool {
 	switch e := n.(type) {
 	case *Mob:
 		return e.WasEliminated(wp)

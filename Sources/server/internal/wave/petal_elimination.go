@@ -6,7 +6,7 @@ import (
 	"flooooio/internal/wave/florr/native"
 )
 
-func (p *Petal) onEliminate(wp *WavePool) {
+func (p *Petal) onEliminate(wp *Pool) {
 	switch p.Type {
 	// If stick is destoryed, sandstorms destoryed too
 	case native.PetalTypeMysteriousStick:
@@ -24,7 +24,7 @@ func (p *Petal) onEliminate(wp *WavePool) {
 	wp.RemovePetal(*p.Id)
 }
 
-func (p *Petal) PetalElimination(wp *WavePool, _ time.Time) {
+func (p *Petal) PetalElimination(wp *Pool, _ time.Time) {
 	if !p.WasEliminated(wp) && 0 >= p.Health {
 		p.onEliminate(wp)
 	}
@@ -34,32 +34,24 @@ func (p *Petal) PetalElimination(wp *WavePool, _ time.Time) {
 //
 // Warning: This behaves the same as when this petal is "naturally" removed.
 // This mean binded entities may also be deleted. If this behavior is not desired, use wp.RemovePetal instead.
-func (p *Petal) ForceEliminate(wp *WavePool) {
+func (p *Petal) ForceEliminate(wp *Pool) {
 	p.Health = 0
 
 	p.onEliminate(wp)
 }
 
-// CompletelyRemove is like ForceEliminate, but remove it binding too.
-func (p *Petal) CompletelyRemove(wp *WavePool) {
-	p.Mu.Lock() // Lock for wave.ResetPlayerBindings()
-
+// CompletelyRemove is like ForceEliminate, but removes its bindings too.
+func (p *Petal) CompletelyRemove(wp *Pool) {
 	if !p.WasEliminated(wp) {
 		// Remove summoned mob
 		if p.SummonedPets != nil {
-			for _, m := range p.SummonedPets {
-				m.Mu.Lock() // Lock for wave.ResetPlayerBindings()
-
-				if m != nil && !m.WasEliminated(wp) {
-					m.ForceEliminate(wp)
+			for _, mob := range p.SummonedPets {
+				if mob != nil && !mob.WasEliminated(wp) {
+					mob.ForceEliminate(wp)
 				}
-
-				m.Mu.Unlock()
 			}
 		}
 
 		p.ForceEliminate(wp)
 	}
-
-	p.Mu.Unlock()
 }

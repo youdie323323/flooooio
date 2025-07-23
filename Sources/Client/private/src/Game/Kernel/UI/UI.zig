@@ -3,7 +3,7 @@ const UI = @This();
 pub const Point = @Vector(2, f32);
 
 pub const VTable = struct {
-    /// Function to be called when this base UI initialization is done.
+    /// Function to be called when this base ui initialization is done.
     on_initialize: *const fn (*anyopaque) void,
 
     /// Render the implementation-depending components.
@@ -29,7 +29,7 @@ mouse_position: Point = .{ 0, 0 },
 hovered_component: ?*Component = null,
 clicked_component: ?*Component = null,
 
-/// Pseudo initialize for setup properties of this base UI.
+/// Pseudo initialize for setup properties of this base ui.
 /// This method is intended to be called from implementation of an `UI`.
 pub fn init(self: *UI) void {
     self.rawOnInitialize();

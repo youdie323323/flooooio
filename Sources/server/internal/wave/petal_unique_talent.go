@@ -13,7 +13,7 @@ const (
 	fasterRagingApplyMS = 50
 )
 
-func (p *Petal) PetalUniqueTalent(wp *WavePool, now time.Time) {
+func (p *Petal) PetalUniqueTalent(wp *Pool, now time.Time) {
 	switch p.Type {
 	case native.PetalTypeFaster:
 		{

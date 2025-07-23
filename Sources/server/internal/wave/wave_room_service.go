@@ -1,28 +1,27 @@
 package wave
 
 import (
+	"fmt"
 	"slices"
 	"sync"
 
 	"flooooio/internal/wave/florr/native"
 )
 
-type WaveRoomService struct {
-	waveRooms []*WaveRoom
+type RoomService struct {
+	rooms []*Room
 
 	mu sync.RWMutex
 }
 
-var WrService = NewWaveRoomService()
-
-func NewWaveRoomService() *WaveRoomService {
-	return &WaveRoomService{
-		waveRooms: make([]*WaveRoom, 0),
+func NewRoomService() *RoomService {
+	return &RoomService{
+		rooms: make([]*Room, 0),
 	}
 }
 
 // JoinPublicWaveRoom adds a player to an existing public wave room or creates a new one if none exists.
-func (s *WaveRoomService) JoinPublicWaveRoom(pd *PlayerData, biome native.Biome) *WaveRoomPlayerId {
+func (s *RoomService) JoinPublicWaveRoom(pd *PlayerData, biome native.Biome) *RoomPlayerId {
 	// Place this before locking to avoid deadlock
 	s.LeaveCurrentWaveRoom(pd)
 
@@ -43,7 +42,7 @@ func (s *WaveRoomService) JoinPublicWaveRoom(pd *PlayerData, biome native.Biome)
 }
 
 // JoinWaveRoom adds a player to a private wave room using a room code.
-func (s *WaveRoomService) JoinWaveRoom(pd *PlayerData, code WaveRoomCode) *WaveRoomPlayerId {
+func (s *RoomService) JoinWaveRoom(pd *PlayerData, code RoomCode) *RoomPlayerId {
 	// Place this before lock to avoid deadlock
 	s.LeaveCurrentWaveRoom(pd)
 
@@ -63,12 +62,12 @@ func (s *WaveRoomService) JoinWaveRoom(pd *PlayerData, code WaveRoomCode) *WaveR
 }
 
 // removeWaveRoom removes a specific wave room from the manager.
-func (s *WaveRoomService) removeWaveRoom(room *WaveRoom) {
-	for i, r := range s.waveRooms {
+func (s *RoomService) removeWaveRoom(room *Room) {
+	for i, r := range s.rooms {
 		if r == room {
 			room.Dispose()
 
-			s.waveRooms = slices.Delete(s.waveRooms, i, i+1)
+			s.rooms = slices.Delete(s.rooms, i, i+1)
 
 			return
 		}
@@ -76,8 +75,8 @@ func (s *WaveRoomService) removeWaveRoom(room *WaveRoom) {
 }
 
 // leaveWaveRoom removes a player from their wave room, deletes empty rooms.
-func (s *WaveRoomService) leaveWaveRoom(id WaveRoomPlayerId) (ok bool) {
-	for _, room := range s.waveRooms {
+func (s *RoomService) leaveWaveRoom(id RoomPlayerId) (ok bool) {
+	for _, room := range s.rooms {
 		if ok := room.DeregisterPlayer(id); ok {
 			if len(room.candidates) == 0 {
 				// Remove empty room
@@ -92,7 +91,7 @@ func (s *WaveRoomService) leaveWaveRoom(id WaveRoomPlayerId) (ok bool) {
 }
 
 // LeaveCurrentWaveRoom removes player from wave room if player was in other wave room.
-func (s *WaveRoomService) LeaveCurrentWaveRoom(pd *PlayerData) (ok bool) {
+func (s *RoomService) LeaveCurrentWaveRoom(pd *PlayerData) (ok bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -104,7 +103,7 @@ func (s *WaveRoomService) LeaveCurrentWaveRoom(pd *PlayerData) (ok bool) {
 }
 
 // NewPublicWaveRoom creates a new public wave room with initial player.
-func (s *WaveRoomService) NewPublicWaveRoom(pd *PlayerData, biome native.Biome) *WaveRoomPlayerId {
+func (s *RoomService) NewPublicWaveRoom(pd *PlayerData, biome native.Biome) *RoomPlayerId {
 	// Place this before locking to avoid deadlock
 	s.LeaveCurrentWaveRoom(pd)
 
@@ -115,17 +114,17 @@ func (s *WaveRoomService) NewPublicWaveRoom(pd *PlayerData, biome native.Biome) 
 		return nil
 	}
 
-	room := NewWaveRoom(biome, RoomVisibilityPublic)
+	room := NewRoom(biome, RoomVisibilityPublic)
 
-	s.waveRooms = append(s.waveRooms, room)
+	s.rooms = append(s.rooms, room)
 
 	return room.RegisterPlayer(pd.StaticPlayer)
 }
 
 // FindPublicRoom finds a public room with available slots for the specified biome.
-func (s *WaveRoomService) findPublicRoom(biome native.Biome) *WaveRoom {
+func (s *RoomService) findPublicRoom(biome native.Biome) *Room {
 	// First try to find room with matching biome
-	for _, room := range s.waveRooms {
+	for _, room := range s.rooms {
 		if room.visibility == RoomVisibilityPublic &&
 			room.biome == biome &&
 			room.isNewPlayerRegisterable() {
@@ -134,7 +133,7 @@ func (s *WaveRoomService) findPublicRoom(biome native.Biome) *WaveRoom {
 	}
 
 	// If no matching biome found, return any public room
-	for _, room := range s.waveRooms {
+	for _, room := range s.rooms {
 		if room.visibility == RoomVisibilityPublic &&
 			room.isNewPlayerRegisterable() {
 			return room
@@ -145,8 +144,8 @@ func (s *WaveRoomService) findPublicRoom(biome native.Biome) *WaveRoom {
 }
 
 // FindPrivateRoom finds a private room with available slots by room code.
-func (s *WaveRoomService) findPrivateRoom(code WaveRoomCode) *WaveRoom {
-	for _, room := range s.waveRooms {
+func (s *RoomService) findPrivateRoom(code RoomCode) *Room {
+	for _, room := range s.rooms {
 		if room.code == code && room.isNewPlayerRegisterable() {
 			return room
 		}
@@ -156,11 +155,11 @@ func (s *WaveRoomService) findPrivateRoom(code WaveRoomCode) *WaveRoom {
 }
 
 // FindPlayerRoom finds the wave room that contains a specific player.
-func (s *WaveRoomService) FindPlayerRoom(id WaveRoomPlayerId) *WaveRoom {
+func (s *RoomService) FindPlayerRoom(id RoomPlayerId) *Room {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	for _, room := range s.waveRooms {
+	for _, room := range s.rooms {
 		for _, candidate := range room.candidates {
 			if candidate != nil && candidate.Id == id {
 				return room
@@ -172,9 +171,9 @@ func (s *WaveRoomService) FindPlayerRoom(id WaveRoomPlayerId) *WaveRoom {
 }
 
 // isPlayerJoinable determines if a player is allowed to join/add.
-func (s *WaveRoomService) isPlayerJoinable(pd *PlayerData) bool {
+func (s *RoomService) isPlayerJoinable(pd *PlayerData) bool {
 	// Check if player is already in a room
-	for _, room := range s.waveRooms {
+	for _, room := range s.rooms {
 		for _, candidate := range room.candidates {
 			if candidate != nil && candidate.Conn == pd.StaticPlayer.Conn {
 				return false
@@ -185,25 +184,33 @@ func (s *WaveRoomService) isPlayerJoinable(pd *PlayerData) bool {
 	return true
 }
 
-func RemovePlayerFromService(pd *PlayerData) {
+// RemovePlayer remove player from service using player data.
+func (s *RoomService) RemovePlayer(pd *PlayerData) {
 	if pd.WrPId != nil && pd.WPId != nil {
-		wr := WrService.FindPlayerRoom(*pd.WrPId)
+		wr := s.FindPlayerRoom(*pd.WrPId)
 		if wr != nil {
-			wp := wr.WavePool
+			wp := wr.Wp
 			if wp != nil {
-				p := wp.SafeFindPlayer(*pd.WPId)
-				if p != nil {
-					{
-						p.Mu.Lock()
+				// commandQueue is thread-safe. No need to do this
+				// wp.Mu.Lock()
+				// defer wp.Mu.Unlock()
 
+				select { // Inqueue player remove fn
+				case wp.commandQueue <- func() bool {
+					p := wp.FindPlayer(*pd.WPId)
+					if p != nil {
 						ResetPlayerBindings(wp, p)
 
-						p.Mu.Unlock()
+						wp.RemovePlayer(*pd.WPId)
 					}
 
-					wp.SafeRemovePlayer(*pd.WPId)
-
 					pd.WPId = nil
+
+					return false
+				}:
+
+				default:
+					fmt.Println("Command queue is full or unavailable")
 				}
 			}
 		}
@@ -211,7 +218,7 @@ func RemovePlayerFromService(pd *PlayerData) {
 
 	{ // This block should executed after room properties deinialization
 		// Dont care about result
-		_ = WrService.LeaveCurrentWaveRoom(pd)
+		_ = s.LeaveCurrentWaveRoom(pd)
 
 		pd.WrPId = nil
 	}

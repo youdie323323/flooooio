@@ -1,10 +1,10 @@
 package wave
 
-type PlayerState = byte
+type RoomPlayerReadyState = byte
 
 const (
-	PlayerStateNotReady PlayerState = iota
-	PlayerStateReady
+	RoomPlayerReadyStateNotReady RoomPlayerReadyState = iota
+	RoomPlayerReadyStateReady
 )
 
-var PlayerStateValues = []WaveRoomVisibility{PlayerStateNotReady, PlayerStateReady}
+var RoomPlayerReadyStateValues = []RoomVisibility{RoomPlayerReadyStateNotReady, RoomPlayerReadyStateReady}

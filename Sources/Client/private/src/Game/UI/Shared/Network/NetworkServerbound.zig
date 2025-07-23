@@ -172,7 +172,7 @@ const mem = std.mem;
 const math = std.math;
 const leb = std.leb;
 
-const Wr = @import("../../../Florr/Native/Wave/WaveRoom.zig");
+const Wr = @import("../Wave/WaveRoom.zig");
 const Biome = @import("../../../Florr/Native/Biome.zig").Biome;
 const PlayerMood = @import("../Entity/PlayerMood.zig");
 const NetworkClient = @import("NetworkClient.zig");

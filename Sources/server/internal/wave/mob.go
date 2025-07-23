@@ -103,12 +103,12 @@ func (m *Mob) IsOrganismAlly() bool {
 }
 
 // HasConnectingSegment determinate if mob has connecting segment.
-func (m *Mob) HasConnectingSegment(wp *WavePool) bool {
+func (m *Mob) HasConnectingSegment(wp *Pool) bool {
 	return m.ConnectingSegment != nil && !IsDeadNode(wp, m.ConnectingSegment)
 }
 
 // MobToDamage returns mob to damage.
-func (m *Mob) MobToDamage(wp *WavePool) *Mob {
+func (m *Mob) MobToDamage(wp *Pool) *Mob {
 	var toDamaged *Mob
 
 	switch m.Type {
@@ -125,14 +125,14 @@ func (m *Mob) MobToDamage(wp *WavePool) *Mob {
 
 // WasEliminated determine if mob is eliminated.
 // This method exists because struct pointer mob reference doesnt nil'ed when removed.
-func (m *Mob) WasEliminated(wp *WavePool) bool {
+func (m *Mob) WasEliminated(wp *Pool) bool {
 	return wp.FindMob(*m.Id) == nil
 }
 
 var _ LightningEmitter = (*Mob)(nil) // *Mob must implement LightningEmitter
 
 // SearchLightningBounceTargets returns targets to bounce.
-func (m *Mob) SearchLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId) []collision.Node {
+func (m *Mob) SearchLightningBounceTargets(wp *Pool, bouncedIds []*EntityId) []collision.Node {
 	if m.IsEnemy() {
 		return slices.Concat(
 			collision.ToNodeSlice(wp.FilterPlayersWithCondition(func(p *Player) bool {
@@ -153,7 +153,7 @@ func (m *Mob) SearchLightningBounceTargets(wp *WavePool, bouncedIds []*EntityId)
 	}
 }
 
-func (m *Mob) OnUpdateTick(wp *WavePool, now time.Time) {
+func (m *Mob) OnUpdateTick(wp *Pool, now time.Time) {
 	m.Mu.Lock()
 
 	m.MobCoordinateMovement(wp, now)

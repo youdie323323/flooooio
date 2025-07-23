@@ -15,29 +15,33 @@ pub const Biome = enum(u8) {
         .ocean = .comptimeFromHex(0x4E77A7),
     });
 
-    var tilesets: std.EnumMap(Biome, TileRenderer.Tileset) = undefined;
+    var tilesets: std.EnumMap(Biome, TileRenderer.Tileset) = .init(.{});
 
-    const tile_size = 256 * 4;
+    /// Resolution of tile.
+    pub const tile_resoltion = 4;
 
-    /// Statically-initializes tilesets.
-    /// Without inline, the program start causing fancy errors.
+    /// Size of tile.
+    pub const tile_size = tile_resoltion * 256;
+
+    /// Statically-initializes biome tilesets.
+    /// Without inline, the program will start causing fancy errors.
     /// Might be related: https://github.com/ziglang/zig/issues/11650.
     pub inline fn initTilesets(allocator: mem.Allocator) void {
-        const garden_tile_1 = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
-        const garden_tile_2 = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
-        const garden_tile_3 = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
-        const garden_tile_4 = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
+        const garden_tile_1: TileRenderer.Tile = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
+        const garden_tile_2: TileRenderer.Tile = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
+        const garden_tile_3: TileRenderer.Tile = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
+        const garden_tile_4: TileRenderer.Tile = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
 
         garden_tile_1.drawSvg(@embedFile("../../UI/Shared/Tile/Tiles/grass_c_0.svg"));
         garden_tile_2.drawSvg(@embedFile("../../UI/Shared/Tile/Tiles/grass_c_1.svg"));
         garden_tile_3.drawSvg(@embedFile("../../UI/Shared/Tile/Tiles/grass_c_2.svg"));
         garden_tile_4.drawSvg(@embedFile("../../UI/Shared/Tile/Tiles/grass_c_3.svg"));
 
-        const desert_tile_1 = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
-        const desert_tile_2 = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
-        const desert_tile_3 = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
-        const desert_tile_4 = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
-        const desert_tile_5 = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
+        const desert_tile_1: TileRenderer.Tile = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
+        const desert_tile_2: TileRenderer.Tile = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
+        const desert_tile_3: TileRenderer.Tile = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
+        const desert_tile_4: TileRenderer.Tile = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
+        const desert_tile_5: TileRenderer.Tile = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
 
         desert_tile_1.drawSvg(@embedFile("../../UI/Shared/Tile/Tiles/desert_c_0.svg"));
         desert_tile_2.drawSvg(@embedFile("../../UI/Shared/Tile/Tiles/desert_c_1.svg"));
@@ -45,21 +49,19 @@ pub const Biome = enum(u8) {
         desert_tile_4.drawSvg(@embedFile("../../UI/Shared/Tile/Tiles/desert_c_3.svg"));
         desert_tile_5.drawSvg(@embedFile("../../UI/Shared/Tile/Tiles/desert_c_4.svg"));
 
-        const ocean_tile_1 = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
-        const ocean_tile_2 = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
-        const ocean_tile_3 = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
-        const ocean_tile_4 = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
+        const ocean_tile_1: TileRenderer.Tile = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
+        const ocean_tile_2: TileRenderer.Tile = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
+        const ocean_tile_3: TileRenderer.Tile = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
+        const ocean_tile_4: TileRenderer.Tile = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
 
         ocean_tile_1.drawSvg(@embedFile("../../UI/Shared/Tile/Tiles/ocean_c_0.svg"));
         ocean_tile_2.drawSvg(@embedFile("../../UI/Shared/Tile/Tiles/ocean_c_1.svg"));
         ocean_tile_3.drawSvg(@embedFile("../../UI/Shared/Tile/Tiles/ocean_c_2.svg"));
         ocean_tile_4.drawSvg(@embedFile("../../UI/Shared/Tile/Tiles/ocean_c_3.svg"));
 
-        tilesets = .init(.{
-            .garden = &.{ garden_tile_1, garden_tile_2, garden_tile_3, garden_tile_4 },
-            .desert = &.{ desert_tile_1, desert_tile_2, desert_tile_3, desert_tile_4, desert_tile_5 },
-            .ocean = &.{ ocean_tile_1, ocean_tile_2, ocean_tile_3, ocean_tile_4 },
-        });
+        tilesets.put(.garden, &.{ garden_tile_1, garden_tile_2, garden_tile_3, garden_tile_4 });
+        tilesets.put(.desert, &.{ desert_tile_1, desert_tile_2, desert_tile_3, desert_tile_4, desert_tile_5 });
+        tilesets.put(.ocean, &.{ ocean_tile_1, ocean_tile_2, ocean_tile_3, ocean_tile_4 });
     }
 
     pub fn name(biome: Biome) ?[]const u8 {

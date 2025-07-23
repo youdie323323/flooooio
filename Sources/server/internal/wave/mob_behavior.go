@@ -195,7 +195,7 @@ func (m *Mob) detectRange() float32 {
 }
 
 // TrackingTargets returns target nodes to track.
-func (m *Mob) TrackingTargets(wp *WavePool) []collision.Node {
+func (m *Mob) TrackingTargets(wp *Pool) []collision.Node {
 	if m.IsEnemy() {
 		return collision.ToNodeSlice(wp.FilterPlayersWithCondition(func(p *Player) bool {
 			return !p.IsDead
@@ -209,7 +209,7 @@ func (m *Mob) TrackingTargets(wp *WavePool) []collision.Node {
 
 var missileSpeed = MobSpeedOf(native.MobTypeMissileProjectile)
 
-func (m *Mob) MobBehavior(wp *WavePool, now time.Time) {
+func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 	// If body, dont do anything
 	if IsBody(wp, m) {
 		return

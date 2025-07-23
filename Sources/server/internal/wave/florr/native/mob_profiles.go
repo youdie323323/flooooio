@@ -349,7 +349,7 @@ var MobProfiles = map[MobType]MobData{
 			Health:     2500,
 			BodyDamage: 100,
 		},
-		BaseSize: 40,
+		BaseSize: 35,
 		EntityData: EntityData[MobI18n]{
 			I18n: MobI18n{
 				Name:        "Sandstorm",

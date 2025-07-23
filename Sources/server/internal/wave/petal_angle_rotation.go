@@ -8,7 +8,7 @@ import (
 	"github.com/chewxy/math32"
 )
 
-func (p *Petal) PetalAngleRotation(wp *WavePool, _ time.Time) {
+func (p *Petal) PetalAngleRotation(wp *Pool, _ time.Time) {
 	if p.Detached {
 		return
 	}

@@ -6,7 +6,7 @@ const (
 	PlayerMovementMu = .9
 )
 
-func (p *Player) PlayerCoordinateMovement(wp *WavePool, _ time.Time) {
+func (p *Player) PlayerCoordinateMovement(wp *Pool, _ time.Time) {
 	p.Velocity[0] += p.Acceleration[0] * p.MagnitudeMultiplier
 	p.Velocity[1] += p.Acceleration[1] * p.MagnitudeMultiplier
 

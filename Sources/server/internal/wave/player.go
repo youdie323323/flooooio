@@ -92,7 +92,7 @@ func (p *Player) MaxHealth() float32 {
 }
 
 type PlayerCommand interface {
-	Execute(*WavePool, *Player)
+	Execute(*Pool, *Player)
 }
 
 type MovementCommand struct {
@@ -110,7 +110,7 @@ type SwapPetalCommand struct {
 
 const PlayerSpeedMultiplier = .5
 
-func (c *MovementCommand) Execute(_ *WavePool, p *Player) {
+func (c *MovementCommand) Execute(_ *Pool, p *Player) {
 	if p.IsDead {
 		return
 	}
@@ -128,7 +128,7 @@ func (c *MovementCommand) Execute(_ *WavePool, p *Player) {
 	p.Acceleration[1] = accelY
 }
 
-func (c *MoodCommand) Execute(_ *WavePool, p *Player) {
+func (c *MoodCommand) Execute(_ *Pool, p *Player) {
 	if p.IsDead {
 		return
 	}
@@ -136,7 +136,7 @@ func (c *MoodCommand) Execute(_ *WavePool, p *Player) {
 	p.Mood = c.Mood
 }
 
-func (c *SwapPetalCommand) Execute(wp *WavePool, p *Player) {
+func (c *SwapPetalCommand) Execute(wp *Pool, p *Player) {
 	if p.IsDead {
 		return
 	}
@@ -180,14 +180,14 @@ func (p *Player) ChangeMood(m native.Mood) {
 
 // SwapPetal swaps the petal.
 func (p *Player) SwapPetal(
-	wp *WavePool,
+	wp *Pool,
 
 	at int,
 ) {
 	p.commandQueue <- &SwapPetalCommand{at}
 }
 
-func (p *Player) OnUpdateTick(wp *WavePool, now time.Time) {
+func (p *Player) OnUpdateTick(wp *Pool, now time.Time) {
 	p.Mu.Lock()
 
 	// Execute all commands

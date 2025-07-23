@@ -41,6 +41,9 @@ func readCString(buf []byte, at int) (string, int) {
 	return unsafe.String(&buf[at], end-at), end + 1
 }
 
+// WrService is global wave room service.
+var WrService = wave.NewRoomService()
+
 func HandleMessage(pd *wave.PlayerData, buf []byte) {
 	bufLen := len(buf)
 	if bufLen < 1 {
@@ -63,16 +66,16 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 				return
 			}
 
-			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
+			wr := WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
 				return
 			}
 
-			if wr.WavePool == nil {
+			if wr.Wp == nil {
 				return
 			}
 
-			player := wr.WavePool.SafeFindPlayer(*pd.WPId)
+			player := wr.Wp.SafeFindPlayer(*pd.WPId)
 			if player == nil {
 				return
 			}
@@ -103,16 +106,16 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 				return
 			}
 
-			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
+			wr := WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
 				return
 			}
 
-			if wr.WavePool == nil {
+			if wr.Wp == nil {
 				return
 			}
 
-			player := wr.WavePool.SafeFindPlayer(*pd.WPId)
+			player := wr.Wp.SafeFindPlayer(*pd.WPId)
 			if player == nil {
 				return
 			}
@@ -133,22 +136,22 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 			swapAt := buf[at]
 			at++
 
-			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
+			wr := WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
 				return
 			}
 
-			if wr.WavePool == nil {
+			if wr.Wp == nil {
 				return
 			}
 
-			player := wr.WavePool.SafeFindPlayer(*pd.WPId)
+			player := wr.Wp.SafeFindPlayer(*pd.WPId)
 			if player == nil {
 				return
 			}
 
 			player.SwapPetal(
-				wr.WavePool,
+				wr.Wp,
 
 				int(swapAt),
 			)
@@ -164,24 +167,24 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 				return
 			}
 
-			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
+			wr := WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
 				return
 			}
 
-			if wr.WavePool == nil {
+			if wr.Wp == nil {
 				return
 			}
 
 			var chatMsg string
 			chatMsg, at = readCString(buf, at)
 
-			wr.WavePool.HandleChatMessage(*pd.WPId, chatMsg)
+			wr.Wp.HandleChatMessage(*pd.WPId, chatMsg)
 		}
 
 	case network.ServerboundWaveLeave:
 		{
-			wave.RemovePlayerFromService(pd)
+			WrService.RemovePlayer(pd)
 		}
 
 	case network.ServerboundWaveRoomCreate:
@@ -197,7 +200,7 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 				return
 			}
 
-			id := wave.WrService.NewPublicWaveRoom(pd, biome)
+			id := WrService.NewPublicWaveRoom(pd, biome)
 
 			pd.AssignWaveRoomPlayerId(id)
 		}
@@ -211,13 +214,13 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 			var maybeCode string
 
 			maybeCode, at = readCString(buf, at)
-			if !wave.IsWaveRoomCode(maybeCode) {
+			if !wave.IsRoomCode(maybeCode) {
 				return
 			}
 
-			code := wave.WaveRoomCode(maybeCode)
+			code := wave.RoomCode(maybeCode)
 
-			id := wave.WrService.JoinWaveRoom(pd, code)
+			id := WrService.JoinWaveRoom(pd, code)
 
 			pd.AssignWaveRoomPlayerId(id)
 		}
@@ -235,10 +238,10 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 				return
 			}
 
-			id := wave.WrService.JoinPublicWaveRoom(pd, biome)
+			id := WrService.JoinPublicWaveRoom(pd, biome)
 			if id == nil {
 				// If public wave room not found, make new public wave room
-				id = wave.WrService.NewPublicWaveRoom(pd, biome)
+				id = WrService.NewPublicWaveRoom(pd, biome)
 			}
 
 			pd.AssignWaveRoomPlayerId(id)
@@ -257,16 +260,16 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 			state := buf[at]
 			at++
 
-			if !slices.Contains(wave.PlayerStateValues, state) {
+			if !slices.Contains(wave.RoomPlayerReadyStateValues, state) {
 				return
 			}
 
-			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
+			wr := WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
 				return
 			}
 
-			wr.UpdatePlayerState(*pd.WrPId, wave.PlayerState(state))
+			wr.UpdatePlayerState(*pd.WrPId, wave.RoomPlayerReadyState(state))
 		}
 
 	case network.ServerboundWaveRoomChangeVisible:
@@ -282,16 +285,16 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 			state := buf[at]
 			at++
 
-			if !slices.Contains(wave.WaveRoomVisibilityValues, state) {
+			if !slices.Contains(wave.RoomVisibilityValues, state) {
 				return
 			}
 
-			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
+			wr := WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
 				return
 			}
 
-			wr.UpdateRoomVisibility(*pd.WrPId, wave.WaveRoomVisibility(state))
+			wr.UpdateVisibility(*pd.WrPId, wave.RoomVisibility(state))
 		}
 
 	case network.ServerboundWaveRoomChangeName:
@@ -307,7 +310,7 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 			var name string
 			name, at = readCString(buf, at)
 
-			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
+			wr := WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
 				return
 			}
@@ -317,7 +320,7 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 
 	case network.ServerboundWaveRoomLeave:
 		{
-			ok := wave.WrService.LeaveCurrentWaveRoom(pd)
+			ok := WrService.LeaveCurrentWaveRoom(pd)
 			if !ok {
 				return
 			}
@@ -335,16 +338,16 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 				return
 			}
 
-			wr := wave.WrService.FindPlayerRoom(*pd.WrPId)
+			wr := WrService.FindPlayerRoom(*pd.WrPId)
 			if wr == nil {
 				return
 			}
 
-			if wr.WavePool == nil {
+			if wr.Wp == nil {
 				return
 			}
 
-			player := wr.WavePool.SafeFindPlayer(*pd.WPId)
+			player := wr.Wp.SafeFindPlayer(*pd.WPId)
 			if player == nil {
 				return
 			}

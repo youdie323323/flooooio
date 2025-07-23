@@ -1,11 +1,11 @@
 package wave
 
-type WaveRoomState = byte
+type RoomState = byte
 
 const (
-	RoomStateWaiting WaveRoomState = iota
+	RoomStateWaiting RoomState = iota
 	RoomStatePlaying
 	RoomStateEnded
 )
 
-var WaveRoomStateValues = []WaveRoomVisibility{RoomStateWaiting, RoomStatePlaying, RoomStateEnded}
+var RoomStateValues = []RoomVisibility{RoomStateWaiting, RoomStatePlaying, RoomStateEnded}

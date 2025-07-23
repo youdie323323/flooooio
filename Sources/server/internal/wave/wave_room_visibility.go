@@ -1,10 +1,10 @@
 package wave
 
-type WaveRoomVisibility = byte
+type RoomVisibility = byte
 
 const (
-	RoomVisibilityPublic WaveRoomVisibility = iota
+	RoomVisibilityPublic RoomVisibility = iota
 	RoomVisibilityPrivate
 )
 
-var WaveRoomVisibilityValues = []WaveRoomVisibility{RoomVisibilityPublic, RoomVisibilityPrivate}
+var RoomVisibilityValues = []RoomVisibility{RoomVisibilityPublic, RoomVisibilityPrivate}

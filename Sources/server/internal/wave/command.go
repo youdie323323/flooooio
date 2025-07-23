@@ -20,7 +20,7 @@ const (
 type Context struct {
 	Operator *Player
 
-	Wp *WavePool
+	Wp *Pool
 }
 
 type cli struct {
@@ -71,7 +71,7 @@ func GetCliHelp(c cli) string {
 
 	for i := range t.NumField() {
 		field := t.Field(i)
-		
+
 		cmdName := field.Tag.Get("cmd")
 		help := field.Tag.Get("help")
 

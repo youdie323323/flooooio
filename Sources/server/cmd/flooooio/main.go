@@ -46,7 +46,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 						Type:   native.PetalTypeMissile,
 						Rarity: native.RarityUltra,
 					},
-				}, 10),
+				}, 200),
 				Bottom: []wave.StaticPetalData{
 					{
 						Type:   native.PetalTypeWeb,
@@ -101,7 +101,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		wave.ConnPool.Delete(conn)
 		_ = conn.Close()
 
-		wave.RemovePlayerFromService(pd)
+		kernel.WrService.RemovePlayer(pd)
 	}()
 
 	for {

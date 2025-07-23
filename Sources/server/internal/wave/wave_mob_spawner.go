@@ -238,7 +238,7 @@ type DynamicMobData struct {
 	SegmentBodies int
 }
 
-type WaveMobSpawner struct {
+type MobSpawner struct {
 	// totalTime is total progress time.
 	totalTime int
 
@@ -253,30 +253,30 @@ type WaveMobSpawner struct {
 	points int
 }
 
-func NewWaveMobSpawner(wd *WaveData) *WaveMobSpawner {
-	s := new(WaveMobSpawner)
+func NewMobSpawner(wd *Data) *MobSpawner {
+	s := new(MobSpawner)
 
 	s.Next(wd, nil)
 
 	return s
 }
 
-func CalculateWaveLuck(progress WaveProgress) float64 {
+func CalculateWaveLuck(progress Progress) float64 {
 	return math.Pow(1.3, float64(progress)) - 1
 }
 
 const two_over_three float64 = 2.0 / 3.0
 
 // CalculateSpawnWave calculate spawn wave by best wave progression of this wave.
-func CalculateSpawnWave(bestWave WaveProgress) WaveProgress {
-	return WaveProgress(math.Ceil(two_over_three * float64(bestWave)))
+func CalculateSpawnWave(bestWave Progress) Progress {
+	return Progress(math.Ceil(two_over_three * float64(bestWave)))
 }
 
 func CalculateWaveLength(x float32) float32 {
 	return max(60, math32.Pow(x, 0.2)*18.9287+30)
 }
 
-func (s *WaveMobSpawner) Next(data *WaveData, groupIndex *int) {
+func (s *MobSpawner) Next(data *Data, groupIndex *int) {
 	s.totalTime = -1
 
 	if s.spawnList == nil {
@@ -309,7 +309,7 @@ const (
 	spawnDelay int = WaveDataUpdatePerSec * 0.8
 )
 
-func (s *WaveMobSpawner) ComputeDynamicMobData(data *WaveData) *DynamicMobData {
+func (s *MobSpawner) ComputeDynamicMobData(data *Data) *DynamicMobData {
 	// Increase time
 	s.totalTime++
 
@@ -403,6 +403,6 @@ const (
 	gaussianStdev     = 1.
 )
 
-func (s *WaveMobSpawner) gaussian(x float64) float64 {
+func (s *MobSpawner) gaussian(x float64) float64 {
 	return flatTopGaussian(x, gaussianAmplitude, gaussianMean, gaussianW, gaussianStdev)
 }
