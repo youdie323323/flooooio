@@ -42,16 +42,20 @@ pub fn build(b: *std.Build) !void {
         ),
     });
 
+    wasm.rdynamic = true;
+
     wasm.export_memory = true;
+
+    wasm.export_table = true;
 
     wasm.initial_memory = wasm_memory;
     wasm.max_memory = wasm_memory;
 
-    wasm.export_table = true;
+    wasm.link_function_sections = true; // -ffunction-sections
+    wasm.link_data_sections = true; // -fdata-sections
+    wasm.link_gc_sections = true; // --gc-sections
 
     wasm.entry = .disabled;
-
-    wasm.rdynamic = true;
 
     wasm.want_lto = true;
 

@@ -21,7 +21,7 @@ pub const Biome = enum(u8) {
     pub const tile_resoltion = 4;
 
     /// Size of tile.
-    pub const tile_size = tile_resoltion * 256;
+    pub const tile_size = 256 * tile_resoltion;
 
     /// Statically-initializes biome tilesets.
     /// Without inline, the program will start causing fancy errors.
