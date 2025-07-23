@@ -46,7 +46,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 						Type:   native.PetalTypeMissile,
 						Rarity: native.RarityUltra,
 					},
-				}, 200),
+				}, 500),
 				Bottom: []wave.StaticPetalData{
 					{
 						Type:   native.PetalTypeWeb,

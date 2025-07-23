@@ -49,12 +49,12 @@ func writeCString[T ~string](buf []byte, at int, s T) int {
 	return at + n + 1
 }
 
-type Progress = uint16
+type DataProgress = uint16
 
 type Data struct {
 	Biome native.Biome
 
-	Progress         Progress
+	Progress         DataProgress
 	ProgressTimer    float32
 	ProgressRedTimer float32
 	ProgressIsRed    bool

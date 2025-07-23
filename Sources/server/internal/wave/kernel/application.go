@@ -308,6 +308,7 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 			}
 
 			var name string
+
 			name, at = readCString(buf, at)
 
 			wr := WrService.FindPlayerRoom(*pd.WrPId)
@@ -360,7 +361,7 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 
 			width, height = clampWindowSize(width, height)
 
-			// Lock before write window
+			// Lock before write to window
 			player.Mu.Lock()
 
 			player.Window[0] = width

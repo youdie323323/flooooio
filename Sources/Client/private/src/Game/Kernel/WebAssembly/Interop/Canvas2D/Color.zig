@@ -34,7 +34,7 @@ fn mulSafe(self: Color, comptime strength: FloatingRgb) Rgb {
 
 pub fn darkened(self: Color, comptime strength: comptime_float) Color {
     comptime {
-        // Not changing
+        // No changes
         if (strength == 0) return;
 
         debug.assert(strength <= 1);

@@ -109,15 +109,15 @@ func (pd *PlayerData) AssignWavePlayerId(id *EntityId) {
 	}
 }
 
-func NewRoom(b native.Biome, v RoomVisibility) *Room {
+func NewRoom(biome native.Biome, visibility RoomVisibility) *Room {
 	wr := &Room{
 		updatePacketBroadcastTicker: time.NewTicker(time.Second / waveRoomUpdatePacketSendIntervalMS),
 
 		Pool: nil,
 
-		biome:      b,
+		biome:      biome,
 		code:       GenerateRandomRoomCode(),
-		visibility: v,
+		visibility: visibility,
 		state:      RoomStateWaiting,
 		candidates: make([]*RoomCandidate, 0, waveRoomMaxPlayerAmount),
 	}
@@ -125,7 +125,7 @@ func NewRoom(b native.Biome, v RoomVisibility) *Room {
 	// WavePool and WaveRoom respectively has circular property,
 	// thus initalize WavePool after initialized WaveRoom
 	wr.Pool = NewPool(wr, &Data{
-		Biome: b,
+		Biome: biome,
 
 		Progress:         70,
 		ProgressTimer:    0,

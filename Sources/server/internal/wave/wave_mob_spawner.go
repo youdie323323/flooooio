@@ -25,7 +25,7 @@ type MobSpawnRule struct {
 }
 
 const (
-	centipedePoint = 3
+	centipedePoints = 3
 )
 
 var mobSpawnRules = map[native.Biome]map[native.MobType]MobSpawnRule{
@@ -37,8 +37,8 @@ var mobSpawnRules = map[native.Biome]map[native.MobType]MobSpawnRule{
 		native.MobTypeWorkerAnt:  {2, 50, 1},
 		native.MobTypeSoldierAnt: {3, 50, 1},
 
-		native.MobTypeCentipede:     {2, 1, centipedePoint},
-		native.MobTypeCentipedeEvil: {3, 1, centipedePoint},
+		native.MobTypeCentipede:     {2, 1, centipedePoints},
+		native.MobTypeCentipedeEvil: {3, 1, centipedePoints},
 	},
 	native.BiomeDesert: {
 		native.MobTypeBeetle:       {2, 200, 1},
@@ -47,7 +47,7 @@ var mobSpawnRules = map[native.Biome]map[native.MobType]MobSpawnRule{
 		native.MobTypeScorpion:     {3, 200, 1},
 		native.MobTypeLadybugShiny: {3, 1, 5},
 
-		native.MobTypeCentipedeDesert: {1, 1, centipedePoint},
+		native.MobTypeCentipedeDesert: {1, 1, centipedePoints},
 	},
 	native.BiomeOcean: {
 		native.MobTypeStarfish:  {3, 1, 1},
@@ -153,14 +153,14 @@ func generateRandomMobAmounts() int {
 	return len(amountTable)
 }
 
-func getRandomMobType(difficulty uint16, b native.Biome, sg *SpawnGroup) native.MobType {
+func getRandomMobType(difficulty uint16, biome native.Biome, sg *SpawnGroup) native.MobType {
 	// If special group exists, use it
 	if sg != nil {
 		totalWeight := 0.
 
 		// Calculate total weight for valid mob types in the special group
 		for _, t := range *sg {
-			if r, exists := mobSpawnRules[b][t]; exists && r.SpawnsAfter <= difficulty {
+			if r, exists := mobSpawnRules[biome][t]; exists && r.SpawnsAfter <= difficulty {
 				totalWeight += r.Weight
 			}
 		}
@@ -169,7 +169,7 @@ func getRandomMobType(difficulty uint16, b native.Biome, sg *SpawnGroup) native.
 		random := rand.Float64() * totalWeight
 
 		for _, t := range *sg {
-			if r, exists := mobSpawnRules[b][t]; exists && r.SpawnsAfter <= difficulty {
+			if r, exists := mobSpawnRules[biome][t]; exists && r.SpawnsAfter <= difficulty {
 				random -= r.Weight
 
 				if random <= 0 {
@@ -182,7 +182,7 @@ func getRandomMobType(difficulty uint16, b native.Biome, sg *SpawnGroup) native.
 	totalWeight := 0.
 
 	// First pass: calculate total weight
-	for _, r := range mobSpawnRules[b] {
+	for _, r := range mobSpawnRules[biome] {
 		if r.SpawnsAfter <= difficulty {
 			totalWeight += r.Weight
 		}
@@ -191,7 +191,7 @@ func getRandomMobType(difficulty uint16, b native.Biome, sg *SpawnGroup) native.
 	// Second pass: select mob
 	random := rand.Float64() * totalWeight
 
-	for t, r := range mobSpawnRules[b] {
+	for t, r := range mobSpawnRules[biome] {
 		if r.SpawnsAfter <= difficulty {
 			random -= r.Weight
 
@@ -246,7 +246,6 @@ type MobSpawner struct {
 	spawnList *list.List
 
 	// spawnGroup is current spawn group.
-	// nil for empty.
 	spawnGroup *SpawnGroup
 
 	// points is current point.
@@ -261,15 +260,15 @@ func NewMobSpawner(wd *Data) *MobSpawner {
 	return s
 }
 
-func CalculateWaveLuck(progress Progress) float64 {
+func CalculateWaveLuck(progress DataProgress) float64 {
 	return math.Pow(1.3, float64(progress)) - 1
 }
 
-const two_over_three float64 = 2.0 / 3.0
+const twoOverThree float64 = 2.0 / 3.0
 
 // CalculateSpawnWave calculate spawn wave by best wave progression of this wave.
-func CalculateSpawnWave(bestWave Progress) Progress {
-	return Progress(math.Ceil(two_over_three * float64(bestWave)))
+func CalculateSpawnWave(bestWave DataProgress) DataProgress {
+	return DataProgress(math.Ceil(twoOverThree * float64(bestWave)))
 }
 
 func CalculateWaveLength(x float32) float32 {
@@ -306,7 +305,7 @@ func (s *MobSpawner) Next(data *Data, groupIndex *int) {
 }
 
 const (
-	spawnDelay int = WaveDataUpdatePerSec * 0.8
+	spawnDelay int = 0.8 * WaveDataUpdatePerSec
 )
 
 func (s *MobSpawner) ComputeDynamicMobData(data *Data) *DynamicMobData {
@@ -319,9 +318,9 @@ func (s *MobSpawner) ComputeDynamicMobData(data *Data) *DynamicMobData {
 		if s.spawnGroup == nil {
 			amount = generateRandomMobAmounts()
 		} else {
-			sec := s.totalTime / spawnDelay
+			ratio := s.totalTime / spawnDelay
 
-			amount = int(math.Round(s.gaussian(float64(sec))))
+			amount = int(math.Round(s.gaussian(float64(ratio))))
 		}
 
 		for range amount {
@@ -350,6 +349,7 @@ func (s *MobSpawner) ComputeDynamicMobData(data *Data) *DynamicMobData {
 					Type:   t,
 					Rarity: r,
 				},
+
 				SegmentBodies: segmentBodies,
 			})
 
