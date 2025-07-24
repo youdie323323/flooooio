@@ -355,7 +355,7 @@ func (wp *Pool) updateEntities() {
 	})
 }
 
-// stepData steps a data, this function should be called every Δt (= DeltaT) seconds.
+// stepData steps a wave data, this function should be called every Δt (= DeltaT) seconds.
 func (wp *Pool) stepData() {
 	if wp.hasBeenEnded.Load() {
 		return
@@ -514,9 +514,7 @@ func (wp *Pool) broadcastUpdatePacket() {
 					packet[dynamicAt] = updatedEntityKindPlayer
 					dynamicAt++
 
-					n.Mu.Lock()
-
-					dynamicAt += PutUvarint16(packet[dynamicAt:], *n.Id)
+					dynamicAt += PutUvarint16(packet[dynamicAt:], n.Id)
 
 					dynamicAt += WriteFloat32(packet[dynamicAt:], n.X)
 					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Y)
@@ -555,8 +553,6 @@ func (wp *Pool) broadcastUpdatePacket() {
 						bFlags |= 8
 					}
 
-					n.Mu.Unlock()
-
 					packet[dynamicAt] = bFlags
 					dynamicAt++
 				}
@@ -566,7 +562,7 @@ func (wp *Pool) broadcastUpdatePacket() {
 					packet[dynamicAt] = updatedEntityKindMob
 					dynamicAt++
 
-					dynamicAt += PutUvarint16(packet[dynamicAt:], *n.Id)
+					dynamicAt += PutUvarint16(packet[dynamicAt:], n.Id)
 
 					dynamicAt += WriteFloat32(packet[dynamicAt:], n.X)
 					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Y)
@@ -625,7 +621,7 @@ func (wp *Pool) broadcastUpdatePacket() {
 					packet[dynamicAt] = updatedEntityKindPetal
 					dynamicAt++
 
-					dynamicAt += PutUvarint16(packet[dynamicAt:], *n.Id)
+					dynamicAt += PutUvarint16(packet[dynamicAt:], n.Id)
 
 					dynamicAt += WriteFloat32(packet[dynamicAt:], n.X)
 					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Y)
@@ -736,7 +732,7 @@ func (wp *Pool) GeneratePlayer(
 	}
 
 	player := NewPlayer(
-		&id,
+		id,
 
 		sp,
 
@@ -891,7 +887,7 @@ func (wp *Pool) GenerateMob(
 	}
 
 	mob := NewMob(
-		&id,
+		id,
 
 		mType,
 
@@ -1100,7 +1096,7 @@ func (wp *Pool) GeneratePetal(
 	}
 
 	petal := NewPetal(
-		&id,
+		id,
 
 		pType,
 
@@ -1233,7 +1229,7 @@ func (wp *Pool) MobDoLightningBounce(jellyfish *Mob, hitEntity collision.Node) {
 	// TODO: check if len(bouncePoints) > 0 and prepend after bounce done
 	bouncePoints = append(bouncePoints, [2]float32{jellyfish.X, jellyfish.Y})
 
-	bouncedIds := make([]*EntityId, 0, maxBouncesInt)
+	bouncedIds := make([]EntityId, 0, maxBouncesInt)
 
 	var targetNode collision.Node = hitEntity
 
@@ -1348,7 +1344,7 @@ func (wp *Pool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 
 	bouncePoints := make([][2]float32, 0, maxBouncesInt)
 
-	bouncedIds := make([]*EntityId, 0, maxBouncesInt)
+	bouncedIds := make([]EntityId, 0, maxBouncesInt)
 
 	var targetNode collision.Node = hitMob
 

@@ -12,7 +12,7 @@ func TraverseMobSegments(wp *Pool, m *Mob) *Mob {
 	current := m
 
 	for current.ConnectingSegment != nil {
-		if segment, ok := current.ConnectingSegment.(*Mob); ok && segment != nil && !segment.WasEliminated(wp) {
+		if segment, ok := current.ConnectingSegment.(*Mob); ok && segment != nil && !segment.IsEliminated(wp) {
 			current = segment
 		} else {
 			break

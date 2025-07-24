@@ -316,7 +316,7 @@ const PlayerSize = 15
 
 // NewPlayer return new player instance.
 func NewPlayer(
-	id *EntityId,
+	id EntityId,
 
 	sp *StaticPlayer[StaticPetalSlots],
 

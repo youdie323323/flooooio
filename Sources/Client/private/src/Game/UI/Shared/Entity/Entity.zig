@@ -84,9 +84,9 @@ pub fn Entity(comptime Impl: type) type {
 
         /// Updates entity components depends on Δt.
         pub fn update(self: *@This(), delta_time: f32) void {
-            const delta_time_100 = delta_time * 0.01;
+            const delta_time_100 = delta_time * comptime (1.0 / 100.0);
             const delta_time_150 = delta_time_100 * comptime (2.0 / 3.0);
-            const delta_time_200 = delta_time_100 * 0.5;
+            const delta_time_200 = delta_time_100 * comptime (1.0 / 2.0);
 
             const delta_time_200_safelerp = @min(1, delta_time_200);
 
@@ -159,7 +159,7 @@ pub fn Entity(comptime Impl: type) type {
                 self.poison_t = math.clamp(self.poison_t, 0, 1);
             }
 
-            if (comptime @hasDecl(Impl, "update")) // Call update of implementation
+            if (comptime @hasDecl(Impl, "update")) // Call an update of implementation
                 self.impl.update(self, delta_time);
         }
 

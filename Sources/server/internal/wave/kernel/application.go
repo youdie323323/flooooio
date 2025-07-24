@@ -24,7 +24,7 @@ const (
 	minWindowHeight uint16 = 100
 )
 
-// clampWindowSize clamp window size.
+// clampWindowSize clamps window size.
 func clampWindowSize(width, height uint16) (uint16, uint16) {
 	width = Clamp(width, minWindowWidth, maxWindowWidth)
 	height = Clamp(height, minWindowHeight, maxWindowHeight)

@@ -16,7 +16,7 @@ type EntityId = uint16
 
 type Entity struct {
 	// Id is unique identifier of entity.
-	Id *EntityId
+	Id EntityId
 
 	// X, Y is position of entity.
 	X, Y float32
@@ -100,7 +100,7 @@ func RandomId() EntityId {
 }
 
 func NewEntity(
-	id *EntityId,
+	id EntityId,
 
 	x float32,
 	y float32,
@@ -128,7 +128,7 @@ func NewEntity(
 
 // LightningEmitter is lightning emitter (like jellyfish, lightning).
 type LightningEmitter interface {
-	SearchLightningBounceTargets(wp *Pool, bouncedIds []*EntityId) []collision.Node
+	SearchLightningBounceTargets(wp *Pool, bouncedIds []EntityId) []collision.Node
 }
 
 const (
@@ -187,7 +187,7 @@ func GetRandomCoordinate(cx, cy, spawnRadius float32) (float32, float32) {
 var _ collision.Node = (*Entity)(nil) // *Entity must implement collision.Node
 
 func (e *Entity) GetId() collision.NodeId {
-	return *e.Id
+	return e.Id
 }
 
 func (e *Entity) GetX() float32 {
@@ -211,10 +211,10 @@ func (e *Entity) GetOldPos() (float32, float32) {
 func IsDeadNode(wp *Pool, n collision.Node) bool {
 	switch e := n.(type) {
 	case *Mob:
-		return e.WasEliminated(wp)
+		return e.IsEliminated(wp)
 
 	case *Petal:
-		return e.WasEliminated(wp)
+		return e.IsEliminated(wp)
 
 	case *Player:
 		return e.IsDead

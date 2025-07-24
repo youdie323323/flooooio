@@ -8,7 +8,7 @@ fn clipFill(
     const ctx = rctx.ctx;
 
     const fcolor = rctx.blendEffectColors(comptime .comptimeFromHex(color));
-    const scolor = fcolor.darkened(body_darken);
+    const scolor = fcolor.darkened(skin_darken);
 
     ctx.save();
     defer ctx.restore();
@@ -65,7 +65,7 @@ const std = @import("std");
 const math = std.math;
 const time = std.time;
 const Renderer = @import("../Renderer.zig").Renderer;
-const body_darken = @import("../Renderer.zig").body_darken;
+const skin_darken = @import("../Renderer.zig").skin_darken;
 const RenderContext = @import("../Renderer.zig").RenderContext;
 const MobSuper = @import("../../Mob.zig").Super;
 

@@ -3,7 +3,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
     const entity = rctx.entity;
 
     const fcolor = rctx.blendEffectColors(comptime .comptimeFromHex(0xE0C85C));
-    const scolor = fcolor.darkened(body_darken);
+    const scolor = fcolor.darkened(skin_darken);
 
     ctx.rotate(entity.angle);
 
@@ -36,6 +36,6 @@ const std = @import("std");
 const math = std.math;
 const time = std.time;
 const Renderer = @import("../Renderer.zig").Renderer;
-const body_darken = @import("../Renderer.zig").body_darken;
+const skin_darken = @import("../Renderer.zig").skin_darken;
 const RenderContext = @import("../Renderer.zig").RenderContext;
 const MobSuper = @import("../../Mob.zig").Super;

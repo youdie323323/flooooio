@@ -12,7 +12,7 @@ pub fn init(allocator: mem.Allocator) UITitle {
         self.super = .{
             .ptr = &self,
             .vtable = &.{
-                .on_initialize = onInitialize,
+                .onInitialize = onInitialize,
                 .render = render,
                 .deinit = deinit,
             },

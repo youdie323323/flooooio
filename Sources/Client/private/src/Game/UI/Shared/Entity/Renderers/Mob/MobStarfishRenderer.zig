@@ -9,7 +9,7 @@ const distance_lerp_factor: comptime_float = 0.2;
 const spots_per_leg: comptime_int = 3;
 const spots_per_leg_float: comptime_float = @floatFromInt(spots_per_leg);
 
-/// Solving arccos(1.963525414466858 / x) = π / 5 for x will lead to 2.426877872787264.
+/// Solving `arccos(1.963525414466858 / x) = π / 5` for x yields 2.426877872787264.
 const leg_valley_depth_between: comptime_float = 2.426877872787264;
 
 const leg_angles = blk: {
@@ -49,7 +49,9 @@ const spot_angles = blk: {
         var spot_pos: f32 = 25;
 
         for (0..spots_per_leg) |j| {
-            angles[i][j] = leg_rotation_vector * @as(Vector2, @splat(spot_pos));
+            const spot_pos_vector: Vector2 = @splat(spot_pos);
+
+            angles[i][j] = spot_pos_vector * leg_rotation_vector;
 
             switch (j) {
                 0 => spot_pos -= 7,
@@ -79,7 +81,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
     ctx.scale(scale, scale);
 
     const rotation =
-        mob.total_t * 0.2;
+        0.2 * mob.total_t;
 
     ctx.rotate(rotation);
 

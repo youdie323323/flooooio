@@ -12,13 +12,13 @@ pub const allocator = fba.allocator();
 
 const size_of_usize = @sizeOf(usize);
 
-const alignment_of_usize = @alignOf(usize);
+const align_of_usize = @alignOf(usize);
 
 pub const MemoryPtr = *align(size_of_usize) anyopaque;
 
 pub export fn malloc(size: usize) callconv(.c) MemoryPtr {
     const total_size = size + size_of_usize;
-    const ptr = allocator.alignedAlloc(u8, alignment_of_usize, total_size) catch unreachable;
+    const ptr = allocator.alignedAlloc(u8, align_of_usize, total_size) catch unreachable;
 
     @as(*usize, @ptrCast(ptr)).* = total_size;
 
@@ -79,3 +79,5 @@ const std = @import("std");
 const testing = std.testing;
 const heap = std.heap;
 const mem = std.mem;
+
+const builtin = @import("builtin");

@@ -4,7 +4,7 @@ pub const Point = @Vector(2, f32);
 
 pub const VTable = struct {
     /// Function to be called when this base ui initialization is done.
-    on_initialize: *const fn (*anyopaque) void,
+    onInitialize: *const fn (*anyopaque) void,
 
     /// Render the implementation-depending components.
     render: *const fn (*anyopaque, *CanvasContext) void,
@@ -94,7 +94,7 @@ pub fn destroy(self: *UI) void {
 /// This function is not intended to be called except from within the
 /// implementation of an `UI`.
 pub inline fn rawOnInitialize(self: *const UI) void {
-    self.vtable.on_initialize(self.ptr);
+    self.vtable.onInitialize(self.ptr);
 }
 
 /// This function is not intended to be called except from within the

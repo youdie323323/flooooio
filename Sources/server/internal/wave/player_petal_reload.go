@@ -72,13 +72,13 @@ func (p *Player) PlayerPetalReload(wp *Pool, now time.Time) {
 
 			// Remove summoned pet memory from summond pets instantly
 			for i, pet := range petal.SummonedPets {
-				if pet != nil && pet.WasEliminated(wp) {
+				if pet != nil && pet.IsEliminated(wp) {
 					petal.SummonedPets = slices.Delete(petal.SummonedPets, i, i+1)
 				}
 			}
 
 			// Petal breaked, start reloading
-			if petal.WasEliminated(wp) {
+			if petal.IsEliminated(wp) {
 				switch petal.Type {
 				case native.PetalTypeEggBeetle:
 					{
@@ -142,7 +142,7 @@ func (p *Player) PlayerPetalReload(wp *Pool, now time.Time) {
 
 			peUsageCooldown := usageCooldownGrid[i]
 
-			if petal.WasEliminated(wp) {
+			if petal.IsEliminated(wp) {
 				// Reset cooldown because its broke
 				peUsageCooldown[j] = time.Time{}
 			} else {

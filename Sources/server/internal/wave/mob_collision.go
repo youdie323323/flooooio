@@ -22,7 +22,7 @@ func Clamp[T cmp.Ordered](f, low, high T) T {
 }
 
 func (m *Mob) MobCollision(wp *Pool, _ time.Time) {
-	if m.WasEliminated(wp) {
+	if m.IsEliminated(wp) {
 		return
 	}
 
@@ -87,7 +87,7 @@ func (m *Mob) MobCollision(wp *Pool, _ time.Time) {
 					continue
 				}
 
-				if nearEntity.WasEliminated(wp) {
+				if nearEntity.IsEliminated(wp) {
 					continue
 				}
 
@@ -182,7 +182,7 @@ func (m *Mob) MobCollision(wp *Pool, _ time.Time) {
 					continue
 				}
 
-				if nearEntity.WasEliminated(wp) {
+				if nearEntity.IsEliminated(wp) {
 					continue
 				}
 

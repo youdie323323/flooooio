@@ -1,14 +1,14 @@
-const Point = @Vector(2, f32);
-const Points = std.BoundedArray(Point, 10);
+const Body = @Vector(2, f32);
+const Bodies = std.BoundedArray(Body, 10);
 
 /// Collect the segment points from leech.
 /// Caller must lock mobs before call this.
-fn collectLeechSegmentPoints(
+fn collectLeechSegmentedBodies(
     mobs: *Mobs,
     leech: *const MobSuper,
     scale: MobSuper.Vector2,
-) !Points {
-    var bodies: Points = .{};
+) !Bodies {
+    var bodies: Bodies = .{};
     var current_leech = leech;
 
     while (true) {
@@ -123,10 +123,9 @@ fn render(rctx: *RenderContext(MobSuper)) void {
         // defer mobs.unlock();
 
         const bodies =
-            collectLeechSegmentPoints(mobs, entity, @splat(scale)) catch return;
+            collectLeechSegmentedBodies(mobs, entity, @splat(scale)) catch return;
 
         const points = bodies.constSlice();
-
         const points_len = points.len;
 
         if (points_len == 0) return;
@@ -177,7 +176,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
     }
 }
 
-const one_over_six_vector: Point = @splat(1.0 / 6.0);
+const one_over_six_vector: Body = @splat(1.0 / 6.0);
 
 fn strokeBodyCurve(rctx: *RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;

@@ -265,7 +265,7 @@ func (p *Player) PlayerPetalOrbit(wp *Pool, now time.Time) {
 			springForce = (DefaultMoodRadius - p.OrbitPetalRadii[i]) * radiusSpringStrength
 
 		case isAngry && firstPetal.Type == native.PetalTypeWing:
-			wingAddition := float32(130 * (math.Sin(math.Mod((nowMilli+float64(*firstPetal.Id))/200, Tau)) + 1))
+			wingAddition := float32(130 * (math.Sin(math.Mod((nowMilli+float64(firstPetal.Id))/200, Tau)) + 1))
 
 			springForce = (targetRadius + wingAddition - p.OrbitPetalRadii[i]) * radiusSpringStrength
 

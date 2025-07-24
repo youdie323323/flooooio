@@ -12,7 +12,7 @@ func (p *Petal) onEliminate(wp *Pool) {
 	case native.PetalTypeMysteriousStick:
 		{
 			for _, mob := range p.SummonedPets {
-				if mob != nil && !mob.WasEliminated(wp) {
+				if mob != nil && !mob.IsEliminated(wp) {
 					mob.ForceEliminate(wp)
 				}
 			}
@@ -21,11 +21,15 @@ func (p *Petal) onEliminate(wp *Pool) {
 
 	// SummonedPets are cleared in Dispose
 
-	wp.RemovePetal(*p.Id)
+	wp.RemovePetal(p.Id)
 }
 
 func (p *Petal) PetalElimination(wp *Pool, _ time.Time) {
-	if !p.WasEliminated(wp) && 0 >= p.Health {
+	if p.IsEliminated(wp) {
+		return
+	}
+
+	if 0 >= p.Health {
 		p.onEliminate(wp)
 	}
 }
@@ -42,11 +46,11 @@ func (p *Petal) ForceEliminate(wp *Pool) {
 
 // CompletelyRemove is like ForceEliminate, but removes its bindings too.
 func (p *Petal) CompletelyRemove(wp *Pool) {
-	if !p.WasEliminated(wp) {
+	if !p.IsEliminated(wp) {
 		// Remove summoned mob
 		if p.SummonedPets != nil {
 			for _, mob := range p.SummonedPets {
-				if mob != nil && !mob.WasEliminated(wp) {
+				if mob != nil && !mob.IsEliminated(wp) {
 					mob.ForceEliminate(wp)
 				}
 			}

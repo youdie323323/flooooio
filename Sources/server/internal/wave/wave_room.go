@@ -40,6 +40,9 @@ type PlayerData struct {
 	*StaticPlayer[StaticPetalSlots]
 
 	WrPId *RoomCandidateId
+
+	// WPId is wave pool player entity id.
+	// This type is pointered since we want to know whether player is playing.
 	WPId  *EntityId
 
 	mu sync.RWMutex
@@ -72,8 +75,10 @@ type Room struct {
 }
 
 func (pd *PlayerData) AssignWaveRoomPlayerId(id *RoomCandidateId) {
+	isIsNotNil := id != nil
+
 	var opcode byte
-	if id != nil {
+	if isIsNotNil {
 		opcode = network.ClientboundWaveRoomSelfId
 	} else {
 		opcode = network.ClientboundWaveRoomJoinFailed
@@ -87,7 +92,7 @@ func (pd *PlayerData) AssignWaveRoomPlayerId(id *RoomCandidateId) {
 
 	pd.mu.Lock()
 
-	if id != nil {
+	if isIsNotNil {
 		at += PutUvarint16(buf[at:], *id)
 
 		pd.WrPId = id
@@ -100,13 +105,11 @@ func (pd *PlayerData) AssignWaveRoomPlayerId(id *RoomCandidateId) {
 	SharedBufPool.Put(buf)
 }
 
-func (pd *PlayerData) AssignWavePlayerId(id *EntityId) {
-	if id != nil {
-		pd.mu.Lock()
-		defer pd.mu.Unlock()
+func (pd *PlayerData) AssignWavePlayerId(id EntityId) {
+	pd.mu.Lock()
+	defer pd.mu.Unlock()
 
-		pd.WPId = id
-	}
+	pd.WPId = &id
 }
 
 func NewRoom(biome native.Biome, visibility RoomVisibility) *Room {

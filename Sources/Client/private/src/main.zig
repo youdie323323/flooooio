@@ -383,7 +383,7 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                             .{ mob_x, mob_y },
                             mob_angle,
                             // Set initial size as zero if web projectile, since its spawns like animated similar to original game
-                            if (mob_type.get() == @intFromEnum(MobType.web_projectile))
+                            if (mob_type.mob == .web_projectile)
                                 0
                             else
                                 mob_size,
@@ -448,11 +448,6 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                 },
 
                 inline .petal => {
-                    // Petal treated as mob
-
-                    // TODO: in server, the id may collide between player, mob, petal because their pool is separated
-                    // So may need to separate mobs objects for petals
-                    // That chance is 1 / math.maxInt(u16) but that possibly collidable (and can cause error)
                     const petal_id = try leb.readUleb128(EntityId, stream);
 
                     const petal_x = try Network.readFloat32(stream);
@@ -475,6 +470,8 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                     var petal: MobImpl.Super = undefined;
 
                     var outer_obj_id: Mach.ObjectId = undefined;
+
+                    // Petal treated as mob
 
                     if (petals.search(petal_id)) |inner_obj_id| {
                         petal = petals.get(inner_obj_id);

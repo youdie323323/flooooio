@@ -58,7 +58,7 @@ func (p *Player) PlayerPetalConsume(wp *Pool, now time.Time) {
 				continue
 			}
 
-			if petal.WasEliminated(wp) {
+			if petal.IsEliminated(wp) {
 				continue
 			}
 
@@ -76,7 +76,7 @@ func (p *Player) PlayerPetalConsume(wp *Pool, now time.Time) {
 			case native.PetalTypeEggBeetle:
 				{
 					// Remove petal as it consumed
-					wp.RemovePetal(*petal.Id)
+					wp.RemovePetal(petal.Id)
 
 					smd := summonPetsData[petal.Type][petal.Rarity]
 
@@ -152,7 +152,7 @@ func (p *Player) PlayerPetalConsume(wp *Pool, now time.Time) {
 					}
 
 					// Remove petal as it consumed
-					wp.RemovePetal(*petal.Id)
+					wp.RemovePetal(petal.Id)
 
 					dx := p.X - petal.X
 					dy := p.Y - petal.Y
@@ -185,7 +185,7 @@ func (p *Player) PlayerPetalConsume(wp *Pool, now time.Time) {
 							)
 
 							// Remove petal as it consumed
-							wp.RemovePetal(*petal.Id)
+							wp.RemovePetal(petal.Id)
 						}
 
 						continue

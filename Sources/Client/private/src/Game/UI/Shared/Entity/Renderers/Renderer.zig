@@ -1,8 +1,5 @@
-/// Factor used to darken skin colors.
-pub const skin_darken: comptime_float = 0.2;
-
-/// Factor used for darken a body color.
-pub const body_darken: comptime_float = 0.1;
+/// Factor used for darken skin colors, especially for this game.
+pub const skin_darken: comptime_float = 0.19;
 
 /// Creates a render context for the specified entity type.
 pub fn RenderContext(comptime AnyEntity: type) type {
@@ -13,6 +10,7 @@ pub fn RenderContext(comptime AnyEntity: type) type {
             else
                 @compileError("AnyEntity must have an implementation");
 
+        // Reconstruct typed AnyEntity using unknown implementation
         const TypedAnyEntity = Entity(AnyImpl);
         const TypedAnyImpl = @FieldType(TypedAnyEntity, "impl");
 

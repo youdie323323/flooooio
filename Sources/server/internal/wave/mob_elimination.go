@@ -8,14 +8,12 @@ import (
 
 func removeConnectedSegmentTraversal(wp *Pool, m *Mob) {
 	for _, id := range m.ConnectedSegmentIds {
-		if id != nil {
-			toDelete := wp.FindMob(*id)
-			if toDelete != nil {
-				// We want call this first because RemoveMob call Dispose and Dispose clear ConnectedSegmentIds
-				removeConnectedSegmentTraversal(wp, toDelete)
+		toDelete := wp.FindMob(id)
+		if toDelete != nil {
+			// We want call this first because RemoveMob call Dispose and Dispose clear ConnectedSegmentIds
+			removeConnectedSegmentTraversal(wp, toDelete)
 
-				wp.RemoveMob(*id)
-			}
+			wp.RemoveMob(id)
 		}
 	}
 }
@@ -33,7 +31,7 @@ func (m *Mob) onEliminate(wp *Pool) {
 		}
 	}
 
-	wp.RemoveMob(*m.Id)
+	wp.RemoveMob(m.Id)
 }
 
 func (m *Mob) MobElimination(wp *Pool, _ time.Time) {
@@ -45,7 +43,7 @@ func (m *Mob) MobElimination(wp *Pool, _ time.Time) {
 		return
 	}
 
-	if !m.WasEliminated(wp) && 0 >= m.Health {
+	if !m.IsEliminated(wp) && 0 >= m.Health {
 		m.onEliminate(wp)
 
 		return

@@ -36,7 +36,7 @@ type Mob struct {
 	// Use collision.Node here because its not possible to Mob refer itself.
 	// Use type assertion.
 	ConnectingSegment   collision.Node
-	ConnectedSegmentIds []*EntityId
+	ConnectedSegmentIds []EntityId
 	IsFirstSegment      bool
 
 	// JellyfishLastBounce is last time lightning bounced from jellyfish.
@@ -123,16 +123,16 @@ func (m *Mob) MobToDamage(wp *Pool) *Mob {
 	return toDamaged
 }
 
-// WasEliminated determine if mob is eliminated.
+// IsEliminated returns whether if mob was eliminated.
 // This method exists because struct pointer mob reference doesnt nil'ed when removed.
-func (m *Mob) WasEliminated(wp *Pool) bool {
-	return wp.FindMob(*m.Id) == nil
+func (m *Mob) IsEliminated(wp *Pool) bool {
+	return wp.FindMob(m.Id) == nil
 }
 
 var _ LightningEmitter = (*Mob)(nil) // *Mob must implement LightningEmitter
 
 // SearchLightningBounceTargets returns targets to bounce.
-func (m *Mob) SearchLightningBounceTargets(wp *Pool, bouncedIds []*EntityId) []collision.Node {
+func (m *Mob) SearchLightningBounceTargets(wp *Pool, bouncedIds []EntityId) []collision.Node {
 	if m.IsEnemy() {
 		return slices.Concat(
 			collision.ToNodeSlice(wp.FilterPlayersWithCondition(func(p *Player) bool {
@@ -201,18 +201,12 @@ func (m *Mob) Dispose() {
 
 	m.ConnectingSegment = nil
 
-	{
-		for i := range m.ConnectedSegmentIds {
-			m.ConnectedSegmentIds[i] = nil
-		}
-
-		m.ConnectedSegmentIds = nil
-	}
+	m.ConnectedSegmentIds = nil
 }
 
 // NewMob return new mob instance.
 func NewMob(
-	id *EntityId,
+	id EntityId,
 
 	mType native.MobType,
 
@@ -276,7 +270,7 @@ func NewMob(
 		StarfishRegeningHealth: false,
 
 		ConnectingSegment:   connectingSegment,
-		ConnectedSegmentIds: make([]*EntityId, 0),
+		ConnectedSegmentIds: make([]EntityId, 0),
 		IsFirstSegment:      isFirstSegment,
 
 		JellyfishLastBounce: time.Time{},
