@@ -24,9 +24,8 @@ pub const Biome = enum(u8) {
     pub const tile_size = 256 * tile_resoltion;
 
     /// Statically-initializes biome tilesets.
-    /// Without inline, the program will start causing fancy errors.
-    /// Might be related: https://github.com/ziglang/zig/issues/11650.
-    pub inline fn initTilesets(allocator: mem.Allocator) void {
+    /// This function using allocator.alloc for UAF.
+    pub fn initTilesets(allocator: mem.Allocator) !void {
         const garden_tile_1: TileRenderer.Tile = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
         const garden_tile_2: TileRenderer.Tile = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
         const garden_tile_3: TileRenderer.Tile = CanvasContext.createCanvasContext(allocator, tile_size, tile_size, false);
@@ -59,9 +58,39 @@ pub const Biome = enum(u8) {
         ocean_tile_3.drawSvg(@embedFile("../../UI/Shared/Tile/Tiles/ocean_c_2.svg"));
         ocean_tile_4.drawSvg(@embedFile("../../UI/Shared/Tile/Tiles/ocean_c_3.svg"));
 
-        tilesets.put(.garden, &.{ garden_tile_1, garden_tile_2, garden_tile_3, garden_tile_4 });
-        tilesets.put(.desert, &.{ desert_tile_1, desert_tile_2, desert_tile_3, desert_tile_4, desert_tile_5 });
-        tilesets.put(.ocean, &.{ ocean_tile_1, ocean_tile_2, ocean_tile_3, ocean_tile_4 });
+        { // Put garden tiles
+            const garden_tiles = try allocator.alloc(TileRenderer.Tile, 4);
+
+            garden_tiles[0] = garden_tile_1;
+            garden_tiles[1] = garden_tile_2;
+            garden_tiles[2] = garden_tile_3;
+            garden_tiles[3] = garden_tile_4;
+
+            tilesets.put(.garden, garden_tiles);
+        }
+
+        { // Put desert tiles
+            const desert_tiles = try allocator.alloc(TileRenderer.Tile, 5);
+
+            desert_tiles[0] = desert_tile_1;
+            desert_tiles[1] = desert_tile_2;
+            desert_tiles[2] = desert_tile_3;
+            desert_tiles[3] = desert_tile_4;
+            desert_tiles[4] = desert_tile_5;
+
+            tilesets.put(.desert, desert_tiles);
+        }
+
+        { // Put ocean tiles
+            const ocean_tiles = try allocator.alloc(TileRenderer.Tile, 4);
+
+            ocean_tiles[0] = ocean_tile_1;
+            ocean_tiles[1] = ocean_tile_2;
+            ocean_tiles[2] = ocean_tile_3;
+            ocean_tiles[3] = ocean_tile_4;
+
+            tilesets.put(.ocean, ocean_tiles);
+        }
     }
 
     pub fn name(biome: Biome) ?[]const u8 {

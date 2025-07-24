@@ -645,7 +645,7 @@ export fn main() c_int {
     std.log.debug("main()", .{});
 
     // Initialize tilesets
-    Biome.initTilesets(allocator);
+    Biome.initTilesets(allocator) catch unreachable;
 
     // Initialize main canvas context
     ctx = CanvasContext.createCanvasContextBySelector(allocator, "canvas", false);
