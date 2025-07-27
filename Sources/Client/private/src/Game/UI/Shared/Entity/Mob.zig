@@ -1,12 +1,8 @@
-const MobImpl = @This();
+const MobImpl = PureRenderer.ValidatedImpl(@This());
 
 pub const Super = Entity(MobImpl);
 
 pub const Renderer = MobRenderingDispatcher;
-
-comptime { // Validate
-    PureRenderer.validateEntityImplementation(MobImpl);
-}
 
 const StarfishLegDistances = [MobStarfishRenderer.leg_amount]f32;
 

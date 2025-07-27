@@ -175,7 +175,15 @@ pub fn Entity(comptime Impl: type) type {
     };
 }
 
+pub const Mobs = Mach.Objects(MobImpl.Super, .id);
+pub const Players = Mach.Objects(PlayerImpl.Super, .id);
+
 const std = @import("std");
 const math = std.math;
 const heap = std.heap;
 const mem = std.mem;
+
+const Mach = @import("../../../../Mach/Mach.zig");
+
+const PlayerImpl = @import("Player.zig");
+const MobImpl = @import("Mob.zig");

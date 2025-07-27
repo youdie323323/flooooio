@@ -26,7 +26,7 @@ pub const MobData = struct {
 
     /// Returns stat by specified rarity.
     pub fn statByRarity(self: *const MobData, rarity: EntityRarity) ?MobStat {
-        // Returning null only happens when rarity is ultra
+        // Return of null only happens when rarity is ultra
         // But mob rarity cannot be ultra, so no need to care about
 
         return self.stats.get(rarity);
@@ -85,7 +85,7 @@ fn statsByConstantContinunous(
     }
 }
 
-fn createCentiData(i18n: MobI18n) MobData {
+fn createCentiData(comptime i18n: MobI18n) MobData {
     comptime {
         return .{
             .i18n = i18n,

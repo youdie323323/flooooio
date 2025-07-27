@@ -15,8 +15,8 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         const TypedAnyImpl = @FieldType(TypedAnyEntity, "impl");
 
         comptime { // Ensure they are same type
-            debug.assert(TypedAnyEntity == AnyEntity);
-            debug.assert(TypedAnyImpl == AnyImpl);
+            assert(TypedAnyEntity == AnyEntity);
+            assert(TypedAnyImpl == AnyImpl);
         }
 
         const is_mob_impl = @hasField(TypedAnyImpl, "type");
@@ -31,9 +31,9 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         /// Whether this render context is specimen.
         is_specimen: bool,
 
-        players: *Main.Players,
-        mobs: *Main.Mobs,
-        petals: *Main.Mobs,
+        players: *Players,
+        mobs: *Mobs,
+        petals: *Mobs,
 
         /// Determines if the entity should be rendered based on its state.
         /// Returns false if the entity is dead and past its death animation time.
@@ -263,11 +263,11 @@ pub fn Renderer(
     };
 }
 
-/// Renders an entity using its implementation's renderer.
-pub fn renderEntity(comptime Impl: type, rctx: *RenderContext(Impl.Super)) void {
-    // Validate implementation
-    comptime validateEntityImplementation(Impl);
-
+/// Renders an entity using its implementation renderer.
+pub fn renderEntity(
+    comptime Impl: type,
+    rctx: *RenderContext(ValidatedImpl(Impl).Super),
+) void {
     if (!rctx.shouldRender()) return;
 
     const ctx = rctx.ctx;
@@ -278,14 +278,15 @@ pub fn renderEntity(comptime Impl: type, rctx: *RenderContext(Impl.Super)) void 
     Impl.Renderer.render(rctx);
 }
 
-/// Validates that an entity implementation has the required declarations.
-/// TODO: too much locations use this function, decide one robust location to call.
-pub fn validateEntityImplementation(comptime Impl: type) void {
+/// Validates an entity implementation and returns itself.
+pub fn ValidatedImpl(comptime Impl: type) type {
     if (!@hasDecl(Impl, "Super"))
         @compileError("entity implementation must have a Super declaration");
 
     if (!@hasDecl(Impl, "Renderer"))
         @compileError("entity implementation must have a Renderer declaration");
+
+    return Impl;
 }
 
 const std = @import("std");
@@ -293,9 +294,12 @@ const mem = std.mem;
 const math = std.math;
 const debug = std.debug;
 
+const assert = debug.assert;
+
 const CanvasContext = @import("../../../../Kernel/WebAssembly/Interop/Canvas2D/CanvasContext.zig");
 const Color = @import("../../../../Kernel/WebAssembly/Interop/Canvas2D/Color.zig");
 const MobType = @import("../EntityType.zig").MobType;
 const Entity = @import("../Entity.zig").Entity;
-const Main = @import("../../../../../main.zig");
+const Mobs = @import("../Entity.zig").Mobs;
+const Players = @import("../Entity.zig").Players;
 const setupFont = @import("../../../../Kernel/UI/Layout/Components/WellKnown/Text.zig").setupFont;

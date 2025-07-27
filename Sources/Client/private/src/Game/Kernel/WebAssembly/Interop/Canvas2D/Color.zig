@@ -37,7 +37,7 @@ pub fn darkened(self: Color, comptime strength: comptime_float) Color {
         // No changes
         if (strength == 0) return;
 
-        debug.assert(strength <= 1);
+        assert(strength <= 1);
     }
 
     const strength_c: FloatingRgb = comptime @splat(1 - strength);
@@ -46,7 +46,7 @@ pub fn darkened(self: Color, comptime strength: comptime_float) Color {
 }
 
 pub fn lightened(self: Color, comptime strength: comptime_float) Color {
-    comptime debug.assert(strength > 0);
+    comptime assert(strength > 0);
 
     const strength_a: FloatingRgb = comptime @splat(1 + strength);
 
@@ -331,3 +331,5 @@ const ascii = std.ascii;
 const debug = std.debug;
 const mem = std.mem;
 const math = std.math;
+
+const assert = debug.assert;

@@ -208,9 +208,6 @@ var wave_ended: bool = false;
 
 var wave_map_radius: u16 = 0;
 
-pub const Players = Mach.Objects(PlayerImpl.Super, .id);
-pub const Mobs = Mach.Objects(MobImpl.Super, .id);
-
 var mobs: Mobs = undefined;
 var petals: Mobs = undefined;
 var players: Players = undefined;
@@ -948,6 +945,8 @@ const CanvasContext = @import("Game/Kernel/WebAssembly/Interop/Canvas2D/CanvasCo
 const Path2D = @import("Game/Kernel/WebAssembly/Interop/Canvas2D/Path2D.zig");
 
 const EntityId = @import("Game/UI/Shared/Entity/Entity.zig").EntityId;
+const Mobs = @import("Game/UI/Shared/Entity/Entity.zig").Mobs;
+const Players = @import("Game/UI/Shared/Entity/Entity.zig").Players;
 const EntityType = @import("Game/UI/Shared/Entity/EntityType.zig").EntityType;
 const MobType = @import("Game/UI/Shared/Entity/EntityType.zig").MobType;
 const PetalType = @import("Game/UI/Shared/Entity/EntityType.zig").PetalType;

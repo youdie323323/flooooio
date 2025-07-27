@@ -21,11 +21,11 @@ var LinkableMobTypes = []native.MobType{
 type MobSpawnRule struct {
 	SpawnsAfter uint16
 	Weight      float64
-	Points      int
+	Point       int
 }
 
 const (
-	centipedePoints = 3
+	centipedePoint = 3
 )
 
 var mobSpawnRules = map[native.Biome]map[native.MobType]MobSpawnRule{
@@ -37,8 +37,8 @@ var mobSpawnRules = map[native.Biome]map[native.MobType]MobSpawnRule{
 		native.MobTypeWorkerAnt:  {2, 50, 1},
 		native.MobTypeSoldierAnt: {3, 50, 1},
 
-		native.MobTypeCentipede:     {2, 1, centipedePoints},
-		native.MobTypeCentipedeEvil: {3, 1, centipedePoints},
+		native.MobTypeCentipede:     {2, 1, centipedePoint},
+		native.MobTypeCentipedeEvil: {3, 1, centipedePoint},
 	},
 	native.BiomeDesert: {
 		native.MobTypeBeetle:       {2, 200, 1},
@@ -47,7 +47,7 @@ var mobSpawnRules = map[native.Biome]map[native.MobType]MobSpawnRule{
 		native.MobTypeScorpion:     {3, 200, 1},
 		native.MobTypeLadybugShiny: {3, 1, 5},
 
-		native.MobTypeCentipedeDesert: {1, 1, centipedePoints},
+		native.MobTypeCentipedeDesert: {1, 1, centipedePoint},
 	},
 	native.BiomeOcean: {
 		native.MobTypeStarfish:  {3, 1, 1},
@@ -153,15 +153,15 @@ func generateRandomMobAmounts() int {
 	return len(amountTable)
 }
 
-func getRandomMobType(difficulty uint16, biome native.Biome, sg *SpawnGroup) native.MobType {
+func pickRandomMobType(difficulty uint16, biome native.Biome, sg *SpawnGroup) native.MobType {
 	// If special group exists, use it
 	if sg != nil {
 		totalWeight := 0.
 
 		// Calculate total weight for valid mob types in the special group
 		for _, t := range *sg {
-			if r, exists := mobSpawnRules[biome][t]; exists && r.SpawnsAfter <= difficulty {
-				totalWeight += r.Weight
+			if rule, exists := mobSpawnRules[biome][t]; exists && rule.SpawnsAfter <= difficulty {
+				totalWeight += rule.Weight
 			}
 		}
 
@@ -169,8 +169,8 @@ func getRandomMobType(difficulty uint16, biome native.Biome, sg *SpawnGroup) nat
 		random := rand.Float64() * totalWeight
 
 		for _, t := range *sg {
-			if r, exists := mobSpawnRules[biome][t]; exists && r.SpawnsAfter <= difficulty {
-				random -= r.Weight
+			if rule, exists := mobSpawnRules[biome][t]; exists && rule.SpawnsAfter <= difficulty {
+				random -= rule.Weight
 
 				if random <= 0 {
 					return t
@@ -182,18 +182,18 @@ func getRandomMobType(difficulty uint16, biome native.Biome, sg *SpawnGroup) nat
 	totalWeight := 0.
 
 	// First pass: calculate total weight
-	for _, r := range mobSpawnRules[biome] {
-		if r.SpawnsAfter <= difficulty {
-			totalWeight += r.Weight
+	for _, rule := range mobSpawnRules[biome] {
+		if rule.SpawnsAfter <= difficulty {
+			totalWeight += rule.Weight
 		}
 	}
 
 	// Second pass: select mob
 	random := rand.Float64() * totalWeight
 
-	for t, r := range mobSpawnRules[biome] {
-		if r.SpawnsAfter <= difficulty {
-			random -= r.Weight
+	for t, rule := range mobSpawnRules[biome] {
+		if rule.SpawnsAfter <= difficulty {
+			random -= rule.Weight
 
 			if random <= 0 {
 				return t
@@ -248,14 +248,14 @@ type MobSpawner struct {
 	// spawnGroup is current spawn group.
 	spawnGroup *SpawnGroup
 
-	// points is current point.
-	points int
+	// point is current point.
+	point int
 }
 
-func NewMobSpawner(wd *Data) *MobSpawner {
+func NewMobSpawner(data *Data) *MobSpawner {
 	s := new(MobSpawner)
 
-	s.Next(wd, nil)
+	s.Next(data, nil)
 
 	return s
 }
@@ -297,22 +297,22 @@ func (s *MobSpawner) Next(data *Data, groupIndex *int) {
 		s.spawnGroup = &groups[*groupIndex]
 	}
 
-	s.points = int(data.Progress) * 10
+	s.point = int(data.Progress) * 10
 
 	if s.spawnGroup != nil {
-		s.points += 1000
+		s.point += 1000
 	}
 }
 
 const (
-	spawnDelay int = 0.8 * WaveDataUpdatePerSec
+	spawnDelay int = 0.8 * DataUpdatePerSec
 )
 
 func (s *MobSpawner) ComputeDynamicMobData(data *Data) *DynamicMobData {
 	// Increase time
 	s.totalTime++
 
-	if s.points > 0 && (s.totalTime%spawnDelay) == 0 {
+	if s.point > 0 && (s.totalTime%spawnDelay) == 0 {
 		var amount int
 
 		if s.spawnGroup == nil {
@@ -324,7 +324,7 @@ func (s *MobSpawner) ComputeDynamicMobData(data *Data) *DynamicMobData {
 		}
 
 		for range amount {
-			t := getRandomMobType(data.Progress, data.Biome, s.spawnGroup)
+			t := pickRandomMobType(data.Progress, data.Biome, s.spawnGroup)
 			r := pickRandomRarity(data.Progress, 1+0)
 
 			for a, m := range mobSpawnEndAfter {
@@ -333,7 +333,7 @@ func (s *MobSpawner) ComputeDynamicMobData(data *Data) *DynamicMobData {
 				}
 			}
 
-			pointsToConsume := mobSpawnRules[data.Biome][t].Points
+			pointToConsume := mobSpawnRules[data.Biome][t].Point
 
 			segmentBodies := -1
 
@@ -353,9 +353,9 @@ func (s *MobSpawner) ComputeDynamicMobData(data *Data) *DynamicMobData {
 				SegmentBodies: segmentBodies,
 			})
 
-			s.points = max(0, s.points-pointsToConsume)
+			s.point = max(0, s.point-pointToConsume)
 
-			if s.points == 0 {
+			if s.point == 0 {
 				break
 			}
 		}

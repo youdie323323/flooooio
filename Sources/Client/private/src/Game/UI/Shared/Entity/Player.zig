@@ -1,12 +1,8 @@
-const PlayerImpl = @This();
+const PlayerImpl = PureRenderer.ValidatedImpl(@This());
 
 pub const Super = Entity(PlayerImpl);
 
 pub const Renderer = PlayerRenderingDispatcher;
-
-comptime { // Validate
-    PureRenderer.validateEntityImplementation(PlayerImpl);
-}
 
 /// Mood of player.
 mood: PlayerMood.MoodBitSet = .initEmpty(),

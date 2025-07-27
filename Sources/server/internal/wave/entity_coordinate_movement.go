@@ -1,11 +1,9 @@
 package wave
 
-const (
-	// VectorEpsilon is machine epsilon used for movement value.
-	// When velocity is reduced by friction, it may not become zero even if multiplied infinitely.
-	// To check if it is almost zero, compare it with this value.
-	VectorEpsilon = 0.1
-)
+// VectorEpsilon is machine epsilon used for velocity.
+// When velocity is reduced by friction, it may not become zero even if multiplied infinitely.
+// To check if it is almost zero, compare it with this value.
+const VectorEpsilon = 0.1
 
 // VectorWithinEpsilon returns whether vector within epsilon.
 func VectorWithinEpsilon(v Vector2) bool {

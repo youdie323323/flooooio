@@ -26,20 +26,20 @@ import (
 const (
 	spatialHashGridSize = 512
 
-	WaveUpdatePerSec     = 60
-	WaveDataUpdatePerSec = WaveUpdatePerSec / 2
+	PoolUpdatePerSec = 60
+	DataUpdatePerSec = PoolUpdatePerSec / 2
 
-	DeltaT = 1. / WaveUpdatePerSec
+	DeltaT = 1. / PoolUpdatePerSec
 )
 
 const (
-	KB = 1024
-	MB = 1024 * KB
-	GB = 1024 * MB
+	kb = 1024
+	mb = 1024 * kb
+	gb = 1024 * mb
 )
 
 // TODO: if buffer index is above buf len, would panic
-var SharedBufPool = zeropool.New(func() []byte { return make([]byte, 256*KB) })
+var SharedBufPool = zeropool.New(func() []byte { return make([]byte, 256*kb) })
 
 func writeCString[T ~string](buf []byte, at int, s T) int {
 	n := copy(buf[at:], s)
@@ -96,13 +96,13 @@ type Pool struct {
 	Mu sync.RWMutex
 }
 
-func NewPool(wr *Room, wd *Data) *Pool {
+func NewPool(wr *Room, data *Data) *Pool {
 	return &Pool{
 		playerPool: xsync.NewMap[EntityId, *Player](),
 		mobPool:    xsync.NewMap[EntityId, *Mob](),
 		petalPool:  xsync.NewMap[EntityId, *Petal](),
 
-		Spawner: NewMobSpawner(wd),
+		Spawner: NewMobSpawner(data),
 
 		eliminatedEntityIds: make([]EntityId, 0),
 
@@ -117,7 +117,7 @@ func NewPool(wr *Room, wd *Data) *Pool {
 
 		commandQueue: make(chan func() bool, 8),
 
-		Data: wd,
+		Data: data,
 
 		Room: wr,
 	}
@@ -244,7 +244,8 @@ func (wp *Pool) IsAllPlayersDead() bool {
 	return allDead
 }
 
-// broadcastSeldIdPacket broadcast the id packet. Must call lock before.
+// broadcastSeldIdPacket broadcasts self id packet to every player.
+// Caller must guarantees lock resource using Mu before call this.
 func (wp *Pool) broadcastSeldIdPacket() {
 	buf := SharedBufPool.Get()
 
@@ -262,7 +263,7 @@ func (wp *Pool) broadcastSeldIdPacket() {
 }
 
 func (wp *Pool) startUpdate() {
-	wp.updateTicker = time.NewTicker(time.Second / WaveUpdatePerSec)
+	wp.updateTicker = time.NewTicker(time.Second / PoolUpdatePerSec)
 	defer wp.updateTicker.Stop()
 
 	for {
@@ -468,15 +469,16 @@ func PutUvarint16(buf []byte, x uint16) int {
 	return i + 1
 }
 
-const (
-	updatedEntityKindPlayer byte = iota
-	updatedEntityKindMob
-	updatedEntityKindPetal
-)
-
 // FiniteObjectCount possible objects length.
 type FiniteObjectCount = uint16
 
+const ( // Entity kind for client identify entity read type.
+	entityKindPlayer byte = iota
+	entityKindMob
+	entityKindPetal
+)
+
+// broadcastUpdatePacket broadcasts update packet to every player.
 func (wp *Pool) broadcastUpdatePacket() {
 	wp.Mu.Lock()
 	defer wp.Mu.Unlock()
@@ -496,7 +498,7 @@ func (wp *Pool) broadcastUpdatePacket() {
 
 		p.Mu.RUnlock()
 
-		toSend := wp.SpatialHash.QueryRect(
+		entitiesToSend := wp.SpatialHash.QueryRect(
 			p.X, p.Y,
 			float32(window[0]), float32(window[1]),
 			func(n collision.Node) bool {
@@ -505,13 +507,13 @@ func (wp *Pool) broadcastUpdatePacket() {
 		)
 
 		// Write entity count
-		dynamicAt += PutUvarint16(packet[dynamicAt:], FiniteObjectCount(len(toSend)))
+		dynamicAt += PutUvarint16(packet[dynamicAt:], FiniteObjectCount(len(entitiesToSend)))
 
-		for _, e := range toSend {
+		for _, e := range entitiesToSend {
 			switch n := e.(type) {
 			case *Player:
 				{
-					packet[dynamicAt] = updatedEntityKindPlayer
+					packet[dynamicAt] = entityKindPlayer
 					dynamicAt++
 
 					dynamicAt += PutUvarint16(packet[dynamicAt:], n.Id)
@@ -559,7 +561,7 @@ func (wp *Pool) broadcastUpdatePacket() {
 
 			case *Mob:
 				{
-					packet[dynamicAt] = updatedEntityKindMob
+					packet[dynamicAt] = entityKindMob
 					dynamicAt++
 
 					dynamicAt += PutUvarint16(packet[dynamicAt:], n.Id)
@@ -618,7 +620,7 @@ func (wp *Pool) broadcastUpdatePacket() {
 
 			case *Petal:
 				{
-					packet[dynamicAt] = updatedEntityKindPetal
+					packet[dynamicAt] = entityKindPetal
 					dynamicAt++
 
 					dynamicAt += PutUvarint16(packet[dynamicAt:], n.Id)
@@ -651,7 +653,7 @@ func (wp *Pool) broadcastUpdatePacket() {
 			}
 		}
 
-		toSend = nil
+		entitiesToSend = nil
 
 		p.SafeWriteMessage(websocket.BinaryMessage, packet[:dynamicAt])
 

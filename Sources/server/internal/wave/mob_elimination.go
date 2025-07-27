@@ -35,7 +35,7 @@ func (m *Mob) onEliminate(wp *Pool) {
 }
 
 func (m *Mob) MobElimination(wp *Pool, _ time.Time) {
-	// Destroy web projectile if reached time
+	// Destroy web projectile if reached lifespan
 	if m.Type == native.MobTypeWebProjectile &&
 		native.PetalProfiles[native.PetalTypeWeb].StatFromRarity(m.Rarity).Extra["duration"] < m.SigmaT {
 		m.onEliminate(wp)

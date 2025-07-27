@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	waveRoomMaxPlayerAmount = 4 // Maxium player amount that how many joinable to wave room.
+	roomMaxPlayerAmount = 4 // Maxium player amount that how many joinable to wave room.
 
-	waveRoomUpdatePacketSendIntervalMS = 30
+	roomUpdatePerSec = 30
 )
 
 type RoomCandidateId = uint16
@@ -43,7 +43,7 @@ type PlayerData struct {
 
 	// WPId is wave pool player entity id.
 	// This type is pointered since we want to know whether player is playing.
-	WPId  *EntityId
+	WPId *EntityId
 
 	mu sync.RWMutex
 }
@@ -114,7 +114,7 @@ func (pd *PlayerData) AssignWavePlayerId(id EntityId) {
 
 func NewRoom(biome native.Biome, visibility RoomVisibility) *Room {
 	wr := &Room{
-		updatePacketBroadcastTicker: time.NewTicker(time.Second / waveRoomUpdatePacketSendIntervalMS),
+		updatePacketBroadcastTicker: time.NewTicker(time.Second / roomUpdatePerSec),
 
 		Pool: nil,
 
@@ -122,7 +122,7 @@ func NewRoom(biome native.Biome, visibility RoomVisibility) *Room {
 		code:       GenerateRandomRoomCode(),
 		visibility: visibility,
 		state:      RoomStateWaiting,
-		candidates: make([]*RoomCandidate, 0, waveRoomMaxPlayerAmount),
+		candidates: make([]*RoomCandidate, 0, roomMaxPlayerAmount),
 	}
 
 	// WavePool and WaveRoom respectively has circular property,
@@ -155,8 +155,8 @@ func (w *Room) RegisterPlayer(sp *StaticPlayer[StaticPetalSlots]) *RoomCandidate
 
 	id := rand.N[RoomCandidateId](65535)
 
-	for _, c := range w.candidates {
-		if c != nil && c.Id == id {
+	for _, candidate := range w.candidates {
+		if candidate != nil && candidate.Id == id {
 			return w.RegisterPlayer(sp)
 		}
 	}
@@ -190,10 +190,9 @@ func (w *Room) DeregisterPlayer(id RoomCandidateId) (ok bool) {
 		}
 	*/
 
-	// Find player with matching id
-	for i, c := range w.candidates {
-		if c != nil && c.Id == id {
-			savedIsOwner := c.Owner
+	for i, candidate := range w.candidates {
+		if candidate != nil && candidate.Id == id {
+			savedIsOwner := candidate.Owner
 
 			// Remove the candidate
 			w.candidates = slices.Delete(w.candidates, i, i+1)
@@ -213,7 +212,7 @@ func (w *Room) DeregisterPlayer(id RoomCandidateId) (ok bool) {
 }
 
 // UpdatePlayerState update state of player.
-func (w *Room) UpdatePlayerState(id RoomCandidateId, s RoomPlayerReadyState) (ok bool) {
+func (w *Room) UpdatePlayerState(id RoomCandidateId, state RoomPlayerReadyState) (ok bool) {
 	w.Mu.Lock()
 	defer w.Mu.Unlock()
 
@@ -221,9 +220,9 @@ func (w *Room) UpdatePlayerState(id RoomCandidateId, s RoomPlayerReadyState) (ok
 		return false
 	}
 
-	for _, c := range w.candidates {
-		if c != nil && c.Id == id {
-			c.State = s
+	for _, candidate := range w.candidates {
+		if candidate != nil && candidate.Id == id {
+			candidate.State = state
 
 			w.CheckAndUpdateState()
 
@@ -243,9 +242,9 @@ func (w *Room) UpdatePlayerName(id RoomCandidateId, name string) (ok bool) {
 		return false
 	}
 
-	for _, c := range w.candidates {
-		if c != nil && c.Id == id {
-			c.Name = name
+	for _, candidate := range w.candidates {
+		if candidate != nil && candidate.Id == id {
+			candidate.Name = name
 
 			w.CheckAndUpdateState()
 
@@ -257,7 +256,7 @@ func (w *Room) UpdatePlayerName(id RoomCandidateId, name string) (ok bool) {
 }
 
 // UpdateVisibility update visibility of this wave room.
-func (w *Room) UpdateVisibility(caller RoomCandidateId, v RoomVisibility) (ok bool) {
+func (w *Room) UpdateVisibility(caller RoomCandidateId, visibility RoomVisibility) (ok bool) {
 	w.Mu.Lock()
 	defer w.Mu.Unlock()
 
@@ -265,9 +264,9 @@ func (w *Room) UpdateVisibility(caller RoomCandidateId, v RoomVisibility) (ok bo
 		return false
 	}
 
-	for _, c := range w.candidates {
-		if c != nil && c.Id == caller && c.Owner {
-			w.visibility = v
+	for _, candidate := range w.candidates {
+		if candidate != nil && candidate.Id == caller && candidate.Owner {
+			w.visibility = visibility
 
 			w.CheckAndUpdateState()
 
@@ -281,8 +280,8 @@ func (w *Room) UpdateVisibility(caller RoomCandidateId, v RoomVisibility) (ok bo
 func (w *Room) IsAllCandidateReady() bool {
 	candidatesReady := true
 
-	for _, c := range w.candidates {
-		if c != nil && c.State != RoomPlayerReadyStateReady {
+	for _, candidate := range w.candidates {
+		if candidate != nil && candidate.State != RoomPlayerReadyStateReady {
 			candidatesReady = false
 
 			break
@@ -351,8 +350,8 @@ func (w *Room) broadcastUpdatePacket() {
 
 	updatePacket := w.createUpdatePacket()
 
-	for _, c := range w.candidates {
-		c.SafeWriteMessage(websocket.BinaryMessage, updatePacket)
+	for _, candidate := range w.candidates {
+		candidate.SafeWriteMessage(websocket.BinaryMessage, updatePacket)
 	}
 }
 
@@ -369,13 +368,13 @@ func (w *Room) createUpdatePacket() []byte {
 	buf[at] = byte(len(w.candidates))
 	at++
 
-	for _, c := range w.candidates {
-		at += PutUvarint16(buf[at:], c.Id)
+	for _, candidate := range w.candidates {
+		at += PutUvarint16(buf[at:], candidate.Id)
 
 		// Write name
-		at = writeCString(buf, at, c.Name)
+		at = writeCString(buf, at, candidate.Name)
 
-		buf[at] = c.State
+		buf[at] = candidate.State
 		at++
 	}
 
@@ -398,6 +397,6 @@ func (w *Room) isNewPlayerRegisterable() bool {
 	w.Mu.RLock()
 	defer w.Mu.RUnlock()
 
-	return len(w.candidates) < waveRoomMaxPlayerAmount &&
+	return len(w.candidates) < roomMaxPlayerAmount &&
 		w.state == RoomStateWaiting
 }

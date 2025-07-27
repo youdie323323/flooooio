@@ -65,7 +65,7 @@ func calculateRotationDelta(
 	return (speed * clockwise) * DeltaT
 }
 
-func doPetalOrbit(
+func orbitPetal(
 	petal *Petal,
 
 	targetX float32,
@@ -87,8 +87,8 @@ func doPetalOrbit(
 	petal.Velocity[1] += petalVelocityAcceleration * diffY
 }
 
-// doPetalSpin do petal spin on mob.
-func doPetalSpin(
+// spinPetal do petal spin on mob.
+func spinPetal(
 	wp *Pool,
 
 	petal *Petal,
@@ -302,7 +302,7 @@ func (p *Player) PlayerPetalOrbit(wp *Pool, now time.Time) {
 				// Bit faster than normal orbit
 				petalAngle := Tau32*float32(j)/float32(len(petals)) + multipliedRotation*1.3
 
-				doPetalOrbit(
+				orbitPetal(
 					petal,
 
 					slotBaseX,
@@ -322,7 +322,7 @@ func (p *Player) PlayerPetalOrbit(wp *Pool, now time.Time) {
 				if len(spins) > i {
 					spin := spins[i]
 					if len(spin) > j {
-						doPetalSpin(
+						spinPetal(
 							wp,
 
 							petal,
@@ -349,7 +349,7 @@ func (p *Player) PlayerPetalOrbit(wp *Pool, now time.Time) {
 				continue
 			}
 
-			doPetalOrbit(
+			orbitPetal(
 				petal,
 
 				targetX,
@@ -369,7 +369,7 @@ func (p *Player) PlayerPetalOrbit(wp *Pool, now time.Time) {
 			if len(spins) > i {
 				spin := spins[i]
 				if len(spin) > 0 {
-					doPetalSpin(
+					spinPetal(
 						wp,
 
 						petal,

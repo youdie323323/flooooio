@@ -49,15 +49,15 @@ pub fn removeComponent(self: *UI, component: *Component) void {
     }
 }
 
-fn isPointOverlapsComponent(p: Point, component: *Component) bool {
-    const p_x, const p_y = p;
+fn isPointOverlapsComponent(point: Point, component: *Component) bool {
+    const x, const y = point;
 
     // zig fmt: off
     return (
-        p_x >= component.x and 
-        p_x <= component.x + component.w and
-        p_y >= component.y and 
-        p_y <= component.y + component.h
+        x >= component.x and 
+        x <= component.x + component.w and
+        y >= component.y and 
+        y <= component.y + component.h
     );
     // zig fmt: on
 }
@@ -66,10 +66,9 @@ pub fn render(self: *const UI, ctx: *CanvasContext) void {
     self.rawRender(ctx);
 }
 
-/// Render all components.
+/// Renders all components.
 /// This method is intended to be called from implementation of an `UI`.
 pub fn renderComponents(self: *const UI, ctx: *CanvasContext) void {
-    // Render all components
     for (self.components.constSlice()) |component| {
         if (component.is_visible) {
             ctx.fillColor(comptime (Color.comptimeFromCSSColorName("mintcream").lightened(0.1)));

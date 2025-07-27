@@ -9,9 +9,9 @@ const (
 	ChaoticBehavior                    // ChaoticBehavior behaves chaotic.
 )
 
-type RarityMobBehaviorDefinition = map[Rarity]MobBehavior
+type MobBehaviorDefinition = map[Rarity]MobBehavior
 
-var fullyPassiveDefinition = RarityMobBehaviorDefinition{
+var fullyPassiveDefinition = MobBehaviorDefinition{
 	RarityCommon:    PassiveBehavior,
 	RarityUnusual:   PassiveBehavior,
 	RarityRare:      PassiveBehavior,
@@ -20,7 +20,7 @@ var fullyPassiveDefinition = RarityMobBehaviorDefinition{
 	RarityMythic:    PassiveBehavior,
 }
 
-var fullyHostileDefinition = RarityMobBehaviorDefinition{
+var fullyHostileDefinition = MobBehaviorDefinition{
 	RarityCommon:    HostileBehavior,
 	RarityUnusual:   HostileBehavior,
 	RarityRare:      HostileBehavior,
@@ -29,7 +29,7 @@ var fullyHostileDefinition = RarityMobBehaviorDefinition{
 	RarityMythic:    HostileBehavior,
 }
 
-var fullyChaoticDefinition = RarityMobBehaviorDefinition{
+var fullyChaoticDefinition = MobBehaviorDefinition{
 	RarityCommon:    ChaoticBehavior,
 	RarityUnusual:   ChaoticBehavior,
 	RarityRare:      ChaoticBehavior,
@@ -38,7 +38,7 @@ var fullyChaoticDefinition = RarityMobBehaviorDefinition{
 	RarityMythic:    ChaoticBehavior,
 }
 
-var fullyNeutralDefinition = RarityMobBehaviorDefinition{
+var fullyNeutralDefinition = MobBehaviorDefinition{
 	RarityCommon:    NeutralBehavior,
 	RarityUnusual:   NeutralBehavior,
 	RarityRare:      NeutralBehavior,
@@ -47,7 +47,7 @@ var fullyNeutralDefinition = RarityMobBehaviorDefinition{
 	RarityMythic:    NeutralBehavior,
 }
 
-var EachMobBehaviorDefinition = map[MobType]RarityMobBehaviorDefinition{
+var EachMobBehaviorDefinition = map[MobType]MobBehaviorDefinition{
 	MobTypeBee: {
 		RarityCommon:    PassiveBehavior,
 		RarityUnusual:   PassiveBehavior,

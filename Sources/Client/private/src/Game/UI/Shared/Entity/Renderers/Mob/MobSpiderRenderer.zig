@@ -130,5 +130,4 @@ const skin_darken = @import("../../Renderers/Renderer.zig").skin_darken;
 const RenderContext = @import("../../Renderers/Renderer.zig").RenderContext;
 const Mob = @import("../../Mob.zig");
 const MobSuper = Mob.Super;
-const Mobs = @import("../../../../../../main.zig").Mobs;
 const allocator = @import("../../../../../../Mem.zig").allocator;
