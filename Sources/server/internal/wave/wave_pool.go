@@ -62,6 +62,12 @@ type Data struct {
 	MapRadius uint16
 }
 
+type PoolSpatialHash = collision.SpatialHash[EntityId, float32]
+
+type PoolNode = collision.Node[EntityId, float32]
+
+type PoolNodeSlice = collision.NodeSlice[EntityId, float32]
+
 type Pool struct {
 	playerPool *xsync.Map[EntityId, *Player]
 	mobPool    *xsync.Map[EntityId, *Mob]
@@ -85,7 +91,7 @@ type Pool struct {
 
 	frameCount *xsync.Counter
 
-	SpatialHash *collision.SpatialHash
+	SpatialHash *PoolSpatialHash
 
 	hasBeenEnded atomic.Bool
 
@@ -113,7 +119,7 @@ func NewPool(wr *Room, data *Data) *Pool {
 
 		frameCount: xsync.NewCounter(),
 
-		SpatialHash: collision.NewSpatialHash(spatialHashGridSize),
+		SpatialHash: collision.NewSpatialHash[EntityId, float32](spatialHashGridSize),
 
 		commandQueue: make(chan func() bool, 8),
 
@@ -501,7 +507,7 @@ func (wp *Pool) broadcastUpdatePacket() {
 		entitiesToSend := wp.SpatialHash.QueryRect(
 			p.X, p.Y,
 			float32(window[0]), float32(window[1]),
-			func(n collision.Node) bool {
+			func(n PoolNode) bool {
 				return !IsDeadNode(wp, n)
 			},
 		)
@@ -868,7 +874,7 @@ func (wp *Pool) GenerateMob(
 
 	petMaster *Player,
 
-	connectingSegment collision.Node,
+	connectingSegment *Mob,
 	isFirstSegment bool,
 ) *Mob {
 	id := RandomId()
@@ -921,7 +927,7 @@ func (wp *Pool) SafeGenerateMob(
 
 	petMaster *Player,
 
-	connectingSegment collision.Node,
+	connectingSegment *Mob,
 	isFirstSegment bool,
 ) *Mob {
 	wp.Mu.Lock()
@@ -1018,7 +1024,7 @@ func (wp *Pool) LinkedMobSegmentation(
 	// Arc
 	segmentDistance := (mc.Radius * 2) * (size / mc.Fraction)
 
-	var prevSegment collision.Node = nil
+	var prevSegment *Mob = nil
 
 	for i := range bodyCount + 1 {
 		radius := float32(i) * segmentDistance
@@ -1205,7 +1211,7 @@ func (wp *Pool) SafeFilterPetalsWithCondition(condition func(*Petal) bool) []*Pe
 
 // MobDoLightningBounce performs lightning bounce effect between players and pets from enemy (mob) side.
 // hitEntity is the initially struck entity.
-func (wp *Pool) MobDoLightningBounce(jellyfish *Mob, hitEntity collision.Node) {
+func (wp *Pool) MobDoLightningBounce(jellyfish *Mob, hitEntity PoolNode) {
 	// If strike projectile mob type, return
 	if m, ok := hitEntity.(*Mob); ok && slices.Contains(ProjectileMobTypes, m.Type) {
 		return
@@ -1233,7 +1239,7 @@ func (wp *Pool) MobDoLightningBounce(jellyfish *Mob, hitEntity collision.Node) {
 
 	bouncedIds := make([]EntityId, 0, maxBouncesInt)
 
-	var targetNode collision.Node = hitEntity
+	var targetNode PoolNode = hitEntity
 
 Loop:
 	for range maxBouncesInt {
@@ -1348,7 +1354,7 @@ func (wp *Pool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 
 	bouncedIds := make([]EntityId, 0, maxBouncesInt)
 
-	var targetNode collision.Node = hitMob
+	var targetNode PoolNode = hitMob
 
 	for range maxBouncesInt {
 		targetMob, ok := targetNode.(*Mob)

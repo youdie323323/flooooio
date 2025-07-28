@@ -1,27 +1,40 @@
 package collision
 
 import (
-	"github.com/chewxy/math32"
+	"math"
+
 	"github.com/colega/zeropool"
+	"golang.org/x/exp/constraints"
 
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
-type NodeId = uint16
-
-// Node represents an interface entity.
-type Node interface {
-	GetId() NodeId
-
-	GetX() float32
-	GetY() float32
-
-	SetOldPos(x, y float32)
-	GetOldPos() (float32, float32)
+type Number interface {
+	constraints.Integer | constraints.Float
 }
 
-func ToNodeSlice[T Node](entities []T) []Node {
-	nodes := make([]Node, len(entities))
+// Node represents an interface entity.
+type Node[Id comparable, N Number] interface {
+	// GetId returns the unique identifier of the node.
+	GetId() Id
+
+	// GetX returns the current X coordinate of the node.
+	GetX() N
+	// GetY returns the current Y coordinate of the node.
+	GetY() N
+
+	// SetOldPos stores the previous position of the node.
+	SetOldPos(x, y N)
+	// GetOldPos returns the previous X,Y coordinates of the node.
+	GetOldPos() (N, N)
+}
+
+// NodeSlice is slice of node.
+type NodeSlice[Id comparable, N Number] = []Node[Id, N]
+
+// ToNodeSlice converts slice of type that satisfies Node to NodeSlice.
+func ToNodeSlice[T Node[Id, N], Id comparable, N Number](entities []T) NodeSlice[Id, N] {
+	nodes := make(NodeSlice[Id, N], len(entities))
 
 	for i, e := range entities {
 		nodes[i] = e
@@ -31,42 +44,44 @@ func ToNodeSlice[T Node](entities []T) []Node {
 }
 
 // SpatialHash provides a thread-safe 2D spatial hashing implementation.
-type SpatialHash struct {
-	cellSize float32
-	buckets  *xsync.Map[int, *bucket]
+type SpatialHash[Id comparable, N Number] struct {
+	cellSize N
+	buckets  *xsync.Map[int, *bucket[Id, N]]
+
+	nodePool zeropool.Pool[NodeSlice[Id, N]]
 }
 
 // NewSpatialHash creates a new spatial hash.
-func NewSpatialHash(cellSize float32) *SpatialHash {
-	if cellSize <= 0 {
-		cellSize = 1024
-	}
-
-	return &SpatialHash{
+func NewSpatialHash[Id comparable, N Number](cellSize N) *SpatialHash[Id, N] {
+	return &SpatialHash[Id, N]{
 		cellSize: cellSize,
-		buckets:  xsync.NewMap[int, *bucket](),
+		buckets:  xsync.NewMap[int, *bucket[Id, N]](),
+
+		// TODO: automatically calculate pool size from cell size
+		nodePool: zeropool.New(func() NodeSlice[Id, N] { return make(NodeSlice[Id, N], 64) }),
 	}
 }
 
 // bucket is a thread-safe set implementation for Node objects.
-// TODO: maybe sync.Map faster than *xsync.Map[NodeId, Node]? clarify later
-type bucket struct{ nodes *xsync.Map[NodeId, Node] }
+type bucket[Id comparable, N Number] struct{ nodes *xsync.Map[Id, Node[Id, N]] }
 
 // newBucket creates a new node set.
-func newBucket() *bucket { return &bucket{xsync.NewMap[NodeId, Node]()} }
+func newBucket[Id comparable, N Number]() *bucket[Id, N] {
+	return &bucket[Id, N]{xsync.NewMap[Id, Node[Id, N]]()}
+}
 
 // Add adds a node to the set.
-func (s *bucket) Add(n Node) {
+func (s *bucket[Id, N]) Add(n Node[Id, N]) {
 	s.nodes.Store(n.GetId(), n)
 }
 
 // Delete removes a node from the set.
-func (s *bucket) Delete(n Node) {
+func (s *bucket[Id, N]) Delete(n Node[Id, N]) {
 	s.nodes.Delete(n.GetId())
 }
 
 // ForEach iterates over all nodes in the set.
-func (s *bucket) ForEach(f func(_ NodeId, n Node) bool) {
+func (s *bucket[Id, N]) ForEach(f func(_ Id, n Node[Id, N]) bool) {
 	s.nodes.Range(f)
 }
 
@@ -75,22 +90,22 @@ func pairPoint(x, y int) int {
 	return (x << 16) ^ y
 }
 
-func (sh *SpatialHash) calculatePositionKey(x, y float32) int {
+func (sh *SpatialHash[Id, N]) calculatePositionKey(x, y N) int {
 	return pairPoint(
-		int(math32.Floor(x/sh.cellSize)),
-		int(math32.Floor(y/sh.cellSize)),
+		int(math.Floor(float64(x/sh.cellSize))),
+		int(math.Floor(float64(y/sh.cellSize))),
 	)
 }
 
 // Put adds a node to the spatial hash.
-func (sh *SpatialHash) Put(n Node) {
+func (sh *SpatialHash[Id, N]) Put(n Node[Id, N]) {
 	x, y := n.GetX(), n.GetY()
 	key := sh.calculatePositionKey(x, y)
 
 	// Get or create bucket
 	bucket, exists := sh.buckets.Load(key)
 	if !exists {
-		bucket = newBucket()
+		bucket = newBucket[Id, N]()
 
 		sh.buckets.Store(key, bucket)
 	}
@@ -99,7 +114,7 @@ func (sh *SpatialHash) Put(n Node) {
 }
 
 // Remove removes a node from the spatial hash.
-func (sh *SpatialHash) Remove(n Node) {
+func (sh *SpatialHash[Id, N]) Remove(n Node[Id, N]) {
 	x, y := n.GetX(), n.GetY()
 	key := sh.calculatePositionKey(x, y)
 
@@ -109,7 +124,7 @@ func (sh *SpatialHash) Remove(n Node) {
 }
 
 // Update updates a node's position in the spatial hash.
-func (sh *SpatialHash) Update(n Node) {
+func (sh *SpatialHash[Id, N]) Update(n Node[Id, N]) {
 	x, y := n.GetX(), n.GetY()
 	oldX, oldY := n.GetOldPos()
 
@@ -124,7 +139,7 @@ func (sh *SpatialHash) Update(n Node) {
 
 		bucket, ok := sh.buckets.Load(key)
 		if !ok {
-			bucket = newBucket()
+			bucket = newBucket[Id, N]()
 
 			sh.buckets.Store(key, bucket)
 		}
@@ -136,19 +151,16 @@ func (sh *SpatialHash) Update(n Node) {
 	n.SetOldPos(x, y)
 }
 
-// searchResultPool is shared collision searchResultPool between Search.
-var searchResultPool = zeropool.New(func() []Node { return make([]Node, 64) })
-
-// Search finds all nodes within the specified radius.
-func (sh *SpatialHash) Search(x, y, radius float32) []Node {
+// Search searches all nodes within the radius.
+func (sh *SpatialHash[Id, N]) Search(x, y, radius N) NodeSlice[Id, N] {
 	radiusSq := radius * radius
 
-	minX := int(math32.Floor((x - radius) / sh.cellSize))
-	maxX := int(math32.Floor((x + radius) / sh.cellSize))
-	minY := int(math32.Floor((y - radius) / sh.cellSize))
-	maxY := int(math32.Floor((y + radius) / sh.cellSize))
+	minX := int(math.Floor(float64((x - radius) / sh.cellSize)))
+	maxX := int(math.Floor(float64((x + radius) / sh.cellSize)))
+	minY := int(math.Floor(float64((y - radius) / sh.cellSize)))
+	maxY := int(math.Floor(float64((y + radius) / sh.cellSize)))
 
-	result := searchResultPool.Get()
+	result := sh.nodePool.Get()
 	nodes := result[:0]
 
 	for yy := minY; yy <= maxY; yy++ {
@@ -156,7 +168,7 @@ func (sh *SpatialHash) Search(x, y, radius float32) []Node {
 			key := pairPoint(xx, yy)
 
 			if bucket, ok := sh.buckets.Load(key); ok {
-				bucket.ForEach(func(_ NodeId, n Node) bool {
+				bucket.ForEach(func(_ Id, n Node[Id, N]) bool {
 					dx := n.GetX() - x
 					dy := n.GetY() - y
 
@@ -170,26 +182,25 @@ func (sh *SpatialHash) Search(x, y, radius float32) []Node {
 		}
 	}
 
-	finalResult := make([]Node, len(nodes))
+	finalResult := make(NodeSlice[Id, N], len(nodes))
 	copy(finalResult, nodes)
 
-	searchResultPool.Put(result)
+	sh.nodePool.Put(result)
 
 	return finalResult
 }
 
-// QueryRect finds all nodes within the specified rectangular area centered on a point.
-func (sh *SpatialHash) QueryRect(x, y, width, height float32, filter func(n Node) bool) []Node {
-	// Calculate rectangle bounds
-	halfWidth := width * 0.5
-	halfHeight := height * 0.5
+// QueryRect queries all nodes within the specified rectangular area centered on a point.
+func (sh *SpatialHash[Id, N]) QueryRect(x, y, width, height N, filter func(n Node[Id, N]) bool) NodeSlice[Id, N] {
+	halfWidth := width / N(2)
+	halfHeight := height / N(2)
 
-	minX := int(math32.Floor((x - halfWidth) / sh.cellSize))
-	maxX := int(math32.Floor((x + halfWidth) / sh.cellSize))
-	minY := int(math32.Floor((y - halfHeight) / sh.cellSize))
-	maxY := int(math32.Floor((y + halfHeight) / sh.cellSize))
+	minX := int(math.Floor(float64((x - halfWidth) / sh.cellSize)))
+	maxX := int(math.Floor(float64((x + halfWidth) / sh.cellSize)))
+	minY := int(math.Floor(float64((y - halfHeight) / sh.cellSize)))
+	maxY := int(math.Floor(float64((y + halfHeight) / sh.cellSize)))
 
-	result := searchResultPool.Get()
+	result := sh.nodePool.Get()
 	nodes := result[:0]
 
 	for yy := minY; yy <= maxY; yy++ {
@@ -197,7 +208,7 @@ func (sh *SpatialHash) QueryRect(x, y, width, height float32, filter func(n Node
 			key := pairPoint(xx, yy)
 
 			if bucket, ok := sh.buckets.Load(key); ok {
-				bucket.ForEach(func(_ NodeId, n Node) bool {
+				bucket.ForEach(func(_ Id, n Node[Id, N]) bool {
 					if filter(n) {
 						nodes = append(nodes, n)
 					}
@@ -208,15 +219,15 @@ func (sh *SpatialHash) QueryRect(x, y, width, height float32, filter func(n Node
 		}
 	}
 
-	finalResult := make([]Node, len(nodes))
+	finalResult := make(NodeSlice[Id, N], len(nodes))
 	copy(finalResult, nodes)
 
-	searchResultPool.Put(result)
+	sh.nodePool.Put(result)
 
 	return finalResult
 }
 
 // Reset clears all nodes from the spatial hash.
-func (sh *SpatialHash) Reset() {
+func (sh *SpatialHash[Id, N]) Reset() {
 	sh.buckets.Clear()
 }

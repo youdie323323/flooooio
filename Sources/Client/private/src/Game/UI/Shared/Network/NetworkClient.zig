@@ -20,7 +20,7 @@ pub fn init(allocator: mem.Allocator) !*NetworkClient {
     client.* = .{
         .allocator = allocator,
 
-        .in = .init(
+        .in = try .init(
             allocator,
             client,
         ),
@@ -65,7 +65,7 @@ fn onMessage(ws: *OwnContextWebSocket, data: []const u8) void {
 }
 
 fn onOpen(ws: *OwnContextWebSocket) void {
-    ws.ctx.out.sendWaveRoomFindPublic(.desert) catch return;
+    ws.ctx.out.sendWaveRoomFindPublic(.garden) catch return;
     ws.ctx.out.sendWaveRoomChangeReady(.ready) catch return;
 }
 

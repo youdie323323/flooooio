@@ -17,7 +17,7 @@ type Mob struct {
 
 	Rarity native.Rarity
 
-	TargetEntity collision.Node
+	TargetEntity PoolNode
 
 	MagnitudeMultiplier float32
 
@@ -25,7 +25,7 @@ type Mob struct {
 	// Represented in second.
 	SigmaT float32
 
-	LastAttackedEntity collision.Node
+	LastAttackedEntity PoolNode
 
 	PetMaster        *Player
 	PetGoingToMaster bool
@@ -33,9 +33,9 @@ type Mob struct {
 	StarfishRegeningHealth bool
 
 	// ConnectingSegment represents connected segment.
-	// Use collision.Node here because its not possible to Mob refer itself.
+	// Use PoolNode here because its not possible to Mob refer itself.
 	// Use type assertion.
-	ConnectingSegment   collision.Node
+	ConnectingSegment   *Mob
 	ConnectedSegmentIds []EntityId
 	IsFirstSegment      bool
 
@@ -132,7 +132,7 @@ func (m *Mob) IsEliminated(wp *Pool) bool {
 var _ LightningEmitter = (*Mob)(nil) // *Mob must implement LightningEmitter
 
 // SearchLightningBounceTargets returns targets to bounce.
-func (m *Mob) SearchLightningBounceTargets(wp *Pool, bouncedIds []EntityId) []collision.Node {
+func (m *Mob) SearchLightningBounceTargets(wp *Pool, bouncedIds []EntityId) PoolNodeSlice {
 	if m.IsEnemy() {
 		return slices.Concat(
 			collision.ToNodeSlice(wp.FilterPlayersWithCondition(func(p *Player) bool {
@@ -217,7 +217,7 @@ func NewMob(
 
 	petMaster *Player,
 
-	connectingSegment collision.Node,
+	connectingSegment *Mob,
 	isFirstSegment bool,
 ) *Mob {
 	// Ultra+ stats is not defined for mob
@@ -284,9 +284,8 @@ func NewMob(
 		IsSpecialMoving: false,
 	}
 
-	// We only want connected segment ids for mob (leech)
-	if v, ok := connectingSegment.(*Mob); ok {
-		v.ConnectedSegmentIds = append(v.ConnectedSegmentIds, m.Id)
+	if connectingSegment != nil { // Add created mob id to connectingSegment.ConnectedSegmentIds
+		connectingSegment.ConnectedSegmentIds = append(connectingSegment.ConnectedSegmentIds, m.Id)
 	}
 
 	return m

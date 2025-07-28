@@ -273,9 +273,10 @@ pub fn renderEntity(
     const ctx = rctx.ctx;
 
     ctx.save();
-    defer ctx.restore();
 
     Impl.Renderer.render(rctx);
+
+    ctx.restore();
 }
 
 /// Validates an entity implementation and returns itself.

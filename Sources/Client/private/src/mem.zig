@@ -62,14 +62,14 @@ test "malloc/free benchmark" {
     }
 }
 
-pub const CStringPointer = [*:0]u8;
-pub const ConstCStringPointer = [*:0]const u8;
+pub const CStringPtr = [*:0]u8;
+pub const ConstCStringPtr = [*:0]const u8;
 
-pub fn allocCString(slice: []const u8) CStringPointer {
+pub fn allocCString(slice: []const u8) CStringPtr {
     return allocator.dupeZ(u8, slice) catch unreachable;
 }
 
-pub fn freeCString(ptr: CStringPointer) void {
+pub fn freeCString(ptr: CStringPtr) void {
     const len = mem.len(ptr) + 1;
 
     allocator.free(ptr[0..len]);

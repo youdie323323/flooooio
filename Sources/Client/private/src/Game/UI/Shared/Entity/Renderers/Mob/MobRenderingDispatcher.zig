@@ -50,13 +50,13 @@ fn render(rctx: *RenderContext(MobSuper)) void {
     const entity = rctx.entity;
     const mob = &entity.impl;
 
-    if (type_to_renderer.get(mob.type.getMixed())) |renderer|
+    if (type_to_renderer.get(mob.type.toMixed())) |renderer|
         renderer(rctx);
 }
 
 fn init(allocator: mem.Allocator) void {
     { // Init child renderers
-        { // Pure
+        { // Pure mob
             MobStarfishRenderer.initStatic(allocator);
             MobBeeRenderer.initStatic(allocator);
             MobBabyAntRenderer.initStatic(allocator);

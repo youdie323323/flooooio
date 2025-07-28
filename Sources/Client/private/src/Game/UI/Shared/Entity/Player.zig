@@ -4,6 +4,10 @@ pub const Super = Entity(PlayerImpl);
 
 pub const Renderer = PlayerRenderingDispatcher;
 
+/// Mood flags when player is poisoned.
+/// If player is poisoned, player's mood is always locked to sad.
+const poisoned_mood_flags: [2]bool = .{ false, true };
+
 /// Mood of player.
 mood: PlayerMood.MoodBitSet = .initEmpty(),
 
@@ -38,12 +42,11 @@ pub fn update(self: *PlayerImpl, entity: *Super, delta_time: f32) void {
     } else {
         const mouth_mood_speed = delta_time / 100;
 
-        var is_angry, var is_sad = PlayerMood.decodeMood(self.mood);
-
-        if (entity.is_poisoned) {
-            is_angry = false;
-            is_sad = false;
-        }
+        const is_angry, const is_sad =
+            if (entity.is_poisoned)
+                poisoned_mood_flags
+            else
+                PlayerMood.decodeMood(self.mood);
 
         self.angry_t = math.clamp(self.angry_t + (if (is_angry) mouth_mood_speed else -mouth_mood_speed), 0, 1);
         self.sad_t = math.clamp(self.sad_t + (if (!is_angry and is_sad) mouth_mood_speed else -mouth_mood_speed), 0, 1);

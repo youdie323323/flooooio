@@ -14,6 +14,8 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
+
+	// _ "net/http/pprof"
 )
 
 var upgrader = websocket.Upgrader{
@@ -43,7 +45,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Slots: wave.StaticPetalSlots{
 				Surface: slices.Repeat([]wave.StaticPetalData{
 					{
-						Type:   native.PetalTypeStinger,
+						Type:   native.PetalTypeFaster,
 						Rarity: native.RarityUltra,
 					},
 				}, 10),
@@ -121,6 +123,8 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+const port = 8080
+
 func main() {
 	err := godotenv.Load("../../.env")
 	if err != nil {
@@ -135,8 +139,6 @@ func main() {
 	// WebSocket endpoint
 	http.HandleFunc("/ws", handleWebSocket)
 
-	const PORT = 8080
-
-	slog.Info("Server running", "port", PORT)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", PORT), nil))
+	slog.Info("Server running", "port", port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
 }

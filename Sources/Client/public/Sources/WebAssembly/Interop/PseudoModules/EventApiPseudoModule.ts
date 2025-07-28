@@ -9,18 +9,18 @@ const enum GlobalEventTargetType {
     WINDOW,
 }
 
-const PSEUDO_GLOBAL_EVENT_TARGETS = [document, window];
+const SPECIAL_HTML_TARGETS = [document, window];
 
 type EventTargetType = GlobalEventTargetType | number /* Pointer */;
 
-function getEventTarget(eventTargetType: EventTargetType): EventTarget | Element {
-    return eventTargetType > 1
-        ? document.querySelector(decodeCString(eventTargetType))
-        : PSEUDO_GLOBAL_EVENT_TARGETS[eventTargetType];
+function findEventTarget(targetType: EventTargetType): EventTarget | Element {
+    return targetType > 1
+        ? document.querySelector(decodeCString(targetType))
+        : SPECIAL_HTML_TARGETS[targetType];
 }
 
-function getElementBounds(target: EventTarget | Element): DOMRect {
-    const isGlobalTarget = PSEUDO_GLOBAL_EVENT_TARGETS.includes(target as any);
+function getBoundingClientRect(target: EventTarget | Element): DOMRect {
+    const isGlobalTarget = SPECIAL_HTML_TARGETS.includes(target as any);
 
     return isGlobalTarget
         ? {
@@ -42,40 +42,42 @@ const enum EventType {
     WHEEL = 9,
 }
 
-function writeMouseEventToMemory(
+function fillMouseEventData(
     ptr: number,
     event: MouseEvent,
     target: EventTarget | Element,
 ) {
     HEAPF64[ptr >> 3] = event.timeStamp;
 
-    HEAP32[(ptr + 8) >> 2] = event.screenX;
-    HEAP32[(ptr + 12) >> 2] = event.screenY;
+    ptr >>= 2;
 
-    HEAP32[(ptr + 16) >> 2] = event.clientX;
-    HEAP32[(ptr + 20) >> 2] = event.clientY;
+    HEAP32[ptr + 2] = event.screenX;
+    HEAP32[ptr + 3] = event.screenY;
 
-    HEAP32[(ptr + 24) >> 2] = +event.ctrlKey;
-    HEAP32[(ptr + 28) >> 2] = +event.shiftKey;
-    HEAP32[(ptr + 32) >> 2] = +event.altKey;
-    HEAP32[(ptr + 36) >> 2] = +event.metaKey;
+    HEAP32[ptr + 4] = event.clientX;
+    HEAP32[ptr + 5] = event.clientY;
 
-    HEAP16[(ptr + 40) >> 1] = event.button;
-    HEAP16[(ptr + 42) >> 1] = event.buttons;
+    HEAP32[ptr + 6] = <number><unknown>event.ctrlKey;
+    HEAP32[ptr + 7] = <number><unknown>event.shiftKey;
+    HEAP32[ptr + 8] = <number><unknown>event.altKey;
+    HEAP32[ptr + 9] = <number><unknown>event.metaKey;
 
-    HEAP32[(ptr + 48) >> 2] = event.movementX;
-    HEAP32[(ptr + 52) >> 2] = event.movementY;
+    HEAP16[ptr * 2 + 20] = event.button;
+    HEAP16[ptr * 2 + 21] = event.buttons;
 
-    const rect = getElementBounds(target);
+    HEAP32[ptr + 11] = event.movementX;
+    HEAP32[ptr + 12] = event.movementY;
 
-    HEAP32[(ptr + 56) >> 2] = event.clientX - rect.left;
-    HEAP32[(ptr + 60) >> 2] = event.clientY - rect.top;
+    const rect = getBoundingClientRect(target);
+
+    HEAP32[ptr + 13] = event.clientX - rect.left;
+    HEAP32[ptr + 14] = event.clientY - rect.top;
 }
 
 let mouseEventPtr: number | null = null;
 
 function addMouseEventListener(
-    eventTargetType: EventTargetType,
+    targetType: EventTargetType,
     useCapture: boolean,
     ptrOrRemoveListener: number,
     eventType: EventType,
@@ -83,7 +85,7 @@ function addMouseEventListener(
 ) {
     mouseEventPtr ??= malloc(72);
 
-    const target = getEventTarget(eventTargetType);
+    const target = findEventTarget(targetType);
 
     eventManager.addOrRemoveEventListener({
         target,
@@ -92,7 +94,7 @@ function addMouseEventListener(
         callback(e) {
             e = e || event;
 
-            writeMouseEventToMemory(mouseEventPtr, e as MouseEvent, target);
+            fillMouseEventData(mouseEventPtr, e as MouseEvent, target);
 
             // Here, using pointerOremoveListener as pointer is no problem, because removing listener wont require callback
             getWebAssemblyFunction(ptrOrRemoveListener)(eventType, mouseEventPtr) &&
@@ -105,7 +107,7 @@ function addMouseEventListener(
 let screenEventPtr: number | null = null;
 
 function addScreenEventListener(
-    eventTargetType: EventTargetType,
+    targetType: EventTargetType,
     useCapture: boolean,
     ptrOrRemoveListener: number,
     eventType: EventType,
@@ -113,7 +115,7 @@ function addScreenEventListener(
 ) {
     screenEventPtr ??= malloc(36);
 
-    const target = getEventTarget(eventTargetType);
+    const target = findEventTarget(targetType);
 
     eventManager.addOrRemoveEventListener({
         target,
@@ -152,7 +154,7 @@ function addScreenEventListener(
 let wheelEventPtr: number | null = null;
 
 function addWheelEventListener(
-    eventTargetType: EventTargetType,
+    targetType: EventTargetType,
     useCapture: boolean,
     ptrOrRemoveListener: number,
     eventType: EventType,
@@ -160,7 +162,7 @@ function addWheelEventListener(
 ) {
     wheelEventPtr ??= malloc(96);
 
-    const target = getEventTarget(eventTargetType);
+    const target = findEventTarget(targetType);
 
     eventManager.addOrRemoveEventListener({
         target,
@@ -169,11 +171,12 @@ function addWheelEventListener(
         callback(e) {
             e = e || event;
 
-            writeMouseEventToMemory(wheelEventPtr, <WheelEvent>e, target);
+            fillMouseEventData(wheelEventPtr, <WheelEvent>e, target);
 
             HEAPF64[(wheelEventPtr + 64) >> 3] = (<WheelEvent>e).deltaX;
             HEAPF64[(wheelEventPtr + 72) >> 3] = (<WheelEvent>e).deltaY;
             HEAPF64[(wheelEventPtr + 80) >> 3] = (<WheelEvent>e).deltaZ;
+            
             HEAP32[(wheelEventPtr + 88) >> 2] = (<WheelEvent>e).deltaMode;
 
             // Here, using pointerOremoveListener as pointer is no problem, because removing listener wont require callback

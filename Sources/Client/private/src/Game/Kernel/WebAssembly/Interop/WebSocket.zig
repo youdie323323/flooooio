@@ -127,7 +127,7 @@ pub fn WebSocket(comptime Context: type) type {
         /// Checks if current protocol is secure.
         extern "3" fn @"0"() bool;
         /// Creates WebSocket connection.
-        extern "3" fn @"1"(ptr: Mem.CStringPointer) Id;
+        extern "3" fn @"1"(ptr: Mem.CStringPtr) Id;
         /// Destroys WebSocket connection.
         extern "3" fn @"2"(id: Id) void;
         /// Checks if WebSocket is ready.

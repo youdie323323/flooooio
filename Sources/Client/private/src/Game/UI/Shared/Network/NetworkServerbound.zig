@@ -1,12 +1,12 @@
 const Serverbound = @This();
 
-pub const Writer = NetworkClient.DefaultPacketStream.Writer;
+pub const Writer = Client.DefaultPacketStream.Writer;
 
-client: *NetworkClient,
+client: *Client,
 
 pub fn init(
     _: mem.Allocator,
-    client: *NetworkClient,
+    client: *Client,
 ) Serverbound {
     return .{
         .client = client,
@@ -172,8 +172,11 @@ const mem = std.mem;
 const math = std.math;
 const leb = std.leb;
 
+const Network = @import("Network.zig");
+const Client = Network.Client;
+const Opcode = Network.Opcode;
+
 const Wr = @import("../Wave/WaveRoom.zig");
 const Biome = @import("../../../Florr/Native/Biome.zig").Biome;
 const PlayerMood = @import("../Entity/PlayerMood.zig");
-const NetworkClient = @import("NetworkClient.zig");
-const Opcode = @import("NetworkPacketOpcode.zig");
+

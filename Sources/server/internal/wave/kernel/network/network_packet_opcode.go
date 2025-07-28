@@ -15,7 +15,7 @@ const ( // Clientbound packet opcodes.
 
 	ClientboundWaveChatReceive
 
-	ClientboundConnectionKicked
+	ClientboundKick
 )
 
 const ( // Serverbound packet opcodes.

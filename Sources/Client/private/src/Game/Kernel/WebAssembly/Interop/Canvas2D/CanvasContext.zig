@@ -85,255 +85,249 @@ pub const CompositeOperator = enum(u5) {
     luminosity,
 };
 
-/// Getter/setter methods which is similar to ctx.blahblah = blah, ctx.blahblah
-const AccessorMethods = struct {
-    pub const Properties = struct {
-        /// Current lineWidth of this context.
-        /// Default value is 1 px.
-        line_width: f32 = 1.0,
+pub const Properties = struct {
+    /// Current lineWidth of this context.
+    /// Default value is 1px.
+    line_width: f32 = 1.0,
 
-        /// Current globalAlpha of this context.
-        /// Default value is 1.0.
-        global_alpha: f32 = 1.0,
+    /// Current globalAlpha of this context.
+    /// Default value is 1.0.
+    global_alpha: f32 = 1.0,
 
-        /// Current globalCompositeOperation of this context.
-        /// Default value is source_over.
-        global_composite_operation: CompositeOperator = .source_over,
+    /// Current globalCompositeOperation of this context.
+    /// Default value is source_over.
+    global_composite_operation: CompositeOperator = .source_over,
 
-        /// Current textAlign of this context.
-        /// Default value is start.
-        text_align: TextAlign = .start,
+    /// Current textAlign of this context.
+    /// Default value is start.
+    text_align: TextAlign = .start,
 
-        /// Current lineCap of this context.
-        /// Default value is butt.
-        line_cap: LineCap = .butt,
+    /// Current lineCap of this context.
+    /// Default value is butt.
+    line_cap: LineCap = .butt,
 
-        /// Current lineJoin of this context.
-        /// Default value is miter.
-        line_join: LineJoin = .miter,
+    /// Current lineJoin of this context.
+    /// Default value is miter.
+    line_join: LineJoin = .miter,
 
-        /// Current miterLimit of this context.
-        /// Default value is 10.0.
-        miter_limit: f32 = 10.0,
+    /// Current miterLimit of this context.
+    /// Default value is 10.0.
+    miter_limit: f32 = 10.0,
 
-        /// Current lineDashOffset of this context.
-        /// Default value is 0.0.
-        line_dash_offset: f32 = 0.0,
+    /// Current lineDashOffset of this context.
+    /// Default value is 0.0.
+    line_dash_offset: f32 = 0.0,
 
-        /// Current imageSmoothingEnabled of this context.
-        /// Default value is true.
-        image_smoothing_enabled: bool = true,
+    /// Current imageSmoothingEnabled of this context.
+    /// Default value is true.
+    image_smoothing_enabled: bool = true,
+};
+
+// Begin accessor methods
+
+pub fn strokeColor(self: *const CanvasContext, color: Color) void {
+    const r, const g, const b = color.rgb;
+
+    @"22"(self.id, r, g, b);
+}
+
+pub fn fillColor(self: *const CanvasContext, color: Color) void {
+    const r, const g, const b = color.rgb;
+
+    @"21"(self.id, r, g, b);
+}
+
+pub fn setLineWidth(self: *CanvasContext, width: f32) void {
+    self.properties.line_width = width;
+
+    @"33"(self.id, width);
+}
+
+pub fn lineWidth(self: *const CanvasContext) f32 {
+    return self.properties.line_width;
+}
+
+pub fn setLineCap(self: *CanvasContext, comptime cap: LineCap) void {
+    self.properties.line_cap = cap;
+
+    switch (cap) {
+        inline .butt => @"42"(self.id),
+        inline .round => @"43"(self.id),
+        inline .square => @"44"(self.id),
+    }
+}
+
+pub fn lineCap(self: *const CanvasContext) LineCap {
+    return self.properties.line_cap;
+}
+
+pub fn setLineJoin(self: *CanvasContext, comptime join: LineJoin) void {
+    self.properties.line_join = join;
+
+    switch (join) {
+        inline .round => @"45"(self.id),
+        inline .miter => @"46"(self.id),
+        inline else => @compileError(std.fmt.comptimePrint("invalid line join: {any}", .{join})),
+    }
+}
+
+pub fn lineJoin(self: *const CanvasContext) LineJoin {
+    return self.properties.line_join;
+}
+
+pub fn setMiterLimit(self: *CanvasContext, comptime limit: comptime_float) void {
+    self.properties.miter_limit = limit;
+
+    @"47"(self.id, limit);
+}
+
+pub fn miterLimit(self: *const CanvasContext) f32 {
+    return self.properties.miter_limit;
+}
+
+/// Do setLineDash([]) on context.
+pub fn setLineSolid(self: *const CanvasContext) void {
+    @"48"(self.id);
+}
+
+pub fn setLineDashOffset(self: *CanvasContext, comptime offset: comptime_float) void {
+    self.properties.line_dash_offset = offset;
+
+    @"49"(self.id, offset);
+}
+
+pub fn lineDashOffset(self: *const CanvasContext) f32 {
+    return self.properties.line_dash_offset;
+}
+
+pub fn setGlobalAlpha(self: *CanvasContext, alpha: f32) void {
+    self.properties.global_alpha = alpha;
+
+    @"23"(self.id, alpha);
+}
+
+pub fn globalAlpha(self: *const CanvasContext) f32 {
+    return self.properties.global_alpha;
+}
+
+pub fn setStandardFont(self: *const CanvasContext, comptime pixel: f32) void {
+    // TODO: should store font pixel?
+
+    @"39"(self.id, pixel);
+}
+
+pub fn setGlobalCompositeOperation(self: *CanvasContext, comptime op: CompositeOperator) void {
+    self.properties.global_composite_operation = op;
+
+    switch (op) {
+        inline .source_over => @"50"(self.id),
+        inline .destination_in => @"51"(self.id),
+        inline .copy => @"52"(self.id),
+        inline .lighter => @"53"(self.id),
+        inline .multiply => @"54"(self.id),
+        inline else => @compileError(std.fmt.comptimePrint("invalid composite operator: {any}", .{op})),
+    }
+}
+
+pub fn globalCompositeOperation(self: *const CanvasContext) CompositeOperator {
+    return self.properties.global_composite_operation;
+}
+
+pub fn setTextAlign(self: *CanvasContext, comptime @"align": TextAlign) void {
+    self.properties.text_align = @"align";
+
+    const align_string = comptime switch (@"align") {
+        .left => "left",
+        .right => "right",
+        .center => return @"40"(self.id),
+        .start => "start",
+        .end => "end",
     };
 
-    pub fn strokeColor(self: *const CanvasContext, color: Color) void {
-        const r, const g, const b = color.rgb;
+    @"41"(self.id, align_string.ptr, align_string.len);
+}
 
-        @"22"(self.id, r, g, b);
-    }
+pub fn textAlign(self: *const CanvasContext) TextAlign {
+    return self.properties.text_align;
+}
 
-    pub fn fillColor(self: *const CanvasContext, color: Color) void {
-        const r, const g, const b = color.rgb;
+pub fn setImageSmoothingEnabled(self: *CanvasContext, comptime enabled: bool) void {
+    self.properties.image_smoothing_enabled = enabled;
 
-        @"21"(self.id, r, g, b);
-    }
+    @"55"(self.id, comptime @intFromBool(enabled));
+}
 
-    pub fn setLineWidth(self: *CanvasContext, width: f32) void {
-        self.properties.line_width = width;
+pub fn imageSmoothingEnabled(self: *const CanvasContext) bool {
+    return self.properties.image_smoothing_enabled;
+}
 
-        @"33"(self.id, width);
-    }
+pub fn setSize(self: *const CanvasContext, width: u16, height: u16) void {
+    @"56"(self.id, width, height);
+}
 
-    pub fn lineWidth(self: *const CanvasContext) f32 {
-        return self.properties.line_width;
-    }
+pub fn size(self: *const CanvasContext) @Vector(2, u16) {
+    var width: u16 = undefined;
+    var height: u16 = undefined;
 
-    pub fn setLineCap(self: *CanvasContext, comptime cap: LineCap) void {
-        self.properties.line_cap = cap;
+    @"57"(self.id, &width, &height);
 
-        switch (cap) {
-            inline .butt => @"42"(self.id),
-            inline .round => @"43"(self.id),
-            inline .square => @"44"(self.id),
-        }
-    }
+    return .{ width, height };
+}
 
-    pub fn lineCap(self: *const CanvasContext) LineCap {
-        return self.properties.line_cap;
-    }
+// Begin path methods
 
-    pub fn setLineJoin(self: *CanvasContext, comptime join: LineJoin) void {
-        self.properties.line_join = join;
+pub fn closePath(self: *const CanvasContext) void {
+    @"15"(self.id);
+}
 
-        switch (join) {
-            inline .round => @"45"(self.id),
-            inline .miter => @"46"(self.id),
-            inline else => @compileError(std.fmt.comptimePrint("invalid line join: {any}", .{join})),
-        }
-    }
+pub fn moveTo(self: *const CanvasContext, x: f32, y: f32) void {
+    @"24"(self.id, x, y);
+}
 
-    pub fn lineJoin(self: *const CanvasContext) LineJoin {
-        return self.properties.line_join;
-    }
+pub fn lineTo(self: *const CanvasContext, x: f32, y: f32) void {
+    @"25"(self.id, x, y);
+}
 
-    pub fn setMiterLimit(self: *CanvasContext, comptime limit: comptime_float) void {
-        self.properties.miter_limit = limit;
+pub fn quadraticCurveTo(self: *const CanvasContext, cpx: f32, cpy: f32, x: f32, y: f32) void {
+    @"29"(self.id, cpx, cpy, x, y);
+}
 
-        @"47"(self.id, limit);
-    }
+pub fn bezierCurveTo(self: *const CanvasContext, cp1x: f32, cp1y: f32, cp2x: f32, cp2y: f32, x: f32, y: f32) void {
+    @"30"(self.id, cp1x, cp1y, cp2x, cp2y, x, y);
+}
 
-    pub fn miterLimit(self: *const CanvasContext) f32 {
-        return self.properties.miter_limit;
-    }
+pub fn arc(self: *const CanvasContext, x: f32, y: f32, radius: f32, start_angle: f32, end_angle: f32, comptime anticlockwise: bool) void {
+    @"31"(self.id, x, y, radius, start_angle, end_angle, comptime @intFromBool(anticlockwise));
+}
 
-    /// Do setLineDash([]) on context.
-    pub fn setLineSolid(self: *const CanvasContext) void {
-        @"48"(self.id);
-    }
+pub fn ellipse(self: *const CanvasContext, x: f32, y: f32, radius_x: f32, radius_y: f32, rotation: f32, start_angle: f32, end_angle: f32, comptime anticlockwise: bool) void {
+    @"32"(self.id, x, y, radius_x, radius_y, rotation, start_angle, end_angle, comptime @intFromBool(anticlockwise));
+}
 
-    pub fn setLineDashOffset(self: *CanvasContext, comptime offset: comptime_float) void {
-        self.properties.line_dash_offset = offset;
-
-        @"49"(self.id, offset);
-    }
-
-    pub fn lineDashOffset(self: *const CanvasContext) f32 {
-        return self.properties.line_dash_offset;
-    }
-
-    pub fn setGlobalAlpha(self: *CanvasContext, alpha: f32) void {
-        self.properties.global_alpha = alpha;
-
-        @"23"(self.id, alpha);
-    }
-
-    pub fn globalAlpha(self: *const CanvasContext) f32 {
-        return self.properties.global_alpha;
-    }
-
-    pub fn setStandardFont(self: *const CanvasContext, comptime pixel: f32) void {
-        // TODO: should store font pixel?
-
-        @"39"(self.id, pixel);
-    }
-
-    pub fn setGlobalCompositeOperation(self: *CanvasContext, comptime op: CompositeOperator) void {
-        self.properties.global_composite_operation = op;
-
-        switch (op) {
-            inline .source_over => @"50"(self.id),
-            inline .destination_in => @"51"(self.id),
-            inline .copy => @"52"(self.id),
-            inline .lighter => @"53"(self.id),
-            inline .multiply => @"54"(self.id),
-            inline else => @compileError(std.fmt.comptimePrint("invalid composite operator: {any}", .{op})),
-        }
-    }
-
-    pub fn globalCompositeOperation(self: *const CanvasContext) CompositeOperator {
-        return self.properties.global_composite_operation;
-    }
-
-    pub fn setTextAlign(self: *CanvasContext, comptime @"align": TextAlign) void {
-        self.properties.text_align = @"align";
-
-        const align_string = comptime switch (@"align") {
-            .left => "left",
-            .right => "right",
-            .center => return @"40"(self.id),
-            .start => "start",
-            .end => "end",
-        };
-
-        @"41"(self.id, align_string.ptr, align_string.len);
-    }
-
-    pub fn textAlign(self: *const CanvasContext) TextAlign {
-        return self.properties.text_align;
-    }
-
-    pub fn setImageSmoothingEnabled(self: *CanvasContext, comptime enabled: bool) void {
-        self.properties.image_smoothing_enabled = enabled;
-
-        @"55"(self.id, comptime @intFromBool(enabled));
-    }
-
-    pub fn imageSmoothingEnabled(self: *const CanvasContext) bool {
-        return self.properties.image_smoothing_enabled;
-    }
-
-    pub fn setSize(self: *const CanvasContext, width: u16, height: u16) void {
-        @"56"(self.id, width, height);
-    }
-
-    pub fn size(self: *const CanvasContext) @Vector(2, u16) {
-        var width: u16 = undefined;
-        var height: u16 = undefined;
-
-        @"57"(self.id, &width, &height);
-
-        return .{ width, height };
-    }
-};
-
-pub usingnamespace AccessorMethods;
-
-/// Context path methods.
-const PathMethods = struct {
-    pub fn closePath(self: *const CanvasContext) void {
-        @"15"(self.id);
-    }
-
-    pub fn moveTo(self: *const CanvasContext, x: f32, y: f32) void {
-        @"24"(self.id, x, y);
-    }
-
-    pub fn lineTo(self: *const CanvasContext, x: f32, y: f32) void {
-        @"25"(self.id, x, y);
-    }
-
-    pub fn quadraticCurveTo(self: *const CanvasContext, cpx: f32, cpy: f32, x: f32, y: f32) void {
-        @"29"(self.id, cpx, cpy, x, y);
-    }
-
-    pub fn bezierCurveTo(self: *const CanvasContext, cp1x: f32, cp1y: f32, cp2x: f32, cp2y: f32, x: f32, y: f32) void {
-        @"30"(self.id, cp1x, cp1y, cp2x, cp2y, x, y);
-    }
-
-    pub fn arc(self: *const CanvasContext, x: f32, y: f32, radius: f32, start_angle: f32, end_angle: f32, comptime anticlockwise: bool) void {
-        @"31"(self.id, x, y, radius, start_angle, end_angle, comptime @intFromBool(anticlockwise));
-    }
-
-    pub fn ellipse(self: *const CanvasContext, x: f32, y: f32, radius_x: f32, radius_y: f32, rotation: f32, start_angle: f32, end_angle: f32, comptime anticlockwise: bool) void {
-        @"32"(self.id, x, y, radius_x, radius_y, rotation, start_angle, end_angle, comptime @intFromBool(anticlockwise));
-    }
-
-    /// Performs closePath.
-    extern "0" fn @"15"(id: Id) void;
-    /// Performs moveTo.
-    extern "0" fn @"24"(id: Id, x: f32, y: f32) void;
-    /// Performs lineTo.
-    extern "0" fn @"25"(id: Id, x: f32, y: f32) void;
-    /// Performs quadraticCurveTo.
-    extern "0" fn @"29"(id: Id, cpx: f32, cpy: f32, x: f32, y: f32) void;
-    /// Performs bezierCurveTo.
-    extern "0" fn @"30"(id: Id, cp1x: f32, cp1y: f32, cp2x: f32, cp2y: f32, x: f32, y: f32) void;
-    /// Performs arc.
-    extern "0" fn @"31"(id: Id, x: f32, y: f32, radius: f32, start_angle: f32, end_angle: f32, anticlockwise: u8) void;
-    /// Performs ellipse.
-    extern "0" fn @"32"(id: Id, x: f32, y: f32, radius_x: f32, radius_y: f32, rotation: f32, start_angle: f32, end_angle: f32, anticlockwise: u8) void;
-};
-
-pub usingnamespace PathMethods;
+/// Performs closePath.
+extern "0" fn @"15"(id: Id) void;
+/// Performs moveTo.
+extern "0" fn @"24"(id: Id, x: f32, y: f32) void;
+/// Performs lineTo.
+extern "0" fn @"25"(id: Id, x: f32, y: f32) void;
+/// Performs quadraticCurveTo.
+extern "0" fn @"29"(id: Id, cpx: f32, cpy: f32, x: f32, y: f32) void;
+/// Performs bezierCurveTo.
+extern "0" fn @"30"(id: Id, cp1x: f32, cp1y: f32, cp2x: f32, cp2y: f32, x: f32, y: f32) void;
+/// Performs arc.
+extern "0" fn @"31"(id: Id, x: f32, y: f32, radius: f32, start_angle: f32, end_angle: f32, anticlockwise: u8) void;
+/// Performs ellipse.
+extern "0" fn @"32"(id: Id, x: f32, y: f32, radius_x: f32, radius_y: f32, rotation: f32, start_angle: f32, end_angle: f32, anticlockwise: u8) void;
 
 id: Id,
 
 /// Internal context property values.
 /// This should not accessed directly, if you want to get value, call method that named with field name.
-properties: AccessorMethods.Properties = .{},
+properties: Properties = .{},
 
 /// Internal context frames.
 /// This should not accessed directly.
-frames: [8]AccessorMethods.Properties = undefined,
+frames: [8]Properties = undefined,
 
 /// Current depth of context frames.
 frames_depth: usize = 0,
@@ -475,7 +469,7 @@ pub fn clearContextRect(self: *const CanvasContext) void {
 /// Creates the context.
 extern "0" fn @"0"(width: f32, height: f32, is_discardable: u8) Id;
 /// Get context by element id.
-extern "0" fn @"1"(ptr: Mem.CStringPointer, alpha: u8) Id;
+extern "0" fn @"1"(ptr: Mem.CStringPtr, alpha: u8) Id;
 /// Draw svg.
 extern "0" fn @"2"(id: Id, ptr: [*]const u8, len: usize) void;
 /// Destroys the context.

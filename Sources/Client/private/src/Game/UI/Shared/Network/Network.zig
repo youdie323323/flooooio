@@ -1,6 +1,6 @@
-pub const NetworkClient = @import("NetworkClient.zig");
+pub const Client = @import("NetworkClient.zig");
 
 pub const Opcode = @import("NetworkPacketOpcode.zig");
 
-pub usingnamespace @import("NetworkClientbound.zig");
-pub usingnamespace @import("NetworkServerbound.zig");
+pub const Clientbound = @import("NetworkClientbound.zig");
+pub const Serverbound = @import("NetworkServerbound.zig");

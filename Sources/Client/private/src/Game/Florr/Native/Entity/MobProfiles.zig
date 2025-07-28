@@ -26,7 +26,7 @@ pub const MobData = struct {
 
     /// Returns stat by specified rarity.
     pub fn statByRarity(self: *const MobData, rarity: EntityRarity) ?MobStat {
-        // Return of null only happens when rarity is ultra
+        // Returning of null only happens when rarity is ultra
         // But mob rarity cannot be ultra, so no need to care about
 
         return self.stats.get(rarity);

@@ -17,8 +17,8 @@ const (
 func (p *Petal) AddRandomVelocity(speed float32) {
 	angle := Tau32 * rand.Float32()
 
-	p.Velocity[0] += math32.Cos(angle) * speed
-	p.Velocity[1] += math32.Sin(angle) * speed
+	p.Velocity[0] += speed * math32.Cos(angle)
+	p.Velocity[1] += speed * math32.Sin(angle)
 }
 
 func (p *Petal) PetalUniqueTalent(wp *Pool, now time.Time) {
@@ -48,7 +48,7 @@ func (p *Petal) PetalUniqueTalent(wp *Pool, now time.Time) {
 	case native.PetalTypeFaster:
 		{
 			if now.Sub(p.LastFasterRagingVelocityAddition) >= fasterRagingApplyMS*time.Millisecond {
-				p.AddRandomVelocity(6 * rand.Float32())
+				p.AddRandomVelocity(5 * rand.Float32())
 
 				p.LastFasterRagingVelocityAddition = now
 			}
@@ -83,6 +83,6 @@ func (p *Petal) PetalUniqueTalent(wp *Pool, now time.Time) {
 		p.Angle += 0.3
 	}
 
-AngleLimitation: // Label for talent who only want to do angle limitation
+AngleLimitation: // Label for talents which only wants to do angle limitation
 	p.Angle = math32.Mod(p.Angle, 255)
 }

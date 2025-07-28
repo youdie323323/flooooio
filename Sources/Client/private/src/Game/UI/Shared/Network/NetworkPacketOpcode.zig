@@ -20,17 +20,17 @@ pub const Serverbound = enum(u8) {
 };
 
 pub const Clientbound = enum(u8) {
-    pub const ConnectionKickReason = enum(u8) {
+    pub const KickReason = enum(u8) {
         outdated_client,
         cheat_detected,
     };
 
-    const kick_reason_messages: std.EnumMap(ConnectionKickReason, []const u8) = .init(.{
+    const kick_reason_messages: std.EnumMap(KickReason, []const u8) = .init(.{
         .outdated_client = "Outdated client",
         .cheat_detected = "Cheat detected",
     });
 
-    pub fn kickReasonMessage(reason: ConnectionKickReason) ?[]const u8 {
+    pub fn kickReasonMessage(reason: KickReason) ?[]const u8 {
         return kick_reason_messages.get(reason);
     }
 
@@ -46,7 +46,7 @@ pub const Clientbound = enum(u8) {
 
     wave_chat_receive,
 
-    connection_kicked,
+    kick,
 };
 
 const std = @import("std");

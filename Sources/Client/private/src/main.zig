@@ -1,16 +1,22 @@
 /// Global canvas context of this application.
 var ctx: *CanvasContext = undefined;
 
-var client: *Network.NetworkClient = undefined;
+var client: *Network.Client = undefined;
 
+const base_screen_vector: Vector2 = .{ 1300, 650 };
+
+var screen_vector: Vector2 = undefined;
+var screen_center_vector: Vector2 = undefined;
+
+// Just for performance optimization
 var width: f32 = 0;
 var height: f32 = 0;
 
-var base_scale: f32 = 1;
-var antenna_scale: f32 = 0.6;
+var relative_screen_vector: Vector2 = undefined;
+var relative_screen_center_vector: Vector2 = undefined;
 
-const base_width: comptime_float = 1300;
-const base_height: comptime_float = 650;
+var screen_base_scale: f32 = 1;
+var antenna_scale: f32 = 0.5;
 
 var mouse_x_offset: f32 = 0;
 var mouse_y_offset: f32 = 0;
@@ -25,13 +31,13 @@ fn drawMovementHelper(player: *const PlayerImpl.Super, delta_time: f32) void {
     if (player.is_dead) return;
 
     { // Interpolate mouse x and y
-        const delta_time_50_safelerp = @min(1, 0.02 * delta_time);
+        const delta_time_50_safelerp = @min(0.02 * delta_time, 1);
 
         interpolated_mouse_x = math.lerp(interpolated_mouse_x, mouse_x_offset / antenna_scale, delta_time_50_safelerp);
         interpolated_mouse_y = math.lerp(interpolated_mouse_y, mouse_y_offset / antenna_scale, delta_time_50_safelerp);
     }
 
-    const distance = math.hypot(interpolated_mouse_x, interpolated_mouse_y) / base_scale;
+    const distance = math.hypot(interpolated_mouse_x, interpolated_mouse_y) / screen_base_scale;
 
     const alpha: f32 =
         if (100 > distance)
@@ -45,10 +51,9 @@ fn drawMovementHelper(player: *const PlayerImpl.Super, delta_time: f32) void {
     ctx.save();
     defer ctx.restore();
 
-    const width_relative = width / base_scale;
-    const height_relative = height / base_scale;
+    const relative_width_center, const relative_height_center = relative_screen_center_vector;
 
-    ctx.translate(width_relative / 2, height_relative / 2);
+    ctx.translate(relative_width_center, relative_height_center);
     ctx.rotate(math.atan2(interpolated_mouse_y, interpolated_mouse_x));
     ctx.scale(antenna_scale, antenna_scale);
 
@@ -72,18 +77,12 @@ const Vector2 = @Vector(2, f32);
 
 const two_vector: Vector2 = @splat(2);
 
-/// Client-sided self player mood.
+/// Client-side self player mood.
 var self_mood: PlayerMood.MoodBitSet = .initEmpty();
 
 fn onMouseEvent(@"type": Event.EventType, event: *const Event.MouseEvent) callconv(.c) bool {
     switch (@"type") {
         inline .mouse_move => {
-            const screen_vector: Vector2 = .{
-                width,
-                height,
-            };
-            const screen_center_vector = screen_vector / two_vector;
-
             const mouse_pos_vector: Vector2 = .{
                 @floatFromInt(event.client_x),
                 @floatFromInt(event.client_y),
@@ -93,7 +92,7 @@ fn onMouseEvent(@"type": Event.EventType, event: *const Event.MouseEvent) callco
                 mouse_pos_vector - screen_center_vector;
 
             const angle = math.atan2(mouse_y_offset, mouse_x_offset);
-            const distance = math.hypot(mouse_x_offset, mouse_y_offset) / base_scale;
+            const distance = math.hypot(mouse_x_offset, mouse_y_offset) / screen_base_scale;
 
             client.out.sendWaveChangeMove(
                 angle,
@@ -129,21 +128,26 @@ fn onMouseEvent(@"type": Event.EventType, event: *const Event.MouseEvent) callco
     return true;
 }
 
-fn onScreenEvent(_: Event.EventType, event: *const Event.ScreenEvent) callconv(.c) bool {
+fn onScreenEvent(_: Event.EventType, event: *const Event.UIEvent) callconv(.c) bool {
     const dpr: Vector2 = @splat(Dom.devicePixelRatio());
 
-    const screen_vector: Vector2 = .{
-        @floatFromInt(event.inner_width),
-        @floatFromInt(event.inner_height),
+    const window_inner_screen_vector: Vector2 = .{
+        @floatFromInt(event.window_inner_width),
+        @floatFromInt(event.window_inner_height),
     };
 
-    width, height =
-        screen_vector * dpr;
+    screen_vector = dpr * window_inner_screen_vector;
+    screen_center_vector = screen_vector / two_vector;
 
-    base_scale = @max(
-        width / base_width,
-        height / base_height,
-    );
+    width, height = screen_vector;
+
+    const base_scale_x, const base_scale_y = screen_vector / base_screen_vector;
+    screen_base_scale = @max(base_scale_x, base_scale_y);
+
+    const base_scale_vector: Vector2 = @splat(screen_base_scale);
+
+    relative_screen_vector = screen_vector / base_scale_vector;
+    relative_screen_center_vector = relative_screen_vector / two_vector;
 
     ctx.setSize(
         @intFromFloat(width),
@@ -155,14 +159,14 @@ fn onScreenEvent(_: Event.EventType, event: *const Event.ScreenEvent) callconv(.
 
 var wave_room_biome: Biome = .garden;
 
-fn handleWaveRoomUpdate(stream: *const Network.Reader) anyerror!void {
+fn handleWaveRoomUpdate(stream: *const NetworkClientbound.Reader) anyerror!void {
     { // Read player informations
         const players_count = try stream.readByte();
 
         for (0..players_count) |_| {
             const player_id = try leb.readUleb128(WaveRoom.PlayerId, stream);
 
-            const player_name = try Network.readCString(stream);
+            const player_name = try NetworkClientbound.readCString(stream);
 
             const player_ready_state = try stream.readEnum(WaveRoom.PlayerReadyState, .little);
 
@@ -174,7 +178,7 @@ fn handleWaveRoomUpdate(stream: *const Network.Reader) anyerror!void {
         }
     }
 
-    const wave_room_code = try Network.readCString(stream);
+    const wave_room_code = try NetworkClientbound.readCString(stream);
 
     const wave_room_state = try stream.readEnum(WaveRoom.State, .little);
 
@@ -219,26 +223,26 @@ var mob_rctx: RenderContext(MobImpl.Super) = undefined;
 var player_rctx: RenderContext(PlayerImpl.Super) = undefined;
 
 fn byteToRadians(angle: f32) f32 {
-    return (angle / 255) * math.tau;
+    return math.tau * (angle / 255);
 }
 
 var wave_self_id: EntityId = undefined;
 
-fn handleWaveSelfId(stream: *const Network.Reader) anyerror!void {
+fn handleWaveSelfId(stream: *const NetworkClientbound.Reader) anyerror!void {
     wave_self_id = try leb.readUleb128(EntityId, stream);
 }
 
 var lightning_bounces: std.ArrayListUnmanaged(UIWaveLightningBounce) = .empty;
 
-fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
+fn handleWaveUpdate(stream: *const NetworkClientbound.Reader) anyerror!void {
     { // Read wave informations
         wave_progress = try leb.readUleb128(u16, stream);
 
-        wave_progress_timer = try Network.readFloat32(stream);
+        wave_progress_timer = try NetworkClientbound.readFloat32(stream);
 
-        wave_progress_red_gage_timer = try Network.readFloat32(stream);
+        wave_progress_red_gage_timer = try NetworkClientbound.readFloat32(stream);
 
-        wave_ended = try Network.readBool(stream);
+        wave_ended = try NetworkClientbound.readBool(stream);
 
         wave_map_radius = try leb.readUleb128(u16, stream);
     }
@@ -310,8 +314,8 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
 
             for (0..points_count) |_| {
                 try points.append(allocator, .{
-                    try Network.readFloat32(stream),
-                    try Network.readFloat32(stream),
+                    try NetworkClientbound.readFloat32(stream),
+                    try NetworkClientbound.readFloat32(stream),
                 });
             }
 
@@ -329,14 +333,14 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                 inline .mob => {
                     const mob_id = try leb.readUleb128(EntityId, stream);
 
-                    const mob_x = try Network.readFloat32(stream);
-                    const mob_y = try Network.readFloat32(stream);
+                    const mob_x = try NetworkClientbound.readFloat32(stream);
+                    const mob_y = try NetworkClientbound.readFloat32(stream);
 
-                    const mob_angle = byteToRadians(try Network.readFloat32(stream));
+                    const mob_angle = byteToRadians(try NetworkClientbound.readFloat32(stream));
 
-                    const mob_health = try Network.readFloat32(stream);
+                    const mob_health = try NetworkClientbound.readFloat32(stream);
 
-                    const mob_size = try Network.readFloat32(stream);
+                    const mob_size = try NetworkClientbound.readFloat32(stream);
 
                     const mob_type: EntityType = .{ .mob = try stream.readEnum(MobType, .little) };
 
@@ -447,14 +451,14 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                 inline .petal => {
                     const petal_id = try leb.readUleb128(EntityId, stream);
 
-                    const petal_x = try Network.readFloat32(stream);
-                    const petal_y = try Network.readFloat32(stream);
+                    const petal_x = try NetworkClientbound.readFloat32(stream);
+                    const petal_y = try NetworkClientbound.readFloat32(stream);
 
-                    const petal_angle = byteToRadians(try Network.readFloat32(stream));
+                    const petal_angle = byteToRadians(try NetworkClientbound.readFloat32(stream));
 
-                    const petal_health = try Network.readFloat32(stream);
+                    const petal_health = try NetworkClientbound.readFloat32(stream);
 
-                    const petal_size = try Network.readFloat32(stream);
+                    const petal_size = try NetworkClientbound.readFloat32(stream);
 
                     const petal_type: EntityType = .{ .petal = try stream.readEnum(PetalType, .little) };
 
@@ -532,18 +536,18 @@ fn handleWaveUpdate(stream: *const Network.Reader) anyerror!void {
                 inline .player => {
                     const player_id = try leb.readUleb128(EntityId, stream);
 
-                    const player_x = try Network.readFloat32(stream);
-                    const player_y = try Network.readFloat32(stream);
+                    const player_x = try NetworkClientbound.readFloat32(stream);
+                    const player_y = try NetworkClientbound.readFloat32(stream);
 
-                    const player_angle = byteToRadians(try Network.readFloat32(stream));
+                    const player_angle = byteToRadians(try NetworkClientbound.readFloat32(stream));
 
-                    const player_health = try Network.readFloat32(stream);
+                    const player_health = try NetworkClientbound.readFloat32(stream);
 
-                    const player_size = try Network.readFloat32(stream);
+                    const player_size = try NetworkClientbound.readFloat32(stream);
 
                     const player_mood_mask: PlayerMood.MoodBitSet.MaskInt = @intCast(try stream.readByte());
 
-                    const player_name = try Network.readCString(stream);
+                    const player_name = try NetworkClientbound.readCString(stream);
 
                     const player_bool_flags = try stream.readStruct(packed struct {
                         is_dead: bool,
@@ -647,7 +651,7 @@ export fn main() c_int {
     _ = UITitle.init(allocator);
 
     { // Initialize client websocket
-        client = Network.NetworkClient.init(allocator) catch unreachable;
+        client = Network.Client.init(allocator) catch unreachable;
 
         client.in.putHandler(.wave_room_update, handleWaveRoomUpdate) catch unreachable;
 
@@ -665,10 +669,10 @@ export fn main() c_int {
         Event.addEventListener(.window, .screen_resize, onScreenEvent, false);
 
         { // Force fire event to correct init size
-            var virtual_screen_event = mem.zeroes(Event.ScreenEvent);
+            var virtual_screen_event = mem.zeroes(Event.UIEvent);
 
-            virtual_screen_event.inner_width = Dom.clientWidth();
-            virtual_screen_event.inner_height = Dom.clientHeight();
+            virtual_screen_event.window_inner_width = Dom.clientWidth();
+            virtual_screen_event.window_inner_height = Dom.clientHeight();
 
             _ = onScreenEvent(.screen_resize, &virtual_screen_event);
         }
@@ -731,10 +735,7 @@ fn draw(_: f32) callconv(.c) void {
 
     ctx.save();
 
-    ctx.scale(base_scale, base_scale);
-
-    const width_relative = width / base_scale;
-    const height_relative = height / base_scale;
+    ctx.scale(screen_base_scale, screen_base_scale);
 
     const self_player =
         if (players.search(wave_self_id)) |obj_id|
@@ -744,6 +745,8 @@ fn draw(_: f32) callconv(.c) void {
 
     if (self_player) |*player| blk: {
         const tileset = wave_room_biome.tileset() orelse break :blk;
+
+        const width_relative, const height_relative = relative_screen_vector;
 
         TileRenderer.renderGameTileset(.{
             .ctx = ctx,
@@ -769,21 +772,19 @@ fn draw(_: f32) callconv(.c) void {
         drawMovementHelper(player, delta_time);
 
     { // Render entities
-        const center_width = width / 2.0;
-        const center_height = height / 2.0;
-
         if (self_player) |*player| {
-            const x, const y = player.pos;
+            const view_scale = screen_base_scale * antenna_scale;
+            const view_scale_vector: Vector2 = @splat(view_scale);
 
-            const view_scale = base_scale * antenna_scale;
+            const dx, const dy = screen_center_vector - player.pos * view_scale_vector;
 
             ctx.setTransform(
                 view_scale,
                 0,
                 0,
                 view_scale,
-                center_width - x * view_scale,
-                center_height - y * view_scale,
+                dx,
+                dy,
             );
         }
 
@@ -935,11 +936,15 @@ const math = std.math;
 const leb = std.leb;
 const mem = std.mem;
 
+const allocator = @import("Mem.zig").allocator;
+
 const Event = @import("Game/Kernel/WebAssembly/Interop/Event.zig");
 const Dom = @import("Game/Kernel/WebAssembly/Interop/Dom.zig");
 const Timer = @import("Game/Kernel/WebAssembly/Interop/Timer.zig");
 
 const Network = @import("Game/UI/Shared/Network/Network.zig");
+const NetworkClientbound = Network.Clientbound;
+const NetworkServerbound = Network.Serverbound;
 
 const CanvasContext = @import("Game/Kernel/WebAssembly/Interop/Canvas2D/CanvasContext.zig");
 const Path2D = @import("Game/Kernel/WebAssembly/Interop/Canvas2D/Path2D.zig");
@@ -972,5 +977,3 @@ const TileRenderer = @import("Game/UI/Shared/Tile/TileRenderer.zig");
 const UITitle = @import("Game/UI/Title/UITitle.zig");
 
 const UIWaveLightningBounce = @import("Game/UI/Wave/UIWaveLightningBounce.zig");
-
-const allocator = @import("Mem.zig").allocator;

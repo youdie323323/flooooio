@@ -37,8 +37,8 @@ const LayoutResult = struct {
 
 fn parseSize(size: NumberOrPercentage, container_size: f32) f32 {
     return switch (size) {
-        .number => |n| n,
-        .percentage => |p| blk: {
+        inline .number => |n| n,
+        inline .percentage => |p| blk: {
             const percentage = std.fmt.parseFloat(f32, p) catch 0;
             
             break :blk (percentage / 100.0) * container_size;

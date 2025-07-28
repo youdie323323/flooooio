@@ -4,7 +4,6 @@ import (
 	"sync"
 	"time"
 
-	"flooooio/internal/wave/collision"
 	"flooooio/internal/wave/florr/native"
 
 	"github.com/gorilla/websocket"
@@ -41,7 +40,7 @@ type Player struct {
 	Window [2]uint16
 
 	// player_dead_camera.go struct field definitions
-	DeadCameraTarget collision.Node
+	DeadCameraTarget PoolNode
 
 	LastDeadCameraUpdate time.Time
 

@@ -83,7 +83,7 @@ pub const EntityType = union(enum(PureEntityType)) {
     mob: MobType,
     petal: PetalType,
 
-    /// Returns direct entity type within this type.
+    /// Returns direct entity type of this type.
     pub fn get(self: @This()) PureEntityType {
         switch (self) {
             inline .mob => |m| return @intFromEnum(m),
@@ -91,8 +91,8 @@ pub const EntityType = union(enum(PureEntityType)) {
         }
     }
 
-    /// Returns Mixed within this type.
-    pub fn getMixed(self: @This()) Mixed {
+    /// Returns Mixed of this type.
+    pub fn toMixed(self: @This()) Mixed {
         return @enumFromInt(self.get());
     }
 

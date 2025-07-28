@@ -1,27 +1,31 @@
 const Clientbound = @This();
 
-pub const Reader = NetworkClient.DefaultPacketStream.Reader;
+pub const Reader = Client.DefaultPacketStream.Reader;
 pub const Handler = *const fn (stream: *const Reader) anyerror!void;
 
-const NoEofError = NetworkClient.DefaultPacketStream.Reader.NoEofError;
+const NoEofError = Client.DefaultPacketStream.Reader.NoEofError;
 
 const Handlers = std.AutoHashMap(Opcode.Clientbound, Handler);
 
-client: *NetworkClient,
+client: *Client,
 
 handlers: Handlers,
 default_handlers: Handlers,
 
 pub fn init(
     allocator: mem.Allocator,
-    client: *NetworkClient,
-) Clientbound {
-    return .{
+    client: *Client,
+) !Clientbound {
+    var self: Clientbound = .{
         .client = client,
 
         .handlers = .init(allocator),
         .default_handlers = .init(allocator),
     };
+
+    try self.putDefaultHandlers();
+
+    return self;
 }
 
 pub fn deinit(self: *Clientbound) void {
@@ -71,7 +75,7 @@ pub fn readFloat64(stream: *const Reader) NoEofError!f64 {
     return mem.bytesAsValue(f64, &buffer).*;
 }
 
-/// Reads a bool from stream.
+/// Reads a boolean from stream.
 pub fn readBool(stream: *const Reader) NoEofError!bool {
     return try stream.readByte() != 0;
 }
@@ -80,21 +84,21 @@ pub fn read(self: *const Clientbound, data: []const u8) !void {
     var fbs = io.fixedBufferStream(data);
     const stream = fbs.reader();
 
-    const packet_type = try stream.readEnum(Opcode.Clientbound, .little);
+    const opcode = try stream.readEnum(Opcode.Clientbound, .little);
 
-    if (self.handlers.get(packet_type) orelse self.default_handlers.get(packet_type)) |handler|
+    if (self.handlers.get(opcode) orelse self.default_handlers.get(opcode)) |handler|
         try handler(&stream)
     else
-        std.log.warn("Unhandled packet type: {}", .{packet_type});
+        std.log.warn("Unhandled packet type: {}", .{opcode});
 }
 
-/// Puts custom handler.
+/// Puts a custom handler.
 pub fn putHandler(
     self: *Clientbound,
-    op: Opcode.Clientbound,
+    opcode: Opcode.Clientbound,
     handler: Handler,
 ) !void {
-    try self.handlers.put(op, handler);
+    try self.handlers.put(opcode, handler);
 }
 
 /// Clear all custom handlers.
@@ -104,11 +108,11 @@ pub fn clearHandlers(self: *Clientbound) void {
 
 /// Puts all default handlers.
 fn putDefaultHandlers(self: *Clientbound) mem.Allocator.Error!void {
-    try self.default_handlers.put(.connection_kicked, handleConnectionKick);
+    try self.default_handlers.put(.kick, handleKick);
 }
 
-fn handleConnectionKick(stream: *Reader) !void {
-    const reason = try stream.readEnum(Opcode.ClientboundConnectionKickReason, .little);
+fn handleKick(stream: *const Reader) anyerror!void {
+    const reason = try stream.readEnum(Opcode.Clientbound.KickReason, .little);
 
     switch (reason) {
         inline .outdated_client => {},
@@ -120,5 +124,6 @@ const std = @import("std");
 const io = std.io;
 const mem = std.mem;
 
-const NetworkClient = @import("NetworkClient.zig");
-const Opcode = @import("NetworkPacketOpcode.zig");
+const Network = @import("Network.zig");
+const Client = Network.Client;
+const Opcode = Network.Opcode;

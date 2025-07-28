@@ -8,7 +8,6 @@ import (
 
 	"github.com/chewxy/math32"
 
-	"flooooio/internal/wave/collision"
 	"flooooio/internal/wave/florr/native"
 )
 
@@ -128,7 +127,7 @@ func NewEntity(
 
 // LightningEmitter is lightning emitter (like jellyfish, lightning).
 type LightningEmitter interface {
-	SearchLightningBounceTargets(wp *Pool, bouncedIds []EntityId) []collision.Node
+	SearchLightningBounceTargets(wp *Pool, bouncedIds []EntityId) PoolNodeSlice
 }
 
 const (
@@ -184,9 +183,9 @@ func GetRandomCoordinate(cx, cy, spawnRadius float32) (float32, float32) {
 
 // Methods that satisfies spatial hashes Node
 
-var _ collision.Node = (*Entity)(nil) // *Entity must implement collision.Node
+var _ PoolNode = (*Entity)(nil) // *Entity must implement collision.Node
 
-func (e *Entity) GetId() collision.NodeId {
+func (e *Entity) GetId() EntityId {
 	return e.Id
 }
 
@@ -208,7 +207,7 @@ func (e *Entity) GetOldPos() (float32, float32) {
 }
 
 // IsDeadNode determine if Node is dead.
-func IsDeadNode(wp *Pool, n collision.Node) bool {
+func IsDeadNode(wp *Pool, n PoolNode) bool {
 	switch e := n.(type) {
 	case *Mob:
 		return e.IsEliminated(wp)

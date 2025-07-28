@@ -66,7 +66,7 @@ func (p *Petal) IsEliminated(wp *Pool) bool {
 var _ LightningEmitter = (*Petal)(nil) // *Petal must implement LightningEmitter
 
 // SearchLightningBounceTargets returns targets to bounce.
-func (p *Petal) SearchLightningBounceTargets(wp *Pool, bouncedIds []EntityId) []collision.Node {
+func (p *Petal) SearchLightningBounceTargets(wp *Pool, bouncedIds []EntityId) PoolNodeSlice {
 	return collision.ToNodeSlice(wp.FilterMobsWithCondition(func(m *Mob) bool {
 		return !(slices.Contains(bouncedIds, m.Id) ||
 			slices.Contains(ProjectileMobTypes, m.Type)) &&

@@ -37,7 +37,7 @@ var cautionBehaviorStopJudger = map[native.MobType]JudgementFunc{
 }
 
 // FindNearestEntity finds the nearest entity from a slice of entities.
-func FindNearestEntity(me collision.Node, entities []collision.Node) collision.Node {
+func FindNearestEntity(me PoolNode, entities PoolNodeSlice) PoolNode {
 	if len(entities) == 0 {
 		return nil
 	}
@@ -69,7 +69,7 @@ func FindNearestEntity(me collision.Node, entities []collision.Node) collision.N
 	return nearest
 }
 
-func FindNearestEntityWithLimitedDistance(me collision.Node, entities []collision.Node, maxDistance float32) collision.Node {
+func FindNearestEntityWithLimitedDistance(me PoolNode, entities PoolNodeSlice, maxDistance float32) PoolNode {
 	if len(entities) == 0 {
 		return nil
 	}
@@ -77,7 +77,7 @@ func FindNearestEntityWithLimitedDistance(me collision.Node, entities []collisio
 	meX := me.GetX()
 	meY := me.GetY()
 
-	var nearest collision.Node
+	var nearest PoolNode
 
 	maxDistanceSq := maxDistance * maxDistance
 	nearestDistanceSq := maxDistanceSq
@@ -195,7 +195,7 @@ func (m *Mob) detectRange() float32 {
 }
 
 // TrackingTargets returns target nodes to track.
-func (m *Mob) TrackingTargets(wp *Pool) []collision.Node {
+func (m *Mob) TrackingTargets(wp *Pool) PoolNodeSlice {
 	if m.IsEnemy() {
 		return collision.ToNodeSlice(wp.FilterPlayersWithCondition(func(p *Player) bool {
 			return !p.IsDead
@@ -357,7 +357,7 @@ func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 
 	case native.HostileBehavior:
 		{
-			var targetEntity collision.Node
+			var targetEntity PoolNode
 
 			if m.TargetEntity != nil {
 				targetEntity = m.TargetEntity
