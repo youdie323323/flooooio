@@ -1,9 +1,11 @@
 /// Global canvas context of this application.
 var ctx: *CanvasContext = undefined;
 
-var client: *Network.Client = undefined;
+var client: *NetworkClient = undefined;
 
 const base_screen_vector: Vector2 = .{ 1300, 650 };
+
+var screen_dpr_vector: Vector2 = @splat(1);
 
 var screen_vector: Vector2 = undefined;
 var screen_center_vector: Vector2 = undefined;
@@ -16,7 +18,7 @@ var relative_screen_vector: Vector2 = undefined;
 var relative_screen_center_vector: Vector2 = undefined;
 
 var screen_base_scale: f32 = 1;
-var antenna_scale: f32 = 0.5;
+var antenna_scale: f32 = 1;
 
 var mouse_x_offset: f32 = 0;
 var mouse_y_offset: f32 = 0;
@@ -41,12 +43,14 @@ fn drawMovementHelper(player: *const PlayerImpl.Super, delta_time: f32) void {
 
     const alpha: f32 =
         if (100 > distance)
-            (@max(distance - 50, 0) / 50)
+            @max(distance - 50, 0) / 50
         else
             1;
 
     // Dont rendundant rendering
     if (0 >= alpha) return;
+
+    const angle = math.atan2(interpolated_mouse_y, interpolated_mouse_x);
 
     ctx.save();
     defer ctx.restore();
@@ -54,7 +58,7 @@ fn drawMovementHelper(player: *const PlayerImpl.Super, delta_time: f32) void {
     const relative_width_center, const relative_height_center = relative_screen_center_vector;
 
     ctx.translate(relative_width_center, relative_height_center);
-    ctx.rotate(math.atan2(interpolated_mouse_y, interpolated_mouse_x));
+    ctx.rotate(angle);
     ctx.scale(antenna_scale, antenna_scale);
 
     ctx.beginPath();
@@ -89,7 +93,7 @@ fn onMouseEvent(@"type": Event.EventType, event: *const Event.MouseEvent) callco
             };
 
             mouse_x_offset, mouse_y_offset =
-                mouse_pos_vector - screen_center_vector;
+                screen_dpr_vector * mouse_pos_vector - screen_center_vector;
 
             const angle = math.atan2(mouse_y_offset, mouse_x_offset);
             const distance = math.hypot(mouse_x_offset, mouse_y_offset) / screen_base_scale;
@@ -129,14 +133,14 @@ fn onMouseEvent(@"type": Event.EventType, event: *const Event.MouseEvent) callco
 }
 
 fn onScreenEvent(_: Event.EventType, event: *const Event.UIEvent) callconv(.c) bool {
-    const dpr: Vector2 = @splat(Dom.devicePixelRatio());
+    screen_dpr_vector = @splat(Dom.devicePixelRatio());
 
     const window_inner_screen_vector: Vector2 = .{
         @floatFromInt(event.window_inner_width),
         @floatFromInt(event.window_inner_height),
     };
 
-    screen_vector = dpr * window_inner_screen_vector;
+    screen_vector = screen_dpr_vector * window_inner_screen_vector;
     screen_center_vector = screen_vector / two_vector;
 
     width, height = screen_vector;
@@ -651,7 +655,7 @@ export fn main() c_int {
     _ = UITitle.init(allocator);
 
     { // Initialize client websocket
-        client = Network.Client.init(allocator) catch unreachable;
+        client = NetworkClient.init(allocator) catch unreachable;
 
         client.in.putHandler(.wave_room_update, handleWaveRoomUpdate) catch unreachable;
 
@@ -943,6 +947,7 @@ const Dom = @import("Game/Kernel/WebAssembly/Interop/Dom.zig");
 const Timer = @import("Game/Kernel/WebAssembly/Interop/Timer.zig");
 
 const Network = @import("Game/UI/Shared/Network/Network.zig");
+const NetworkClient = Network.Client;
 const NetworkClientbound = Network.Clientbound;
 const NetworkServerbound = Network.Serverbound;
 

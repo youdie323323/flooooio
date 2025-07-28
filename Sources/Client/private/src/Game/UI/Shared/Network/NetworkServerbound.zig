@@ -35,7 +35,7 @@ pub fn send(self: *const Serverbound, buf: []const u8) !void {
 fn normalizeAngle(angle: f32) f32 {
     const normalized = @mod(angle, math.tau);
 
-    return (normalized / math.tau) * 255;
+    return 255 * (normalized / math.tau);
 }
 
 pub fn sendWaveChangeMove(self: *const Serverbound, angle: f32, magnitude: f32) !void {
