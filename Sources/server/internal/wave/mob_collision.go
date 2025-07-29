@@ -38,9 +38,9 @@ func (m *Mob) MobCollision(wp *Pool, _ time.Time) {
 	mToDamage := m.MobToDamage(wp)
 
 	// Hmm health should only use mMobToDamage?
-	// NOTE: yea because mMaxHealth is used as
-	// mMobToDamage.Health -= somedamage / mMaxHealth
-	mMaxHealth := mToDamage.MaxHealth()
+	// NOTE: yea because mMaxHp is used as
+	// mMobToDamage.Health -= somedamage / mMaxHp
+	mMaxHp := mToDamage.MaxHp()
 	mDamage := mStat.GetDamage()
 
 	mTraversed := TraverseMobSegments(wp, m)
@@ -150,11 +150,11 @@ func (m *Mob) MobCollision(wp *Pool, _ time.Time) {
 
 						nearEntityToDamage := nearEntity.MobToDamage(wp)
 
-						nearEntityMaxHealth := nearEntityToDamage.MaxHealth()
+						nearEntityMaxHp := nearEntityToDamage.MaxHp()
 						nearEntityDamage := profile1.StatFromRarity(nearEntity.Rarity).GetDamage()
 
-						mToDamage.TakeProperDamage(nearEntityDamage / mMaxHealth)
-						nearEntityToDamage.TakeProperDamage(mDamage / nearEntityMaxHealth)
+						mToDamage.TakeProperDamage(nearEntityDamage / mMaxHp)
+						nearEntityToDamage.TakeProperDamage(mDamage / nearEntityMaxHp)
 
 						{ // Set LastAttackedEntity
 							// TODO: this algorithm might collide like: mob1 -> mob2, mob2 -> mob1
@@ -203,11 +203,11 @@ func (m *Mob) MobCollision(wp *Pool, _ time.Time) {
 					{ // Damage
 						nearEntityStat := native.PetalProfiles[nearEntity.Type].StatFromRarity(nearEntity.Rarity)
 
-						nearEntityMaxHealth := nearEntity.MaxHealth()
+						nearEntityMaxp := nearEntity.MaxHp()
 						nearEntityDamage := nearEntityStat.GetDamage()
 
-						mToDamage.TakeProperDamage(nearEntityDamage / mMaxHealth)
-						nearEntity.TakeProperDamage(mDamage / nearEntityMaxHealth)
+						mToDamage.TakeProperDamage(nearEntityDamage / mMaxHp)
+						nearEntity.TakeProperDamage(mDamage / nearEntityMaxp)
 
 						// Petal specials
 						switch nearEntity.Type {
@@ -268,10 +268,10 @@ func (m *Mob) MobCollision(wp *Pool, _ time.Time) {
 					nearEntity.Velocity[1] += Clamp(py*2, -maxMobToPlayerVelocity, maxMobToPlayerVelocity)
 
 					{ // Damage
-						nearEntityMaxHealth := nearEntity.MaxHp()
+						nearEntityMaxHp := nearEntity.MaxHp()
 
-						mToDamage.TakeProperDamage(nearEntity.BodyDamage / mMaxHealth)
-						nearEntity.TakeProperDamage(mDamage / nearEntityMaxHealth)
+						mToDamage.TakeProperDamage(nearEntity.BodyDamage / mMaxHp)
+						nearEntity.TakeProperDamage(mDamage / nearEntityMaxHp)
 
 						switch mType {
 						case native.MobTypeScorpion:
@@ -332,9 +332,9 @@ func clawTakeExtraDamage(claw *Petal, stat native.PetalStat, hitMob *Mob) {
 		return
 	}
 
-	maxHealth := hitMob.MaxHealth()
+	hitMobMaxHp := hitMob.MaxHp()
 
-	hitMob.TakeProperDamage(min(hitMob.Health*(percentDamage/100), limit/maxHealth))
+	hitMob.TakeProperDamage(min(hitMob.Health*(percentDamage/100), limit/hitMobMaxHp))
 }
 
 func scropionPoisonPlayer(scorpionStat native.MobStat, target *Player) {

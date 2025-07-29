@@ -6,7 +6,7 @@ import (
 
 	"flooooio/internal/wave/florr/native"
 
-	"github.com/youdie323323/go-spatial-hash"
+	spatial_hash "github.com/youdie323323/go-spatial-hash"
 )
 
 type Mob struct {
@@ -71,8 +71,8 @@ func (m *Mob) Diameter() float32 {
 	return 2 * m.Radius()
 }
 
-// MaxHealth calculates max hp of mob.
-func (m *Mob) MaxHealth() float32 {
+// MaxHp calculates max hp of mob.
+func (m *Mob) MaxHp() float32 {
 	profile := native.MobProfiles[m.Type]
 
 	return profile.StatFromRarity(m.Rarity).Health
@@ -176,9 +176,9 @@ func (m *Mob) OnUpdateTick(wp *Pool, now time.Time) {
 			if m.IsPoisoned.Load() {
 				dp := m.PoisonDPS * DeltaT
 
-				mMaxHealth := m.MaxHealth()
+				mMaxHp := m.MaxHp()
 
-				m.Health -= dp / mMaxHealth
+				m.Health -= dp / mMaxHp
 				m.Health = max(0, m.Health)
 
 				m.TotalPoison += dp

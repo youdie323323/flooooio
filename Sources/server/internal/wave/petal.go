@@ -6,7 +6,7 @@ import (
 
 	"flooooio/internal/wave/florr/native"
 
-	"github.com/youdie323323/go-spatial-hash"
+	spatial_hash "github.com/youdie323323/go-spatial-hash"
 )
 
 type Petal struct {
@@ -42,8 +42,8 @@ func (m *Petal) Diameter() float32 {
 	return 2 * m.Radius()
 }
 
-// MaxHealth calculates max hp of petal.
-func (p *Petal) MaxHealth() float32 {
+// MaxHp calculates max hp of petal.
+func (p *Petal) MaxHp() float32 {
 	profile := native.PetalProfiles[p.Type]
 
 	return profile.StatFromRarity(p.Rarity).Health

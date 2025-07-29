@@ -21,7 +21,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/puzpuzpuz/xsync/v4"
 
-	"github.com/youdie323323/go-spatial-hash"
+	spatial_hash "github.com/youdie323323/go-spatial-hash"
 )
 
 const (
@@ -1257,9 +1257,11 @@ Loop:
 
 				bouncedIds = append(bouncedIds, targetEntity.Id)
 
-				playerMaxHealth := targetEntity.MaxHp()
+				{ // Take damage
+					playerMaxHp := targetEntity.MaxHp()
 
-				targetEntity.TakeProperDamage(lightningDamage / playerMaxHealth)
+					targetEntity.TakeProperDamage(lightningDamage / playerMaxHp)
+				}
 
 				bounceTargets := jellyfish.SearchLightningBounceTargets(wp, bouncedIds)
 
@@ -1275,10 +1277,10 @@ Loop:
 
 				bouncedIds = append(bouncedIds, targetEntity.Id)
 
-				{
-					mobMaxHealth := targetEntity.MaxHealth()
+				{ // Take damage
+					petalMaxHp := targetEntity.MaxHp()
 
-					targetEntity.TakeProperDamage(lightningDamage / mobMaxHealth)
+					targetEntity.TakeProperDamage(lightningDamage / petalMaxHp)
 				}
 
 				// No hit after magnet
@@ -1303,11 +1305,10 @@ Loop:
 				{
 					targetEntityToDamage := targetEntity.MobToDamage(wp)
 
-					mobMaxHealth := targetEntityToDamage.MaxHealth()
+					mobMaxHp := targetEntityToDamage.MaxHp()
 
-					targetEntityToDamage.TakeProperDamage(lightningDamage / mobMaxHealth)
+					targetEntityToDamage.TakeProperDamage(lightningDamage / mobMaxHp)
 
-					// Or just dont?
 					targetEntityToDamage.LastAttackedEntity = jellyfish
 				}
 
@@ -1376,9 +1377,9 @@ func (wp *Pool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 		{
 			targetMobToDamage := targetMob.MobToDamage(wp)
 
-			targetMobMaxHealth := targetMobToDamage.MaxHealth()
+			targetMobMaxHp := targetMobToDamage.MaxHp()
 
-			targetMobToDamage.TakeProperDamage(lightningDamage / targetMobMaxHealth)
+			targetMobToDamage.TakeProperDamage(lightningDamage / targetMobMaxHp)
 
 			targetMobToDamage.LastAttackedEntity = lightning.Master
 		}

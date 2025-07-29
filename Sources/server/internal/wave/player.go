@@ -228,9 +228,9 @@ Done:
 			if p.IsPoisoned.Load() {
 				dp := p.PoisonDPS * DeltaT
 
-				pMaxHealth := p.MaxHp()
+				pMaxHp := p.MaxHp()
 
-				p.Health -= dp / pMaxHealth
+				p.Health -= dp / pMaxHp
 				p.Health = max(0, p.Health)
 
 				p.TotalPoison += dp

@@ -161,9 +161,9 @@ func (m *Mob) MobUniqueTalent(wp *Pool, now time.Time) {
 			if m.StarfishRegeningHealth || 0.5 >= m.Health {
 				m.StarfishRegeningHealth = true
 
-				maxHealth := m.MaxHealth()
+				mMaxHp := m.MaxHp()
 
-				healAmount := float32(m.Rarity) / (2 * maxHealth)
+				healAmount := float32(m.Rarity) / (2 * mMaxHp)
 
 				m.Health = min(1, m.Health+healAmount)
 				if m.Health >= 1 {
