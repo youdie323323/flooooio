@@ -117,30 +117,30 @@ var amountTable = []float64{
 
 var rarityTable = make([]float64, len(relativeRarity))
 
-var totalWeight float64 = 0.
+var relativeRarityWeight float64 = 0.
 
-var totalAmountWeight float64 = 0.
+var amountTableWeight float64 = 0.
 
 func init() {
 	for _, w := range relativeRarity {
-		totalWeight += w
+		relativeRarityWeight += w
 	}
 
 	for _, a := range amountTable {
-		totalAmountWeight += a
+		amountTableWeight += a
 	}
 
 	acc := .0
 
 	for i := range rarityTable {
-		rarityTable[i] = acc / totalWeight
+		rarityTable[i] = acc / relativeRarityWeight
 
 		acc += relativeRarity[i]
 	}
 }
 
 func generateRandomMobAmounts() int {
-	r := rand.Float64() * totalAmountWeight
+	r := amountTableWeight * rand.Float64()
 
 	for i, w := range amountTable {
 		r -= w
@@ -318,9 +318,9 @@ func (s *MobSpawner) ComputeDynamicMobData(data *Data) *DynamicMobData {
 		if s.spawnGroup == nil {
 			amount = generateRandomMobAmounts()
 		} else {
-			ratio := s.totalTime / spawnDelay
+			ratio := float64(s.totalTime) / float64(spawnDelay)
 
-			amount = int(math.Round(s.gaussian(float64(ratio))))
+			amount = int(math.Round(s.gaussian(ratio)))
 		}
 
 		for range amount {

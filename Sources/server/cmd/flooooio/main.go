@@ -14,8 +14,6 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
-
-	// _ "net/http/pprof"
 )
 
 var upgrader = websocket.Upgrader{

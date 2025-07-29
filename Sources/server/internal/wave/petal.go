@@ -4,8 +4,9 @@ import (
 	"slices"
 	"time"
 
-	"flooooio/internal/wave/collision"
 	"flooooio/internal/wave/florr/native"
+
+	"github.com/youdie323323/go-spatial-hash"
 )
 
 type Petal struct {
@@ -57,7 +58,9 @@ func (p *Petal) MasterRealPosition() (x, y float32) {
 	return master.OrbitHistoryX[historyTargetIndex], master.OrbitHistoryY[historyTargetIndex]
 }
 
-// IsEliminated returns whether if petal was eliminated.
+var _ Eliminatable = (*Petal)(nil) // *Petal must implement Eliminatable
+
+// IsEliminated returns whether if petal is eliminated.
 // This method exists because struct pointer petal reference doesnt nil'ed when removed.
 func (p *Petal) IsEliminated(wp *Pool) bool {
 	return wp.FindPetal(p.Id) == nil
@@ -67,7 +70,7 @@ var _ LightningEmitter = (*Petal)(nil) // *Petal must implement LightningEmitter
 
 // SearchLightningBounceTargets returns targets to bounce.
 func (p *Petal) SearchLightningBounceTargets(wp *Pool, bouncedIds []EntityId) PoolNodeSlice {
-	return collision.ToNodeSlice(wp.FilterMobsWithCondition(func(m *Mob) bool {
+	return spatial_hash.ToNodeSlice(wp.FilterMobsWithCondition(func(m *Mob) bool {
 		return !(slices.Contains(bouncedIds, m.Id) ||
 			slices.Contains(ProjectileMobTypes, m.Type)) &&
 			m.IsEnemy()

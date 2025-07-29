@@ -4,14 +4,14 @@ import (
 	"slices"
 	"time"
 
-	"flooooio/internal/wave/collision"
+	"github.com/youdie323323/go-spatial-hash"
 )
 
 // getCameraTargets returns target to camera.
 func getCameraTargets(wp *Pool) PoolNodeSlice {
 	return slices.Concat(
-		collision.ToNodeSlice(wp.FilterMobsWithCondition(func(m *Mob) bool { return m.IsEnemy() })),
-		collision.ToNodeSlice(wp.FilterPlayersWithCondition(func(p2 *Player) bool { return !p2.IsDead })),
+		spatial_hash.ToNodeSlice(wp.FilterMobsWithCondition(func(m *Mob) bool { return m.IsEnemy() })),
+		spatial_hash.ToNodeSlice(wp.FilterPlayersWithCondition(func(p2 *Player) bool { return !p2.IsDead })),
 	)
 }
 

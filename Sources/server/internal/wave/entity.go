@@ -11,6 +11,8 @@ import (
 	"flooooio/internal/wave/florr/native"
 )
 
+type Vector2 = [2]float32
+
 type EntityId = uint16
 
 type Entity struct {
@@ -43,7 +45,16 @@ type Entity struct {
 	Mu sync.RWMutex
 }
 
-type Vector2 = [2]float32
+type Eliminatable interface {
+	// IsEliminated returns whether if entity is eliminated.
+	IsEliminated(wp *Pool) bool
+}
+
+// LightningEmitter is lightning emitter (like jellyfish, lightning petal).
+type LightningEmitter interface {
+	// SearchLightningBounceTargets searches for bounce target.
+	SearchLightningBounceTargets(wp *Pool, bouncedIds []EntityId) PoolNodeSlice
+}
 
 type Poisonable struct {
 	IsPoisoned atomic.Bool
@@ -125,11 +136,6 @@ func NewEntity(
 	}
 }
 
-// LightningEmitter is lightning emitter (like jellyfish, lightning).
-type LightningEmitter interface {
-	SearchLightningBounceTargets(wp *Pool, bouncedIds []EntityId) PoolNodeSlice
-}
-
 const (
 	Tau32 = 2 * math32.Pi
 	Tau   = 2 * math.Pi
@@ -175,38 +181,23 @@ func GetRandomCoordinate(cx, cy, spawnRadius float32) (float32, float32) {
 	angle := rand.Float32() * Tau32
 	distance := (0.5 + 0.5*rand.Float32()) * spawnRadius
 
-	x := spawnRadius + math32.Cos(angle)*distance
-	y := spawnRadius + math32.Sin(angle)*distance
-
-	return x, y
+	return distance*math32.Cos(angle) + spawnRadius,
+		distance*math32.Sin(angle) + spawnRadius
 }
 
-// Methods that satisfies spatial hashes Node
+// Methods that satisfies spatial hash Node
 
-var _ PoolNode = (*Entity)(nil) // *Entity must implement collision.Node
+var _ PoolNode = (*Entity)(nil) // *Entity must implement PoolNode
 
-func (e *Entity) GetId() EntityId {
-	return e.Id
-}
+func (e *Entity) GetId() EntityId { return e.Id }
 
-func (e *Entity) GetX() float32 {
-	return e.X
-}
+func (e *Entity) GetX() float32 { return e.X }
+func (e *Entity) GetY() float32 { return e.Y }
 
-func (e *Entity) GetY() float32 {
-	return e.Y
-}
+func (e *Entity) SetOldPos(x, y float32)        { e.oldX, e.oldY = x, y }
+func (e *Entity) GetOldPos() (float32, float32) { return e.oldX, e.oldY }
 
-func (e *Entity) SetOldPos(x, y float32) {
-	e.oldX = x
-	e.oldY = y
-}
-
-func (e *Entity) GetOldPos() (float32, float32) {
-	return e.oldX, e.oldY
-}
-
-// IsDeadNode determine if Node is dead.
+// IsDeadNode returns whether if PoolNode is dead.
 func IsDeadNode(wp *Pool, n PoolNode) bool {
 	switch e := n.(type) {
 	case *Mob:
@@ -216,7 +207,7 @@ func IsDeadNode(wp *Pool, n PoolNode) bool {
 		return e.IsEliminated(wp)
 
 	case *Player:
-		return e.IsDead
+		return e.IsEliminated(wp)
 	}
 
 	return true

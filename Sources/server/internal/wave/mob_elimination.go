@@ -6,10 +6,10 @@ import (
 	"flooooio/internal/wave/florr/native"
 )
 
+// removeConnectedSegmentTraversal removes each mob of segment chain.
 func removeConnectedSegmentTraversal(wp *Pool, m *Mob) {
 	for _, id := range m.ConnectedSegmentIds {
-		toDelete := wp.FindMob(id)
-		if toDelete != nil {
+		if toDelete := wp.FindMob(id); toDelete != nil {
 			// We want call this first because RemoveMob call Dispose and Dispose clear ConnectedSegmentIds
 			removeConnectedSegmentTraversal(wp, toDelete)
 

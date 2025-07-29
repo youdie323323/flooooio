@@ -4,7 +4,6 @@ import (
 	"cmp"
 	"time"
 
-	"flooooio/internal/wave/collision"
 	"flooooio/internal/wave/florr/native"
 )
 
@@ -53,14 +52,14 @@ func (m *Mob) MobCollision(wp *Pool, _ time.Time) {
 	mIsEnemy := m.IsEnemy()
 	mIsAlly := !mIsEnemy
 
-	c0mob := collision.Circle{
+	c0mob := Circle{
 		X: m.X,
 		Y: m.Y,
 		R: m.Radius(),
 	}
 
 	// Define reusable circle
-	c1mob := collision.Circle{}
+	c1mob := Circle{}
 
 	searchRadius := SearchRadiusMultiplier * c0mob.R
 
@@ -117,7 +116,7 @@ func (m *Mob) MobCollision(wp *Pool, _ time.Time) {
 				c1mob.Y = nearEntity.Y
 				c1mob.R = nearEntity.Radius()
 
-				px, py, ok := collision.ComputeCirclePush(c0mob, c1mob)
+				px, py, ok := ComputeCirclePush(c0mob, c1mob)
 				if ok {
 					// Slows mob which colliding
 					if mIsWeb {
@@ -190,7 +189,7 @@ func (m *Mob) MobCollision(wp *Pool, _ time.Time) {
 				c1mob.Y = nearEntity.Y
 				c1mob.R = nearEntity.Radius()
 
-				px, py, ok := collision.ComputeCirclePush(c0mob, c1mob)
+				px, py, ok := ComputeCirclePush(c0mob, c1mob)
 				if ok {
 					if !nearEntity.SpinningOnMob {
 						m.X -= px * 0.1
@@ -252,7 +251,7 @@ func (m *Mob) MobCollision(wp *Pool, _ time.Time) {
 				c1mob.Y = nearEntity.Y
 				c1mob.R = nearEntity.Size
 
-				px, py, ok := collision.ComputeCirclePush(c0mob, c1mob)
+				px, py, ok := ComputeCirclePush(c0mob, c1mob)
 				if ok {
 					// Slows player which colliding
 					if mIsWeb {
@@ -269,7 +268,7 @@ func (m *Mob) MobCollision(wp *Pool, _ time.Time) {
 					nearEntity.Velocity[1] += Clamp(py*2, -maxMobToPlayerVelocity, maxMobToPlayerVelocity)
 
 					{ // Damage
-						nearEntityMaxHealth := nearEntity.MaxHealth()
+						nearEntityMaxHealth := nearEntity.MaxHp()
 
 						mToDamage.TakeProperDamage(nearEntity.BodyDamage / mMaxHealth)
 						nearEntity.TakeProperDamage(mDamage / nearEntityMaxHealth)
@@ -306,7 +305,7 @@ func fangDoLifesteal(fang *Petal, stat native.PetalStat, damage float32) {
 		return
 	}
 
-	masterMaxHP := master.MaxHealth()
+	masterMaxHP := master.MaxHp()
 	healAmount := damage * (healDamaged / 100)
 
 	master.Health = min(1, master.Health+(healAmount/masterMaxHP))

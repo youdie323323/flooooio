@@ -4,10 +4,10 @@ import (
 	"math/rand/v2"
 	"time"
 
-	"flooooio/internal/wave/collision"
 	"flooooio/internal/wave/florr/native"
 
 	"github.com/chewxy/math32"
+	"github.com/youdie323323/go-spatial-hash"
 )
 
 const (
@@ -130,6 +130,8 @@ func normalizeAngle(angle float32) float32 {
 	return angle
 }
 
+var MissileSpeed = MobSpeedOf(native.MobTypeMissileProjectile)
+
 // predictInterceptionAngle predict interception angle to entity.
 // vtx, vty is movement vector of entity.
 func predictInterceptionAngle(dx, dy, vtx, vty, currentAngle float32) *float32 {
@@ -142,7 +144,7 @@ func predictInterceptionAngle(dx, dy, vtx, vty, currentAngle float32) *float32 {
 		interpolationTime *= (1 - math32.Exp(-angleInterpolationFactor*angleDiff))
 	}
 
-	relSpeedSq := missileSpeed*missileSpeed - (vtx*vtx + vty*vty)
+	relSpeedSq := MissileSpeed*MissileSpeed - (vtx*vtx + vty*vty)
 	posSq := dx*dx + dy*dy
 	dotProd := dx*vtx + dy*vty
 
@@ -174,8 +176,8 @@ func predictInterceptionAngleToMob(dx, dy float32, m *Mob, currentAngle float32)
 
 	targetSpeed := m.Magnitude / 255
 
-	vtx := math32.Cos(targetRad) * targetSpeed
-	vty := math32.Sin(targetRad) * targetSpeed
+	vtx := targetSpeed * math32.Cos(targetRad)
+	vty := targetSpeed * math32.Sin(targetRad)
 
 	return predictInterceptionAngle(dx, dy, vtx, vty, currentAngle)
 }
@@ -183,8 +185,8 @@ func predictInterceptionAngleToMob(dx, dy float32, m *Mob, currentAngle float32)
 // predictInterceptionAngleToPlayer calculates the angle to hit a player target with a missile.
 // Player movement uses velocity instead of angle-based movement.
 func predictInterceptionAngleToPlayer(dx, dy float32, p *Player, currentAngle float32) *float32 {
-	vtx := p.Velocity[0] + p.Acceleration[0]
-	vty := p.Velocity[1] + p.Acceleration[1]
+	vtx, vty := p.Velocity[0]+p.Acceleration[0],
+		p.Velocity[1]+p.Acceleration[1]
 
 	return predictInterceptionAngle(dx, dy, vtx, vty, currentAngle)
 }
@@ -197,17 +199,15 @@ func (m *Mob) detectRange() float32 {
 // TrackingTargets returns target nodes to track.
 func (m *Mob) TrackingTargets(wp *Pool) PoolNodeSlice {
 	if m.IsEnemy() {
-		return collision.ToNodeSlice(wp.FilterPlayersWithCondition(func(p *Player) bool {
+		return spatial_hash.ToNodeSlice(wp.FilterPlayersWithCondition(func(p *Player) bool {
 			return !p.IsDead
 		}))
 	} else {
-		return collision.ToNodeSlice(wp.FilterMobsWithCondition(func(fm *Mob) bool {
-			return fm.Id != m.Id && fm.IsEnemy() && !fm.IsProjectile()
+		return spatial_hash.ToNodeSlice(wp.FilterMobsWithCondition(func(fm *Mob) bool {
+			return fm.Id != m.Id && fm.IsOrganismEnemy()
 		}))
 	}
 }
-
-var missileSpeed = MobSpeedOf(native.MobTypeMissileProjectile)
 
 func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 	// If body, dont do anything
@@ -259,7 +259,7 @@ func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 				if now.Sub(m.JellyfishLastBounce) >= jellyfishLightningShootMS*time.Millisecond {
 					magnet := FindNearestEntityWithLimitedDistance(
 						m.TargetEntity,
-						collision.ToNodeSlice(wp.FilterPetalsWithCondition(func(p *Petal) bool { return p.Type == native.PetalTypeMagnet })),
+						spatial_hash.ToNodeSlice(wp.FilterPetalsWithCondition(func(p *Petal) bool { return p.Type == native.PetalTypeMagnet })),
 						AngryMoodRadius,
 					)
 

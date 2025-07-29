@@ -5,10 +5,11 @@ import (
 	"slices"
 	"time"
 
-	"flooooio/internal/wave/collision"
 	"flooooio/internal/wave/florr/native"
 
 	"github.com/chewxy/math32"
+
+	"github.com/youdie323323/go-spatial-hash"
 )
 
 const (
@@ -99,7 +100,7 @@ func spinPetal(
 ) {
 	mobToSpin, ok := FindNearestEntity(
 		petal,
-		collision.ToNodeSlice(wp.FilterMobsWithCondition(func(m *Mob) bool {
+		spatial_hash.ToNodeSlice(wp.FilterMobsWithCondition(func(m *Mob) bool {
 			if !m.IsOrganismEnemy() {
 				return false
 			}

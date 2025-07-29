@@ -14,13 +14,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	"flooooio/internal/wave/collision"
 	"flooooio/internal/wave/florr/native"
 	"flooooio/internal/wave/kernel/network"
 
 	"github.com/colega/zeropool"
 	"github.com/gorilla/websocket"
 	"github.com/puzpuzpuz/xsync/v4"
+
+	"github.com/youdie323323/go-spatial-hash"
 )
 
 const (
@@ -62,11 +63,11 @@ type Data struct {
 	MapRadius uint16
 }
 
-type PoolSpatialHash = collision.SpatialHash[EntityId, float32]
+type PoolSpatialHash = spatial_hash.SpatialHash[EntityId, float32]
 
-type PoolNode = collision.Node[EntityId, float32]
+type PoolNode = spatial_hash.Node[EntityId, float32]
 
-type PoolNodeSlice = collision.NodeSlice[EntityId, float32]
+type PoolNodeSlice = spatial_hash.NodeSlice[EntityId, float32]
 
 type Pool struct {
 	playerPool *xsync.Map[EntityId, *Player]
@@ -119,7 +120,7 @@ func NewPool(wr *Room, data *Data) *Pool {
 
 		frameCount: xsync.NewCounter(),
 
-		SpatialHash: collision.NewSpatialHash[EntityId, float32](spatialHashGridSize),
+		SpatialHash: spatial_hash.NewSpatialHashWithOptions[EntityId, float32](spatialHashGridSize, false),
 
 		commandQueue: make(chan func() bool, 8),
 
@@ -312,6 +313,7 @@ Done:
 
 	wp.frameCount.Add(1)
 
+	// Update entities
 	wp.updateEntities()
 
 	if wp.frameCount.Value()%2 == 0 {
@@ -475,7 +477,7 @@ func PutUvarint16(buf []byte, x uint16) int {
 	return i + 1
 }
 
-// FiniteObjectCount possible objects length.
+// FiniteObjectCount is possible objects length.
 type FiniteObjectCount = uint16
 
 const ( // Entity kind for client identify entity read type.
@@ -500,64 +502,61 @@ func (wp *Pool) broadcastUpdatePacket() {
 		// RLock before read window
 		p.Mu.RLock()
 
-		window := p.Window
+		windowWidth, windowHeight := float32(p.Window[0]), float32(p.Window[1])
 
 		p.Mu.RUnlock()
 
 		entitiesToSend := wp.SpatialHash.QueryRect(
 			p.X, p.Y,
-			float32(window[0]), float32(window[1]),
-			func(n PoolNode) bool {
-				return !IsDeadNode(wp, n)
-			},
+			windowWidth, windowHeight,
 		)
 
 		// Write entity count
 		dynamicAt += PutUvarint16(packet[dynamicAt:], FiniteObjectCount(len(entitiesToSend)))
 
-		for _, e := range entitiesToSend {
-			switch n := e.(type) {
+		for _, n := range entitiesToSend {
+			switch e := n.(type) {
 			case *Player:
 				{
 					packet[dynamicAt] = entityKindPlayer
 					dynamicAt++
 
-					dynamicAt += PutUvarint16(packet[dynamicAt:], n.Id)
+					dynamicAt += PutUvarint16(packet[dynamicAt:], e.Id)
 
-					dynamicAt += WriteFloat32(packet[dynamicAt:], n.X)
-					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Y)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], e.X)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], e.Y)
 
-					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Angle)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], e.Angle)
 
-					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Health)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], e.Health)
 
-					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Size)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], e.Size)
 
-					packet[dynamicAt] = byte(n.Mood)
+					packet[dynamicAt] = byte(e.Mood)
 					dynamicAt++
 
 					// Write name
-					dynamicAt = writeCString(packet, dynamicAt, n.Name)
+					dynamicAt = writeCString(packet, dynamicAt, e.Name)
 
 					var bFlags uint8 = 0
 
 					// Player is dead, or not
-					if n.IsDead {
+					if e.IsDead {
 						bFlags |= 1
 					}
 
 					// Player is developer, or not
-					if n.IsDev {
+					if e.IsDev {
 						bFlags |= 2
 					}
 
 					// Player is poisoned, or not
-					if n.IsPoisoned.Load() {
+					if e.IsPoisoned.Load() {
 						bFlags |= 4
 					}
 
 					// Player is proper-damaged, or not
-					if n.ConsumeWasProperDamage() {
+					if e.ConsumeWasProperDamage() {
 						bFlags |= 8
 					}
 
@@ -567,39 +566,43 @@ func (wp *Pool) broadcastUpdatePacket() {
 
 			case *Mob:
 				{
+					if IsDeadNode(wp, n) {
+						fmt.Println(e.Type)
+					}
+
 					packet[dynamicAt] = entityKindMob
 					dynamicAt++
 
-					dynamicAt += PutUvarint16(packet[dynamicAt:], n.Id)
+					dynamicAt += PutUvarint16(packet[dynamicAt:], e.Id)
 
-					dynamicAt += WriteFloat32(packet[dynamicAt:], n.X)
-					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Y)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], e.X)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], e.Y)
 
-					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Angle)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], e.Angle)
 
-					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Health)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], e.Health)
 
-					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Size)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], e.Size)
 
-					packet[dynamicAt] = n.Type
+					packet[dynamicAt] = e.Type
 					dynamicAt++
 
-					packet[dynamicAt] = n.Rarity
+					packet[dynamicAt] = e.Rarity
 					dynamicAt++
 
 					var bFlags uint8 = 0
 
 					// Mob is pet, or not
-					if n.IsAlly() {
+					if e.IsAlly() {
 						bFlags |= 1
 					}
 
 					// Mob is first segment, or not
-					if n.IsFirstSegment {
+					if e.IsFirstSegment {
 						bFlags |= 2
 					}
 
-					hasConnectingSegment := n.HasConnectingSegment(wp)
+					hasConnectingSegment := e.HasConnectingSegment(wp)
 
 					// Mob has connecting segment, or not
 					if hasConnectingSegment {
@@ -607,12 +610,12 @@ func (wp *Pool) broadcastUpdatePacket() {
 					}
 
 					// Mob is poisoned, or not
-					if n.IsPoisoned.Load() {
+					if e.IsPoisoned.Load() {
 						bFlags |= 8
 					}
 
 					// Mob is proper-damaged, or not
-					if n.ConsumeWasProperDamage() {
+					if e.ConsumeWasProperDamage() {
 						bFlags |= 16
 					}
 
@@ -620,36 +623,40 @@ func (wp *Pool) broadcastUpdatePacket() {
 					dynamicAt++
 
 					if hasConnectingSegment {
-						dynamicAt += PutUvarint16(packet[dynamicAt:], n.ConnectingSegment.GetId())
+						dynamicAt += PutUvarint16(packet[dynamicAt:], e.ConnectingSegment.GetId())
 					}
 				}
 
 			case *Petal:
 				{
+					if IsDeadNode(wp, n) {
+						fmt.Println(e.Type)
+					}
+
 					packet[dynamicAt] = entityKindPetal
 					dynamicAt++
 
-					dynamicAt += PutUvarint16(packet[dynamicAt:], n.Id)
+					dynamicAt += PutUvarint16(packet[dynamicAt:], e.Id)
 
-					dynamicAt += WriteFloat32(packet[dynamicAt:], n.X)
-					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Y)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], e.X)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], e.Y)
 
-					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Angle)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], e.Angle)
 
-					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Health)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], e.Health)
 
-					dynamicAt += WriteFloat32(packet[dynamicAt:], n.Size)
+					dynamicAt += WriteFloat32(packet[dynamicAt:], e.Size)
 
-					packet[dynamicAt] = n.Type
+					packet[dynamicAt] = e.Type
 					dynamicAt++
 
-					packet[dynamicAt] = n.Rarity
+					packet[dynamicAt] = e.Rarity
 					dynamicAt++
 
 					var bFlags uint8 = 0
 
 					// Petal is proper-damaged, or not
-					if n.ConsumeWasProperDamage() {
+					if e.ConsumeWasProperDamage() {
 						bFlags |= 1
 					}
 
@@ -1250,7 +1257,7 @@ Loop:
 
 				bouncedIds = append(bouncedIds, targetEntity.Id)
 
-				playerMaxHealth := targetEntity.MaxHealth()
+				playerMaxHealth := targetEntity.MaxHp()
 
 				targetEntity.TakeProperDamage(lightningDamage / playerMaxHealth)
 

@@ -76,6 +76,14 @@ func (p *Player) IsCollidable() bool {
 	return !p.NoClip
 }
 
+var _ Eliminatable = (*Player)(nil) // *Player must implement Eliminatable
+
+// IsEliminated returns whether if mob is eliminated.
+// This method exists because struct pointer mob reference doesnt nil'ed when removed.
+func (p *Player) IsEliminated(wp *Pool) bool {
+	return wp.FindPlayer(p.Id) == nil
+}
+
 const maxHpLevel = 75.
 
 // calculatePlayerHp calculate hp by level.
@@ -85,8 +93,8 @@ func calculatePlayerHp(level float32) float32 {
 	return (100 * 100) * math32.Pow(1.02, max(level, maxHpLevel)-1)
 }
 
-// MaxHealth calculates max hp of player.
-func (p *Player) MaxHealth() float32 {
+// MaxHp calculates max hp of player.
+func (p *Player) MaxHp() float32 {
 	return calculatePlayerHp(100)
 }
 
@@ -107,7 +115,7 @@ type SwapPetalCommand struct {
 	At int
 }
 
-const PlayerSpeedMultiplier = .5
+const playerSpeedMultiplier = .5
 
 func (c *MovementCommand) Execute(_ *Pool, p *Player) {
 	if p.IsDead {
@@ -115,7 +123,7 @@ func (c *MovementCommand) Execute(_ *Pool, p *Player) {
 	}
 
 	p.Angle = float32(c.Angle)
-	p.Magnitude = float32(c.Magnitude) * PlayerSpeedMultiplier
+	p.Magnitude = float32(c.Magnitude) * playerSpeedMultiplier
 
 	speed := p.Magnitude / 255.
 	rad := angleToRadian(p.Angle)
@@ -220,7 +228,7 @@ Done:
 			if p.IsPoisoned.Load() {
 				dp := p.PoisonDPS * DeltaT
 
-				pMaxHealth := p.MaxHealth()
+				pMaxHealth := p.MaxHp()
 
 				p.Health -= dp / pMaxHealth
 				p.Health = max(0, p.Health)

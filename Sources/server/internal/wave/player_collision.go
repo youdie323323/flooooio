@@ -3,7 +3,6 @@ package wave
 import (
 	"time"
 
-	"flooooio/internal/wave/collision"
 	"flooooio/internal/wave/florr/native"
 )
 
@@ -22,14 +21,14 @@ func (p *Player) PlayerCollision(wp *Pool, _ time.Time) {
 
 	pId := p.Id
 
-	c0player := collision.Circle{
+	c0player := Circle{
 		X: p.X,
 		Y: p.Y,
 		R: p.Size,
 	}
 
 	// Define reusable circle
-	c1player := collision.Circle{}
+	c1player := Circle{}
 
 	searchRadius := CalculateSearchRadius(PlayerCollision, p.Size)
 
@@ -55,7 +54,7 @@ func (p *Player) PlayerCollision(wp *Pool, _ time.Time) {
 		c1player.Y = op.Y
 		c1player.R = op.Size
 
-		px, py, ok := collision.ComputeCirclePush(c0player, c1player)
+		px, py, ok := ComputeCirclePush(c0player, c1player)
 		if ok {
 			p.Velocity[0] -= px * playerToPlayerKnockbackMultiplier
 			p.Velocity[1] -= py * playerToPlayerKnockbackMultiplier

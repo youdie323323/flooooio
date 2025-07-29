@@ -4,8 +4,9 @@ import (
 	"slices"
 	"time"
 
-	"flooooio/internal/wave/collision"
 	"flooooio/internal/wave/florr/native"
+
+	"github.com/youdie323323/go-spatial-hash"
 )
 
 type Mob struct {
@@ -123,7 +124,9 @@ func (m *Mob) MobToDamage(wp *Pool) *Mob {
 	return toDamaged
 }
 
-// IsEliminated returns whether if mob was eliminated.
+var _ Eliminatable = (*Mob)(nil) // *Mob must implement Eliminatable
+
+// IsEliminated returns whether if mob is eliminated.
 // This method exists because struct pointer mob reference doesnt nil'ed when removed.
 func (m *Mob) IsEliminated(wp *Pool) bool {
 	return wp.FindMob(m.Id) == nil
@@ -135,17 +138,17 @@ var _ LightningEmitter = (*Mob)(nil) // *Mob must implement LightningEmitter
 func (m *Mob) SearchLightningBounceTargets(wp *Pool, bouncedIds []EntityId) PoolNodeSlice {
 	if m.IsEnemy() {
 		return slices.Concat(
-			collision.ToNodeSlice(wp.FilterPlayersWithCondition(func(p *Player) bool {
+			spatial_hash.ToNodeSlice(wp.FilterPlayersWithCondition(func(p *Player) bool {
 				return !slices.Contains(bouncedIds, p.Id)
 			})),
-			collision.ToNodeSlice(wp.FilterMobsWithCondition(func(m *Mob) bool {
+			spatial_hash.ToNodeSlice(wp.FilterMobsWithCondition(func(m *Mob) bool {
 				return !(slices.Contains(bouncedIds, m.Id) ||
 					slices.Contains(ProjectileMobTypes, m.Type)) &&
 					m.IsAlly()
 			})),
 		)
 	} else {
-		return collision.ToNodeSlice(wp.FilterMobsWithCondition(func(m *Mob) bool {
+		return spatial_hash.ToNodeSlice(wp.FilterMobsWithCondition(func(m *Mob) bool {
 			return !(slices.Contains(bouncedIds, m.Id) ||
 				slices.Contains(ProjectileMobTypes, m.Type)) &&
 				m.IsEnemy()
