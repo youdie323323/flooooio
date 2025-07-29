@@ -1302,7 +1302,7 @@ Loop:
 
 				bouncedIds = append(bouncedIds, targetEntity.Id)
 
-				{
+				{ // Take damage
 					targetEntityToDamage := targetEntity.MobToDamage(wp)
 
 					mobMaxHp := targetEntityToDamage.MaxHp()
@@ -1374,7 +1374,7 @@ func (wp *Pool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
 
 		bouncedIds = append(bouncedIds, targetMob.Id)
 
-		{
+		{ // Take damage
 			targetMobToDamage := targetMob.MobToDamage(wp)
 
 			targetMobMaxHp := targetMobToDamage.MaxHp()
