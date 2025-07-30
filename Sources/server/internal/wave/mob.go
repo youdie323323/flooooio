@@ -22,9 +22,8 @@ type Mob struct {
 
 	MagnitudeMultiplier float32
 
-	// SigmaT is the time this mob has experienced so far.
-	// Represented in second.
-	SigmaT float32
+	// T is the time this mob has experienced so far, represented in second.
+	T float32
 
 	LastAttackedEntity PoolNode
 
@@ -170,11 +169,11 @@ func (m *Mob) OnUpdateTick(wp *Pool, now time.Time) {
 	m.MobElimination(wp, now)
 
 	{ // Base onUpdateTick
-		m.SigmaT += DeltaT
+		m.T += DeltaT
 
 		{ // Take poison damage
 			if m.IsPoisoned.Load() {
-				dp := m.PoisonDPS * DeltaT
+				dp := DeltaT * m.PoisonDPS
 
 				mMaxHp := m.MaxHp()
 
@@ -215,8 +214,7 @@ func NewMob(
 
 	rarity native.Rarity,
 
-	x float32,
-	y float32,
+	x, y float32,
 
 	petMaster *Player,
 
@@ -263,7 +261,7 @@ func NewMob(
 
 		MagnitudeMultiplier: 1,
 
-		SigmaT: 0,
+		T: 0,
 
 		LastAttackedEntity: nil,
 

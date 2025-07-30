@@ -69,8 +69,7 @@ func calculateRotationDelta(
 func orbitPetal(
 	petal *Petal,
 
-	targetX float32,
-	targetY float32,
+	targetX, targetY float32,
 
 	radius float32,
 

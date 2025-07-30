@@ -114,8 +114,7 @@ func NewPetal(
 
 	rarity native.Rarity,
 
-	x float32,
-	y float32,
+	x, y float32,
 
 	master *Player,
 ) *Petal {

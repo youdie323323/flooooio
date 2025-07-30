@@ -43,8 +43,7 @@ func (p *Player) PlayerPetalConsume(wp *Pool, now time.Time) {
 
 	isSad := p.Mood.IsSet(native.MoodSad)
 
-	var totalForceX float32 = 0.
-	var totalForceY float32 = 0.
+	var totalForceX, totalForceY float32 = 0., 0.
 
 	usageCooldownGrid := p.Slots.UsageCooldownGrid
 

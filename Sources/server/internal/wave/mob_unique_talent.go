@@ -134,7 +134,7 @@ func (m *Mob) MobUniqueTalent(wp *Pool, now time.Time) {
 
 	case native.MobTypeSpider:
 		{
-			if m.Rarity >= native.RarityLegendary && m.SigmaT > 1 {
+			if m.Rarity >= native.RarityLegendary && m.T > 1 {
 				wp.GenerateMob(
 					native.MobTypeWebProjectile,
 
@@ -150,7 +150,7 @@ func (m *Mob) MobUniqueTalent(wp *Pool, now time.Time) {
 				)
 
 				// TODO: this implementation is not safe and cant used by other location
-				m.SigmaT = 0
+				m.T = 0
 			}
 		}
 

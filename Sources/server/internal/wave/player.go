@@ -226,7 +226,7 @@ Done:
 
 		{ // Take poison damage
 			if p.IsPoisoned.Load() {
-				dp := p.PoisonDPS * DeltaT
+				dp := DeltaT * p.PoisonDPS
 
 				pMaxHp := p.MaxHp()
 
@@ -327,8 +327,7 @@ func NewPlayer(
 
 	sp *StaticPlayer[StaticPetalSlots],
 
-	x float32,
-	y float32,
+	x, y float32,
 ) *Player {
 	return &Player{
 		Entity: NewEntity(

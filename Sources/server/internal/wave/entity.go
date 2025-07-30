@@ -112,8 +112,7 @@ func RandomId() EntityId {
 func NewEntity(
 	id EntityId,
 
-	x float32,
-	y float32,
+	x, y float32,
 
 	size float32,
 ) Entity {

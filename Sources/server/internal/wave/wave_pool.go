@@ -733,8 +733,7 @@ func (wp *Pool) writeStaticUpdatePacket(buf []byte) int {
 func (wp *Pool) GeneratePlayer(
 	sp *StaticPlayer[StaticPetalSlots],
 
-	x float32,
-	y float32,
+	x, y float32,
 ) *Player {
 	id := RandomId()
 	if _, ok := wp.playerPool.Load(id); ok {
@@ -802,8 +801,7 @@ func (wp *Pool) GeneratePlayer(
 func (wp *Pool) SafeGeneratePlayer(
 	sp *StaticPlayer[StaticPetalSlots],
 
-	x float32,
-	y float32,
+	x, y float32,
 ) *Player {
 	wp.Mu.Lock()
 	defer wp.Mu.Unlock()
@@ -876,8 +874,7 @@ func (wp *Pool) GenerateMob(
 
 	rarity native.Rarity,
 
-	x float32,
-	y float32,
+	x, y float32,
 
 	petMaster *Player,
 
@@ -929,8 +926,7 @@ func (wp *Pool) SafeGenerateMob(
 
 	rarity native.Rarity,
 
-	x float32,
-	y float32,
+	x, y float32,
 
 	petMaster *Player,
 
@@ -1015,8 +1011,7 @@ func (wp *Pool) LinkedMobSegmentation(
 
 	rarity native.Rarity,
 
-	x float32,
-	y float32,
+	x, y float32,
 
 	bodyCount int,
 
@@ -1058,8 +1053,7 @@ func (wp *Pool) SafeLinkedMobSegmentation(
 
 	rarity native.Rarity,
 
-	x float32,
-	y float32,
+	x, y float32,
 
 	bodyCount int,
 
@@ -1087,8 +1081,7 @@ func (wp *Pool) GeneratePetal(
 
 	rarity native.Rarity,
 
-	x float32,
-	y float32,
+	x, y float32,
 
 	master *Player,
 
@@ -1137,8 +1130,7 @@ func (wp *Pool) SafeGeneratePetal(
 
 	rarity native.Rarity,
 
-	x float32,
-	y float32,
+	x, y float32,
 
 	master *Player,
 

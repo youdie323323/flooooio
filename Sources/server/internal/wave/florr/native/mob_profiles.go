@@ -58,7 +58,9 @@ func (d MobData) StatFromRarity(r Rarity) MobStat {
 	case RarityMythic:
 		return d.Mythic
 
-	// Ultra (it wont happed but, just guarantees no error)
+	case RarityUltra:
+		return d.Ultra
+
 	default:
 		return d.Common
 	}

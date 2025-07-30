@@ -6,11 +6,7 @@ import (
 	"github.com/chewxy/math32"
 )
 
-type Circle struct {
-	X float32
-	Y float32
-	R float32
-}
+type Circle struct{ X, Y, R float32 }
 
 func ComputeCirclePush(c0, c1 Circle) (float32, float32, bool) {
 	dx := c1.X - c0.X
