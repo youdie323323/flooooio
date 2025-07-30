@@ -104,7 +104,8 @@ func spinPetal(
 			spinDetectRad := orbitSpinNearestSizeCoef * m.Radius()
 			spinDetectRadSq := spinDetectRad * spinDetectRad
 
-			dx, dy := m.X-petal.X, m.Y-petal.Y
+			dx, dy := m.X-petal.X,
+				m.Y-petal.Y
 
 			return (dx*dx + dy*dy) <= spinDetectRadSq
 		})),
@@ -286,8 +287,8 @@ func (p *Player) PlayerPetalOrbit(wp *Pool, now time.Time) {
 		if IsClusterPetal(petals) {
 			angleIndex := calculateTableIndex(baseAngle)
 
-			slotBaseX := targetX + cosTable[angleIndex]*radius
-			slotBaseY := targetY + sinTable[angleIndex]*radius
+			slotBaseX, slotBaseY := targetX+cosTable[angleIndex]*radius,
+				targetY+sinTable[angleIndex]*radius
 
 			for j, petal := range petals {
 				if petal == nil {
