@@ -8,27 +8,22 @@ import (
 	"flooooio/internal/wave/florr/native"
 
 	"github.com/chewxy/math32"
-
-	"github.com/youdie323323/go-spatial-hash"
+	spatial_hash "github.com/youdie323323/go-spatial-hash"
 )
 
-const (
-	OrbitHistorySize = 10
-
-	precalcSize = 360
-)
+const tablePrecalcSize = 360
 
 var (
-	lazyCosTable = make([]float32, precalcSize)
-	lazySinTable = make([]float32, precalcSize)
+	cosTable = make([]float32, tablePrecalcSize)
+	sinTable = make([]float32, tablePrecalcSize)
 )
 
 func init() {
-	for i := range precalcSize {
-		angle := (float32(i) * Tau32) / precalcSize
+	for i := range tablePrecalcSize {
+		angle := (float32(i) * Tau32) / tablePrecalcSize
 
-		lazyCosTable[i] = math32.Cos(angle)
-		lazySinTable[i] = math32.Sin(angle)
+		cosTable[i] = math32.Cos(angle)
+		sinTable[i] = math32.Sin(angle)
 	}
 }
 
@@ -37,6 +32,8 @@ var UnmoodablePetalTypes = slices.Concat(UsablePetalTypes, []native.PetalType{
 })
 
 const (
+	OrbitHistorySize = 10
+
 	orbitBaseRotationSpeed = 2.5
 
 	orbitRadiusSpringStrength = 0.4
@@ -48,12 +45,10 @@ const (
 	orbitSpinInterpolationSpeed = 0.6
 	orbitSpinNearestSizeCoef    = 1.075
 	orbitSpinAngleCoef          = 10.0
-)
 
-const (
-	DefaultMoodRadius = 40
-	SadMoodRadius     = 25
-	AngryMoodRadius   = 80
+	orbitDefaultMoodRadius = 40
+	orbitSadMoodRadius     = 25
+	orbitAngryMoodRadius   = 80
 )
 
 func calculateTableIndex(angle float32) int {
@@ -79,8 +74,8 @@ func orbitPetal(
 ) {
 	angleIndex := calculateTableIndex(angle)
 
-	chaseX := targetX + lazyCosTable[angleIndex]*radius
-	chaseY := targetY + lazySinTable[angleIndex]*radius
+	chaseX := targetX + cosTable[angleIndex]*radius
+	chaseY := targetY + sinTable[angleIndex]*radius
 
 	diffX := chaseX - petal.X
 	diffY := chaseY - petal.Y
@@ -144,8 +139,8 @@ func spinPetal(
 
 		mobToSpinDesiredSize := 1.1 * mobToSpin.Radius()
 
-		targetX := mobToSpin.X + lazyCosTable[spinAngleIndex]*mobToSpinDesiredSize
-		targetY := mobToSpin.Y + lazySinTable[spinAngleIndex]*mobToSpinDesiredSize
+		targetX := mobToSpin.X + cosTable[spinAngleIndex]*mobToSpinDesiredSize
+		targetY := mobToSpin.Y + sinTable[spinAngleIndex]*mobToSpinDesiredSize
 
 		petal.X += orbitSpinInterpolationSpeed * (targetX - petal.X)
 		petal.Y += orbitSpinInterpolationSpeed * (targetY - petal.Y)
@@ -228,13 +223,13 @@ func (p *Player) PlayerPetalOrbit(wp *Pool, now time.Time) {
 
 	switch true {
 	case isAngry:
-		targetRadius = AngryMoodRadius
+		targetRadius = orbitAngryMoodRadius
 
 	case isSad:
-		targetRadius = SadMoodRadius
+		targetRadius = orbitSadMoodRadius
 
 	default:
-		targetRadius = DefaultMoodRadius
+		targetRadius = orbitDefaultMoodRadius
 	}
 
 	targetRadius += ((p.Size / PlayerSize) - 1) * PlayerCollision.Radius
@@ -264,7 +259,7 @@ func (p *Player) PlayerPetalOrbit(wp *Pool, now time.Time) {
 
 		switch true {
 		case slices.Contains(UnmoodablePetalTypes, firstPetal.Type):
-			springForce = (DefaultMoodRadius - p.OrbitPetalRadii[i]) * orbitRadiusSpringStrength
+			springForce = (orbitDefaultMoodRadius - p.OrbitPetalRadii[i]) * orbitRadiusSpringStrength
 
 		case isAngry && firstPetal.Type == native.PetalTypeWing:
 			wingAddition := float32(130 * (math.Sin(math.Mod((nowMilli+float64(firstPetal.Id))/200, Tau)) + 1))
@@ -289,8 +284,8 @@ func (p *Player) PlayerPetalOrbit(wp *Pool, now time.Time) {
 		if IsClusterPetal(petals) {
 			angleIndex := calculateTableIndex(baseAngle)
 
-			slotBaseX := targetX + lazyCosTable[angleIndex]*radius
-			slotBaseY := targetY + lazySinTable[angleIndex]*radius
+			slotBaseX := targetX + cosTable[angleIndex]*radius
+			slotBaseY := targetY + sinTable[angleIndex]*radius
 
 			for j, petal := range petals {
 				if petal == nil {

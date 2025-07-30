@@ -7,7 +7,7 @@ import (
 	"flooooio/internal/wave/florr/native"
 
 	"github.com/chewxy/math32"
-	"github.com/youdie323323/go-spatial-hash"
+	spatial_hash "github.com/youdie323323/go-spatial-hash"
 )
 
 const (
@@ -260,7 +260,7 @@ func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 					magnet := FindNearestEntityWithLimitedDistance(
 						m.TargetEntity,
 						spatial_hash.ToNodeSlice(wp.FilterPetalsWithCondition(func(p *Petal) bool { return p.Type == native.PetalTypeMagnet })),
-						AngryMoodRadius,
+						orbitAngryMoodRadius,
 					)
 
 					if magnet != nil {
