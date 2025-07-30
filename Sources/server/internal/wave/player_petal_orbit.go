@@ -36,16 +36,18 @@ var UnmoodablePetalTypes = slices.Concat(UsablePetalTypes, []native.PetalType{
 	native.PetalTypeMagnet,
 })
 
-// PlayerPetalOrbit class constants
 const (
-	defaultRotateSpeed        = 2.5
-	radiusSpringStrength      = 0.4
-	radiusFriction            = 0.1
-	petalVelocityAcceleration = 0.1
-	petalClusterRadius        = 6.0
-	spingInterpolationSpeed   = 0.6
-	spinNearestSizeCoef       = 1.075
-	spinAngleCoef             = 10.0
+	orbitBaseRotationSpeed = 2.5
+
+	orbitRadiusSpringStrength = 0.4
+	orbitRadiusFriction       = 0.1
+
+	orbitPetalVelocityAcceleration = 0.1
+	orbitPetalClusterRadius        = 6.0
+
+	orbitSpinInterpolationSpeed = 0.6
+	orbitSpinNearestSizeCoef    = 1.075
+	orbitSpinAngleCoef          = 10.0
 )
 
 const (
@@ -83,8 +85,8 @@ func orbitPetal(
 	diffX := chaseX - petal.X
 	diffY := chaseY - petal.Y
 
-	petal.Velocity[0] += petalVelocityAcceleration * diffX
-	petal.Velocity[1] += petalVelocityAcceleration * diffY
+	petal.Velocity[0] += orbitPetalVelocityAcceleration * diffX
+	petal.Velocity[1] += orbitPetalVelocityAcceleration * diffY
 }
 
 // spinPetal do petal spin on mob.
@@ -104,7 +106,7 @@ func spinPetal(
 				return false
 			}
 
-			spinDetectRad := m.Radius() * spinNearestSizeCoef
+			spinDetectRad := m.Radius() * orbitSpinNearestSizeCoef
 			spinDetectRadSq := spinDetectRad * spinDetectRad
 
 			dx := m.X - petal.X
@@ -145,8 +147,8 @@ func spinPetal(
 		targetX := mobToSpin.X + lazyCosTable[spinAngleIndex]*mobToSpinDesiredSize
 		targetY := mobToSpin.Y + lazySinTable[spinAngleIndex]*mobToSpinDesiredSize
 
-		petal.X += (targetX - petal.X) * spingInterpolationSpeed
-		petal.Y += (targetY - petal.Y) * spingInterpolationSpeed
+		petal.X += orbitSpinInterpolationSpeed * (targetX - petal.X)
+		petal.Y += orbitSpinInterpolationSpeed * (targetY - petal.Y)
 	}
 }
 
@@ -218,9 +220,9 @@ func (p *Player) PlayerPetalOrbit(wp *Pool, now time.Time) {
 
 	var currentAngleIndex float32 = 0.
 
-	var totalSpeed float32 = defaultRotateSpeed
+	var totalSpeed float32 = orbitBaseRotationSpeed
 
-	spinRotationDelta := calculateRotationDelta(defaultRotateSpeed*spinAngleCoef, clockwise)
+	spinRotationDelta := calculateRotationDelta(orbitSpinAngleCoef*orbitBaseRotationSpeed, clockwise)
 
 	var targetRadius float32
 
@@ -262,18 +264,18 @@ func (p *Player) PlayerPetalOrbit(wp *Pool, now time.Time) {
 
 		switch true {
 		case slices.Contains(UnmoodablePetalTypes, firstPetal.Type):
-			springForce = (DefaultMoodRadius - p.OrbitPetalRadii[i]) * radiusSpringStrength
+			springForce = (DefaultMoodRadius - p.OrbitPetalRadii[i]) * orbitRadiusSpringStrength
 
 		case isAngry && firstPetal.Type == native.PetalTypeWing:
 			wingAddition := float32(130 * (math.Sin(math.Mod((nowMilli+float64(firstPetal.Id))/200, Tau)) + 1))
 
-			springForce = (targetRadius + wingAddition - p.OrbitPetalRadii[i]) * radiusSpringStrength
+			springForce = (targetRadius + wingAddition - p.OrbitPetalRadii[i]) * orbitRadiusSpringStrength
 
 		default:
-			springForce = (targetRadius - p.OrbitPetalRadii[i]) * radiusSpringStrength
+			springForce = (targetRadius - p.OrbitPetalRadii[i]) * orbitRadiusSpringStrength
 		}
 
-		p.OrbitRadiusVelocities[i] = p.OrbitRadiusVelocities[i]*radiusFriction + springForce
+		p.OrbitRadiusVelocities[i] = p.OrbitRadiusVelocities[i]*orbitRadiusFriction + springForce
 		p.OrbitPetalRadii[i] += p.OrbitRadiusVelocities[i]
 
 		ringIndex := math32.Floor(currentAngleIndex / realLength)
@@ -308,7 +310,7 @@ func (p *Player) PlayerPetalOrbit(wp *Pool, now time.Time) {
 					slotBaseX,
 					slotBaseY,
 
-					petalClusterRadius,
+					orbitPetalClusterRadius,
 
 					petalAngle,
 				)

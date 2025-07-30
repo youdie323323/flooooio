@@ -166,7 +166,7 @@ func pickRandomMobType(difficulty uint16, biome native.Biome, sg *SpawnGroup) na
 		}
 
 		// Select mob from special group
-		random := rand.Float64() * totalWeight
+		random := totalWeight * rand.Float64()
 
 		for _, t := range *sg {
 			if rule, exists := mobSpawnRules[biome][t]; exists && rule.SpawnsAfter <= difficulty {
@@ -264,15 +264,15 @@ func CalculateWaveLuck(progress DataProgress) float64 {
 	return math.Pow(1.3, float64(progress)) - 1
 }
 
-const twoOverThree float64 = 2.0 / 3.0
+const twoOverThree float64 = 2. / 3.
 
-// CalculateSpawnWave calculate spawn wave by best wave progression of this wave.
-func CalculateSpawnWave(bestWave DataProgress) DataProgress {
-	return DataProgress(math.Ceil(twoOverThree * float64(bestWave)))
+// CalculateSpawnWave calculates spawn wave by best wave progress.
+func CalculateSpawnWave(progress DataProgress) DataProgress {
+	return DataProgress(math.Ceil(twoOverThree * float64(progress)))
 }
 
 func CalculateWaveLength(x float32) float32 {
-	return max(60, math32.Pow(x, 0.2)*18.9287+30)
+	return max(18.9287*math32.Pow(x, 0.2)+30, 60)
 }
 
 func (s *MobSpawner) Next(data *Data, groupIndex *int) {
