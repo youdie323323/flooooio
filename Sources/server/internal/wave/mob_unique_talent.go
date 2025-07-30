@@ -9,8 +9,6 @@ import (
 	"github.com/chewxy/math32"
 )
 
-const RotationCounterGoal = 500
-
 var UntalentedMobTypes = []native.MobType{
 	native.MobTypeShell,
 	native.MobTypeBubble,
@@ -18,12 +16,14 @@ var UntalentedMobTypes = []native.MobType{
 	native.MobTypeSponge,
 }
 
-const ( // Step added to movementTimer every time step.
-	movementTimerDefaultStep         = DeltaT / 3 // 3 second
-	movementTimerDesertCentipedeStep = DeltaT / 6 // 6 second
+const MobRotationCounterGoal = 500
+
+const ( // Step added to movementTimer every step.
+	mobMovementTimerDefaultStep         = DeltaT / 3 // 3 second
+	mobMovementTimerDesertCentipedeStep = DeltaT / 6 // 6 second
 )
 
-var shakeSinusoidalWave = NewSinusoidalWave(200)
+var mobAngleShakeSinusoidalWave = NewSinusoidalWave(200)
 
 func (m *Mob) MobUniqueTalent(wp *Pool, now time.Time) {
 	if slices.Contains(UntalentedMobTypes, m.Type) {
@@ -41,7 +41,7 @@ func (m *Mob) MobUniqueTalent(wp *Pool, now time.Time) {
 	}
 
 	if m.TargetEntity == nil {
-		if m.RotationCounter >= RotationCounterGoal {
+		if m.RotationCounter >= MobRotationCounterGoal {
 			m.Angle = RandomAngle()
 
 			m.RotationCounter = 0
@@ -66,10 +66,10 @@ func (m *Mob) MobUniqueTalent(wp *Pool, now time.Time) {
 
 				switch m.Type {
 				case native.MobTypeCentipedeDesert:
-					m.MovementTimer += movementTimerDesertCentipedeStep
+					m.MovementTimer += mobMovementTimerDesertCentipedeStep
 
 				default:
-					m.MovementTimer += movementTimerDefaultStep
+					m.MovementTimer += mobMovementTimerDefaultStep
 				}
 			}
 		} else {
@@ -128,7 +128,7 @@ func (m *Mob) MobUniqueTalent(wp *Pool, now time.Time) {
 				shakeMultiplier = 2.
 			}
 
-			m.Angle += shakeSinusoidalWave.At(m.SineWaveIndex) * shakeMultiplier
+			m.Angle += mobAngleShakeSinusoidalWave.At(m.SineWaveIndex) * shakeMultiplier
 			m.SineWaveIndex++
 		}
 

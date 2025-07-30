@@ -53,7 +53,7 @@ func (p *Petal) MaxHp() float32 {
 func (p *Petal) MasterRealPosition() (x, y float32) {
 	master := p.Master
 
-	historyTargetIndex := (master.OrbitHistoryIndex + 6) % OrbitHistorySize
+	historyTargetIndex := (master.OrbitHistoryIndex + 6) % PlayerOrbitHistorySize
 
 	return master.OrbitHistoryX[historyTargetIndex], master.OrbitHistoryY[historyTargetIndex]
 }

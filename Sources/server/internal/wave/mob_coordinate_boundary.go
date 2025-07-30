@@ -13,19 +13,18 @@ var ProjectileMobTypes = []native.MobType{
 	native.MobTypeWebProjectile,
 }
 
-const DeadzoneRadiusMultiplier = 1.5
+const MobDeadzoneExpandMultiplier = 1.5
 
 func (m *Mob) MobCoordinateBoundary(wp *Pool, _ time.Time) {
 	mapRadius := float32(wp.Data.MapRadius)
 
 	desiredMapRadius := mapRadius - m.Radius()
 
-	dx := m.X - mapRadius
-	dy := m.Y - mapRadius
+	dx, dy := m.X-mapRadius, m.Y-mapRadius
 
 	dot := dx*dx + dy*dy
 
-	deadzone := desiredMapRadius * DeadzoneRadiusMultiplier
+	deadzone := desiredMapRadius * MobDeadzoneExpandMultiplier
 
 	if dot > deadzone*deadzone {
 		m.ForceEliminate(wp)

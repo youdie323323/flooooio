@@ -18,7 +18,7 @@ var relative_screen_vector: Vector2 = undefined;
 var relative_screen_center_vector: Vector2 = undefined;
 
 var screen_base_scale: f32 = 1;
-var antenna_scale: f32 = 1;
+var antenna_scale: f32 = 0.5;
 
 var mouse_x_offset: f32 = 0;
 var mouse_y_offset: f32 = 0;

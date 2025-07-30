@@ -384,8 +384,8 @@ func NewPlayer(
 
 		OrbitRotation:         0,
 		OrbitHistoryIndex:     0,
-		OrbitHistoryX:         make([]float32, OrbitHistorySize),
-		OrbitHistoryY:         make([]float32, OrbitHistorySize),
+		OrbitHistoryX:         make([]float32, PlayerOrbitHistorySize),
+		OrbitHistoryY:         make([]float32, PlayerOrbitHistorySize),
 		OrbitPetalRadii:       nil,
 		OrbitRadiusVelocities: nil,
 		OrbitPetalSpins:       nil,

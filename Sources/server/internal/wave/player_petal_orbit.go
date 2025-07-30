@@ -32,7 +32,7 @@ var UnmoodablePetalTypes = slices.Concat(UsablePetalTypes, []native.PetalType{
 })
 
 const (
-	OrbitHistorySize = 10
+	PlayerOrbitHistorySize = 10
 
 	orbitBaseRotationSpeed = 2.5
 
@@ -60,7 +60,7 @@ func calculateRotationDelta(
 
 	clockwise float32,
 ) float32 {
-	return (speed * clockwise) * DeltaT
+	return DeltaT * (clockwise * speed)
 }
 
 func orbitPetal(
@@ -74,17 +74,17 @@ func orbitPetal(
 ) {
 	angleIndex := calculateTableIndex(angle)
 
-	chaseX := targetX + cosTable[angleIndex]*radius
-	chaseY := targetY + sinTable[angleIndex]*radius
+	chaseX, chaseY := targetX+cosTable[angleIndex]*radius,
+		targetY+sinTable[angleIndex]*radius
 
-	diffX := chaseX - petal.X
-	diffY := chaseY - petal.Y
+	diffX, diffY := chaseX-petal.X,
+		chaseY-petal.Y
 
 	petal.Velocity[0] += orbitPetalVelocityAcceleration * diffX
 	petal.Velocity[1] += orbitPetalVelocityAcceleration * diffY
 }
 
-// spinPetal do petal spin on mob.
+// spinPetal does petal spin on mob.
 func spinPetal(
 	wp *Pool,
 
@@ -101,11 +101,10 @@ func spinPetal(
 				return false
 			}
 
-			spinDetectRad := m.Radius() * orbitSpinNearestSizeCoef
+			spinDetectRad := orbitSpinNearestSizeCoef * m.Radius()
 			spinDetectRadSq := spinDetectRad * spinDetectRad
 
-			dx := m.X - petal.X
-			dy := m.Y - petal.Y
+			dx, dy := m.X-petal.X, m.Y-petal.Y
 
 			return (dx*dx + dy*dy) <= spinDetectRadSq
 		})),
@@ -114,12 +113,12 @@ func spinPetal(
 		return
 	}
 
-	wasSpinning := petal.SpinningOnMob
+	wasSpinned := petal.SpinningOnMob
 
 	petal.SpinningOnMob = mobToSpin != nil
 
 	if petal.SpinningOnMob {
-		if !wasSpinning {
+		if !wasSpinned {
 			targetAngle := math32.Atan2(
 				petal.Y-mobToSpin.Y,
 				petal.X-mobToSpin.X,
@@ -139,24 +138,27 @@ func spinPetal(
 
 		mobToSpinDesiredSize := 1.1 * mobToSpin.Radius()
 
-		targetX := mobToSpin.X + cosTable[spinAngleIndex]*mobToSpinDesiredSize
-		targetY := mobToSpin.Y + sinTable[spinAngleIndex]*mobToSpinDesiredSize
+		targetX, targetY := mobToSpin.X+cosTable[spinAngleIndex]*mobToSpinDesiredSize,
+			mobToSpin.Y+sinTable[spinAngleIndex]*mobToSpinDesiredSize
 
-		petal.X += orbitSpinInterpolationSpeed * (targetX - petal.X)
-		petal.Y += orbitSpinInterpolationSpeed * (targetY - petal.Y)
+		diffX, diffY := targetX-petal.X,
+			targetY-petal.Y
+
+		petal.X += orbitSpinInterpolationSpeed * diffX
+		petal.Y += orbitSpinInterpolationSpeed * diffY
 	}
 }
 
 func (p *Player) PlayerPetalOrbit(wp *Pool, now time.Time) {
-	p.OrbitHistoryX[p.OrbitHistoryIndex] = p.X
-	p.OrbitHistoryY[p.OrbitHistoryIndex] = p.Y
+	p.OrbitHistoryX[p.OrbitHistoryIndex],
+		p.OrbitHistoryY[p.OrbitHistoryIndex] = p.X, p.Y
 
-	historyTargetIndex := (p.OrbitHistoryIndex + 6) % OrbitHistorySize
+	historyTargetIndex := (p.OrbitHistoryIndex + 6) % PlayerOrbitHistorySize
 
-	targetX := p.OrbitHistoryX[historyTargetIndex]
-	targetY := p.OrbitHistoryY[historyTargetIndex]
+	targetX, targetY := p.OrbitHistoryX[historyTargetIndex],
+		p.OrbitHistoryY[historyTargetIndex]
 
-	p.OrbitHistoryIndex = (p.OrbitHistoryIndex + 1) % OrbitHistorySize
+	p.OrbitHistoryIndex = (p.OrbitHistoryIndex + 1) % PlayerOrbitHistorySize
 
 	surface := p.Slots.Surface
 	surfaceLen := len(surface)
@@ -232,7 +234,7 @@ func (p *Player) PlayerPetalOrbit(wp *Pool, now time.Time) {
 		targetRadius = orbitDefaultMoodRadius
 	}
 
-	targetRadius += ((p.Size / PlayerSize) - 1) * PlayerCollision.Radius
+	targetRadius += PlayerCollision.Radius * ((p.Size / PlayerSize) - 1)
 
 	nowMilli := float64(now.UnixMilli())
 

@@ -2,16 +2,14 @@ package wave
 
 import "time"
 
-const (
-	PlayerMovementMu = .9
-)
+const PlayerMovementVelocityMu = .9
 
 func (p *Player) PlayerCoordinateMovement(wp *Pool, _ time.Time) {
 	p.Velocity[0] += p.Acceleration[0] * p.MagnitudeMultiplier
 	p.Velocity[1] += p.Acceleration[1] * p.MagnitudeMultiplier
 
-	p.Velocity[0] *= PlayerMovementMu
-	p.Velocity[1] *= PlayerMovementMu
+	p.Velocity[0] *= PlayerMovementVelocityMu
+	p.Velocity[1] *= PlayerMovementVelocityMu
 
 	p.X += p.Velocity[0]
 	p.Y += p.Velocity[1]

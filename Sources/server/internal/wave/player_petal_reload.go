@@ -22,6 +22,7 @@ func (p *Player) PlayerPetalReload(wp *Pool, now time.Time) {
 	}
 
 	surface := p.Slots.Surface
+	surfaceSupplies := p.Slots.SurfaceSupplies
 
 	reloadCooldownGrid := p.Slots.ReloadCooldownGrid
 	usageCooldownGrid := p.Slots.UsageCooldownGrid
@@ -34,7 +35,7 @@ func (p *Player) PlayerPetalReload(wp *Pool, now time.Time) {
 
 		for j, petal := range petals {
 			if petal == nil { // If petal is nil and there is appropriate supply for petal, we can use supply for reload
-				supplies := p.Slots.SurfaceSupplies[i]
+				supplies := surfaceSupplies[i]
 				if supplies != nil {
 					supply := supplies[j]
 					if supply != nil {
@@ -63,6 +64,9 @@ func (p *Player) PlayerPetalReload(wp *Pool, now time.Time) {
 
 							// Zero
 							peReloadCooldown[j] = time.Time{}
+
+							// No need this supply anymore, dispose
+							supplies[j] = nil
 						}
 					}
 				}

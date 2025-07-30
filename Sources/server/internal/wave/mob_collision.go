@@ -10,10 +10,10 @@ import (
 const (
 	mobToMobKnockbackMultiplier = 0.5
 
-	maxMobToPlayerVelocity = 15.0
-
-	webSlowPercent = (100. - 75.) / 100.
+	mobToPlayerMaxKnockback = 15.0
 )
+
+const projectileWebSlowPercent = (100. - 75.) / 100.
 
 // Clamp returns f clamped to [low, high].
 func Clamp[T cmp.Ordered](f, low, high T) T {
@@ -82,7 +82,7 @@ func (m *Mob) MobCollision(wp *Pool, _ time.Time) {
 				// This is most simple lag mitigation, but this constrain the all MagnitudeMultiplier must unique
 				//
 				// Avoid redundant calculation if mob is already slowed this frame
-				if mIsWeb && nearEntity.MagnitudeMultiplier == webSlowPercent {
+				if mIsWeb && nearEntity.MagnitudeMultiplier == projectileWebSlowPercent {
 					continue
 				}
 
@@ -122,7 +122,7 @@ func (m *Mob) MobCollision(wp *Pool, _ time.Time) {
 					if mIsWeb {
 						// TODO: enemy web not slows pets?
 						if nearEntity.IsOrganismEnemy() && (mIsEnemy != nearEntityIsEnemy) {
-							nearEntity.MagnitudeMultiplier = webSlowPercent
+							nearEntity.MagnitudeMultiplier = projectileWebSlowPercent
 						}
 
 						// Web does nothing
@@ -243,7 +243,7 @@ func (m *Mob) MobCollision(wp *Pool, _ time.Time) {
 				}
 
 				// Avoid redundant calculation if mob is already slowed this frame
-				if mIsWeb && nearEntity.MagnitudeMultiplier == webSlowPercent {
+				if mIsWeb && nearEntity.MagnitudeMultiplier == projectileWebSlowPercent {
 					continue
 				}
 
@@ -255,7 +255,7 @@ func (m *Mob) MobCollision(wp *Pool, _ time.Time) {
 				if ok {
 					// Slows player which colliding
 					if mIsWeb {
-						nearEntity.MagnitudeMultiplier = webSlowPercent
+						nearEntity.MagnitudeMultiplier = projectileWebSlowPercent
 
 						// Web does nothing
 						continue
@@ -264,8 +264,8 @@ func (m *Mob) MobCollision(wp *Pool, _ time.Time) {
 					m.X -= px
 					m.Y -= py
 
-					nearEntity.Velocity[0] += Clamp(px*2, -maxMobToPlayerVelocity, maxMobToPlayerVelocity)
-					nearEntity.Velocity[1] += Clamp(py*2, -maxMobToPlayerVelocity, maxMobToPlayerVelocity)
+					nearEntity.Velocity[0] += Clamp(px*2, -mobToPlayerMaxKnockback, mobToPlayerMaxKnockback)
+					nearEntity.Velocity[1] += Clamp(py*2, -mobToPlayerMaxKnockback, mobToPlayerMaxKnockback)
 
 					{ // Damage
 						nearEntityMaxHp := nearEntity.MaxHp()

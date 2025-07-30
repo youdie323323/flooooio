@@ -11,14 +11,9 @@ import (
 )
 
 const (
-	jellyfishLightningShootMS = 1000
+	mobJellyfishLightningShootInterval = 1000 * time.Millisecond
 
-	hornetMissileShootMS = 2000
-)
-
-const (
-	hornetCautionRadius    = 5
-	jellyfishCautionRadius = 3
+	mobHornetMissileShootInterval = 2000 * time.Millisecond
 )
 
 type JudgementFunc = func(m *Mob, distanceToTargetDot float32) bool
@@ -27,13 +22,18 @@ func createCautionJudger(radiusMultiplier float32) JudgementFunc {
 	return func(m *Mob, distanceToTargetDot float32) bool {
 		cautionRad := m.Radius() * radiusMultiplier
 
-		return m.TargetEntity != nil && (cautionRad*cautionRad) > distanceToTargetDot
+		return m.TargetEntity != nil && cautionRad*cautionRad > distanceToTargetDot
 	}
 }
 
+const (
+	mobHornetCautionRadius    = 5
+	mobJellyfishCautionRadius = 3
+)
+
 var cautionBehaviorStopJudger = map[native.MobType]JudgementFunc{
-	native.MobTypeHornet:    createCautionJudger(hornetCautionRadius),
-	native.MobTypeJellyfish: createCautionJudger(jellyfishCautionRadius),
+	native.MobTypeHornet:    createCautionJudger(mobHornetCautionRadius),
+	native.MobTypeJellyfish: createCautionJudger(mobJellyfishCautionRadius),
 }
 
 // FindNearestEntity finds the nearest entity from a slice of entities.
@@ -191,8 +191,8 @@ func predictInterceptionAngleToPlayer(dx, dy float32, p *Player, currentAngle fl
 	return predictInterceptionAngle(dx, dy, vtx, vty, currentAngle)
 }
 
-// detectRange returns detection range within this mob.
-func (m *Mob) detectRange() float32 {
+// DetectRange returns detection range within this mob.
+func (m *Mob) DetectRange() float32 {
 	return 2000
 }
 
@@ -241,8 +241,8 @@ func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 	if m.TargetEntity != nil {
 		judgementFunc, ok := cautionBehaviorStopJudger[m.Type]
 		if ok {
-			dx := m.TargetEntity.GetX() - m.X
-			dy := m.TargetEntity.GetY() - m.Y
+			dx, dy := m.TargetEntity.GetX()-m.X,
+				m.TargetEntity.GetY()-m.Y
 
 			shouldStop = judgementFunc(m, dx*dx+dy*dy)
 		}
@@ -256,7 +256,7 @@ func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 	case native.MobTypeJellyfish:
 		{
 			if shouldStop {
-				if now.Sub(m.JellyfishLastBounce) >= jellyfishLightningShootMS*time.Millisecond {
+				if now.Sub(m.JellyfishLastBounce) >= mobJellyfishLightningShootInterval {
 					magnet := FindNearestEntityWithLimitedDistance(
 						m.TargetEntity,
 						spatial_hash.ToNodeSlice(wp.FilterPetalsWithCondition(func(p *Petal) bool { return p.Type == native.PetalTypeMagnet })),
@@ -288,11 +288,11 @@ func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 			mRadius := m.Radius()
 			mRadiusSq := mRadius * mRadius
 
-			shootX := m.X + math32.Cos(angleRad)*mRadius
-			shootY := m.Y + math32.Sin(angleRad)*mRadius
+			shootX, shootY := m.X+math32.Cos(angleRad)*mRadius,
+				m.Y+math32.Sin(angleRad)*mRadius
 
-			dx := m.TargetEntity.GetX() - shootX
-			dy := m.TargetEntity.GetY() - shootY
+			dx, dy := m.TargetEntity.GetX()-shootX,
+				m.TargetEntity.GetY()-shootY
 
 			// If distance is close, we can just use CalculateInterpolatedAngleToTarget
 			if (dx*dx + dy*dy) <= mRadiusSq {
@@ -319,7 +319,7 @@ func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 				}
 			}
 
-			if now.Sub(m.HornetLastMissileShoot) >= hornetMissileShootMS*time.Millisecond {
+			if now.Sub(m.HornetLastMissileShoot) >= mobHornetMissileShootInterval {
 				missile := wp.GenerateMob(
 					native.MobTypeMissileProjectile,
 
@@ -352,7 +352,7 @@ func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 		{
 			m.Angle = math32.Mod(m.Angle+generateValleyDistribution(-25, 25), 255)
 
-			m.Magnitude = MobSpeedOf(m.Type) * 255
+			m.Magnitude = 255 * MobSpeedOf(m.Type)
 		}
 
 	case native.HostileBehavior:
@@ -364,15 +364,15 @@ func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 			} else if m.LastAttackedEntity != nil {
 				targetEntity = m.LastAttackedEntity
 			} else {
-				targetEntity = FindNearestEntityWithLimitedDistance(m, m.TrackingTargets(wp), m.detectRange())
+				targetEntity = FindNearestEntityWithLimitedDistance(m, m.TrackingTargets(wp), m.DetectRange())
 				if targetEntity == nil {
 					return
 				}
 			}
 
 			if shouldTurnToTarget {
-				dx := targetEntity.GetX() - m.X
-				dy := targetEntity.GetY() - m.Y
+				dx, dy := targetEntity.GetX()-m.X,
+					targetEntity.GetY()-m.Y
 
 				m.Angle = CalculateInterpolatedAngleToEntity(
 					m.Angle,
@@ -397,8 +397,8 @@ func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 		{
 			if m.LastAttackedEntity != nil {
 				if shouldTurnToTarget {
-					dx := m.LastAttackedEntity.GetX() - m.X
-					dy := m.LastAttackedEntity.GetY() - m.Y
+					dx, dy := m.LastAttackedEntity.GetX()-m.X,
+						m.LastAttackedEntity.GetY()-m.Y
 
 					m.Angle = CalculateInterpolatedAngleToEntity(
 						m.Angle,

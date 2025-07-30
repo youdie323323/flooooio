@@ -9,12 +9,6 @@ import (
 	"github.com/chewxy/math32"
 )
 
-const (
-	bubbleBounceForce = 6
-
-	yggdrasilPushForce = 2.5
-)
-
 var summonPetsData = map[native.PetalType]map[native.Rarity]StaticMobData{
 	native.PetalTypeEggBeetle: {
 		native.RarityCommon:    StaticMobData{native.MobTypeBabyAnt, native.RarityCommon},
@@ -35,6 +29,12 @@ var summonPetsData = map[native.PetalType]map[native.Rarity]StaticMobData{
 		native.RarityUltra:     StaticMobData{native.MobTypeSandstorm, native.RarityEpic},
 	},
 }
+
+const (
+	petalBubbleBounceForce = 6
+
+	petalYggdrasilPushForce = 2.5
+)
 
 func (p *Player) PlayerPetalConsume(wp *Pool, now time.Time) {
 	if p.IsDead {
@@ -115,8 +115,8 @@ func (p *Player) PlayerPetalConsume(wp *Pool, now time.Time) {
 							dirX := dx / distance
 							dirY := dy / distance
 
-							petal.Velocity[0] += dirX * yggdrasilPushForce
-							petal.Velocity[1] += dirY * yggdrasilPushForce
+							petal.Velocity[0] += dirX * petalYggdrasilPushForce
+							petal.Velocity[1] += dirY * petalYggdrasilPushForce
 						}
 					}
 
@@ -159,8 +159,8 @@ func (p *Player) PlayerPetalConsume(wp *Pool, now time.Time) {
 					distance := math32.Hypot(dx, dy)
 
 					if distance > 0 {
-						totalForceX += dx / distance * bubbleBounceForce
-						totalForceY += dy / distance * bubbleBounceForce
+						totalForceX += dx / distance * petalBubbleBounceForce
+						totalForceY += dy / distance * petalBubbleBounceForce
 					}
 				}
 
@@ -202,8 +202,7 @@ func (p *Player) PlayerPetalConsume(wp *Pool, now time.Time) {
 					// Detach
 					petal.Detached = true
 
-					dx := petal.X - p.X
-					dy := petal.Y - p.Y
+					dx, dy := petal.X-p.X, petal.Y-p.Y
 
 					// Calculate angle from player to petal
 					angle := math32.Atan2(dy, dx)

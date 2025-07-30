@@ -13,10 +13,9 @@ func (p *Petal) PetalCoordinateBoundary(wp *Pool, _ time.Time) {
 
 	desiredMapRadius := mapRadius - p.Radius()
 
-	dx := p.X - mapRadius
-	dy := p.Y - mapRadius
+	dx, dy := p.X-mapRadius, p.Y-mapRadius
 
-	deadzone := desiredMapRadius * DeadzoneRadiusMultiplier
+	deadzone := desiredMapRadius * MobDeadzoneExpandMultiplier
 
 	if dx*dx+dy*dy > deadzone*deadzone {
 		p.ForceEliminate(wp)

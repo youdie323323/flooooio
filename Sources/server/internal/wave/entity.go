@@ -148,19 +148,19 @@ func GetRandomSafeCoordinate(mapRadius float32, safetyDistance float32, clients 
 		angle := rand.Float32() * Tau32
 		distance := rand.Float32() * (mapRadius - safetyDistance)
 
-		x := mapRadius + math32.Cos(angle)*distance
-		y := mapRadius + math32.Sin(angle)*distance
+		x, y := math32.Cos(angle)*distance+mapRadius,
+			math32.Sin(angle)*distance+mapRadius
 
 		isSafe := true
 
 		// Dont spawn on player
 		for _, c := range clients {
-			dx := c.X - x
-			dy := c.Y - y
+			dx, dy := c.X-x,
+				c.Y-y
 
 			safeSafetyDistance := safetyDistance + c.Size
 
-			if (dx*dx + dy*dy) < (safeSafetyDistance * safeSafetyDistance) {
+			if dx*dx+dy*dy < safeSafetyDistance*safeSafetyDistance {
 				isSafe = false
 
 				break
@@ -177,8 +177,8 @@ func GetRandomSafeCoordinate(mapRadius float32, safetyDistance float32, clients 
 
 // GetRandomCoordinate generates a random position.
 func GetRandomCoordinate(cx, cy, spawnRadius float32) (float32, float32) {
-	angle := rand.Float32() * Tau32
-	distance := (0.5 + 0.5*rand.Float32()) * spawnRadius
+	angle := Tau32 * rand.Float32()
+	distance := (0.5*rand.Float32() + 0.5) * spawnRadius
 
 	return distance*math32.Cos(angle) + spawnRadius,
 		distance*math32.Sin(angle) + spawnRadius

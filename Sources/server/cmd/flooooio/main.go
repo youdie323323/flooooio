@@ -43,7 +43,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			Slots: wave.StaticPetalSlots{
 				Surface: slices.Repeat([]wave.StaticPetalData{
 					{
-						Type:   native.PetalTypeFaster,
+						Type:   native.PetalTypeMissile,
 						Rarity: native.RarityUltra,
 					},
 				}, 10),

@@ -9,8 +9,8 @@ import (
 type Circle struct{ X, Y, R float32 }
 
 func ComputeCirclePush(c0, c1 Circle) (float32, float32, bool) {
-	dx := c1.X - c0.X
-	dy := c1.Y - c0.Y
+	dx, dy := c1.X-c0.X,
+		c1.Y-c0.Y
 
 	dot := dx*dx + dy*dy
 
@@ -30,8 +30,8 @@ func ComputeCirclePush(c0, c1 Circle) (float32, float32, bool) {
 
 	delta := radiusSum - distance
 
-	nx := dx / distance
-	ny := dy / distance
+	nx, ny := dx/distance,
+		dy/distance
 
 	return nx * delta, ny * delta, true
 }

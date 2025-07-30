@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	fasterRagingApplyMS = 50
+	petalFasterRagingInterval = 50 * time.Millisecond
 )
 
 // AddRandomVelocity adds random velocity to petal velocity using speed.
@@ -47,7 +47,7 @@ func (p *Petal) PetalUniqueTalent(wp *Pool, now time.Time) {
 
 	case native.PetalTypeFaster:
 		{
-			if now.Sub(p.LastFasterRagingVelocityAddition) >= fasterRagingApplyMS*time.Millisecond {
+			if now.Sub(p.LastFasterRagingVelocityAddition) >= petalFasterRagingInterval {
 				p.AddRandomVelocity(5 * rand.Float32())
 
 				p.LastFasterRagingVelocityAddition = now

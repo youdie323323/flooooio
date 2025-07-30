@@ -13,7 +13,7 @@ func TraverseMobSegments(wp *Pool, m *Mob) *Mob {
 
 	for current.ConnectingSegment != nil {
 		segment := current.ConnectingSegment
-		
+
 		if segment != nil && !segment.IsEliminated(wp) {
 			current = segment
 		} else {
@@ -53,8 +53,8 @@ func (m *Mob) MobBodyConnection(wp *Pool, _ time.Time) {
 		return
 	}
 
-	dx := seg.GetX() - m.X
-	dy := seg.GetY() - m.Y
+	dx, dy := seg.GetX()-m.X,
+		seg.GetY()-m.Y
 
 	currentDistance := math32.Hypot(dx, dy)
 
