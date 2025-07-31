@@ -126,10 +126,10 @@ func (c *MovementCommand) Execute(_ *Pool, p *Player) {
 	p.Magnitude = float32(c.Magnitude) * playerSpeedMultiplier
 
 	speed := p.Magnitude / 255.
-	rad := angleToRadian(p.Angle)
+	radian := AngleToRadian(p.Angle)
 
-	accelX := math32.Cos(rad) * speed
-	accelY := math32.Sin(rad) * speed
+	accelX := math32.Cos(radian) * speed
+	accelY := math32.Sin(radian) * speed
 
 	p.Acceleration[0] = accelX
 	p.Acceleration[1] = accelY

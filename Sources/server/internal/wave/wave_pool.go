@@ -1212,7 +1212,7 @@ func (wp *Pool) SafeFilterPetalsWithCondition(condition func(*Petal) bool) []*Pe
 // hitEntity is the initially struck entity.
 func (wp *Pool) MobDoLightningBounce(jellyfish *Mob, hitEntity PoolNode) {
 	// If strike projectile mob type, return
-	if m, ok := hitEntity.(*Mob); ok && slices.Contains(ProjectileMobTypes, m.Type) {
+	if m, ok := hitEntity.(*Mob); ok && m.IsProjectile() {
 		return
 	}
 
@@ -1331,8 +1331,8 @@ Loop:
 // PetalDoLightningBounce performs lightning bounce effect between mobs.
 // hitMob is the initially struck mob.
 func (wp *Pool) PetalDoLightningBounce(lightning *Petal, hitMob *Mob) {
-	// If strike unconducted mob type, return
-	if slices.Contains(ProjectileMobTypes, hitMob.Type) {
+	// If struck unconducted mob type, return
+	if hitMob.IsProjectile() {
 		return
 	}
 

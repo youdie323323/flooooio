@@ -113,7 +113,7 @@ func (m *Mob) MobToDamage(wp *Pool) *Mob {
 
 	switch m.Type {
 	case native.MobTypeLeech:
-		// Leech emit all damages into head leech entity
+		// Leech body emits all damages to head
 		toDamaged = TraverseMobSegments(wp, m)
 
 	default:
@@ -142,14 +142,14 @@ func (m *Mob) SearchLightningBounceTargets(wp *Pool, bouncedIds []EntityId) Pool
 			})),
 			spatial_hash.ToNodeSlice(wp.FilterMobsWithCondition(func(m *Mob) bool {
 				return !(slices.Contains(bouncedIds, m.Id) ||
-					slices.Contains(ProjectileMobTypes, m.Type)) &&
+					m.IsProjectile()) &&
 					m.IsAlly()
 			})),
 		)
 	} else {
 		return spatial_hash.ToNodeSlice(wp.FilterMobsWithCondition(func(m *Mob) bool {
 			return !(slices.Contains(bouncedIds, m.Id) ||
-				slices.Contains(ProjectileMobTypes, m.Type)) &&
+				m.IsProjectile()) &&
 				m.IsEnemy()
 		}))
 	}

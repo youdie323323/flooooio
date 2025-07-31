@@ -72,7 +72,7 @@ var _ LightningEmitter = (*Petal)(nil) // *Petal must implement LightningEmitter
 func (p *Petal) SearchLightningBounceTargets(wp *Pool, bouncedIds []EntityId) PoolNodeSlice {
 	return spatial_hash.ToNodeSlice(wp.FilterMobsWithCondition(func(m *Mob) bool {
 		return !(slices.Contains(bouncedIds, m.Id) ||
-			slices.Contains(ProjectileMobTypes, m.Type)) &&
+			m.IsProjectile()) &&
 			m.IsEnemy()
 	}))
 }

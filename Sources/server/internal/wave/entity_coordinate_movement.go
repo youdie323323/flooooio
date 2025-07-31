@@ -10,6 +10,6 @@ func VectorWithinEpsilon(v Vector2) bool {
 	return v[0] < VectorEpsilon && v[1] < VectorEpsilon
 }
 
-func angleToRadian(angle float32) float32 {
+func AngleToRadian(angle float32) float32 {
 	return angle / 255 * Tau32
 }

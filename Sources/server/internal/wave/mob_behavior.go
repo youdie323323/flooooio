@@ -172,12 +172,12 @@ func predictInterceptionAngle(dx, dy, vtx, vty, currentAngle float32) *float32 {
 // predictInterceptionAngleToMob calculates the angle to hit a moving mob with a missile.
 func predictInterceptionAngleToMob(dx, dy float32, m *Mob, currentAngle float32) *float32 {
 	// Calculate target's speed vector
-	targetRad := angleToRadian(m.Angle)
+	targetRadian := AngleToRadian(m.Angle)
 
 	targetSpeed := m.Magnitude / 255
 
-	vtx := targetSpeed * math32.Cos(targetRad)
-	vty := targetSpeed * math32.Sin(targetRad)
+	vtx := targetSpeed * math32.Cos(targetRadian)
+	vty := targetSpeed * math32.Sin(targetRadian)
 
 	return predictInterceptionAngle(dx, dy, vtx, vty, currentAngle)
 }
@@ -283,13 +283,13 @@ func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 
 			shouldTurnToTarget = false
 
-			angleRad := angleToRadian(m.Angle)
+			angleRadian := AngleToRadian(m.Angle)
 
 			mRadius := m.Radius()
 			mRadiusSq := mRadius * mRadius
 
-			shootX, shootY := m.X+math32.Cos(angleRad)*mRadius,
-				m.Y+math32.Sin(angleRad)*mRadius
+			shootX, shootY := m.X+math32.Cos(angleRadian)*mRadius,
+				m.Y+math32.Sin(angleRadian)*mRadius
 
 			dx, dy := m.TargetEntity.GetX()-shootX,
 				m.TargetEntity.GetY()-shootY
