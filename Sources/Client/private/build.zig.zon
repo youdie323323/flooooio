@@ -28,7 +28,7 @@
 
     // Tracks the earliest Zig version that the package considers to be a
     // supported use case.
-    .minimum_zig_version = "0.14.0",
+    .minimum_zig_version = "0.15.1",
 
     // This field is optional.
     // Each dependency must either provide a `url` and `hash`, or a `path`.
@@ -36,9 +36,9 @@
     // Once all dependencies are fetched, `zig build` no longer requires
     // internet connectivity.
     .dependencies = .{
-        .boost = .{
-            .url = "git+https://github.com/youdie323323/boost-libraries-zig#882bee04ce250beee88faf723e36e142dcf6875d",
-            .hash = "boost_libraries-1.88.0-frkKHDyBAQDh4hZ5BUDXtRhaulUCceDrKxNOcbSyaSNi",
+        .bounded_array = .{
+            .url = "https://github.com/jedisct1/zig-bounded-array/archive/refs/tags/0.1.0.tar.gz",
+            .hash = "bounded_array-0.1.0-VF2RKidJAABQywm1YzfjMMwuog59V7gFdG_CXPWumthx",
         },
     },
     .paths = .{

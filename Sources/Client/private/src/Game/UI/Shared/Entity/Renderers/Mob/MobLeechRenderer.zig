@@ -1,5 +1,5 @@
 const Body = @Vector(2, f32);
-const Bodies = std.BoundedArray(Body, 10);
+const Bodies = BoundedArray(Body, 10);
 
 /// Collect the segment points from leech.
 /// Caller must lock mobs before call this.
@@ -208,3 +208,5 @@ const Mob = @import("../../Mob.zig");
 const MobSuper = Mob.Super;
 const Mobs = @import("../../Entity.zig").Mobs;
 const allocator = @import("../../../../../../Mem.zig").allocator;
+
+const BoundedArray = @import("bounded_array").BoundedArray;

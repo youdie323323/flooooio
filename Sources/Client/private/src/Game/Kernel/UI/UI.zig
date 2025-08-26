@@ -23,7 +23,7 @@ vtable: *const VTable,
 
 allocator: mem.Allocator,
 
-components: std.BoundedArray(*Component, std.math.pow(usize, 2, 8)) = .{},
+components: BoundedArray(*Component, std.math.pow(usize, 2, 8)) = .{},
 mouse_position: Point = .{ 0, 0 },
 
 hovered_component: ?*Component = null,
@@ -115,3 +115,5 @@ const Component = @import("Layout/Components/Component.zig");
 
 const CanvasContext = @import("../WebAssembly/Interop/Canvas2D/CanvasContext.zig");
 const Color = @import("../WebAssembly/Interop/Canvas2D/Color.zig");
+
+const BoundedArray = @import("bounded_array").BoundedArray;

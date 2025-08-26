@@ -180,9 +180,12 @@ export type AnyFunction = (...args: Array<any>) => any;
 
                 return 0;
             },
-            fd_close: () => 0,      // Dummy
-            fd_fdstat_get: () => 0, // Dummy
-            fd_seek: () => 0,       // Dummy
+            fd_close: () => 0,        // Dummy
+            fd_fdstat_get: () => 0,   // Dummy
+            fd_filestat_get: () => 0, // Dummy
+            fd_pwrite: () => 0,       // Dummy
+            fd_pread: () => 0,        // Dummy
+            fd_seek: () => 0,         // Dummy
             proc_exit(code: number): void {
                 throw "Program terminated with exit(" + code + ")";
             },

@@ -14,7 +14,7 @@ const PackedObject = packed struct(ObjectId) {
 };
 
 pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Object)) type {
-    const SearchFieldType = meta.FieldType(Object, search_field);
+    const SearchFieldType = @FieldType(Object, @tagName(search_field));
 
     return struct {
         internal: struct {

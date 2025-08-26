@@ -95,5 +95,11 @@ pub fn build(b: *std.Build) !void {
     //     // exe.root_module.addCMacro("BOOST_EXCEPTION_DISABLE", "");
     // }
 
+    { // Add bounded array
+        const bounded_array = b.dependency("bounded_array", .{});
+
+        wasm.root_module.addImport("bounded_array", bounded_array.module("bounded_array"));
+    }
+
     b.installArtifact(wasm);
 }

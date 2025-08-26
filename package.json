@@ -4,9 +4,9 @@
   "description": "Florr.io-like game",
   "scripts": {
     "build:client:public": "cd Sources/Client/public && esbuild Sources/Application.ts --bundle --minify --legal-comments=none --allow-overwrite --outfile=../../server/static/client.js",
+    "build:client:public:legacy": "tsc --noEmit & node esbuild.mjs",
     "build:client:private": "cd Sources/Client/private && zig build",
     "build:client:private:prod": "cd Sources/Client/private && zig build -Dproduction=true",
-    "build:client:public:legacy": "tsc --noEmit & node esbuild.mjs",
     "build:server": "cd Sources/server && go build -ldflags=\"-s -w\" -trimpath cmd/flooooio/main.go",
     "start:server": "cd Sources/server && go run -ldflags=\"-s -w\" -trimpath cmd/flooooio/main.go",
     "start:server:debug": "cd Sources/server && go run cmd/flooooio/main.go"
