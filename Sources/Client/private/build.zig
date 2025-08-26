@@ -59,42 +59,6 @@ pub fn build(b: *std.Build) !void {
 
     wasm.want_lto = true;
 
-    // wasm.linkLibCpp();
-    // wasm.addIncludePath(b.path(c_src_folder));
-    // wasm.addCSourceFile(.{
-    //     .file = b.path(c_src_folder ++ "/webgpu/webgpu_cpp.h"),
-    //     .flags = &.{
-    //         "-s",
-    //         "-fno-stack-protector",
-    //         "-fno-pie",
-    //         "-fno-unwind-tables",
-    //         "-fno-asynchronous-unwind-tables",
-    //         "-Wl,--gc-sections",
-    //         "-Wl,--strip-all",
-    //     },
-    // });
-
-    // const optimize = b.standardOptimizeOption(.{});
-
-    // {
-    //     const boost_dep = b.dependency("boost", .{
-    //         .target = target,
-    //         .optimize = optimize,
-    //     });
-    //     const boost_artifact = boost_dep.artifact("boost");
-
-    //     for (boost_artifact.root_module.include_dirs.items) |include_dir| {
-    //         try wasm.root_module.include_dirs.append(b.allocator, include_dir);
-    //     }
-
-    //     // If not header-only, link library
-    //     wasm.linkLibrary(boost_artifact);
-
-    //     // exe.root_module.addCMacro("BOOST_NO_RTTI", "");
-    //     // exe.root_module.addCMacro("BOOST_NO_EXCEPTIONS", "");
-    //     // exe.root_module.addCMacro("BOOST_EXCEPTION_DISABLE", "");
-    // }
-
     { // Add bounded array
         const bounded_array = b.dependency("bounded_array", .{});
 
