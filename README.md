@@ -3,15 +3,15 @@ Almost all codes are written by me.
 
 ## Screenshot of game (newer) 
 
-![](assets/newer-garden.png)
-![](assets/newer-desert.png)
-![](assets/newer-ocean.png)
+![](image/newer-garden.png)
+![](image/newer-desert.png)
+![](image/newer-ocean.png)
 
 ## Screenshot of game (legacy) 
 
-![](assets/legacy-menu-1.png)
-![](assets/legacy-menu-2.png)
-![](assets/legacy-menu-3.png)
-![](assets/legacy-menu-4.png)
+![](image/legacy-menu-1.png)
+![](image/legacy-menu-2.png)
+![](image/legacy-menu-3.png)
+![](image/legacy-menu-4.png)
 
 Play is not possible due to bitrot.
