@@ -1,6 +1,6 @@
 const pi10: comptime_float = math.pi / 10.0;
 
-const beak_mul: comptime_float = 0.05;
+const beak_multiplier: comptime_float = 0.05;
 
 fn render(rctx: *RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
@@ -24,8 +24,8 @@ fn render(rctx: *RenderContext(MobSuper)) void {
 
     ctx.strokeColor(bcolor);
 
-    const beak_angle = mob.calculateBeakAngle(beak_mul);
-    const beak_angle_positive = beak_angle + beak_mul;
+    const beak_angle = mob.calculateBeakAngle(beak_multiplier);
+    const beak_angle_positive = beak_angle + beak_multiplier;
 
     { // Beak
         ctx.save();

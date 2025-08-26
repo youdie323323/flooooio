@@ -41,12 +41,20 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		StaticPlayer: &wave.StaticPlayer[wave.StaticPetalSlots]{
 			Name: "pdfodwahfioahwfwapihugwaiugaifuwafgwailfgalifaguagtwaiufgwa",
 			Slots: wave.StaticPetalSlots{
-				Surface: slices.Repeat([]wave.StaticPetalData{
-					{
-						Type:   native.PetalTypeMissile,
-						Rarity: native.RarityUltra,
+				Surface: slices.Concat(
+					slices.Repeat([]wave.StaticPetalData{
+						{
+							Type:   native.PetalTypeStinger,
+							Rarity: native.RarityUltra,
+						},
+					}, 9),
+					[]wave.StaticPetalData{
+						{
+							Type:   native.PetalTypeFaster,
+							Rarity: native.RarityUltra,
+						},
 					},
-				}, 10),
+				),
 				Bottom: []wave.StaticPetalData{
 					{
 						Type:   native.PetalTypeWeb,

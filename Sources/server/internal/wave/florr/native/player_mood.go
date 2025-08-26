@@ -1,20 +1,20 @@
 package native
 
-type Mood uint8
+type PlayerMood uint8
 
 const (
-	MoodDefault Mood = 0
-	MoodAngry   Mood = 1
-	MoodSad     Mood = 2
+	PlayerMoodDefault PlayerMood = 0
+	PlayerMoodAngry   PlayerMood = 1
+	PlayerMoodSad     PlayerMood = 2
 )
 
-var ValidMoodFlags = []Mood{
-	MoodDefault,
-	MoodAngry,
-	MoodSad,
-	MoodAngry | MoodSad,
+var ValidPlayerMoodFlags = []PlayerMood{
+	PlayerMoodDefault,
+	PlayerMoodAngry,
+	PlayerMoodSad,
+	PlayerMoodAngry | PlayerMoodSad,
 }
 
-func (m Mood) IsSet(mood Mood) bool {
+func (m PlayerMood) IsSet(mood PlayerMood) bool {
 	return m&mood != 0
 }

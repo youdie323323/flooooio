@@ -10,23 +10,23 @@ pub const allocator = fba.allocator();
 
 // Setting up the free/alloc functions also overrides malloc and free in C
 
-const size_of_usize = @sizeOf(usize);
+const usize_size = @sizeOf(usize);
 
-const align_of_usize = @alignOf(usize);
+const usize_align = @alignOf(usize);
 
-pub const MemoryPtr = *align(size_of_usize) anyopaque;
+pub const MemoryPtr = *align(usize_size) anyopaque;
 
 pub export fn malloc(size: usize) callconv(.c) MemoryPtr {
-    const total_size = size + size_of_usize;
-    const ptr = allocator.alignedAlloc(u8, align_of_usize, total_size) catch unreachable;
+    const total_size = size + usize_size;
+    const ptr = allocator.alignedAlloc(u8, usize_align, total_size) catch unreachable;
 
     @as(*usize, @ptrCast(ptr)).* = total_size;
 
-    return ptr.ptr + size_of_usize;
+    return ptr.ptr + usize_size;
 }
 
 pub export fn free(ptr: MemoryPtr) callconv(.c) void {
-    const to_free = @as([*]align(size_of_usize) u8, @ptrCast(ptr)) - size_of_usize;
+    const to_free = @as([*]align(usize_size) u8, @ptrCast(ptr)) - usize_size;
     const total_size = @as(*usize, @ptrCast(to_free)).*;
 
     allocator.free(to_free[0..total_size]);

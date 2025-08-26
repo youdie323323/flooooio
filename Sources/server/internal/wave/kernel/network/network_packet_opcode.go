@@ -13,7 +13,7 @@ const ( // Clientbound packet opcodes.
 
 	ClientboundWaveStarted
 
-	ClientboundWaveChatReceive
+	ClientboundWaveChatMessage
 
 	ClientboundKick
 )

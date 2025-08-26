@@ -5,8 +5,8 @@ import "time"
 const PlayerMovementVelocityMu = .9
 
 func (p *Player) PlayerCoordinateMovement(wp *Pool, _ time.Time) {
-	p.Velocity[0] += p.Acceleration[0] * p.MagnitudeMultiplier
-	p.Velocity[1] += p.Acceleration[1] * p.MagnitudeMultiplier
+	p.Velocity[0] += p.MagnitudeMultiplier * p.Acceleration[0]
+	p.Velocity[1] += p.MagnitudeMultiplier * p.Acceleration[1]
 
 	p.Velocity[0] *= PlayerMovementVelocityMu
 	p.Velocity[1] *= PlayerMovementVelocityMu

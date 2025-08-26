@@ -117,7 +117,10 @@ pub fn RenderContext(comptime AnyEntity: type) type {
         }
 
         const hp_bar_line_width: comptime_float = 5;
+
         const hp_bar_info_size: comptime_float = hp_bar_line_width + 1;
+        const two_minus_hp_bar_info_size: comptime_float = 2 - hp_bar_info_size;
+        const hp_bar_info_size_plus_two: comptime_float = hp_bar_info_size + 2;
 
         /// Renders entity status indicators like health bars.
         pub fn drawEntityStatuses(self: *const @This()) void {
@@ -160,8 +163,8 @@ pub fn RenderContext(comptime AnyEntity: type) type {
                         setupFont(ctx, hp_bar_info_size);
                         ctx.fillColor(comptime .comptimeFromHex(0xFFFFFF));
 
-                        ctx.strokeText(name, -1, comptime (-hp_bar_info_size + 2));
-                        ctx.fillText(name, -1, comptime (-hp_bar_info_size + 2));
+                        ctx.strokeText(name, -1, two_minus_hp_bar_info_size);
+                        ctx.fillText(name, -1, two_minus_hp_bar_info_size);
 
                         if (impl.rarity.color()) |rarity_color| {
                             if (impl.rarity.name()) |rarity_name| {
@@ -170,8 +173,8 @@ pub fn RenderContext(comptime AnyEntity: type) type {
                                 ctx.setTextAlign(.right);
                                 ctx.fillColor(rarity_color);
 
-                                ctx.strokeText(rarity_name, rarity_name_translate_x, comptime (hp_bar_info_size + 2));
-                                ctx.fillText(rarity_name, rarity_name_translate_x, comptime (hp_bar_info_size + 2));
+                                ctx.strokeText(rarity_name, rarity_name_translate_x, hp_bar_info_size_plus_two);
+                                ctx.fillText(rarity_name, rarity_name_translate_x, hp_bar_info_size_plus_two);
                             }
                         }
                     }
@@ -264,10 +267,7 @@ pub fn Renderer(
 }
 
 /// Renders an entity using its implementation renderer.
-pub fn renderEntity(
-    comptime Impl: type,
-    rctx: *RenderContext(ValidatedImpl(Impl).Super),
-) void {
+pub fn renderEntity(comptime Impl: type, rctx: *RenderContext(ValidatedImpl(Impl).Super)) void {
     if (!rctx.shouldRender()) return;
 
     const ctx = rctx.ctx;

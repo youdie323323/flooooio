@@ -85,10 +85,10 @@ pub const EntityType = union(enum(PureEntityType)) {
 
     /// Returns direct entity type of this type.
     pub fn get(self: @This()) PureEntityType {
-        switch (self) {
-            inline .mob => |m| return @intFromEnum(m),
-            inline .petal => |p| return @intFromEnum(p),
-        }
+        return switch (self) {
+            inline .mob => |m| @intFromEnum(m),
+            inline .petal => |p| @intFromEnum(p),
+        };
     }
 
     /// Returns Mixed of this type.

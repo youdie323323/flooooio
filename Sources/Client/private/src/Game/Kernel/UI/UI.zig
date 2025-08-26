@@ -16,7 +16,7 @@ pub const VTable = struct {
 /// The type erased pointer to the ui implementation.
 ///
 /// Any comparison of this field may result in illegal behavior, since it may
-/// be set to `undefined` in cases where the allocator implementation does not
+/// be set to `undefined` in cases where the ui implementation does not
 /// have any associated state.
 ptr: *anyopaque,
 vtable: *const VTable,

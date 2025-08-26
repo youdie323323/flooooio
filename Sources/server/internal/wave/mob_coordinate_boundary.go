@@ -3,17 +3,10 @@ package wave
 import (
 	"time"
 
-	"flooooio/internal/wave/florr/native"
-
 	"github.com/chewxy/math32"
 )
 
-var ProjectileMobTypes = []native.MobType{
-	native.MobTypeMissileProjectile,
-	native.MobTypeWebProjectile,
-}
-
-const MobDeadzoneExpandMultiplier = 1.5
+const MobDeadzoneExpand = 1.5
 
 func (m *Mob) MobCoordinateBoundary(wp *Pool, _ time.Time) {
 	mapRadius := float32(wp.Data.MapRadius)
@@ -24,7 +17,7 @@ func (m *Mob) MobCoordinateBoundary(wp *Pool, _ time.Time) {
 
 	dot := dx*dx + dy*dy
 
-	deadzone := desiredMapRadius * MobDeadzoneExpandMultiplier
+	deadzone := desiredMapRadius * MobDeadzoneExpand
 
 	if dot > deadzone*deadzone {
 		m.ForceEliminate(wp)

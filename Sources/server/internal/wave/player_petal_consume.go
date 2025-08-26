@@ -41,7 +41,7 @@ func (p *Player) PlayerPetalConsume(wp *Pool, now time.Time) {
 		return
 	}
 
-	isSad := p.Mood.IsSet(native.MoodSad)
+	isSad := p.Mood.IsSet(native.PlayerMoodSad)
 
 	var totalForceX, totalForceY float32 = 0., 0.
 
@@ -168,7 +168,7 @@ func (p *Player) PlayerPetalConsume(wp *Pool, now time.Time) {
 				{
 					if petal.Detached {
 						// Detached, use web if stop
-						if VectorWithinEpsilon(petal.Velocity) {
+						if Vector2WithinEpsilon(petal.Velocity) {
 							wp.GenerateMob(
 								native.MobTypeWebProjectile,
 

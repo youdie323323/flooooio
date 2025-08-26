@@ -28,7 +28,7 @@ pub fn Objects(comptime Object: type, comptime search_field: meta.FieldEnum(Obje
             data: std.MultiArrayList(Object) = .empty,
 
             /// Whether a given slot in data[i] is dead or not.
-            dead: std.bit_set.DynamicBitSetUnmanaged = .{},
+            dead: std.DynamicBitSetUnmanaged = .{},
 
             /// The current generation number of data[i], when data[i] becomes dead and then alive
             /// again, this number is incremented by one.

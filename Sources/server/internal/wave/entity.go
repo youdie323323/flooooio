@@ -11,8 +11,6 @@ import (
 	"flooooio/internal/wave/florr/native"
 )
 
-type Vector2 = [2]float32
-
 type EntityId = uint16
 
 type Entity struct {

@@ -28,7 +28,7 @@ type Player struct {
 	BodyDamage float32
 
 	// Mood is current mood of a player.
-	Mood native.Mood
+	Mood native.PlayerMood
 
 	IsDead bool
 
@@ -108,7 +108,7 @@ type MovementCommand struct {
 }
 
 type MoodCommand struct {
-	Mood native.Mood
+	Mood native.PlayerMood
 }
 
 type SwapPetalCommand struct {
@@ -123,7 +123,7 @@ func (c *MovementCommand) Execute(_ *Pool, p *Player) {
 	}
 
 	p.Angle = float32(c.Angle)
-	p.Magnitude = float32(c.Magnitude) * playerSpeedMultiplier
+	p.Magnitude = playerSpeedMultiplier * float32(c.Magnitude)
 
 	speed := p.Magnitude / 255.
 	radian := AngleToRadian(p.Angle)
@@ -181,7 +181,7 @@ func (p *Player) UpdateMovement(angle uint8, magnitude uint8) {
 }
 
 // ChangeMood changes the mood.
-func (p *Player) ChangeMood(m native.Mood) {
+func (p *Player) ChangeMood(m native.PlayerMood) {
 	p.commandQueue <- &MoodCommand{m}
 }
 

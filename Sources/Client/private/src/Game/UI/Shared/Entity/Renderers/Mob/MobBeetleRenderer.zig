@@ -1,6 +1,6 @@
 var body: Path2D = undefined;
 
-const beak_mul: comptime_float = 0.1;
+const beak_multiplier: comptime_float = 0.1;
 
 const body_points: [3]MobSuper.Vector2 = .{
     .{ -17, -12 },
@@ -36,7 +36,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
         ctx.strokeColor(bcolor);
         ctx.setLineWidth(6);
 
-        const beak_angle = mob.calculateBeakAngle(beak_mul);
+        const beak_angle = mob.calculateBeakAngle(beak_multiplier);
 
         inline for (.{ -1, 1 }) |dir| {
             ctx.save();

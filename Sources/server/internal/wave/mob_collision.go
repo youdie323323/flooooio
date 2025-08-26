@@ -192,12 +192,12 @@ func (m *Mob) MobCollision(wp *Pool, _ time.Time) {
 				px, py, ok := ComputeCirclePush(c0mob, c1mob)
 				if ok {
 					if !nearEntity.SpinningOnMob {
-						m.X -= px * 0.1
-						m.Y -= py * 0.1
+						m.X -= 0.1 * px
+						m.Y -= 0.1 * py
 
 						// Maybe dont collide to petal?
-						nearEntity.X += px * 3
-						nearEntity.Y += py * 3
+						nearEntity.X += 3 * px
+						nearEntity.Y += 3 * py
 					}
 
 					{ // Damage

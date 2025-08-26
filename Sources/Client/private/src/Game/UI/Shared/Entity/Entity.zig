@@ -166,7 +166,7 @@ pub fn Entity(comptime Impl: type) type {
         fn calculateAngleDistance(start_angle: f32, end_angle: f32) f32 {
             const angle_diff = @mod(end_angle - start_angle, math.tau);
 
-            return @mod(angle_diff * 2, math.tau) - angle_diff;
+            return @mod(2 * angle_diff, math.tau) - angle_diff;
         }
 
         fn interpolateAngle(start_angle: f32, end_angle: f32, progress: f32) f32 {

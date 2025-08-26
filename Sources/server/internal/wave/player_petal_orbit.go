@@ -180,8 +180,8 @@ func (p *Player) PlayerPetalOrbit(wp *Pool, now time.Time) {
 		}
 	}
 
-	isAngry := p.Mood.IsSet(native.MoodAngry)
-	isSad := p.Mood.IsSet(native.MoodSad)
+	isAngry := p.Mood.IsSet(native.PlayerMoodAngry)
+	isSad := p.Mood.IsSet(native.PlayerMoodSad)
 
 	var numYinYang float32 = 0.
 

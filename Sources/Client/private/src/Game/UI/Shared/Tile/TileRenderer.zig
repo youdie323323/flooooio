@@ -5,7 +5,7 @@ pub const Tileset = []const Tile;
 
 pub const Vector2 = @Vector(2, f32);
 
-/// Hashes loop index to single usize value.
+/// Hashes loop index into single usize value.
 fn hashGridPosition(i: usize, j: usize) usize {
     const p1: usize = 73856093;
     const p2: usize = 19349663;

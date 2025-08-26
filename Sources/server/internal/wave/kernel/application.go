@@ -99,10 +99,10 @@ func HandleMessage(pd *wave.PlayerData, buf []byte) {
 				return
 			}
 
-			flag := native.Mood(buf[at])
+			flag := native.PlayerMood(buf[at])
 			at++
 
-			if !slices.Contains(native.ValidMoodFlags, flag) {
+			if !slices.Contains(native.ValidPlayerMoodFlags, flag) {
 				return
 			}
 

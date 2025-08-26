@@ -8,7 +8,7 @@ const leg_length: comptime_float = 36;
 
 const whatthefuck: comptime_float = 3.8014068603515625;
 
-const beak_mul: comptime_float = 0.1;
+const beak_multiplier: comptime_float = 0.1;
 
 fn render(rctx: *RenderContext(MobSuper)) void {
     const ctx = rctx.ctx;
@@ -44,7 +44,7 @@ fn render(rctx: *RenderContext(MobSuper)) void {
         ctx.translate(20, 0);
         ctx.scale(0.6628867661928461, 0.6628867198043205);
 
-        const beak_angle = mob.calculateBeakAngle(beak_mul) - beak_mul;
+        const beak_angle = mob.calculateBeakAngle(beak_multiplier) - beak_multiplier;
 
         inline for (.{ -1, 1 }) |dir| {
             ctx.beginPath();

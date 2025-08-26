@@ -92,7 +92,7 @@ func (m *Mob) MobUniqueTalent(wp *Pool, now time.Time) {
 				dia3 := 3 * m.Diameter()
 
 				if (dx*dx + dy*dy) > (dia3 * dia3) {
-					m.Angle = CalculateInterpolatedAngleToEntity(
+					m.Angle = IntepolateAngleTo(
 						m.Angle,
 						dx,
 						dy,
@@ -176,7 +176,7 @@ func (m *Mob) MobUniqueTalent(wp *Pool, now time.Time) {
 					dx := m.TargetEntity.GetX() - m.X
 					dy := m.TargetEntity.GetY() - m.Y
 
-					m.Angle = CalculateInterpolatedAngleToEntity(
+					m.Angle = IntepolateAngleTo(
 						m.Angle,
 						// Reverse angle
 						-dx,

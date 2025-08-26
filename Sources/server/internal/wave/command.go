@@ -118,6 +118,7 @@ func ParseCommand(cmdStr string) (*kong.Context, error) {
 	cmdStr = strings.TrimPrefix(cmdStr, CommandPrefix)
 
 	var cli cli
+
 	parser, err := kong.New(&cli)
 	if err != nil {
 		return nil, err

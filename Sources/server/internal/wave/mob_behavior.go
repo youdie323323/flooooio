@@ -16,11 +16,11 @@ const (
 	mobHornetMissileShootInterval = 2000 * time.Millisecond
 )
 
-type JudgementFunc = func(m *Mob, distanceToTargetDot float32) bool
+type MobCautionJudger = func(m *Mob, distanceToTargetDot float32) bool
 
-func createCautionJudger(radiusMultiplier float32) JudgementFunc {
+func createMobCautionJudger(radiusMultiplier float32) MobCautionJudger {
 	return func(m *Mob, distanceToTargetDot float32) bool {
-		cautionRad := m.Radius() * radiusMultiplier
+		cautionRad := radiusMultiplier * m.Radius()
 
 		return m.TargetEntity != nil && cautionRad*cautionRad > distanceToTargetDot
 	}
@@ -31,9 +31,9 @@ const (
 	mobJellyfishCautionRadius = 3
 )
 
-var cautionBehaviorStopJudger = map[native.MobType]JudgementFunc{
-	native.MobTypeHornet:    createCautionJudger(mobHornetCautionRadius),
-	native.MobTypeJellyfish: createCautionJudger(mobJellyfishCautionRadius),
+var mobCautionBehaviorStopJudgers = map[native.MobType]MobCautionJudger{
+	native.MobTypeHornet:    createMobCautionJudger(mobHornetCautionRadius),
+	native.MobTypeJellyfish: createMobCautionJudger(mobJellyfishCautionRadius),
 }
 
 // FindNearestEntity finds the nearest entity from a slice of entities.
@@ -42,8 +42,8 @@ func FindNearestEntity(me PoolNode, entities PoolNodeSlice) PoolNode {
 		return nil
 	}
 
-	meX := me.GetX()
-	meY := me.GetY()
+	meX, meY := me.GetX(),
+		me.GetY()
 
 	nearest := entities[0]
 
@@ -51,13 +51,13 @@ func FindNearestEntity(me PoolNode, entities PoolNodeSlice) PoolNode {
 	var distanceSqToCurrent, distanceSqToNearest float32
 
 	for _, current := range entities[1:] {
-		dx = current.GetX() - meX
-		dy = current.GetY() - meY
+		dx, dy = current.GetX()-meX,
+			current.GetY()-meY
 
 		distanceSqToCurrent = dx*dx + dy*dy
 
-		dx = nearest.GetX() - meX
-		dy = nearest.GetY() - meY
+		dx, dy = nearest.GetX()-meX,
+			nearest.GetY()-meY
 
 		distanceSqToNearest = dx*dx + dy*dy
 
@@ -74,8 +74,8 @@ func FindNearestEntityWithLimitedDistance(me PoolNode, entities PoolNodeSlice, m
 		return nil
 	}
 
-	meX := me.GetX()
-	meY := me.GetY()
+	meX, meY := me.GetX(),
+		me.GetY()
 
 	var nearest PoolNode
 
@@ -85,8 +85,8 @@ func FindNearestEntityWithLimitedDistance(me PoolNode, entities PoolNodeSlice, m
 	var dx, dy, dot float32
 
 	for _, current := range entities {
-		dx = current.GetX() - meX
-		dy = current.GetY() - meY
+		dx, dy = current.GetX()-meX,
+			current.GetY()-meY
 
 		dot = dx*dx + dy*dy
 
@@ -103,9 +103,9 @@ const angleFactor = 255 / Tau32 // 255/2π
 
 const angleInterpolationFactor = .05
 
-// CalculateInterpolatedAngleToEntity calculates interpolated angle to entity.
-func CalculateInterpolatedAngleToEntity(thisAngle, dx, dy float32) float32 {
-	angleDiff := math32.Mod(math32.Atan2(dy, dx)*angleFactor, 255) - thisAngle
+// IntepolateAngleTo interpolates angle to (Δx, Δy).
+func IntepolateAngleTo(thisAngle, dx, dy float32) float32 {
+	angleDiff := math32.Mod(angleFactor*math32.Atan2(dy, dx), 255) - thisAngle
 
 	switch {
 	case angleDiff > 127.5:
@@ -121,16 +121,18 @@ func CalculateInterpolatedAngleToEntity(thisAngle, dx, dy float32) float32 {
 func normalizeAngle(angle float32) float32 {
 	angle = math32.Mod(angle, Tau32)
 
-	if angle > math32.Pi {
+	switch {
+	case angle > math32.Pi:
 		angle -= Tau32
-	} else if angle < -math32.Pi {
+
+	case angle < -math32.Pi:
 		angle += Tau32
 	}
 
 	return angle
 }
 
-var MissileSpeed = MobSpeedOf(native.MobTypeMissileProjectile)
+var ProjectileMissileSpeed = MobSpeedOf(native.MobTypeMissileProjectile)
 
 // predictInterceptionAngle predict interception angle to entity.
 // vtx, vty is movement vector of entity.
@@ -144,7 +146,7 @@ func predictInterceptionAngle(dx, dy, vtx, vty, currentAngle float32) *float32 {
 		interpolationTime *= (1 - math32.Exp(-angleInterpolationFactor*angleDiff))
 	}
 
-	relSpeedSq := MissileSpeed*MissileSpeed - (vtx*vtx + vty*vty)
+	relSpeedSq := ProjectileMissileSpeed*ProjectileMissileSpeed - (vtx*vtx + vty*vty)
 	posSq := dx*dx + dy*dy
 	dotProd := dx*vtx + dy*vty
 
@@ -161,10 +163,10 @@ func predictInterceptionAngle(dx, dy, vtx, vty, currentAngle float32) *float32 {
 	// Predict final position using average velocity
 	totalTime := t + interpolationTime
 
-	xf := dx + vtx*totalTime
-	yf := dy + vty*totalTime
+	xf, yf := dx+vtx*totalTime,
+		dy+vty*totalTime
 
-	interpolatedAngle := CalculateInterpolatedAngleToEntity(currentAngle, xf, yf)
+	interpolatedAngle := IntepolateAngleTo(currentAngle, xf, yf)
 
 	return &interpolatedAngle
 }
@@ -220,7 +222,7 @@ func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 		return
 	}
 
-	// Dont do anything while p.StarfishRegeningHealth so
+	// Dont do anything while p.StarfishRegeningHealth is active, so
 	// can handle angle in mob_health_regen.go
 	if m.StarfishRegeningHealth {
 		return
@@ -239,7 +241,7 @@ func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 	shouldStop := false
 
 	if m.TargetEntity != nil {
-		judgementFunc, ok := cautionBehaviorStopJudger[m.Type]
+		judgementFunc, ok := mobCautionBehaviorStopJudgers[m.Type]
 		if ok {
 			dx, dy := m.TargetEntity.GetX()-m.X,
 				m.TargetEntity.GetY()-m.Y
@@ -296,7 +298,7 @@ func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 
 			// If distance is close, we can just use CalculateInterpolatedAngleToTarget
 			if (dx*dx + dy*dy) <= mRadiusSq {
-				m.Angle = CalculateInterpolatedAngleToEntity(m.Angle, dx, dy)
+				m.Angle = IntepolateAngleTo(m.Angle, dx, dy)
 			} else {
 				var predicted *float32 = nil
 
@@ -315,7 +317,7 @@ func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 				if predicted != nil {
 					m.Angle = *predicted
 				} else {
-					m.Angle = CalculateInterpolatedAngleToEntity(m.Angle, dx, dy)
+					m.Angle = IntepolateAngleTo(m.Angle, dx, dy)
 				}
 			}
 
@@ -342,20 +344,20 @@ func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 		}
 	}
 
-	behavior := native.EachMobBehaviorDefinition[m.Type][m.Rarity]
+	behavior := native.MobBehaviors[m.Type][m.Rarity]
 
 	switch behavior {
-	case native.PassiveBehavior:
+	case native.MobPassiveBehavior:
 		return
 
-	case native.ChaoticBehavior:
+	case native.MobChaoticBehavior:
 		{
 			m.Angle = math32.Mod(m.Angle+generateValleyDistribution(-25, 25), 255)
 
 			m.Magnitude = 255 * MobSpeedOf(m.Type)
 		}
 
-	case native.HostileBehavior:
+	case native.MobHostileBehavior:
 		{
 			var targetEntity PoolNode
 
@@ -374,7 +376,7 @@ func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 				dx, dy := targetEntity.GetX()-m.X,
 					targetEntity.GetY()-m.Y
 
-				m.Angle = CalculateInterpolatedAngleToEntity(
+				m.Angle = IntepolateAngleTo(
 					m.Angle,
 					dx,
 					dy,
@@ -393,14 +395,14 @@ func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 			m.TargetEntity = targetEntity
 		}
 
-	case native.NeutralBehavior:
+	case native.MobNeutralBehavior:
 		{
 			if m.LastAttackedEntity != nil {
 				if shouldTurnToTarget {
 					dx, dy := m.LastAttackedEntity.GetX()-m.X,
 						m.LastAttackedEntity.GetY()-m.Y
 
-					m.Angle = CalculateInterpolatedAngleToEntity(
+					m.Angle = IntepolateAngleTo(
 						m.Angle,
 						dx,
 						dy,

@@ -3,91 +3,91 @@ package native
 type MobBehavior int
 
 const (
-	HostileBehavior MobBehavior = iota // AggressiveBehavior behaves aggressively.
-	PassiveBehavior                    // PassiveBehavior behaves passively.
-	NeutralBehavior                    // NeutralBehavior behaves neutrality.
-	ChaoticBehavior                    // ChaoticBehavior behaves chaotic.
+	MobHostileBehavior MobBehavior = iota // AggressiveBehavior behaves aggressively.
+	MobPassiveBehavior                    // PassiveBehavior behaves passively.
+	MobNeutralBehavior                    // NeutralBehavior behaves neutrality.
+	MobChaoticBehavior                    // ChaoticBehavior behaves chaotic.
 )
 
-type MobBehaviorDefinition = map[Rarity]MobBehavior
+type MobRarityBehavior = map[Rarity]MobBehavior
 
-var fullyPassiveDefinition = MobBehaviorDefinition{
-	RarityCommon:    PassiveBehavior,
-	RarityUnusual:   PassiveBehavior,
-	RarityRare:      PassiveBehavior,
-	RarityEpic:      PassiveBehavior,
-	RarityLegendary: PassiveBehavior,
-	RarityMythic:    PassiveBehavior,
+var mobFullPassiveBehavior = MobRarityBehavior{
+	RarityCommon:    MobPassiveBehavior,
+	RarityUnusual:   MobPassiveBehavior,
+	RarityRare:      MobPassiveBehavior,
+	RarityEpic:      MobPassiveBehavior,
+	RarityLegendary: MobPassiveBehavior,
+	RarityMythic:    MobPassiveBehavior,
 }
 
-var fullyHostileDefinition = MobBehaviorDefinition{
-	RarityCommon:    HostileBehavior,
-	RarityUnusual:   HostileBehavior,
-	RarityRare:      HostileBehavior,
-	RarityEpic:      HostileBehavior,
-	RarityLegendary: HostileBehavior,
-	RarityMythic:    HostileBehavior,
+var mobFullHostileBehavior = MobRarityBehavior{
+	RarityCommon:    MobHostileBehavior,
+	RarityUnusual:   MobHostileBehavior,
+	RarityRare:      MobHostileBehavior,
+	RarityEpic:      MobHostileBehavior,
+	RarityLegendary: MobHostileBehavior,
+	RarityMythic:    MobHostileBehavior,
 }
 
-var fullyChaoticDefinition = MobBehaviorDefinition{
-	RarityCommon:    ChaoticBehavior,
-	RarityUnusual:   ChaoticBehavior,
-	RarityRare:      ChaoticBehavior,
-	RarityEpic:      ChaoticBehavior,
-	RarityLegendary: ChaoticBehavior,
-	RarityMythic:    ChaoticBehavior,
+var mobFullChaoticBehavior = MobRarityBehavior{
+	RarityCommon:    MobChaoticBehavior,
+	RarityUnusual:   MobChaoticBehavior,
+	RarityRare:      MobChaoticBehavior,
+	RarityEpic:      MobChaoticBehavior,
+	RarityLegendary: MobChaoticBehavior,
+	RarityMythic:    MobChaoticBehavior,
 }
 
-var fullyNeutralDefinition = MobBehaviorDefinition{
-	RarityCommon:    NeutralBehavior,
-	RarityUnusual:   NeutralBehavior,
-	RarityRare:      NeutralBehavior,
-	RarityEpic:      NeutralBehavior,
-	RarityLegendary: NeutralBehavior,
-	RarityMythic:    NeutralBehavior,
+var mobFullNeutralBehavior = MobRarityBehavior{
+	RarityCommon:    MobNeutralBehavior,
+	RarityUnusual:   MobNeutralBehavior,
+	RarityRare:      MobNeutralBehavior,
+	RarityEpic:      MobNeutralBehavior,
+	RarityLegendary: MobNeutralBehavior,
+	RarityMythic:    MobNeutralBehavior,
 }
 
-var EachMobBehaviorDefinition = map[MobType]MobBehaviorDefinition{
+var MobBehaviors = map[MobType]MobRarityBehavior{
 	MobTypeBee: {
-		RarityCommon:    PassiveBehavior,
-		RarityUnusual:   PassiveBehavior,
-		RarityRare:      NeutralBehavior,
-		RarityEpic:      NeutralBehavior,
-		RarityLegendary: NeutralBehavior,
-		RarityMythic:    NeutralBehavior,
+		RarityCommon:    MobPassiveBehavior,
+		RarityUnusual:   MobPassiveBehavior,
+		RarityRare:      MobNeutralBehavior,
+		RarityEpic:      MobNeutralBehavior,
+		RarityLegendary: MobNeutralBehavior,
+		RarityMythic:    MobNeutralBehavior,
 	},
-	MobTypeSpider:     fullyHostileDefinition,
-	MobTypeHornet:     fullyHostileDefinition,
-	MobTypeBabyAnt:    fullyPassiveDefinition,
-	MobTypeWorkerAnt:  fullyNeutralDefinition,
-	MobTypeSoldierAnt: fullyHostileDefinition,
+	MobTypeSpider:     mobFullHostileBehavior,
+	MobTypeHornet:     mobFullHostileBehavior,
+	MobTypeBabyAnt:    mobFullPassiveBehavior,
+	MobTypeWorkerAnt:  mobFullNeutralBehavior,
+	MobTypeSoldierAnt: mobFullHostileBehavior,
 
-	MobTypeBeetle:       fullyHostileDefinition,
-	MobTypeSandstorm:    fullyChaoticDefinition,
-	MobTypeCactus:       fullyPassiveDefinition,
-	MobTypeScorpion:     fullyHostileDefinition,
-	MobTypeLadybugShiny: fullyNeutralDefinition,
+	MobTypeBeetle:       mobFullHostileBehavior,
+	MobTypeSandstorm:    mobFullChaoticBehavior,
+	MobTypeCactus:       mobFullPassiveBehavior,
+	MobTypeScorpion:     mobFullHostileBehavior,
+	MobTypeLadybugShiny: mobFullNeutralBehavior,
 
-	MobTypeStarfish:  fullyHostileDefinition,
-	MobTypeJellyfish: fullyHostileDefinition,
-	MobTypeBubble:    fullyPassiveDefinition,
-	MobTypeSponge:    fullyPassiveDefinition,
-	MobTypeShell:     fullyNeutralDefinition,
-	MobTypeCrab:      fullyHostileDefinition,
-	MobTypeLeech:     fullyHostileDefinition,
+	MobTypeStarfish:  mobFullHostileBehavior,
+	MobTypeJellyfish: mobFullHostileBehavior,
+	MobTypeBubble:    mobFullPassiveBehavior,
+	MobTypeSponge:    mobFullPassiveBehavior,
+	MobTypeShell:     mobFullNeutralBehavior,
+	MobTypeCrab:      mobFullHostileBehavior,
+	MobTypeLeech:     mobFullHostileBehavior,
 
 	MobTypeCentipede: {
-		RarityCommon:    PassiveBehavior,
-		RarityUnusual:   PassiveBehavior,
-		RarityRare:      PassiveBehavior,
-		RarityEpic:      NeutralBehavior,
-		RarityLegendary: NeutralBehavior,
-		RarityMythic:    NeutralBehavior,
+		RarityCommon:    MobPassiveBehavior,
+		RarityUnusual:   MobPassiveBehavior,
+		RarityRare:      MobPassiveBehavior,
+		RarityEpic:      MobNeutralBehavior,
+		RarityLegendary: MobNeutralBehavior,
+		RarityMythic:    MobNeutralBehavior,
 	},
-	MobTypeCentipedeDesert: fullyPassiveDefinition,
-	MobTypeCentipedeEvil:   fullyHostileDefinition,
+	MobTypeCentipedeDesert: mobFullPassiveBehavior,
+	MobTypeCentipedeEvil:   mobFullHostileBehavior,
 
 	// These just placeholder and does nothing
-	MobTypeMissileProjectile: fullyPassiveDefinition,
-	MobTypeWebProjectile:     fullyPassiveDefinition,
+	MobTypeMissileProjectile: mobFullPassiveBehavior,
+	MobTypeWebProjectile:     mobFullPassiveBehavior,
 }

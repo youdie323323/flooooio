@@ -23,16 +23,16 @@ pub const Clientbound = enum(u8) {
     pub const KickReason = enum(u8) {
         outdated_client,
         cheat_detected,
+        
+        const messages: std.EnumMap(KickReason, []const u8) = .init(.{
+            .outdated_client = "Outdated client",
+            .cheat_detected = "Cheat detected",
+        });
+
+        pub fn message(self: KickReason) ?[]const u8 {
+            return messages.get(self);
+        }
     };
-
-    const kick_reason_messages: std.EnumMap(KickReason, []const u8) = .init(.{
-        .outdated_client = "Outdated client",
-        .cheat_detected = "Cheat detected",
-    });
-
-    pub fn kickReasonMessage(reason: KickReason) ?[]const u8 {
-        return kick_reason_messages.get(reason);
-    }
 
     wave_self_id,
     wave_room_self_id,
@@ -44,7 +44,7 @@ pub const Clientbound = enum(u8) {
 
     wave_started,
 
-    wave_chat_receive,
+    wave_chat_message,
 
     kick,
 };

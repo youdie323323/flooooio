@@ -138,7 +138,7 @@ fn comptimeIsValidRgbString(comptime str: []const u8) bool {
     }
 }
 
-/// Convert rgb string to Color.
+/// Converts rgb string to Color.
 pub fn comptimeFromRgbString(comptime str: []const u8) Color {
     comptime {
         if (!comptimeIsValidRgbString(str)) @compileError("rgb string " ++ str ++ " is not valid");

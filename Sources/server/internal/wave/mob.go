@@ -89,7 +89,7 @@ func (m *Mob) IsAlly() bool {
 
 // IsProjectile determinate if mob is projectile.
 func (m *Mob) IsProjectile() bool {
-	return slices.Contains(ProjectileMobTypes, m.Type)
+	return slices.Contains(native.ProjectileMobTypes, m.Type)
 }
 
 // IsOrganismEnemy determinate if mob is enemy from player side and its living organism.

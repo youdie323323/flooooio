@@ -50,3 +50,8 @@ const (
 	PetalTypeMagnet
 	PetalTypeMissile
 )
+
+var ProjectileMobTypes = []MobType{
+	MobTypeMissileProjectile,
+	MobTypeWebProjectile,
+}

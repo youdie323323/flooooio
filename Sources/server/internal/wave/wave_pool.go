@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	spatialHashGridSize = 512
+	poolGridSize = 512
 
 	PoolUpdatePerSec = 60
 	DataUpdatePerSec = PoolUpdatePerSec / 2
@@ -96,8 +96,8 @@ type Pool struct {
 
 	hasBeenEnded atomic.Bool
 
-	// commandQueue is command queue to run command with atomic.
-	// If command fn is returns true, command execution will force ends.
+	// commandQueue is a queue for executing commands atomically.
+	// If a command function returns true, the execution will be forcibly terminated.
 	commandQueue chan func() bool
 
 	Mu sync.RWMutex
@@ -120,7 +120,7 @@ func NewPool(wr *Room, data *Data) *Pool {
 
 		frameCount: xsync.NewCounter(),
 
-		SpatialHash: spatial_hash.NewSpatialHashWithOptions[EntityId, float32](spatialHashGridSize, false),
+		SpatialHash: spatial_hash.NewSpatialHashWithOptions[EntityId, float32](poolGridSize, false),
 
 		commandQueue: make(chan func() bool, 8),
 
@@ -499,7 +499,7 @@ func (wp *Pool) broadcastUpdatePacket() {
 	wp.playerPool.Range(func(_ EntityId, p *Player) bool {
 		dynamicAt := at
 
-		// RLock before read window
+		// RLock before read a window
 		p.Mu.RLock()
 
 		windowWidth, windowHeight := float32(p.Window[0]), float32(p.Window[1])
@@ -1024,7 +1024,7 @@ func (wp *Pool) LinkedMobSegmentation(
 	size := CalculateMobSize(profile, rarity)
 
 	// Arc
-	segmentDistance := (mc.Radius * 2) * (size / mc.Fraction)
+	segmentDistance := (2 * mc.Radius) * (size / mc.Fraction)
 
 	var prevSegment *Mob = nil
 
@@ -1433,7 +1433,7 @@ func (wp *Pool) createChatReceivePacket(msg string) []byte {
 
 	at := 0
 
-	buf[at] = network.ClientboundWaveChatReceive
+	buf[at] = network.ClientboundWaveChatMessage
 	at++
 
 	// Write chat message
@@ -1442,7 +1442,7 @@ func (wp *Pool) createChatReceivePacket(msg string) []byte {
 	return buf[:at]
 }
 
-func (wp *Pool) BroadcastChatReceivePacket(msg string) {
+func (wp *Pool) BroadcastChatMessagePacket(msg string) {
 	buf := wp.createChatReceivePacket(msg)
 
 	wp.playerPool.Range(func(_ EntityId, p *Player) bool {
@@ -1452,7 +1452,7 @@ func (wp *Pool) BroadcastChatReceivePacket(msg string) {
 	})
 }
 
-func (wp *Pool) UnicastChatReceivePacket(player *Player, msg string) {
+func (wp *Pool) UnicastChatMessagePacket(player *Player, msg string) {
 	buf := wp.createChatReceivePacket(msg)
 
 	player.SafeWriteMessage(websocket.BinaryMessage, buf)
@@ -1474,7 +1474,7 @@ func (wp *Pool) HandleChatMessage(wPId EntityId, chatMsg string) {
 	if strings.HasPrefix(chatMsg, CommandPrefix) {
 		ctx, err := ParseCommand(chatMsg)
 		if err != nil {
-			wp.UnicastChatReceivePacket(player, err.Error())
+			wp.UnicastChatMessagePacket(player, err.Error())
 
 			return
 		}
@@ -1487,14 +1487,14 @@ func (wp *Pool) HandleChatMessage(wPId EntityId, chatMsg string) {
 				Wp:       wp,
 			})
 			if err != nil {
-				wp.UnicastChatReceivePacket(player, err.Error())
+				wp.UnicastChatMessagePacket(player, err.Error())
 			}
 
 			return false
 		}:
 
 		default:
-			wp.UnicastChatReceivePacket(player, "Command queue is full or unavailable")
+			wp.UnicastChatMessagePacket(player, "Command queue is full or unavailable")
 		}
 	} else {
 		hash := sha256.New()
@@ -1509,6 +1509,6 @@ func (wp *Pool) HandleChatMessage(wPId EntityId, chatMsg string) {
 			return
 		}
 
-		wp.BroadcastChatReceivePacket(fmt.Sprintf("%s: %s", player.Name, chatMsg))
+		wp.BroadcastChatMessagePacket(fmt.Sprintf("%s: %s", player.Name, chatMsg))
 	}
 }
