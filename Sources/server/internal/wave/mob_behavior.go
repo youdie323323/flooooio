@@ -132,47 +132,69 @@ func normalizeAngle(angle float32) float32 {
 	return angle
 }
 
+const (
+	ByteTau32 = 255 / Tau32
+	Tau32Byte = Tau32 / 255
+)
+
+func isQuadraticTermAlmostZero(x float32) bool {
+	return math32.Abs(x) < 1e-6
+}
+
 var ProjectileMissileSpeed = MobSpeedOf(native.MobTypeMissileProjectile)
 
 // predictInterceptionAngle predict interception angle to entity.
-// vtx, vty is movement vector of entity.
-func predictInterceptionAngle(dx, dy, vtx, vty, currentAngle float32) *float32 {
-	targetAngle := math32.Atan2(dy, dx)
-	currentRad := currentAngle / angleFactor
-	angleDiff := math32.Abs(normalizeAngle(targetAngle - currentRad))
+// Vtx, vty is movement vector of entity.
+func predictInterceptionAngle(dx, dy, vtx, vty, currentAngle float32) float32 {
+	targetSpeedSq := vtx*vtx + vty*vty
+	projSpeedSq := ProjectileMissileSpeed * ProjectileMissileSpeed
 
-	var interpolationTime float32 = 2 /* -log(0.01) */ / angleInterpolationFactor
-	if angleDiff > 1e-3 {
-		interpolationTime *= (1 - math32.Exp(-angleInterpolationFactor*angleDiff))
+	// Calulate coefs: "At^2 + Bt + C = 0"
+
+	a := targetSpeedSq - projSpeedSq
+	b := 2 * (dx*vtx + dy*vty)
+	c := dx*dx + dy*dy
+
+	var t float32
+
+	if isQuadraticTermAlmostZero(a) { // If A ≒ 0, we can ignore t^2 term
+		if isQuadraticTermAlmostZero(b) { // No solution (C = 0)
+			return IntepolateAngleTo(currentAngle, dx, dy)
+		}
+
+		t = -c / b
+	} else {
+		twoA := 2 * a
+
+		discriminant := b*b - 2*twoA*c
+		if discriminant < 0 {
+			return IntepolateAngleTo(currentAngle, dx, dy)
+		}
+
+		sqrtDisc := math32.Sqrt(discriminant)
+
+		t1 := -(b + sqrtDisc) / twoA
+		t2 := (-b + sqrtDisc) / twoA
+
+		if t1 > 0 && (t1 < t2 || t2 < 0) {
+			t = t1
+		} else {
+			t = t2
+		}
 	}
 
-	relSpeedSq := ProjectileMissileSpeed*ProjectileMissileSpeed - (vtx*vtx + vty*vty)
-	posSq := dx*dx + dy*dy
-	dotProd := dx*vtx + dy*vty
-
-	d := dotProd*dotProd + relSpeedSq*posSq
-	if d < 0 {
-		return nil
+	if t < 0 { // Target is in the past
+		return IntepolateAngleTo(currentAngle, dx, dy)
 	}
 
-	t := (dotProd + math32.Sqrt(d)) / relSpeedSq
-	if t < 0 {
-		return nil
-	}
+	finalX := dx + vtx*t
+	finalY := dy + vty*t
 
-	// Predict final position using average velocity
-	totalTime := t + interpolationTime
-
-	xf, yf := dx+vtx*totalTime,
-		dy+vty*totalTime
-
-	interpolatedAngle := IntepolateAngleTo(currentAngle, xf, yf)
-
-	return &interpolatedAngle
+	return IntepolateAngleTo(currentAngle, finalX, finalY)
 }
 
 // predictInterceptionAngleToMob calculates the angle to hit a moving mob with a missile.
-func predictInterceptionAngleToMob(dx, dy float32, m *Mob, currentAngle float32) *float32 {
+func predictInterceptionAngleToMob(dx, dy float32, m *Mob, currentAngle float32) float32 {
 	// Calculate target's speed vector
 	targetRadian := AngleToRadian(m.Angle)
 
@@ -186,7 +208,7 @@ func predictInterceptionAngleToMob(dx, dy float32, m *Mob, currentAngle float32)
 
 // predictInterceptionAngleToPlayer calculates the angle to hit a player target with a missile.
 // Player movement uses velocity instead of angle-based movement.
-func predictInterceptionAngleToPlayer(dx, dy float32, p *Player, currentAngle float32) *float32 {
+func predictInterceptionAngleToPlayer(dx, dy float32, p *Player, currentAngle float32) float32 {
 	vtx, vty := p.Velocity[0]+p.Acceleration[0],
 		p.Velocity[1]+p.Acceleration[1]
 
@@ -300,7 +322,7 @@ func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 			if (dx*dx + dy*dy) <= mRadiusSq {
 				m.Angle = IntepolateAngleTo(m.Angle, dx, dy)
 			} else {
-				var predicted *float32 = nil
+				var predicted float32
 
 				switch e := m.TargetEntity.(type) {
 				case *Mob:
@@ -314,11 +336,7 @@ func (m *Mob) MobBehavior(wp *Pool, now time.Time) {
 					}
 				}
 
-				if predicted != nil {
-					m.Angle = *predicted
-				} else {
-					m.Angle = IntepolateAngleTo(m.Angle, dx, dy)
-				}
+				m.Angle = predicted
 			}
 
 			if now.Sub(m.HornetLastMissileShoot) >= mobHornetMissileShootInterval {

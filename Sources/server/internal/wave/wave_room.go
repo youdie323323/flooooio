@@ -135,7 +135,7 @@ func NewRoom(biome native.Biome, visibility RoomVisibility) *Room {
 		ProgressRedTimer: 0,
 		ProgressIsRed:    false,
 
-		MapRadius: 1500,
+		MapRadius: 5000,
 	})
 
 	// Start sending update packet

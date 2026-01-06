@@ -2,8 +2,6 @@ const std = @import("std");
 
 const src_folder = "src";
 
-const c_src_folder = "src-c";
-
 const wasm_memory = 4096 * std.wasm.page_size;
 
 pub fn build(b: *std.Build) !void {
@@ -28,16 +26,14 @@ pub fn build(b: *std.Build) !void {
                 .root_source_file = b.path(src_folder ++ "/main.zig"),
                 .target = target,
                 .optimize = .ReleaseFast,
-                .single_threaded = true,
                 .strip = true,
+                .pic = false,
                 .unwind_tables = .none,
                 .stack_protector = false,
-                .pic = false,
             } else .{
                 .root_source_file = b.path(src_folder ++ "/main.zig"),
                 .target = target,
                 .optimize = .Debug,
-                .single_threaded = true,
             },
         ),
     });
@@ -51,13 +47,9 @@ pub fn build(b: *std.Build) !void {
     wasm.initial_memory = wasm_memory;
     wasm.max_memory = wasm_memory;
 
-    wasm.link_function_sections = true; // -ffunction-sections
-    wasm.link_data_sections = true; // -fdata-sections
-    wasm.link_gc_sections = true; // --gc-sections
+    wasm.lto = .thin;
 
     wasm.entry = .disabled;
-
-    wasm.want_lto = true;
 
     { // Add bounded array
         const bounded_array = b.dependency("bounded_array", .{});

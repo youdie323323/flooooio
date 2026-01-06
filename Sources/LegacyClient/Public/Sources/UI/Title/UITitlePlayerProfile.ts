@@ -28,7 +28,7 @@ export default class UITitlePlayerProfile extends AbstractDynamicLayoutable {
 
         0,
 
-        MoodFlags.NORMAL,
+        0,
 
         "",
     );

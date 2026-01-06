@@ -1,275 +1,111 @@
 const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d");
 
-const TAU = 2 * Math.PI;
-const PI2 = Math.PI / 2;
-const PI10 = Math.PI / 10;
+const dwadupawdiaw = new Path2D();
+dwadupawdiaw.moveTo(10, 0);
+dwadupawdiaw.lineTo(0.44663524627685547, -2.955202579498291);
+dwadupawdiaw.lineTo(0.44663524627685547, 2.955203056335449);
+dwadupawdiaw.lineTo(10, 0);
+dwadupawdiaw.closePath();
 
-ctx.translate(500, 500);
-ctx.scale(7, 7);
+const bodyPath = new Path2D();
+bodyPath.moveTo(50, 0);
+bodyPath.quadraticCurveTo(40.702884674072266, 13.225168228149414, 40.45085144042969, 29.389263153076172);
+bodyPath.quadraticCurveTo(25.155765533447266, 34.62394332885742, 15.450848579406738, 47.552825927734375);
+bodyPath.quadraticCurveTo(-0.000001287460349885805, 42.797542572021484, -15.450851440429688, 47.552825927734375);
+bodyPath.quadraticCurveTo(-25.155765533447266, 34.623939514160156, -40.45085144042969, 29.389259338378906);
+bodyPath.quadraticCurveTo(-40.702884674072266, 13.225165367126465, -50, -0.000004371138857095502);
+bodyPath.quadraticCurveTo(-40.702884674072266, -13.225172996520996, -40.45084762573242, -29.38926887512207);
+bodyPath.quadraticCurveTo(-25.155765533447266, -34.62394332885742, -15.450854301452637, -47.552825927734375);
+bodyPath.quadraticCurveTo(8.583068620282575e-7, -42.797542572021484, 15.45085620880127, -47.552825927734375);
+bodyPath.quadraticCurveTo(25.155765533447266, -34.62394332885742, 40.45084762573242, -29.389265060424805);
+bodyPath.quadraticCurveTo(40.702884674072266, -13.225165367126465, 50, 0.000008742277714191005);
+bodyPath.lineTo(50, 0);
+bodyPath.closePath();
 
-const scorpionTail = (function () {
-    const path = new Path2D();
+const detailPath = new Path2D();
+detailPath.moveTo(52.86328887939453, 2.0128533840179443);
+detailPath.quadraticCurveTo(44.1856689453125, 14.356807708740234, 43.95042419433594, 29.443828582763672);
+detailPath.quadraticCurveTo(43.93316650390625, 30.550823211669922, 43.28240966796875, 31.446510314941406);
+detailPath.quadraticCurveTo(42.631656646728516, 32.34219741821289, 41.58417510986328, 32.7006950378418);
+detailPath.quadraticCurveTo(27.308242797851562, 37.586570739746094, 18.249988555908203, 49.653968811035156);
+detailPath.quadraticCurveTo(17.585350036621094, 50.539398193359375, 16.532405853271484, 50.88152313232422);
+detailPath.quadraticCurveTo(15.479463577270508, 51.2236442565918, 14.42131519317627, 50.897979736328125);
+detailPath.quadraticCurveTo(0, 46.45954895019531, -14.421318054199219, 50.897979736328125);
+detailPath.quadraticCurveTo(-15.479469299316406, 51.22364807128906, -16.532413482666016, 50.881526947021484);
+detailPath.quadraticCurveTo(-17.585355758666992, 50.539405822753906, -18.2499942779541, 49.653968811035156);
+detailPath.quadraticCurveTo(-27.30825424194336, 37.58656311035156, -41.58417510986328, 32.70069122314453);
+detailPath.quadraticCurveTo(-42.631656646728516, 32.342193603515625, -43.282413482666016, 31.44650650024414);
+detailPath.quadraticCurveTo(-43.93316650390625, 30.550819396972656, -43.9504280090332, 29.443824768066406);
+detailPath.quadraticCurveTo(-44.18565368652344, 14.356803894042969, -52.86328887939453, 2.0128512382507324);
+detailPath.quadraticCurveTo(-53.5, 1.1071265935897827, -53.5, -0.000003933906555175781);
+detailPath.quadraticCurveTo(-53.5, -1.1071343421936035, -52.86328887939453, -2.0128579139709473);
+detailPath.quadraticCurveTo(-44.1856689453125, -14.356813430786133, -43.95042419433594, -29.44383430480957);
+detailPath.quadraticCurveTo(-43.93316650390625, -30.550832748413086, -43.28240966796875, -31.446517944335938);
+detailPath.quadraticCurveTo(-42.631656646728516, -32.34220504760742, -41.584171295166016, -32.70069885253906);
+detailPath.quadraticCurveTo(-27.308242797851562, -37.586578369140625, -18.249998092651367, -49.653968811035156);
+detailPath.quadraticCurveTo(-17.585359573364258, -50.539405822753906, -16.53241539001465, -50.881526947021484);
+detailPath.quadraticCurveTo(-15.479471206665039, -51.22364807128906, -14.421321868896484, -50.897979736328125);
+detailPath.quadraticCurveTo(0, -46.45954895019531, 14.421323776245117, -50.897979736328125);
+detailPath.quadraticCurveTo(15.479473114013672, -51.22364807128906, 16.53241539001465, -50.881526947021484);
+detailPath.quadraticCurveTo(17.585359573364258, -50.53940200805664, 18.249998092651367, -49.653968811035156);
+detailPath.quadraticCurveTo(27.308246612548828, -37.586578369140625, 41.584171295166016, -32.70069885253906);
+detailPath.quadraticCurveTo(42.63165283203125, -32.342201232910156, 43.28240966796875, -31.446514129638672);
+detailPath.quadraticCurveTo(43.933162689208984, -30.550827026367188, 43.95042419433594, -29.443832397460938);
+detailPath.quadraticCurveTo(44.1856689453125, -14.356796264648438, 52.86328887939453, -2.01284122467041);
+detailPath.quadraticCurveTo(53.5, -1.1071189641952515, 53.5, 0.000009894371032714844);
+detailPath.quadraticCurveTo(53.5, 1.107138752937317, 52.86328887939453, 2.012861967086792);
+detailPath.lineTo(52.86328887939453, 2.0128533840179443);
+detailPath.closePath();
+detailPath.moveTo(47.13671112060547, -2.0128445625305176);
+detailPath.lineTo(50, 0.000008742277714191005);
+detailPath.lineTo(47.13671112060547, 2.012864112854004);
+detailPath.quadraticCurveTo(37.2200927734375, -12.093551635742188, 36.951271057128906, -29.334697723388672);
+detailPath.lineTo(40.45084762573242, -29.389265060424805);
+detailPath.lineTo(39.31752395629883, -26.077835083007812);
+detailPath.quadraticCurveTo(23.003299713134766, -31.66131591796875, 12.651713371276855, -45.451683044433594);
+detailPath.lineTo(15.45085620880127, -47.552825927734375);
+detailPath.lineTo(16.480388641357422, -44.207672119140625);
+detailPath.quadraticCurveTo(0, -39.135528564453125, -16.48038673400879, -44.207672119140625);
+detailPath.lineTo(-15.450854301452637, -47.552825927734375);
+detailPath.lineTo(-12.651712417602539, -45.451683044433594);
+detailPath.quadraticCurveTo(-23.0032958984375, -31.66131591796875, -39.31752395629883, -26.077836990356445);
+detailPath.lineTo(-40.45084762573242, -29.38926887512207);
+detailPath.lineTo(-36.951271057128906, -29.334699630737305);
+detailPath.quadraticCurveTo(-37.2200927734375, -12.093571662902832, -47.13671112060547, 2.0128490924835205);
+detailPath.lineTo(-50, -0.000004371138857095502);
+detailPath.lineTo(-47.13671112060547, -2.012855052947998);
+detailPath.quadraticCurveTo(-37.22010803222656, 12.093559265136719, -36.95127868652344, 29.334693908691406);
+detailPath.lineTo(-40.45085144042969, 29.389259338378906);
+detailPath.lineTo(-39.317527770996094, 26.07782745361328);
+detailPath.quadraticCurveTo(-23.0032958984375, 31.661300659179688, -12.651708602905273, 45.451683044433594);
+detailPath.lineTo(-15.450851440429688, 47.552825927734375);
+detailPath.lineTo(-16.480382919311523, 44.207672119140625);
+detailPath.quadraticCurveTo(0, 39.135528564453125, 16.48038101196289, 44.207672119140625);
+detailPath.lineTo(15.450848579406738, 47.552825927734375);
+detailPath.lineTo(12.651705741882324, 45.451683044433594);
+detailPath.quadraticCurveTo(23.0032958984375, 31.66130828857422, 39.317527770996094, 26.077831268310547);
+detailPath.lineTo(40.45085144042969, 29.389263153076172);
+detailPath.lineTo(36.95127868652344, 29.334697723388672);
+detailPath.quadraticCurveTo(37.22010803222656, 12.093557357788086, 47.13671112060547, -2.0128533840179443);
+detailPath.lineTo(47.13671112060547, -2.0128445625305176);
+detailPath.closePath();
 
-    path.moveTo(0.6085600256919861, 36.22243881225586);
-    path.bezierCurveTo(0.834030032157898, 59.97243881225586, 9.074830055236816, 71.84744262695312, 32.05949020385742, 71.72244262695312);
-    path.bezierCurveTo(55.044151306152344, 71.59744262695312, 83.05949401855469, 58.722442626953125, 92.48587036132812, 36.222442626953125);
-    path.bezierCurveTo(78.25892639160156, -0.24285000562667847, -2.8690900802612305, -21.410219192504883, 0.6085600256919861, 36.22243881225586);
-    path.closePath();
+ctx.lineJoin = "round";
 
-    return path;
-})();
-
-const scorpionTailStroke = (function () {
-    const path = new Path2D();
-
-    path.moveTo(8.108222007751465, 36.151241302490234);
-    path.quadraticCurveTo(8.25671672821045, 51.79310607910156, 13.548282623291016, 58.108978271484375);
-    path.quadraticCurveTo(18.73090362548828, 64.2948226928711, 32.018699645996094, 64.2225570678711);
-    path.quadraticCurveTo(48.49220275878906, 64.13297271728516, 63.757965087890625, 55.78304672241211);
-    path.quadraticCurveTo(79.84596252441406, 46.98338317871094, 85.56841278076172, 33.32437515258789);
-    path.lineTo(92.48587036132812, 36.222442626953125);
-    path.lineTo(85.49881744384766, 38.94844436645508);
-    path.quadraticCurveTo(81.18331146240234, 27.887290954589844, 67.55020141601562, 19.021472930908203);
-    path.quadraticCurveTo(54.011810302734375, 10.217248916625977, 38.99715042114258, 8.380192756652832);
-    path.quadraticCurveTo(24.207897186279297, 6.570713043212891, 16.02060890197754, 12.762636184692383);
-    path.quadraticCurveTo(7.113079071044922, 19.499269485473633, 8.094919204711914, 35.77069854736328);
-    path.quadraticCurveTo(8.100666046142578, 35.8657341003418, 8.103991508483887, 35.96088409423828);
-    path.quadraticCurveTo(8.107316970825195, 36.05603790283203, 8.108221054077148, 36.151241302490234);
-    path.lineTo(8.108222007751465, 36.151241302490234);
-    path.closePath();
-    path.moveTo(-6.891101837158203, 36.293636322021484);
-    path.lineTo(0.6085600256919861, 36.22243881225586);
-    path.lineTo(-6.877847194671631, 36.674171447753906);
-    path.quadraticCurveTo(-8.34365463256836, 12.38224983215332, 6.972555637359619, 0.7988262176513672);
-    path.quadraticCurveTo(20.002670288085938, -9.055655479431152, 40.81882858276367, -6.5087785720825195);
-    path.quadraticCurveTo(59.27922821044922, -4.250129699707031, 75.72781372070312, 6.44663143157959);
-    path.quadraticCurveTo(93.40434265136719, 17.941944122314453, 99.4729232788086, 33.49644088745117);
-    path.quadraticCurveTo(100.00334930419922, 34.855995178222656, 99.98529052734375, 36.31524658203125);
-    path.quadraticCurveTo(99.96723937988281, 37.774497985839844, 99.40332794189453, 39.12051010131836);
-    path.quadraticCurveTo(91.65159606933594, 57.623260498046875, 70.95611572265625, 68.94308471679688);
-    path.quadraticCurveTo(52.36455154418945, 79.11212158203125, 32.10027313232422, 79.22232818603516);
-    path.quadraticCurveTo(-6.4815673828125, 79.43215942382812, -6.891101837158203, 36.293636322021484);
-    path.closePath();
-
-    return path;
-})();
-
-const scorpionTailWrinkle1 = (function () {
-    const path = new Path2D();
-
-    path.moveTo(-24.127342224121094, -3.297753095626831);
-    path.quadraticCurveTo(-25.364002227783203, 0, -24.127342224121094, 3.297753095626831);
-    path.quadraticCurveTo(-23.83646011352539, 4.073432922363281, -24.17926597595215, 4.827605247497559);
-    path.quadraticCurveTo(-24.522071838378906, 5.581777572631836, -25.297752380371094, 5.8726582527160645);
-    path.quadraticCurveTo(-26.07343101501465, 6.163537979125977, -26.82760238647461, 5.820732593536377);
-    path.quadraticCurveTo(-27.581775665283203, 5.477927207946777, -27.872657775878906, 4.70224666595459);
-    path.quadraticCurveTo(-29.635997772216797, -4.76837158203125e-7, -27.872657775878906, -4.70224666595459);
-    path.quadraticCurveTo(-27.581775665283203, -5.477927207946777, -26.827604293823242, -5.820732593536377);
-    path.quadraticCurveTo(-26.07343101501465, -6.163537979125977, -25.297752380371094, -5.8726582527160645);
-    path.quadraticCurveTo(-24.522071838378906, -5.581777572631836, -24.17926597595215, -4.827605247497559);
-    path.quadraticCurveTo(-23.83646011352539, -4.073432922363281, -24.127342224121094, -3.297753095626831);
-    path.closePath();
-
-    return path;
-})();
-
-const scorpionTailWrinkle2 = (function () {
-    const path = new Path2D();
-
-    path.moveTo(-34.28501510620117, -3.971008539199829);
-    path.quadraticCurveTo(-36.66761779785156, 4.76837158203125e-7, -34.28501510620117, 3.971008539199829);
-    path.quadraticCurveTo(-33.85879135131836, 4.681378364562988, -34.059715270996094, 5.485071182250977);
-    path.quadraticCurveTo(-34.26063537597656, 6.288763046264648, -34.97100830078125, 6.7149858474731445);
-    path.quadraticCurveTo(-35.681373596191406, 7.141207695007324, -36.485069274902344, 6.940284729003906);
-    path.quadraticCurveTo(-37.288761138916016, 6.739361763000488, -37.71498489379883, 6.02899169921875);
-    path.quadraticCurveTo(-41.33238220214844, 0, -37.71498489379883, -6.02899169921875);
-    path.quadraticCurveTo(-37.288761138916016, -6.739361763000488, -36.485069274902344, -6.940284729003906);
-    path.quadraticCurveTo(-35.681373596191406, -7.141207695007324, -34.97100830078125, -6.7149858474731445);
-    path.quadraticCurveTo(-34.26063537597656, -6.288763046264648, -34.05971145629883, -5.485071182250977);
-    path.quadraticCurveTo(-33.85879135131836, -4.681378364562988, -34.28501510620117, -3.971008539199829);
-    path.closePath();
-
-    return path;
-})();
-
-ctx.lineJoin = ctx.lineCap = "round";
-
-{
+ctx.save();
+ctx.fillStyle = "#292929";
+for (let i = 0; i < 8; i++) {
     ctx.save();
-
-    ctx.fillStyle = ctx.strokeStyle = "#333333";
-    ctx.lineWidth = 6;
-
-    ctx.translate(84 - 64, 0);
-    ctx.scale(0.6628867661928461, 0.6628867198043205);
-
-    const beakAngle = 0;
-
-    {
-        ctx.save();
-
-        ctx.rotate(beakAngle);
-        ctx.translate(0, -2);
-
-        ctx.beginPath();
-        ctx.moveTo(-10, 5);
-        ctx.quadraticCurveTo(0, 30, 35, 11);
-        ctx.quadraticCurveTo(0, 20, -10, 5);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.restore();
-    }
-
-    {
-        ctx.save();
-
-        ctx.rotate(-beakAngle);
-        ctx.translate(0, 2);
-
-        ctx.beginPath();
-        ctx.moveTo(-10, -5);
-        ctx.quadraticCurveTo(0, -30, 35, -11);
-        ctx.quadraticCurveTo(0, -20, -10, -5);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.restore();
-    }
-
+    ctx.translate(50, 0);
+    ctx.fill(dwadupawdiaw, "nonzero");
     ctx.restore();
+    ctx.rotate(0.6283185307179586);
 }
+ctx.restore();
 
-{
-    ctx.save();
+ctx.fillStyle = "#32A852";
+ctx.fill(bodyPath, "nonzero");
 
-    ctx.lineWidth = 7;
-
-    ctx.translate(67.80140686035156 - 64, 0);
-    ctx.scale(0.7679999578592127, 0.7679999578592127);
-
-    { // Legs
-        ctx.strokeStyle = "#333333";
-
-        const LEG_LENGTH = 36;
-
-        ctx.beginPath();
-
-        for (let i = 0; i < 8; i++) {
-            const dir = ((0.25 + (i % 4) * 0.14) * Math.PI + Math.sin(i + 1 * 0.75) * 0.2) *
-                (i < 4 ? 1 : -1);
-
-            ctx.moveTo(0, 0);
-            ctx.lineTo(Math.cos(dir) * LEG_LENGTH, Math.sin(dir) * LEG_LENGTH);
-        }
-
-        ctx.stroke();
-    }
-
-    ctx.strokeStyle = "#9E7C24";
-
-    { // Body
-        ctx.beginPath();
-
-        ctx.moveTo(0, -30);
-        ctx.quadraticCurveTo(40, -20, 40, 0);
-        ctx.quadraticCurveTo(40, 20, 0, 30);
-        ctx.quadraticCurveTo(-40, 35, -40, 0);
-        ctx.quadraticCurveTo(-40, -35, 0, -30);
-
-        ctx.closePath();
-
-        ctx.fillStyle = "#C69A2D";
-        ctx.fill();
-        ctx.stroke();
-    }
-
-    { // Wrinkles
-        ctx.beginPath();
-        ctx.moveTo(22, -12);
-        ctx.quadraticCurveTo(26, 0, 22, 12);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(7, -18);
-        ctx.quadraticCurveTo(10.5, 0, 7, 18);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(-7, -18);
-        ctx.quadraticCurveTo(-10.5, 0, -7, 18);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(-22, -15);
-        ctx.quadraticCurveTo(-27, 0, -22, 15);
-        ctx.stroke();
-    }
-
-    ctx.restore();
-}
-
-const tailColor = "#DBAB32";
-
-const tailStrokeColor = "#B18B28";
-
-{ // Tail
-    ctx.save();
-
-    ctx.translate(30 - 64, 57 - 64 - 3.8014068603515625);
-    ctx.scale(0.30719998103634244, 0.30719998103634244);
-
-    ctx.fillStyle = tailColor;
-    ctx.fill(scorpionTail, "nonzero");
-
-    ctx.fillStyle = tailStrokeColor;
-    ctx.fill(scorpionTailStroke, "nonzero");
-
-    ctx.restore();
-}
-
-{ // Tail wrinkle
-    ctx.save();
-
-    ctx.translate(67.80140686035156 - 64, 0);
-    ctx.scale(0.7679999578592127, 0.7679999578592127);
-
-    ctx.fillStyle = tailStrokeColor;
-
-    ctx.fill(scorpionTailWrinkle1, "nonzero");
-    ctx.fill(scorpionTailWrinkle2, "nonzero");
-
-    ctx.restore();
-}
-
-{ // Pincer
-    ctx.save();
-
-    ctx.lineWidth = 4;
-    ctx.fillStyle = "#333333";
-    ctx.strokeStyle = "#292929";
-
-    ctx.translate(59 - 64, 67.80140686035156 - 64 - 3.8014068603515625);
-    ctx.scale(0.7679999578592127, 0.7679999578592127);
-
-    ctx.beginPath();
-    ctx.moveTo(3.5, 0);
-    ctx.lineTo(-3.5, -7);
-    ctx.lineTo(-3.5, 7);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.restore();
-}
-
-ctx.beginPath();
-
-ctx.arc(0, 0, 25, 0, TAU);
-
-ctx.lineWidth = 2;
-ctx.strokeStyle = "#000000";
-ctx.stroke();
+ctx.fillStyle = "#288842";
+ctx.fill(detailPath, "nonzero");
